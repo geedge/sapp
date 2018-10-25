@@ -1,0 +1,13 @@
+[PLUGINFO]
+PLUGNAME=PPTP
+SO_PATH=./plug/protocol/pptp_protocol_plug/pptp_protocol_plug.so
+INIT_FUNC=pptp_protocol_init
+DESTROY_FUNC=pptp_protocol_destroy
+GETPLUGID_FUNC=pptp_protocol_get_plugid
+FLAGCHANGE_FUNC=pptp_protocol_flag_change
+FLAGSTATE_FUNC=pptp_protocol_funstat
+
+[TCP]
+FUNC_FLAG=ALL
+FUNC_NAME=pptp_control_protocol_entry
+

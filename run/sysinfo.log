@@ -1,0 +1,53 @@
+
+*********************** [41msysinfo exactly[0m *************************
+RCV-PKT       total_pkt    total_len          pps          Bps
+Ethernet           1000       165936          544        90266
+IPv4               1000       138950          545        76041
+IPv6                  0            0            0            0
+TCP                 571        84919          327        47178
+UDP                 234         9081          124         4510
+Unknown               0            0            0            0
+
+***************************************************************
+SND-PKT       total_pkt    total_len          pps          Bps
+TCP_RST               0            0            0            0
+TCP_S/A               0            0            0            0
+UDP                   0            0            0            0
+SEND-ERR              0            0            0            0
+
+TUNNEL        total_pkt    total_len
+6over4                0            0
+teredo                0            0
+
+DROP          total_pkt
+app                   0
+lib                   0
+
+
+------------------------------- TCP statistics detail -----------------------------
+    |-----------Current---------| |------Realtime-----| |--------From-of-startup---------|
+tid link-syn link-data link-nouse link-new/s link-del/s stream-num reset-num hash-list-max
+  0        1         0          1          2          2          4         0             1
+
+-------------------------- UDP statistics detail ------------------------
+    |-----------Current---------| |------Realtime-----| |--From-of-startup--|
+tid link-one  link-two  link-more link-new/s link-del/s stream-num reset-num
+  0      213         4          0        120          2        219         2
+*****************************************************************
+
+################# [41msysinfo humanly[0m --- is same as above! #########
+RCV-PKT       total_pkt    total_len          pps          bps
+Ethernet           1000      162.05K          544      705.20K
+IPv4               1000      135.69K          545      594.07K
+IPv6                  0            0            0            0
+TCP                 571       82.93K          327      368.58K
+UDP                 234        8.87K          124       35.23K
+Unknown               0            0            0            0
+#################################################################
+SND-PKT       total_pkt    total_len          pps          bps
+TCP_RST               0            0            0            0
+TCP_S/A               0            0            0            0
+UDP                   0            0            0            0
+SEND-ERR              0            0            0            0
+#################################################################
+

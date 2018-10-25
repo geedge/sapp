@@ -1,0 +1,3 @@
+./plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.inf
+./plug/protocol/isakmp_protocol_plug/isakmp_protocol_plug.inf
+./plug/protocol/pptp_protocol_plug/pptp_protocol_plug.inf

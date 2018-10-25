@@ -1,0 +1,364 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+AUTHDATA_LENGTH	c3client.h	70;"	d
+C3CLIENT_APPSTATE_ACTIVE	c3client.h	55;"	d
+C3CLIENT_APPSTATE_CONNECTED	c3client.h	54;"	d
+C3CLIENT_APPSTATE_IDLE	c3client.h	53;"	d
+C3CLIENT_INSTATE_BODY	c3client.h	61;"	d
+C3CLIENT_INSTATE_HDR	c3client.h	60;"	d
+C3CLIENT_INSTATE_IDLE	c3client.h	59;"	d
+C3CLIENT_KASTATE_IDLE	c3client.h	74;"	d
+C3CLIENT_KASTATE_RECIEVING	c3client.h	76;"	d
+C3CLIENT_KASTATE_SENDING	c3client.h	75;"	d
+C3CLIENT_MAGIC	c3client.h	68;"	d
+C3CLIENT_OUTDATA_AUTH	c3client.h	79;"	d
+C3CLIENT_OUTDATA_DATA	c3client.h	81;"	d
+C3CLIENT_OUTDATA_KA	c3client.h	80;"	d
+C3CLIENT_OUTSTATE_BODY	c3client.h	65;"	d
+C3CLIENT_OUTSTATE_HDR	c3client.h	64;"	d
+C3CLIENT_OUTSTATE_IDLE	c3client.h	63;"	d
+C3CLIENT_STATE_ACTIVE	c3client.h	49;"	d
+C3CLIENT_STATE_AUTH_RECIEVED	c3client.h	47;"	d
+C3CLIENT_STATE_AUTH_RECIEVING	c3client.h	46;"	d
+C3CLIENT_STATE_AUTH_SENDED	c3client.h	45;"	d
+C3CLIENT_STATE_AUTH_SENDING	c3client.h	44;"	d
+C3CLIENT_STATE_AUTH_SUCCEEDED	c3client.h	48;"	d
+C3CLIENT_STATE_CONNECT	c3client.h	41;"	d
+C3CLIENT_STATE_CONNECTED	c3client.h	43;"	d
+C3CLIENT_STATE_CONNECTING	c3client.h	42;"	d
+C3CLIENT_STATE_IDLE	c3client.h	40;"	d
+C3CLIENT_STATE_STOPPED	c3client.h	51;"	d
+C3CLIENT_STATE_STOPPING	c3client.h	50;"	d
+CACHED_RULE_NUM	c3client.h	71;"	d
+CC	Makefile	/^CC = g++$/;"	m
+CCC_CMD_AUTH	ccchdr.h	12;"	d
+CCC_CMD_AUTH_REP	ccchdr.h	21;"	d
+CCC_CMD_AUTH_REQ	ccchdr.h	20;"	d
+CCC_CMD_DATA	ccchdr.h	14;"	d
+CCC_CMD_FDATA_REP	ccchdr.h	25;"	d
+CCC_CMD_FDATA_REQ	ccchdr.h	24;"	d
+CCC_CMD_KEEPALIVE	ccchdr.h	13;"	d
+CCC_CMD_KEEPALIVE_REP	ccchdr.h	23;"	d
+CCC_CMD_KEEPALIVE_REQ	ccchdr.h	22;"	d
+CCC_CMD_SDATA_REP	ccchdr.h	27;"	d
+CCC_CMD_SDATA_REQ	ccchdr.h	26;"	d
+CCC_MAX_SIZE	main.c	12;"	d	file:
+CCC_ROUTE_D	ccchdr.h	35;"	d
+CCC_ROUTE_G	ccchdr.h	34;"	d
+CCC_ROUTE_S	ccchdr.h	36;"	d
+CCC_VERSION	ccchdr.h	7;"	d
+CFLAGS	Makefile	/^CFLAGS = -g -Wall -DPROGRAM_DATE=\\"$(DATE)\\" -I.\/include -DNOTIME -DCONTROL_CONVERGE -D_GNU_SOURCE -DLINUX -DLinux -D__LITTLE_ENDIAN_BITFIELD -DVEVIFY_ID_ENABLE -DALWAYS_LOCK -fPIC $/;"	m
+CPP	Makefile	/^CPP = g++$/;"	m
+DATE	Makefile	/^DATE=$(shell cat version)$/;"	m
+DYNAMIC_TARGET	Makefile	/^DYNAMIC_TARGET=libc3client.so$/;"	m
+GRULE_ACTION_ADD	grule.h	118;"	d
+GRULE_ACTION_DEL	grule.h	119;"	d
+GRULE_APP_STATUS_ACTIVE	grule.h	181;"	d
+GRULE_APP_STATUS_CONNECTED	grule.h	180;"	d
+GRULE_APP_STATUS_IDLE	grule.h	179;"	d
+GRULE_BIG_TYPE_MASK4	grule.h	115;"	d
+GRULE_BIG_TYPE_MASK6	grule.h	116;"	d
+GRULE_BIG_TYPE_SIMPLE4	grule.h	113;"	d
+GRULE_BIG_TYPE_SIMPLE6	grule.h	114;"	d
+GRULE_ERR	grule.h	145;"	d
+GRULE_ERRNO_AGAIN	grule.h	147;"	d
+GRULE_ERRNO_AUTH	grule.h	151;"	d
+GRULE_ERRNO_BAD_CONNECTION	grule.h	150;"	d
+GRULE_ERRNO_BAD_OPT	grule.h	149;"	d
+GRULE_ERRNO_BAD_RULE	grule.h	148;"	d
+GRULE_OK	grule.h	144;"	d
+GRULE_RESP_OK	grule.h	153;"	d
+GRULE_RESP_WHITELIST	grule.h	154;"	d
+GRULE_SOL_PROTO	grule.h	139;"	d
+GRULE_TYPE_AUTH	grule.h	141;"	d
+GRULE_TYPE_NONBLOCK	grule.h	142;"	d
+LDFLAGS	Makefile	/^LDFLAGS = -rdynamic $/;"	m
+LIBS	Makefile	/^LIBS = -L.\/ -L.\/lib\/ -L\/usr\/local\/lib\/  -lpthread -ldl$/;"	m
+MESSAGE_MAX_LENGTH	c3client.h	37;"	d
+NN_ALLOC_INCLUDED	alloc.h	24;"	d
+OBJECTS	Makefile	/^OBJECTS= alloc.o ccchdr.o efd_eventfd.o grule.o c3client.o main.o util.o ruleread.o$/;"	m
+PIPE_IN	c3client.c	1130;"	d	file:
+PIPE_OUT	c3client.c	1131;"	d	file:
+RULE_DELEMITER	ruleread.c	183;"	d	file:
+RULE_DIP	grule.h	366;"	d
+RULE_DIPMASK	grule.h	367;"	d
+RULE_DPMASK	grule.h	371;"	d
+RULE_DPORT	grule.h	370;"	d
+RULE_PMASK	grule.h	373;"	d
+RULE_PROTO	grule.h	372;"	d
+RULE_SIP	grule.h	364;"	d
+RULE_SIPMASK	grule.h	365;"	d
+RULE_SPMASK	grule.h	369;"	d
+RULE_SPORT	grule.h	368;"	d
+SERVICE_STATE_CONNECTED	main.c	36;"	d	file:
+SERVICE_STATE_FIRSTCONNECT	main.c	35;"	d	file:
+SERVICE_STATE_IDLE	main.c	34;"	d	file:
+SOCKADDR_MAX_NUM	c3client.h	35;"	d
+STATIC_TARGET	Makefile	/^STATIC_TARGET=libc3client.a$/;"	m
+TARGET	Makefile	/^TARGET=c3client $/;"	m
+__C3CLIENT_H	c3client.h	2;"	d
+__CCC_HDR_H	ccchdr.h	2;"	d
+__GRULE_H	grule.h	2;"	d
+__RULEREAD_H	ruleread.h	2;"	d
+__UTIL_H	util.h	2;"	d
+__c3client	c3client.h	/^typedef struct __c3client{$/;"	s
+__rulereader	ruleread.c	/^struct __rulereader{$/;"	s	file:
+action	ccchdr.h	/^			uint8_t action:1;$/;"	m	struct:__anon1::__anon2::__anon3
+action	grule.h	/^	uint16_t    action; \/\/ add or delete$/;"	m	struct:__anon17
+addr	c3client.h	/^	struct sockaddr_in addr[SOCKADDR_MAX_NUM];$/;"	m	struct:__c3client	typeref:struct:__c3client::sockaddr_in
+addr_index	c3client.h	/^	int                addr_index;$/;"	m	struct:__c3client
+addr_no	c3client.h	/^	int                addr_no;$/;"	m	struct:__c3client
+app_state	c3client.h	/^	int                app_state;$/;"	m	struct:__c3client
+attr_len	ccchdr.h	/^	uint8_t attr_len; \/\/ must be zero;$/;"	m	struct:__anon1
+authdata	c3client.h	/^	uint8_t            authdata[AUTHDATA_LENGTH];$/;"	m	struct:__c3client
+big_type	grule.h	/^	uint16_t    big_type; \/\/ GRULE_BIG_TYPE_SIMPLE4, GRULE_BIG_TYPE_SIMPLE6, GRULE_BIG_TYPE_MASK4, $/;"	m	struct:__anon17
+c3client_app_status	c3client.c	/^int c3client_app_status(c3client_t *client)$/;"	f
+c3client_bad_results_str	c3client.c	/^const char * c3client_bad_results_str(grule_result_t *rst)$/;"	f
+c3client_close	c3client.c	/^int c3client_close(c3client_t * client)$/;"	f
+c3client_connect	c3client.c	/^int c3client_connect(c3client_t * client, const char * addr)$/;"	f
+c3client_data_rep	c3client.c	/^static int c3client_data_rep(c3client_t *client)$/;"	f	file:
+c3client_errno	c3client.c	/^int c3client_errno(c3client_t * client)$/;"	f
+c3client_error_str	c3client.c	/^const char * c3client_error_str(int err_no)$/;"	f
+c3client_hdr_check	c3client.c	/^int c3client_hdr_check(uint8_t * data, size_t size)$/;"	f
+c3client_in	c3client.c	/^static int c3client_in(c3client_t * client)$/;"	f	file:
+c3client_keepalive_in	c3client.c	/^static int c3client_keepalive_in(c3client_t * client)$/;"	f	file:
+c3client_lock	c3client.c	/^static inline void c3client_lock(c3client_t * client)$/;"	f	file:
+c3client_open	c3client.c	/^c3client_t * c3client_open()$/;"	f
+c3client_opt_get	c3client.c	/^int c3client_opt_get(c3client_t * client, int level, int type, void * opt, size_t opt_size)$/;"	f
+c3client_opt_set	c3client.c	/^int c3client_opt_set(c3client_t * client, int level, int type, const void * opt, size_t opt_size)$/;"	f
+c3client_out	c3client.c	/^static int c3client_out(c3client_t * client)$/;"	f	file:
+c3client_process	c3client.c	/^static void * c3client_process(void * c3)$/;"	f	file:
+c3client_recv	c3client.c	/^int c3client_recv(c3client_t * client, grule_result_t *rst, size_t rst_num, int flags)$/;"	f
+c3client_send	c3client.c	/^int c3client_send(c3client_t * client, grule_t *rules, size_t rule_num, int flags)$/;"	f
+c3client_t	c3client.h	/^}c3client_t;$/;"	t	typeref:struct:__c3client
+c3client_unlock	c3client.c	/^static inline void c3client_unlock(c3client_t *client)$/;"	f	file:
+c3errno	c3client.h	/^	int                c3errno;$/;"	m	struct:__c3client
+cached_msgid	c3client.h	/^	uint32_t           cached_msgid[CACHED_RULE_NUM];$/;"	m	struct:__c3client
+cached_result	c3client.h	/^	struct cached_rst  cached_result[CACHED_RULE_NUM];$/;"	m	struct:__c3client	typeref:struct:__c3client::cached_rst
+cached_rst	c3client.h	/^struct cached_rst{$/;"	s
+cached_rst_no	c3client.h	/^	size_t             cached_rst_no;$/;"	m	struct:__c3client
+cached_rule	c3client.h	/^	grule_t            cached_rule[CACHED_RULE_NUM];$/;"	m	struct:__c3client
+cached_rule_no	c3client.h	/^	volatile size_t             cached_rule_no;$/;"	m	struct:__c3client
+ccc_auth_check	c3client.c	/^static int ccc_auth_check(const uint8_t * data, size_t size)$/;"	f	file:
+channel_hdr_t	ccchdr.h	/^}channel_hdr_t;$/;"	t	typeref:union:__anon4
+check_rule	grule.c	/^int  check_rule(grule_t * rule)$/;"	f
+check_snprintf_noreturn	grule.c	618;"	d	file:
+check_snprintf_return	grule.c	622;"	d	file:
+check_snprintf_return_ptr	grule.c	151;"	d	file:
+checksum	ccchdr.h	/^	uint16_t  checksum;$/;"	m	struct:__anon6
+chnl_id	ccchdr.h	/^		uint32_t chnl_id:24;$/;"	m	struct:__anon4::__anon5
+cksum_vec_t	ccchdr.h	/^}cksum_vec_t;$/;"	t	typeref:struct:__anon9
+data	ccchdr.h	/^	uint8_t *data;$/;"	m	struct:__anon9
+dev_type	ccchdr.h	/^		uint32_t dev_type:8;$/;"	m	struct:__anon4::__anon5
+dip	grule.h	/^	ip4_addr_t dip;$/;"	m	struct:__anon13
+dip	grule.h	/^	ip4_addr_t dip;$/;"	m	struct:__anon15
+dip	grule.h	/^	ip6_addr_t dip;$/;"	m	struct:__anon14
+dip	grule.h	/^	ip6_addr_t dip;$/;"	m	struct:__anon16
+dip_flag	ccchdr.h	/^			uint8_t dip_flag:1;$/;"	m	struct:__anon1::__anon2::__anon3
+dip_flag	grule.h	/^		uint16_t  dip_flag:1;$/;"	m	struct:__anon10::__anon11
+dip_mask	grule.h	/^	ip4_addr_t dip_mask;$/;"	m	struct:__anon15
+dip_mask	grule.h	/^	ip6_addr_t dip_mask;$/;"	m	struct:__anon16
+dipmsk_flag	ccchdr.h	/^			uint8_t dipmsk_flag:1;$/;"	m	struct:__anon1::__anon2::__anon3
+dipmsk_flag	grule.h	/^		uint16_t  dipmsk_flag:1;$/;"	m	struct:__anon10::__anon11
+do_check_rule	c3client.c	/^static int do_check_rule(grule_t * rule)$/;"	f	file:
+do_checksum	ccchdr.h	/^static inline uint16_t do_checksum(const uint8_t * data, size_t size)$/;"	f
+do_checksum_multidata	ccchdr.h	/^static inline uint16_t do_checksum_multidata(const cksum_vec_t * vec, size_t count)$/;"	f
+do_fill_auth	c3client.c	/^static int do_fill_auth(uint8_t *data, size_t * size, uint8_t * authdata)$/;"	f	file:
+do_fill_data	c3client.c	/^static int do_fill_data(uint8_t *data, size_t *size, uint32_t msg_id, grule_t * rule)$/;"	f	file:
+do_fill_keepalive	c3client.c	/^static int do_fill_keepalive(uint8_t *data, size_t * size, uint32_t msg_id, int is_req)$/;"	f	file:
+dpmsk_flag	ccchdr.h	/^			uint8_t dpmsk_flag:1;$/;"	m	struct:__anon1::__anon2::__anon3
+dpmsk_flag	grule.h	/^		uint16_t  dpmsk_flag:1;$/;"	m	struct:__anon10::__anon11
+dport	grule.h	/^	port_t     dport;$/;"	m	struct:__anon13
+dport	grule.h	/^	port_t     dport;$/;"	m	struct:__anon14
+dport	grule.h	/^	port_t     dport;$/;"	m	struct:__anon15
+dport	grule.h	/^	port_t     dport;$/;"	m	struct:__anon16
+dport_flag	ccchdr.h	/^			uint8_t dport_flag:1;$/;"	m	struct:__anon1::__anon2::__anon3
+dport_flag	grule.h	/^		uint16_t  dport_flag:1;$/;"	m	struct:__anon10::__anon11
+dport_mask	grule.h	/^	port_t     dport_mask;$/;"	m	struct:__anon15
+dport_mask	grule.h	/^	port_t     dport_mask;$/;"	m	struct:__anon16
+durable	ccchdr.h	/^			uint8_t durable:1;$/;"	m	struct:__anon1::__anon2::__anon3
+durable	grule.h	/^	uint16_t    durable; \/\/ rule is durable$/;"	m	struct:__anon17
+efd	efd_eventfd.h	/^    int efd;$/;"	m	struct:nn_efd
+errno_assert	util.h	34;"	d
+fd_event	c3client.h	/^	struct nn_efd      fd_event;$/;"	m	struct:__c3client	typeref:struct:__c3client::nn_efd
+file	ruleread.c	/^	FILE *file;$/;"	m	struct:__rulereader	file:
+file_index	ruleread.c	/^	size_t file_index;$/;"	m	struct:__rulereader	file:
+file_no	ruleread.c	/^	size_t file_no;$/;"	m	struct:__rulereader	file:
+file_path	ruleread.c	/^	char **file_path;$/;"	m	struct:__rulereader	file:
+flag	c3client.h	/^	int                flag;$/;"	m	struct:__c3client
+flag_ignor_result	c3client.h	/^	int                flag_ignor_result;$/;"	m	struct:__c3client
+grule_app_status	grule.c	/^int grule_app_status(grule_hdl_t hdl)$/;"	f
+grule_bad_results_str	grule.c	/^const char * grule_bad_results_str(grule_result_t *rst)$/;"	f
+grule_close	grule.c	/^int grule_close(grule_hdl_t hdl)$/;"	f
+grule_connect	grule.c	/^int grule_connect(grule_hdl_t hdl, const char * addr)$/;"	f
+grule_errno	grule.c	/^int grule_errno(grule_hdl_t hdl)$/;"	f
+grule_error_str	grule.c	/^const char * grule_error_str(int err_no)$/;"	f
+grule_hdl_t	grule.h	/^typedef void * grule_hdl_t;$/;"	t
+grule_open	grule.c	/^grule_hdl_t grule_open()$/;"	f
+grule_opt_get	grule.c	/^int grule_opt_get(grule_hdl_t hdl, int level, int type, void * opt, size_t opt_size)$/;"	f
+grule_opt_set	grule.c	/^int grule_opt_set(grule_hdl_t hdl, int level, int type, const void * opt, size_t opt_size)$/;"	f
+grule_recv	grule.c	/^int grule_recv(grule_hdl_t hdl, grule_result_t *rst, size_t rst_num, int flags)$/;"	f
+grule_result_t	grule.h	/^}grule_result_t;$/;"	t	typeref:struct:__anon19
+grule_send	grule.c	/^int grule_send(grule_hdl_t hdl, grule_t *rules, size_t rule_num, int flags)$/;"	f
+grule_service	main.c	/^int grule_service(int argc, char ** argv)$/;"	f
+grule_t	grule.h	/^}grule_t;$/;"	t	typeref:struct:__anon17
+grule_type	grule.h	/^	uint16_t grule_type;$/;"	m	union:__anon10
+grule_type_t	grule.h	/^}grule_type_t;$/;"	t	typeref:union:__anon10
+indata	c3client.h	/^	uint8_t            indata[MESSAGE_MAX_LENGTH];$/;"	m	struct:__c3client
+indata_len	c3client.h	/^	int                indata_len;$/;"	m	struct:__c3client
+indata_len_expect	c3client.h	/^	int                indata_len_expect;$/;"	m	struct:__c3client
+inhdr	c3client.h	/^	message_hdr_t      inhdr;$/;"	m	struct:__c3client
+instate	c3client.h	/^	int                instate;$/;"	m	struct:__c3client
+ip4_addr_t	grule.h	/^typedef uint32_t ip4_addr_t;$/;"	t
+ip6_addr_t	grule.h	/^}ip6_addr_t;$/;"	t	typeref:union:__anon12
+ip6_c	grule.h	/^		unsigned char ip6_c[16];$/;"	m	union:__anon12
+ip6_i	grule.h	/^		unsigned int  ip6_i[4];$/;"	m	union:__anon12
+ip6_l	grule.h	/^		unsigned long ip6_l[2];$/;"	m	union:__anon12
+ip_rule_hdr_t	ccchdr.h	/^}ip_rule_hdr_t;$/;"	t	typeref:struct:__anon1
+ipv6	ccchdr.h	/^			uint8_t ipv6:1;$/;"	m	struct:__anon1::__anon2::__anon3
+is_stopped	c3client.h	/^	int                is_stopped;$/;"	m	struct:__c3client
+kastate	c3client.h	/^	int                kastate;$/;"	m	struct:__c3client
+keepalive_interval	c3client.h	/^	int                keepalive_interval;$/;"	m	struct:__c3client
+keepalive_state_out	c3client.h	/^	int                keepalive_state_out;$/;"	m	struct:__c3client
+keepalive_state_out_id	c3client.h	/^	uint32_t           keepalive_state_out_id;$/;"	m	struct:__c3client
+last_data_time	c3client.h	/^	time_t             last_data_time;$/;"	m	struct:__c3client
+len_flag	ccchdr.h	/^		uint16_t len_flag;$/;"	m	union:__anon6::__anon7
+line_no	ruleread.c	/^	size_t line_no;$/;"	m	struct:__rulereader	file:
+lock	c3client.h	/^	pthread_mutex_t    lock;$/;"	m	struct:__c3client
+m4	grule.h	/^		mask4_rule_t    m4;$/;"	m	union:__anon17::__anon18
+m6	grule.h	/^		mask6_rule_t    m6;$/;"	m	union:__anon17::__anon18
+magic	c3client.h	/^	unsigned int       magic;$/;"	m	struct:__c3client
+main	main.c	/^__attribute__((weak)) int main(int argc, char ** argv)$/;"	f
+mask4_rule_t	grule.h	/^}mask4_rule_t;$/;"	t	typeref:struct:__anon15
+mask6_rule_t	grule.h	/^}mask6_rule_t;$/;"	t	typeref:struct:__anon16
+message_hdr_t	ccchdr.h	/^}message_hdr_t;$/;"	t	typeref:struct:__anon6
+more_flag	ccchdr.h	/^			uint8_t  more_flag:2;$/;"	m	struct:__anon6::__anon7::__anon8
+more_flag	ccchdr.h	/^	uint16_t more_flag:2;$/;"	m	struct:__anon6
+msg_code	ccchdr.h	/^	uint16_t msg_code;$/;"	m	struct:__anon6
+msg_count	ccchdr.h	/^	uint16_t  msg_count;$/;"	m	struct:__anon6
+msg_id	c3client.h	/^	int                msg_id;$/;"	m	struct:__c3client
+msg_id	c3client.h	/^	uint16_t msg_id;$/;"	m	struct:cached_rst
+msg_id	ccchdr.h	/^	uint32_t msg_id;$/;"	m	struct:__anon6
+msg_len	ccchdr.h	/^	uint16_t msg_len:14;$/;"	m	struct:__anon6
+msg_len1	ccchdr.h	/^			uint8_t  msg_len1:6;$/;"	m	struct:__anon6::__anon7::__anon8
+msg_len2	ccchdr.h	/^			uint8_t  msg_len2;		$/;"	m	struct:__anon6::__anon7::__anon8
+msg_type	ccchdr.h	/^	uint8_t  msg_type;$/;"	m	struct:__anon6
+name	alloc.c	/^    const char *name;$/;"	m	struct:nn_alloc_hdr	file:
+nn_alloc	alloc.h	37;"	d
+nn_alloc	alloc.h	40;"	d
+nn_alloc_	alloc.c	/^void *nn_alloc_ (size_t size)$/;"	f
+nn_alloc_	alloc.c	/^void *nn_alloc_ (size_t size, const char *name)$/;"	f
+nn_alloc_blocks	alloc.c	/^static size_t nn_alloc_blocks;$/;"	v	file:
+nn_alloc_bytes	alloc.c	/^static size_t nn_alloc_bytes;$/;"	v	file:
+nn_alloc_hdr	alloc.c	/^struct nn_alloc_hdr {$/;"	s	file:
+nn_alloc_init	alloc.c	/^void nn_alloc_init (void)$/;"	f
+nn_alloc_sync	alloc.c	/^static struct nn_mutex nn_alloc_sync;$/;"	v	typeref:struct:nn_mutex	file:
+nn_alloc_term	alloc.c	/^void nn_alloc_term (void)$/;"	f
+nn_assert	util.h	22;"	d
+nn_backtrace_print	c3client.c	/^void nn_backtrace_print (void)$/;"	f
+nn_efd	efd_eventfd.h	/^struct nn_efd {$/;"	s
+nn_efd_getfd	efd_eventfd.c	/^int nn_efd_getfd (struct nn_efd *self)$/;"	f
+nn_efd_init	efd_eventfd.c	/^int nn_efd_init (struct nn_efd *self)$/;"	f
+nn_efd_signal	efd_eventfd.c	/^void nn_efd_signal (struct nn_efd *self)$/;"	f
+nn_efd_stop	efd_eventfd.c	/^void nn_efd_stop (struct nn_efd *self)$/;"	f
+nn_efd_term	efd_eventfd.c	/^void nn_efd_term (struct nn_efd *self)$/;"	f
+nn_efd_unsignal	efd_eventfd.c	/^void nn_efd_unsignal (struct nn_efd *self)$/;"	f
+nn_err_abort	util.h	/^inline void nn_err_abort (void)$/;"	f
+nn_err_strerror	util.c	/^const char *nn_err_strerror (int errnum)$/;"	f
+nn_fast	c3client.h	27;"	d
+nn_fast	c3client.h	30;"	d
+nn_fast	util.h	12;"	d
+nn_fast	util.h	15;"	d
+nn_free	alloc.c	/^void nn_free (void *ptr)$/;"	f
+nn_getl	c3client.c	/^uint32_t nn_getl (const void *_buf)$/;"	f
+nn_getll	c3client.c	/^uint64_t nn_getll (const void *_buf)$/;"	f
+nn_gets	c3client.c	/^uint16_t nn_gets (const void * _buf)$/;"	f
+nn_putl	c3client.c	/^void nn_putl (void *_buf, uint32_t val)$/;"	f
+nn_putll	c3client.c	/^void nn_putll (uint8_t *buf, uint64_t val)$/;"	f
+nn_puts	c3client.c	/^void nn_puts (void *_buf, uint16_t val)$/;"	f
+nn_realloc	alloc.c	/^void *nn_realloc (void *ptr, size_t size)$/;"	f
+nn_slow	c3client.h	28;"	d
+nn_slow	c3client.h	31;"	d
+nn_slow	util.h	13;"	d
+nn_slow	util.h	16;"	d
+outdata	c3client.h	/^	uint8_t            outdata[MESSAGE_MAX_LENGTH];$/;"	m	struct:__c3client
+outdata_len	c3client.h	/^	int                outdata_len;$/;"	m	struct:__c3client
+outhdr	c3client.h	/^	message_hdr_t      outhdr;$/;"	m	struct:__c3client
+outstate	c3client.h	/^	int                outstate;$/;"	m	struct:__c3client
+parse_addr	ruleread.c	/^static int parse_addr(int domain, const char * src, void * dst, int is_mask)$/;"	f	file:
+parse_grule	ruleread.c	/^static int parse_grule(const char * str, grule_t * rule)$/;"	f	file:
+parse_rule	grule.c	/^void parse_rule(grule_t * rule)$/;"	f
+parse_rule_str	grule.c	/^char * parse_rule_str(grule_t * rule, char * buf, size_t *buf_size)$/;"	f
+parse_rule_str_full	grule.c	/^char * parse_rule_str_full(grule_t * rule, char * buf, size_t *buf_size)$/;"	f
+parse_ruletype	ruleread.c	/^int parse_ruletype(char * str, grule_type_t * ruletype)$/;"	f
+parse_type	ruleread.c	/^int parse_type(const char * str)$/;"	f
+pmsk_flag	ccchdr.h	/^			uint8_t pmsk_flag:1;$/;"	m	struct:__anon1::__anon2::__anon3
+pmsk_flag	grule.h	/^		uint16_t  pmsk_flag:1;$/;"	m	struct:__anon10::__anon11
+port_t	grule.h	/^typedef uint16_t port_t;$/;"	t
+print_bigtype	grule.c	/^const char * print_bigtype(uint16_t bigtype)$/;"	f
+print_rule	grule.c	/^const char * print_rule(uint16_t bigtype, grule_type_t grule_type, void * rule, char * str, size_t size, int is_full)$/;"	f
+print_rule_conf_format	grule.c	/^void print_rule_conf_format()$/;"	f
+print_rule_full	grule.c	/^const char * print_rule_full(uint16_t bigtype, grule_type_t grule_type, void * rule, char * str, size_t size)$/;"	f
+print_ruletype	grule.c	/^char * print_ruletype(grule_type_t t, char * ptr, size_t size)$/;"	f
+proto	grule.h	/^	uint8_t    proto;$/;"	m	struct:__anon13
+proto	grule.h	/^	uint8_t    proto;$/;"	m	struct:__anon14
+proto	grule.h	/^	uint8_t    proto;$/;"	m	struct:__anon15
+proto	grule.h	/^	uint8_t    proto;$/;"	m	struct:__anon16
+proto_flag	ccchdr.h	/^			uint8_t proto_flag:1;$/;"	m	struct:__anon1::__anon2::__anon3
+proto_flag	grule.h	/^		uint16_t  proto_flag:1;$/;"	m	struct:__anon10::__anon11
+proto_mask	grule.h	/^	uint8_t    proto_mask;$/;"	m	struct:__anon15
+proto_mask	grule.h	/^	uint8_t    proto_mask;$/;"	m	struct:__anon16
+result	grule.h	/^	uint32_t result;$/;"	m	struct:__anon19
+resv	ccchdr.h	/^			uint8_t resv:3; \/\/ must be zero$/;"	m	struct:__anon1::__anon2::__anon3
+resv	ccchdr.h	/^	uint16_t  resv;$/;"	m	struct:__anon6
+resv	grule.h	/^		uint16_t  resv:6; \/\/ resv must be zero$/;"	m	struct:__anon10::__anon11
+route_key	ccchdr.h	/^	uint32_t route_key;$/;"	m	union:__anon4
+rule_id	grule.h	/^	uint64_t    rule_id;\/\/ rule uniq id$/;"	m	struct:__anon17
+rule_info	ccchdr.h	/^		uint16_t rule_info;$/;"	m	union:__anon1::__anon2
+rule_scope	grule.h	/^	uint32_t    rule_scope; \/\/ rule scope, such as all of carrier, China unicom$/;"	m	struct:__anon17
+rule_type	grule.h	/^	grule_type_t rule_type;$/;"	m	struct:__anon17
+rulereader_destroy	ruleread.c	/^int rulereader_destroy(rulereader_t * self)$/;"	f
+rulereader_init	ruleread.c	/^rulereader_t * rulereader_init(char **file, size_t file_no)$/;"	f
+rulereader_readnext	ruleread.c	/^int rulereader_readnext(rulereader_t * self, grule_t * rule)$/;"	f
+rulereader_t	ruleread.h	/^typedef struct __rulereader rulereader_t;$/;"	t	typeref:struct:__rulereader
+s4	grule.h	/^		simple4_rule_t  s4;$/;"	m	union:__anon17::__anon18
+s6	grule.h	/^		simple6_rule_t  s6;$/;"	m	union:__anon17::__anon18
+sem_r	c3client.h	/^	sem_t              sem_r;$/;"	m	struct:__c3client
+sem_w	c3client.h	/^	sem_t              sem_w;$/;"	m	struct:__c3client
+send_data_type	c3client.h	/^	int                send_data_type;$/;"	m	struct:__c3client
+serv_type	ccchdr.h	/^	uint8_t serv_type;$/;"	m	struct:__anon1
+simple4_rule_t	grule.h	/^}simple4_rule_t;$/;"	t	typeref:struct:__anon13
+simple6_rule_t	grule.h	/^}simple6_rule_t;$/;"	t	typeref:struct:__anon14
+sip	grule.h	/^	ip4_addr_t sip;$/;"	m	struct:__anon13
+sip	grule.h	/^	ip4_addr_t sip;$/;"	m	struct:__anon15
+sip	grule.h	/^	ip6_addr_t sip;$/;"	m	struct:__anon14
+sip	grule.h	/^	ip6_addr_t sip;$/;"	m	struct:__anon16
+sip_flag	ccchdr.h	/^			uint8_t sip_flag:1;$/;"	m	struct:__anon1::__anon2::__anon3
+sip_flag	grule.h	/^		uint16_t  sip_flag:1;$/;"	m	struct:__anon10::__anon11
+sip_mask	grule.h	/^	ip4_addr_t sip_mask;$/;"	m	struct:__anon15
+sip_mask	grule.h	/^	ip6_addr_t sip_mask;$/;"	m	struct:__anon16
+sipmsk_flag	ccchdr.h	/^			uint8_t sipmsk_flag:1;$/;"	m	struct:__anon1::__anon2::__anon3
+sipmsk_flag	grule.h	/^		uint16_t  sipmsk_flag:1;$/;"	m	struct:__anon10::__anon11
+size	alloc.c	/^    size_t size;$/;"	m	struct:nn_alloc_hdr	file:
+size	ccchdr.h	/^	size_t   size;$/;"	m	struct:__anon9
+sock	c3client.h	/^	int                sock;$/;"	m	struct:__c3client
+spmsk_flag	ccchdr.h	/^			uint8_t spmsk_flag:1;$/;"	m	struct:__anon1::__anon2::__anon3
+spmsk_flag	grule.h	/^		uint16_t  spmsk_flag:1;$/;"	m	struct:__anon10::__anon11
+sport	grule.h	/^	port_t     sport;$/;"	m	struct:__anon13
+sport	grule.h	/^	port_t     sport;$/;"	m	struct:__anon14
+sport	grule.h	/^	port_t     sport;$/;"	m	struct:__anon15
+sport	grule.h	/^	port_t     sport;$/;"	m	struct:__anon16
+sport_flag	ccchdr.h	/^			uint8_t sport_flag:1;$/;"	m	struct:__anon1::__anon2::__anon3
+sport_flag	grule.h	/^		uint16_t  sport_flag:1;$/;"	m	struct:__anon10::__anon11
+sport_mask	grule.h	/^	port_t     sport_mask;$/;"	m	struct:__anon15
+sport_mask	grule.h	/^	port_t     sport_mask;$/;"	m	struct:__anon16
+srv_type	grule.h	/^	uint32_t    srv_type; \/\/ rule service type$/;"	m	struct:__anon17
+state	c3client.h	/^	int                state;$/;"	m	struct:__c3client
+strstrim	ruleread.c	/^static inline size_t strstrim(char * str)$/;"	f	file:
+thread_id	c3client.h	/^	pthread_t          thread_id;$/;"	m	struct:__c3client
+user_id	c3client.h	/^	uint64_t user_id;$/;"	m	struct:cached_rst
+version	ccchdr.h	/^	uint8_t  version;$/;"	m	struct:__anon6

@@ -1,0 +1,8 @@
+./plug/business/test_app/test_app.inf
+#./plug/business/anti_flood/anti_flood.inf
+#./plug/business/test_http/test_http.inf
+#./plug/business/ipsec_biz_sample/ipsec_biz_sample.inf
+#./plug/business/l2tp_biz_sample/l2tp_biz_sample.inf
+#./plug/business/pptp_biz_sample/pptp_biz_sample.inf
+#./plug/business/terminal_tag/terminal_tag.inf
+#./plug/business/g_device_plug/g_device_plug.inf

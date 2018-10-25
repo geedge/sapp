@@ -1,0 +1,553 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+#include <netinet/ip.h>
+#include <netinet/ip6.h>
+#include "stream_manage.h"
+#include "capture_internal.h"
+#include "sysinfo.h"
+#include "logger.h"
+#include "sendpacket.h"
+#include "deal_ipv6.h"
+#include "packet_io_internal.h"
+#include "packet_io.h"
+
+#define QUEUE_FULL_LOG_FILE		"queue_full.log"
+
+int g_packetio_threadnum=4;
+struct thread_node_new *threads_pool_new;
+struct thread_node_new **thread_table_new;
+
+extern struct sendpacket_mac_table *G_PKT_MAC_TABLE;
+extern const unsigned char G_BROADCAST_ADDR[6];
+static int seed = 0;
+unsigned long G_RCV_PKT_NUM = 0;/* 2012-08-14 LiJia add, 总计收到的包数，每收到一个包递增1, 全局唯一 */
+
+
+/* 2012-08-09 LiJia add, 为了防止因某个工作线程死循环，造成无法正确处理及转发数据包，创建此线程，
+   默认不会分配给此线程任何数据包，只有当某个线程队列已满时，才会发给此线程，
+   而且此线程只负责回复特殊设备的keepalive包，及转发包，不做应用层协议处理.
+*/
+struct thread_node_new *G_RESERVED_THREAD;
+
+int ipv4_entry(struct streaminfo_private*pfstream, 
+		void *a_packet, int thread_num, unsigned char routedir);
+int ipv6_entry(struct streaminfo_private *pfstream, 
+		void *a_packet, int thread_num, unsigned char routedir);
+int gdev_keepalive(u_char *data, int len, int thread_id, int pro_type);
+
+volatile int queue_full_flag[MAX_THREAD_NUM];
+
+/* 2012-08-09 LiJia add,
+   用于检测缓存队列是否已满，并记录日志.
+*/
+void queue_full_detect(FILE *queue_log_fp)
+{	
+	int i;
+	char time_now_str[32];
+
+	if(NULL == queue_log_fp)
+	{
+		return;
+	}
+	
+	timet_to_str(g_CurrentTime, time_now_str, 32);
+	
+	for(i = 0; i < g_packetio_threadnum; i++)
+	{
+		if(queue_full_flag[i] > 0)
+		{
+			fprintf(queue_log_fp, "%s: Thread-%d queue full!\n", time_now_str, i);
+			queue_full_flag[i] = 0;
+		}
+	}
+
+	return;
+}
+
+struct data_node *add_new_data_pcap (struct thread_node_new *a_thread, char *data,int datalen,unsigned char dir)
+{
+    	struct data_node *a_data;
+#ifdef TEST_DEAL_TIME 
+    	struct timeval tv;
+#endif    	
+
+	/* 2012-08-09 LiJia add, 增加最大缓存包数限制
+		如果某线程队列已满，则把队列满标志设为1，用于记录日志，
+		同时把数据包分配给保留线程处理.
+	*/
+	if(a_thread->data_num > g_queue_max_num)
+	{
+#if 0 /* 2013-02-04 lijia modify for debug */
+		queue_full_flag[a_thread->thread_num] = 1;
+
+		/* 并联模式下，标记错误后，直接返回 */
+		if(G_NET_CONNECTION_MODE & __NET_CONN_PARALLEL)
+		{
+			return NULL;
+		}
+
+		if(G_RESERVED_THREAD->data_num > 50000)
+		{
+			return NULL;
+		}
+
+		a_thread = G_RESERVED_THREAD;
+#else
+		usleep(1000 * 10);
+#endif
+	}
+	a_data = (struct data_node*)malloc(sizeof(struct data_node));
+	if(!a_data){
+		printf("%s:%d:no mem!\n", __FILE__, __LINE__);
+		exit(1);
+		return a_data;
+	}
+	memset (a_data, 0, sizeof(struct data_node));
+    	a_data->data = (unsigned char *)data;
+	a_data->dir = dir;
+	a_data->datalen=datalen;
+	a_data->packet_num = G_RCV_PKT_NUM++;
+
+#ifdef TEST_DEAL_TIME 
+	gettimeofday(&tv, 0);
+        a_data->begintime = tv.tv_sec* 1000*1000 + tv.tv_usec;
+#endif
+#ifdef MULTITHREAD
+
+        pthread_mutex_lock (&a_thread->mutex);
+        {
+#endif 
+	if (a_thread->data_queue == NULL)
+  	{
+      		a_thread->data_queue = a_data;
+      		a_thread->oldest_data = a_thread->data_queue;;
+  	}
+    	else
+  	{
+      		a_data->next = a_thread->data_queue;
+      		a_thread->data_queue->prev = a_data;
+      		//a_data->prev_time = a_thread->data_queue;
+      		//a_thread->data_queue->next_time = a_data;
+      		a_thread->data_queue = a_data;
+  	}
+  	
+	a_thread->data_num++;
+	a_thread->new_data = 1;
+	pthread_cond_signal (&(a_thread->cond));
+#ifdef MULTITHREAD	  
+	pthread_mutex_unlock (&a_thread->mutex);
+	}
+#endif
+
+	return a_data;
+}
+
+void free_data_pcap (struct thread_node_new *a_thread)
+{
+    struct data_node *oldest_data = NULL;
+
+    oldest_data = a_thread->oldest_data;
+
+    if (oldest_data)
+      {
+	  if (a_thread->data_queue == oldest_data)
+	    {
+		a_thread->data_queue = NULL;
+		a_thread->oldest_data = NULL;
+	    }
+	  else
+	    {
+		if(oldest_data->prev != NULL)
+		{
+		 a_thread->oldest_data = oldest_data->prev;
+		}
+                else
+		{
+			//	add by yzh for debug, 20031204
+			//FILE *pFile = fopen("err.txt","a");
+			//time_t t;
+			//char buf[256];
+	    		//time(&t);
+		   	//CTIME(&t, buf, 256);
+			//fprintf(pFile,"ERROR %s: oldest_data->next_time == NULL\n",buf);
+			//fclose(pFile);
+		
+			printf("free_data_pcap ERROR : oldest_data->next_time == NULL\n");
+			exit(-1);
+		}
+	    }
+	free(oldest_data->data);		//	add by yzh, 20030218
+	free (oldest_data);    	  
+	  a_thread->data_num--;
+	  if(a_thread->data_num == 0)
+    	  	a_thread->new_data = 0;
+      }
+
+}
+
+
+
+/*Thread hander. If the data queue is finished, as well as no new data comes, it will
+* sleep*/
+void thread_handler_pcap(struct thread_node_new *a_thread)
+{
+	unsigned char *data;
+	struct data_node* oldest_data;
+	int need_free;
+	unsigned int sendlen=0;
+	int ret=DROP;
+#ifdef TEST_DEAL_TIME	
+	struct timeval tv;
+	unsigned long delaytime,dealtime,endtime,begintime;
+#endif
+	unsigned char dir;
+	struct sendpacket_ethernet_hdr *eth_hdr;
+	unsigned short ether_type;
+	
+#ifdef MULTITHREAD
+	while (1)
+	{
+		pthread_mutex_lock (&a_thread->mutex);
+		
+		while (!a_thread->new_data && a_thread->data_num == 0)
+		{
+		//	usleep(10);
+			pthread_cond_wait (&(a_thread->cond), &a_thread->mutex);
+		}
+		
+		pthread_mutex_unlock (&a_thread->mutex);
+#endif	 
+		need_free = 0;
+		oldest_data = a_thread->oldest_data;
+		if(oldest_data!=NULL)
+		{
+			data = oldest_data->data;/*out the queue*/
+			a_thread->packet_num = oldest_data->packet_num;
+			sendlen=oldest_data->datalen;
+			dir = (unsigned char)oldest_data->dir;
+#ifdef TEST_DEAL_TIME
+			gettimeofday(&tv, 0);
+			begintime=oldest_data->begintime;
+      			delaytime = tv.tv_sec* 1000*1000 + tv.tv_usec;
+#endif 
+		}
+
+	if(G_NET_CONNECTION_MODE & __NET_CONN_LINK_LAYER)
+	{
+		memcpy(G_PKT_MAC_TABLE[a_thread->thread_num].src_mac, data+6, 6);
+		if(NET_CONN_SERIAL_2CARD == G_NET_CONNECTION_MODE) /* 双网卡串联模式才需要记录目标MAC, 其他模式的目标MAC即本机MAC */
+		{
+			memcpy(G_PKT_MAC_TABLE[a_thread->thread_num].dst_mac, data, 6);
+		}
+		G_PKT_MAC_TABLE[a_thread->thread_num].rcv_dir = dir; /* 记录本次收包的方向 */
+	}
+	
+	eth_hdr = (struct sendpacket_ethernet_hdr *)data;
+	ether_type = ntohs(eth_hdr->ether_type);
+
+	/* 2012-08-13 LiJia add, 特殊设备串联模式下，非ARP协议的广播包，直接丢弃! */
+	if((G_NET_CONNECTION_MODE & __NET_CONN_GDEV)
+	 && (memcmp(G_BROADCAST_ADDR, eth_hdr->ether_dhost, 6) == 0)
+	 && (ether_type != ETHERTYPE_ARP))
+	{
+		goto free_pkt;
+	}
+	
+	switch(ether_type)
+	{
+		case ETHERTYPE_IP:
+			ret = ipv4_entry(NULL, (struct ip *)(data+linkoffset), a_thread->thread_num, dir);
+		break;
+
+		case ETHERTYPE_IPv6:
+			ret = ipv6_entry(NULL, (struct simple_ip6_hdr * )(data+linkoffset), a_thread->thread_num, dir);
+		break;
+
+		case ETHERTYPE_ARP:
+			if((G_NET_CONNECTION_MODE & __NET_CONN_GDEV)
+			 && (gdev_keepalive(data, sendlen, a_thread->thread_num, 2) > 0)) /* 特殊设备保活包 */
+			{
+				goto free_pkt;
+			}
+			else
+			{
+				if(NET_CONN_SERIAL_2CARD == G_NET_CONNECTION_MODE)
+				{
+				   ret = PASS;
+				   break;
+				}
+				goto free_pkt;
+			}
+		break;
+
+		default:
+			/* 串联模式下，捕到其他未知的包，需要转发(回注) */
+			if(G_NET_CONNECTION_MODE & __NET_CONN_SERIAL)
+			{
+				forwarding_packet_low_level(dir, a_thread->thread_num, data, sendlen);
+			}
+
+			/* 并联模式下，捕到未知的包，直接丢弃 */
+			goto free_pkt;
+		break;
+	}
+	
+	if(PASS == ret)
+	{
+		forwarding_packet_low_level(dir, a_thread->thread_num, data, sendlen);
+	}
+
+
+free_pkt:
+	g_SysInputInfo[a_thread->thread_num][PKT_ETHERNET]++;
+
+
+#ifdef MULTITHREAD
+			pthread_mutex_lock (&a_thread->mutex);
+			free_data_pcap(a_thread);
+			pthread_mutex_unlock(&a_thread->mutex);
+			continue;
+#else
+			free_data_pcap(a_thread);
+			return;
+#endif
+
+	
+#ifdef MULTITHREAD	  
+	}
+	printf("\nThread %lu exit\n", a_thread->thread_id);
+#endif      
+}
+
+
+int mk_thread_hash_index (u_int saddr, u_int daddr)
+{
+/**modify thread dispatch strategy
+   by zzb 2005/12/27
+*/
+	unsigned int addr;
+	unsigned int add;
+	unsigned int ixor;
+	unsigned char index = 0;
+
+	if(saddr>daddr)
+	{
+		ixor = saddr % 911; 
+		add = daddr % 439;
+	}
+	else
+	{
+		ixor = daddr % 911;
+		add = saddr % 439;
+	}
+	//add by lqy 20071025
+	//当线程个数不等于4个时，应当如何分发?
+	if(1==g_packetio_threadnum)
+		return 0;
+	if(4!=g_packetio_threadnum)
+	{
+	  index=(ixor +add)%g_packetio_threadnum;
+	  return index;
+	}
+	//end add 	
+	if(1!=g_packetio_threadnum)
+	{
+	addr = add;
+	while(addr)
+	{
+		index += (addr & 0x3);
+		addr = addr >> 2;
+	}
+
+	addr = ixor;
+	while(addr)
+	{
+		index += (addr & 0x3);
+		addr = addr >> 3;
+	}
+	add = index + (ixor ^ seed);
+	index = 0;
+	while(add)
+	{
+		index ^= (add & 0x3);
+		add = add >> 5;
+	}
+	return index;
+	}
+	else
+		return 0;
+	
+	
+//    	return (((u_int) (saddr )) % g_packetio_threadnum);
+}
+
+
+inline struct thread_node_new *find_thread (u_int saddr, u_int daddr)
+{
+    	int hash_index;
+    	hash_index = mk_thread_hash_index(saddr, daddr);
+    	thread_table_new[hash_index]->hash_index=hash_index;
+    	return thread_table_new[hash_index];
+}
+
+
+void pcap_hand(u_char * par, struct pcap_pkthdr *hdr, u_char *data)
+{
+	struct thread_node_new *a_thread;
+	struct ip *ipv4_hdr;
+	struct ip6_hdr *ipv6_hdr;
+	unsigned int dispatch_arg1, dispatch_arg2;
+	unsigned char *new_data;
+	unsigned char dir;
+	struct sendpacket_ethernet_hdr *eth_hdr;
+	unsigned short ether_type;
+
+	eth_hdr = (struct sendpacket_ethernet_hdr *)data;
+	ether_type = ntohs(eth_hdr->ether_type);
+
+	
+	if(NET_CONN_SERIAL_GDEV == G_NET_CONNECTION_MODE)
+	{
+		if(memcmp(data, sendto_gdev_card_mac, 6) != 0)
+		{
+			if(memcmp(data, G_BROADCAST_ADDR, 6) != 0)
+			{
+				return; /* 本机收到的非广播MAC，丢弃 */
+			}
+			else 
+			{
+				if(ETHERTYPE_ARP != ether_type)
+				{
+					return; /* 如果是广播但不是ARP，丢弃 */
+				}
+
+				/* 是arp， 继续处理 */
+			}
+		}
+		/* 是发给本机的MAC，继续处理 */
+	}
+
+	/* 根据各协议层地址计算HASH，分配给每个处理线程 */
+	switch(ether_type)
+	{
+		case ETHERTYPE_IP:
+			ipv4_hdr = (struct ip *)(data+linkoffset);
+			dispatch_arg1 = ipv4_hdr->ip_src.s_addr;
+			dispatch_arg2 = ipv4_hdr->ip_dst.s_addr;
+		break;
+
+		case ETHERTYPE_IPv6:
+			ipv6_hdr = (struct ip6_hdr *)(data+linkoffset);
+			dispatch_arg1 = ipv6_hdr->ip6_src.s6_addr32[3];
+			dispatch_arg2 = ipv6_hdr->ip6_dst.s6_addr32[3];
+		break;
+
+		default: /* 其他协议类型使用MAC地址计算HASH  */
+			dispatch_arg1 = *((unsigned int *)data);
+			dispatch_arg2 = *((unsigned int *)(data + 6));
+		break;
+	}
+    
+	new_data=(u_char*)malloc(hdr->len);
+	if(!new_data)
+	{
+		printf("no mem!\n");
+		exit(0);
+	}
+	memcpy(new_data, data, hdr->len);
+	
+	a_thread = find_thread (dispatch_arg1, dispatch_arg2);
+	if(!a_thread)
+	{
+		goto err;
+	}
+
+	if(NET_CONN_SERIAL_2CARD == G_NET_CONNECTION_MODE)
+	{
+		dir = *par;
+	}
+	else
+	{
+		if(data[11] & 0x01) /* 源MAC的最后一位表示方向 */
+		{
+			dir = 0x80; /* 系统内部使用最高位表示方向 */
+		}
+		else
+		{
+			dir = 0x00;
+		}
+	}
+
+	if(!add_new_data_pcap(a_thread, (char *)new_data, hdr->len, dir))
+	{
+		goto err;
+	}
+
+	return;
+	
+err:
+	free(new_data);
+	return;
+}
+
+
+int thread_init_new(void)
+{
+	int i;
+   	pthread_attr_t thread_attr;
+	struct sched_param param;
+	int thread_num = g_packetio_threadnum;
+
+	if(G_NET_CONNECTION_MODE & __NET_CONN_SERIAL)
+	{
+		thread_num++; /* 多分配一块空间给保留线程 */
+	}
+	
+	pthread_attr_init(&thread_attr);
+	pthread_attr_getschedparam(&thread_attr, &param);
+	param.sched_priority = 15;
+	pthread_attr_setschedpolicy(&thread_attr, SCHED_RR);	
+	//mallopt(M_MMAP_MAX, 0);
+	thread_table_new = (struct thread_node_new **)malloc (thread_num * sizeof (char *));
+	memset (thread_table_new, 0, thread_num * sizeof (char *));
+    
+	threads_pool_new =  (struct thread_node_new *)malloc ((thread_num) * sizeof (struct thread_node_new));
+	memset(threads_pool_new, 0, thread_num * sizeof(struct thread_node_new));
+
+	if(G_NET_CONNECTION_MODE & __NET_CONN_SERIAL)
+	{
+		G_RESERVED_THREAD = (struct thread_node_new *)malloc(sizeof(struct thread_node_new));
+		memset(G_RESERVED_THREAD, 0, sizeof(struct thread_node_new));
+	}
+    
+	for (i = 0; i < thread_num; i++)
+   	{			
+#ifdef MULTITHREAD	  
+      		pthread_cond_init (&threads_pool_new[i].cond, NULL);
+      		pthread_mutex_init (&threads_pool_new[i].mutex, NULL);
+      		pthread_mutex_init (&threads_pool_new[i].free_mutex, NULL);
+#endif	  
+
+		threads_pool_new[i].thread_num = i;	//zzb 2006/04/25
+		seed = rand();
+		//init_block(&threads_pool[i]);
+		//id2pt[threads_pool[i].thread_id % g_packetio_threadnum] = &threads_pool[i];
+		thread_table_new[i] = &threads_pool_new[i]; 
+  	}
+
+	if(G_NET_CONNECTION_MODE & __NET_CONN_SERIAL)
+	{
+  		G_RESERVED_THREAD = &threads_pool_new[thread_num-1];
+	}
+	
+	return 1;
+}
+
+#ifdef __cplusplus
+}
+#endif

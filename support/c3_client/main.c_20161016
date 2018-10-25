@@ -1,0 +1,161 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+ #include <sys/socket.h>
+       #include <netinet/in.h>
+       #include <arpa/inet.h>
+#include "grule.h"
+
+#define CCC_MAX_SIZE 16
+int grule_service()
+{
+	grule_hdl_t handle;
+	//const char *ccc_list = "192.168.0.162:15000"; //it should be inited.
+	const char *ccc_list = "192.168.1.161:10005"; //it should be inited.
+	size_t      ccc_num = 8; 
+	size_t      ccc_index = 0;
+	int         state;
+	uint8_t     auth_data[8]; // it should be inited
+	int         ret;
+	size_t      auth_err_num;
+	size_t      i;
+
+	grule_t          rule_list[16];
+	grule_result_t   rst_list[16];
+	uint64_t         rule_num;
+
+	#define SERVICE_STATE_IDLE         1
+	#define SERVICE_STATE_FIRSTCONNECT 2
+	#define SERVICE_STATE_CONNECTED    3
+	//#define SERVICE_STATE_
+
+	state        = SERVICE_STATE_IDLE;
+	auth_err_num = 0;
+	handle       = NULL;
+
+	handle = grule_open();
+
+	if(handle == NULL){
+		fprintf(stderr, "grule lib error\n");
+		abort();
+	}
+
+	grule_opt_set(handle, GRULE_SOL_PROTO, GRULE_TYPE_AUTH, auth_data, sizeof(auth_data));
+
+	ret = grule_connect(handle, ccc_list);
+
+	if(ret != 0){
+		fprintf(stderr, "addr error\n");
+		abort();
+	}
+
+	while(1){
+
+			switch(state){
+				case SERVICE_STATE_IDLE:
+					/*handle = grule_open();
+					if(handle == NULL){
+						fprintf(stderr, "grule lib error\n");
+						abort();
+					}
+					grule_opt_set(handle, GRULE_SOL_PROTO, GRULE_TYPE_AUTH, auth_data, sizeof(auth_data));
+					ret = grule_connect(handle, ccc_list);
+					ccc_index = (ccc_index + 1) % ccc_num;*/
+					while(grule_app_status(handle) != GRULE_APP_STATUS_CONNECTED){
+						sleep(1);
+					}
+
+					/*if(ret == 0){
+						state = SERVICE_STATE_FIRSTCONNECT;
+						auth_err_num = 0;
+						continue;
+					}
+					
+					if(grule_errno(handle) == GRULE_ERRNO_AUTH){
+						auth_err_num++;
+						if(auth_err_num >= ccc_num){
+							fprintf(stderr, "auth error\n");
+							abort();
+						}
+						//  stop the program if trying many times
+					}else{
+						fprintf(stderr, "connect error: %s\n", grule_error_str(grule_errno(handle)));
+					}*/
+					//goto _error;
+					state = SERVICE_STATE_FIRSTCONNECT;
+					break;
+				case SERVICE_STATE_FIRSTCONNECT:
+					// if having durable rules, send all of them.
+					state = SERVICE_STATE_CONNECTED;
+					break;
+					//break;
+				case SERVICE_STATE_CONNECTED:
+					//
+					while(1){
+						// has rule?????
+						
+						memset(rule_list, 0, sizeof(rule_list));
+						// init
+						// set rule;
+						// sending
+						rule_list[0].rule_id = 1;
+						rule_list[0].srv_type = 5;
+						rule_list[0].rule_scope = 1000;
+						rule_list[0].big_type = GRULE_BIG_TYPE_SIMPLE4;
+						rule_list[0].durable = 0;
+						rule_list[0].action = 1;
+						rule_list[0].rule_type.grule_type = 0;
+						rule_list[0].rule_type.sip_flag  = 1;
+						//rule_list[0]. = ;
+						rule_list[0].s4.sip = inet_addr("1.2.3.4");
+							
+						ret = grule_send(handle, rule_list, 1, 0);
+						if(ret < 0){
+							fprintf(stderr, "sending error: %s\n", grule_error_str(grule_errno(handle)));
+							goto _error;
+						}
+
+						//while(1){
+							sleep(1);
+						//}
+
+						/*ret = grule_recv(handle, rst_list, rule_num, 0);
+						if(ret != rule_num){
+							fprintf(stderr, "recv error: %s\n", grule_error_str(grule_errno(handle)));
+							goto _error;
+						}
+
+						for(i = 0; i < rule_num; i++){
+							if(rst_list[i].result != GRULE_RESP_OK && rst_list[i].result != GRULE_RESP_WHITELIST){ // rule is wrong.
+								fprintf(stderr, "rulerror: %s\n", grule_bad_results_str(&rst_list[i]));
+								abort();// fatal error.
+							}
+						}*/
+					}
+					break;
+				default:
+					fprintf(stderr, "bad state: %d\n", state);
+					abort();
+					break;
+			}	
+		_noerror:
+			continue;
+		_error:
+			if(handle != NULL){
+				//grule_close(handle);
+			}
+			sleep(2);
+			state = SERVICE_STATE_IDLE;
+
+	}
+}
+
+
+
+__attribute__((weak)) int main()
+{
+	grule_service();	
+}
+
+
