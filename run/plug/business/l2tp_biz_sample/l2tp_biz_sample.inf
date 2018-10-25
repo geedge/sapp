@@ -1,0 +1,10 @@
+[PLUGINFO]
+PLUGNAME=l2tp_sample
+SO_PATH=./plug/business/l2tp_biz_sample/l2tp_biz_sample.so
+INIT_FUNC=l2tp_sample_init
+DESTROY_FUNC=l2tp_sample_destroy
+
+[L2TP]
+FUNC_FLAG=ALL
+FUNC_NAME=l2tp_sample_entry
+

@@ -1,0 +1,25 @@
+CC	= gcc
+CFLAGS	= -g -Wall -fPIC 
+CFLAGS  += $(OPTFLAGS)
+OBJECTS =  test_connect.o 
+MODULES	=  
+TARGET	= test_app.so
+
+INCS	= -I ../../include 
+INCS	+= -I../../include/stream_inc/
+
+
+.c.o:  
+	$(CC) -c -o $@ $(CFLAGS) -I. $(INCS) $<
+
+.PHONY: all clean 
+all: $(TARGET)
+$(TARGET):$(OBJECTS)
+	$(CC) -o $(TARGET) -shared -fPIC $(CFLAGS) $(OBJECTS) $(MODULES)
+	cp $@ ../plug/business/test_app/
+	
+test_connect.o: test_connect.c
+
+clean:
+	rm -f $(TARGET)	$(OBJECTS) 
+

@@ -1,0 +1,14 @@
+#use_which 	PARA_NAME		DELIM		MESA_NAME			ONLINE_NAME					USER_ARG
+M		conf_file_name		=		./conf/wangyan_send_pkt.conf	/home/ningsi/new_machine.conf	
+N		vxlan_smac		:		vxlan_smac			SRC_OUT_MAC					-
+N		vxlan_dmac		:		vxlan_dmac			DST_OUT_MAC					:
+N		vxlan_sip		:		vxlan_sip			115_IP
+N		vxlan_dip		:		vxlan_dip			GIP
+M		vxlan_sport		=		vxlan_sport			--no
+M		vxlan_dport		=		vxlan_dport			--no
+N		vxlan_link_id		:		vxlan_link_id			LINK_ID_VALUE
+N		vxlan_vlxn_num		:		vxlan_vlxn_num			no
+N		vxlan_inner_layer2_type :		vxlan_inner_layer2_type		LINK_TYPE
+M		vxlan_trans_dir		=		vxlan_trans_dir			C_DIR						CorI
+N		vxlan_inner_smac	:		vxlan_inner_smac		SRC_IN_MAC					:
+N		vxlan_inner_dmac	:		vxlan_inner_dmac		DST_IN_MAC					:

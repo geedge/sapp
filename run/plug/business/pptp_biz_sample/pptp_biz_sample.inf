@@ -1,0 +1,10 @@
+[PLUGINFO]
+PLUGNAME=pptp_sample
+SO_PATH=./plug/business/pptp_biz_sample/pptp_biz_sample.so
+INIT_FUNC=pptp_sample_init
+DESTROY_FUNC=pptp_sample_destroy
+
+[PPTP]
+FUNC_FLAG=ALL
+FUNC_NAME=pptp_sample_entry
+

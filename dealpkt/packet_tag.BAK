@@ -1,0 +1,273 @@
+/*
+	2012-12-25, for 863用户标签设备.
+*/
+#if 0 /* add for 863 */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef __FAVOR_BSD
+#define __FAVOR_BSD 1
+#endif
+
+#include <netinet/ip.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include "stream.h"
+#include "stream_manage.h"
+#include "deal_ipv6.h"
+#include "packet_io.h"
+#include "filter_std.h"
+#include "sendpacket.h"
+#include "sendpacket_internal.h"
+#include "capture_internal.h"
+#include "Profile.h"
+
+
+#define PACKET_TAG_CONFIG_FILE	"./conf/863.conf"
+#define TCP_SYN_TAG_TYPE	(0xFF)	
+#define TCP_SYN_TAG_LEN		(8)  /* 6字节MAC+1字节类型+1字节长度 */
+#define TCP_HDR_MAX_LEN		(60) /* TCP头部最大长度 */
+
+#define PAKCET_TAG_MAGIC	(0x8633)
+
+static char packet_tag_device[128];
+static unsigned char packet_tag_dir;
+static int packet_tag_switch = 0;
+
+extern sendpacketTool g_SendPacketTools[MAX_THREAD_NUM+1];
+extern char g_nids_device[128];
+extern char g_nids_device2[128];
+
+#ifdef CAPTURE_MODE_PFRING
+extern int pfring_get_sendbuf(sendpacketTool *pTool);
+extern void pfring_release_sendbuf(sendpacketTool *pTool);
+#endif
+
+
+/* 终端用户的MAC在网络中传输时做一些简单的加密处理，
+   算法: MAC地址的每两个字节 ^ 目的IP地址的低16位 ^ MAGIC_NUM
+*/
+static void packet_tag_encry(u_int8_t *clear_data, u_int8_t *en_data, 
+									struct streaminfo *stream)
+{
+	int i;
+	u_int16_t encry = (u_int16_t)stream->addr.paddr->daddr ^ PAKCET_TAG_MAGIC;
+	u_int16_t *pc = (u_int16_t *)clear_data;
+	u_int16_t *pe = (u_int16_t *)en_data;
+
+	for(i = 0; i < 3; i++, pc++,pe++)
+	{
+		*pe = *pc ^ encry;
+	}
+
+	return;
+}
+
+/* MAC地址解密 */
+static void packet_tag_decry(u_int8_t *clear_data, u_int8_t *en_data,
+									struct streaminfo *stream)
+{
+	int i;
+	u_int16_t decry = (u_int16_t)stream->addr.paddr->daddr ^ PAKCET_TAG_MAGIC;
+	u_int16_t *pc = (u_int16_t *)clear_data;
+	u_int16_t *pe = (u_int16_t *)en_data;
+
+	for(i = 0; i < 3; i++, pc++,pe++)
+	{
+		*pc = *pe ^ decry;
+	}
+
+#if 1	
+    printf("decry mac: ");
+    for(i = 0;i < 6; i++)
+    {
+        printf("%02x-", clear_data[i]);
+    }
+    printf("\n");
+#endif
+
+	return;
+}
+
+/* 用于应用层插件获取本TCP流中对应的内网客户端真实源MAC 
+    返回值:
+    NULL: 没有获得终端用户mac;
+    非空: 指向MAC地址数组首地址的指针，数据有效长度为6.
+*/
+const u_int8_t *get_packet_tag(struct streaminfo *stream)
+{
+    if(0 == stream->__inside_tag_flag)
+    {
+        return NULL;
+    }
+    
+	return (const u_int8_t *)stream->__inside_src_mac;
+}
+
+
+/* 设备获取用户TAG, 解密后存于stream中 */
+int packet_tag_probe(struct streaminfo *stream, struct mesa_tcp_hdr *this_tcphdr)
+{
+	u_int8_t *option = (u_int8_t *)this_tcphdr + 20; /* TCP标准头部长度=20 */
+	u_int16_t tcp_hdr_len = 4 * this_tcphdr->doff;
+	u_int16_t option_len;
+
+	tcp_hdr_len -= 20; /* 减去TCP标准头部长度20 */
+	
+	if(tcp_hdr_len < TCP_SYN_TAG_LEN)
+	{
+		return -1;
+	}
+
+	while(tcp_hdr_len > 0)
+	{
+		switch(*option)
+		{
+			case 1:
+				option_len = 1;
+			break;
+
+			case TCP_SYN_TAG_TYPE:
+				option_len = *(option+1);
+				if(TCP_SYN_TAG_LEN == option_len)
+				{
+					packet_tag_decry(stream->__inside_src_mac, option+2, stream);
+					stream->__inside_tag_flag = 1;
+					return 0;
+				}
+			break;
+
+			default:
+				option_len = *(option+1);
+		}
+
+		option += option_len;
+		tcp_hdr_len -= option_len;
+	}
+
+	return -1;
+}
+
+/* 对于每个TCP-SYN包，追加选项，存储客户端MAC地址 */
+int tcp_syn_append_tag(struct streamindex *pstream,
+		struct mesa_tcp_hdr *this_tcphdr, struct ip *rawippkt,int iplen,int thread_num)
+{
+    int ret = DROP;
+	char pkt_buf[MTU_MAX];
+	sendpacketTool *pTool;
+	unsigned char tag_type = TCP_SYN_TAG_TYPE;
+	unsigned char tag_len = TCP_SYN_TAG_LEN;
+	unsigned char route_dir;
+
+	if(0 == packet_tag_switch)
+	{
+		return PASS;
+	}
+
+	if(this_tcphdr->doff*4 + TCP_SYN_TAG_LEN > 60)
+	{
+		return PASS;
+	}
+	
+	if(iplen + SENDPACKET_ETH_H > MTU_MAX)
+	{
+		return PASS;
+	}
+	
+	route_dir = pstream->stream.routedir & 0x80;
+	if(packet_tag_dir != route_dir)
+	{
+		return PASS;
+	}
+
+	pTool = &g_SendPacketTools[thread_num];
+
+#ifdef CAPTURE_MODE_PFRING
+    if(pfring_get_sendbuf(pTool) < 0)
+    {
+        return PASS;
+    }
+#endif
+
+	memcpy(pTool->send_buf, rawippkt, iplen);
+	/* 直接把追加的选项内容，添加到原始包的最后 */
+	memcpy(pTool->send_buf+iplen, &tag_type, 1);
+	memcpy(pTool->send_buf+iplen+1, &tag_len, 1);
+	memcpy(pTool->send_buf+iplen+2, G_PKT_MAC_TABLE[thread_num].src_mac, 6);
+	packet_tag_encry(pTool->send_buf+iplen+2, pTool->send_buf+iplen+2, &pstream->stream);
+
+    rawippkt = (struct ip *)pTool->send_buf;
+    this_tcphdr = (struct mesa_tcp_hdr *)((char *)rawippkt + 4*rawippkt->ip_hl);
+    
+    /* 扩大8个字节 */
+    rawippkt->ip_len = htons(ntohs(rawippkt->ip_len) + TCP_SYN_TAG_LEN);
+	this_tcphdr->doff += 2; 
+
+    sendpacket_do_checksum(pTool->send_buf, IPPROTO_IP, SENDPACKET_IP_H);
+	sendpacket_do_checksum(pTool->send_buf, IPPROTO_TCP, this_tcphdr->doff*4);
+	
+	pTool->send_buf_location = SENDBUF_LOCATION_TOOL;
+	
+	if(sendpacket_write_new(pTool, iplen+8, route_dir) < 0) /* 追加TAG失败 */
+	{
+		ret = PASS;;
+	}
+
+#ifdef CAPTURE_MODE_PFRING
+    pfring_release_sendbuf(pTool);
+#endif
+
+	return ret; /* 原始SYN包丢弃 */
+}
+
+
+int packet_tag_init(void)
+{
+	Profile profile_tag(PACKET_TAG_CONFIG_FILE);
+
+	/* 只适用于串行模式 */
+	if(G_NET_CONNECTION_MODE != NET_CONN_SERIAL_2CARD)
+	{
+		printf("packet tag module must running in serial mode!\n");
+		return -1;
+	}
+	
+	packet_tag_switch = profile_tag.fn_iReadInt("Module","tcp_syn_tag_switch", 0);
+	profile_tag.fn_iReadString("Module", "tag_device", "", packet_tag_device, 128);
+
+	if(packet_tag_device[0] = '\0')
+	{
+		printf("Please assign tag_device in 863.conf!\n");
+		return -1;
+	}
+
+	if(strcasecmp(packet_tag_device, g_nids_device)
+	&& strcasecmp(packet_tag_device, g_nids_device2))
+	{
+		printf("Invalid tag_device, must same as pcapdevice or pcapdevice2 in main.conf!\n");
+		return -1;
+	}
+
+	if(strcasecmp(packet_tag_device, g_nids_device) == 0)
+	{
+		packet_tag_dir = 0x0; /* 第一块网卡方向为0 */
+	}
+	else
+	{
+		packet_tag_dir = 0x80;
+	}
+	
+	return 0;
+}
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+

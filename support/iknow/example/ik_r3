@@ -1,0 +1,9 @@
+#!/bin/sh
+
+while [ 1 ]; do
+	ulimit -c unlimited
+	./iknow_server
+	echo program crashed, restart at `date +"%w %Y/%m/%d, %H:%M:%S"` >> RESTART.log
+done
+
+

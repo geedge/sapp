@@ -1,0 +1,3 @@
+killall r3 sapp
+./r3 &> /dev/null &
+#./kill_sapp_by_mem.sh &> /dev/null &

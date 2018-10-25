@@ -1,0 +1,13 @@
+[PLUGINFO]
+PLUGNAME=L2TP
+SO_PATH=./plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.so
+INIT_FUNC=l2tp_protocol_init
+DESTROY_FUNC=l2tp_protocol_destroy
+GETPLUGID_FUNC=l2tp_protocol_get_plugid
+FLAGCHANGE_FUNC=l2tp_protocol_flag_change
+FLAGSTATE_FUNC=l2tp_protocol_funstat
+
+[UDP]
+FUNC_FLAG=ALL
+FUNC_NAME=l2tp_protocol_entry
+

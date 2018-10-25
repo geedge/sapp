@@ -1,0 +1,51 @@
+
+*********************** [41msysinfo exactly[0m *************************
+RCV-PKT       total_pkt    total_len          pps          Bps
+Ethernet             15         1470            1           98
+IPv4                 15         1260            1           84
+IPv6                  0            0            0            0
+TCP                   0            0            0            0
+UDP                   0            0            0            0
+Unknown               0            0            0            0
+
+***************************************************************
+SND-PKT       total_pkt    total_len          pps          Bps
+TCP_RST               0            0            0            0
+TCP_S/A               0            0            0            0
+UDP                   0            0            0            0
+
+TUNNEL        total_pkt    total_len
+6over4                0            0
+teredo                0            0
+
+DROP          total_pkt
+app                   0
+lib                   0
+
+
+------------------------------- TCP statistics detail -----------------------------
+    |-----------Current---------| |------Realtime-----| |--------From-of-startup---------|
+tid link-syn link-data link-nouse link-new/s link-del/s stream-num reset-num hash-list-max
+  0        0         0          0          0          0          0         0             0
+
+-------------------------- UDP statistics detail ------------------------
+    |-----------Current---------| |------Realtime-----| |--From-of-startup--|
+tid link-one  link-two  link-more link-new/s link-del/s stream-num reset-num
+  0        0         0          0          0          0          0         0
+*****************************************************************
+
+################# [41msysinfo humanly[0m --- is same as above! #########
+RCV-PKT       total_pkt    total_len          pps          bps
+Ethernet             15        1.44K            1          784
+IPv4                 15        1.23K            1          672
+IPv6                  0            0            0            0
+TCP                   0            0            0            0
+UDP                   0            0            0            0
+Unknown               0            0            0            0
+#################################################################
+SND-PKT       total_pkt    total_len          pps          bps
+TCP_RST               0            0            0            0
+TCP_S/A               0            0            0            0
+UDP                   0            0            0            0
+#################################################################
+

@@ -1,0 +1,10 @@
+[PLUGINFO]
+PLUGNAME=ipsec_sample
+SO_PATH=./plug/business/ipsec_biz_sample/ipsec_biz_sample.so
+INIT_FUNC=ipsec_sample_init
+DESTROY_FUNC=ipsec_sample_destroy
+
+[IPSEC]
+FUNC_FLAG=ALL
+FUNC_NAME=ipsec_sample_entry
+

@@ -1,0 +1,13 @@
+[PLUGINFO]
+PLUGNAME=IPSEC
+SO_PATH=./plug/protocol/isakmp_protocol_plug/isakmp_protocol_plug.so
+INIT_FUNC=isakmp_protocol_init
+DESTROY_FUNC=isakmp_protocol_destroy
+GETPLUGID_FUNC=isakmp_protocol_get_plugid
+FLAGCHANGE_FUNC=isakmp_protocol_flag_change
+FLAGSTATE_FUNC=isakmp_protocol_funstat
+
+[UDP]
+FUNC_FLAG=ALL
+FUNC_NAME=isakmp_protocol_entry
+

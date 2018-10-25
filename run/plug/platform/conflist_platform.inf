@@ -1,0 +1,3 @@
+#./plug/platform/g_device_plug/g_device_plug.inf
+#./plug/platform/wangyan_keepalive_plug/wangyan_keepalive_plug.inf
+#./plug/platform/sapp_assistant/sapp_assistant.inf

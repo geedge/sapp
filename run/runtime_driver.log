@@ -1,0 +1,13 @@
+
+------------------------------ driver_to_platform delay status ---------------------------------
+Implication: 
+	10000, 40000, 70000 is CPU-Cycle range, the value below this is packet number.
+	AVG, MAX is CPU-Cycle statistics of processed packet.
+	For example, if CPU frequency is 2000MHz, CPU-Cycle is 2000, means delay is 1us.
+---------------------------------------- summary ------------------------------------------
+ range        10000        40000        70000       100000         more       AVG       MAX
+number            0            0            0            0            0       0.0         0
+--------------------------------------- per-thread ----------------------------------------
+     0            0            0            0            0            0       0.0         0
+===========================================================================================
+

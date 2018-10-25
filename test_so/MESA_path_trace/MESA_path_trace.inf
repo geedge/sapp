@@ -1,0 +1,9 @@
+[PLUGINFO]
+PLUGNAME=MESA_path_trace
+SO_PATH=./plug/business/MESA_path_trace/MESA_path_trace.so
+INIT_FUNC=CHAR_INIT
+
+[UDP]
+FUNC_FLAG=ALL
+FUNC_NAME=MESA_path_trace_entry
+

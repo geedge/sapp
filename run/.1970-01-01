@@ -1,0 +1,462 @@
+Thu Jan 1 08:00:00 1970, FATAL, plugin, dlopen ./plug/platform/heroes_manager/heroes_manager.so in ./plug/platform/heroes_manager/heroes_manager.inf error:./plug/platform/heroes_manager/heroes_manager.so: undefined symbol: g_iThreadNum
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/platform/streamid/streamid.inf load STREAM_INIT succ
+
+Thu Jan 1 08:00:00 1970, FATAL, STREAMID, project_req_register() error!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, ./plug/platform/streamid/streamid.so init error,don't load it
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_GETPLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load HTTP success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load MAIL success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load FETION success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load UDP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load QQ success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load YMSG success!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, dlopen ./plug/protocol/ftp_parse/ftp_parse.so in ./plug/protocol/ftp_parse/ftp_parse.inf error:./plug/protocol/ftp_parse/ftp_parse.so: undefined symbol: g_iThreadNum
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load TEST_APP_INIT succ
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, ./plug/business/test_app/test_app.inf has func:CHAR_DESTROY,but there is no in ./plug/business/test_app/test_app.so
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load UDP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load test_app success!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, dlopen ./plug/platform/heroes_manager/heroes_manager.so in ./plug/platform/heroes_manager/heroes_manager.inf error:./plug/platform/heroes_manager/heroes_manager.so: undefined symbol: g_iThreadNum
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/platform/streamid/streamid.inf load STREAM_INIT succ
+
+Thu Jan 1 08:00:00 1970, FATAL, STREAMID, project_req_register() error!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, ./plug/platform/streamid/streamid.so init error,don't load it
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_GETPLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load HTTP success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load MAIL success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load FETION success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load UDP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load QQ success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load YMSG success!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, dlopen ./plug/protocol/ftp_parse/ftp_parse.so in ./plug/protocol/ftp_parse/ftp_parse.inf error:./plug/protocol/ftp_parse/ftp_parse.so: undefined symbol: g_iThreadNum
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load TEST_APP_INIT succ
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, ./plug/business/test_app/test_app.inf has func:CHAR_DESTROY,but there is no in ./plug/business/test_app/test_app.so
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load UDP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load test_app success!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, dlopen ./plug/platform/heroes_manager/heroes_manager.so in ./plug/platform/heroes_manager/heroes_manager.inf error:./plug/platform/heroes_manager/heroes_manager.so: undefined symbol: g_iThreadNum
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/platform/streamid/streamid.inf load STREAM_INIT succ
+
+Thu Jan 1 08:00:00 1970, FATAL, STREAMID, project_req_register() error!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, ./plug/platform/streamid/streamid.so init error,don't load it
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_GETPLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load HTTP success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load MAIL success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load FETION success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load UDP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load QQ success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load YMSG success!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, dlopen ./plug/protocol/ftp_parse/ftp_parse.so in ./plug/protocol/ftp_parse/ftp_parse.inf error:./plug/protocol/ftp_parse/ftp_parse.so: undefined symbol: g_iThreadNum
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load TEST_APP_INIT succ
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, ./plug/business/test_app/test_app.inf has func:CHAR_DESTROY,but there is no in ./plug/business/test_app/test_app.so
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load UDP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load test_app success!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, dlopen ./plug/platform/heroes_manager/heroes_manager.so in ./plug/platform/heroes_manager/heroes_manager.inf error:./plug/platform/heroes_manager/heroes_manager.so: undefined symbol: g_iThreadNum
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/platform/streamid/streamid.inf load STREAM_INIT succ
+
+Thu Jan 1 08:00:00 1970, FATAL, STREAMID, project_req_register() error!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, ./plug/platform/streamid/streamid.so init error,don't load it
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_GETPLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load HTTP success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load MAIL success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load FETION success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load UDP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load QQ success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load YMSG success!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, dlopen ./plug/protocol/ftp_parse/ftp_parse.so in ./plug/protocol/ftp_parse/ftp_parse.inf error:./plug/protocol/ftp_parse/ftp_parse.so: undefined symbol: g_iThreadNum
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load TEST_APP_INIT succ
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, ./plug/business/test_app/test_app.inf has func:CHAR_DESTROY,but there is no in ./plug/business/test_app/test_app.so
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load UDP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load test_app success!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, dlopen ./plug/platform/heroes_manager/heroes_manager.so in ./plug/platform/heroes_manager/heroes_manager.inf error:./plug/platform/heroes_manager/heroes_manager.so: undefined symbol: g_iThreadNum
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, dlopen ./plug/platform/heroes_manager/heroes_manager.so in ./plug/platform/heroes_manager/heroes_manager.inf error:./plug/platform/heroes_manager/heroes_manager.so: undefined symbol: g_iThreadNum
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/platform/streamid/streamid.inf load STREAM_INIT succ
+
+Thu Jan 1 08:00:00 1970, FATAL, STREAMID, project_req_register() error!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, ./plug/platform/streamid/streamid.so init error,don't load it
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_GETPLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load HTTP_PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/http/http.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load HTTP success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/mail/mail.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load MAIL success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/fetion_alys/fetion_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load FETION success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/qq_alys/qq_alys.inf load UDP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load QQ success!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_INIT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_DESTROY succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load GET_PLUGID succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load FLAG_CHANGE succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load PROT_FUNSTAT succ
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/protocol/ymsg_alys/ymsg_alys.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load YMSG success!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, dlopen ./plug/protocol/ftp_parse/ftp_parse.so in ./plug/protocol/ftp_parse/ftp_parse.inf error:./plug/protocol/ftp_parse/ftp_parse.so: undefined symbol: g_iThreadNum
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load TEST_APP_INIT succ
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, ./plug/business/test_app/test_app.inf has func:CHAR_DESTROY,but there is no in ./plug/business/test_app/test_app.so
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load TCP entry succ!
+
+Thu Jan 1 08:00:00 1970, INFO, plugin, ./plug/business/test_app/test_app.inf load UDP entry succ!
+
+Thu Jan 1 08:00:00 1970, FATAL, plugin, load test_app success!
+

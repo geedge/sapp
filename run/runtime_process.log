@@ -1,0 +1,13 @@
+
+------------------------------ pkt_process delay status ---------------------------------
+Implication: 
+	10000, 40000, 70000 is CPU-Cycle range, the value below this is packet number.
+	AVG, MAX is CPU-Cycle statistics of processed packet.
+	For example, if CPU frequency is 2000MHz, CPU-Cycle is 2000, means delay is 1us.
+---------------------------------------- summary ------------------------------------------
+ range        10000        40000        70000       100000         more       AVG       MAX
+number           13            0            1            0            1   14253.8    108495
+--------------------------------------- per-thread ----------------------------------------
+     0           13            0            1            0            1   14253.8    108495
+===========================================================================================
+

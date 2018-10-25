@@ -1,0 +1,15 @@
+/*
+   inside                         outside
+
+    -------------->C------------------>
+	
+   client                               server
+
+    <--------------I-------------------<
+
+
+    if ningsi.conf->CorI is C and C_DIR is 1, means packet from inside to outside;
+    if ningsi.conf->CorI is C and C_DIR is 0, means packet from outside to inside;
+    if ningsi.conf->CorI is I and C_DIR is 1, means packet from outside to inside;
+    if ningsi.conf->CorI is I and C_DIR is 0, means packet from intside to outside;
+*/

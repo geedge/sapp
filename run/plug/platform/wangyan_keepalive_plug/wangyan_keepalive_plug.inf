@@ -1,0 +1,4 @@
+[PLUGINFO]
+PLUGNAME=wangyan_keepalive_plug
+SO_PATH=./plug/platform/wangyan_keepalive_plug/wangyan_keepalive_plug.so
+INIT_FUNC=wangyan_keepalive_plug_init
