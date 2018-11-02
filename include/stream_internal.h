@@ -193,6 +193,7 @@ struct tcpdetail_private
 	void   *apme;		  //应用层上下文
 	void   *pAllpktpme;   //无状态的tcp管理上下文
 	struct tcp_flow_stat *flow_stat; /* 2016-07-14 lijia add, 用于记录TCP纯data包的计数, 实际内存分配和释放由project模块完成, 可能为NULL,  */
+	struct tcp_flow_stat *deduce_flow_stat; /* 2018-10-30 lijia add, 用于记录靠序号推断出理论上传输的数据, 包含丢包的长度; 以及单向流情况下, 对端应该收到的数据  */
 };
 
 struct udpdetail_private
@@ -280,11 +281,14 @@ struct sapp_global_single_t{
 	void *fs2_handle;
 	const char *fs2_server_ip;
 	unsigned short fs2_server_port_host;
+	short __pad1;
 	int fs2_filed_id_array[COUNTER_NUM];
 
-	int send_fake_pkt_with_vxlan; /* 2018-08-31 lijia add, for PanGu, 使用串联vxlan发送rst包, DNS-fake包等 */ 
-
+	int send_fake_pkt_by_gdev; /* 2018-10-26 lijia add, for PanGu, 由于缺少FD路由, 需借用串联GDEV发送rst包, DNS-fake包等 */ 
+	int send_fake_pkt_by_gdev_service;  /* 2018-10-26 lijia add, for PanGu, 用哪个GDEV业务号, 用于选择vxlan源端口 */
 	int treat_vlan_as_mac_in_mac_sw; /* MAC_IN_MAC包会被协议栈改为vlan包, 在线捕包debug很不方便, 增加此配置, 强制将vlan包做为MAC_IN_MAC格式解析  */
+
+	
 };
 
 #define TIMESTAMP_SINGLE_PKT_REGION 		(4) /* 单包延时统计区间 */

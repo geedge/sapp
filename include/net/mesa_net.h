@@ -629,15 +629,17 @@ struct mesa_gre_hdr{
 #define MPLS_TTL_MASK		(0x000000FF)
 struct mesa_mpls_hdr{
 #if __BYTE_ORDER == __LITTLE_ENDIAN 
-	unsigned int mpls_label:20;
-	unsigned int mpls_exp:3;
-	unsigned int mpls_bls:1;	/* bottom of label stack */
-	unsigned int mpls_ttl:8;
+	unsigned short mpls_label_low;
+	unsigned char mpls_bls:1;	/* bottom of label stack */
+	unsigned char mpls_exp:3;
+	unsigned char mpls_label_high:4;
+	unsigned char mpls_ttl;
 #elif __BYTE_ORDER == __BIG_ENDIAN
-	unsigned int mpls_ttl:8;
-	unsigned int mpls_bls:1;	/* bottom of label stack */
-	unsigned int mpls_exp:3;
-	unsigned int mpls_label:20;
+	unsigned char mpls_ttl;
+	unsigned char mpls_label_high:4;
+	unsigned char mpls_exp:3;
+	unsigned char mpls_bls:1;	/* bottom of label stack */
+	unsigned short mpls_label_low;
 #else
 #error "Please check <endian.h>"
 #endif

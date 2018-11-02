@@ -401,8 +401,9 @@ int MESA_platform_init(int argc, char *argv[])
 		usleep(10000);
 	}
 
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_with_vxlan",  &sapp_global_single.send_fake_pkt_with_vxlan, 0);
-
+	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_by_gdev",  &sapp_global_single.send_fake_pkt_by_gdev, 0);
+	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_by_gdev_service",  &sapp_global_single.send_fake_pkt_by_gdev_service, 15);
+	
 	sapp_assistant_init();
 
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_tcp_offload", &sapp_global_single.cfg_send_tcp_offload_sw, 0);

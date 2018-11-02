@@ -771,7 +771,7 @@ static int packet_io_calc_ethernet_offset_to_ip(const unsigned char *sendbuf)
 	const struct mesa_ethernet_hdr *outer_ehdr;
 	///const struct mesa_ethernet_hdr *inner_ehdr;
 
-	if(sapp_global_single.send_fake_pkt_with_vxlan != 0){
+	if(sapp_global_single.send_fake_pkt_by_gdev != 0){
 		sendbuf += VXLAN_HDR_RESERVED_LEN; /* vxlan模式下预留了vxlan和外层mac,ip,udp头部, 跳转到内层mac头 */
 	}
 	
@@ -822,7 +822,6 @@ static int packet_io_send_by_sys_routev4(MESA_send_handle *send_handle,int datal
 #endif
 	/* TODO, 如果是mac-in-mac, 从内层MAC开始作为负载, 增加vxlan_hdr, udp_hdr, ip_hdr, 直接发送给GDEV, 类似主动发包
        需要从外层mac中剥离出link_id, 将gdev_id, 转换为gdev_IP, 即当前包从哪个gdev来的, 要从哪个gdev回去.
-       
 	*/
 
 	ip4_hdr = (struct mesa_ip4_hdr *)actual_data_ptr;
@@ -832,11 +831,11 @@ static int packet_io_send_by_sys_routev4(MESA_send_handle *send_handle,int datal
 	/* build_ipv4时已经按dir方向构造好地址, 此处直接使用ip_dst即可 */
 	sock_addr_v4.sin_addr.s_addr = ip4_hdr->ip_dst.s_addr;
 
-	if(sapp_global_single.send_fake_pkt_with_vxlan != 0){
-		return packet_io_send_fake_pkt_with_vxlan(send_handle, ADDR_TYPE_IPV4, actual_data_ptr+VXLAN_HDR_RESERVED_LEN, datalen, dir,
-									feedback_buf, feedback_buf_len);
+	if(sapp_global_single.send_fake_pkt_by_gdev != 0){
+		return packet_io_send_fake_pkt_by_gdev(send_handle, ADDR_TYPE_IPV4, 
+							actual_data_ptr+VXLAN_HDR_RESERVED_LEN, datalen, dir,
+							feedback_buf, feedback_buf_len);
 	}
-
 
 retry:
 	ret = sendto(send_handle->raw_ipv4_fd, actual_data_ptr, datalen, 0,

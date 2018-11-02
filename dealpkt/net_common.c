@@ -322,6 +322,35 @@ static int ppp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 	return skip_len + sizeof(struct mesa_pppoe_session_hdr);
 }
 
+
+static int mpls_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
+{
+	int skip_len = 0;
+	const struct mesa_mpls_hdr *mpls_hdr = (const struct mesa_mpls_hdr *)raw_data;
+	const char *next_layer_data = raw_data + sizeof(struct mesa_mpls_hdr);
+
+	if(raw_layer_type == expect_layer_type){
+		return 0;
+	}
+
+	if(0 == mpls_hdr->mpls_bls){ /* 非MPLS栈底, 递归调用自身 */
+		return mpls_jump_to_layer(next_layer_data, ADDR_TYPE_MPLS, expect_layer_type) + sizeof(struct mesa_mpls_hdr);
+	}
+
+	/* 猜测下一层的IP类型 */
+
+	if((*next_layer_data & 0x40) == 0x40){
+		skip_len = ipv4_jump_to_layer(next_layer_data, __ADDR_TYPE_IP_PAIR_V4, expect_layer_type);
+	}else if((*next_layer_data & 0x60) == 0x60){
+		skip_len = ipv6_jump_to_layer(next_layer_data, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
+	}else{
+		printf("TODO: jmp unsupport type in MPLS, 0x%x!\n",  (unsigned char)(*next_layer_data));
+		return -1;
+	}
+
+	return skip_len + sizeof(struct mesa_mpls_hdr); /* mpls header is 4 byte */
+}
+
 static int __common_eth_type_dispatch(UINT16 eth_type, const char *next_layer_data, int raw_layer_type, int expect_layer_type)
 {
 	int skip_len = 0;
@@ -339,7 +368,11 @@ static int __common_eth_type_dispatch(UINT16 eth_type, const char *next_layer_da
 			if(ADDR_TYPE_VLAN == expect_layer_type){
 				break;
 			}else{
-				skip_len = vlan8021q_jump_to_layer(next_layer_data, ADDR_TYPE_VLAN, expect_layer_type);
+				if(sapp_global_single.treat_vlan_as_mac_in_mac_sw){
+					skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MAC, expect_layer_type);
+				}else{
+					skip_len = vlan8021q_jump_to_layer(next_layer_data, ADDR_TYPE_VLAN, expect_layer_type);
+				}
 			}
 		break;
 		
@@ -366,6 +399,14 @@ static int __common_eth_type_dispatch(UINT16 eth_type, const char *next_layer_da
 				skip_len = ppp_jump_to_layer(next_layer_data, ADDR_TYPE_PPPOE_SES, expect_layer_type);
 			}
 		break;		
+
+		case 0x88A8: /* MAC_IN_MAC */
+			skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MAC, expect_layer_type);
+		break;
+
+		case 0x8847: /* MPLS, ETH_P_MPLS_UC */
+			skip_len = mpls_jump_to_layer(next_layer_data, ADDR_TYPE_MPLS, expect_layer_type);
+		break;
 		
 		default:
 			skip_len = -1;
@@ -518,7 +559,11 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 			ret = arp_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
 		break;
 		case ADDR_TYPE_VLAN:
-			ret = vlan8021q_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
+			if(sapp_global_single.treat_vlan_as_mac_in_mac_sw){
+				ret = mac_in_mac_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
+			}else{
+				ret = vlan8021q_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
+			}
 		break;
 		
 		case __ADDR_TYPE_IP_PAIR_V4:

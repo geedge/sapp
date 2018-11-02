@@ -35,10 +35,14 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 	char *next_layer_hdr = (char *)this_layer_data+ sizeof(struct mesa_mpls_hdr);
 	int next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct mesa_mpls_hdr);
 
+	memcpy(&this_mpls_hdr, mpls_pkt_data,  sizeof(struct mesa_mpls_hdr));
+
+#if 0	
 	this_mpls_hdr.mpls_label = (ntohl(*mpls_pkt_data) & MPLS_LABEL_MASK) >> 12;
 	this_mpls_hdr.mpls_exp = (ntohl(*mpls_pkt_data) & MPLS_EXP_MASK) >> 9;
 	this_mpls_hdr.mpls_bls = (ntohl(*mpls_pkt_data) & MPLS_BLS_MASK) >> 8;
 	this_mpls_hdr.mpls_ttl = (ntohl(*mpls_pkt_data) & MPLS_TTL_MASK);
+#endif
 		
 	if(0 == G_SKIP_NOT_IP_LAYER){ 
 		memset(ptmp,0,sizeof(struct streamindex));
@@ -61,7 +65,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 	}
 	
 	if(1 == this_mpls_hdr.mpls_bls){ /* 已到栈底, MPLS已结束 */
-		/* TODO, 如果MPLS承载的是IPv6呢? 或其他协议呢? 如何区别? */
+		/* TODO, MPLS没有字段表示承载的协议类型, 如果MPLS承载的是IPv6呢? 或其他协议呢? 如何区别? */
 		((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
 		ret = ipv4_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
 	}else{

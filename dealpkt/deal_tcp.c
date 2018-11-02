@@ -71,6 +71,7 @@ int g_kill_tcp_remedy_sw = 0; /* 2016-06-21 lijia add, 是否进行FD补救 */
 int g_analyse_tcp_opt_sw = 0;
 
 int G_TCP_FLOW_STAT_PROJECT_ID = -1; /* 2016-07-14 lijia copy from sapp */
+int G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID = -1; /* 单向流, 根据ACK序号推断出的对端理论接收的数据长度 */
 
 #if DEBUG
 static void packet_io_status_tcp_pkt_update(int tid, unsigned char tcp_flags, int payload_len);
@@ -742,6 +743,18 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		}
 	}
 
+	if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
+		pdetail_pr->deduce_flow_stat = (struct tcp_flow_stat *)dictator_malloc(pstream->threadnum, sizeof(struct tcp_flow_stat));
+		memset(pdetail_pr->deduce_flow_stat, 0, sizeof(struct tcp_flow_stat));	
+		project_req_add_struct(pstream, G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID, pdetail_pr->deduce_flow_stat);
+
+		if(DIR_S2C == createdir){
+			pdetail_pr->S2C_first_ack_seq = ntohl(this_tcphdr->th_ack);
+		}else{
+			; /* SYN包木有ACK, 忽略 */
+		}
+	}
+
 #if (0 == HIGH_PERF)	
 	tcp_parse_opts(pstream_pr, createdir, (const struct tcphdr *)this_tcphdr); /* 2016-07-07 lijia add, for janus hijack */
 #endif
@@ -950,7 +963,19 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 				pdetail_pr->flow_stat->S2C_all_byte = datalen;				
 			}
 		}
-		/* NOTE, tcp_data计数在stream_process_tcp中累计 */
+		/* NOTE, tcp_data计数在stream_process_tcp()中累计 */
+	}
+
+	if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
+		pdetail_pr->deduce_flow_stat = (struct tcp_flow_stat *)dictator_malloc(pstream->threadnum, sizeof(struct tcp_flow_stat));
+		memset(pdetail_pr->deduce_flow_stat, 0, sizeof(struct tcp_flow_stat));	
+		project_req_add_struct(pstream, G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID, pdetail_pr->deduce_flow_stat);
+
+		if(DIR_C2S == createdir){
+			pdetail_pr->C2S_first_ack_seq = ntohl(this_tcphdr->th_ack);
+		}else{
+			pdetail_pr->S2C_first_ack_seq = ntohl(this_tcphdr->th_ack);
+		}
 	}
 	
 #if SAPP_INSECTICIDE
@@ -1104,31 +1129,6 @@ static void tcp_change_stream_tonouse(struct streamindex *pindex)
 	}
 }
 
-/* 2017-08-03 lijia add, 单向流结束时, 靠ack统计对侧数据 */
-#if 0
-static void tcp_reckon_one_way_stream_stats(struct streaminfo *pstream)
-{
-	struct tcpdetail *pdetail = pstream->ptcpdetail;
-	struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private*)pstream->pdetail;
-
-	/* 2017-08-03 lijia add, 单向流结束时, 靠ack统计对侧数据 */
-	if(DIR_C2S == pstream->dir){
-		pdetail->clientbytes = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq;
-		if(G_TCP_FLOW_STAT_PROJECT_ID != -1){
-			pdetail_pr->flow_stat->S2C_all_byte = pdetail->clientbytes;
-			pdetail_pr->flow_stat->S2C_data_byte = pdetail->clientbytes;
-		}
-	}else if(DIR_S2C == pstream->dir){
-		pdetail->serverbytes = pdetail_pr->S2C_ack_seq - pdetail_pr->S2C_first_ack_seq;
-		if(G_TCP_FLOW_STAT_PROJECT_ID != -1){
-			pdetail_pr->flow_stat->C2S_all_byte = pdetail->serverbytes;
-			pdetail_pr->flow_stat->C2S_data_byte = pdetail->serverbytes;
-		}
-	}
-
-	return;
-}
-#endif
 
 //void tcp_free_stream(struct streamindex *pindex)
 //add raw_pkt by lqy 2015-01-07
@@ -1266,6 +1266,16 @@ static void tcp_reset_stream(struct streamindex *pindex,struct mesa_tcp_hdr *thi
 		}else{
 			pdetail_pr->flow_stat->S2C_all_pkt--;
 			pdetail_pr->flow_stat->S2C_all_byte -= datalen;
+		}
+	}
+
+	if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
+		if(DIR_C2S == pstream->curdir){
+			pdetail_pr->deduce_flow_stat->C2S_all_pkt--;
+			pdetail_pr->deduce_flow_stat->C2S_all_byte -= datalen;
+		}else{
+			pdetail_pr->deduce_flow_stat->S2C_all_pkt--;
+			pdetail_pr->deduce_flow_stat->S2C_all_byte -= datalen;
 		}
 	}
 	
@@ -1603,22 +1613,28 @@ static int tcp_deal_ack(struct streaminfo *a_tcp,struct mesa_tcp_hdr *this_tcphd
 			cur_half_stream_ack = &pdetail_pr->C2S_ack_seq;
 		}
 		
-		/* 2017-08-03 lijia add, 单向流, 靠本端ack统计对侧数据 */
+		/* 2017-08-03 lijia add, 单向流, 靠本端ack推断出对侧理论上应该收到的数据 */
 		if(DIR_C2S == a_tcp->dir){
 			pdetail = a_tcp->ptcpdetail;
-			pdetail->clientbytes = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq;
-			if(G_TCP_FLOW_STAT_PROJECT_ID != -1){
-				pdetail_pr->flow_stat->S2C_all_byte = pdetail->clientbytes;
-				pdetail_pr->flow_stat->S2C_data_byte = pdetail->clientbytes;
+			//pdetail->clientbytes = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq;
+			if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
+				pdetail_pr->deduce_flow_stat->C2S_data_byte = pdetail->serverbytes; /* 单向流本端复制流结构体中的变量 */
+				pdetail_pr->deduce_flow_stat->C2S_data_pkt = pdetail->serverpktnum;/* 单向流本端复制流结构体中的变量 */
+				
+				pdetail_pr->deduce_flow_stat->S2C_all_byte = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq; /* 推断出的结果, all和data是一样的, 但没有pkt */
+				pdetail_pr->deduce_flow_stat->S2C_data_byte = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq; /* 推断出的结果, all和data是一样的, 但没有pkt */
 			}
 		}else if(DIR_S2C == a_tcp->dir){
 			pdetail = a_tcp->ptcpdetail;
-			pdetail->serverbytes = pdetail_pr->S2C_ack_seq - pdetail_pr->S2C_first_ack_seq;
-			if(G_TCP_FLOW_STAT_PROJECT_ID != -1){
-				pdetail_pr->flow_stat->C2S_all_byte = pdetail->serverbytes;
-				pdetail_pr->flow_stat->C2S_data_byte = pdetail->serverbytes;
+			//pdetail->serverbytes = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq;
+			if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
+				pdetail_pr->deduce_flow_stat->S2C_data_byte = pdetail->clientbytes; /* 单向流本端复制流结构体中的变量 */
+				pdetail_pr->deduce_flow_stat->S2C_data_pkt = pdetail->clientpktnum;/* 单向流本端复制流结构体中的变量 */
+				
+				pdetail_pr->deduce_flow_stat->C2S_all_byte = pdetail_pr->S2C_ack_seq - pdetail_pr->S2C_first_ack_seq;
+				pdetail_pr->deduce_flow_stat->C2S_data_byte = pdetail_pr->S2C_ack_seq - pdetail_pr->S2C_first_ack_seq;
 			}
-		}		
+		}
 			
 		tcp_half_handle_ack_and_seq(phalf,this_tcphdr,cur_half_stream_ack);
 
@@ -2499,6 +2515,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		pdetail->serverpktnum++;
 	}
 
+	/* flow_stat是全包无状态记录, 不关心重传、乱序问题 */
 	if(G_TCP_FLOW_STAT_PROJECT_ID != -1){
 		if(DIR_C2S == pstream->curdir){
 			pdetail_pr->flow_stat->C2S_all_pkt++;
@@ -2506,6 +2523,16 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		}else{
 			pdetail_pr->flow_stat->S2C_all_pkt++;
 			pdetail_pr->flow_stat->S2C_all_byte += tcplen;
+		}
+	}
+
+	if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
+		if(DIR_C2S == pstream->curdir){
+			pdetail_pr->deduce_flow_stat->C2S_all_pkt++;
+			pdetail_pr->deduce_flow_stat->C2S_all_byte += tcplen;
+		}else{
+			pdetail_pr->deduce_flow_stat->S2C_all_pkt++;
+			pdetail_pr->deduce_flow_stat->S2C_all_byte += tcplen;
 		}
 	}
 	
@@ -3438,6 +3465,14 @@ int tcp_flow_stat_init(void)
 		G_TCP_FLOW_STAT_PROJECT_ID = -1;
 	}
 
+	project_req_id = project_producer_register(PROJECT_REQ_TCP_DEDUCE_FLOW, "struct", tcp_flow_stat_free);
+	if(project_req_id >= 0){
+		G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID = project_req_id;
+	}else{
+		/* 配置文件没有'tcp_flow_stat'项, 关闭此功能 */
+		G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID = -1;
+	}
+	
 	return 0;
 }
 

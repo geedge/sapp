@@ -86,6 +86,11 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 			ret = ipv6_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
 		break;
 
+		case ETH_P_MPLS_UC: 
+			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+			ret = mpls_uc_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+		break;
+		
 		default:
 			sapp_runtime_log(10, "MAC-IN-MAC unknown protocol: 0x%x\n", ntohs(inner_ether_hdr->ether_type));
 			ret = PASS;

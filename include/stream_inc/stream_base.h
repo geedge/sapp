@@ -505,37 +505,6 @@ const raw_ipfrag_list_t *get_raw_frag_list(const struct streaminfo *stream);
 const raw_ipfrag_list_t *ip_plug_get_raw_ipfrag_list(int thread_num, enum addr_type_t addr_type);
 
 
-/* 2018-08-28 lijia add, for pangu 项目mac_in_mac回流
-   理论上, sapp平台不应该关心和业务密切相关的东西, 比如mac里某个字段是link_id,
-   但这个玩意太底层了, 平台发送RST包也要填充这些值, 必须平台处理, 
-   前面加个pangu前缀, 表示仅用于特定项目, 不通用!!
-*/
-struct pangu_mac_in_mac_net_hdr{
-	unsigned int route_dir:1;
-	unsigned int link_id:3;
-	unsigned int dev_id:6;
-	unsigned int region_id:5;
-	unsigned int __pad1:1;
-	unsigned int encap_type:4;
-	unsigned int __pad2:20;
-	unsigned int __pad3:8;
-};
-
-/* 2018-08-28 lijia add, for pangu 项目mac_in_mac回流
-   理论上, sapp平台不应该关心和业务密切相关的东西, 比如mac里某个字段是link_id,
-   但这个玩意太底层了, 平台发送RST包也要填充这些值, 必须平台处理, 
-   前面加个pangu前缀, 表示仅用于特定项目, 不通用!!
-*/
-/* 为了方便业务插件获取mac_in_mac地址里的具体信息, 不再使用bit位域, 转换成变量形式 */
-struct pangu_mac_in_mac_mem_hdr{
-	unsigned char route_dir;
-	unsigned char link_id;
-	unsigned char dev_seq;
-	unsigned char region_seq;
-	unsigned char encap_type;
-};
-
-
 #ifdef __cplusplus
 }
 #endif

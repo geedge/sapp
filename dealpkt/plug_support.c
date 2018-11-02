@@ -454,12 +454,14 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
 		sprintf((char *)ptr, "%02x:", mim_addr->inner_src_mac[i]);
 	}
 	vxinfo->inner_smac[17] = '\0'; /* 最后一位清零 */
+	memcpy(vxinfo->inner_smac_hex, mim_addr->inner_src_mac, 6);
 
 	ptr = vxinfo->inner_dmac;
 	for(i = 0; i < 6; i++, ptr += 3){
 		sprintf((char *)ptr, "%02x:", mim_addr->inner_dst_mac[i]);
 	}
 	vxinfo->inner_dmac[17] = '\0'; /* 最后一位清零 */
+	memcpy(vxinfo->inner_dmac_hex, mim_addr->inner_dst_mac, 6);
 	
 	return 0;
 }

@@ -174,9 +174,10 @@ extern int set_gre_hdr(struct mesa_gre_hdr *stack_gre_addr, const void *this_lay
 extern int calc_gre_hdr_len(const struct mesa_gre_hdr *gre_hdr);
 extern int packet_io_status_vlan_init(void);
 extern int get_pkt_len_from_eth_hdr(const struct mesa_ethernet_hdr *ehdr);
-extern int packet_io_send_fake_pkt_with_vxlan(MESA_send_handle *send_handle, enum addr_type_t addrtype, 
+extern int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_type_t addrtype, 
 	char *data, int datalen, int dir_reverse,char *feedback_buf, int *feedback_buf_len);
-	
+unsigned long long MESA_rand_range(unsigned long long start, unsigned long long end);
+
 #ifdef __cplusplus
 }
 #endif

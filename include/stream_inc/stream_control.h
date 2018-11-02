@@ -124,6 +124,11 @@ struct tcp_option_ext{
 } __attribute__((packed, aligned(1)));
 
 
+/* 2018-10-24 lijia add, for pangu 项目mac_in_mac回流.
+   理论上, sapp平台不应该关心和业务密切相关的东西, 比如mac里哪个字段是link_id, 哪个是dev_id,
+   但这个玩意太底层了, 平台借用GDEV发送RST包也要填充这些值, 必须平台处理!!
+*/
+/* 为了方便业务插件获取mac_in_mac地址里的具体信息, 不再使用原始的bit位域, 转换成变量形式 */
 struct vxlan_info{
 	unsigned char encap_type; /* 原始二层封装格式 */
 	unsigned char entrance_id; /* 设备所在出入口ID */
@@ -132,6 +137,8 @@ struct vxlan_info{
 	unsigned char link_dir; /* 链路方向, 指当前四元组的IP被捕获时的传输方向, 对于TCP, SYN包的传输方向; 对于UDP, 端口大IP的传输方向 */
 	unsigned char inner_smac[18]; /* 内层真实SMAC, string类型, 例: "11:22:33:44:55:66"  */
 	unsigned char inner_dmac[18]; /* 内层真实DMAC, string类型, 例: "11:22:33:44:55:66"  */
+	unsigned char inner_smac_hex[6]; /* 内层真实SMAC, 原始二进制类型  */
+	unsigned char inner_dmac_hex[6]; /* 内层真实DMAC, 原始二进制类型  */	
 };
 
 

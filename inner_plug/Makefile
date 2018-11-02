@@ -75,7 +75,7 @@ g_device_plug.so: g_device_plug.o
 	mkdir -p $(RELEASE_BIZ_PATH)/g_device_plug;
 	cp $@ $(RELEASE_BIZ_PATH)/g_device_plug/
 
-libsapp_assistant.so: sapp_assistant.o  gdev_block.o
+libsapp_assistant.so: sapp_assistant.o  gdev_assistant.o
 	mkdir -p /opt/MESA/lib; 
 	cp ../lib/libc3client.so /opt/MESA/lib/;
 	ldconfig;

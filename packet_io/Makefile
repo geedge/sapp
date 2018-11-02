@@ -86,7 +86,6 @@ OBJS+=packet_io_status_new.o
 #OBJS += cycle_pkt_dump.o
 #OBJS += cycle_pkt_dump_unix.o
 OBJS += cycle_pkt_dump_through_write_offset.o
-OBJS += packet_io_send_pkt_with_vxlan.o
 
 ifeq ($(debug), $(_DEBUG2))
 OBJS += iknow_info.o 

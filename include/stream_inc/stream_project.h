@@ -34,6 +34,9 @@ typedef void (project_req_free_t)(int thread_seq, void *project_req_value);
 */
 #define PROJECT_REQ_TCP_FLOW				"tcp_flow_stat"
 
+
+#define PROJECT_REQ_TCP_DEDUCE_FLOW		"tcp_deduce_flow_stat"
+
 /* 
 	CHN : UDP流量统计功能平台固定开启, 不依赖project_list.conf控制, 对应的project_id需要使用如下函数获取:
 	ENG : this MARCO is use for tcp flow statistics, it's always enable.
@@ -42,13 +45,13 @@ typedef void (project_req_free_t)(int thread_seq, void *project_req_value);
 #define PROJECT_REQ_UDP_FLOW				"udp_flow_stat"
 
 /* 
-	CHN : 将包数,字节数统计值从pdetail中移动到project 
+	CHN : 将包数,字节数统计值从pdetail中移动到project,字节数扩展为64bit. 
 	ENG : before 2015-12-31, this statistics in struct streaminfo, after 2015-12-31, you must get these use project_req_get_struct().
 */
 struct tcp_flow_stat
 {
-	UINT32 C2S_all_pkt;		/* All tcp packets, include SYN, ACK, FIN, RST, etc. */
-	UINT32 C2S_data_pkt;	/* TCP reassemble packet, there is not payload size is zero, not retransmit packet */
+	UINT32 C2S_all_pkt;	/* All tcp packets, include SYN, ACK, FIN, RST, etc. */
+	UINT32 C2S_data_pkt;	/* TCP reassemble packet, payload size more than zero, no retransmit packet */
 	UINT32 S2C_all_pkt;
 	UINT32 S2C_data_pkt;
 	UINT64 C2S_all_byte;	/* All tcp packet's data size, include retransmit packet */
