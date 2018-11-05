@@ -17,7 +17,7 @@
 #include "packet_io.h"
 #include "sendpacket.h"
 #include "project_requirement.h"
-#include "mesa_net.h"
+#include "net/mesa_net.h"
 #include "sysinfo.h"
 #include "stream_internal.h"
 

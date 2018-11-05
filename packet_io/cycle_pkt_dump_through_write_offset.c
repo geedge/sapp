@@ -340,7 +340,7 @@ static long long tot_udp_send_willful_discard_num = 0; /* 主动丢弃数量 */
 
 static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_raw_pkt)
 {
-	const mesa_ethernet_hdr *ehdr;
+	const struct mesa_ethernet_hdr *ehdr;
 	const unsigned char *pktdata;
 	int pktlen, ret;
 	char perceptive_mode_pkt_buf[2048];
@@ -358,11 +358,11 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 		if(p_raw_pkt->low_layer_type  != CAP_LEVEL_MAC){
 			pktdata =  (const unsigned char *)p_raw_pkt->raw_pkt_data-14 + pkt_dump_data_offset, 
 			pktlen = p_raw_pkt->raw_pkt_len + 14 - pkt_dump_data_offset;
-			ehdr = (const mesa_ethernet_hdr *)pktdata;
+			ehdr = (const struct mesa_ethernet_hdr *)pktdata;
 		}else{
 			pktdata =  (const unsigned char *)p_raw_pkt->raw_pkt_data + pkt_dump_data_offset, 
 			pktlen = p_raw_pkt->raw_pkt_len - pkt_dump_data_offset;
-			ehdr = (const mesa_ethernet_hdr *)pktdata;
+			ehdr = (const struct mesa_ethernet_hdr *)pktdata;
 		}
 
 		/* 2017-01-06 lijia add, 非常规Ethernet包不处理 */

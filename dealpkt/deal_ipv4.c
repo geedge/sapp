@@ -35,7 +35,7 @@
 #include "sendpacket.h"
 #include "compat.h"
 #include "project_requirement.h"
-#include "mesa_net.h"
+#include "net/mesa_net.h"
 #include "stream_internal.h"
 
 #ifdef __cplusplus

@@ -930,7 +930,7 @@ int get_pkt_len_from_eth_hdr(const struct mesa_ethernet_hdr *ehdr)
 		case ETHERTYPE_IP:
 		{
 			struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)((char *)ehdr + sizeof(struct mesa_ethernet_hdr));
-			raw_pkt_len = ntohs(ip4hdr->ip_len) + sizeof(mesa_ethernet_hdr);
+			raw_pkt_len = ntohs(ip4hdr->ip_len) + sizeof(struct mesa_ethernet_hdr);
 		}
 		break;
 

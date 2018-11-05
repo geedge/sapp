@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include "stream_internal.h"
 
 #define TCP_FLOOD_DETECT_OFF 0x0
 #define TCP_SYNFLOOD_DETECT_ON 0x01

@@ -3,7 +3,7 @@ Implication:
 	10000, 40000, 70000 is CPU-Cycle range, the value below this is packet number.
 	AVG, MAX is CPU-Cycle statistics of processed packet.
 ---------------------------------------- summary ------------------------------------------
- range        10000        40000        70000       100000         more       AVG       MAX
-number          767          105           85           27           16 59860559.5 4250299028
+ range            0            0            0            0         more       AVG       MAX
+number            0            0            0            0           32   14210.2    154308
 --------------------------------------- per-thread ----------------------------------------
-     0          767          105           85           27           16 59860559.5 4250299028
+     0            0            0            0            0           32   14210.2    154308

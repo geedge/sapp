@@ -1,0 +1,12 @@
+SI/
+*.log
+*.o
+*.so
+*.si4project/
+*.a
+*.o
+*.d
+build/
+.idea/
+run/log/
+run/sapp

@@ -5,7 +5,7 @@ extern "C" {
 #include "stream_internal.h"
 #include "packet_io.h"
 #include "packet_io_internal.h"
-#include "mesa_net.h"
+#include "net/mesa_net.h"
 #include "sendpacket.h"
 #include "MESA_list_queue.h"
 #include "stream_manage.h"
@@ -1152,7 +1152,7 @@ int dl_io_init(int argc, char *argv[])
 		if(pcap_device_up_mtu < 1500){
 			printf("\033[41m Warning! '%s' MTU is %d!. \033[0m\n", g_pcap_up_dev_name, pcap_device_up_mtu);
 		}
-		pcap_device_up_mtu += sizeof(mesa_ethernet_hdr); /* MTU不含ethernet层长度, 但pcap捕包是包括的, 需要加上这个头部 */
+		pcap_device_up_mtu += sizeof(struct mesa_ethernet_hdr); /* MTU不含ethernet层长度, 但pcap捕包是包括的, 需要加上这个头部 */
 		
 		if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode) /* 双网卡串联模式 */	
 		{
@@ -1168,7 +1168,7 @@ int dl_io_init(int argc, char *argv[])
 			if(pcap_device_down_mtu < 1500){
 				printf("\033[41m Warning! '%s' MTU is %d!. \033[0m\n", g_pcap_down_dev_name, pcap_device_down_mtu);
 			}
-			pcap_device_down_mtu += sizeof(mesa_ethernet_hdr); /* MTU不含ethernet层长度, 但pcap捕包是包括的, 需要加上这个头部 */
+			pcap_device_down_mtu += sizeof(struct mesa_ethernet_hdr); /* MTU不含ethernet层长度, 但pcap捕包是包括的, 需要加上这个头部 */
 			dl_set_filter(pcap_down_handle, g_pcap_cap_filter);
 			pcap_setdirection(pcap_down_handle, PCAP_D_IN);
 		}

@@ -10,7 +10,7 @@
 #include "deal_ipv6.h"
 #include "dealpkt.h"
 #include "sendpacket.h"
-#include "mesa_net.h"
+#include "net/mesa_net.h"
 #include "packet_io.h"
 #include "project_internal.h"
 #include "g_device.h"

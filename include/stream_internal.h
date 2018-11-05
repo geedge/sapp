@@ -10,7 +10,7 @@
 #include "stream_inc/stream_inject.h"
 #include "stream_inc/stream_rawpkt.h"
 #include "stream_inc/stream_control.h"
-#include "mesa_net.h"
+#include "net/mesa_net.h"
 #include "sysinfo.h"
 #include "MESA_handle_logger.h"
 

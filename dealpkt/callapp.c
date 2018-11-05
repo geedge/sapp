@@ -62,7 +62,7 @@ extern "C" char calltcpApp_old(struct streaminfo *pstream,void **pme, int thread
 extern "C" char callIpApp_old(struct streaminfo *pstream,int routedir, int thread_seq,void *a_packet);
 #endif
 
-extern "C" void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq);
+void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq);
 
 /* 2014-12-31 lqy add */
 int stream_register_funtoArray(int funtype,char (*x)(void),stFunArray *pArrary,int *pNum)

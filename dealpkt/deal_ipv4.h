@@ -60,7 +60,7 @@ extern "C" {
 #endif
 
 /* 是否为IPv4私有地址 */
-inline int is_private_addr_v4(u_int ip_add)
+static inline int is_private_addr_v4(u_int ip_add)
 {
 /* 10/8 */
 #define IPV4_LOCAL_CLASS_A(_add) (((_add&0xFF000000)==0x0A000000)?1:0) 
@@ -80,7 +80,7 @@ inline int is_private_addr_v4(u_int ip_add)
 }
 
 /* 是否为IPv4组播地址 */
-inline int is_multicast_addr_v4(u_int ip_add)
+static inline int is_multicast_addr_v4(u_int ip_add)
 {
 /* 224~239 */
 #define IPV4_MULTICAST_ADDR(_add) (((_add&0xF0000000)==0xE0000000)?1:0) 

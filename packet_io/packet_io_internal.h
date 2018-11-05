@@ -2,8 +2,8 @@
 #define _PACKET_IO_INTERNAL_H_
 #include <linux/limits.h>
 #include <netinet/in.h>
-#include "mesa_net.h"
-#include "stream_base.h"
+#include "net/mesa_net.h"
+#include "stream_inc/stream_base.h"
 
 #ifdef __cplusplus
 extern "C" {

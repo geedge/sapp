@@ -7,15 +7,15 @@ extern "C" {
 #include "packet_io_internal.h"
 #include "stream_manage.h"
 #include "stream_internal.h"
-#include "mesa_net.h"
+#include "net/mesa_net.h"
 #include "sendpacket.h"
 #include "iknow.h"
-#include "logger.h"
+//#include "logger.h"
 
 //#define CPU_CLOCK_TO_1US				(2199) /* 1微妙转换成CPU周期数, 比如2.2GHz就是2200 */
 
 
-#if DEBUG
+#if 1
 
 
 /* 2015-11-26 lijia add, 时间戳记录 */
@@ -28,7 +28,7 @@ extern int g_timestamp_record_sw;
 static long timestamp_out_min = 0;
 
 static long long g_timestamp_record_benchmark[TIMESTAMP_SINGLE_PKT_REGION_MAX];
-extern void *PLATFORM_IHANDLE;
+//extern void *PLATFORM_IHANDLE;
 
 extern void sapp_statsd_add_para(const char *key, unsigned long long value);
 
@@ -343,9 +343,9 @@ int timestamp_record_init(void)
 		g_timestamp_record_benchmark[i] = 10000 + i*30000;
 	}
 
-	iknow_register_cmd(PLATFORM_IHANDLE, "show timestamp summary", "show timestamp summary", 
-					  show_timestamp_summary_cb, 
-					  NULL, 0, NULL);
+	//iknow_register_cmd(PLATFORM_IHANDLE, "show timestamp summary", "show timestamp summary", 
+	//				  show_timestamp_summary_cb, 
+	//				  NULL, 0, NULL);
 
 	return 0;	
 }

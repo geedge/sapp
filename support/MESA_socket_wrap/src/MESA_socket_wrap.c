@@ -6,7 +6,7 @@
 	在系统标准SOCKET接口基础上, 增加超时机制, 对于任何类型描述符, 都类似非阻塞操作.
 */
 
-#include "MESA_socket_wrap.h"
+#include "../include/MESA_socket_wrap.h"
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <stdio.h>

@@ -6,7 +6,7 @@
 #include <MESA/MESA_handle_logger.h>
 #include "MESA/MESA_prof_load.h"
 #include "dealpkt.h"
-#include "deal_ipv4.h"
+//#include "deal_ipv4.h"
 #include "deal_ipv6.h"
 #include "packet_io.h"
 #include "project_requirement.h"

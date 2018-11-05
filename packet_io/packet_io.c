@@ -101,7 +101,7 @@ void del_last_rn(char *data, int max_len);
 static int parse_send_raw_pkt_conf(void);
 extern void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt);
 extern char *MESA_MD5_sum_bin(unsigned char *raw_data, unsigned int raw_data_len, char result[16]);
-void timestamp_region_update(int tid, long long cpu_cycle);
+extern void timestamp_region_update(int tid, long long cpu_cycle);
 void pptp_exit(void);
 extern void ipv4_frag_per_thread_exit(int thread_seq);
 extern void ipv6_frag_per_thread_exit(int thread_seq);

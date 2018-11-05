@@ -1,7 +1,7 @@
 #ifndef _PROJECT_INTERNAL_H_
 #define _PROJECT_INTERNAL_H_
 
-#include "mesa_net.h"
+#include "net/mesa_net.h"
 #include "stream_internal.h"
 
 #ifdef __cplusplus

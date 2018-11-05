@@ -76,7 +76,7 @@ static int __addr_mac_in_mac_pton(char *addr_str, addr_continuous_bin_t *addr_bi
 static const char *__layer_addr_ntop (const struct streaminfo *stream, int thread_index);
 
 
-extern "C" const addr_convert_t G_ADDR_CONVERT_HANDLE[] = 
+const addr_convert_t G_ADDR_CONVERT_HANDLE[] = 
 {
 	{__ADDR_TYPE_INIT,			STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL},
 #if (0 == IP_PORT_UNION_VERSION) /* 在IP-PORT合并的版本里, 没有纯IP地址层 */

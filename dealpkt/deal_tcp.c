@@ -39,7 +39,7 @@
 #include "deal_ipv6.h"
 #include "sysinfo.h"
 #include "logger.h"
-#include "mesa_net.h"
+#include "net/mesa_net.h"
 #include "project_requirement.h"
 #include "project_internal.h"
 #include "packet_io_internal.h"
