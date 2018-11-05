@@ -664,4 +664,7 @@ int stream_addr_list_pton(const char *addr_list_str, void *dst, int size, int th
 2018-11-02 李佳
 1)修改mpls_hdr头部定义错误;
 2)解析多层嵌套MPLS数据包.
+*********************************************************************
+2018-11-05 杨威
+1)修改源码, 适配cmake编译.
 #endif
