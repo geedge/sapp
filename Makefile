@@ -237,6 +237,7 @@ all:
 	nm run/sapp | grep version_VERSION;
 
 clean:
+	rm -rf build/*;
 	rm -f run/sapp;
 	rm -f lib/*.a;
 	cd test_so; $(MAKE) clean;

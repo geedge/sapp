@@ -553,7 +553,7 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 		return DROP;
 	}
 	
-	if(likely(udp_stream_table_size > 0)){
+//	if(likely(udp_stream_table_size > 0)){
 		/*
 			Attention, 特别注意:
 			判断stream_carry_up_layer_tunnel_type时, 是从heap内存中的pstream_pr判断,
@@ -569,17 +569,19 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 		if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_L2TP){
 			ret = l2tpv2_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);	
 		}
-		
-	}else{
+		if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNEL_GPRS_TUNNEL){
+			ret = gtp_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
+		}
+//	}else{
 		/* 单包处理 */
-		if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_TEREDO){
-			ret = teredo_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
-		}
+//		if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_TEREDO){
+//			ret = teredo_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
+//		}
 
-		if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_L2TP){
-			ret = l2tpv2_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);	
-		}
-	}
+//		if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_L2TP){
+//			ret = l2tpv2_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
+//		}
+//	}
 #endif
 
 	return ret;

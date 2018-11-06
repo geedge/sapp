@@ -70,7 +70,8 @@ enum addr_type_t{
 	ADDR_TYPE_PPP,				/* 14 */
 	ADDR_TYPE_PPTP,			/* 15 */
 	ADDR_TYPE_MAC_IN_MAC,		/* 16 */
-	__ADDR_TYPE_MAX,			/* 17 */
+	ADDR_TYPE_GPRS_TUNNEL,      /* 17 */
+	__ADDR_TYPE_MAX,			/* 18 */
 };
 
 #define TCP_TAKEOVER_STATE_FLAG_OFF	0
@@ -122,6 +123,7 @@ enum stream_carry_tunnel_t{
 	STREAM_TUNNLE_PPTP		= 1 << 4,
 	STREAM_TUNNLE_L2TP		= 1 << 5,
 	STREAM_TUNNLE_TEREDO		= 1 << 6,
+	STREAM_TUNNEL_GPRS_TUNNEL = 1 << 7,
 };
 
 typedef struct raw_ipfrag_list{
@@ -277,9 +279,11 @@ struct layer_addr_l2tp
 	}l2tpun;
 };
 
+#define MAX_MPLS_ADDR_LAYER 4
 struct layer_addr_mpls
 {
-	unsigned int mpls_pkt;
+	unsigned int mpls_pkt[MAX_MPLS_ADDR_LAYER];
+    char mpls_layer_num;
 };
 
 struct layer_addr_pptp

@@ -164,6 +164,8 @@ int mpls_uc_entry(struct streaminfo_private *pfstream,const void *this_layer_dat
 						unsigned char routedir, const raw_pkt_t *raw_pkt, int);
 int teredo_entry(struct streaminfo_private *pfstream,void *this_layer_data,int thread_num, 
 		unsigned char routedir, const raw_pkt_t *raw_packet, int offset_to_raw_pkt_hdr);
+int gtp_entry(struct streaminfo_private *pfstream,void *this_layer_data,int thread_num,
+				 unsigned char routedir, const raw_pkt_t *raw_packet, int offset_to_raw_pkt_hdr);
 int icmp_entry(struct streaminfo_private *fstream, const void *this_layer_hdr, 
 	int thread_num, unsigned char dir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)	;
 //int MESA_sendpacket_ethlayer(int thread_num,const char *data, int data_len, unsigned char compat_no_use);		

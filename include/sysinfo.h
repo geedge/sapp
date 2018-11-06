@@ -100,6 +100,7 @@
 #define TUNNEL_TEREDO			(64)
 #define TUNNEL_TEREDO_LEN		(65)
 #define TUNNEL_IP_IN_IP			(66)
+#define TUNNEL_GTP              (67)
 
 #define SEND_IP_RAW_PKT		(70) /* 调用MESA_sendpacket_iplayer()发送构造好的IP完整包 */
 #define SEND_IP_RAW_PKT_LEN	(71)

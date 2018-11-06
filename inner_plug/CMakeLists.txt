@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
+include_directories(${MESA_SDK_PREFIX}/include)
+include_directories(${MESA_SDK_PREFIX}/include/MESA)
 include_directories(${CMAKE_SOURCE_DIR}/packet_io)
 #include_directories(${CMAKE_SOURCE_DIR}/project)
 include_directories(${CMAKE_SOURCE_DIR}/include)

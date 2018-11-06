@@ -130,7 +130,8 @@ struct streaminfo_private
 	/* ---8 bytes-- */
 	UCHAR  layer_dir:2;   /* 单包有效, 当前层的地址是否和默认规则"大端口是客户端"相同 */	
 	UCHAR  stream_dir:2; /* 流的生存期内有效, 流的存储的地址是否和默认规则"大端口是客户端"相同  */		
-	UCHAR  addr_use_as_hash:2; /* 本层的addr是否做为HASH计算和比较的参数, 如:MAC地址不参与计算 */
+	UCHAR  addr_use_as_hash:1; /* 本层的addr是否做为HASH计算和比较的参数, 如:MAC地址不参与计算 */
+	UCHAR  addr_skip_for_layer_cmp:1;/*本层的addr是否作为地址比较的层级，如：MPLS地址不作为层数计算，直接跳过，该值默认为0，即需要比较*/
 	UCHAR  stream_killed_flag:2; /* 2014-08-22 lijia add, 串联模式下, 已经被插件Kill, 之后此流可直接Drop或Kill, 无需再给上层插件 */
 	UCHAR  dirreverse;	     /* 建立连接时是否进行了ip地址反转, 即与"大端口是客户端"规则相反 */
 	UINT16 timeout;/* 每个链接的独有超时时间, 此值有两个用途, 1:用于尽早淘汰长时间无包到达的流, 以节约内存; 2:用于保护长时间无包的流, 对于IM类长时间无包但连接并未结束, 可设置较大的timeout */

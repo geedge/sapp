@@ -110,6 +110,8 @@ void sysinfo_output(void)
 		sysinfo_new[TUNNEL_TEREDO] += g_SysInputInfo[i][TUNNEL_TEREDO];
 		sysinfo_new[TUNNEL_TEREDO_LEN] += g_SysInputInfo[i][TUNNEL_TEREDO_LEN];
 
+		sysinfo_new[TUNNEL_GTP] += g_SysInputInfo[i][TUNNEL_GTP];
+
 		sysinfo_new[SEND_TCP_RST] += g_SysInputInfo[i][SEND_TCP_RST];
 		sysinfo_new[SEND_TCP_RST_LEN] += g_SysInputInfo[i][SEND_TCP_RST_LEN];
 
@@ -153,7 +155,9 @@ void sysinfo_output(void)
 	fprintf(fp,"\n%-10s %12s %12s\n", "TUNNEL", "total_pkt", "total_len");	
 	fprintf(fp,"%-10s %12llu %12llu\n", "6over4", sysinfo_new[TUNNEL_6OVER4], sysinfo_new[TUNNEL_6OVER4_LEN]); 
 	fprintf(fp,"%-10s %12llu %12llu\n","teredo",sysinfo_new[TUNNEL_TEREDO], sysinfo_new[TUNNEL_TEREDO_LEN]);
-	
+	fprintf(fp,"%-10s %12llu %12llu\n","GTP",sysinfo_new[TUNNEL_GTP], 0);
+
+
 	fprintf(fp,"\n%-10s %12s\n", "DROP", "total_pkt");
 	fprintf(fp,"%-10s %12ld\n", "app", packet_io_get_app_drop_num_tot());
 	fprintf(fp,"%-10s %12ld\n\n", "lib", packet_io_get_lib_drop_num());

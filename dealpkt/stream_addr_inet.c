@@ -21,6 +21,10 @@
 #include "deal_ipv6.h"
 
 #ifdef __cplusplus
+extern "C" const addr_convert_t G_ADDR_CONVERT_HANDLE[];
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 

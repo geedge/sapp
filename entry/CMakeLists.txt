@@ -1,5 +1,7 @@
-
 cmake_minimum_required(VERSION 2.8)
+
+include_directories(${MESA_SDK_PREFIX}/include)
+include_directories(${MESA_SDK_PREFIX}/include/MESA)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/include/support)
 include_directories(${CMAKE_SOURCE_DIR}/include/net)
@@ -31,6 +33,7 @@ endif()
 
 # Target Install
 install(TARGETS sapp DESTINATION ${CMAKE_SOURCE_DIR}/run/)
+install(FILES ${CMAKE_SOURCE_DIR}/build/inner_plug/libsapp_assistant.so DESTINATION /opt/MESA/lib)
 #install(DIRECTORY conf/ DESTINATION ${CMAKE_SOURCE_DIR}/run/conf)
 #install(DIRECTORY log/ DESTINATION ${CMAKE_SOURCE_DIR}/run/log)
 

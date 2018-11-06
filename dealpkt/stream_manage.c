@@ -44,8 +44,8 @@
 extern "C" {
 #endif
 
-int Stream_Analyse_Process_Platform_version_VERSION_20181102; /* nm sapp | grep version */
-int sapp_args_v = 20181102; /* ./sapp -v */
+int Stream_Analyse_Process_Platform_version_VERSION_20181105; /* nm sapp | grep version */
+int sapp_args_v = 20181105; /* ./sapp -v */
 
 /* 
 	下面的版本号用于packet_io_lib校验, 防止平台和dl.so不匹配导致运行异常, 或已修复的BUG未更新.
@@ -1271,7 +1271,16 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 	//int isreverse=0;
 	struct streaminfo *pheap_stream;
 	struct streaminfo *pstack_stream;
-	
+
+	while(pheap_stream_pr!= NULL && pheap_stream_pr->addr_skip_for_layer_cmp == 1)
+	{
+		pheap_stream_pr = (struct streaminfo_private *)pheap_stream_pr->stream_public.pfather;
+	}
+	while(pstack_stream_pr != NULL && pstack_stream_pr->addr_skip_for_layer_cmp == 1)
+	{
+		pstack_stream_pr = (struct streaminfo_private *)pstack_stream_pr->stream_public.pfather;
+	}
+
 	if(pheap_stream_pr==NULL)
 	{
 		if(unlikely(pstack_stream_pr!=NULL)){		

@@ -152,7 +152,7 @@ enum timestamp_level{
 /* 临时存储用于构造每层包头的参数, 如ip->id, ip->ttl, tcp->flags, tcp->win参数等 */
 typedef struct{
 	void *layer_args[__ADDR_TYPE_MAX];
-	long __pad[7];
+	long __pad[6];
 }layer_args_t;
 
 

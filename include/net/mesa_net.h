@@ -761,6 +761,24 @@ struct mesa_isakmp_payload_hdr{ /* RFC2408-Page22 */
 	unsigned short payload_len;
 };
 
+#define GTP_MSG_TYPE_T_PDU (0xFF)
+
+struct gtp_hdr{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+	unsigned char flags;
+	unsigned char msg_type;
+    unsigned short len;
+	unsigned int teid;
+#elif __BYTE_ORDER == __BIG_ENDIAN
+	unsigned int teid;
+    unsigned short len;
+	unsigned char msg_type;
+	unsigned char flags;
+#else
+#error "Please check <endian.h>"
+#endif
+};
+
 #define MAX_ADDR_TYPE_STRING_LEN	(64)
 #define MAX_ADDR_LIST_STRING_LEN	(2048)
 #define MAX_ADDR_EMBED_LAYER_NUM (20) /* 最大地址嵌套层数 */
