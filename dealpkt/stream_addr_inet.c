@@ -20,8 +20,6 @@
 #include <ctype.h>
 #include "deal_ipv6.h"
 
-extern "C" const addr_convert_t G_ADDR_CONVERT_HANDLE[];
-
 #ifdef __cplusplus
 extern "C" const addr_convert_t G_ADDR_CONVERT_HANDLE[];
 #endif

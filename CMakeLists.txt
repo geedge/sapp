@@ -1,6 +1,8 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_MACOSX_RPATH 0)
+
 # MESA SDK Root
 set(MESA_SDK_PREFIX "/opt/MESA/" CACHE STRING "MESA Framework Prefix")
 # Capture Mode

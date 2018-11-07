@@ -72,14 +72,14 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
 
     pstream_pr->addr_use_as_hash = 0;
 
-    pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
+    pstream_pr->offset_to_raw_pkt_hdr = (unsigned short)offset_to_raw_pkt_hdr;
     pstream_pr->raw_pkt = raw_pkt;
     pstream_pr->layer_dir = pfstream_pr->layer_dir; /* L2TP层不能对本层做出方向性判断, 使用父层的方向值, L2TP只能是UDP或IP承载 */
 
     pstream->pfather=&pfstream_pr->stream_public;
     pstream->type=STREAM_TYPE_L2TP;
     pstream->routedir=routedir;
-    pstream->threadnum=thread_num;
+    pstream->threadnum=(UCHAR)thread_num;
 
     next_layer_hdr = (char *)p_gtd_hdr + sizeof(struct gtp_hdr);
     next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct gtp_hdr);

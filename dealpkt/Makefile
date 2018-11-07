@@ -39,6 +39,7 @@ OBJS += plug_support.o
 OBJS += deal_l2tp.o
 OBJS += deal_isakmp.o
 OBJS += deal_mac_in_mac.o
+OBJS += deal_gprs_tunnel.o
 
 
 ifeq ($(IIEFD_DUAL_STACK), $(YES))

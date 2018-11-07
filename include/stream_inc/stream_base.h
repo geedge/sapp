@@ -199,9 +199,8 @@ struct layer_addr_pppoe_session
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 	unsigned int ver:4;   
-	unsigned int type:4;  
-#endif
-#if __BYTE_ORDER == __BIG_ENDIAN
+	unsigned int type:4;
+#elif __BYTE_ORDER == __BIG_ENDIAN
 	unsigned int type:4; 
 	unsigned int ver:4; 
 #endif
