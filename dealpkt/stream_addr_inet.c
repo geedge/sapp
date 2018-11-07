@@ -56,6 +56,8 @@ static int __addr_pptp_n2p_fun(const struct layer_addr *paddr, char *buf, int bu
 static int __addr_socks_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
 static int __addr_openvpn_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
 static int __addr_mac_in_mac_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
+static int __addr_gtp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
+
 
 static int __addr_ipv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 static int __addr_ipv6_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
@@ -78,6 +80,8 @@ static int __addr_sockv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_va
 static int __addr_openvpn_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 static int __addr_mac_in_mac_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 static const char *__layer_addr_ntop (const struct streaminfo *stream, int thread_index);
+static int __addr_gtp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
+
 
 
 const addr_convert_t G_ADDR_CONVERT_HANDLE[] = 
@@ -112,7 +116,8 @@ const addr_convert_t G_ADDR_CONVERT_HANDLE[] =
 	{ADDR_TYPE_MAC_IN_MAC,	STREAM_TYPE_NON, "ADDR_TYPE_MAC_IN_MAC",		"MAC_IN_MAC",		"MAC_IN_MAC<",__addr_mac_in_mac_n2p_fun,__addr_mac_in_mac_pton}, /* 4 */
 	{ADDR_TYPE_IPV4,			STREAM_TYPE_OPENVPN,"ADDR_TYPE_OPENVPN",	"OpenVPN",	"OpenVPN<",__addr_openvpn_n2p_fun,__addr_openvpn_pton},/* 2017-02-10 lijia add */
 	{ADDR_TYPE_IPV6,			STREAM_TYPE_OPENVPN,"ADDR_TYPE_OPENVPN",	"OpenVPN",	"OpenVPN<",__addr_openvpn_n2p_fun,__addr_openvpn_pton},/* 2017-02-10 lijia add */
-	{__ADDR_TYPE_MAX,		STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL} /* EOF */
+    {ADDR_TYPE_GPRS_TUNNEL,			STREAM_TYPE_NON,"ADDR_TYPE_GTP",		"GTP",		"GTP<",__addr_gtp_n2p_fun,__addr_gtp_pton},	/*  */
+    {__ADDR_TYPE_MAX,		STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL} /* EOF */
 };
 
 
@@ -794,6 +799,15 @@ static int __addr_l2tp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 	return 0;
 }
 
+static int __addr_gtp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
+{
+    addr_bin_val->stream.addr.addrtype = ADDR_TYPE_GPRS_TUNNEL;
+    addr_bin_val->stream.type = STREAM_TYPE_NON;
+    addr_bin_val->stream.addr.paddr = addr_bin_val->addr_value;
+
+    return 0;
+}
+
 static int __addr_sockv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 {
 	char *save_ptr;
@@ -1411,6 +1425,19 @@ static int __addr_l2tp_n2p_fun(const struct layer_addr *paddr, char *buf, int bu
 	strncpy(buf, __L2TP_ADDR_STRING, addr_len + 1);
 
 	return addr_len + 1;
+}
+
+static int __addr_gtp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
+{
+#define __GTP_ADDR_STRING		"NULL"
+
+    int addr_len = strlen(__GTP_ADDR_STRING);
+    if(buf_len <= addr_len + 1){
+        return -1;
+    }
+    strncpy(buf, __GTP_ADDR_STRING, addr_len + 1);
+
+    return addr_len + 1;
 }
 
 static int __addr_arp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
