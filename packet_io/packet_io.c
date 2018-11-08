@@ -831,11 +831,11 @@ static int packet_io_send_by_sys_routev4(MESA_send_handle *send_handle,int datal
 	/* build_ipv4时已经按dir方向构造好地址, 此处直接使用ip_dst即可 */
 	sock_addr_v4.sin_addr.s_addr = ip4_hdr->ip_dst.s_addr;
 
-	if(sapp_global_single.send_fake_pkt_by_gdev != 0){
-		return packet_io_send_fake_pkt_by_gdev(send_handle, ADDR_TYPE_IPV4, 
-							actual_data_ptr+VXLAN_HDR_RESERVED_LEN, datalen, dir,
-							feedback_buf, feedback_buf_len);
-	}
+	//if(sapp_global_single.send_fake_pkt_by_gdev != 0){
+	//	return packet_io_send_fake_pkt_by_gdev(send_handle, ADDR_TYPE_IPV4,
+	//						actual_data_ptr+VXLAN_HDR_RESERVED_LEN, datalen, dir,
+	//						feedback_buf, feedback_buf_len);
+	//}
 
 retry:
 	ret = sendto(send_handle->raw_ipv4_fd, actual_data_ptr, datalen, 0,
@@ -979,22 +979,28 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 	UINT16 ether_type;
 	
 	if(g_topology_mode & __NET_CONN_PARALLEL){
-		switch(low_layer_type){
-			case __ADDR_TYPE_IP_PAIR_V4:
-			case ADDR_TYPE_IPV4:
-				ret = packet_io_send_by_sys_routev4(send_handle, datalen, dir, feedback_buf, feedback_buf_len);
-			break;
+		if(sapp_global_single.send_fake_pkt_by_gdev != 0){
+			ret = packet_io_send_fake_pkt_by_gdev(send_handle, low_layer_type,
+												  (char *)send_handle->send_buf, datalen, dir, feedback_buf, feedback_buf_len);
+		}
+		else {
+			switch (low_layer_type) {
+				case __ADDR_TYPE_IP_PAIR_V4:
+				case ADDR_TYPE_IPV4:
+					ret = packet_io_send_by_sys_routev4(send_handle, datalen, dir, feedback_buf, feedback_buf_len);
+					break;
 
-			case __ADDR_TYPE_IP_PAIR_V6:
-			case ADDR_TYPE_IPV6:
-				ret = packet_io_send_by_sys_routev6(send_handle, datalen, dir, feedback_buf, feedback_buf_len);
-			break;
+				case __ADDR_TYPE_IP_PAIR_V6:
+				case ADDR_TYPE_IPV6:
+					ret = packet_io_send_by_sys_routev6(send_handle, datalen, dir, feedback_buf, feedback_buf_len);
+					break;
 
-			default:
-				/* 并联模式下的非IP协议, 不能使用系统路由发送, 必须使用raw_eth_fd通过指定网卡发送 */
-				ether_type = net_layer_to_ethernet_protocol(low_layer_type);
-				ret = packet_io_send_by_manual_conf(send_handle, datalen, dir, ether_type);
-			break;
+				default:
+					/* 并联模式下的非IP协议, 不能使用系统路由发送, 必须使用raw_eth_fd通过指定网卡发送 */
+					ether_type = net_layer_to_ethernet_protocol(low_layer_type);
+					ret = packet_io_send_by_manual_conf(send_handle, datalen, dir, ether_type);
+					break;
+			}
 		}
 	}else{
 		ret = dl_io_fun_list.dl_io_low_level_send(send_handle->low_level_send_handle, 

@@ -16,6 +16,7 @@ typedef struct{
 	int threadnum; 
 	int raw_ipv4_fd; /* 仅用于发送IPv4的rst包 */
 	int raw_ipv6_fd; /* 仅用于发送IPv6的rst包 */
+	int raw_udp_fd;
 	int raw_eth_fd; /* 仅用于发送Ethernet原始报文 */
 	unsigned char *send_buf;
 	void *low_level_send_handle; /* 底层发包句柄, 根据底层库决定, 通过dl_io_get_send_handle()获取 */

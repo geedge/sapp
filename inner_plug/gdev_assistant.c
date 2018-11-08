@@ -280,6 +280,7 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 {
 	const struct streaminfo_private *pstrem_pr =  (const struct streaminfo_private *)send_handle->user_arg;
 	const struct streaminfo *pstream = (const struct streaminfo *)send_handle->user_arg;
+    const struct streaminfo *tmpstream = pstream;
 	vxlan_header_t *vxlan_hdr;
 	struct vxlan_info mim_mem_hdr;
 	struct mesa_ethernet_hdr *inner_eth_hdr;
@@ -299,13 +300,16 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 	}
 
 	opt_len = sizeof(mim_mem_hdr);
-	ret = MESA_get_stream_opt(pstream, MSO_STREAM_VXLAN_INFO, &mim_mem_hdr, &opt_len);
+	ret = MESA_get_stream_opt(tmpstream, MSO_STREAM_VXLAN_INFO, &mim_mem_hdr, &opt_len);
 	if(ret < 0){
 		sapp_runtime_log(20, "packet_io_send_fake_pkt_by_gdev(): get vxlan info error!\n");
 		return -1;
 	}
-		
-	data -= sizeof(struct mesa_ethernet_hdr);
+    data += sizeof(vxlan_header_t);/*跳过预留的vxlan头部*/
+    datalen -=  sizeof(vxlan_header_t);
+
+	data += sizeof(struct mesa_ethernet_hdr);/*跳过mim的外层MAC*/
+	datalen -= sizeof(struct mesa_ethernet_hdr);
 	inner_eth_hdr = (struct mesa_ethernet_hdr *)data;
 
 	if(dir_reverse){ /* 当前发包方向与流创建时的地址是反向的, 即流结构体的四元组: sip=1.1.1.1, dip=2.2.2.2, 当前想发送的包sip=2.2.2.2, dip=1.1.1.1 */
@@ -325,6 +329,7 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 	}
 	
 	data -= sizeof(vxlan_header_t);
+	datalen +=  sizeof(vxlan_header_t);
 
 	vxlan_hdr = (vxlan_header_t *)data;
 
@@ -340,11 +345,11 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 	}else{
 		vxlan_hdr->dir = mim_mem_hdr.link_dir;
 	}
-
+#if 0
 	data -= sizeof(struct mesa_udp_hdr);
 	udp_hdr = (struct mesa_udp_hdr *)data;
 
-	udp_hdr->uh_sport = htons(50709); /* TODO, 根据业务号计算源端口范围, vpn_id减100一般就是业务号 */
+	udp_hdr->uh_sport = htons((unsigned short)sapp_global_single.send_fake_pkt_gdev_sport); /* 根据配置文件填写vxlan源端口 */
 	udp_hdr->uh_dport = htons(4789); 
 	udp_hdr->uh_ulen = htons(datalen + sizeof(vxlan_header_t) + sizeof(struct mesa_udp_hdr));
 	udp_hdr->uh_sum = 0;
@@ -360,13 +365,16 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 	ip4_hdr->ip_id = MESA_rand_range(10000, 60000);
 	ip4_hdr->ip_ttl = MESA_rand_range(64, 128);
 	ip4_hdr->ip_p = IPPROTO_UDP;
-	ip4_hdr->ip_dst.s_addr = 0xC906000A;
-	ip4_hdr->ip_src.s_addr = 0xE506000A; 
+	ip4_hdr->ip_dst.s_addr = 0xC906000A;/*  目的ID根据device_id查表获得*/
+	ip4_hdr->ip_src.s_addr = 0xE506000A; /*  源IP从配置文件获得，可以固定*/
+#endif
 
 	sock_addr_v4.sin_family = AF_INET;
-	sock_addr_v4.sin_addr.s_addr = ip4_hdr->ip_dst.s_addr;
+	inet_pton(AF_INET, "10.3.127.1", &sock_addr_v4.sin_addr.s_addr);
+	//sock_addr_v4.sin_addr.s_addr = ;/* TODO, 目的ID根据device_id查表获得*/
+	sock_addr_v4.sin_port = htons(4789);
 
-	ret = sendto(send_handle->raw_ipv4_fd, data, datalen + sizeof(vxlan_header_t) + sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip4_hdr), 0,
+    ret = sendto(send_handle->raw_udp_fd, data, datalen, 0,
 				(struct sockaddr *)&sock_addr_v4, sizeof(struct sockaddr));
 
 	return ret;

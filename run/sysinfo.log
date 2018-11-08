@@ -1,11 +1,11 @@
 
 *********************** [41msysinfo exactly[0m *************************
 RCV-PKT       total_pkt    total_len          pps          Bps
-Ethernet          10000      3120673        10000      3120673
-IPv4              12497      4133728        12497      4133728
+Ethernet           3008       810487         3008       810487
+IPv4               3470      1012489         3470      1012489
 IPv6                  0            0            0            0
-TCP                1681       244969         1681       244969
-UDP                9118      3497319         9118      3497319
+TCP                 248        46821          248        46821
+UDP                2646       858372         2646       858372
 Unknown               0            0            0            0
 
 ***************************************************************
@@ -18,7 +18,7 @@ SEND-ERR              0            0            0            0
 TUNNEL        total_pkt    total_len
 6over4                0            0
 teredo                0            0
-GTP                2505            0
+GTP                 462            0
 
 DROP          total_pkt
 app                   0
@@ -28,21 +28,21 @@ lib                   0
 ------------------------------- TCP statistics detail -----------------------------
     |-----------Current---------| |------Realtime-----| |--------From-of-startup---------|
 tid link-syn link-data link-nouse link-new/s link-del/s stream-num reset-num hash-list-max
-  0       74       204        356        634          0        634         0             6
+  0       18        49         55        122          0        122         1             2
 
 -------------------------- UDP statistics detail ------------------------
     |-----------Current---------| |------Realtime-----| |--From-of-startup--|
 tid link-one  link-two  link-more link-new/s link-del/s stream-num reset-num
-  0     2451       826        671       3948          0       3948         0
+  0      476       137        213        826          0        826         0
 *****************************************************************
 
 ################# [41msysinfo humanly[0m --- is same as above! #########
 RCV-PKT       total_pkt    total_len          pps          bps
-Ethernet          10000        2.98M        10000       23.81M
-IPv4              12497        3.94M        12497       31.54M
+Ethernet           3008      791.49K         3008        6.18M
+IPv4               3470      988.76K         3470        7.72M
 IPv6                  0            0            0            0
-TCP                1681      239.23K         1681        1.87M
-UDP                9118        3.34M         9118       26.68M
+TCP                 248       45.72K          248      365.79K
+UDP                2646      838.25K         2646        6.55M
 Unknown               0            0            0            0
 #################################################################
 SND-PKT       total_pkt    total_len          pps          bps

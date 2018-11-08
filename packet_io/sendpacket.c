@@ -1940,7 +1940,7 @@ err:
 }
 
 
-static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int kill_num, 
+static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int kill_num,
 								char *feedback_buf, int *feedback_buf_len)
 {
 	int i, ret = -1, reserved_hdr_len, send_len = 0;
@@ -1976,7 +1976,7 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 
 	if(sapp_global_single.send_fake_pkt_by_gdev != 0){ /* 预留底层封装vxlan包的空间, 避免再二次copy */
 		send_handle->user_arg = (void *)stream;
-		reserved_hdr_len += VXLAN_HDR_RESERVED_LEN;
+		reserved_hdr_len += sizeof(vxlan_header_t);
 	}
 
 	tcp_rst_finger = make_tcp_rst_finger_mark(thread_num, (const raw_pkt_t *)raw_pkt);
@@ -2424,6 +2424,23 @@ static int send_handle_init(int tot_thread_num)
 		if(g_send_handle[i].raw_ipv4_fd < 0){
 			printf("socket v4 error, %s\n", strerror(errno));
 			return -1;
+		}
+		g_send_handle[i].raw_udp_fd = socket(AF_INET, SOCK_DGRAM, 0);
+		if(g_send_handle[i].raw_udp_fd < 0){
+			printf("socket udp error, %s\n", strerror(errno));
+			return -1;
+		} else
+		{
+			int opt_value = 1;
+			setsockopt(g_send_handle[i].raw_udp_fd, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof(int));
+			struct sockaddr_in listen_addr;
+			bzero(&listen_addr, sizeof(listen_addr));
+			listen_addr.sin_family = AF_INET;
+			listen_addr.sin_port = htons((unsigned short)sapp_global_single.send_fake_pkt_gdev_sport); /* 根据配置文件填写vxlan源端口 */
+			if(bind(g_send_handle[i].raw_udp_fd, (struct sockaddr *) &listen_addr, sizeof(listen_addr)) != 0){
+				printf("socket bind udp error");
+				return -1;
+			}
 		}
 		if(g_packet_io_ipv6_raw_socket){
 			g_send_handle[i].raw_ipv6_fd = socket(PF_INET6, SOCK_RAW, IPPROTO_RAW);
