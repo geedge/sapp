@@ -100,6 +100,43 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
 }
 
 
+static int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned int payload_len)
+{
+    if (payload_len >= sizeof(struct gtp_hdr))
+    {
+        unsigned int gtp_u = (2152);
+        unsigned int gtp_c = (2123);
+        unsigned int gtp_v0 = (3386);
+
+        unsigned short dest = 0, source = 0;
+
+        if (pstream->addr.addrtype == __ADDR_TYPE_IP_PAIR_V6
+            || pstream->addr.addrtype == ADDR_TYPE_IPV6) {
+            dest = ntohs(pstream->addr.ipv6->dest);
+            source = ntohs(pstream->addr.ipv6->source);
+        } else {
+            dest = ntohs(pstream->addr.ipv4->dest);
+            source = ntohs(pstream->addr.ipv4->source);
+        }
+
+        if ((source == gtp_u) || (dest == gtp_u) || (source == gtp_c)
+            || (dest == gtp_c) || (source == gtp_v0) || (dest == gtp_v0)) {
+            struct gtp_hdr *gtp =
+                    (struct gtp_hdr *) payload;
+            unsigned short gtp_version = (gtp->flags & 0xE0) >> 5;
+
+            if ((gtp_version == 0) || (gtp_version == 1) || (gtp_version == 2)) {
+                unsigned short message_len = ntohs(gtp->len);
+
+                if (message_len == (payload_len - sizeof(struct gtp_hdr))) {
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 /*
 	内置插件, 
 	用于识别当前UDP流是否是隧道.
@@ -107,6 +144,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
 */
 char udp_gtp_identify_entry(const struct streaminfo *pstream, const void *this_hdr, const void *raw_pkt, void **pme)
 {
+#if 0
 	if(pstream->addr.addrtype == ADDR_TYPE_IPV4)
 	{
 		if(ntohs(pstream->addr.tuple4_v4->dest) == GPRS_TUNNEL_PORT && ntohs(pstream->addr.tuple4_v4->source) == GPRS_TUNNEL_PORT)
@@ -125,6 +163,13 @@ char udp_gtp_identify_entry(const struct streaminfo *pstream, const void *this_h
     }
     else
         ;
+#else
+    struct streaminfo_private *pstream_pr = (struct streaminfo_private *)pstream;
+    if(1 == identify_gtp(pstream, this_hdr+sizeof(struct udphdr), pstream_pr->raw_pkt->raw_pkt_len - (this_hdr - pstream_pr->raw_pkt->raw_pkt_data) - sizeof(struct udphdr)))
+    {
+        pstream_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNEL_GPRS_TUNNEL;
+    }
+#endif
 	return APP_STATE_DROPME; /* 每个流只看第一个包, 不管是否GTP隧道, 后续都不再处理了 */
 }
 
