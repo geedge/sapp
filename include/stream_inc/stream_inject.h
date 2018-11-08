@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-#define STREAM_INJECT_H_VERSION		(20170619)
+#define STREAM_INJECT_H_VERSION		(20181108)
 
 
 /* 
@@ -83,10 +83,14 @@ int MESA_inject_pkt_feedback(struct streaminfo *stream, const char *payload, int
 						
 int MESA_sendpacket_ethlayer(int thread_index,const char *buf, int buf_len, unsigned int target_id);//papp online, shuihu
 
-/* 发送已构造好的完整IP包, 校验和等均需调用者计算 */
+/* 发送已构造好的完整IPv4包, IPv4头部校验和等均需调用者计算 */
 int MESA_sendpacket_iplayer(int thread_index,const char *buf,  int buf_len, __uint8_t dir);
 
+/* 发送已构造好的完整IPv4包, 用于vxlan环境, options用于填充和vxlan相关的选项 */
 int MESA_sendpacket_iplayer_options(int thread_index,const char *data,  int data_len, u_int8_t dir, SAPP_TLV_T *options, int opt_num);
+
+/* 发送已构造好的完整IPv6包, 校验和等均需调用者计算, 用于vxlan环境, options用于填充和vxlan相关的选项 */
+int MESA_sendpacket_ipv6_layer_options(int thread_index,const char *data,  int data_len, u_int8_t dir, SAPP_TLV_T *options, int opt_num);
 
 /* 发送指定参数IP包, 可指定负载内容, 校验和由平台自动计算,
    sip, dip为主机序. */

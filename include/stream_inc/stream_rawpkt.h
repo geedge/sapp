@@ -1,7 +1,7 @@
 #ifndef _APP_STREAM_RAWPKT_H_
 #define _APP_STREAM_RAWPKT_H_ 
 
-#define STREAM_RAWPKT_H_VERSION		(20170731)
+#define STREAM_RAWPKT_H_VERSION		(20181029)
 
 #include "stream_base.h"
 
@@ -13,9 +13,13 @@ enum{
 	RAW_PKT_GET_THIS_LAYER_HDR,	//value type: void *, out_value should be void **
 	RAW_PKT_GET_THIS_LAYER_REMAIN_LEN, //value type: int , out_value should be int *
 
-	RAW_PKT_GET_GDEV_IP, // network-order, valute type is int, out_value should be int *
-	RAW_PKT_GET_VXLAN_ID, // network-order, valute type is int, out_value should be int *
-	RAW_PKT_GET_VXLAN_SPORT, // network-order, valute type is short, out_value should be short *
+	RAW_PKT_GET_GDEV_IP, // network-order, value type is int, out_value should be int *
+	RAW_PKT_GET_VXLAN_ID, // network-order, LINK_ID, not VPN_ID, value type is int, out_value should be int *
+	RAW_PKT_GET_VXLAN_SPORT, // network-order, value type is short, out_value should be short *
+	RAW_PKT_GET_VXLAN_ENCAP_TYPE,  //value type is char, 
+	RAW_PKT_GET_VXLAN_LINK_DIR,  //value type is char, 
+	RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC,  //value type is char[6],  
+	RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC,  //value type is char[6],  
 };
 
 #ifdef __cplusplus

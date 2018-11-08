@@ -44,8 +44,8 @@
 extern "C" {
 #endif
 
-int Stream_Analyse_Process_Platform_version_VERSION_20181013; /* nm sapp | grep version */
-int sapp_args_v = 20181013; /* ./sapp -v */
+int Stream_Analyse_Process_Platform_version_VERSION_20181108; /* nm sapp | grep version */
+int sapp_args_v = 20181108; /* ./sapp -v */
 
 /* 
 	下面的版本号用于packet_io_lib校验, 防止平台和dl.so不匹配导致运行异常, 或已修复的BUG未更新.
@@ -2334,13 +2334,14 @@ void free_heap_stream_info(struct streaminfo *heap_stream, int layer)
 	if(NULL == heap_stream){
 		return;
 	}
+	threadnum = heap_stream->threadnum;
 
 	pfather = heap_stream->pfather;
 	addr = &heap_stream->addr;
 
 	/* 为了节省空间, 地址类型ADDR_TYPE_IPV4/6实际存储在下一层的IP层, 无需free */
 	if(addr->paddr){
-		dictator_free(heap_stream->threadnum, addr->paddr);
+		dictator_free(threadnum, addr->paddr);
 		addr->paddr = NULL;
 	}
 	
@@ -2349,7 +2350,6 @@ void free_heap_stream_info(struct streaminfo *heap_stream, int layer)
 			无需free, 
 			pfather指向的streaminfo结构才是通过copy_stream_info_to_heap()动态malloc的.
 		*/
-		threadnum = heap_stream->threadnum;
 #if SAPP_INSECTICIDE
 		/* 2018-09-20 lijia close!  此处关闭清空stream, 因为后续很多地方还有继续看op_state的值, 设置成0xFE会导致莫名其妙的问题 */
 		//memset(heap_stream, 0xFE, sizeof(struct streaminfo)); 

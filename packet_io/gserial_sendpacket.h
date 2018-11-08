@@ -37,7 +37,7 @@ extern "C" {
 参数说明:
 		plug_id:插件ID;
 		thread_index:线程号；
-		buf:伪造数据包
+		buf:伪造数据包(IPv4头)
 		buf_len:buf长度，主机字节序；
 		dir:传输方向
 返回值:发送成功则返回发送数据字节数；
@@ -45,7 +45,22 @@ extern "C" {
 */
 int Gserial_sendpacket_iplayer(int plug_id, struct streaminfo *stream,const char *buf, int buf_len, u_char dir);
 
-
+/*
+函数名:Gserial_sendpacket_ipv6_layer();
+函数功能:发送伪造数据包,伪造的数据包存储在buf中,
+			 且数据包最低层ipv6层，不能发送链路层的数据。
+			  即buf中依次存储ip层、tcp/udp层、(应用层)数据；
+			  程序只负责将buf中内容发送出去。
+参数说明:
+		plug_id:插件ID;
+		thread_index:线程号；
+		buf:伪造数据包(IPv6头)
+		buf_len:buf长度，主机字节序；
+		dir:传输方向
+返回值:发送成功则返回发送数据字节数；
+			若发送失败则返回FAILE (-1);
+*/
+int Gserial_sendpacket_ipv6_layer(int plug_id, struct streaminfo *stream,const char *buf, int buf_len, u_char dir);
 
 /*
 函数名:Gserial_sendpacket_ipv4();

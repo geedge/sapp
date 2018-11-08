@@ -64,6 +64,28 @@ int Gserial_sendpacket_iplayer(int plug_id, struct streaminfo *stream,const char
 	return ret;
 }
 
+int Gserial_sendpacket_ipv6_layer(int plug_id, struct streaminfo *stream,const char *buf, int buf_len, u_char dir)
+{
+	int ret;
+	
+	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
+	{
+		printf("Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
+		return -1;
+	}
+	
+#if IOMODE_MARSIO
+	ret = MESA_sendpacket_iplayer_options(plug_id, buf, buf_len, dir, NULL, 0);
+	return ret;
+#endif
+
+	ret = MESA_sendpacket_iplayer(stream->threadnum, buf, buf_len, dir);
+
+	Gserial_sendpacket_ip_info[stream->threadnum][plug_id]++;
+
+	return ret;
+}
+
 int Gserial_sendpacket_ipv4(int plug_id, struct streaminfo *stream,u_char ttl,u_char protocol,uint sip, uint dip,
 									const char *payload,int payload_len,u_char dir)
 {

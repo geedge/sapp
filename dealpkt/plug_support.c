@@ -95,6 +95,10 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_GDEV_IP:
 		{
 			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
+			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+				ret = -1;
+				break;
+			}
 			int *out_value = (int *)void_value;
 			*out_value = mr_ctrlzone->g_device_in_addr;
 		}
@@ -104,6 +108,10 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_VXLAN_ID:
 		{
 			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
+			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+				ret = -1;
+				break;
+			}			
 			int *out_value = (int *)void_value;
 			*out_value = ntohl(mr_ctrlzone->g_device_vpn_id);
 		}
@@ -112,10 +120,60 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_VXLAN_SPORT:
 		{
 			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
+			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+				ret = -1;
+				break;
+			}			
 			short *out_value = (short *)void_value;
 			*out_value = mr_ctrlzone->l4_src_port;
 		}
 		break;
+
+		case RAW_PKT_GET_VXLAN_ENCAP_TYPE:
+		{
+			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
+			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+				ret = -1;
+				break;
+			}			
+			unsigned char *out_value = (unsigned char *)void_value;
+			*out_value = mr_ctrlzone->__encap_type;
+		}
+		break;
+		
+		case RAW_PKT_GET_VXLAN_LINK_DIR:
+		{
+			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
+			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+				ret = -1;
+				break;
+			}			
+			unsigned char *out_value = (unsigned char *)void_value;
+			*out_value = mr_ctrlzone->route_dir;
+		}
+		break;
+
+		case RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC:
+		{
+			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
+			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+				ret = -1;
+				break;
+			}			
+			memcpy(void_value, mr_ctrlzone->g_device_mac, 6);
+		}
+		break;
+
+		case RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC:
+		{
+			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
+			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+				ret = -1;
+				break;
+			}			
+			memcpy(void_value, mr_ctrlzone->l_device_mac, 6);
+		}
+		break;		
 #endif
 		default:
 			ret = -1;

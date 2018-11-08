@@ -2495,7 +2495,7 @@ static inline int dir_check(unsigned char raw_dir)
 	return 0;
 }
 
-int MESA_sendpacket_iplayer(int thread_index,const char *data,  int data_len, u_int8_t dir)
+static int __MESA_sendpacket_iplayer(int thread_index,const char *data,  int data_len, u_int8_t dir, int layer_type)
 {
 	MESA_send_handle *send_handle;
 	int ret, offset = 0;
@@ -2526,7 +2526,7 @@ int MESA_sendpacket_iplayer(int thread_index,const char *data,  int data_len, u_
 	memcpy(send_handle->send_buf + offset, data, data_len);
 	
 	ret = packet_io_send_fake_pkt(send_handle, data_len+sizeof(struct mesa_ethernet_hdr), SEND_TYPE_LINK_INJECT, 
-							   __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
+							   layer_type, dir, thread_index,
 							   (char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
 
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
@@ -2535,6 +2535,16 @@ int MESA_sendpacket_iplayer(int thread_index,const char *data,  int data_len, u_
 	g_SysInputInfo[thread_index][SEND_IP_RAW_PKT_LEN]+=ret;	
 	
 	return ret;
+}
+
+int MESA_sendpacket_iplayer(int thread_index,const char *data,  int data_len, u_int8_t dir)
+{
+	return __MESA_sendpacket_iplayer(thread_index, data, data_len, dir, __ADDR_TYPE_IP_PAIR_V4);
+}
+
+int MESA_sendpacket_ipv6_layer(int thread_index,const char *data,  int data_len, u_int8_t dir)
+{
+	return __MESA_sendpacket_iplayer(thread_index, data, data_len, dir, __ADDR_TYPE_IP_PAIR_V6);
 }
 
 int MESA_fakepacket_send_ipv4(int thread_index,u_int8_t ttl,
@@ -2943,10 +2953,12 @@ static void sapp_fakepacket_set_vxlan_options(struct mr_tunnat_ctrlzone *mr_ctrl
 }
 
 /*
+	此函数由ipv4, ipv6发包函数共用, 靠ether_type_host参数区别.
 	data: 包含ip头部的整个ip包;
 	data_len: 包含ip头部长度.
 */
-int MESA_sendpacket_iplayer_options(int thread_index,const char *data,  int data_len, u_int8_t dir, SAPP_TLV_T *options, int opt_num)
+static int __MESA_sendpacket_iplayer_options(int thread_index,const char *data,  int data_len, 
+    u_int8_t dir, SAPP_TLV_T *options, int opt_num, unsigned short ether_type_host)
 {
 	/* marsio系列函数0表示正常, -1表示错误, g_serial系列函数正常返回字节数, 错误返回-1 */
 	int inner_ret;
@@ -2967,7 +2979,7 @@ int MESA_sendpacket_iplayer_options(int thread_index,const char *data,  int data
 	
 	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], data_len+sizeof(struct mesa_ethernet_hdr));
 	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
-	inner_ehdr->ether_type = ntohs(ETHERTYPE_IP);/* 底层设为ethernte */
+	inner_ehdr->ether_type = ntohs(ether_type_host);/* 底层设为ethernet */
 
 	/* 此处只处理跟IP层相关的选项, vxlan相关选项在公共函数sapp_fakepacket_set_vxlan_options()设置 */
 	memset(&mr_ctrlzone, 0 , sizeof(struct mr_tunnat_ctrlzone));
@@ -2997,6 +3009,19 @@ int MESA_sendpacket_iplayer_options(int thread_index,const char *data,  int data
 	g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
 	
 	return data_len;
+}
+
+
+int MESA_sendpacket_iplayer_options(int thread_index,const char *data,  int data_len, 
+    u_int8_t dir, SAPP_TLV_T *options, int opt_num)
+{
+	return __MESA_sendpacket_iplayer_options(thread_index, data, data_len, dir, options, opt_num, ETHERTYPE_IP);
+}
+
+int MESA_sendpacket_ipv6_layer_options(int thread_index,const char *data,  int data_len, 
+    u_int8_t dir, SAPP_TLV_T *options, int opt_num)
+{
+	return __MESA_sendpacket_iplayer_options(thread_index, data, data_len, dir, options, opt_num, ETHERTYPE_IPv6);
 }
 
 int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t protocol,

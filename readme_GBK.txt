@@ -630,4 +630,7 @@ int stream_addr_list_pton(const char *addr_list_str, void *dst, int size, int th
 2018-09-23 李佳
 1)修改判断广播和组播的判断逻辑, vxlan模式下对于vxlan封装的数据包不做判断；
 2)支持IPV6发包.
+*********************************************************************
+2018-11-08 李佳
+1)增加Gserial_sendpacket_ipv6_layer()函数, 可以发送已构造好的IPV6数据包.
 #endif
