@@ -1413,6 +1413,30 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 	printf("get opt from rawpkt: totlen:%d, remain_len:%d, raw_hdr:%p, this_hader:%p\n",
 		tot_len, this_layer_remain_len, raw_pkt_hdr, this_layer_hdr);
 
+
+	int gdev_ip = 0;
+	char gdev_ip_str[32];
+	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_GDEV_IP, &gdev_ip);
+	inet_ntop(AF_INET, &gdev_ip, gdev_ip_str, 32);
+
+	int link_id;
+	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_VXLAN_ID, &link_id);
+	
+	unsigned short vxlan_sport = 0;
+	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_VXLAN_SPORT, &vxlan_sport);
+	
+	unsigned char link_dir = 0;
+	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_VXLAN_LINK_DIR, &link_dir);
+
+	char gdev_mac[6], local_mac[6];
+	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC, gdev_mac);
+	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC, local_mac);
+
+	printf("get vxlan opt from rawpkt:  gdev_ip:%s, vxlan_link_id:%d, sport:%u, link_dir:%d, smac:%02x-%02x-%02x-%02x-%02x-%02x, dmac:%02x-%02x-%02x-%02x-%02x-%02x \n", 
+		 gdev_ip_str, ntohl(link_id), ntohs(vxlan_sport), link_dir,
+		 gdev_mac[0], gdev_mac[1], gdev_mac[2], gdev_mac[3], gdev_mac[4], gdev_mac[5],
+		 local_mac[0], local_mac[1], local_mac[2],  local_mac[3], local_mac[4], local_mac[5]);
+
 	return APP_STATE_GIVEME;	
 }
 
