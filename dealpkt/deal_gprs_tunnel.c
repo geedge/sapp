@@ -11,9 +11,11 @@ extern "C" {
 
 struct layer_addr_gtp
 {
-    unsigned char source[8];
-    unsigned char dest[8];
-};
+    struct gtp_hdr source;
+    unsigned int src_seq;
+    struct gtp_hdr dest;
+    unsigned int dest_seq;
+}__attribute__ ((aligned (1)));
 
 extern int ipv4_entry(struct streaminfo_private *pfstream, const void *this_layer_data, int thread_num,
                       unsigned char routedir, const raw_pkt_t *raw_pkt, int);
@@ -37,33 +39,44 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     int ret = PASS;
     char *next_layer_hdr;
     int next_layer_offset;
+    unsigned int cur_seq = 0, seq_offset = 0;
+
 
     /* 之前已经通过协议识别插件识别过, 所以在entry()里不用再次判断 */
     p_gtd_hdr = (const struct gtp_hdr *)((char *)this_layer_data + sizeof(struct mesa_udp_hdr));
 
-    if(p_gtd_hdr->flags != 0x30)
+    /* 仅处理T-PDU类型的数据面信息，控制面不认为是GTP隧道*/
+    if(p_gtd_hdr->msg_type != GTP_MSG_TYPE_T_PDU)
+    {
+        sapp_runtime_log(10, "GTP layer msg_type not T_PDU, %x !\n", p_gtd_hdr->msg_type);
+        return PASS;
+    }
+    if(p_gtd_hdr->flags != 0x30 && p_gtd_hdr->flags != 0x32)
     {
         sapp_runtime_log(20, "GTP layer flag not 0x30, %x !\n", p_gtd_hdr->flags);
         return PASS;
     }
-    if(p_gtd_hdr->msg_type != GTP_MSG_TYPE_T_PDU)
-    {
-        sapp_runtime_log(20, "GTP layer msg_type not T_PDU, %x !\n", p_gtd_hdr->msg_type);
-        return PASS;
-    }
 
+    if(p_gtd_hdr->flags == 0x32)
+    {
+        cur_seq = ntohs(*(unsigned short *)(p_gtd_hdr + 1));
+        seq_offset = sizeof(unsigned int);
+    }
 
     g_SysInputInfo[thread_num][TUNNEL_GTP]++;
 
     memset(&tmp_index, 0, sizeof(struct streamindex));
+    memset(&gtpaddr, 0, sizeof(struct layer_addr_gtp));
     if(pfstream_pr->layer_dir == 1)
     {
-        memcpy(gtpaddr.source, p_gtd_hdr, sizeof(struct gtp_hdr));
+        memcpy(&gtpaddr.source, p_gtd_hdr, sizeof(struct gtp_hdr));
+        gtpaddr.src_seq = cur_seq;
         pstream->curdir = DIR_C2S;
     }
     else
     {
-        memcpy(gtpaddr.dest, p_gtd_hdr, sizeof(struct gtp_hdr));
+        memcpy(&gtpaddr.dest, p_gtd_hdr, sizeof(struct gtp_hdr));
+        gtpaddr.dest_seq = cur_seq;
         pstream->curdir = DIR_S2C;
     }
     pstream->addr.paddr = &gtpaddr;
@@ -74,15 +87,15 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
 
     pstream_pr->offset_to_raw_pkt_hdr = (unsigned short)offset_to_raw_pkt_hdr;
     pstream_pr->raw_pkt = raw_pkt;
-    pstream_pr->layer_dir = pfstream_pr->layer_dir; /* L2TP层不能对本层做出方向性判断, 使用父层的方向值, L2TP只能是UDP或IP承载 */
+    pstream_pr->layer_dir = pfstream_pr->layer_dir; /* 不能对本层做出方向性判断, 使用父层的方向值, 只能是UDP或TCP承载 */
 
     pstream->pfather=&pfstream_pr->stream_public;
     pstream->type=STREAM_TYPE_NON;
     pstream->routedir=routedir;
     pstream->threadnum=(UCHAR)thread_num;
 
-    next_layer_hdr = (char *)p_gtd_hdr + sizeof(struct gtp_hdr);
-    next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct gtp_hdr);
+    next_layer_hdr = (char *)p_gtd_hdr + sizeof(struct gtp_hdr) + seq_offset;
+    next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct gtp_hdr) + seq_offset;
 
     if((*next_layer_hdr & 0xF0) == 0x40)
     {
@@ -97,6 +110,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
         sapp_runtime_log(20, "GTP next layer not IPv4 or IPv6, drop pkt !\n");
         return PASS;
     }
+    return ret;
 }
 
 
