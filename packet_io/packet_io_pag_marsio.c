@@ -133,7 +133,7 @@ void dl_io_free_sendbuf(void *phandle, int thread_num)
 int dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 						int eth_carry_layer_addr_type, int dir,int thread_num)
 {
-	//TODO:
+	//TODO 2:
 
 	printf("TODO: pag send not support yet\n");
 	assert(0);
@@ -193,7 +193,7 @@ static int __pag_get_raw_pkt_len(const raw_pkt_t *raw_pkt)
 		struct mesa_ip6_hdr *ip6hdr = (struct mesa_ip6_hdr *)raw_pkt->raw_pkt_data;
 		raw_pkt_len = ntohs(ip6hdr->ip6_payload_len) + sizeof(struct mesa_ip6_hdr);	
 	}else{
-		//TODO
+		raw_pkt_len = -1;
 	}
 
 	return raw_pkt_len;

@@ -16,7 +16,7 @@
 #include "MESA_feedback.h"
 
 /*
-2015-04-15 , TODO
+2015-04-15
    平台实时捕获最近的数据包, 按size指定大小, 如最近的100MB,
    每个线程分为两个文件, 循环写入,
 	文件名规则:
@@ -820,9 +820,6 @@ static int packet_io_send_by_sys_routev4(MESA_send_handle *send_handle,int datal
 	datalen -= offset;
 
 #endif
-	/* TODO, 如果是mac-in-mac, 从内层MAC开始作为负载, 增加vxlan_hdr, udp_hdr, ip_hdr, 直接发送给GDEV, 类似主动发包
-       需要从外层mac中剥离出link_id, 将gdev_id, 转换为gdev_IP, 即当前包从哪个gdev来的, 要从哪个gdev回去.
-	*/
 
 	ip4_hdr = (struct mesa_ip4_hdr *)actual_data_ptr;
 
@@ -1121,19 +1118,19 @@ static int parse_send_raw_pkt_conf(void)
 		}
 		G_SND_RAW_PKT_INFO[G_SND_RAW_PKT_INFO_NUM].send_args[CAP_MODEL_DPDK].port_id = strtoul(section, NULL, 10);	
 
-		/* TODO, PPF args, port number */
+		/* TODO 1, PPF args, port number */
 		section = strtok_r(NULL, delim, &saveptr);
 
-		/* TODO, PPF args, port number */
+		/* TODO 1, PPF args, port number */
 		section = strtok_r(NULL, delim, &saveptr);
 
-		/* TODO, npacket args, port number */
+		/* TODO 1, npacket args, port number */
 		section = strtok_r(NULL, delim, &saveptr);
 
-		/* TODO, qnf args, port number */
+		/* TODO 1, qnf args, port number */
 		section = strtok_r(NULL, delim, &saveptr);
 
-		/* TODO, n95 args, port number */
+		/* TODO 1, n95 args, port number */
 		section = strtok_r(NULL, delim, &saveptr);
 			
 		while(strtok_r(NULL, delim, &saveptr)); /* clear line buf */

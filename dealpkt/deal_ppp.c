@@ -417,7 +417,7 @@ int ppp_chap_pkt_parse(const struct mesa_ppp_chap_hdr *chap_hdr, char *res, int 
 }
 
 /*
-	TODO:
+	TODO 2:
 	PPP协议解压缩怎么处理? 解压后相当于原始包的内容变了, 有点类似IP分片重组, 
 	思路:解压之后, 当前层的底层各协议直接挂载到pfather, 但要跟新raw_pkt指针，底层的entry不会再被调用, 从当前层之上，继续调用上层协议。
 

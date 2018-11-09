@@ -256,7 +256,7 @@ struct half_stream
     void *pktinfo;       ///<单包其它信息数组，预留，数组长度为    pktcout_new
 };  
 
-///@todo 应用需要的结构
+///@ 应用需要的结构
 struct app_info_struct
 {
     char op_state;

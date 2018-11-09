@@ -484,8 +484,7 @@ static cmd_tree_t *ik_cmd_search(inner_iknow_t *ihandle,
 }
 
 
-/* 
-	TODO:
+/*
 		简写命令, 如"sh ht b", 如果每层只命中一个命令, 则实际执行"show http bps";
 		只命中了一半, 如"show http", 并不是一个完整命令, 提示"uncomplete cmd";
 		

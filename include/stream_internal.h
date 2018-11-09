@@ -226,7 +226,7 @@ struct pptp_stream_key{
 	UINT32 dip;   /* sip,dip are network order */
 	UINT16 sip_side_call_id; /* 网络数据包中由sip发出的GRE包的callid, 实际意义表示peer call id, network order */
 	UINT16 dip_side_call_id; /* 网络数据包中由dip发出的GRE包的callid, 实际意义表示peer call id, network order */
-	//struct streaminfo_private *stream_pr;  /* TODO, 用于保存地址链表, 目前仅用了最底层的IP和call_id */
+	//struct streaminfo_private *stream_pr;  /* TODO 1, 用于保存地址链表, 目前仅用了最底层的IP和call_id */
 };
 
 /* PPTP协议解析层管理结构, sapp内部使用 */
@@ -256,7 +256,7 @@ struct l2tp_stream_key{
 	UINT16 sip_side_session_id; /* sip测发来包的tunnelid, network order */
 	UINT16 dip_side_tunnel_id; /* dip测发来包的tunnelid, network order */
 	UINT16 dip_side_session_id; /* dip测发来包的tunnelid, network order */
-	//struct streaminfo_private *stream_pr;  /* TODO, 用于保存地址链表, 目前仅用了最底层的IP和call_id */
+	//struct streaminfo_private *stream_pr;  /* TODO 1, 用于保存地址链表, 目前仅用了最底层的IP和call_id */
 };
 
 struct l2tp_info_pri{

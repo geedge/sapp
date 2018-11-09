@@ -710,7 +710,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		udp_cleardata(pstream);
 	}
 
-	/* TODO, 基于IPv6的UDP port 1701 L2TP协议 */
+	/* TODO 2, 基于IPv6的UDP port 1701 L2TP协议 */
 	
 	return ret;
 }
@@ -783,13 +783,12 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 		break;
 
 		case IPPROTO_L2TPV3:
-			/* TODO */
 			sapp_runtime_log(20, "recv ipv4 carry L2TPv3, not support yet!\n");
 			ret = PASS;
 		break;
 		
 		default:		
-			//printf("TODO: unsupport Ipv4 protocol:0x%x!\n", a_packet->ip_p);
+			//printf("unsupport Ipv4 protocol:0x%x!\n", a_packet->ip_p);
 		break;
 	}
 	

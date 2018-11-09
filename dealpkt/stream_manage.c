@@ -346,7 +346,7 @@ int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned s
 	if((0 == pstream_pr->timeout)  /* 0为从未设置过 */
 	 || (timeout >= pstream_pr->timeout))  /* 新设置的超时值必须大于等于当前值 */
 	{
-	  /* TODO, 将此流移动到LRU超时链表适当的位置, 从head开始按剩余的超时时间排序。
+	  /* TODO 1, 将此流移动到LRU超时链表适当的位置, 从head开始按剩余的超时时间排序。
 	    NOTE:
 	    因为可能全局都没开启超时, 但针对单个流设置了超时, 那么此流应该移动到LRU末尾,
 		否则del_stream_by_time()函数只会判断最末尾的流是否超时, 不会判断其他的流.
@@ -1015,9 +1015,6 @@ static int  cmpaddr_positive(void *addr_heap, void *addr_stack, UCHAR addrtype, 
 			}		
 		}
 		break;
-
-		/* TODO:  MPLS地址只比较label, TTL等不参与地址HASH */
-
 		default:
 			/* 其他地址类型, 如VLAN, L2TP等, 无方向性特征, 无需转换, 直接比较即可 */
 			ret = memcmp(addr_heap, addr_stack, addrlen);
@@ -1739,7 +1736,7 @@ struct streamindex *findstreamindex(struct streamindex *pindex, const raw_pkt_t 
 	
       //ptmp->hash_index=hash_index;
 
-#if 0    /* TODO, 二分查找 */
+#if 0
      a_index= findandsethashindex(phashstream[hash_index],pindex);
 #elif 0
 	a_index=findandsethashindex_binsearch(elemcount,phashstream[hash_index],pindex);
@@ -2132,7 +2129,7 @@ void reverse_addr(void *addr, int addrtype)
 		}	
 		break;
 
-		/* TODO:PPTP-addr */
+		/* TODO 1:PPTP-addr */
 
 		default:
 			/* 其他地址类型, 如VLAN, L2TP等, 无方向性特征, 无需转换 */
@@ -2201,7 +2198,7 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
 		}		
 		break;
 
-		/* TODO:PPTP-addr */
+		/* TODO 1:PPTP-addr */
 		
 		default:
 			/* 其他地址类型, 如VLAN, L2TP等, 无方向性特征,直接copy */
@@ -2396,7 +2393,6 @@ static inline void update_stream_status(UCHAR threadnum, UCHAR stream_type, UCHA
 
 
 /*
-	TODO: 
 	因众核tilera架构下的内存分配分为local和shared模式, 
 	原来在主线程将所有全局内存一次性申请完的模式不可用, 
 	改为每个工作线程自己初始化.

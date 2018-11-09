@@ -94,7 +94,7 @@ static int guess_if_l2tpv2(const struct streaminfo *a_udp, const struct mesa_udp
 
 	pl2tphdrv2 = (const struct l2tp_hdr_v2 *)((char *)udph + sizeof(struct mesa_udp_hdr));
 
-	/* TODO, 暂时只处理L2TPv2版本, L2TPv3待添加 */
+	/* TODO 2, 暂时只处理L2TPv2版本, L2TPv3待添加 */
 	if(2 != pl2tphdrv2->version){
 		if(3 == pl2tphdrv2->version){
 			sapp_runtime_log(20, "recv l2tp version3 packet, but not support yet, TODO!\n");
@@ -141,7 +141,7 @@ static int l2tp_insert_to_stream_hash(int tid, struct l2tp_stream_key *l2tp_key,
 	l2tp_pri->ssinfo.session_state = 0; /* PPTP数据传输阶段, 不方便判断pending, data, close状态, 靠判断当前session-state值决定 */
 	memcpy(&l2tp_pri->l2tp_key, l2tp_key, sizeof(struct l2tp_stream_key));
 
-	/* TODO, 增加嵌套地址链表 */
+	/* TODO 2, 增加嵌套地址链表 */
 	hash_ret = MESA_htable_add(g_l2tp_htable_array[tid], (const uchar *)l2tp_key, sizeof(struct l2tp_stream_key), l2tp_pri);
 	if(hash_ret < 0){
 		dictator_free(tid,  l2tp_pri);
@@ -209,19 +209,19 @@ static char l2tp_ctrl_pkt_parse(const struct streaminfo *a_udp, struct l2tp_info
 	if(0 == ntohs(pavp->attribute_type)){
 		switch(ntohs(*p_msg_type)){
 			case L2TP_CTRL_MSG_SCCRQ:
-				/* TODO, 解析AVP内容, 单向流情况下可获取对方tunnel_id */
+				/* TODO 2, 解析AVP内容, 单向流情况下可获取对方tunnel_id */
 			break;
 
 			case L2TP_CTRL_MSG_SCCRP:
-				/* TODO, 解析AVP内容, 单向流情况下可获取对方tunnel_id */
+				/* TODO 2, 解析AVP内容, 单向流情况下可获取对方tunnel_id */
 			break;
 			
 			case L2TP_CTRL_MSG_ICRQ:
-				/* TODO, 解析AVP内容, 单向流情况下可获取对方session_id */
+				/* TODO 2, 解析AVP内容, 单向流情况下可获取对方session_id */
 			break;
 			
 			case L2TP_CTRL_MSG_ICRP:
-				/* TODO, 解析AVP内容, 单向流情况下可获取对方session_id */
+				/* TODO 2, 解析AVP内容, 单向流情况下可获取对方session_id */
 			{
 				/* NOTE: 此处的IP地址和UDP端口要从原始包中获取, 因为stream->addr的地址按大端口是源的规则, 可能已经转化过了 */
 				const struct mesa_ip4_hdr *ip4hdr = (const struct mesa_ip4_hdr *)((char *)udph - a_udp_pr->offset_to_ip_hdr);
@@ -446,7 +446,7 @@ static int l2tp_stream_key_comp(const uchar * key1, uint size1, const uchar * ke
 		}	
 	}
 
-	/* TODO, 判断嵌套地址链表, 目前仅判断了最外层的IP, PORT和call_id */
+	/* TODO 1, 判断嵌套地址链表, 目前仅判断了最外层的IP, PORT和call_id */
 	return -1;
 }
 
@@ -456,7 +456,7 @@ static uchar *l2tp_stream_key_dup(const uchar *key, uint key_size)
 	const struct l2tp_stream_key *pptp_stack_key = (const struct l2tp_stream_key *)key;
 	struct l2tp_stream_key *l2tp_heap_key;
 
-	/* TODO, 需要和l2tp_stream_key_free()函数匹配, 改为dictator_malloc(), 增加threadnum, free时也要用标准free() */
+	/* TODO 1, 需要和l2tp_stream_key_free()函数匹配, 改为dictator_malloc(), 增加threadnum, free时也要用标准free() */
 	l2tp_heap_key = (struct l2tp_stream_key *)malloc(sizeof(struct l2tp_stream_key));
 	memcpy(l2tp_heap_key, pptp_stack_key, sizeof(struct l2tp_stream_key));
 
@@ -465,7 +465,7 @@ static uchar *l2tp_stream_key_dup(const uchar *key, uint key_size)
 
 static void l2tp_stream_key_free(uchar *key, uint key_size)
 {
-	/* TODO, 需要和l2tp_stream_key_dup()函数匹配, 改为dictator_malloc(), 需要增加threadnum */
+	/* TODO 1, 需要和l2tp_stream_key_dup()函数匹配, 改为dictator_malloc(), 需要增加threadnum */
 	free(key);
 }
 

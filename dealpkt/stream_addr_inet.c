@@ -866,7 +866,7 @@ err:
 	return -1;
 }
 
-/* TODO, 基于IPv6的openvpn协议如何? */
+/* How TODO 2, 基于IPv6的openvpn协议如何? */
 static int __addr_openvpn_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 {
 	addr_bin_val->stream.addr.addrtype = ADDR_TYPE_IPV4; 

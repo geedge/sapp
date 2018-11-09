@@ -378,7 +378,7 @@ int pptp_entry(struct streamindex *pindex, const void *this_layer_data,int threa
 		
 		case PPP_PROTOCOL_IPCP:
 		/*
-			TODO:
+			TODO 1:
 				协议标准做法是当双向IPCP都确认OK, 进入数据传输阶段时,
 				调用业务插件, 告之content_type类型.
 				但IPCP是双向的, 必须等服务端的IPCP确认后, 再通知业务层,

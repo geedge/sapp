@@ -43,7 +43,7 @@ extern int g_use_MESA_sleep_sw;
 extern void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq);
 extern void timestamp_record_lib(const raw_pkt_t *raw_pkt);
 /*
-	TODO:
+
 	注册控制命令,
 	"set timestamp record minimum xxx",
 	即超时最小是xxx时才显示.
@@ -166,7 +166,7 @@ int dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun)
 
 unsigned char *dl_io_get_sendbuf(void *phandle, int thread_num)
 {
-	/* TODO */	
+	/*  */
 	return NULL;
 }
 
@@ -181,14 +181,14 @@ void dl_io_free_sendbuf(void *phandle, int thread_num)
 int dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 						int eth_carry_layer_addr_type, int dir,int thread_num)
 {
-	/* TODO */	
+	/*  */
 	return -1;
 }
 
 
 void *dl_io_get_send_handle(int thread_num)
 {
-	/* TODO */	
+	/*  */
 	return (void *)1324521345;
 }
 

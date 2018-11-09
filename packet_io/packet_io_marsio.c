@@ -20,7 +20,7 @@ extern "C" {
 		3: 一共一块卡, 单进单出
 
 
-	TODO:
+	TODO 1:
 	    从send_raw_pkt.conf解析的数据存储于G_SND_RAW_PKT_INFO,
 	    本模块虽不一定从这些网卡收包, 但肯定会从这些网卡发包, 用于注入数据包给从应用的虚拟网卡,
 	    仍然要在初始化时打开这些设备, 创建send_path.

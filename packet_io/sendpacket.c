@@ -522,7 +522,7 @@ int sendpacket_build_ipv4(u_int16_t carry_layer_len, u_int8_t tos, u_int16_t id,
 }
 
 
-/* TODO: 带扩展头部的IPv6包 */
+/* TODO 2: 带扩展头部的IPv6包 */
 int sendpacket_build_ipv6(u_int8_t traffic_class, u_int32_t flow_lable,
                               u_int16_t len, u_int8_t next_header, u_int8_t hop,
                               const struct in6_addr *src, const struct in6_addr *dst,
@@ -1648,7 +1648,7 @@ static int build_net_layer_l2tp(struct streaminfo_private *stream_pr, int carry_
 	unsigned short int16_tmp;
 	
 	if(reverse != 0){
-		/* TODO: 
+		/* TODO 2:
 			L2TP包c2s和s2c方向TUNNEL-ID不一样, 目前没有形成L2TP流, 无法保存另一个方向的信息 ,
 			所以, 暂时只能单向KILL.
 		*/
@@ -1813,7 +1813,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 		}
 		break;
 
-		/* TODO: GRE v1有callid, 分别存储于C2S, S2C两个方向的数据包, 发送双向RST需要记录另一方向的值 */
+		/* TODO 2: GRE v1有callid, 分别存储于C2S, S2C两个方向的数据包, 发送双向RST需要记录另一方向的值 */
 		case ADDR_TYPE_GRE:
 			this_layer_len = calc_gre_hdr_len(
 						 (const struct mesa_gre_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
@@ -2206,7 +2206,6 @@ int MESA_kill_connection(struct streaminfo *stream, const void *ext_raw_pkt)
 		case STREAM_TYPE_SOCKS5:
 		case STREAM_TYPE_HTTP_PROXY:
 		case STREAM_TYPE_PPPOE:
-			//TODO
 			printf("stream type: %d, not support kill_connection!\n", stream->type);
 			return -1;
 			//assert(0);
@@ -2255,7 +2254,6 @@ int MESA_kill_connection_feedback(struct streaminfo *stream, const void *ext_raw
 		case STREAM_TYPE_SOCKS5:
 		case STREAM_TYPE_HTTP_PROXY:
 		case STREAM_TYPE_PPPOE:
-			//TODO
 			printf("stream type: %d, not support kill_connection!\n", stream->type);
 			return -1;
 			//assert(0);
@@ -2514,7 +2512,7 @@ int sendpacket_init_new(int tot_thread_num)
 		return -1;
 	}
 
-	/* to do, TODO, 
+	/* to do, TODO 1,
 		//get_gateway_info();
 	
 		创建一个线程, 动态获取默认网关的MAC地址, 发包目标如果是IPv4地址而且是内网IP,发送arp请求,

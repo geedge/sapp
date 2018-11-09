@@ -916,11 +916,11 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 				if(ret==DROP){
 					goto prosecc_pkt_drop;
 				}				
-				/* TODO: 加密数据, 直接丢弃?! */
+				/* 加密数据, 直接丢弃! */
 				goto done;
 
 			default:
-				//printf("TODO:Unknown IPv6 header type:0x%x!\n", next_hdr_type);				
+				//printf("Unknown IPv6 header type:0x%x!\n", next_hdr_type);
 				goto err_exit;
 			break;
 		}

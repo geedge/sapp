@@ -150,7 +150,7 @@ static int ipv4_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 				skip_len = 0;
 				break;
 			}else{
-				/* TODO: teredo隧道模式 */
+				/* TODO 1: teredo隧道模式 */
 				skip_len = -1; 
 			}
 		break;
@@ -463,7 +463,7 @@ static int vlan8021q_jump_to_layer(const char *raw_data,  int raw_layer_type, in
 			skip_len = -1;
 		break;
 
-		case 0x8200: /* TODO: XinJing捕包发现此类型, 未知什么包 */
+		case 0x8200: /* XinJing捕包发现此类型, 未知什么包 */
 			skip_len = -1;
 		break;
 		
@@ -581,7 +581,6 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 		case ADDR_TYPE_PPPOE_SES:
 		case ADDR_TYPE_MPLS:		
 		case ADDR_TYPE_GRE:
-		/* TODO */
 		default:
 			printf("TODO: jmp unsupport raw_layer_type:%d in MESA_net_jump_to_layer()!\n", raw_layer_type);
 			return NULL;
@@ -863,7 +862,7 @@ int MESA_stream_list_cmp(struct streaminfo_private *stream1_pr, struct streaminf
 	}
 #endif
 
-	/* TODO, to do: 
+	/* TODO 2, to do:
 		if(isreverse), 反转地址比较, 或调用反向地址比较函数 
 	*/
 

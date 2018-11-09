@@ -58,11 +58,11 @@ static int gdev_block_ipv4_legality_check(unsigned int ip_net_order)
 		return 0;
 	}
 	
-	if((ip_host_order & 0xFF) == 0){ /* 最低8位为0, 其实也不一定非法, 但非常可能是个网络地址, 先算非法吧, TODO */
+	if((ip_host_order & 0xFF) == 0){ /* 最低8位为0, 其实也不一定非法, 但非常可能是个网络地址, 先算非法吧, TODO 1 */
 		return 0;
 	}
 
-	if((ip_host_order & 0xFF) == 0xFF){ /* 最低8位为0xff, 其实也不一定非法, 但非常可能是个广播地址, 先算非法吧, TODO */
+	if((ip_host_order & 0xFF) == 0xFF){ /* 最低8位为0xff, 其实也不一定非法, 但非常可能是个广播地址, 先算非法吧, TODO 1 */
 		return 0;
 	}	
 
@@ -325,7 +325,9 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 	}else if(ADDR_TYPE_IPV6 == addrtype){
 		inner_eth_hdr->ether_type = htons(ETH_P_IPV6);
 	}else{
-		assert(0); /* TODO */
+		assert(0); /* */
+        sapp_runtime_log(20, "packet_io_send_fake_pkt_by_gdev(): inner_eth_hdr not IP4 or IP6, %d!\n", addrtype);
+		return -1;
 	}
 	
 	data -= sizeof(vxlan_header_t);

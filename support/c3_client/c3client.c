@@ -491,9 +491,6 @@ static int c3client_data_rep(c3client_t *client)
 	}
 
 
-
-	// FIXME
-
 	return 0;
 
 }

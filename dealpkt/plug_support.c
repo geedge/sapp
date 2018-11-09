@@ -596,7 +596,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 
 		case MSO_TCP_ISN_S2C:
 		{
-			/* TODO: 代码与上面重复, 待合并 */
+			/* TODO 1: 代码与上面重复, 待合并 */
 			struct tcpdetail_private *pdetail_pr;
 			UINT32 *out_val = (UINT32 *)opt_val;
 			if(STREAM_TYPE_TCP != pstream->type){

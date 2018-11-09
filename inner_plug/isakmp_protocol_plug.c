@@ -97,7 +97,7 @@ static int isakmp_v1_process(const struct streaminfo *a_udp, struct isakmp_info_
 
 	/* 只解析SA类型的payload */
 	if(ISAKMP_PAYLOAD_TYPE_SA == ikp_net_hdr->next_payload){
-		/* TODO, 按RFC2408, 细分析包格式中的加密类型、HASH算法等 */
+		/* TODO 1, 按RFC2408, 细分析包格式中的加密类型、HASH算法等 */
 	}
 
 	return pro_plug_ret;
@@ -130,7 +130,7 @@ static int isakmp_process(const struct streaminfo *a_udp, struct isakmp_info_pri
 	if((1 == ikp_net_hdr->major_version) && (0 == ikp_net_hdr->minor_version)){
 		pro_plug_ret = isakmp_v1_process(a_udp, ikp_pri, ikp_net_hdr, ip_hdr);
 	}else{
-		/* TODO, IKE version2 process */
+		/* TODO 1, IKE version2 process */
 		goto dropme;
 	}
 	

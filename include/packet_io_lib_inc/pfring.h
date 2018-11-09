@@ -142,7 +142,7 @@ extern "C" {
 					       */
     } tx;
 
-    /* TODO these fields should be moved in ->priv_data */
+    /*  these fields should be moved in ->priv_data */
     /* DNA (Direct NIC Access) */
     struct {
       u_char dna_mapped_device;    

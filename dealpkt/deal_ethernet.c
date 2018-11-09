@@ -108,8 +108,6 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 		}
 	}
 
-	/* TODO: 将每层头部相对原始包的偏移量放在raw_pkt里, 不再使用参数传递 */
-	
 	switch(eth_type){
 		case ETHERTYPE_IP:	
 			if(g_skip_ethernet_layer_sw){

@@ -248,7 +248,7 @@ static int pptp_stream_key_insert_hash(const struct streaminfo *a_tcp, int tid, 
 
 	pptp_pri->my_stream = pptp_build_data_stream_info(a_tcp, pptp_key);
 
-	/* TODO, pptp_key增加嵌套地址链表 */
+	/* TODO 1, pptp_key增加嵌套地址链表 */
 	hash_ret = MESA_htable_add(g_pptp_htable_array[tid], (const uchar *)pptp_key, sizeof(struct pptp_stream_key), pptp_pri);
 	if(hash_ret < 0){
 		/* NOTE: 底层隧道一样, 但隧道内有多个TCP连接时, 会HASH冲突, 需要free */
@@ -323,7 +323,7 @@ static int pptp_control_protocol_process_data(const struct streaminfo *a_tcp,
 				struct pptp_info_pri *pptp_pri, const struct mesa_ip4_hdr *ip_hdr)
 {
 	/*
-		TODO,
+		TODO 1,
 		跟踪控制连接, 解析出callid, 暂存于struct pptp_stream_key,
 		当两个方向的callid都获取到(即便单向流, 也可以获取对方的),
 		加入全局的PPTP_HASH表, 
@@ -515,7 +515,7 @@ static  int pptp_stream_key_comp(const uchar * key1, uint size1, const uchar * k
 		}
 	}
 
-	/* TODO, 判断嵌套地址链表, 目前仅判断了最外层的IP和call_id */
+	/* TODO 1, 判断嵌套地址链表, 目前仅判断了最外层的IP和call_id */
 
 	return -1;
 }
@@ -525,7 +525,7 @@ static uchar *pptp_stream_key_dup(const uchar *key, uint key_size)
 	const struct pptp_stream_key *pptp_stack_key = (const struct pptp_stream_key *)key;
 	struct pptp_stream_key *pptp_heap_key;
 
-	/* TODO, 改为dictator_malloc(), 增加threadnum, free时也要用标准free() */
+	/* TODO 1, 改为dictator_malloc(), 增加threadnum, free时也要用标准free() */
 	pptp_heap_key = (struct pptp_stream_key *)malloc(sizeof(struct pptp_stream_key));
 	memcpy(pptp_heap_key, pptp_stack_key, sizeof(struct pptp_stream_key));
 
@@ -534,7 +534,7 @@ static uchar *pptp_stream_key_dup(const uchar *key, uint key_size)
 
 static void pptp_stream_key_free(uchar *key, uint key_size)
 {
-	/* TODO, 改为dictator_malloc(), 需要增加threadnum */
+	/* TODO 1, 改为dictator_malloc(), 需要增加threadnum */
 	free(key);
 }
 

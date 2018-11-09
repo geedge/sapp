@@ -453,7 +453,7 @@ static int symbol_file_check(const char *raw_filename, void *user_arg)
 #elif (2 == SYMBOL_GET_TYPE)			
 		ret = symbol_convert_by_objdump(symbol_info_buf, &so_symbol_info);
 #else
-		//TODO
+		//TODO 1
 #endif
 		if(ret >= 0){
 			ret = symbol_insert_hash(so_file_info, &so_symbol_info, (int *)user_arg);

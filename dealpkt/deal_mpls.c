@@ -69,7 +69,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		pstream->addr.paddr=&addr;
 		pstream->addr.addrtype = ADDR_TYPE_MPLS;
 		pstream->addr.addrlen = sizeof(struct layer_addr_mpls);
-		pstream_pr->addr_use_as_hash = 0;//TODO: 定义需要加入hash计算的地址表，查表决定是否加入hash比对
+		pstream_pr->addr_use_as_hash = 0;//不加入hash比对
 		pstream_pr->addr_skip_for_layer_cmp = 1;
 		//ptmp->stream.p_layer_header = this_layer_data;
 		//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_layer_data - (char *)raw_pkt->raw_pkt_data;
@@ -85,7 +85,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 	}
 	
 	if(1 == this_mpls_hdr->mpls_bls) { /* 已到栈底, MPLS已结束 */
-		/* TODO, MPLS没有字段表示承载的协议类型, 如果MPLS承载的是IPv6协议，目前没有处理过 */
+		/* MPLS没有字段表示承载的协议类型, 如果MPLS承载的是IPv6协议，靠猜 */
 		((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
 		if((*next_layer_hdr & 0xF0) == 0x40)
         {

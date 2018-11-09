@@ -5,7 +5,7 @@ extern "C" {
 
 
 /*
-	TODO:
+	TODO 1:
 
 	建立L2TP全局hash, 靠地址链确定一个L2TP隧道,
 
@@ -310,7 +310,7 @@ int l2tpv2_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_d
 	pstream->addr.addrlen = sizeof(struct layer_addr_l2tp); /* 此处使用结构体长度, l2tphdr_len表示网络中传输的L2TP实际头部长度,可能很多头部字段缺失 */
 
 	/* 
-		TODO:
+		TODO 1:
 		L2TP的ID只有单方向本地意义, 而且本端暂无法获取对端的ID, 不像IP, TCP层源和目的同时存在, 
 		和PPTP的协议解析层一样, 获取CS双方的tunnelid和sessionid, 根据四元组,两个ID, 和嵌套地址链表创建L2TP流,
 		并调用l2tp业务层插件.
@@ -396,7 +396,7 @@ int l2tpv2_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_d
 		break;
 
 		case PPP_PROTOCOL_PAP:
-			/* TODO */
+			/* TODO 1*/
 		break;
 		
 		case PPP_PROTOCOL_CHAP:

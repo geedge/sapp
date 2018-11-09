@@ -456,7 +456,7 @@ static long ik_inner_cmd_quit(iknow_handle ihandle, iknow_conn iconn, const void
 	iknow_client_state_t *client_state = (iknow_client_state_t *)iconn;
 	
 	iprintf(ihandle, iconn, "bye!\n");
-	//ik_terminate_connection(); /* TODO: 怎么调用此函数呢?  ihandle换成pme吧? */
+	//ik_terminate_connection(); /* TODO 1: 怎么调用此函数呢?  ihandle换成pme吧? */
 	close(client_state->connfd);
 	return 0;
 }

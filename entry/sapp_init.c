@@ -324,7 +324,7 @@ int MESA_platform_init(int argc, char *argv[])
 	if(MESA_load_profile_string_nodef("conf/main.conf", "Module", "gateway_mac", gateway_mac, 32) < 0){
 		printf("read conf  'gateway_mac' error!\n");
 	}
-	packet_io_set_gateway_mac(gateway_mac); /* TODO, 读取配置文件 */
+	packet_io_set_gateway_mac(gateway_mac); /*读取配置文件 */
 
 	if(MESA_load_profile_string_nodef("conf/main.conf", "Module", "senddevice", snd_dev, 128) < 0){
 		printf("read conf  'senddevice' error!\n");

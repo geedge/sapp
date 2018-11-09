@@ -803,7 +803,7 @@ MESA_htable_handle ipv4_frag_htable_create(void)
 	hargs.thread_safe = 0;
 	hargs.recursive = 0;
 	hargs.hash_slot_size = 1048576;
-	hargs.max_elem_num = 50000;   /* TODO: 设个默认值, 增加配置文件,可指定最大分片队列数量 !! */
+	hargs.max_elem_num = 50000;   /* TODO 1: 设个默认值, 增加配置文件,可指定最大分片队列数量 !! */
 	hargs.eliminate_type = HASH_ELIMINATE_ALGO_LRU;
 	hargs.expire_time = IPV4_FRAG_TIMEOUT;
 	hargs.key_comp = ipv4_frag_key_cmp_cb;

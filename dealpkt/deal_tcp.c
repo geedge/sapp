@@ -644,7 +644,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	}
 	else
 	{
-	 /* TODO:
+	 /* TODO 1:
 		如果连接重置, 最好不使用原来的streamindex结构, free后再申请一个新的,
 		故意使streamindex地址与原来不一样, 主要便于DEBUG.
 	 */
@@ -1150,7 +1150,7 @@ void tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const 
 
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]);
 
-	/* do do, TODO, 
+	/* TODO 1,
 		free分平台靠time, list_lru原因, 此时属于真正的free,
 		如果是插件返回CLOSEME, 则只释放相关pdetail内存, 但仍将tcp流结构保留, 为了FD补救功能.
 
@@ -1162,7 +1162,7 @@ void tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const 
 		tcp_thorough_free(); // del_stream_by_time(), streamaddlist()时超过最大数量等函数要调用, 真正的free
 							// 包含tcp_light_free(); tcp_struct_free();两个函数
 
-		TODO:
+		TODO 1:
 			如果在调用tcp_deal_unorder()后, 因乱序包引发的kill_tcp, 应该判断stream_killed_flag标记, 
 			如果stream_killed_flag=1, 则后续的包不再处理, 直接tcp_free_half()释放.
 	*/
@@ -3109,12 +3109,12 @@ static inline void update_stream_list_raw_pkt_pointer(struct streaminfo_private 
 {
 	a_tcp_pr->raw_pkt = raw_pkt;
 
-	/* TODO: 是否需要递归的将a_tcp->pfather->raw_pkt也全部更新?! */
+	/* TODO 3: 是否需要递归的将a_tcp->pfather->raw_pkt也全部更新?! */
 
 	return;
 }
 
-/* TODO: 更新每个流的平均包数, 字节数, 平均流时间跨度统计 */
+/* TODO 1: 更新每个流的平均包数, 字节数, 平均流时间跨度统计 */
 #if DEBUG
 #include "iknow.h"
 typedef struct{
@@ -3371,7 +3371,7 @@ void packet_io_status_stream_update(int tid, UCHAR stream_type, UCHAR stream_sta
 	if(STREAM_TYPE_TCP == stream_type){
 		packet_io_status_tcp_stream_update(tid, stream_state, action);
 	}else if(STREAM_TYPE_UDP == stream_type){
-		/* TODO */
+		/*  */
 	}
 }
 

@@ -380,7 +380,7 @@ static void Ic_interactive_mode(void)
 	int cmd_ch;
 	int ret;
 
-	/* TODO: tcgetattr, tcsetattr */
+	/* TODO 1: tcgetattr, tcsetattr */
 	
 	while(1){
 		cmd_ch = Ic_getchar();
@@ -457,7 +457,7 @@ static int Ic_connect(void)
 		exit(1);		
 	}
 
-	/* TODO:
+	/* TODO 1:
 		命令行直接输入命令时, 服务器端不要输出欢迎字符,
 		可以向服务器端输入一个特殊命令, "be quiet", 表示客户端不要欢迎字符.
 	*/

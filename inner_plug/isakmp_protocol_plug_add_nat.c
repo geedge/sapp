@@ -104,7 +104,7 @@ static int isakmp_v1_process(const struct streaminfo *a_udp, struct isakmp_info_
 
 	/* 只解析SA类型的payload */
 	if(ISAKMP_PAYLOAD_TYPE_SA == ikp_net_hdr->next_payload){
-		/* TODO, 按RFC2408, 细分析包格式中的加密类型、HASH算法等 */
+		/* TODO 1, 按RFC2408, 细分析包格式中的加密类型、HASH算法等 */
 	}
 
 	return pro_plug_ret;
@@ -128,7 +128,7 @@ static int isakmp_raw_process(const struct streaminfo *a_udp, struct isakmp_info
 	if((1 == ikp_net_hdr->major_version) && (0 == ikp_net_hdr->minor_version)){
 		pro_plug_ret = isakmp_v1_process(a_udp, ikp_pri, ikp_net_hdr, ip_hdr);
 	}else {
-		/* TODO, IKE version2 process, 暂不支持 */
+		/* IKE version2 process, 暂不支持 */
 		sapp_runtime_log(RLOG_LV_INFO, "unsupport IKEv2 version yet!");
 		goto dropme;
 	}
@@ -173,7 +173,7 @@ static inline void isakmp_context_init(struct isakmp_info_pri *ikp_pri)
 }
 
 /*
-	TODO:
+	TODO 1:
 	IKEv2识别, 前几个字节SPI长度不同, 需要分别尝试识别两次.
 	
 */

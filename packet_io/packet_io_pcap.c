@@ -66,7 +66,7 @@ extern int g_use_MESA_sleep_sw;
 extern void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq);
 extern void timestamp_record_lib(const raw_pkt_t *raw_pkt);
 /*
-	TODO:
+
 	注册控制命令,
 	"set timestamp record minimum xxx",
 	即超时最小是xxx时才显示.

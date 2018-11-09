@@ -129,7 +129,7 @@ static int set_gre_hdr_ver0(struct mesa_gre_hdr *stack_gre_addr, const struct me
 	/* SRE信息在GRE头部的最后, 因为不定长, 不定数量 */
 	if(net_gre_base->route_flag){
 		//rse_hdr = (const struct gre_source_route_entry_hdr *)net_ext_hdr_value;
-		//TODO, copy SRE
+		//TODO 1, copy SRE
 		GRE_PRINT("found GRE SRE data, but not parse yet, TODO!\n");
 		return -1;
 	}
@@ -203,7 +203,7 @@ int set_gre_hdr(struct mesa_gre_hdr *stack_gre_addr, const void *this_layer_data
 	}else if(1 == net_gre_addr->gre_base.version){
 		gre_hdr_len = set_gre_hdr_ver1(stack_gre_addr, net_gre_addr);
 	}else{
-		//TODO, 未知版本
+		//TODO 1, 未知版本
 		GRE_PRINT("Unknown gre hdr version:%d\n", net_gre_addr->gre_base.version);
 		gre_hdr_len = -1;
 	}
@@ -249,7 +249,7 @@ int gre_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_data
 	pstream->addr.addrlen = sizeof(struct mesa_gre_hdr); 
 	
 	/* 
-		TODO:
+		TODO 1:
 		GRE层callid只在当前包存在, 但另一个方向的callid获取不到, 目前还没有GRE流,
 		GRE层双向格式可以不相同, 序号等也实时变化, 没有可以做为唯一标识的变量, 不做地址比较 
 		仅用于跳包, 和发送RST构造包时使用.	
@@ -263,7 +263,7 @@ int gre_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_data
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
 
-	/* TODO:
+	/* TODO 1:
 		GRE包格式解析, 不定长, 不定项!
 		基于GRE层发送RST包时, C2S与S2C是不同的, 需要类似TCP层保留双向的信息,
 		可能需要根据下层IP地址, 标识一个GRE虚拟通道, 本层还需要HASH查找?!
@@ -289,8 +289,6 @@ int gre_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_data
 			////((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
 			ret=pptp_entry(&tmp_index,(const void *)next_layer_hdr,thread_num,routedir,raw_pkt,next_layer_offset, &gre_addr, gre_hdr_len);		
 		break;
-			
-			// TODO, other type
 		default:
 			ret = PASS;
 			GRE_PRINT("Unknown gre protocol\n");

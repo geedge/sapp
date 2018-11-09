@@ -37,7 +37,7 @@ char process_http_proxy_stream(struct streaminfo *pstream,struct streaminfo *pPr
 		{
 			pProxydetail->dealstate=PROXY_STATE_LINK_IN;
 			//创建新流嵌套关系
-			/* 2014-12-29 lijia add, 增加流类型标识, TODO:如果是socks怎么识别? 此函数应增加一个类型参数 */
+			/* 2014-12-29 lijia add, 增加流类型标识, TODO 1:如果是socks怎么识别? 此函数应增加一个类型参数 */
 			pProxy->type = STREAM_TYPE_HTTP_PROXY; 
 			set_proxy_fstream(pstream,pProxy);
 		}
