@@ -9,14 +9,6 @@ extern "C" {
 
 #define GPRS_TUNNEL_PORT (2152)
 
-struct layer_addr_gtp
-{
-    struct gtp_hdr source;
-    unsigned int src_seq;
-    struct gtp_hdr dest;
-    unsigned int dest_seq;
-}__attribute__ ((aligned (1)));
-
 extern int ipv4_entry(struct streaminfo_private *pfstream, const void *this_layer_data, int thread_num,
                       unsigned char routedir, const raw_pkt_t *raw_pkt, int);
 
@@ -83,7 +75,8 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     pstream->addr.addrtype = ADDR_TYPE_GPRS_TUNNEL;
     pstream->addr.addrlen = sizeof(struct layer_addr_gtp); /* 此处使用结构体长度 */
 
-    pstream_pr->addr_use_as_hash = 0;
+    pstream_pr->addr_use_as_hash = 0;//地址不参与hash比对，仅算层数
+    pstream_pr->need_update_opposite_addr = 1;//需要更新对侧信息
 
     pstream_pr->offset_to_raw_pkt_hdr = (unsigned short)offset_to_raw_pkt_hdr;
     pstream_pr->raw_pkt = raw_pkt;

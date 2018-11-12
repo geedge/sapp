@@ -69,8 +69,9 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		pstream->addr.paddr=&addr;
 		pstream->addr.addrtype = ADDR_TYPE_MPLS;
 		pstream->addr.addrlen = sizeof(struct layer_addr_mpls);
-		pstream_pr->addr_use_as_hash = 0;//不加入hash比对
-		pstream_pr->addr_skip_for_layer_cmp = 1;
+		pstream_pr->addr_use_as_hash = 0;//地址不参与hash比对，仅算层数
+		pstream_pr->addr_skip_for_layer_cmp = 1;//MPLS存在一侧有标签，一侧没有的情况，该标志位设成1
+		pstream_pr->need_update_opposite_addr = 1;//两侧地址不一样，需要更新对侧信息
 		//ptmp->stream.p_layer_header = this_layer_data;
 		//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_layer_data - (char *)raw_pkt->raw_pkt_data;
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;

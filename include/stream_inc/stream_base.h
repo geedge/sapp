@@ -291,6 +291,14 @@ struct layer_addr_pptp
 	UINT16 S2C_call_id;	/* S2Ck以传输层协议方向为准, TCP SYN/ACK为S2C, UDP目的端口大的为S2C, callid, network order */
 };
 
+struct layer_addr_gtp
+{
+    unsigned long long source;
+    unsigned int src_seq;
+    unsigned long long dest;
+    unsigned int dest_seq;
+}__attribute__ ((aligned (1)));
+
 #define MAC_IN_MAC_HDR_LEN	(sizeof(struct mesa_ethernet_hdr) +  sizeof(struct mesa_ethernet_hdr))
 struct layer_addr_mac_in_mac
 {
@@ -323,6 +331,7 @@ struct layer_addr
 		struct layer_addr_l2tp	*l2tp;
 		struct layer_addr_pptp	*pptp;
 		struct layer_addr_mac_in_mac *mimac;
+        struct layer_addr_gtp *gtp;
 		void 					*paddr;
 	};
 

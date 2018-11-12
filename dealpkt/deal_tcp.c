@@ -2388,6 +2388,51 @@ static char tcp_process_newstreambydata(struct streamindex *pindex_tcp,const voi
 	return ret;
 }
 
+void update_opposite_addr_info(struct streaminfo_private *pstream_pr, struct streaminfo_private *p_stack, unsigned char cur_dir)
+{
+	if(pstream_pr == NULL || p_stack == NULL)
+	{
+		return;
+	}
+	if(p_stack->need_update_opposite_addr == 0) {
+		return update_opposite_addr_info((struct streaminfo_private *) pstream_pr->stream_public.pfather,
+		                             (struct streaminfo_private *) p_stack->stream_public.pfather, cur_dir);
+	} else{
+		switch(p_stack->stream_public.addr.addrtype)
+		{
+			case ADDR_TYPE_GPRS_TUNNEL:
+					if(p_stack->dirreverse == 0){
+						if(cur_dir == DIR_C2S){
+                            pstream_pr->stream_public.addr.gtp->source = p_stack->stream_public.addr.gtp->source;
+                            pstream_pr->stream_public.addr.gtp->src_seq = p_stack->stream_public.addr.gtp->src_seq;
+						}
+						else{
+
+                            pstream_pr->stream_public.addr.gtp->dest = p_stack->stream_public.addr.gtp->dest;
+                            pstream_pr->stream_public.addr.gtp->dest_seq = p_stack->stream_public.addr.gtp->dest_seq;
+						}
+					}
+					else{
+						if(cur_dir == DIR_C2S){
+                            pstream_pr->stream_public.addr.gtp->source = p_stack->stream_public.addr.gtp->dest;
+                            pstream_pr->stream_public.addr.gtp->src_seq = p_stack->stream_public.addr.gtp->dest_seq;
+						}
+						else{
+                            pstream_pr->stream_public.addr.gtp->dest = p_stack->stream_public.addr.gtp->source;
+                            pstream_pr->stream_public.addr.gtp->dest_seq = p_stack->stream_public.addr.gtp->src_seq;
+						}
+					}
+				break;
+			case ADDR_TYPE_MPLS:
+				break;
+			default:
+				break;
+		}
+	}
+	return;
+}
+
+
 /* LiJia comment: pstream指向栈里的内存 */
 //int deal_tcp_stream(struct streamindex *pstream,struct mesa_tcp_hdr *this_tcphdr,int tcplen,const void *rawippkt,int iplen)
 static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, struct mesa_tcp_hdr *this_tcphdr,
@@ -2400,7 +2445,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	int retAll=PASS;
 	struct streaminfo_private *pstream_pr = &pindex->stream;
 	struct streaminfo *pstream = &pstream_pr->stream_public;
-	
+	int try_to_update_addr_info = 0;
 	pindex_tcp = findstreamindex (pindex, raw_pkt);
 	if(unlikely(!pindex_tcp)){
 		 if(this_tcphdr->th_flags & TH_SYN)
@@ -2503,16 +2548,29 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 
 	pdetail_pr =(struct tcpdetail_private*)(pstream->pdetail);
 	pdetail =(struct tcpdetail *)(&pdetail_pr->tcpdetail_public);
-	
 	if(pstream->curdir==DIR_S2C)
 	{
+		if(pdetail->clientpktnum == 0)
+		{
+			try_to_update_addr_info = 1;
+		}
 		pdetail->clientbytes+=tcplen;
 		pdetail->clientpktnum++;
 	}
 	else
 	{
+		if(pdetail->serverpktnum == 0)
+		{
+			try_to_update_addr_info = 1;
+		}
 		pdetail->serverbytes+=tcplen;
 		pdetail->serverpktnum++;
+	}
+
+	if(try_to_update_addr_info == 1)
+	{
+		update_opposite_addr_info((struct tcpdetail_private *)(pstream->pfather),
+				(struct tcpdetail_private *)(pindex->stream.stream_public.pfather), pstream->curdir);
 	}
 
 	/* flow_stat是全包无状态记录, 不关心重传、乱序问题 */
