@@ -1429,15 +1429,13 @@ static int __addr_l2tp_n2p_fun(const struct layer_addr *paddr, char *buf, int bu
 
 static int __addr_gtp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
-#define __GTP_ADDR_STRING		"NULL"
+	int addr_len;
+	const struct gtp_hdr *src_net_hdr = (struct gtp_hdr *)&paddr->gtp->source;
+	const struct gtp_hdr *dst_net_hdr = (struct gtp_hdr *)&paddr->gtp->dest;
+	
+	addr_len = snprintf(buf, buf_len, "%u-%u", ntohl(src_net_hdr->teid), ntohl(dst_net_hdr->teid));
 
-    int addr_len = strlen(__GTP_ADDR_STRING);
-    if(buf_len <= addr_len + 1){
-        return -1;
-    }
-    strncpy(buf, __GTP_ADDR_STRING, addr_len + 1);
-
-    return addr_len + 1;
+	return addr_len + 1;
 }
 
 static int __addr_arp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
@@ -1455,11 +1453,12 @@ static int __addr_arp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf
 
 static int __addr_ppp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
-#define __PPP_ADDR_STRING		"NULL"
 
+#define __PPP_ADDR_STRING               "NULL"
+	
 	int addr_len = strlen(__PPP_ADDR_STRING);
 	if(buf_len <= addr_len + 1){
-		return -1;
+			return -1;
 	}
 	strncpy(buf, __PPP_ADDR_STRING, addr_len + 1);
 

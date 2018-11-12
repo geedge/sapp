@@ -293,9 +293,9 @@ struct layer_addr_pptp
 
 struct layer_addr_gtp
 {
-    unsigned long long source;
+    unsigned long long source;  /* From Client */
     unsigned int src_seq;
-    unsigned long long dest;
+    unsigned long long dest;	/* From Server */
     unsigned int dest_seq;
 }__attribute__ ((aligned (1)));
 

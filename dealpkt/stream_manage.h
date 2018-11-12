@@ -149,6 +149,8 @@ int mkaddrhash(char *data,int datalen);
 int wy_init_hash();
 void udp_free_stream(struct streamindex *pstream);
 void tcp_free_stream(struct streamindex *pstream, const void*, const void *,const raw_pkt_t *raw_pkt);
+void update_opposite_addr_info(struct streaminfo_private *pstream_pr, 
+	struct streaminfo_private *p_stack, unsigned char cur_dir);
 
 #ifdef __cplusplus
 }

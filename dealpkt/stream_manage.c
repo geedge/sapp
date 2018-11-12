@@ -2198,6 +2198,18 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
 		}		
 		break;
 
+		case ADDR_TYPE_GPRS_TUNNEL:
+		{
+			const struct layer_addr_gtp *src_gtp = (const struct layer_addr_gtp *)saddr;
+			struct layer_addr_gtp *dst_gtp = (struct layer_addr_gtp *)daddr;
+
+			dst_gtp->source = src_gtp->dest;
+			dst_gtp->dest = src_gtp->source;
+			dst_gtp->src_seq = src_gtp->dest_seq;
+			dst_gtp->dest_seq = src_gtp->src_seq;
+		}
+		break;
+
 		/* TODO 1:PPTP-addr */
 		
 		default:
@@ -2564,6 +2576,47 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
 
 	return get_stream_carry_tunnel_type(pfather, this_stream, tunnel_type);
 }
+
+
+void update_opposite_addr_info(struct streaminfo_private *pstream_pr, 
+	struct streaminfo_private *p_stack, unsigned char cur_dir)
+{
+	if(pstream_pr == NULL || p_stack == NULL)
+	{
+		return;
+	}
+	if(p_stack->need_update_opposite_addr == 0) {
+		return update_opposite_addr_info((struct streaminfo_private *) pstream_pr->stream_public.pfather,
+		                             (struct streaminfo_private *) p_stack->stream_public.pfather, cur_dir);
+	} else{
+		switch(p_stack->stream_public.addr.addrtype)
+		{
+			case ADDR_TYPE_GPRS_TUNNEL:
+				    /* GTP地址C2S, S2C方向独立, 无法靠当前包地址区分dir, 每次栈里的变量都存储于source方向, 即C2S方向,  
+				       创建流时, 已经根据最内层TCP, UDP的流方向, 将GTP的地址存于source或dest, 
+				       此函数是更新的对端缺失的地址, 仅靠最内层的cur_dir表示需要更新哪个方向的地址, 固定从当前包的source拷贝. 
+				     */
+				if(cur_dir == DIR_C2S){
+                    pstream_pr->stream_public.addr.gtp->source = p_stack->stream_public.addr.gtp->source;
+                    pstream_pr->stream_public.addr.gtp->src_seq = p_stack->stream_public.addr.gtp->src_seq;
+				}
+				else{
+                    pstream_pr->stream_public.addr.gtp->dest = p_stack->stream_public.addr.gtp->source;
+                    pstream_pr->stream_public.addr.gtp->dest_seq = p_stack->stream_public.addr.gtp->src_seq;
+				}
+				break;
+			case ADDR_TYPE_MPLS:
+				//TODO 3
+				break;
+			default:
+				return update_opposite_addr_info((struct streaminfo_private *) pstream_pr->stream_public.pfather,
+				                             (struct streaminfo_private *) p_stack->stream_public.pfather, cur_dir);			
+				break;
+		}
+	}
+	return;
+}
+
 
 #ifdef __cplusplus
 }

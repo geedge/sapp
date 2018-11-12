@@ -105,19 +105,6 @@ char print_stream_tunnel_type(struct streaminfo *a_tcp,  void **pme, int thread_
 	return APP_STATE_DROPME;
 }
 
-extern void packet_extract_para_from_mac_addr(const struct layer_addr_mac_in_mac *mimac,  struct pangu_mac_in_mac_mem_hdr *mim_mem_hdr);
-char pangu_mac_in_mac_test(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
-{
-	struct pangu_mac_in_mac_mem_hdr pangu_mim_hdr;
-	
-	if(ADDR_TYPE_MAC_IN_MAC == stream->pfather->addr.addrtype){
-		packet_extract_para_from_mac_addr(stream->pfather->addr.mimac, &pangu_mim_hdr);
-		printf("MAC_IN_MAC info: region_seq:%u, dev_id:%u, link_id:%u\n", pangu_mim_hdr.region_seq, pangu_mim_hdr.dev_seq, pangu_mim_hdr.link_id);
-	}
-
-	return APP_STATE_GIVEME;
-}
-
 static void test_get_tcp_opts_show_detail(struct tcp_option *opt_array, int optnum)
 {
 	int i;
@@ -1054,7 +1041,7 @@ char test_inet_addr_list_addr(const struct streaminfo *stream,void **pme, int th
 		printf("recover-addr-list len is:\t%d, value:\t%s\n", ret, addr_list_str_recover);
 
 		if(strncasecmp(addr_list_str, addr_list_str_recover, 4096) != 0){
-			assert(0);
+			printf("stream_addr_list not name!\n");
 		}
 	}
 

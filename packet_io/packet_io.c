@@ -977,7 +977,7 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 	
 	if(g_topology_mode & __NET_CONN_PARALLEL){
 		if(sapp_global_single.send_fake_pkt_by_gdev != 0){
-			ret = packet_io_send_fake_pkt_by_gdev(send_handle, low_layer_type,
+			ret = packet_io_send_fake_pkt_by_gdev(send_handle, (enum addr_type_t)low_layer_type,
 												  (char *)send_handle->send_buf, datalen, dir, feedback_buf, feedback_buf_len);
 		}
 		else {

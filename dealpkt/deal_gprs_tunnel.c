@@ -18,7 +18,6 @@ extern int ipv6_entry(struct streaminfo_private *pfstream, const void *this_laye
 int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int thread_num, 
 		unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
-
 	/*
 		创建gtp层结构, 分别记录C2S, S2C方向的地址, 
 	*/
@@ -59,7 +58,10 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
 
     memset(&tmp_index, 0, sizeof(struct streamindex));
     memset(&gtpaddr, 0, sizeof(struct layer_addr_gtp));
-    if(pfstream_pr->layer_dir == 1)
+    /* GTP地址C2S, S2C方向独立, 无法靠当前包地址区分dir, 每次栈里的变量都存储于source方向, 即C2S方向,  
+       创建流时, 如果需要reverse拷贝, 则将source, dest颠倒, 否则直接memcpy到堆里的addr.
+     */
+	if(1) 
     {
         memcpy(&gtpaddr.source, p_gtd_hdr, sizeof(struct gtp_hdr));
         gtpaddr.src_seq = cur_seq;
@@ -71,6 +73,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
         gtpaddr.dest_seq = cur_seq;
         pstream->curdir = DIR_S2C;
     }
+    
     pstream->addr.paddr = &gtpaddr;
     pstream->addr.addrtype = ADDR_TYPE_GPRS_TUNNEL;
     pstream->addr.addrlen = sizeof(struct layer_addr_gtp); /* 此处使用结构体长度 */
@@ -80,7 +83,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
 
     pstream_pr->offset_to_raw_pkt_hdr = (unsigned short)offset_to_raw_pkt_hdr;
     pstream_pr->raw_pkt = raw_pkt;
-    pstream_pr->layer_dir = pfstream_pr->layer_dir; /* 不能对本层做出方向性判断, 使用父层的方向值, 只能是UDP或TCP承载 */
+    pstream_pr->layer_dir = pfstream_pr->layer_dir;  
 
     pstream->pfather=&pfstream_pr->stream_public;
     pstream->type=STREAM_TYPE_NON;
@@ -172,7 +175,8 @@ char udp_gtp_identify_entry(const struct streaminfo *pstream, const void *this_h
         ;
 #else
     struct streaminfo_private *pstream_pr = (struct streaminfo_private *)pstream;
-    if(1 == identify_gtp(pstream, this_hdr+sizeof(struct udphdr), pstream_pr->raw_pkt->raw_pkt_len - (this_hdr - pstream_pr->raw_pkt->raw_pkt_data) - sizeof(struct udphdr)))
+    if(1 == identify_gtp(pstream, (char *)this_hdr+sizeof(struct mesa_udp_hdr), 
+    					pstream_pr->raw_pkt->raw_pkt_len - ((const char *)this_hdr - (const char*)pstream_pr->raw_pkt->raw_pkt_data) - sizeof(struct mesa_udp_hdr)))
     {
         pstream_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNEL_GPRS_TUNNEL;
     }
