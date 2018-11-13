@@ -50,7 +50,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
 
     if(p_gtd_hdr->flags == 0x32)
     {
-        cur_seq = ntohs(*(unsigned short *)(p_gtd_hdr + 1));
+        cur_seq = ntohl(*(unsigned int *)(p_gtd_hdr + 1));
         seq_offset = sizeof(unsigned int);
     }
 
@@ -61,18 +61,10 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     /* GTP地址C2S, S2C方向独立, 无法靠当前包地址区分dir, 每次栈里的变量都存储于source方向, 即C2S方向,  
        创建流时, 如果需要reverse拷贝, 则将source, dest颠倒, 否则直接memcpy到堆里的addr.
      */
-	if(1) 
-    {
-        memcpy(&gtpaddr.source, p_gtd_hdr, sizeof(struct gtp_hdr));
-        gtpaddr.src_seq = cur_seq;
-        pstream->curdir = DIR_C2S;
-    }
-    else
-    {
-        memcpy(&gtpaddr.dest, p_gtd_hdr, sizeof(struct gtp_hdr));
-        gtpaddr.dest_seq = cur_seq;
-        pstream->curdir = DIR_S2C;
-    }
+    memcpy(&gtpaddr.source, p_gtd_hdr, sizeof(struct gtp_hdr));
+    gtpaddr.src_seq = cur_seq;
+    pstream->curdir = DIR_C2S;
+
     
     pstream->addr.paddr = &gtpaddr;
     pstream->addr.addrtype = ADDR_TYPE_GPRS_TUNNEL;

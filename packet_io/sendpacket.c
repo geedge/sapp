@@ -991,6 +991,18 @@ int MESA_kill_tcp(struct streaminfo *stream)
 }
 #endif
 
+static int calc_gtp_hdr_len(const struct gtp_hdr *gtp_hdr)
+{
+	int hdr_len = sizeof(struct gtp_hdr);
+
+	if(gtp_hdr->flags&0x02)
+	{
+		hdr_len += sizeof(unsigned int);
+        sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: MESA_kill_tcp() calc_gtp_hdr_len include GTP SEQ not support !", __FILE__, __LINE__);
+    }
+	return hdr_len;
+}
+
 /*
 	1-计算所有包头的长度, 用于预留空间. 计算到最底层协议, 如果有MAC也包含MAC头空间;
 	2-递归过程中获取Ethernet层承载的协议类型.
@@ -1086,7 +1098,14 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type)
 						   (const struct l2tp_hdr_v2 *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
 		}
 		break;
-		
+		case ADDR_TYPE_GPRS_TUNNEL:
+		{
+			struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
+			reserved_hdr_len = calc_gtp_hdr_len(
+					(const struct gtp_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
+		}
+			break;
+
 		case __ADDR_TYPE_IP_PAIR_V4:
 			/* to do, 如果构造带选项的包, 怎么计算? */
 			reserved_hdr_len = sizeof(struct mesa_ip4_hdr);
@@ -1613,6 +1632,41 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 	return sizeof(struct mesa_mpls_hdr);
 }
 
+static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_layer_type,
+								int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt)
+{
+	struct gtp_hdr *raw_hdr;
+	int layer_len = sizeof(struct gtp_hdr);
+
+	raw_hdr = (struct gtp_hdr *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
+
+	if(reverse == 0){
+		memcpy(buf, raw_hdr, sizeof(struct gtp_hdr));
+		if(raw_hdr->flags&0x02){
+			//TODO: 目前不支持带序号的GTP发包，seq未更新
+		    memcpy(buf+sizeof(struct gtp_hdr), raw_hdr+1, sizeof(unsigned int));
+            *(unsigned int *)(buf+sizeof(struct gtp_hdr)) = htonl(ntohl(*(unsigned int *)(raw_hdr+1)) + 1);
+            layer_len+=sizeof(unsigned int);
+		}
+	} else{
+		if(0 == memcmp(raw_hdr, &stream_pr->stream_public.addr.gtp->source, sizeof(struct gtp_hdr))) {
+			memcpy(buf, &stream_pr->stream_public.addr.gtp->dest, sizeof(struct gtp_hdr));
+			if (raw_hdr->flags & 0x02) {
+				*(unsigned int *)(buf+sizeof(struct gtp_hdr)) = htonl(stream_pr->stream_public.addr.gtp->dest_seq + 1);
+				layer_len+=sizeof(unsigned int);
+			}
+		}
+		else{
+			memcpy(buf, &stream_pr->stream_public.addr.gtp->source, sizeof(struct gtp_hdr));
+			if (raw_hdr->flags & 0x02) {
+                *(unsigned int *)(buf+sizeof(struct gtp_hdr)) = htonl(stream_pr->stream_public.addr.gtp->src_seq + 1);
+                layer_len+=sizeof(unsigned int);
+			}
+		}
+	}
+	return layer_len;
+}
+
 static void checksum_for_carry_layer(unsigned char *buf, int this_layer_type, int carry_layer_type, int payload_len)
 {
 	if((ADDR_TYPE_TCP != carry_layer_type) && (ADDR_TYPE_UDP != carry_layer_type)){
@@ -1831,7 +1885,14 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
 			carry_layer_type = ADDR_TYPE_MPLS;
 		break;
-		
+
+		case ADDR_TYPE_GPRS_TUNNEL:
+			this_layer_len = calc_gtp_hdr_len((const struct gtp_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
+			buf -= this_layer_len;
+			build_net_layer_gtp(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
+			carry_layer_type = ADDR_TYPE_GPRS_TUNNEL;
+			break;
+
 		case ADDR_TYPE_PPPOE_SES:
 			this_layer_len = sizeof(struct mesa_pppoe_session_hdr);
 			buf -= sizeof(struct mesa_pppoe_session_hdr);
