@@ -8,6 +8,7 @@ extern "C" {
 #include "packet_io_internal.h"
 #include "packet_io.h"
 #include <MESA/MESA_handle_logger.h>
+#include <MESA/MESA_htable.h>
 #include <netinet/if_ether.h>
 #include <netinet/in.h>
 #include <net/if_arp.h>
@@ -85,7 +86,18 @@ extern int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int
 					char *feedback_buf, int *feedback_buf_len);					
 static inline int dir_check(unsigned char raw_dir);
 
+extern MESA_htable_handle g_gtp_info_hash[MAX_THREAD_NUM];
 
+struct gtp_cache_addr_t
+{
+	unsigned char addr_type;
+	union
+	{
+		unsigned int v4[2];
+		unsigned int v6[32];
+	};
+};
+struct gtp_cache_addr_t g_addr_register_for_gtp_cache[MAX_THREAD_NUM];
 /* 
 	根据收到的字节数、与上个包的长度差、及数据包的地址部分, 得到计算随机数的种子.
 */
@@ -1000,7 +1012,7 @@ static int calc_gtp_hdr_len(const struct gtp_hdr *gtp_hdr)
 	if(gtp_hdr->flags&0x02)
 	{
 		hdr_len += sizeof(unsigned int);
-        sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: MESA_kill_tcp() calc_gtp_hdr_len include GTP SEQ not support !", __FILE__, __LINE__);
+        sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: MESA_kill_tcp() calc_gtp_hdr_len include GTP not support correct SEQ!", __FILE__, __LINE__);
     }
 	return hdr_len;
 }
@@ -1358,6 +1370,7 @@ static int build_net_layer_ipv4(struct streaminfo_private *stream_pr, int carry_
 	UINT16 ip_id;
 	UINT8 ip_ttl;
 	bulid_layer_ipv4_args_t *build_ip4_args;
+	int threadnum = (int)stream_pr->stream_public.threadnum;
 
 	raw_ip4_hdr = (struct mesa_ip4_hdr *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
 	build_ip4_args = (bulid_layer_ipv4_args_t *)g_build_pkt_args[stream_pr->stream_public.threadnum].layer_args[__ADDR_TYPE_IP_PAIR_V4];
@@ -1382,6 +1395,14 @@ static int build_net_layer_ipv4(struct streaminfo_private *stream_pr, int carry_
 							NULL,
 							0, 
 							(unsigned char *)buf);
+		if(stream_pr->stream_public.pfather != NULL &&
+			stream_pr->stream_public.pfather->addr.addrtype == ADDR_TYPE_GPRS_TUNNEL &&
+			g_gtp_info_hash[threadnum] != NULL)
+		{
+			g_addr_register_for_gtp_cache[threadnum].addr_type = ADDR_TYPE_IPV4;
+			g_addr_register_for_gtp_cache[threadnum].v4[0] = raw_ip4_hdr->ip_dst.s_addr;
+			g_addr_register_for_gtp_cache[threadnum].v4[1] = raw_ip4_hdr->ip_src.s_addr;
+		}
 	}else{
 		sendpacket_build_ipv4(carry_layer_len, 
 							0, 
@@ -1406,6 +1427,7 @@ static int build_net_layer_ipv6(struct streaminfo_private *stream_pr, int carry_
 {
 	struct mesa_ip6_hdr *raw_ip6_hdr;
 	UINT8 hop = (UINT8)MESA_rand_range(64, 128);
+	int threadnum = (int)stream_pr->stream_public.threadnum;
 
 	if(0 == g_packet_io_ipv6_switch){
 		printf("IPv6 module is not support! Please set 'IPv6_module_enable=1' in main.conf.\n");
@@ -1425,6 +1447,14 @@ static int build_net_layer_ipv6(struct streaminfo_private *stream_pr, int carry_
 							NULL,
 							0,
 							(unsigned char *)buf);
+		if(stream_pr->stream_public.pfather != NULL &&
+		   stream_pr->stream_public.pfather->addr.addrtype == ADDR_TYPE_GPRS_TUNNEL &&
+		   g_gtp_info_hash[threadnum] != NULL)
+		{
+			g_addr_register_for_gtp_cache[threadnum].addr_type = ADDR_TYPE_IPV4;
+			memcpy(g_addr_register_for_gtp_cache[threadnum].v6, &raw_ip6_hdr->ip6_dst, sizeof(struct in6_addr));
+			memcpy((char *)(g_addr_register_for_gtp_cache[threadnum].v6) + sizeof(struct in6_addr), &raw_ip6_hdr->ip6_src, sizeof(struct in6_addr));
+		}
 	}else{
 		sendpacket_build_ipv6(0,
 							0,
@@ -1639,9 +1669,9 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
 {
 	struct gtp_hdr *raw_hdr;
 	int layer_len = sizeof(struct gtp_hdr);
-
 	raw_hdr = (struct gtp_hdr *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
-
+	void *gtp_hash_key;
+	int gtp_hash_key_len;
 	if(reverse == 0){
 		memcpy(buf, raw_hdr, sizeof(struct gtp_hdr));
 		if(raw_hdr->flags&0x02){
@@ -1651,18 +1681,38 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
             layer_len+=sizeof(unsigned int);
 		}
 	} else{
-		if(0 == memcmp(raw_hdr, &stream_pr->stream_public.addr.gtp->source, sizeof(struct gtp_hdr))) {
-			memcpy(buf, &stream_pr->stream_public.addr.gtp->dest, sizeof(struct gtp_hdr));
-			if (raw_hdr->flags & 0x02) {
-				*(unsigned int *)(buf+sizeof(struct gtp_hdr)) = htonl(stream_pr->stream_public.addr.gtp->dest_seq + 1);
-				layer_len+=sizeof(unsigned int);
+		if(stream_pr->stream_public.addr.gtp->source == 0 || stream_pr->stream_public.addr.gtp->dest == 0)
+		{
+			if(g_gtp_info_hash[stream_pr->stream_public.threadnum])
+			{
+				gtp_hash_key = (g_addr_register_for_gtp_cache[stream_pr->stream_public.threadnum].addr_type == ADDR_TYPE_IPV4)?g_addr_register_for_gtp_cache[stream_pr->stream_public.threadnum].v4:g_addr_register_for_gtp_cache[stream_pr->stream_public.threadnum].v6;
+				gtp_hash_key_len = (g_addr_register_for_gtp_cache[stream_pr->stream_public.threadnum].addr_type == ADDR_TYPE_IPV4)?sizeof(g_addr_register_for_gtp_cache[stream_pr->stream_public.threadnum].v4):sizeof(g_addr_register_for_gtp_cache[stream_pr->stream_public.threadnum].v6);
+				raw_hdr = (struct gtp_hdr *)MESA_htable_search(g_gtp_info_hash[stream_pr->stream_public.threadnum], gtp_hash_key, gtp_hash_key_len);
+				if(raw_hdr == NULL)
+				{
+					layer_len = 0;
+				}
+				else
+				{
+					memcpy(buf, raw_hdr, sizeof(struct gtp_hdr));
+				}
 			}
 		}
-		else{
-			memcpy(buf, &stream_pr->stream_public.addr.gtp->source, sizeof(struct gtp_hdr));
-			if (raw_hdr->flags & 0x02) {
-                *(unsigned int *)(buf+sizeof(struct gtp_hdr)) = htonl(stream_pr->stream_public.addr.gtp->src_seq + 1);
-                layer_len+=sizeof(unsigned int);
+		else
+		{
+			if(0 == memcmp(raw_hdr, &stream_pr->stream_public.addr.gtp->source, sizeof(struct gtp_hdr))) {
+				memcpy(buf, &stream_pr->stream_public.addr.gtp->dest, sizeof(struct gtp_hdr));
+				if (raw_hdr->flags & 0x02) {
+					*(unsigned int *)(buf+sizeof(struct gtp_hdr)) = htonl(stream_pr->stream_public.addr.gtp->dest_seq + 1);
+					layer_len+=sizeof(unsigned int);
+				}
+			}
+			else{
+				memcpy(buf, &stream_pr->stream_public.addr.gtp->source, sizeof(struct gtp_hdr));
+				if (raw_hdr->flags & 0x02) {
+					*(unsigned int *)(buf+sizeof(struct gtp_hdr)) = htonl(stream_pr->stream_public.addr.gtp->src_seq + 1);
+					layer_len+=sizeof(unsigned int);
+				}
 			}
 		}
 	}

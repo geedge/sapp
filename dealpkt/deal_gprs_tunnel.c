@@ -6,8 +6,12 @@ extern "C" {
 #include "stream_manage.h"
 #include "mesa_net.h"
 #include "sysinfo.h"
+#include "MESA_htable.h"
 
 #define GPRS_TUNNEL_PORT (2152)
+
+
+MESA_htable_handle g_gtp_info_hash[MAX_THREAD_NUM];
 
 extern int ipv4_entry(struct streaminfo_private *pfstream, const void *this_layer_data, int thread_num,
                       unsigned char routedir, const raw_pkt_t *raw_pkt, int);
