@@ -797,6 +797,7 @@ unsigned short net_layer_to_ethernet_protocol(int addr_type);
 int net_common_build_send_mac(unsigned char *buf, const struct mesa_ethernet_hdr *raw_eth_hdr, int addr_type, int dir_reverse, int net_topology_mode);
 int net_common_adjust_forward_mac(struct mesa_ethernet_hdr *raw_eth_hdr,int net_topology_mode);
 const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
+const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_type, int expect_layer_type);
 char MESA_ascii_to_hex(char ascii);
 
 #ifdef __cplusplus

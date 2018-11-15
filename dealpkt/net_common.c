@@ -124,6 +124,62 @@ static int arp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 }
 
 
+static int gtp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
+{
+	const struct gtp_hdr *gh = (struct gtp_hdr *)raw_data;
+	int opt_len = 0; /* 可选项长度 */
+	const unsigned char *next_ip_layer_hdr;
+	int skip_len;
+
+	if(ADDR_TYPE_GPRS_TUNNEL == expect_layer_type){
+		return 0;
+	}
+	
+	if(gh->flags & 0x2){
+		opt_len += sizeof(int);  /* sequence */
+	}
+
+	next_ip_layer_hdr = (unsigned char *)raw_data + opt_len + sizeof(struct gtp_hdr);
+
+	if((*next_ip_layer_hdr & 0x40) == 0x40){
+		skip_len = ipv4_jump_to_layer((char *)next_ip_layer_hdr, __ADDR_TYPE_IP_PAIR_V4, expect_layer_type);
+	}else if((*next_ip_layer_hdr & 0x60) == 0x60){
+		skip_len = ipv6_jump_to_layer((char *)next_ip_layer_hdr, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
+	}else{
+		sapp_runtime_log(20, "TODO: jmp unsupport type in GTP, 0x%x!\n", (*next_ip_layer_hdr));
+		return -1;
+	}
+
+	return opt_len + sizeof(struct gtp_hdr) + skip_len;
+}
+
+static int udp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
+{
+	const struct mesa_udp_hdr *uh = (const struct mesa_udp_hdr *)raw_data;
+	unsigned short usport, udport;
+	int skip_len;
+
+	if(ADDR_TYPE_UDP == expect_layer_type){
+		return 0;
+	}
+
+	usport = ntohs(uh->uh_sport);
+	udport = ntohs(uh->uh_dport);
+
+	if((2152 == usport) && (2152 == udport)){
+		skip_len = gtp_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), ADDR_TYPE_UDP, expect_layer_type);
+	}else if((3544 == usport) || (3544 == udport)){
+		;
+		//TODO
+		//skip_len = teredo_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), ADDR_TYPE_UDP, expect_layer_type);
+	}else{
+		/* 其他UDP类型不支持再跳转 */
+		return -1;
+	}
+
+	return skip_len + sizeof(struct mesa_udp_hdr);
+}
+
 static int ipv4_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
 {
 	struct ip *p_ip_hdr = (struct ip *)raw_data;
@@ -150,13 +206,12 @@ static int ipv4_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 				skip_len = 0;
 				break;
 			}else{
-				/* TODO 1: teredo隧道模式 */
-				skip_len = -1; 
+				skip_len = udp_jump_to_layer(raw_data+ip_hdr_len, ADDR_TYPE_UDP, expect_layer_type); 
 			}
 		break;
 
 		case IPPROTO_IPV6:
-			if(__ADDR_TYPE_IP_PAIR_V4 == expect_layer_type){
+			if(__ADDR_TYPE_IP_PAIR_V6 == expect_layer_type){
 				skip_len = 0;
 				break;
 			}else{
@@ -337,14 +392,13 @@ static int mpls_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 		return mpls_jump_to_layer(next_layer_data, ADDR_TYPE_MPLS, expect_layer_type) + sizeof(struct mesa_mpls_hdr);
 	}
 
-	/* 猜测下一层的IP类型 */
-
+	/* MPLS没有字段标识下一层是什么, 靠猜测下一层的IP类型 */
 	if((*next_layer_data & 0x40) == 0x40){
 		skip_len = ipv4_jump_to_layer(next_layer_data, __ADDR_TYPE_IP_PAIR_V4, expect_layer_type);
 	}else if((*next_layer_data & 0x60) == 0x60){
 		skip_len = ipv6_jump_to_layer(next_layer_data, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
 	}else{
-		printf("TODO: jmp unsupport type in MPLS, 0x%x!\n",  (unsigned char)(*next_layer_data));
+		sapp_runtime_log(20, "TODO: jmp unsupport type in MPLS, 0x%x!\n",  (unsigned char)(*next_layer_data));
 		return -1;
 	}
 
@@ -519,6 +573,7 @@ static int mac_in_mac_jump_to_layer(const char *raw_data,  int raw_layer_type, i
 
 	return layer_skip_len + sizeof(struct ethhdr) * 2;
 }
+
 /*
 	return value:
 		Non-NULL: the pointer to expect layer;
@@ -577,6 +632,10 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 		case ADDR_TYPE_MAC_IN_MAC:
 			ret = mac_in_mac_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
 		break;
+
+		case ADDR_TYPE_UDP:
+			ret = udp_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
+		break;
 				
 		case ADDR_TYPE_PPPOE_SES:
 		case ADDR_TYPE_MPLS:		
@@ -591,6 +650,60 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 	}
 
 	return ((const char *)raw_data + ret);
+}
+
+/*
+	与MESA_net_jump_to_layer()的区别:
+		MESA_net_jump_to_layer()从最外层开始, 找到第一个符合条件的层就退出;
+		MESA_net_jump_to_layer_greedy()会一直尝试找最内层协议头, 适合隧道模式.
+	
+	return value:
+		Non-NULL: the pointer to expect layer;
+		NULL: not found expect layer.
+*/
+const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_type, int expect_layer_type)
+{
+	const void *expect_layer;
+	const void *success_layer = NULL; /* 最后一次成功找到的层 */
+	int new_raw_layer_type = raw_layer_type; /* 在跳转过程中, 可能会更新中间层信息 */
+	const char *new_next_layer_data = (char *)raw_data;
+
+	expect_layer = MESA_net_jump_to_layer(new_next_layer_data, new_raw_layer_type, expect_layer_type);
+	while(expect_layer){
+		success_layer = expect_layer;
+
+		switch(expect_layer_type){
+			case __ADDR_TYPE_IP_PAIR_V4:
+			{
+				const struct mesa_ip4_hdr *ip4hdr = (const struct mesa_ip4_hdr *)expect_layer;
+				if(IPPROTO_UDP == ip4hdr->ip_p){
+					new_next_layer_data = (char *)expect_layer + ip4hdr->ip_hl * 4;
+					new_raw_layer_type = ADDR_TYPE_UDP; /* IP层如果继续向下一层偏移, 只支持UDP, IPIP, GRE, L2TPv3. */
+				}else{
+					//TODO 2, GRE, IPIP, L2TPv3
+					goto done;
+				}
+			}
+			break;
+
+			case __ADDR_TYPE_IP_PAIR_V6:
+			{
+				//TODO2,
+				sapp_runtime_log(20, "MESA_net_jump_to_layer_greedy() not support IPv6 layer yet\n");
+				goto done;		
+			}
+			break;
+
+			default:
+				sapp_runtime_log(20, "MESA_net_jump_to_layer_greedy() not support layer type:%d\n", expect_layer_type);
+				goto done;
+		}
+
+		expect_layer = MESA_net_jump_to_layer(new_next_layer_data, new_raw_layer_type, expect_layer_type);
+	}
+
+done:
+	return success_layer;
 }
 
 UINT8 net_layer_to_ipv4_protocol(int addr_type)

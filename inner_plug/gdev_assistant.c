@@ -284,8 +284,8 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 	vxlan_header_t *vxlan_hdr;
 	struct vxlan_info mim_mem_hdr;
 	struct mesa_ethernet_hdr *inner_eth_hdr;
-	struct mesa_udp_hdr *udp_hdr;
-	struct mesa_ip4_hdr *ip4_hdr;
+	//struct mesa_udp_hdr *udp_hdr;
+	//struct mesa_ip4_hdr *ip4_hdr;
 	int ret, opt_len;
 	struct sockaddr_in sock_addr_v4;
 	char *data = raw_data;

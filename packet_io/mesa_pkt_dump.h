@@ -1,6 +1,8 @@
 #ifndef _MESA_PKT_DUMP_H_
 #define _MESA_PKT_DUMP_H_ 1
 
+#define MESA_PKT_DUM_H_VER (20181115)
+
 /* 
 	用于DPDK-3.0, PFRING模式下, 驱动独占网卡时, 通过平台实时捕包.
 */
@@ -14,6 +16,7 @@ enum pkt_dump_opt_t{
 	PKT_DUMP_OPT_THREAD_INDEX,	
 	PKT_DUMP_OPT_ACK, /* sapp返回给tcpdump_mesa的ack包 */
 	PKT_DUMP_OPT_PERCEPTIVE, /* 明察秋毫模式, 可以发现丢包数量 */	
+	PKT_DUMP_OPT_GREEDY_SEEK,  /* 偏移到最内层IP, 便于隧道模式下查找BUG */ 
 };
 
 /* 网络序, 便于以后在其他系统如ARM, PowerPC, MIPS上移植 */
