@@ -92,7 +92,10 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 		break;
 		
 		default:
-			sapp_runtime_log(10, "MAC-IN-MAC unknown protocol: 0x%x\n", ntohs(inner_ether_hdr->ether_type));
+			/* unknown protocol */	
+			g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+			g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;		
+			sapp_runtime_log(20, "MAC-IN-MAC unknown protocol: 0x%x\n", ntohs(inner_ether_hdr->ether_type));
 			ret = PASS;
 		break;
 	}

@@ -787,8 +787,11 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 			ret = PASS;
 		break;
 		
-		default:		
-			//printf("unsupport Ipv4 protocol:0x%x!\n", a_packet->ip_p);
+		default:	
+			/* unknown protocol */	
+			g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+			g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;	
+			sapp_runtime_log(20, "unsupport Ipv4 protocol:%u!\n", a_packet->ip_p);
 		break;
 	}
 	

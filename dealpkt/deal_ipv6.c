@@ -920,7 +920,9 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 				goto done;
 
 			default:
-				//printf("Unknown IPv6 header type:0x%x!\n", next_hdr_type);
+				g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+				g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;	
+				sapp_runtime_log(20, "unsupport Ipv6 protocol:%u!\n", next_hdr_type);			
 				goto err_exit;
 			break;
 		}
