@@ -1629,8 +1629,14 @@ char test_jump_layer(struct streaminfo *f_stream,unsigned char routedir,int thre
 #endif
 
 	const struct mesa_ip4_hdr * iphdr, *iphdr_greedy;
+	const struct mesa_ip6_hdr * ip6hdr, *ip6hdr_greedy;
 	char ipsrc[64], ipdst[64];
 	char ipsrc_greedy[64], ipdst_greedy[64];
+
+	ipsrc[0] = '\0';
+	ipdst[0] = '\0';
+	ipsrc_greedy[0] = '\0';
+	ipdst_greedy[0] = '\0';
 
 	iphdr = (const struct mesa_ip4_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V4);
 	if(iphdr){
@@ -1642,8 +1648,28 @@ char test_jump_layer(struct streaminfo *f_stream,unsigned char routedir,int thre
 		inet_ntop(AF_INET, &iphdr_greedy->ip_src.s_addr, ipsrc_greedy, 64);
 		inet_ntop(AF_INET, &iphdr_greedy->ip_dst.s_addr, ipdst_greedy, 64);
 	}
+	if(iphdr || iphdr_greedy){
+		printf("jump to ip4hdr:%s-%s, greedy jump ip4hdr:%s-%s\n", ipsrc, ipdst, ipsrc_greedy, ipdst_greedy);
+	}
 
-	printf("jump to iphdr:%s-%s, greedy jump iphdr:%s-%s\n", ipsrc, ipdst, ipsrc_greedy, ipdst_greedy);
+	ipsrc[0] = '\0';
+	ipdst[0] = '\0';
+	ipsrc_greedy[0] = '\0';
+	ipdst_greedy[0] = '\0';
+
+	ip6hdr = (const struct mesa_ip6_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V6);
+	if(ip6hdr){
+		inet_ntop(AF_INET6, &ip6hdr->ip6_src, ipsrc, 64);
+		inet_ntop(AF_INET6, &ip6hdr->ip6_dst, ipdst, 64);
+	}
+	ip6hdr_greedy = (const struct mesa_ip6_hdr *)MESA_net_jump_to_layer_greedy(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V6);
+	if(ip6hdr_greedy){
+		inet_ntop(AF_INET6, &ip6hdr_greedy->ip6_src, ipsrc_greedy, 64);
+		inet_ntop(AF_INET6, &ip6hdr_greedy->ip6_dst, ipdst_greedy, 64);
+	}
+	if(ip6hdr || ip6hdr_greedy){
+		printf("jump to ip6hdr:%s-%s, greedy jump ip6hdr:%s-%s\n", ipsrc, ipdst, ipsrc_greedy, ipdst_greedy);
+	}
 
 	return APP_STATE_GIVEME;
 }

@@ -492,7 +492,6 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 		for_bpf_filter_len = pktlen;
 	}
 
-
 	if(tcpdump_perceptive_flag > 0){ /* 丢包检测 */
 		memcpy(modify_pkt_buf, pktdata, pktlen>2048?2048:pktlen);
 		pperceptive_info = (struct perceptive_info *)&modify_pkt_buf[6]; /* 存于源MAC地址 */

@@ -168,10 +168,19 @@ static int udp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 
 	if((2152 == usport) && (2152 == udport)){
 		skip_len = gtp_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), ADDR_TYPE_UDP, expect_layer_type);
+	}else if(4789 == udport){
+		/* vxlan模式暂时只支持ethernet. TODO: 如果是hdlc, ppp封装, 需要实现一个单独的vxlan_jump_to_layer()函数 */
+		skip_len = eth_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr)+8, ADDR_TYPE_MAC, expect_layer_type);
+		if(skip_len < 0){
+			return -1;
+		}
+		skip_len += 8; /* skip vxlan header */
 	}else if((3544 == usport) || (3544 == udport)){
-		;
-		//TODO
-		//skip_len = teredo_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), ADDR_TYPE_UDP, expect_layer_type);
+		/* teredo实际没有数据包头, 直接跳转到ipv6层即可 */
+		skip_len = ipv6_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
+		if(skip_len < 0){
+			return -1;
+		}
 	}else{
 		/* 其他UDP类型不支持再跳转 */
 		return -1;
@@ -291,6 +300,7 @@ static int ipv6_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 				if(ADDR_TYPE_UDP == expect_layer_type){
 					skip_len = next_hdr_ptr - (UINT8 *)raw_data;
 				}else{
+					/* TODO: IPv6的其他隧道模式 */
 					skip_len = -1;
 				}
 				goto done;
@@ -688,8 +698,6 @@ const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_ty
 
 			case __ADDR_TYPE_IP_PAIR_V6:
 			{
-				//TODO2,
-				sapp_runtime_log(20, "MESA_net_jump_to_layer_greedy() not support IPv6 layer yet\n");
 				goto done;		
 			}
 			break;
