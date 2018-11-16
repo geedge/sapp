@@ -1,0 +1,5 @@
+#include_directories(${CMAKE_SOURCE_DIR}/packet_io)
+#include_directories(${CMAKE_SOURCE_DIR}/project)
+#include_directories(${CMAKE_SOURCE_DIR}/include)
+#include_directories(${CMAKE_SOURCE_DIR}/include/support)
+add_subdirectory(src)

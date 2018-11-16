@@ -39,6 +39,9 @@ extern "C"
 #define ETHERTYPE_VLAN          		0x8100  /* IEEE 802.1Q VLAN tagging */
 #define ETHERTYPE_LOOPBACK      	0x9000  /* used to test interfaces */
 
+#define ETH_P_MAC_IN_MAC			0x88A8 /* pangu项目借用88a8类型, 用于回流MAC_IN_MAC数据包 */
+
+#define ETHERTYPE_PANGU_MAC_IN_MAC 0x88A8 /* 2018-08-16 lijia add, for pangu MAC-in-MAC */
 #define ETHERTYPE_IP_NET            	0x0008  /* IP protocol network order */
 #define ETHERTYPE_IPv6_NET          	0xdd86  /* IPv6 protocol network order */
 #define ETHERTYPE_VLAN_NET         	0x0081  /* IEEE 802.1Q VLAN tagging network order*/
@@ -513,6 +516,24 @@ struct mesa_vlan_hdr{
 	unsigned short type;
 };
 
+struct mesa_vlan_detail_hdr{
+	unsigned int priority:3;
+	unsigned int del_flag:1;
+	unsigned int vlan_id:12;
+	unsigned short type;
+};
+
+/* 2018-08-28 lijia add, for pangu 项目mac_in_mac回流 */
+struct mesa_mac_in_mac_net_hdr{
+	unsigned int route_dir:1;
+	unsigned int link_id:3;
+	unsigned int dev_id:6;
+	unsigned int region_id:5;
+	unsigned int __pad1:1;
+	unsigned int encap_type:4;
+	unsigned int __pad2:20;
+	unsigned int __pad3:8;
+};
 struct mesa_gre_base_hdr_v0{
 #if __BYTE_ORDER == __LITTLE_ENDIAN 
 	unsigned char recur:3;
@@ -603,15 +624,17 @@ struct mesa_gre_hdr{
 #define MPLS_TTL_MASK		(0x000000FF)
 struct mesa_mpls_hdr{
 #if __BYTE_ORDER == __LITTLE_ENDIAN 
-	unsigned int mpls_label:20;
-	unsigned int mpls_exp:3;
-	unsigned int mpls_bls:1;	/* bottom of label stack */
-	unsigned int mpls_ttl:8;
+	unsigned short mpls_label_low;
+	unsigned char mpls_bls:1;	/* bottom of label stack */
+	unsigned char mpls_exp:3;
+	unsigned char mpls_label_high:4;
+	unsigned char mpls_ttl;
 #elif __BYTE_ORDER == __BIG_ENDIAN
-	unsigned int mpls_ttl:8;
-	unsigned int mpls_bls:1;	/* bottom of label stack */
-	unsigned int mpls_exp:3;
-	unsigned int mpls_label:20;
+	unsigned char mpls_ttl;
+	unsigned char mpls_label_high:4;
+	unsigned char mpls_exp:3;
+	unsigned char mpls_bls:1;	/* bottom of label stack */
+	unsigned short mpls_label_low;
 #else
 #error "Please check <endian.h>"
 #endif
@@ -734,6 +757,23 @@ struct mesa_isakmp_payload_hdr{ /* RFC2408-Page22 */
 };
 
 #define ADDR_PREFIX_LEN			(3) /* "U4T", "IP4", "GRE", etc. */
+#define GTP_MSG_TYPE_T_PDU (0xFF)
+
+struct gtp_hdr{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+	unsigned char flags;
+	unsigned char msg_type;
+    unsigned short len;
+	unsigned int teid;
+#elif __BYTE_ORDER == __BIG_ENDIAN
+	unsigned int teid;
+    unsigned short len;
+	unsigned char msg_type;
+	unsigned char flags;
+#else
+#error "Please check <endian.h>"
+#endif
+};
 #define MAX_ADDR_TYPE_STRING_LEN	(64)
 #define MAX_ADDR_LIST_STRING_LEN	(2048)
 #define MAX_ADDR_EMBED_LAYER_NUM (20) /* 最大地址嵌套层数 */
@@ -752,6 +792,7 @@ unsigned short net_layer_to_ethernet_protocol(int addr_type);
 int net_common_build_send_mac(unsigned char *buf, const struct mesa_ethernet_hdr *raw_eth_hdr, int addr_type, int dir_reverse, int net_topology_mode);
 int net_common_adjust_forward_mac(struct mesa_ethernet_hdr *raw_eth_hdr,int net_topology_mode);
 const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
+const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_type, int expect_layer_type);
 char MESA_ascii_to_hex(char ascii);
 
 #ifdef __cplusplus

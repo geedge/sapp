@@ -72,11 +72,11 @@ extern int G_TCP_FLOW_STAT_PROJECT_ID;
 #ifdef IIEFD_DUAL_STACK
 static int judge_pure_ipv4_stack(const struct streaminfo *pstream, const void *a_packet);
 /* iiefd代码中的总回调函数, 只有纯IPv4的包才处理 */
-extern "C" char calltcpApp_old(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet);
-extern "C" char callIpApp_old(struct streaminfo *pstream,int routedir, int thread_seq,void *a_packet);
+extern  char calltcpApp_old(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet);
+extern  char callIpApp_old(struct streaminfo *pstream,int routedir, int thread_seq,void *a_packet);
 #endif
 
-extern "C" void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq);
+extern  void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq);
 
 /* 2014-12-31 lqy add */
 int stream_register_funtoArray(int funtype,char (*x)(void),stFunArray *pArrary,int *pNum)

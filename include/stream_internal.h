@@ -130,15 +130,20 @@ struct streaminfo_private
 	void   *pproject;		//每个工程可以自定义使用；
 	UCHAR  layer_dir:2;   /* 单包有效, 当前层的地址是否和默认规则"大端口是客户端"相同 */	
 	UCHAR  stream_dir:2; /* 流的生存期内有效, 流的存储的地址是否和默认规则"大端口是客户端"相同  */		
-	UCHAR  addr_use_as_hash:2; /* 本层的addr是否做为HASH计算和比较的参数, 如:MAC地址不参与计算 */
-	UCHAR  stream_killed_flag:2; /* 2014-08-22 lijia add, 串联模式下, 已经被插件Kill, 之后此流可直接Drop或Kill, 无需再给上层插件 */
+	UCHAR  addr_use_as_hash:1; /* 本层的addr是否做为HASH计算和比较的参数, 如:MAC地址不参与计算 */
+	UCHAR  addr_skip_for_layer_cmp:1;/*本层的addr是否作为地址比较的层级，如：MPLS地址不作为层数计算，直接跳过，该值默认为0，即需要比较*/
+	UCHAR  need_update_opposite_addr:1;/*本层的addr是否在对侧来包时更新，如：MPLS标签非对称时需要在S2C侧第一个包记录本侧标签,该值默认为0，即不需要更新*/
+	UCHAR  stream_killed_flag:1; /* 2014-08-22 lijia add, 串联模式下, 已经被插件Kill, 之后此流可直接Drop或Kill, 无需再给上层插件 */
 	UCHAR  dirreverse;	     /* 建立连接时是否进行了ip地址反转, 即与"大端口是客户端"规则相反 */
 	UINT16 timeout;/* 每个链接的独有超时时间, 此值有两个用途, 1:用于尽早淘汰长时间无包到达的流, 以节约内存; 2:用于保护长时间无包的流, 对于IM类长时间无包但连接并未结束, 可设置较大的timeout */
 	unsigned short offset_to_raw_pkt_hdr; /* 本层头相对于原始包的起始地址的偏移量 */
 	unsigned short offset_to_ip_hdr; /* 2015-12-07 lijia add, UDP/TCP 包头相对于承载的IP包头偏移量 */
 	const raw_pkt_t *raw_pkt; /* 2014-12-30 lijia add, 有些回调函数不支持原始包, 但发包又需要, 存储于private结构中 */
 	unsigned int hash_slave; /* 2015-12-14 lijia add, 使用linux_jhash计算时, 可以同时得到两个以上的HASH值, 主HASH用于确定在HASH表的SLOT位置, slave_HASH用于快速比较地址是否相等 */
-	int hash_not_head_times;/* 2015-12-15 lijia add, 当前index不在HASH SLOT的第一位的次数 */
+	unsigned char hash_not_head_times;/* 2015-12-15 lijia add, 当前index不在HASH SLOT的第一位的次数 */
+	unsigned char cur_layer_raw_hdr_len; /* 2017-10-31 lijia add, 当前层的原始包地址长度, 因ppp头部压缩, 原来版本无法保存这个状态, 发包时也无法得知地址如何填充 */
+	char __pad;
+	unsigned char gdev_block_timer;
 	unsigned short stream_low_layer_tunnel_type; /* 2016-07-25 lijia add, 记录本流底层隧道类型, 0为非隧道, 其他详见:enum stream_carry_tunnel_t */
 	unsigned short stream_carry_up_layer_tunnel_type; /* 当前流上层的隧道类型, 比如当前流为UDP, 承载的可能是teredo隧道或L2TP隧道 */
   
@@ -179,6 +184,7 @@ struct tcpdetail_private
 	void   *apme;		  //应用层上下文
 	void   *pAllpktpme;   //无状态的tcp管理上下文
 	struct tcp_flow_stat *flow_stat; /* 2016-07-14 lijia add, 用于记录TCP纯data包的计数, 实际内存分配和释放由project模块完成, 可能为NULL,  */
+	struct tcp_flow_stat *deduce_flow_stat; /* 2018-10-30 lijia add, 用于记录靠序号推断出理论上传输的数据, 包含丢包的长度; 以及单向流情况下, 对端应该收到的数据  */
 };
 
 struct udpdetail_private
@@ -258,6 +264,12 @@ struct sapp_global_single_t{
 	int signal_take_over_sw; /* 是否接管常见系统信号, 如SIGSEGV, SIGABRT等等 */
 	int ipentry_priority_over_ipfrag; /* IP_entry优先级高于IP_frag_entry, 默认为0, 适应WY串联特定需求 */
 	int tuple4_reuse_time_interval; /* 四元组重用的最小间隔时间 */
+	void *fs2_handle;
+	const char *fs2_server_ip;
+	unsigned short fs2_server_port_host;
+	short __pad1;
+	int fs2_filed_id_array[COUNTER_NUM];
+	int treat_vlan_as_mac_in_mac_sw;
 };
 
 #define TIMESTAMP_SINGLE_PKT_REGION 		(4) /* 单包延时统计区间 */
@@ -294,8 +306,6 @@ extern void *g_sapp_log_handle;
 
 int MESA_kill_tcp_remedy(struct streaminfo *stream, const void *ext_raw_pkt);
 
-long long sapp_get_cpu_cycle(void);
-
 int get_stream_carry_tunnel_type(const struct streaminfo *this_stream, const struct streaminfo *upper_stream, unsigned short *tunnel_type);
 
 void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt);
@@ -305,7 +315,7 @@ void idle_polling_call(int thread_seq);
 int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt_t *raw_pkt);
 int sapp_assistant_init(void);
 
-inline long long sapp_get_cpu_cycle(void)
+static inline long long sapp_get_cpu_cycle(void)
 {
 #ifdef __x86_64
 #define X86_64_ENV 1

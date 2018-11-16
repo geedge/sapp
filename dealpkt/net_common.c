@@ -124,9 +124,74 @@ static int arp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 }
 
 
+static int gtp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
+{
+	const struct gtp_hdr *gh = (struct gtp_hdr *)raw_data;
+	int opt_len = 0; /* 可选项长度 */
+	const unsigned char *next_ip_layer_hdr;
+	int skip_len;
+
+	if(ADDR_TYPE_GPRS_TUNNEL == expect_layer_type){
+		return 0;
+	}
+	
+	if(gh->flags & 0x2){
+		opt_len += sizeof(int);  /* sequence */
+	}
+
+	next_ip_layer_hdr = (unsigned char *)raw_data + opt_len + sizeof(struct gtp_hdr);
+
+	if((*next_ip_layer_hdr & 0x40) == 0x40){
+		skip_len = ipv4_jump_to_layer((char *)next_ip_layer_hdr, __ADDR_TYPE_IP_PAIR_V4, expect_layer_type);
+	}else if((*next_ip_layer_hdr & 0x60) == 0x60){
+		skip_len = ipv6_jump_to_layer((char *)next_ip_layer_hdr, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
+	}else{
+		sapp_runtime_log(20, "TODO: jmp unsupport type in GTP, 0x%x!\n", (*next_ip_layer_hdr));
+		return -1;
+	}
+
+	return opt_len + sizeof(struct gtp_hdr) + skip_len;
+}
+
+static int udp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
+{
+	const struct mesa_udp_hdr *uh = (const struct mesa_udp_hdr *)raw_data;
+	unsigned short usport, udport;
+	int skip_len;
+
+	if(ADDR_TYPE_UDP == expect_layer_type){
+		return 0;
+	}
+
+	usport = ntohs(uh->uh_sport);
+	udport = ntohs(uh->uh_dport);
+
+	if((2152 == usport) && (2152 == udport)){
+		skip_len = gtp_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), ADDR_TYPE_UDP, expect_layer_type);
+	}else if(4789 == udport){
+		/* vxlan模式暂时只支持ethernet. TODO: 如果是hdlc, ppp封装, 需要实现一个单独的vxlan_jump_to_layer()函数 */
+		skip_len = eth_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr)+8, ADDR_TYPE_MAC, expect_layer_type);
+		if(skip_len < 0){
+			return -1;
+		}
+		skip_len += 8; /* skip vxlan header */
+	}else if((3544 == usport) || (3544 == udport)){
+		/* teredo实际没有数据包头, 直接跳转到ipv6层即可 */
+		skip_len = ipv6_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
+		if(skip_len < 0){
+			return -1;
+		}
+	}else{
+		/* 其他UDP类型不支持再跳转 */
+		return -1;
+	}
+
+	return skip_len + sizeof(struct mesa_udp_hdr);
+}
+
 static int ipv4_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
 {
-	struct ip *p_ip_hdr = (struct ip *)raw_data;
+	struct mesa_ip4_hdr *p_ip_hdr = (struct mesa_ip4_hdr *)raw_data;
 	int skip_len = 0;
 	int ip_hdr_len = p_ip_hdr->ip_hl * 4;
 	//const char *next_layer_data = raw_data + ip_hdr_len;
@@ -134,7 +199,12 @@ static int ipv4_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 	if(raw_layer_type == expect_layer_type){
 		return 0;
 	}
-	
+
+	if((ntohs(p_ip_hdr->ip_off) & IP_MF ) || (ntohs(p_ip_hdr->ip_off) & IP_OFFMASK)){
+		/* IP分片不再继续向内层跳转 */
+		return -1;
+	}
+				
 	switch(p_ip_hdr->ip_p){
 		case IPPROTO_TCP:
 			if(ADDR_TYPE_TCP == expect_layer_type){
@@ -150,13 +220,12 @@ static int ipv4_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 				skip_len = 0;
 				break;
 			}else{
-				/* TODO: teredo隧道模式 */
-				skip_len = -1; 
+				skip_len = udp_jump_to_layer(raw_data+ip_hdr_len, ADDR_TYPE_UDP, expect_layer_type); 
 			}
 		break;
 
 		case IPPROTO_IPV6:
-			if(__ADDR_TYPE_IP_PAIR_V4 == expect_layer_type){
+			if(__ADDR_TYPE_IP_PAIR_V6 == expect_layer_type){
 				skip_len = 0;
 				break;
 			}else{
@@ -236,13 +305,16 @@ static int ipv6_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 				if(ADDR_TYPE_UDP == expect_layer_type){
 					skip_len = next_hdr_ptr - (UINT8 *)raw_data;
 				}else{
+					/* TODO: IPv6的其他隧道模式 */
 					skip_len = -1;
 				}
 				goto done;
 			break;
 
-			case NEXTHDR_FRAGMENT:		
-				offset_to_ip6 = sizeof(struct ipv6_frag_hdr);
+			case NEXTHDR_FRAGMENT:	
+				/* IP分片不再继续向内层跳转 */
+				skip_len = -1;
+				goto done;
 			break;
 
 			case NEXTHDR_ESP:
@@ -322,6 +394,34 @@ static int ppp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 	return skip_len + sizeof(struct mesa_pppoe_session_hdr);
 }
 
+
+static int mpls_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
+{
+	int skip_len = 0;
+	const struct mesa_mpls_hdr *mpls_hdr = (const struct mesa_mpls_hdr *)raw_data;
+	const char *next_layer_data = raw_data + sizeof(struct mesa_mpls_hdr);
+
+	if(raw_layer_type == expect_layer_type){
+		return 0;
+	}
+
+	if(0 == mpls_hdr->mpls_bls){ /* 非MPLS栈底, 递归调用自身 */
+		return mpls_jump_to_layer(next_layer_data, ADDR_TYPE_MPLS, expect_layer_type) + sizeof(struct mesa_mpls_hdr);
+	}
+
+	/* MPLS没有字段标识下一层是什么, 靠猜测下一层的IP类型 */
+	if((*next_layer_data & 0x40) == 0x40){
+		skip_len = ipv4_jump_to_layer(next_layer_data, __ADDR_TYPE_IP_PAIR_V4, expect_layer_type);
+	}else if((*next_layer_data & 0x60) == 0x60){
+		skip_len = ipv6_jump_to_layer(next_layer_data, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
+	}else{
+		sapp_runtime_log(20, "TODO: jmp unsupport type in MPLS, 0x%x!\n",  (unsigned char)(*next_layer_data));
+		return -1;
+	}
+
+	return skip_len + sizeof(struct mesa_mpls_hdr); /* mpls header is 4 byte */
+}
+
 static int __common_eth_type_dispatch(UINT16 eth_type, const char *next_layer_data, int raw_layer_type, int expect_layer_type)
 {
 	int skip_len = 0;
@@ -339,7 +439,11 @@ static int __common_eth_type_dispatch(UINT16 eth_type, const char *next_layer_da
 			if(ADDR_TYPE_VLAN == expect_layer_type){
 				break;
 			}else{
-				skip_len = vlan8021q_jump_to_layer(next_layer_data, ADDR_TYPE_VLAN, expect_layer_type);
+				if(sapp_global_single.treat_vlan_as_mac_in_mac_sw){
+					skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MAC, expect_layer_type);
+				}else{
+					skip_len = vlan8021q_jump_to_layer(next_layer_data, ADDR_TYPE_VLAN, expect_layer_type);
+				}
 			}
 		break;
 		
@@ -366,6 +470,14 @@ static int __common_eth_type_dispatch(UINT16 eth_type, const char *next_layer_da
 				skip_len = ppp_jump_to_layer(next_layer_data, ADDR_TYPE_PPPOE_SES, expect_layer_type);
 			}
 		break;		
+
+		case 0x88A8: /* MAC_IN_MAC */
+			skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MAC, expect_layer_type);
+		break;
+
+		case 0x8847: /* MPLS, ETH_P_MPLS_UC */
+			skip_len = mpls_jump_to_layer(next_layer_data, ADDR_TYPE_MPLS, expect_layer_type);
+		break;
 		
 		default:
 			skip_len = -1;
@@ -422,7 +534,7 @@ static int vlan8021q_jump_to_layer(const char *raw_data,  int raw_layer_type, in
 			skip_len = -1;
 		break;
 
-		case 0x8200: /* TODO: XinJing捕包发现此类型, 未知什么包 */
+		case 0x8200: /* XinJing捕包发现此类型, 未知什么包 */
 			skip_len = -1;
 		break;
 		
@@ -456,6 +568,27 @@ static int eth_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 	}
 
 	return layer_skip_len + sizeof(struct ethhdr);
+}
+
+
+static int mac_in_mac_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
+{
+	struct ethhdr *inner_eth_hdr = (struct ethhdr *)(raw_data + sizeof(struct ethhdr ));
+	unsigned short inner_eth_type = ntohs(inner_eth_hdr->h_proto);
+	//int skip_len = -1;
+	const char *next_layer_data = raw_data + sizeof(struct ethhdr);
+	int layer_skip_len;
+
+	if(raw_layer_type == expect_layer_type){
+		return 0;
+	}
+	
+	layer_skip_len =  __common_eth_type_dispatch(inner_eth_type, next_layer_data, raw_layer_type, expect_layer_type);
+	if(layer_skip_len < 0){
+		return -1;
+	}
+
+	return layer_skip_len + sizeof(struct ethhdr) * 2;
 }
 
 /*
@@ -498,7 +631,11 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 			ret = arp_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
 		break;
 		case ADDR_TYPE_VLAN:
-			ret = vlan8021q_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
+			if(sapp_global_single.treat_vlan_as_mac_in_mac_sw){
+				ret = mac_in_mac_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
+			}else{
+				ret = vlan8021q_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
+			}
 		break;
 		
 		case __ADDR_TYPE_IP_PAIR_V4:
@@ -508,10 +645,18 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 		case __ADDR_TYPE_IP_PAIR_V6:
 			ret = ipv6_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
 		break;
+
+		case ADDR_TYPE_MAC_IN_MAC:
+			ret = mac_in_mac_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
+		break;
+
+		case ADDR_TYPE_UDP:
+			ret = udp_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
+		break;
+				
 		case ADDR_TYPE_PPPOE_SES:
 		case ADDR_TYPE_MPLS:		
 		case ADDR_TYPE_GRE:
-		/* TODO */
 		default:
 			printf("TODO: jmp unsupport raw_layer_type:%d in MESA_net_jump_to_layer()!\n", raw_layer_type);
 			return NULL;
@@ -522,6 +667,63 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 	}
 
 	return ((const char *)raw_data + ret);
+}
+
+/*
+	与MESA_net_jump_to_layer()的区别:
+		MESA_net_jump_to_layer()从最外层开始, 找到第一个符合条件的层就退出;
+		MESA_net_jump_to_layer_greedy()会一直尝试找最内层协议头, 适合隧道模式.
+	
+	return value:
+		Non-NULL: the pointer to expect layer;
+		NULL: not found expect layer.
+*/
+const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_type, int expect_layer_type)
+{
+	const void *expect_layer;
+	const void *success_layer = NULL; /* 最后一次成功找到的层 */
+	int new_raw_layer_type = raw_layer_type; /* 在跳转过程中, 可能会更新中间层信息 */
+	const char *new_next_layer_data = (char *)raw_data;
+
+	expect_layer = MESA_net_jump_to_layer(new_next_layer_data, new_raw_layer_type, expect_layer_type);
+	while(expect_layer){
+		success_layer = expect_layer;
+
+		switch(expect_layer_type){
+			case __ADDR_TYPE_IP_PAIR_V4:
+			{
+				const struct mesa_ip4_hdr *ip4hdr = (const struct mesa_ip4_hdr *)expect_layer;
+				if((ntohs(ip4hdr->ip_off) & IP_MF ) || (ntohs(ip4hdr->ip_off) & IP_OFFMASK)){
+					/* IP分片不再继续向内层跳转 */
+					goto done;
+				}				
+				if(IPPROTO_UDP == ip4hdr->ip_p){
+					new_next_layer_data = (char *)expect_layer + ip4hdr->ip_hl * 4;
+					new_raw_layer_type = ADDR_TYPE_UDP; /* IP层如果继续向下一层偏移, 只支持UDP, IPIP, GRE, L2TPv3. */
+				}else{
+					//TODO 2, GRE, IPIP, L2TPv3
+					goto done;
+				}
+			}
+			break;
+
+			case __ADDR_TYPE_IP_PAIR_V6:
+			{
+				//TODO2,
+				goto done;		
+			}
+			break;
+
+			default:
+				sapp_runtime_log(20, "MESA_net_jump_to_layer_greedy() not support layer type:%d\n", expect_layer_type);
+				goto done;
+		}
+
+		expect_layer = MESA_net_jump_to_layer(new_next_layer_data, new_raw_layer_type, expect_layer_type);
+	}
+
+done:
+	return success_layer;
 }
 
 UINT8 net_layer_to_ipv4_protocol(int addr_type)
@@ -793,7 +995,7 @@ int MESA_stream_list_cmp(struct streaminfo_private *stream1_pr, struct streaminf
 	}
 #endif
 
-	/* TODO, to do: 
+	/* TODO 2, to do:
 		if(isreverse), 反转地址比较, 或调用反向地址比较函数 
 	*/
 
@@ -856,15 +1058,15 @@ int get_pkt_len_from_eth_hdr(const struct mesa_ethernet_hdr *ehdr)
 {
 	int raw_pkt_len = -1;
 
-	switch(ehdr->ether_type){
-		case ETHERTYPE_IP_NET:
+	switch(ntohs(ehdr->ether_type)){
+		case ETHERTYPE_IP:
 		{
 			struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)((char *)ehdr + sizeof(struct mesa_ethernet_hdr));
-			raw_pkt_len = ntohs(ip4hdr->ip_len) + sizeof(mesa_ethernet_hdr);
+			raw_pkt_len = ntohs(ip4hdr->ip_len) + sizeof(struct mesa_ethernet_hdr);
 		}
 		break;
 
-		case ETHERTYPE_IPv6_NET:
+		case ETHERTYPE_IPv6:
 		{
 			struct mesa_ip6_hdr *ip6hdr = (struct mesa_ip6_hdr *)((char *)ehdr + sizeof(struct mesa_ethernet_hdr));
 			raw_pkt_len = ntohs(ip6hdr->ip6_payload_len) + sizeof(struct mesa_ip6_hdr) + sizeof(struct mesa_ethernet_hdr);	

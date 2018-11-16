@@ -118,7 +118,7 @@ wangyan_keepalive_plug.so:wangyan_keepalive_plug.c ../lib/libping.a
 	mkdir -p $(RELEASE_PLT_PATH)/wangyan_keepalive_plug;
 	cp $@ $(RELEASE_PLT_PATH)/wangyan_keepalive_plug/;
 
-libsapp_assistant.so: sapp_assistant.c
+libsapp_assistant.so: sapp_assistant.cpp
 	$(CCC) -o $@ -shared -fPIC $(H_DIR) $(CFLAGS) $^ $(MODULES) $(LIB) -lMESA_field_stat2;
 	mkdir -p /opt/MESA/lib; 
 	cp $@ /opt/MESA/lib/;

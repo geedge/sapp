@@ -15,7 +15,7 @@ extern "C" {
 #define CPU_CLOCK_TO_1US				(2199) /* 1微妙转换成CPU周期数, 比如2.2GHz就是2200 */
 
 
-#if DEBUG
+#if 1
 
 
 /* 2015-11-26 lijia add, 时间戳记录 */
@@ -383,9 +383,9 @@ int timestamp_record_init(void)
 		g_timestamp_record_benchmark[i] = 10000 + i*30000; /* 拍脑袋想的, 起始为10000个CPU周期, 每个区间之间差30000的CPU周期 */
 	}
 
-	iknow_register_cmd(PLATFORM_IHANDLE, "show timestamp summary", "show timestamp summary", 
-					  show_timestamp_summary_cb, 
-					  NULL, 0, NULL);
+	//iknow_register_cmd(PLATFORM_IHANDLE, "show timestamp summary", "show timestamp summary", 
+					  //show_timestamp_summary_cb, 
+					  //NULL, 0, NULL);
 
 	return 0;	
 }

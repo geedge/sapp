@@ -52,7 +52,7 @@ typedef struct{
 	int sapp_active_send_fs_id;
 }sapp_fs_id_t;
 
-static sapp_fs_id_t g_sapp_fs_id;
+//static sapp_fs_id_t g_sapp_fs_id;
 static const unsigned char G_BROADCAST_ADDR[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 
@@ -312,7 +312,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 	return ret;
 }
 
-
+#if 0
 int sapp_fileld_stat_init(void)
 {
 	int opt;
@@ -361,6 +361,7 @@ int sapp_fileld_stat_init(void)
 	
 	return 0;
 }
+#endif
 
 /*
 	因为sapp_fs_handle句柄初始化后, 可能还有其他插件需要使用FS_register注册新的字段,
@@ -370,37 +371,122 @@ int sapp_fileld_stat_init(void)
 	使用一个小技巧, 平台开始收包后, 肯定就是开始运行了.
 	然后再调用FS_start(sapp_fs_handle);
 */
+
+#if 0
 static void *sapp_delay_start(void *arg)
 {
-	time_t last_time;
+	//time_t last_time;
 	
 	while(0 == g_SysInputInfo[0][PKT_IP]){
 		usleep(100);
 	}
 
-	FS_start(sapp_fs_handle);
+	if(sapp_global_single.fs2_handle != NULL){
+		FS_start(sapp_fs_handle);
+	}
 
-
-	last_time = time(NULL);
+	//last_time = time(NULL);
 	while(1){
-		if(g_CurrentTime > last_time){	
-			FS_operate(sapp_fs_handle, g_sapp_fs_id.sapp_tot_pkt_fs_id, 0, FS_OP_SET, sysinfo_new[PKT_ETHERNET]);
-			FS_operate(sapp_fs_handle, g_sapp_fs_id.sapp_tot_bytes_fs_id, 0, FS_OP_SET, sysinfo_new[PKT_ETHERNET_LEN]);
-			last_time = g_CurrentTime;
-		}
-
 		usleep(1000);
 	}
 
 	return NULL;
 }
+#endif
+
+void sapp_fs2_update(int field_index, unsigned  long long value)
+{
+	if(sapp_global_single.fs2_handle != NULL){
+		FS_operate(sapp_global_single.fs2_handle, sapp_global_single.fs2_filed_id_array[field_index], 0, FS_OP_SET,  (long long)value);
+	}
+}
+
+static int sapp_fs2_init(void)
+{
+	int module_switch;
+	char cfg_ip_str[32];
+	int cfg_port;
+	int fs2_opt;
+
+	MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "FS_switch", &module_switch, 0);
+	if(0 == module_switch){
+		sapp_global_single.fs2_handle = NULL;
+		return 0;
+	}
+
+	sapp_global_single.fs2_handle = FS_create_handle();
+	if(NULL == sapp_global_single.fs2_handle){
+		sapp_runtime_log(RLOG_LV_FATAL, "FS_create_handle() error: %s!\n", strerror(errno));
+		return -1;
+	}
+
+	MESA_load_profile_string_def("conf/main.conf", "ShowStatInfo", "FS_server_ip", cfg_ip_str,32, "#");
+	if('#' == cfg_ip_str[0]){
+		sapp_runtime_log(RLOG_LV_FATAL, "FS_switch is enable, but not found FS_server_ip config\n");
+		return -1;
+	}
+
+	sapp_global_single.fs2_server_ip = strdup(cfg_ip_str);
+
+	MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "FS_server_port", &cfg_port, -1);
+	if(cfg_port <= 0 || cfg_port > 65535){
+		sapp_runtime_log(RLOG_LV_FATAL, "FS_server_port %d invalid!\n", cfg_port);
+		return -1;
+	}
+
+	sapp_global_single.fs2_server_port_host = (unsigned short)cfg_port;
+
+	fs2_opt = 1;
+	FS_set_para(sapp_global_single.fs2_handle, STAT_CYCLE, &fs2_opt, sizeof(int));
+
+	fs2_opt = 1; /* 1:Rewrite ,2: Append.  */
+	FS_set_para(sapp_global_single.fs2_handle, PRINT_MODE, &fs2_opt, sizeof(int));
+
+	MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "FS_print_switch", &fs2_opt, 0);	
+	FS_set_para(sapp_global_single.fs2_handle, PRINT_TRIGGER, &fs2_opt, sizeof(int));
+
+	FS_set_para(sapp_global_single.fs2_handle, OUTPUT_DEVICE, "fs2_sysinfo.log", strlen("fs2_sysinfo.log")+1);
+
+	FS_set_para(sapp_global_single.fs2_handle, APP_NAME, "sapp", strlen("sapp")+1);
+
+	FS_set_para(sapp_global_single.fs2_handle, STATS_SERVER_IP, (void *)sapp_global_single.fs2_server_ip, strlen(sapp_global_single.fs2_server_ip)+1);
+
+	FS_set_para(sapp_global_single.fs2_handle, STATS_SERVER_PORT, &sapp_global_single.fs2_server_port_host, sizeof(short));
+
+	sapp_global_single.fs2_filed_id_array[PKT_ETHERNET] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_STATUS, FS_CALC_CURRENT, "Ethernet_pps");
+	sapp_global_single.fs2_filed_id_array[PKT_ETHERNET_LEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_STATUS, FS_CALC_CURRENT, "Ethernet_bps");
+
+	sapp_global_single.fs2_filed_id_array[PKT_IP] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_pps");
+	sapp_global_single.fs2_filed_id_array[PKT_IPLEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_bps");
+
+	sapp_global_single.fs2_filed_id_array[PKT_IPV6] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv6_pps");
+	sapp_global_single.fs2_filed_id_array[PKT_IPV6LEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv6_bps");
+
+	sapp_global_single.fs2_filed_id_array[PKT_TCP] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_pps");
+	sapp_global_single.fs2_filed_id_array[PKT_TCPLEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_bps");
+
+	sapp_global_single.fs2_filed_id_array[PKT_UDP] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "UDP_pps");
+	sapp_global_single.fs2_filed_id_array[PKT_UDPLEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "UDP_bps");
+
+	sapp_global_single.fs2_filed_id_array[SYS_TCP_LINK_NEW] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_NEW");
+	sapp_global_single.fs2_filed_id_array[SYS_TCP_LINK_DEL] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_DEL");
+	sapp_global_single.fs2_filed_id_array[SYS_TCP_LINK_DATA] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_CONCURRENT");
+
+	sapp_global_single.fs2_filed_id_array[SEND_TCP_RST] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_RST");
+	sapp_global_single.fs2_filed_id_array[SEND_TCP_SYN_ACK] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_S/A");
+	sapp_global_single.fs2_filed_id_array[SEND_UDP_PKT] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_UDP");
+
+	FS_start(sapp_global_single.fs2_handle);
+	
+	return 0;
+}
 
 
 int sapp_assistant_init(void)
 {
-	pthread_t pid;
+	///pthread_t pid;
 	
-	if(sapp_fileld_stat_init() < 0){
+	if(sapp_fs2_init() < 0){
 		return -1;
 	}
 
@@ -408,9 +494,8 @@ int sapp_assistant_init(void)
 
 	pthread_mutex_init(&g_plug_Independent_thread_mutex, NULL);
 
-	pthread_create(&pid, NULL, sapp_delay_start, NULL);
-
-	pthread_detach(pid);
+	///pthread_create(&pid, NULL, sapp_delay_start, NULL);
+	///pthread_detach(pid);
 	
 	return 1;
 }

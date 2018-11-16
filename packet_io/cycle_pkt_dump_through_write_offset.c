@@ -69,6 +69,8 @@ static pkt_dump_status_t PKT_DISCARD_STAT[MAX_THREAD_NUM];
 
 #endif
 
+const int tcpdump_mesa_version_VERSION_20181114 = 20181114;
+
 extern int g_packet_io_cap_level;
 extern int g_use_MESA_sleep_sw;
 extern int MESA_mkdir_p(const char *pathname, mode_t mode);
@@ -95,6 +97,8 @@ static int pkt_dump_tcp_cmd_sd = -1;/* TCP fd,  用于接收外部tcpdump命令 */
 static volatile int pkt_dump_udp_socket_peer_alive = 0; /* 外部tcpdump是否存活 */
 static int pkt_dump_udp_pkt_sd[MAX_THREAD_NUM]; /* UDP发送数据包fd */
 static struct sockaddr_in udp_recv_addr;
+static int tcpdump_perceptive_flag = 0; /* 明察秋毫模式, 可以发现丢包数量 */	
+static int greedy_seek_flag = 0; /* 偏移到最内层IP, 便于隧道模式下查找BUG */
 
 static unsigned char phony_mac_hdr[14] = 
 {
@@ -102,14 +106,20 @@ static unsigned char phony_mac_hdr[14] =
 	0x12, 0x23, 0x34, 0x56, 0x67, 0x78,
 	0x08, 0x00
 };
-/* 大流量环境下, 未指定过滤条件, 会引发sapp丢包, 所以设置采样比率 */
+
+
+/* 在线大流量环境下, 未指定过滤条件, 会通过sendto发送大量数据包, 引发sapp丢包, 所以设置采样比率 */
 typedef struct{
 	int sample_pkt_num;
-	char __cache_alignment[60];
-}pkt_dump_sample_t;
+	unsigned int perceptive_mode_pkt_seq;
+	char __cache_alignment[56];
+}pkt_dump_mthread_t;
 
-static pkt_dump_sample_t pkt_dump_sample[MAX_THREAD_NUM];
-static int pkt_dump_ratio = 30; /* 每隔N个包捕获一次 */
+static pkt_dump_mthread_t pkt_dump_mthread_info[MAX_THREAD_NUM];
+
+static int raw_cfg_pkt_dump_ratio = 30; /* 全局默认捕包采样率, 表示每隔N个包捕获一次, 防止大流量下tcpdump_mesa导致平台丢包 */
+static int cur_conn_pkt_dump_ratio = 30; /* 当前连接的捕包采样率, 如果设置了host, port等bpf参数, 则为全捕包模式, debug排错用 */
+
 
 typedef struct  {
 	unsigned int magic;
@@ -313,71 +323,214 @@ done:
 
 static inline int cycle_pkt_dump_sample_by_ratio(int thread_seq)
 {
-	if(pkt_dump_sample[thread_seq].sample_pkt_num++ >= pkt_dump_ratio){
-		pkt_dump_sample[thread_seq].sample_pkt_num = 0;
+	if(pkt_dump_mthread_info[thread_seq].sample_pkt_num++ >= cur_conn_pkt_dump_ratio){
+		pkt_dump_mthread_info[thread_seq].sample_pkt_num = 0;
 		return 1;
 	}
 
 	return 0;
 }
+
+extern char *timet_to_str(time_t timet, char *time_str, int time_str_len);
+static char udp_start_time_str[64];
+static long long tot_udp_send_succ_num = 0; /* sendto成功数量 */
+static long long tot_udp_send_err_num = 0; /* 发送错误数量, 如缓存满等原因 */
+static long long tot_udp_send_willful_discard_num = 0; /* 主动丢弃数量 */
+
+
+/* 
+	为了DEBUG方便, 支持过滤最内层的四元组, 但tcpdump -w 存储的包还是整个带隧道完整的数据包.
+	
+	return value:
+		>=0: 符合条件, 输出给tcpdump_mesa;
+		 <0: 不符合bpf条件, 或不符合采样条件, 丢弃.
+*/
+static int cycle_pkt_dump_seek_to_inner_ip(char *pkt_buf, int pktlen, int thread_seq)
+{
+	struct mesa_ethernet_hdr *ehdr = (struct mesa_ethernet_hdr *)pkt_buf;
+	char *first_ip_layer = NULL;
+	struct mesa_ip4_hdr *ip4hdr_greedy;
+	struct mesa_ip6_hdr *ip6hdr_greedy;
+	int bpf_match_pkt_len = -1;
+	int bpf_match_ipv4 = 0, bpf_match_ipv6 = 0;
+
+	if(ETHERTYPE_IP == ntohs(ehdr->ether_type)){
+		first_ip_layer = pkt_buf + sizeof(struct mesa_ethernet_hdr);
+	}else if(ETHERTYPE_IPv6 == ntohs(ehdr->ether_type)){
+		first_ip_layer = pkt_buf + sizeof(struct mesa_ethernet_hdr);
+	}else{
+		first_ip_layer = NULL;
+	}
+	
+	ip4hdr_greedy = (struct mesa_ip4_hdr *)MESA_net_jump_to_layer_greedy(pkt_buf, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
+	if(ip4hdr_greedy){
+		if((char *)ip4hdr_greedy == first_ip_layer){
+			bpf_match_pkt_len = pktlen; /* 最内层和第一层IP一样, 说明是标准ethernet->IPv4包, 无需memmove操作 */
+		}else{
+			if(pktlen <= ((char *)ip4hdr_greedy - pkt_buf)){
+				return -1; /* 因各种不明原因, 跳转的内层包头溢出了, 错误!! */
+			}			
+			memmove(pkt_buf + sizeof(struct mesa_ethernet_hdr),
+			        ip4hdr_greedy,
+			        pktlen - ((char *)ip4hdr_greedy - pkt_buf));
+			bpf_match_pkt_len = pktlen - ((char *)ip4hdr_greedy - pkt_buf) + sizeof(struct mesa_ethernet_hdr);
+			ehdr->ether_type = htons(ETHERTYPE_IP); /* 第一层可能不是IPV4, 比如MPLS, VLAN等, 需要改成IP, 以便bpf过滤器能正确执行 */
+		}
+
+		if(bpf_match_pkt_len <= 0){
+			sapp_runtime_log(20, "cycle_pkt_dump_seek_to_inner_ip() length error!\n");
+			return -1;
+		}
+		
+		/* 如果有正确的过滤条件, 不设采样率, 保证捕包尽量全, 符合调用者意图;
+	       如果没有过滤条件, 即全捕包模式, 为了尽量不影响包处理线程, 根据采样率只捕一部分包.
+		*/
+		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
+			bpf_match_ipv4 == bpf_filter(G_PKT_DUMP_BPF_FILTER[thread_seq].bf_insns, 
+						    (const unsigned char *)pkt_buf, (unsigned int)bpf_match_pkt_len, (unsigned int)bpf_match_pkt_len);
+		}
+	}else{
+		bpf_match_ipv4 = 0;
+	}
+
+	ip6hdr_greedy = (struct mesa_ip6_hdr *)MESA_net_jump_to_layer_greedy(pkt_buf, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
+	if(ip6hdr_greedy){
+		if((char *)ip6hdr_greedy == first_ip_layer){
+			bpf_match_pkt_len = pktlen; /* 最内层和第一层IP一样, 说明是标准ethernet->IPv6包, 无需memmove操作 */
+		}else{
+			if(pktlen <= ((char *)ip4hdr_greedy - pkt_buf)){
+				return -1; /* 因各种不明原因, 跳转的内层包头溢出了, 错误!! */
+			}				
+			memmove(pkt_buf + sizeof(struct mesa_ethernet_hdr),
+			        ip6hdr_greedy,
+			        pktlen - ((char *)ip6hdr_greedy - pkt_buf));
+			bpf_match_pkt_len = pktlen - ((char *)ip4hdr_greedy - pkt_buf) + sizeof(struct mesa_ethernet_hdr);
+			ehdr->ether_type = htons(ETHERTYPE_IPv6); /* 第一层可能不是IPV6, 比如MPLS, VLAN等,需要改成IP,以便bpf过滤器能正确执行 */
+		}
+
+		if(bpf_match_pkt_len <= 0){
+			sapp_runtime_log(20, "cycle_pkt_dump_seek_to_inner_ip() length error!\n");
+			return -1;
+		}
+		
+
+		/* 如果有正确的过滤条件, 不设采样率, 保证捕包尽量全, 符合调用者意图;
+	       如果没有过滤条件, 即全捕包模式, 为了尽量不影响包处理线程, 根据采样率只捕一部分包.
+		*/
+		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
+			bpf_match_ipv6 == bpf_filter(G_PKT_DUMP_BPF_FILTER[thread_seq].bf_insns, 
+						    (const unsigned char *)pkt_buf, (unsigned int)bpf_match_pkt_len, (unsigned int)bpf_match_pkt_len);
+		}
+		
+	}else{
+		bpf_match_ipv6 = 0;
+	}	
+
+	if(bpf_match_ipv4 || bpf_match_ipv6){
+		return 1; /* 任意头部命中即可输出给tcpdump_mesa */ 
+	}else{
+		if(cur_conn_pkt_dump_ratio > 0){
+			if(0 == cycle_pkt_dump_sample_by_ratio(thread_seq)){
+				tot_udp_send_willful_discard_num++;
+				return -1;
+			}
+		}
+	}
+
+	return 1;
+}
+
 static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_raw_pkt)
 {
-	const mesa_ethernet_hdr *ehdr;
-	const unsigned char *pktdata;
-	int pktlen;
+	const unsigned char *pktdata, *for_bpf_filter_data;
+	int pktlen, for_bpf_filter_len, ret;
+	char modify_pkt_buf[2048]; /* 需要修改原始包, 先copy到临时缓冲区 */
+	struct perceptive_info *pperceptive_info;
 
-	if(1 == pkt_dump_udp_socket_peer_alive){
-		if(0 == G_PKT_DUMP_PER_THREAD_SW[thread_seq]){
-			return;
-		}	
-		/* 原始包跳过偏离量后, 还不满一个Ethernet帧, 跳过 */
-		if(pkt_dump_data_offset + 14 > p_raw_pkt->raw_pkt_len){
-			return;
-		}
-		
-		if(g_packet_io_cap_level != CAP_LEVEL_MAC){
-			pktdata =  (const unsigned char *)p_raw_pkt->raw_pkt_data-14 + pkt_dump_data_offset, 
+	if(0 == pkt_dump_udp_socket_peer_alive){	
+		return;
+	}
+	if(0 == G_PKT_DUMP_PER_THREAD_SW[thread_seq]){
+		return;
+	}
+	/* 原始包跳过偏离量后, 还不满一个Ethernet帧, 跳过 */
+	if(pkt_dump_data_offset + 14 > p_raw_pkt->raw_pkt_len){
+		return;
+	}
+
+	if(0 == greedy_seek_flag){
+		if(p_raw_pkt->low_layer_type  != (enum addr_type_t)CAP_LEVEL_MAC){
+			pktdata =  (const unsigned char *)p_raw_pkt->raw_pkt_data-14 + pkt_dump_data_offset;
+			for_bpf_filter_data = pktdata;
 			pktlen = p_raw_pkt->raw_pkt_len + 14 - pkt_dump_data_offset;
-			ehdr = (const mesa_ethernet_hdr *)pktdata;
+			for_bpf_filter_len = pktlen;
 		}else{
-			pktdata =  (const unsigned char *)p_raw_pkt->raw_pkt_data + pkt_dump_data_offset, 
+			pktdata =  (const unsigned char *)p_raw_pkt->raw_pkt_data + pkt_dump_data_offset;
 			pktlen = p_raw_pkt->raw_pkt_len - pkt_dump_data_offset;
-			ehdr = (const mesa_ethernet_hdr *)pktdata;
 		}
 
-		/* 2017-01-06 lijia add, 非常规Ethernet包不处理 */
-		switch(ntohs(ehdr->ether_type)){
-			case ETHERTYPE_IP:
-			case ETHERTYPE_IPv6:
-			case ETHERTYPE_VLAN:
-			case ETHERTYPE_ARP:
-			break;
-
-			default:
-			return;
-		}
-	
+		/* 如果有正确的过滤条件, 不设采样率, 保证捕包尽量全, 符合调用者意图;
+	       如果没有过滤条件, 即全捕包模式, 为了尽量不影响包处理线程, 根据采样率只捕一部分包.
+		*/
 		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
 			if(0 == bpf_filter(G_PKT_DUMP_BPF_FILTER[thread_seq].bf_insns, 
-						    (const unsigned char *)pktdata, pktlen, pktlen)){
+						    (const unsigned char *)for_bpf_filter_data, for_bpf_filter_len, for_bpf_filter_len)){
 				return;
 			}
+		}else{
+			if(cur_conn_pkt_dump_ratio > 0){
+				if(0 == cycle_pkt_dump_sample_by_ratio(thread_seq)){
+					tot_udp_send_willful_discard_num++;
+					return;
+				}
+			}
 		}
+	
+	}else{
+		pktlen = p_raw_pkt->raw_pkt_len>2048?2048:p_raw_pkt->raw_pkt_len;
+		memcpy(modify_pkt_buf, p_raw_pkt->raw_pkt_data, pktlen);
+		pktlen = cycle_pkt_dump_seek_to_inner_ip(modify_pkt_buf, pktlen, thread_seq);
+		if(pktlen < 0){
+			return;
+		}
+		pktdata = (unsigned char *)modify_pkt_buf;
+		for_bpf_filter_data = pktdata;
+		for_bpf_filter_len = pktlen;
+	}
 
-		if(pkt_dump_ratio > 0){
-			if(0 == cycle_pkt_dump_sample_by_ratio(thread_seq)){
-				return;
-			}
-		}
-		
-		/* bingo, match filter, sendto */
-		sendto(pkt_dump_udp_pkt_sd[thread_seq], 
-				(char *)pktdata, 
-				pktlen, 
+	if(tcpdump_perceptive_flag > 0){ /* 丢包检测 */
+		memcpy(modify_pkt_buf, pktdata, pktlen>2048?2048:pktlen);
+		pperceptive_info = (struct perceptive_info *)&modify_pkt_buf[6]; /* 存于源MAC地址 */
+		pperceptive_info->thread_id = thread_seq;
+		pperceptive_info->pkt_seq = htonl(pkt_dump_mthread_info[thread_seq].perceptive_mode_pkt_seq);
+		pkt_dump_mthread_info[thread_seq].perceptive_mode_pkt_seq++;
+		pktdata = (unsigned char *)modify_pkt_buf;
+		pktlen = pktlen>2048?2048:pktlen;
+	}
+	
+	/* bingo, match filter, sendto */
+	ret = sendto(pkt_dump_udp_pkt_sd[thread_seq], 
+			(char *)p_raw_pkt->raw_pkt_data, /* 过滤时使用内层数据包头, 但要发送整个原始包 */
+			p_raw_pkt->raw_pkt_len, 		 /* 过滤时使用内层数据包头, 但要发送整个原始包 */
+		  	MSG_DONTWAIT,
+		  	(const struct sockaddr *)&udp_recv_addr,
+		  	sizeof(udp_recv_addr));
+	if((ret < 0) && (EINTR == errno)){
+		/* 优先保证sapp处理流程, 因中断造成的发包失败只重试一次, 其他错误不重试 */
+		ret = sendto(pkt_dump_udp_pkt_sd[thread_seq], 
+				(char *)p_raw_pkt->raw_pkt_data, 
+				p_raw_pkt->raw_pkt_len, 
 			  	MSG_DONTWAIT,
 			  	(const struct sockaddr *)&udp_recv_addr,
 			  	sizeof(udp_recv_addr));
 	}
+	
+	if(ret < 0){
+		tot_udp_send_err_num++;
+	}else{
+		tot_udp_send_succ_num ++;
+	}
+
 }
 
 static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
@@ -400,7 +553,7 @@ static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 	}
 
 	if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
-		if(g_packet_io_cap_level != CAP_LEVEL_MAC){
+		if(g_packet_io_cap_level != (enum addr_type_t)CAP_LEVEL_MAC){
 			if(0 == bpf_filter(G_PKT_DUMP_BPF_FILTER[thread_seq].bf_insns, 
 						    (const unsigned char *)p_raw_pkt->raw_pkt_data-14, 
 			       		    p_raw_pkt->raw_pkt_len+14, p_raw_pkt->raw_pkt_len+14)){
@@ -430,7 +583,7 @@ static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 	/* 更新包长度, 时间戳 */
 	pcap_hdr[0].ts.tv_sec = (unsigned int )g_CurrentTime;	
 
-	if(g_packet_io_cap_level != CAP_LEVEL_MAC){
+	if(p_raw_pkt->low_layer_type != CAP_LEVEL_MAC){
 		pcap_hdr[0].caplen = p_raw_pkt->raw_pkt_len+14;
 		pcap_hdr[0].len = p_raw_pkt->raw_pkt_len+14;
 		memcpy(&pcap_hdr[1], phony_mac_hdr, 14);
@@ -808,6 +961,7 @@ static void pkt_dump_set_default_opt(void)
 	
 	memset(G_PKT_DUMP_FILTER_STR, 0, sizeof(G_PKT_DUMP_FILTER_STR));
 	pkt_dump_data_offset = 0;
+
 	/* 默认所有线程全部开启 */
 	memset(G_PKT_DUMP_PER_THREAD_SW, 1,  sizeof(G_PKT_DUMP_PER_THREAD_SW));
 }
@@ -821,6 +975,10 @@ static void pkt_dump_parse_opt_rcv_port(const struct pkt_dump_opt *cmd_opt, cons
 
 static void pkt_dump_parse_opt_bpf_filter(const struct pkt_dump_opt *cmd_opt, const char *opt_val)
 {
+	if(ntohs(cmd_opt->opt_len) >= sizeof(G_PKT_DUMP_FILTER_STR)){
+		printf("bpf filter string is too long: %s\n", opt_val);
+		return;
+	}
 	memcpy(G_PKT_DUMP_FILTER_STR, opt_val, ntohs(cmd_opt->opt_len)); /* 已包含了EOF */
 }
 
@@ -853,7 +1011,28 @@ static void pkt_dump_parse_opt_thread_index(const struct pkt_dump_opt *cmd_opt, 
 	return;
 }
 
-static void cycle_pkt_dump_command_paicdiarse(int connfd)
+static int pkt_dump_reply_ack(int connfd)
+{
+	char send_buf[128];
+	struct pkt_dump_handshake *pkt_hdr;
+	struct pkt_dump_opt *ack_opt;
+
+	pkt_hdr = (struct pkt_dump_handshake *)&send_buf[0];
+	ack_opt = (struct pkt_dump_opt *)(send_buf + sizeof(struct pkt_dump_handshake));
+
+	pkt_hdr->magic = htonl(PKT_DUMP_HDR_MAGIC);
+	pkt_hdr->version = htonl(20180119);
+	pkt_hdr->opt_num = htonl(1);
+
+	ack_opt->opt_type = htons(PKT_DUMP_OPT_ACK);
+	ack_opt->opt_len = 0;
+
+	int ret = MESA_sock_force_write(connfd, send_buf, sizeof(struct pkt_dump_handshake)+sizeof(struct pkt_dump_opt), 0);
+
+	return ret;
+}
+
+static void cycle_pkt_dump_command_parse(int connfd)
 {
 	char cmd_buf[1024];
 	unsigned int i;
@@ -861,7 +1040,7 @@ static void cycle_pkt_dump_command_paicdiarse(int connfd)
 	struct pkt_dump_handshake pkt_hdr;
 	struct pkt_dump_opt cmd_opt;
 	
-	/* 先发送2个字节tcpdump UDP接收端口 */
+	/* tcpdump_mesa先发送固定头部, 用于判定magic, 选项数量, 版本号之类的 */
 	ret = MESA_sock_greedy_read(connfd,  &pkt_hdr, sizeof(pkt_hdr), -1);
 	if(0 == ret){
 		goto err_exit;
@@ -871,8 +1050,14 @@ static void cycle_pkt_dump_command_paicdiarse(int connfd)
 	}
 
 	if(ntohl(pkt_hdr.magic) != PKT_DUMP_HDR_MAGIC){
-		printf("Remote tcpdump is not recognized\n");
+		printf("Remote tcpdump_mesa is not recognized!\n");
 		goto err_exit;
+	}
+
+    /* 暂不严格限定对端tcpdump_mesa版本号, 只打印警告信息 */
+	if(ntohl(pkt_hdr.version) != (unsigned int)tcpdump_mesa_version_VERSION_20181114){
+		printf("Remote tcpdump_mesa version is incompatible!\n");
+		sapp_runtime_log(20, "Remote tcpdump_mesa version is incompatible!\n");
 	}
 
 	pkt_dump_set_default_opt();
@@ -886,13 +1071,15 @@ static void cycle_pkt_dump_command_paicdiarse(int connfd)
 			printf("sock read error, %s\n", strerror(errno));
 			goto err_exit;
 		}
-		/* get opt value */
-		ret = MESA_sock_greedy_read(connfd,  cmd_buf, ntohs(cmd_opt.opt_len), -1);
-		if(0 == ret){
-			goto err_exit;
-		}else if(ret < 0){
-			printf("sock read error, %s\n", strerror(errno));
-			goto err_exit;
+		/* get opt value if exist */
+		if(ntohs(cmd_opt.opt_len) > 0){
+			ret = MESA_sock_greedy_read(connfd,  cmd_buf, ntohs(cmd_opt.opt_len), -1);
+			if(0 == ret){
+				goto err_exit;
+			}else if(ret < 0){
+				printf("sock read error, %s\n", strerror(errno));
+				goto err_exit;
+			}
 		}
 		
 		switch(ntohs(cmd_opt.opt_type)){
@@ -911,6 +1098,15 @@ static void cycle_pkt_dump_command_paicdiarse(int connfd)
 			case PKT_DUMP_OPT_THREAD_INDEX:
 				pkt_dump_parse_opt_thread_index(&cmd_opt, cmd_buf);
 			break;
+
+			case PKT_DUMP_OPT_PERCEPTIVE:
+				tcpdump_perceptive_flag = 1;
+			break;
+
+			case PKT_DUMP_OPT_GREEDY_SEEK:
+				greedy_seek_flag = 1;
+			break;
+
 			default:
 				/* 未知选项跳过不处理 */
 				break;
@@ -923,29 +1119,54 @@ static void cycle_pkt_dump_command_paicdiarse(int connfd)
 			goto err_exit;
 		}		
 
-		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){ /* 允许没有filter */
+		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){ /* 允许没有filter, 即全捕包 */
 			if(pcap_compile(phony_pcap_handle[i], &G_PKT_DUMP_BPF_FILTER[i], G_PKT_DUMP_FILTER_STR, 100, 0) < 0){                
 				printf("Compile pcap filter '%s' error:%s\n", G_PKT_DUMP_FILTER_STR, pcap_geterr(phony_pcap_handle[i]));                
 				goto err_exit;    
 			}
+			/* 如果有正确的过滤条件, 不设采样率, 保证捕包尽量符合调用者意图 */
+			cur_conn_pkt_dump_ratio = 0;			
 		}
 	}
 
 	pkt_dump_udp_socket_peer_alive = 1;
 
-	/* 以后不再处理任何命令, 阻塞读取, 直到对端连接结束 */
-	while(MESA_sock_greedy_read(connfd,  cmd_buf, sizeof(cmd_buf), -1)  != 0);
+	if(pkt_dump_reply_ack(connfd) < 0 ){
+		goto err_exit;
+	}
+
+	timet_to_str(time(NULL),  udp_start_time_str, 64);
+
+	/* 与tcpdump_mesa建立连接以后不再处理任何命令, 阻塞读取但不做任何解析, 直到对端tcpdump_mesa连接结束 */
+	while(MESA_sock_greedy_read(connfd,  cmd_buf, sizeof(cmd_buf), -1) != 0);
+
+	MESA_handle_runtime_log(g_sapp_log_handle, 20, "tcpdump_mesa", "capture start at %s, send pkt succ: %lld, error: %lld, willful discard:%lld!",
+						   udp_start_time_str,
+						   tot_udp_send_succ_num,
+						   tot_udp_send_err_num,
+						   tot_udp_send_willful_discard_num);
 
 err_exit:
-	pkt_dump_udp_socket_peer_alive = 0;
+	/* 恢复各种变量的默认值 */
+	pkt_dump_udp_socket_peer_alive = 0; /* NOTE: 命令连接中断后, 第一步先关闭捕包开关 */
+	tot_udp_send_succ_num = 0; /* sendto成功数量 */
+	tot_udp_send_err_num = 0; /* 发送错误数量, 如缓存满等原因 */
+	tot_udp_send_willful_discard_num = 0; /* 主动丢弃数量 */
+	tcpdump_perceptive_flag = 0;
+	greedy_seek_flag = 0;
+	
+	memset(G_PKT_DUMP_FILTER_STR, 0, sizeof(G_PKT_DUMP_FILTER_STR));
+	pkt_dump_data_offset = 0;
+	cur_conn_pkt_dump_ratio = raw_cfg_pkt_dump_ratio;
+	
+	/* 可单独按线程指定捕包, 每次恢复默认值 */
+	memset(G_PKT_DUMP_PER_THREAD_SW, 0,  sizeof(G_PKT_DUMP_PER_THREAD_SW));
 	usleep(1000 * 500); /* 延时释放, 避免有线程正在使用BPF过滤器 */
 	for(i = 0; i <  (unsigned int )g_packet_io_thread_num; i++){
 		pcap_freecode(&G_PKT_DUMP_BPF_FILTER[i]);
-	}
-	memset(G_PKT_DUMP_FILTER_STR, 0, sizeof(G_PKT_DUMP_FILTER_STR));
-	pkt_dump_data_offset = 0;
-	/* 可单独按线程指定捕包, 每次恢复默认值 */
-	memset(G_PKT_DUMP_PER_THREAD_SW, 0,  sizeof(G_PKT_DUMP_PER_THREAD_SW));
+		pkt_dump_mthread_info[i].sample_pkt_num = 0;
+		pkt_dump_mthread_info[i].perceptive_mode_pkt_seq = 0;
+	}	
 	close(connfd);
 	return;
 }
@@ -966,7 +1187,7 @@ static void * cycle_pkt_dump_udp_socket_daemon_thread(void *arg)
 		connfd = accept(pkt_dump_tcp_cmd_sd, (struct sockaddr *) &cliaddr, &cliaddr_len);
 		if(connfd > 0){
 			//cycle_pkt_dump_command_parse(connfd);
-			cycle_pkt_dump_command_paicdiarse(connfd);
+			cycle_pkt_dump_command_parse(connfd);
 		}
 	}
 
@@ -993,7 +1214,7 @@ static int cycle_pkt_dump_socket_init(void)
 		printf("pkt dump bind cmd port %u error, %s!\n", pkt_dump_tcp_bind_port, strerror(errno));
 		return -1;
 	}
-	listen(pkt_dump_tcp_cmd_sd,  1); /* 暂时只支持一个客户端捕包 */
+	listen(pkt_dump_tcp_cmd_sd,  1); /* 不支持并发, 暂时只支持一个客户端捕包 */
 
 	for(i = 0; i < g_packet_io_thread_num; i++){
 		pkt_dump_udp_pkt_sd[i] = socket(AF_INET, SOCK_DGRAM, 0);
@@ -1006,7 +1227,7 @@ static int cycle_pkt_dump_socket_init(void)
 
 int cycle_pkt_dump_init(int argc, char *argv[])
 {
-	int i, ret;
+	int i, ret = 0;
 	int int_tmp, total_files_size, core_num;
 	char per_thread_sw[PATH_MAX];
 	char pcap_errbuf[PCAP_ERRBUF_SIZE];
@@ -1031,8 +1252,8 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 	pkt_dump_tcp_bind_port = (unsigned short)int_tmp;
 
 
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_ratio", &pkt_dump_ratio, 30);
-
+	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_ratio", &raw_cfg_pkt_dump_ratio, 30);
+	cur_conn_pkt_dump_ratio = raw_cfg_pkt_dump_ratio;
 	
 #if 0 == CYCLE_PKT_DUMP
 	printf("\n\033[33m[Warning]pkt_dump is enable, but sapp is not compile correct, please use debug=2.\033[0m\n");

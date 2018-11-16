@@ -18,6 +18,7 @@ typedef struct{
 	int threadnum; 
 	int raw_ipv4_fd; /* 仅用于发送IPv4的rst包 */
 	int raw_ipv6_fd; /* 仅用于发送IPv6的rst包 */
+	int raw_udp_fd;
 	int raw_eth_fd; /* 仅用于发送Ethernet原始报文 */
 	unsigned char *send_buf;
 	void *low_level_send_handle; /* 底层发包句柄, 根据底层库决定, 通过dl_io_get_send_handle()获取 */
@@ -26,6 +27,7 @@ typedef struct{
 	unsigned long tot_send_pkt;
 	unsigned long tot_send_byte;
 	unsigned long tot_send_err;
+	void *user_arg; /* 2018-08-31 lijia add, for PanGu, 使用串联vxlan发送rst包 */
 }MESA_send_handle;
 
 /* 2012-07-10 LiJia add, 网络连接模式，可根据配置文件内容，更改工作模式: 
@@ -56,6 +58,30 @@ typedef struct{
 #define DEV_NAME_STR_LEN			(32)
 
 extern int g_topology_mode;
+typedef struct 
+{
+	unsigned char flags;
+
+	/*------------byte delim -------*/
+	unsigned char reserved[3];
+
+	/*--------int delim -------*/
+	unsigned char vlan_id_half_high;
+	unsigned char link_layer_type : 4; /* 二层报文封装格式 */
+	unsigned char vlan_id_half_low : 4;
+	unsigned int online_test : 1;
+	unsigned int link_id : 6;
+	unsigned int dir : 1;
+
+	unsigned int r7 : 1;
+	unsigned int r6 : 1;
+	unsigned int r5 : 1;
+	unsigned int r4 : 1;
+	unsigned int vni_flag : 1;
+	unsigned int r2 : 1;
+	unsigned int r1 : 1;
+	unsigned int r0 : 1;
+}vxlan_header_t;  /* 在线GDEV标准 */
 
 struct sendpacket_mac_table{
 	unsigned char src_mac[6];
@@ -115,6 +141,7 @@ enum timestamp_level{
 /* 临时存储用于构造每层包头的参数, 如ip->id, ip->ttl, tcp->flags, tcp->win参数等 */
 typedef struct{
 	void *layer_args[__ADDR_TYPE_MAX];
+	long long __pad[6];
 }layer_args_t;
 
 struct dl_io_lib_name{

@@ -69,7 +69,9 @@ enum addr_type_t{
 	__ADDR_TYPE_IP_PAIR_V6,		/* 13, ipv6 layer in tunnel mode */
 	ADDR_TYPE_PPP,				/* 14 */
 	ADDR_TYPE_PPTP,			/* 15 */
-	__ADDR_TYPE_MAX,			/* 16 */
+	ADDR_TYPE_MAC_IN_MAC,		/* 16 */
+	ADDR_TYPE_GPRS_TUNNEL,      /* 17 */
+	__ADDR_TYPE_MAX,			/* 18 */
 };
 
 #define TCP_TAKEOVER_STATE_FLAG_OFF	0
@@ -121,6 +123,7 @@ enum stream_carry_tunnel_t{
 	STREAM_TUNNLE_PPTP		= 1 << 4,
 	STREAM_TUNNLE_L2TP		= 1 << 5,
 	STREAM_TUNNLE_TEREDO		= 1 << 6,
+	STREAM_TUNNEL_GPRS_TUNNEL = 1 << 7,
 };
 
 typedef struct raw_ipfrag_list{
@@ -196,9 +199,8 @@ struct layer_addr_pppoe_session
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 	unsigned int ver:4;   
-	unsigned int type:4;  
-#endif
-#if __BYTE_ORDER == __BIG_ENDIAN
+	unsigned int type:4;
+#elif __BYTE_ORDER == __BIG_ENDIAN
 	unsigned int type:4; 
 	unsigned int ver:4; 
 #endif
@@ -287,6 +289,23 @@ struct layer_addr_pptp
 	UINT16 S2C_call_id;	/* S2Ck以传输层协议方向为准, TCP SYN/ACK为S2C, UDP目的端口大的为S2C, callid, network order */
 };
 
+struct layer_addr_gtp
+{
+    unsigned long long source;  /* From Client */
+    unsigned int src_seq;
+    unsigned long long dest;	/* From Server */
+    unsigned int dest_seq;
+}__attribute__ ((aligned (1)));
+
+#define MAC_IN_MAC_HDR_LEN	(sizeof(struct mesa_ethernet_hdr) +  sizeof(struct mesa_ethernet_hdr))
+struct layer_addr_mac_in_mac
+{
+	UCHAR outer_dst_mac[MAC_ADDR_LEN]; /* 最外层mac地址, network order */
+	UCHAR outer_src_mac[MAC_ADDR_LEN]; /* 最外层mac地址, network order */
+	UCHAR inner_dst_mac[MAC_ADDR_LEN]; /* 内层mac地址, network order */
+	UCHAR inner_src_mac[MAC_ADDR_LEN]; /* 内层mac地址, network order */
+};
+
 struct layer_addr
 {
 	UCHAR addrtype; /*  definition in enum addr_type_t */
@@ -309,6 +328,8 @@ struct layer_addr
 		struct layer_addr_pppoe_session *pppoe_ses;		
 		struct layer_addr_l2tp	*l2tp;
 		struct layer_addr_pptp	*pptp;
+		struct layer_addr_mac_in_mac *mimac;
+        struct layer_addr_gtp *gtp;
 		void 					*paddr;
 	};
 

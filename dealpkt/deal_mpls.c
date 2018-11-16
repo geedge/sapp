@@ -35,7 +35,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 	char *next_layer_hdr = (char *)this_layer_data+ sizeof(struct mesa_mpls_hdr);
 	int next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct mesa_mpls_hdr);
 
-	this_mpls_hdr.mpls_label = (ntohl(*mpls_pkt_data) & MPLS_LABEL_MASK) >> 12;
+	//this_mpls_hdr.mpls_label = (ntohl(*mpls_pkt_data) & MPLS_LABEL_MASK) >> 12;
 	this_mpls_hdr.mpls_exp = (ntohl(*mpls_pkt_data) & MPLS_EXP_MASK) >> 9;
 	this_mpls_hdr.mpls_bls = (ntohl(*mpls_pkt_data) & MPLS_BLS_MASK) >> 8;
 	this_mpls_hdr.mpls_ttl = (ntohl(*mpls_pkt_data) & MPLS_TTL_MASK);
@@ -46,7 +46,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		pstream->addr.paddr=&addr;
 		pstream->addr.addrtype = ADDR_TYPE_MPLS;
 		pstream->addr.addrlen = sizeof(struct layer_addr_mpls);
-		pstream_pr->addr_use_as_hash = 1;	
+		pstream_pr->addr_use_as_hash = 0;	/* MPLS地址不参与HASH比较, 因为双向可能不一致 */
 		//ptmp->stream.p_layer_header = this_layer_data;
 		//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_layer_data - (char *)raw_pkt->raw_pkt_data;
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;

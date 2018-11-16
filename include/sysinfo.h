@@ -100,6 +100,7 @@
 #define TUNNEL_TEREDO			(64)
 #define TUNNEL_TEREDO_LEN		(65)
 #define TUNNEL_IP_IN_IP			(66)
+#define TUNNEL_GTP              (67)
 
 #define SEND_IP_RAW_PKT		(70) /* 调用MESA_sendpacket_iplayer()发送构造好的IP完整包 */
 #define SEND_IP_RAW_PKT_LEN	(71)
@@ -113,6 +114,9 @@
 #define SEND_TCP_SYN_ACK_LEN	(79)
 #define SEND_UDP_PKT			(80) /* MESA_fakepacket_send_udp()发送UDP数据包 */
 #define SEND_UDP_PKT_LEN		(81)
+
+#define SEND_PKT_ERR			(82)
+#define SEND_PKT_ERR_LEN		(83) /* sendto error */
 
 /* 2014-12-02 lijia add */
 #define PKT_UNKNOWN			(98)

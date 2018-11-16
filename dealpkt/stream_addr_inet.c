@@ -21,6 +21,10 @@
 #include "deal_ipv6.h"
 
 #ifdef __cplusplus
+extern "C" const addr_convert_t G_ADDR_CONVERT_HANDLE[];
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -51,6 +55,9 @@ static int __addr_ppp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf
 static int __addr_pptp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
 static int __addr_socks_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
 static int __addr_openvpn_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
+static int __addr_mac_in_mac_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
+static int __addr_gtp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
+
 
 static int __addr_ipv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 static int __addr_ipv6_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
@@ -71,11 +78,13 @@ static int __addr_ppp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 static int __addr_pptp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 static int __addr_sockv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 static int __addr_openvpn_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
-
+static int __addr_mac_in_mac_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 static const char *__layer_addr_ntop (const struct streaminfo *stream, int thread_index);
+static int __addr_gtp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 
 
-extern "C" const addr_convert_t G_ADDR_CONVERT_HANDLE[] = 
+
+const addr_convert_t G_ADDR_CONVERT_HANDLE[] = 
 {
 	{__ADDR_TYPE_INIT,			STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL},
 #if (0 == IP_PORT_UNION_VERSION) /* 在IP-PORT合并的版本里, 没有纯IP地址层 */
@@ -104,9 +113,11 @@ extern "C" const addr_convert_t G_ADDR_CONVERT_HANDLE[] =
 	{ADDR_TYPE_IPV4,			STREAM_TYPE_SOCKS4,"ADDR_TYPE_SOCKS",	"SOCKS",		"SOCKS<",__addr_socks_n2p_fun,__addr_sockv4_pton},/* 14 */
 	{ADDR_TYPE_IPV4,			STREAM_TYPE_SOCKS5,"ADDR_TYPE_SOCKS",	"SOCKS",		"SOCKS<",__addr_socks_n2p_fun,__addr_sockv4_pton},/* 14 */
 	{ADDR_TYPE_PPTP,			STREAM_TYPE_PPTP,"ADDR_TYPE_PPPTP",		"PPTP", 		"PPTP<",__addr_pptp_n2p_fun, __addr_pptp_pton}, /* 15 */
+	{ADDR_TYPE_MAC_IN_MAC,	STREAM_TYPE_NON, "ADDR_TYPE_MAC_IN_MAC",		"MAC_IN_MAC",		"MAC_IN_MAC<",__addr_mac_in_mac_n2p_fun,__addr_mac_in_mac_pton}, /* 4 */
 	{ADDR_TYPE_IPV4,			STREAM_TYPE_OPENVPN,"ADDR_TYPE_OPENVPN",	"OpenVPN",	"OpenVPN<",__addr_openvpn_n2p_fun,__addr_openvpn_pton},/* 2017-02-10 lijia add */
 	{ADDR_TYPE_IPV6,			STREAM_TYPE_OPENVPN,"ADDR_TYPE_OPENVPN",	"OpenVPN",	"OpenVPN<",__addr_openvpn_n2p_fun,__addr_openvpn_pton},/* 2017-02-10 lijia add */
-	{__ADDR_TYPE_MAX,		STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL} /* EOF */
+    {ADDR_TYPE_GPRS_TUNNEL,			STREAM_TYPE_NON,"ADDR_TYPE_GTP",		"GTP",		"GTP<",__addr_gtp_n2p_fun,__addr_gtp_pton},	/*  */
+    {__ADDR_TYPE_MAX,		STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL} /* EOF */
 };
 
 
@@ -587,6 +598,113 @@ static int __addr_mac_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 	return 0;
 }	
 
+/*MAC_IN_MAC<000100032202-00e0fc030007,000100032202-00e0fc030007>*/
+static int __addr_mac_in_mac_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
+{
+	int i;
+	char *str_val = addr_str;
+	//char *bin_val = addr_bin_val->addr_value;
+	unsigned char tmp_bin_val;
+	struct layer_addr_mac_in_mac *macaddr = (struct layer_addr_mac_in_mac *)addr_bin_val->addr_value;
+	addr_bin_val->stream.addr.addrtype = ADDR_TYPE_MAC_IN_MAC;
+	addr_bin_val->stream.type = STREAM_TYPE_NON;
+	addr_bin_val->stream.addr.addrlen = sizeof(struct layer_addr_mac_in_mac);
+
+	for(i = 0; i < MAC_ADDR_LEN; i++){
+		tmp_bin_val = 0; /* 先清零, 后续赋值语句都是或操作 */
+		if(isxdigit(*str_val)==0){
+			printf("MAC string type error!\n");
+			return -1;
+		}
+		tmp_bin_val |= MESA_ascii_to_hex(*str_val) << 4;
+		str_val++;
+		
+		if(isxdigit(*str_val)==0)	{
+			printf("MAC string type error!\n");
+			return -1;
+		}
+		tmp_bin_val |= MESA_ascii_to_hex(*str_val);
+		str_val++;
+		macaddr->inner_src_mac[i] = tmp_bin_val;
+	}
+
+	if(*str_val != '-'){
+		printf("MAC string type error!\n");
+		return -1;		
+	}
+	str_val++;
+	
+	for(i = 0; i < MAC_ADDR_LEN; i++){
+		tmp_bin_val = 0; /* 先清零, 后续赋值语句都是或操作 */
+		if(isxdigit(*str_val)==0){
+			printf("MAC string type error!\n");
+			return -1;
+		}
+		tmp_bin_val |= MESA_ascii_to_hex(*str_val) << 4;
+		str_val++;
+		
+		if(isxdigit(*str_val)==0)	{
+			printf("MAC string type error!\n");
+			return -1;
+		}
+		tmp_bin_val |= MESA_ascii_to_hex(*str_val);
+		str_val++;
+		macaddr->inner_dst_mac[i] = tmp_bin_val;
+	}
+
+	if(*str_val != ','){
+		printf("MAC_IN_MAC string type error!\n");
+		return -1;		
+	}
+	str_val++;
+	
+	for(i = 0; i < MAC_ADDR_LEN; i++){
+		tmp_bin_val = 0; /* 先清零, 后续赋值语句都是或操作 */
+		if(isxdigit(*str_val)==0){
+			printf("MAC string type error!\n");
+			return -1;
+		}
+		tmp_bin_val |= MESA_ascii_to_hex(*str_val) << 4;
+		str_val++;
+		
+		if(isxdigit(*str_val)==0)	{
+			printf("MAC string type error!\n");
+			return -1;
+		}
+		tmp_bin_val |= MESA_ascii_to_hex(*str_val);
+		str_val++;
+		macaddr->outer_src_mac[i] = tmp_bin_val;
+	}
+
+	if(*str_val != '-'){
+		printf("MAC_IN_MAC string type error!\n");
+		return -1;		
+	}
+	str_val++;
+	
+	for(i = 0; i < MAC_ADDR_LEN; i++){
+		tmp_bin_val = 0; /* 先清零, 后续赋值语句都是或操作 */
+		if(isxdigit(*str_val)==0){
+			printf("MAC string type error!\n");
+			return -1;
+		}
+		tmp_bin_val |= MESA_ascii_to_hex(*str_val) << 4;
+		str_val++;
+		
+		if(isxdigit(*str_val)==0)	{
+			printf("MAC string type error!\n");
+			return -1;
+		}
+		tmp_bin_val |= MESA_ascii_to_hex(*str_val);
+		str_val++;
+		macaddr->outer_dst_mac[i] = tmp_bin_val;
+	}
+	
+	addr_bin_val->stream.addr.paddr = addr_bin_val->addr_value;
+
+	return 0;
+}
+
 static int __addr_arp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 {
 	addr_bin_val->stream.addr.addrtype = ADDR_TYPE_ARP;
@@ -681,6 +799,15 @@ static int __addr_l2tp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 	return 0;
 }
 
+static int __addr_gtp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
+{
+    addr_bin_val->stream.addr.addrtype = ADDR_TYPE_GPRS_TUNNEL;
+    addr_bin_val->stream.type = STREAM_TYPE_NON;
+    addr_bin_val->stream.addr.paddr = addr_bin_val->addr_value;
+
+    return 0;
+}
+
 static int __addr_sockv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 {
 	char *save_ptr;
@@ -739,7 +866,7 @@ err:
 	return -1;
 }
 
-/* TODO, 基于IPv6的openvpn协议如何? */
+/* How TODO 2, 基于IPv6的openvpn协议如何? */
 static int __addr_openvpn_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 {
 	addr_bin_val->stream.addr.addrtype = ADDR_TYPE_IPV4; 
@@ -1016,6 +1143,7 @@ int stream_addr_list_pton(const char *addr_list_str, void *dst, int size, int th
 			return -1;
 		}
 		real_stream_item = (addr_continuous_bin_t *)stream_addr;
+		real_stream_item->stream.threadnum = thread_index;
 		memcpy(save_dst, real_stream_item, sizeof(addr_continuous_bin_t));
 		stream_addr = stream_addr->pfather;
 		tot_len += sizeof(addr_continuous_bin_t);
@@ -1205,6 +1333,48 @@ static int __addr_mac_n2p_fun(const struct layer_addr *paddr, char *buf, int buf
 	return MAC_ADDR_STR_LEN;	
 }
 
+static int __addr_mac_in_mac_n2p_fun(const struct layer_addr *paddr, char *in_buf, int buf_len)
+{
+#define MACINMAC_ADDR_STR_LEN		(strlen("00e0fc030007")*4 + 3) /* 四个MAC字符串, 三个分隔符, 最小缓存长度 */
+	int i;
+	char *buf = in_buf;
+	//unsigned char *mac_addr = (unsigned char *)stream->addr.paddr;
+	const struct layer_addr_mac_in_mac *macaddr = (const struct layer_addr_mac_in_mac *)paddr->paddr;
+
+	if(buf_len <= (int)MACINMAC_ADDR_STR_LEN){
+		buf[0]= '\0';
+		return -1;
+	}
+
+	/* 里层MAC在左面 */
+	for(i = 0; i < 6; i++, buf+=2){
+		sprintf(buf, "%02x", macaddr->inner_src_mac[i]);
+	}
+	*buf = '-';
+	buf++;
+	//mac_addr += MAC_ADDR_LEN;
+	for(i = 0; i < 6; i++,buf+=2){
+		sprintf(buf, "%02x", macaddr->inner_dst_mac[i]);
+	}
+	
+	*buf = ','; /* 分隔符 */
+	buf++;
+	
+	for(i = 0; i < 6; i++, buf+=2){
+		sprintf(buf, "%02x", macaddr->outer_src_mac[i]);
+	}
+	*buf = '-';
+	buf++;
+	//mac_addr += MAC_ADDR_LEN;
+	for(i = 0; i < 6; i++,buf+=2){
+		sprintf(buf, "%02x", macaddr->outer_dst_mac[i]);
+	}	
+	*buf = '\0';
+	buf++;
+	
+	return strlen(in_buf) + 1;	
+}
+
 static int __addr_gre_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
 #define __GRE_ADDR_STRING		"NULL"
@@ -1257,6 +1427,17 @@ static int __addr_l2tp_n2p_fun(const struct layer_addr *paddr, char *buf, int bu
 	return addr_len + 1;
 }
 
+static int __addr_gtp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
+{
+	int addr_len;
+	const struct gtp_hdr *src_net_hdr = (struct gtp_hdr *)&paddr->gtp->source;
+	const struct gtp_hdr *dst_net_hdr = (struct gtp_hdr *)&paddr->gtp->dest;
+	
+	addr_len = snprintf(buf, buf_len, "%u-%u", ntohl(src_net_hdr->teid), ntohl(dst_net_hdr->teid));
+
+	return addr_len + 1;
+}
+
 static int __addr_arp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
 #define __ARP_ADDR_STRING		"NULL"
@@ -1272,11 +1453,12 @@ static int __addr_arp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf
 
 static int __addr_ppp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
-#define __PPP_ADDR_STRING		"NULL"
 
+#define __PPP_ADDR_STRING               "NULL"
+	
 	int addr_len = strlen(__PPP_ADDR_STRING);
 	if(buf_len <= addr_len + 1){
-		return -1;
+			return -1;
 	}
 	strncpy(buf, __PPP_ADDR_STRING, addr_len + 1);
 
@@ -1454,7 +1636,7 @@ const char *__layer_addr_ntop_r (const struct streaminfo *stream, char *dst, int
 }
 
 
-/* 由内向外(平台默认模式), "TCP:12345-80<IP4:10.0.6.1-10.0.6.2<MAC:0x112233445566-0xAABBCCDDEEFF" */
+/* 由内向外(平台默认模式), "IPv4_TCP<2196-80-222.75.165.42-209.34.91.23>|MAC<000100032101-00e0fc030002>" */
 const char *stream_addr_list_ntop_outward(const struct streaminfo *pstream)
 {
 	const struct streaminfo *ptmp = pstream;;

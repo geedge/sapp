@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define STREAM_CONTROL_H_VERSION		(20170904)
+#define STREAM_CONTROL_H_VERSION		(20181024)
 
 #define TCP_CTEAT_LINK_BYSYN   			0x01
 #define TCP_CTEAT_LINK_BYDATA 			0x02
@@ -30,6 +30,7 @@ enum MESA_stream_opt{
 	MSO_TCP_SYNACK_OPT, /* opt_val must be struct tcp_option **, opt_val_len [OUT} is struct tcp_option number, valid only if SYN/ACK packet is captured */
 	MSO_STREAM_TUNNEL_TYPE,  /* opt_val must be unsigned short, refer to enum stream_carry_tunnel_t */
 	MSO_STREAM_CLOSE_REASON, /* opt_val type must be unsigned char, refer to stream_close_reason_t */
+	MSO_STREAM_VXLAN_INFO, /* opt_val type must be struct vxlan_info */
 	__MSO_MAX,
 };
 
@@ -58,6 +59,16 @@ enum sapp_platform_opt{
 	SPO_INDEPENDENT_THREAD_ID, /* plug independent thread which is created by pthread_create(), opt_val type must be int */
 };
 
+/*
+	option of device, 
+*/
+enum sapp_device_opt{
+	__SDO_PAD			=	0,    /* placeholder */
+	SDO_MAC_ADDR,				/* device mac addr, opt_val type must be at least char[6] */
+	SDO_IPV4_ADDR,				/* device ipv4 addr in network order,  opt_val type must be int */
+	SDO_MTU,					/* device MTU, opt_val type must be int */
+	__SDO_MAX,
+};
 /* for MSO_MAX_UNORDER  */
 struct max_unorder_opt{
 	unsigned short stream_dir; /* refer to stream_base.h, DIR_C2S, DIR_S2C, DIR_DOUBLE */
@@ -110,6 +121,22 @@ struct tcp_option_ext{
 		struct tcp_option_ts opt_ts_val;
 	};	
 } __attribute__((packed, aligned(1)));
+/* 2018-10-24 lijia add, for pangu 项目mac_in_mac回流.
+   理论上, sapp平台不应该关心和业务密切相关的东西, 比如mac里哪个字段是link_id, 哪个是dev_id,
+   但这个玩意太底层了, 平台借用GDEV发送RST包也要填充这些值, 必须平台处理!!
+*/
+/* 为了方便业务插件获取mac_in_mac地址里的具体信息, 不再使用原始的bit位域, 转换成变量形式 */
+struct vxlan_info{
+	unsigned char encap_type; /* 原始二层封装格式 */
+	unsigned char entrance_id; /* 设备所在出入口ID */
+	unsigned char dev_id; /* 设备ID */
+	unsigned char link_id; /* 链路ID */
+	unsigned char link_dir; /* 链路方向, 指当前四元组的IP被捕获时的传输方向, 对于TCP, SYN包的传输方向; 对于UDP, 端口大IP的传输方向 */
+	unsigned char inner_smac[18]; /* 内层真实SMAC, string类型, 例: "11:22:33:44:55:66"  */
+	unsigned char inner_dmac[18]; /* 内层真实DMAC, string类型, 例: "11:22:33:44:55:66"  */
+	unsigned char inner_smac_hex[6]; /* 内层真实SMAC, 原始二进制类型  */
+	unsigned char inner_dmac_hex[6]; /* 内层真实DMAC, 原始二进制类型  */	
+};
 /*
 	plug call MESA_set_stream_opt() to set feature of specified stream.
 		opt: option type, refer to enum MESA_stream_opt;
@@ -165,6 +192,18 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 		<0:error;
 */
 int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_val_len);
+
+/*
+	Get some options of hardware .
+		opt: option type, refer to enum sapp_device_opt;
+		opt_val: option value, depend on opt type;
+		opt_val_len: value-result argment, IN:opt_val buf size, OUT:opt_val actual size;
+	
+	return value:
+		0 :OK;
+		<0:error;	
+*/
+int sapp_get_device_opt(const char *device, enum sapp_device_opt opt_type, void *opt_val, int *opt_val_len);
 /****************************************************************************************
 	CHN : 因为历史遗留问题,此类函数保留仅为向后兼容,请使用新接口:MESA_set_stream_opt().
 	ENG : for compat old version, keep these functions, but we suggest you use new API MESA_set_stream_opt().

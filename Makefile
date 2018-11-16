@@ -260,6 +260,7 @@ all:
 	cd entry; $(MAKE);
 
 clean:
+	rm -rf build;
 	rm -f run/sapp;
 	rm -f run/MESA_IP_PLUG.so;
 	rm -f lib/*.a;

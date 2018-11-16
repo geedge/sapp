@@ -42,6 +42,7 @@ extern unsigned char sendto_gdev_card_mac[6];
 /*
 	此结构定义与标准vxlan(RFC7348)不同, 是中心专用设备版, 使用了某些标准版的预留字段.
 */
+#if 0
 typedef struct{
 	unsigned int r0:1;
 	unsigned int r1:1;
@@ -62,6 +63,7 @@ typedef struct{
 	unsigned int r8:24;
 	unsigned int flags:8;
 }vxlan_hdr_t;
+#endif
 
 #define RESERVED_HDR_LEN (sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_udp_hdr) + sizeof(vxlan_hdr_t))
 
