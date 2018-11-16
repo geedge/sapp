@@ -281,8 +281,10 @@ struct layer_addr_l2tp
 #define MAX_MPLS_ADDR_LAYER 4
 struct layer_addr_mpls
 {
-	unsigned int mpls_pkt[MAX_MPLS_ADDR_LAYER];
-    char mpls_layer_num;
+	unsigned int src_mpls_pkt[MAX_MPLS_ADDR_LAYER];
+    char src_mpls_layer_num;
+    unsigned int dest_mpls_pkt[MAX_MPLS_ADDR_LAYER];
+    char dest_mpls_layer_num;
 };
 
 struct layer_addr_pptp
@@ -332,7 +334,9 @@ struct layer_addr
 		struct layer_addr_pptp	*pptp;
 		struct layer_addr_mac_in_mac *mimac;
         struct layer_addr_gtp *gtp;
-		void 					*paddr;
+        struct layer_addr_mpls *mpls;
+
+        void 					*paddr;
 	};
 
 };

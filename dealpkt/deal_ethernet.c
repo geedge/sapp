@@ -107,65 +107,75 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			((raw_pkt_t *)raw_pkt)->raw_pkt_len = raw_pkt->__lib_raw_pkt_len - sizeof(struct mesa_ethernet_hdr);
 		}
 	}
-
-	switch(eth_type){
-		case ETHERTYPE_IP:	
-			if(g_skip_ethernet_layer_sw){
-				((raw_pkt_t *)raw_pkt)->low_layer_type = (enum addr_type_t)CAP_LEVEL_IPV4;
-			}
+	if(sapp_global_single.create_mpls_anyway != 0)
+	{
+		if(eth_type == ETHERTYPE_IP || eth_type == ETHERTYPE_IPv6)
+		{
 			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			ret = ipv4_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
-		break;
+			ret = mpls_empty_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+		}
+	}
+	else
+	{
+		switch(eth_type){
+			case ETHERTYPE_IP:
+				if(g_skip_ethernet_layer_sw){
+					((raw_pkt_t *)raw_pkt)->low_layer_type = (enum addr_type_t)CAP_LEVEL_IPV4;
+				}
+				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+				ret = ipv4_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+			break;
 
-		case ETHERTYPE_IPv6:
-			if(g_skip_ethernet_layer_sw){
-				((raw_pkt_t *)raw_pkt)->low_layer_type = (enum addr_type_t)CAP_LEVEL_IPV6;
-			}
-			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			ret = ipv6_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
-		break;
+			case ETHERTYPE_IPv6:
+				if(g_skip_ethernet_layer_sw){
+					((raw_pkt_t *)raw_pkt)->low_layer_type = (enum addr_type_t)CAP_LEVEL_IPV6;
+				}
+				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+				ret = ipv6_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+			break;
 
-		case ETHERTYPE_VLAN:	
-			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			if(sapp_global_single.treat_vlan_as_mac_in_mac_sw){
+			case ETHERTYPE_VLAN:
+				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+				if(sapp_global_single.treat_vlan_as_mac_in_mac_sw){
+					ret = mac_in_mac_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
+				}else{
+					ret = vlan_8021q_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+				}
+			break;
+
+			case ETH_P_PPP_SES:
+				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+				ret = pppoe_session_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+			break;
+
+			case ETH_P_MPLS_UC: /* 2014-12-08 add */
+				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+				ret = mpls_uc_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+			break;
+
+			case ETH_P_ARP:
+				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+				ret = arp_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+			break;
+
+			/* 2018-08-19 lijia add, for PanGu项目并联回流流量格式, 复用了ETH_P_8021AD(0x88A8)字段, 实际是MAC-IN-MAC格式数据包 */
+			case ETH_P_MAC_IN_MAC:
+				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
 				ret = mac_in_mac_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
-			}else{
-				ret = vlan_8021q_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
-			}
-		break;
+			break;
 
-		case ETH_P_PPP_SES:	
-			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			ret = pppoe_session_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
-		break;
-
-		case ETH_P_MPLS_UC: /* 2014-12-08 add */
-			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			ret = mpls_uc_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
-		break;
-
-		case ETH_P_ARP:	
-			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			ret = arp_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
-		break;
-
-		/* 2018-08-19 lijia add, for PanGu项目并联回流流量格式, 复用了ETH_P_8021AD(0x88A8)字段, 实际是MAC-IN-MAC格式数据包 */
-		case ETH_P_MAC_IN_MAC:
-			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			ret = mac_in_mac_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
-		break;
-		
-		default:
-			/* unknown protocol */	
-			g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-			g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;			
-			if(NET_CONN_SERIAL_GDEV == g_topology_mode){
-				/* GDEV串联模式下, 什么时候都不应该把不认识的包再回注, 在线发现把SPT生成树协议再注回去, 导致网络故障 */
-				ret = DROP;
-			}else{
-				ret = PASS;
-			}
-		break;
+			default:
+				/* unknown protocol */
+				g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+				g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+				if(NET_CONN_SERIAL_GDEV == g_topology_mode){
+					/* GDEV串联模式下, 什么时候都不应该把不认识的包再回注, 在线发现把SPT生成树协议再注回去, 导致网络故障 */
+					ret = DROP;
+				}else{
+					ret = PASS;
+				}
+			break;
+		}
 	}
 
 	return ret;

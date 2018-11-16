@@ -291,6 +291,7 @@ struct sapp_global_single_t{
 	int send_fake_pkt_sip;
 	int treat_vlan_as_mac_in_mac_sw; /* MAC_IN_MAC包会被协议栈改为vlan包, 在线捕包debug很不方便, 增加此配置, 强制将vlan包做为MAC_IN_MAC格式解析  */
 
+	int create_mpls_anyway;/*无条件在MAC和IP层之间创建MPLS层*/
 	
 };
 

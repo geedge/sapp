@@ -2210,6 +2210,18 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
 		}
 		break;
 
+        case ADDR_TYPE_MPLS:
+        {
+            const struct layer_addr_mpls *src_mpls = (const struct layer_addr_mpls *)saddr;
+            struct layer_addr_mpls *dst_mpls = (struct layer_addr_mpls *)daddr;
+
+            memcpy(dst_mpls->src_mpls_pkt, src_mpls->dest_mpls_pkt, sizeof(src_mpls->dest_mpls_pkt));
+            dst_mpls->src_mpls_layer_num = src_mpls->dest_mpls_layer_num;
+
+            memcpy(dst_mpls->dest_mpls_pkt, src_mpls->src_mpls_pkt, sizeof(src_mpls->src_mpls_pkt));
+            dst_mpls->dest_mpls_layer_num = src_mpls->src_mpls_layer_num;
+        }
+            break;
 		/* TODO 1:PPTP-addr */
 		
 		default:
@@ -2606,7 +2618,18 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 				}
 				break;
 			case ADDR_TYPE_MPLS:
-				//TODO 3
+				if(cur_dir == DIR_C2S){
+					memcpy(pstream_pr->stream_public.addr.mpls->src_mpls_pkt,
+					        p_stack->stream_public.addr.mpls->src_mpls_pkt,
+					        sizeof(p_stack->stream_public.addr.mpls->src_mpls_pkt));
+                    pstream_pr->stream_public.addr.mpls->src_mpls_layer_num = p_stack->stream_public.addr.mpls->src_mpls_layer_num;
+				}
+				else{
+                    memcpy(pstream_pr->stream_public.addr.mpls->dest_mpls_pkt,
+                           p_stack->stream_public.addr.mpls->src_mpls_pkt,
+                           sizeof(p_stack->stream_public.addr.mpls->src_mpls_pkt));
+                    pstream_pr->stream_public.addr.mpls->dest_mpls_layer_num = p_stack->stream_public.addr.mpls->src_mpls_layer_num;
+				}
 				break;
 			default:
 				return update_opposite_addr_info((struct streaminfo_private *) pstream_pr->stream_public.pfather,
