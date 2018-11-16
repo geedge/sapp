@@ -367,6 +367,9 @@ static int cycle_pkt_dump_seek_to_inner_ip(char *pkt_buf, int pktlen, int thread
 		if((char *)ip4hdr_greedy == first_ip_layer){
 			bpf_match_pkt_len = pktlen; /* 最内层和第一层IP一样, 说明是标准ethernet->IPv4包, 无需memmove操作 */
 		}else{
+			if(pktlen <= ((char *)ip4hdr_greedy - pkt_buf)){
+				return -1; /* 因各种不明原因, 跳转的内层包头溢出了, 错误!! */
+			}				
 			memmove(pkt_buf + sizeof(struct mesa_ethernet_hdr),
 			        ip4hdr_greedy,
 			        pktlen - ((char *)ip4hdr_greedy - pkt_buf));
@@ -395,6 +398,9 @@ static int cycle_pkt_dump_seek_to_inner_ip(char *pkt_buf, int pktlen, int thread
 		if((char *)ip6hdr_greedy == first_ip_layer){
 			bpf_match_pkt_len = pktlen; /* 最内层和第一层IP一样, 说明是标准ethernet->IPv6包, 无需memmove操作 */
 		}else{
+			if(pktlen <= ((char *)ip4hdr_greedy - pkt_buf)){
+				return -1; /* 因各种不明原因, 跳转的内层包头溢出了, 错误!! */
+			}			
 			memmove(pkt_buf + sizeof(struct mesa_ethernet_hdr),
 			        ip6hdr_greedy,
 			        pktlen - ((char *)ip6hdr_greedy - pkt_buf));
