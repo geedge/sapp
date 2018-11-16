@@ -191,7 +191,7 @@ static int udp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 
 static int ipv4_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
 {
-	struct ip *p_ip_hdr = (struct ip *)raw_data;
+	struct mesa_ip4_hdr *p_ip_hdr = (struct mesa_ip4_hdr *)raw_data;
 	int skip_len = 0;
 	int ip_hdr_len = p_ip_hdr->ip_hl * 4;
 	//const char *next_layer_data = raw_data + ip_hdr_len;
@@ -199,7 +199,12 @@ static int ipv4_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 	if(raw_layer_type == expect_layer_type){
 		return 0;
 	}
-	
+
+	if((ntohs(p_ip_hdr->ip_off) & IP_MF ) || (ntohs(p_ip_hdr->ip_off) & IP_OFFMASK)){
+		/* IP分片不再继续向内层跳转 */
+		return -1;
+	}
+				
 	switch(p_ip_hdr->ip_p){
 		case IPPROTO_TCP:
 			if(ADDR_TYPE_TCP == expect_layer_type){
@@ -306,8 +311,10 @@ static int ipv6_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 				goto done;
 			break;
 
-			case NEXTHDR_FRAGMENT:		
-				offset_to_ip6 = sizeof(struct ipv6_frag_hdr);
+			case NEXTHDR_FRAGMENT:	
+				/* IP分片不再继续向内层跳转 */
+				skip_len = -1;
+				goto done;
 			break;
 
 			case NEXTHDR_ESP:
@@ -686,6 +693,10 @@ const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_ty
 			case __ADDR_TYPE_IP_PAIR_V4:
 			{
 				const struct mesa_ip4_hdr *ip4hdr = (const struct mesa_ip4_hdr *)expect_layer;
+				if((ntohs(ip4hdr->ip_off) & IP_MF ) || (ntohs(ip4hdr->ip_off) & IP_OFFMASK)){
+					/* IP分片不再继续向内层跳转 */
+					goto done;
+				}				
 				if(IPPROTO_UDP == ip4hdr->ip_p){
 					new_next_layer_data = (char *)expect_layer + ip4hdr->ip_hl * 4;
 					new_raw_layer_type = ADDR_TYPE_UDP; /* IP层如果继续向下一层偏移, 只支持UDP, IPIP, GRE, L2TPv3. */
@@ -698,6 +709,7 @@ const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_ty
 
 			case __ADDR_TYPE_IP_PAIR_V6:
 			{
+				//TODO2,
 				goto done;		
 			}
 			break;
