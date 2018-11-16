@@ -40,6 +40,7 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 	//const struct mesa_vlan_detail_hdr *vlan_hdr;
 	const  unsigned char *next_layer_data;
 	int next_layer_offset,  ret;
+    unsigned short eth_type = 0; /* 使用网络序直接判断, 避免每次都调用ntohs() */
 
 	memset(&tmp_index, 0, sizeof(struct streamindex));
 	ptmp = &tmp_index;
@@ -68,36 +69,47 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 			((raw_pkt_t *)raw_pkt)->raw_pkt_len = raw_pkt->__lib_raw_pkt_len - sizeof(struct mesa_ethernet_hdr);
 		}
 	}
-
-	switch(ntohs(inner_ether_hdr->ether_type)){
-		case ETHERTYPE_IP:	
-			if(g_skip_ethernet_layer_sw){
-				((raw_pkt_t *)raw_pkt)->low_layer_type = (enum addr_type_t)CAP_LEVEL_IPV4;
-			}
+    eth_type = ntohs(inner_ether_hdr->ether_type);
+	if(sapp_global_single.create_mpls_anyway != 0)
+	{
+		if(eth_type == ETHERTYPE_IP || eth_type == ETHERTYPE_IPv6)
+		{
 			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			ret = ipv4_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
-		break;
+			ret = mpls_empty_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+		}
+	}
+	else
+	{
+		switch(eth_type){
+			case ETHERTYPE_IP:
+				if(g_skip_ethernet_layer_sw){
+					((raw_pkt_t *)raw_pkt)->low_layer_type = (enum addr_type_t)CAP_LEVEL_IPV4;
+				}
+				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+				ret = ipv4_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+			break;
 
-		case ETHERTYPE_IPv6:
-			if(g_skip_ethernet_layer_sw){
-				((raw_pkt_t *)raw_pkt)->low_layer_type = (enum addr_type_t)CAP_LEVEL_IPV6;
-			}
-			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			ret = ipv6_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
-		break;
+			case ETHERTYPE_IPv6:
+				if(g_skip_ethernet_layer_sw){
+					((raw_pkt_t *)raw_pkt)->low_layer_type = (enum addr_type_t)CAP_LEVEL_IPV6;
+				}
+				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+				ret = ipv6_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+			break;
 
-		case ETH_P_MPLS_UC: 
-			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			ret = mpls_uc_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
-		break;
-		
-		default:
-			/* unknown protocol */	
-			g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-			g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;		
-			sapp_runtime_log(20, "MAC-IN-MAC unknown protocol: 0x%x\n", ntohs(inner_ether_hdr->ether_type));
-			ret = PASS;
-		break;
+			case ETH_P_MPLS_UC:
+				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+				ret = mpls_uc_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+			break;
+
+			default:
+				/* unknown protocol */
+				g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+				g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+				sapp_runtime_log(20, "MAC-IN-MAC unknown protocol: 0x%x\n", ntohs(inner_ether_hdr->ether_type));
+				ret = PASS;
+			break;
+		}
 	}
 
 	return ret;

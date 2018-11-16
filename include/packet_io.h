@@ -162,6 +162,8 @@ int gre_entry(struct streaminfo_private *fstream, const void *this_layer_hdr,
 
 int mpls_uc_entry(struct streaminfo_private *pfstream,const void *this_layer_data,int thread_num, 
 						unsigned char routedir, const raw_pkt_t *raw_pkt, int);
+int mpls_empty_entry(struct streaminfo_private *pfstream,const void *this_layer_data,int thread_num,
+				  unsigned char routedir, const raw_pkt_t *raw_pkt, int);
 int teredo_entry(struct streaminfo_private *pfstream,void *this_layer_data,int thread_num, 
 		unsigned char routedir, const raw_pkt_t *raw_packet, int offset_to_raw_pkt_hdr);
 int gtp_entry(struct streaminfo_private *pfstream,void *this_layer_data,int thread_num,

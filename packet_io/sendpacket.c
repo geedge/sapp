@@ -88,7 +88,7 @@ static inline int dir_check(unsigned char raw_dir);
 
 extern MESA_htable_handle g_gtp_info_hash[MAX_THREAD_NUM];
 
-struct gtp_cache_addr_t
+typedef struct gtp_cache_addr_t
 {
 	unsigned char addr_type;
 	union
@@ -96,9 +96,15 @@ struct gtp_cache_addr_t
 		unsigned int v4[2];
 		unsigned int v6[32];
 	};
-};
+}mpls_cache_addr_t;
+
 struct gtp_cache_addr_t g_addr_register_for_gtp_cache[MAX_THREAD_NUM];
-/* 
+
+extern MESA_htable_handle g_mpls_info_hash[MAX_THREAD_NUM];
+mpls_cache_addr_t g_mpls_cache_key[MAX_THREAD_NUM];
+struct layer_addr_mpls g_mpls_register_addr[MAX_THREAD_NUM];
+
+/*
 	根据收到的字节数、与上个包的长度差、及数据包的地址部分, 得到计算随机数的种子.
 */
 #if 0
@@ -1005,6 +1011,133 @@ int MESA_kill_tcp(struct streaminfo *stream)
 }
 #endif
 
+static int calc_mpls_hdr_len(int reverse, struct streaminfo_private * stream_pr)
+{
+	int hdr_len = 0;
+    const struct layer_addr_mpls *mpls_addr = stream_pr->stream_public.addr.mpls;
+    int threadnum = stream_pr->stream_public.threadnum;
+    struct layer_addr_mpls *cache_mpls_addr, *tmp_mpls_addr = &g_mpls_register_addr[threadnum];
+    void *mpls_hash_key = (g_mpls_cache_key[threadnum].addr_type == ADDR_TYPE_IPV4)?g_mpls_cache_key[threadnum].v4:g_mpls_cache_key[threadnum].v6;
+    int mpls_hash_key_len = (g_mpls_cache_key[threadnum].addr_type == ADDR_TYPE_IPV4)?sizeof(g_mpls_cache_key[threadnum].v4):sizeof(g_mpls_cache_key[threadnum].v6);
+    const void *raw_mpls_hdr = (const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr;
+
+    memset(tmp_mpls_addr, 0, sizeof(struct layer_addr_mpls));
+
+    if(mpls_addr->dest_mpls_layer_num == 0 && mpls_addr->src_mpls_layer_num == 0)
+    {
+            if(g_mpls_info_hash[threadnum])
+            {
+                cache_mpls_addr = (struct layer_addr_mpls *)MESA_htable_search(g_mpls_info_hash[threadnum], mpls_hash_key, mpls_hash_key_len);
+                memcpy(tmp_mpls_addr->src_mpls_pkt, cache_mpls_addr->src_mpls_pkt, cache_mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                hdr_len = cache_mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr);
+            }
+    }
+    else if(mpls_addr->dest_mpls_layer_num > 0 && mpls_addr->src_mpls_layer_num > 0)
+    {
+        if(reverse == 0)
+        {
+            if(0 == memcmp(mpls_addr->src_mpls_pkt, raw_mpls_hdr, sizeof(struct mesa_mpls_hdr)*(mpls_addr->src_mpls_layer_num)))
+            {
+                memcpy(tmp_mpls_addr->src_mpls_pkt, mpls_addr->src_mpls_pkt, mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                hdr_len = sizeof(struct mesa_mpls_hdr)*mpls_addr->src_mpls_layer_num;
+            }
+            else
+            {
+                memcpy(tmp_mpls_addr->src_mpls_pkt, mpls_addr->dest_mpls_pkt, mpls_addr->dest_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                hdr_len = sizeof(struct mesa_mpls_hdr)*mpls_addr->dest_mpls_layer_num;
+            }
+        }
+        else
+        {
+            if(0 == memcmp(mpls_addr->src_mpls_pkt, raw_mpls_hdr, sizeof(struct mesa_mpls_hdr)*(mpls_addr->src_mpls_layer_num)))
+            {
+                memcpy(tmp_mpls_addr->src_mpls_pkt, mpls_addr->dest_mpls_pkt, mpls_addr->dest_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                hdr_len = sizeof(struct mesa_mpls_hdr)*mpls_addr->dest_mpls_layer_num;
+            }
+            else
+            {
+                memcpy(tmp_mpls_addr->src_mpls_pkt, mpls_addr->src_mpls_pkt, mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                hdr_len = sizeof(struct mesa_mpls_hdr)*mpls_addr->src_mpls_layer_num;
+            }
+        }
+    }
+    else if(mpls_addr->src_mpls_layer_num > 0)
+    {
+        if(reverse == 0)
+        {
+            if(0 == memcmp(mpls_addr->src_mpls_pkt, raw_mpls_hdr, sizeof(struct mesa_mpls_hdr)*(mpls_addr->src_mpls_layer_num)))
+            {
+                memcpy(tmp_mpls_addr->src_mpls_pkt, mpls_addr->src_mpls_pkt, mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                hdr_len = sizeof(struct mesa_mpls_hdr)*mpls_addr->src_mpls_layer_num;
+            }
+            else
+            {
+                if(g_mpls_info_hash[threadnum])
+                {
+                    cache_mpls_addr = (struct layer_addr_mpls *)MESA_htable_search(g_mpls_info_hash[threadnum], mpls_hash_key, mpls_hash_key_len);
+                    memcpy(tmp_mpls_addr->src_mpls_pkt, cache_mpls_addr->src_mpls_pkt, cache_mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                    hdr_len = cache_mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr);
+                }
+            }
+        }
+        else
+        {
+            if(0 == memcmp(mpls_addr->src_mpls_pkt, raw_mpls_hdr, sizeof(struct mesa_mpls_hdr)*(mpls_addr->src_mpls_layer_num)))
+            {
+                if(g_mpls_info_hash[threadnum])
+                {
+                    cache_mpls_addr = (struct layer_addr_mpls *)MESA_htable_search(g_mpls_info_hash[threadnum], mpls_hash_key, mpls_hash_key_len);
+                    memcpy(tmp_mpls_addr->src_mpls_pkt, cache_mpls_addr->src_mpls_pkt, cache_mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                    hdr_len = cache_mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr);              }
+            }
+            else
+            {
+                memcpy(tmp_mpls_addr->src_mpls_pkt, mpls_addr->src_mpls_pkt, mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                hdr_len = sizeof(struct mesa_mpls_hdr)*mpls_addr->src_mpls_layer_num;
+            }
+        }
+    }
+    else
+    {
+        if(reverse == 0)
+        {
+            if(0 == memcmp(mpls_addr->dest_mpls_pkt, raw_mpls_hdr, sizeof(struct mesa_mpls_hdr)*(mpls_addr->dest_mpls_layer_num)))
+            {
+                memcpy(tmp_mpls_addr->src_mpls_pkt, mpls_addr->dest_mpls_pkt, mpls_addr->dest_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                hdr_len = sizeof(struct mesa_mpls_hdr)*mpls_addr->dest_mpls_layer_num;
+            }
+            else
+            {
+                if(g_mpls_info_hash[threadnum])
+                {
+                    cache_mpls_addr = (struct layer_addr_mpls *)MESA_htable_search(g_mpls_info_hash[threadnum], mpls_hash_key, mpls_hash_key_len);
+                    memcpy(tmp_mpls_addr->src_mpls_pkt, cache_mpls_addr->src_mpls_pkt, cache_mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                    hdr_len = cache_mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr);
+                }
+            }
+        }
+        else
+        {
+            if(0 == memcmp(mpls_addr->dest_mpls_pkt, raw_mpls_hdr, sizeof(struct mesa_mpls_hdr)*(mpls_addr->dest_mpls_layer_num)))
+            {
+                if(g_mpls_info_hash[threadnum])
+                {
+                    cache_mpls_addr = (struct layer_addr_mpls *)MESA_htable_search(g_mpls_info_hash[threadnum], mpls_hash_key, mpls_hash_key_len);
+                    memcpy(tmp_mpls_addr->src_mpls_pkt, cache_mpls_addr->src_mpls_pkt, cache_mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                    hdr_len = cache_mpls_addr->src_mpls_layer_num*sizeof(struct mesa_mpls_hdr);
+                }
+            }
+            else
+            {
+                memcpy(tmp_mpls_addr->src_mpls_pkt, mpls_addr->dest_mpls_pkt, mpls_addr->dest_mpls_layer_num*sizeof(struct mesa_mpls_hdr));
+                hdr_len = sizeof(struct mesa_mpls_hdr)*mpls_addr->dest_mpls_layer_num;
+            }
+        }
+    }
+
+	return hdr_len;
+}
+
 static int calc_gtp_hdr_len(const struct gtp_hdr *gtp_hdr)
 {
 	int hdr_len = sizeof(struct gtp_hdr);
@@ -1024,11 +1157,13 @@ static int calc_gtp_hdr_len(const struct gtp_hdr *gtp_hdr)
 static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type)
 {
 	int  reserved_hdr_len = 0;
+    struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
+    const raw_pkt_t *raw_pkt;
 
 	if(NULL == stream){ /* 递归计算终结条件! */
 		return 0;
 	}
-
+    raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
 	if(is_proxy_stream(stream)){ /* 代理流结构为虚拟结构, 实际构造包时跳过不处理 */
 		reserved_hdr_len = 0;
 		goto done;
@@ -1047,6 +1182,15 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type)
 				return -1;
 				//assert(0);
 			}
+            if(stream->pfather != NULL &&
+               stream->pfather->addr.addrtype == ADDR_TYPE_MPLS &&
+               g_mpls_info_hash[stream->threadnum] != NULL)
+            {
+                struct mesa_ip4_hdr *raw_ip4_hdr = (struct mesa_ip4_hdr *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
+                g_mpls_cache_key[stream->threadnum].addr_type = ADDR_TYPE_IPV4;
+                g_mpls_cache_key[stream->threadnum].v4[0] = raw_ip4_hdr->ip_dst.s_addr;
+                g_mpls_cache_key[stream->threadnum].v4[1] = raw_ip4_hdr->ip_src.s_addr;
+            }
 		break;
 		
 		case ADDR_TYPE_IPV6:
@@ -1061,6 +1205,15 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type)
 				return -1;
 				//assert(0);
 			}
+            if(stream->pfather != NULL &&
+               stream->pfather->addr.addrtype == ADDR_TYPE_MPLS &&
+               g_mpls_info_hash[stream->threadnum] != NULL)
+            {
+                struct mesa_ip6_hdr *raw_ip6_hdr = (struct mesa_ip6_hdr *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
+                g_mpls_cache_key[stream->threadnum].addr_type = ADDR_TYPE_IPV6;
+                memcpy(g_mpls_cache_key[stream->threadnum].v6, &raw_ip6_hdr->ip6_dst, sizeof(struct in6_addr));
+                memcpy((char *)(g_mpls_cache_key[stream->threadnum].v6) + sizeof(struct in6_addr), &raw_ip6_hdr->ip6_src, sizeof(struct in6_addr));
+            }
 		break;
 
 		case ADDR_TYPE_VLAN:
@@ -1080,14 +1233,13 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type)
 
 		case ADDR_TYPE_GRE:
 		{
-			struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
 			reserved_hdr_len = calc_gre_hdr_len(
 						   (const struct mesa_gre_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
 		}
 		break;
 
 		case ADDR_TYPE_MPLS:
-			reserved_hdr_len = sizeof(struct mesa_mpls_hdr);
+			reserved_hdr_len = calc_mpls_hdr_len(1, stream_pr);
 		break;
 		
 		case ADDR_TYPE_PPPOE_SES:
@@ -1107,14 +1259,14 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type)
 
 		case ADDR_TYPE_L2TP:
 		{
-			struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
+			stream_pr = (struct streaminfo_private *)stream;
 			reserved_hdr_len = calc_l2tp_hdr_len(
 						   (const struct l2tp_hdr_v2 *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
 		}
 		break;
 		case ADDR_TYPE_GPRS_TUNNEL:
 		{
-			struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
+			stream_pr = (struct streaminfo_private *)stream;
 			reserved_hdr_len = calc_gtp_hdr_len(
 					(const struct gtp_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
 		}
@@ -1137,7 +1289,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type)
 
 		case ADDR_TYPE_PPTP:
 		{			
-			struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
+			stream_pr = (struct streaminfo_private *)stream;
 			reserved_hdr_len = stream_pr->cur_layer_raw_hdr_len;
 		}
 		break;
@@ -1451,7 +1603,7 @@ static int build_net_layer_ipv6(struct streaminfo_private *stream_pr, int carry_
 		   stream_pr->stream_public.pfather->addr.addrtype == ADDR_TYPE_GPRS_TUNNEL &&
 		   g_gtp_info_hash[threadnum] != NULL)
 		{
-			g_addr_register_for_gtp_cache[threadnum].addr_type = ADDR_TYPE_IPV4;
+			g_addr_register_for_gtp_cache[threadnum].addr_type = ADDR_TYPE_IPV6;
 			memcpy(g_addr_register_for_gtp_cache[threadnum].v6, &raw_ip6_hdr->ip6_dst, sizeof(struct in6_addr));
 			memcpy((char *)(g_addr_register_for_gtp_cache[threadnum].v6) + sizeof(struct in6_addr), &raw_ip6_hdr->ip6_src, sizeof(struct in6_addr));
 		}
@@ -1932,10 +2084,14 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 		break;
 
 		case ADDR_TYPE_MPLS:
-			this_layer_len = sizeof(struct mesa_mpls_hdr);
-			buf -= sizeof(struct mesa_mpls_hdr);
-			build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
-			carry_layer_type = ADDR_TYPE_MPLS;
+			this_layer_len = g_mpls_register_addr[stream_pr->stream_public.threadnum].src_mpls_layer_num*sizeof(struct mesa_mpls_hdr);
+			if(this_layer_len > 0)
+			{
+                buf -= this_layer_len;
+				//build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
+				memcpy(buf, g_mpls_register_addr[stream_pr->stream_public.threadnum].src_mpls_pkt, this_layer_len);
+				carry_layer_type = ADDR_TYPE_MPLS;
+			}
 		break;
 
 		case ADDR_TYPE_GPRS_TUNNEL:
