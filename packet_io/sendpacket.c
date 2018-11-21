@@ -2243,8 +2243,12 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 		goto fun_exit;
 	}
 
-	if(sapp_global_single.send_fake_pkt_by_gdev != 0){ /* 预留底层封装vxlan包的空间, 避免再二次copy */
-		send_handle->user_arg = (void *)stream;
+    if(sapp_global_single.send_fake_pkt_mode != SEND_PKT_MODE_STACK_3_LAYER)
+    {
+	    send_handle->user_arg = (void *)stream;
+    }
+
+	if(sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_GDEV){ /* gdev注入模式时预留底层封装vxlan包的空间, 避免再二次copy */
 		reserved_hdr_len += sizeof(vxlan_header_t);
 	}
 

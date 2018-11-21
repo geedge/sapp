@@ -51,6 +51,11 @@ extern MESA_send_handle g_send_handle[MAX_THREAD_NUM];
 char g_send_dev_name[DEV_NAME_STR_LEN]; /* 发包网卡名 */
 unsigned char g_send_dev_mac[MAC_ADDR_LEN];
 unsigned char g_send_gateway_mac[MAC_ADDR_LEN]; /* 通过手工配置或查询路由表和ARP表得到 */
+unsigned char g_send_gateway_mac_table[64][16][18];
+static int G_SND_ROUTE_INFO_NUM = 0;
+
+unsigned char g_send_gdev_ip_table[64][32];
+static int G_SND_GDEV_INFO_NUM = 0;
 
 char g_up_dev_name[DEV_NAME_STR_LEN]; /* 并联模式默认捕包网卡 */
 char g_down_dev_name[DEV_NAME_STR_LEN];
@@ -99,6 +104,8 @@ void packet_io_exit(void);
 int packet_io_lib_load(int cap_mode);
 void del_last_rn(char *data, int max_len);
 static int parse_send_raw_pkt_conf(void);
+int parse_send_route_conf(const char *profile_path);
+int parse_send_gdev_ip_conf(const char *profile_path);
 extern void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt);
 extern char *MESA_MD5_sum_bin(unsigned char *raw_data, unsigned int raw_data_len, char result[16]);
 extern void timestamp_region_update(int tid, long long cpu_cycle);
@@ -692,6 +699,10 @@ int packet_io_init(int argc, char *argv[])
 
 	gdev_init();
 
+    parse_send_gdev_ip_conf("conf/send_gdev.conf");
+
+	parse_send_route_conf("conf/send_route.conf");
+
 	parse_send_raw_pkt_conf();
 
 	packet_io_status_init();
@@ -771,7 +782,7 @@ static int packet_io_calc_ethernet_offset_to_ip(const unsigned char *sendbuf)
 	const struct mesa_ethernet_hdr *outer_ehdr;
 	///const struct mesa_ethernet_hdr *inner_ehdr;
 
-	if(sapp_global_single.send_fake_pkt_by_gdev != 0){
+	if(sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_GDEV){
 		sendbuf += VXLAN_HDR_RESERVED_LEN; /* vxlan模式下预留了vxlan和外层mac,ip,udp头部, 跳转到内层mac头 */
 	}
 	
@@ -828,7 +839,7 @@ static int packet_io_send_by_sys_routev4(MESA_send_handle *send_handle,int datal
 	/* build_ipv4时已经按dir方向构造好地址, 此处直接使用ip_dst即可 */
 	sock_addr_v4.sin_addr.s_addr = ip4_hdr->ip_dst.s_addr;
 
-	//if(sapp_global_single.send_fake_pkt_by_gdev != 0){
+	//if(sapp_global_single.send_fake_pkt_mode != 0){
 	//	return packet_io_send_fake_pkt_by_gdev(send_handle, ADDR_TYPE_IPV4,
 	//						actual_data_ptr+VXLAN_HDR_RESERVED_LEN, datalen, dir,
 	//						feedback_buf, feedback_buf_len);
@@ -928,6 +939,20 @@ retry:
 	return ret;
 }
 
+static int packet_io_get_sendroute_mac(char dev_id, char link_id, unsigned char *out_mac_addr)
+{
+    char *p_mac_addr = (char *)g_send_gateway_mac_table[dev_id][link_id];
+    if(G_SND_ROUTE_INFO_NUM <= 0 || strlen(p_mac_addr) <= 0)return -1;
+    else
+    {
+		if(MESA_mac_pton(p_mac_addr, ':', (char *)out_mac_addr) < 0){
+			printf("error, src mac:%s is not correct, for example:00:11:22:33:44:55\n", p_mac_addr);
+			return -1;
+		}
+    }
+    return 0;
+}
+
 static int packet_io_send_by_manual_conf(MESA_send_handle *send_handle,int datalen,
 										int dir, UINT16 ether_type)
 {
@@ -951,8 +976,33 @@ static int packet_io_send_by_manual_conf(MESA_send_handle *send_handle,int datal
 	memcpy(g_send_dev_mac, mac_201_em2, 6);
 
 #endif
+	const struct streaminfo_private *pstrem_pr =  (const struct streaminfo_private *)send_handle->user_arg;
+	const struct streaminfo *pstream = (const struct streaminfo *)send_handle->user_arg;
+	const struct streaminfo *tmpstream = pstream;
+	struct vxlan_info mim_mem_hdr;
+	int opt_len = sizeof(mim_mem_hdr);
+	ret = MESA_get_stream_opt(tmpstream, MSO_STREAM_VXLAN_INFO, &mim_mem_hdr, &opt_len);
+	if(ret < 0){
+		sapp_runtime_log(20, "packet_io_send_by_manual_conf(): get vxlan info error!\n");
+		return -1;
+	}
+    unsigned char send_route_mac[MAC_ADDR_LEN] = "";
+	unsigned char *p_dst_mac;
 
-	sendpacket_build_ethernet(g_send_gateway_mac, g_send_dev_mac, ether_type, NULL, 0, send_handle->send_buf);	
+	if(sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE )
+    {
+        ret = packet_io_get_sendroute_mac(mim_mem_hdr.dev_id, mim_mem_hdr.link_id, send_route_mac);
+        if(ret < 0){
+            sapp_runtime_log(20, "packet_io_send_by_manual_conf(): get sendroute_mac info using %d:%d error!\n", mim_mem_hdr.dev_id, mim_mem_hdr.link_id);
+            return -1;
+        }
+        p_dst_mac = send_route_mac;
+    }
+    else
+    {
+        p_dst_mac = g_send_gateway_mac;
+    }
+    sendpacket_build_ethernet(p_dst_mac, g_send_dev_mac, ether_type, NULL, 0, send_handle->send_buf);
 
 send_again:
 	ret = sendto(send_handle->raw_eth_fd, send_handle->send_buf, datalen, 0, 
@@ -975,13 +1025,22 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 	int ret;
 	UINT16 ether_type;
 	
-	if(g_topology_mode & __NET_CONN_PARALLEL){
-		if(sapp_global_single.send_fake_pkt_by_gdev != 0){
+	if(g_topology_mode & __NET_CONN_PARALLEL)
+	{
+		if(sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_GDEV)
+		{
 			ret = packet_io_send_fake_pkt_by_gdev(send_handle, (enum addr_type_t)low_layer_type,
 												  (char *)send_handle->send_buf, datalen, dir, feedback_buf, feedback_buf_len);
 		}
-		else {
-			switch (low_layer_type) {
+		else if(sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_1_ROUTE || sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE)
+        {
+            ether_type = net_layer_to_ethernet_protocol(low_layer_type);
+            ret = packet_io_send_by_manual_conf(send_handle, datalen, dir, ether_type);
+        }
+		else
+		{
+			switch (low_layer_type)
+			{
 				case __ADDR_TYPE_IP_PAIR_V4:
 				case ADDR_TYPE_IPV4:
 					ret = packet_io_send_by_sys_routev4(send_handle, datalen, dir, feedback_buf, feedback_buf_len);
@@ -999,7 +1058,9 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 					break;
 			}
 		}
-	}else{
+	}
+	else
+	{
 		ret = dl_io_fun_list.dl_io_low_level_send(send_handle->low_level_send_handle, 
 										(UINT8 *)send_handle->send_buf,
 										datalen,
@@ -1060,6 +1121,89 @@ send_raw_pkt_info_t *get_raw_pkt_conf_by_id(unsigned int target_id)
 	//printf("Send raw pkt error! Not found target_id:%u\n", target_id);
 
 	return NULL;
+}
+
+int parse_send_gdev_ip_conf(const char *profile_path)
+{
+    FILE *fp;
+    char conf_buf[1024] = "";
+    int dev_id = 0;
+    char ip_addr[32] = "";
+    int ret = 0;
+    fp = fopen(profile_path, "r");
+    if(NULL == fp){
+        printf("open %s error!\n", profile_path);
+        return -1;
+    }
+
+    memset(g_send_gdev_ip_table, 0, sizeof(g_send_gdev_ip_table));
+    G_SND_GDEV_INFO_NUM = 0;
+
+    while(fgets(conf_buf, 1024, fp)){
+        if('#' == conf_buf[0] || ' ' == conf_buf[0] || '\r' == conf_buf[0] || '\n' == conf_buf[0]){
+            continue;
+        }
+
+        //del_last_rn(conf_buf, 1024);
+
+        ret = sscanf(conf_buf, "%d\t%s", &dev_id, ip_addr);
+
+        if(ret != 2 || dev_id >= 64 || strlen(ip_addr) >= 32)
+        {
+            printf("read %s error, line:%s!\n", profile_path, conf_buf);
+            G_SND_GDEV_INFO_NUM = 0;
+            break;
+        }
+
+        memcpy(g_send_gdev_ip_table[dev_id], ip_addr, strlen(ip_addr));
+
+        G_SND_GDEV_INFO_NUM++;
+        memset(conf_buf, 0, sizeof(conf_buf));
+    }
+    fclose(fp);
+    return 0;
+}
+
+int parse_send_route_conf(const char *profile_path)
+{
+	FILE *fp;
+	char conf_buf[1024] = "";
+	//const char *delim = "\t ";
+	int dev_id = 0, link_id = 0;
+	char mac_addr[18] = "";
+	int ret = 0;
+	fp = fopen(profile_path, "r");
+	if(NULL == fp){
+		printf("open %s error!\n", profile_path);
+		return -1;
+	}
+
+	memset(g_send_gateway_mac_table, 0, sizeof(g_send_gateway_mac_table));
+    G_SND_ROUTE_INFO_NUM = 0;
+
+    while(fgets(conf_buf, 1024, fp)){
+		if('#' == conf_buf[0] || ' ' == conf_buf[0] || '\r' == conf_buf[0] || '\n' == conf_buf[0]){
+			continue;
+		}
+
+		//del_last_rn(conf_buf, 1024);
+
+		ret = sscanf(conf_buf, "%d\t%d\t%s", &dev_id, &link_id, mac_addr);
+
+		if(ret != 3 || dev_id >= 64 || link_id >= 16 || strlen(mac_addr) >= 18)
+		{
+			printf("read %s error, line:%s!\n", profile_path, conf_buf);
+			G_SND_ROUTE_INFO_NUM = 0;
+			break;
+		}
+
+		memcpy(g_send_gateway_mac_table[dev_id][link_id], mac_addr, strlen(mac_addr));
+
+		G_SND_ROUTE_INFO_NUM++;
+		memset(conf_buf, 0, sizeof(conf_buf));
+	}
+	fclose(fp);
+	return 0;
 }
 
 static int parse_send_raw_pkt_conf(void)

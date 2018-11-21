@@ -73,6 +73,7 @@ add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
 set(SAPP_DEPEND_DYN_LIB  MESA_handle_logger MESA_htable pthread MESA_field_stat2)
 
 #set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG -fno-inline")
+set(CMAKE_C_FLAGS_RELEASE "-Werror")
 
 add_subdirectory(support)
 add_subdirectory(dealpkt)

@@ -798,10 +798,12 @@ UINT16 net_layer_to_ethernet_protocol(int addr_type)
 
 	switch(addr_type){
 		case __ADDR_TYPE_IP_PAIR_V4:
+		case ADDR_TYPE_IPV4:
 			ether_type = ETH_P_IP;
 		break;
 
 		case __ADDR_TYPE_IP_PAIR_V6:
+		case ADDR_TYPE_IPV6:
 			ether_type = ETH_P_IPV6;
 		break;
 

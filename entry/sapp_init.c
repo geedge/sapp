@@ -405,7 +405,7 @@ int MESA_platform_init(int argc, char *argv[])
 	}
 
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"create_mpls_anyway",  &sapp_global_single.create_mpls_anyway, 0);
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_by_gdev",  &sapp_global_single.send_fake_pkt_by_gdev, 0);
+	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_mode",  &sapp_global_single.send_fake_pkt_mode, 0);
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_gdev_sport",  &sapp_global_single.send_fake_pkt_gdev_sport, 15);
 	
 	sapp_assistant_init();

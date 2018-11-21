@@ -15,6 +15,7 @@ extern "C" {
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <linux/if_ether.h>
+#include <stream.h>
 
 
 static void * gdev_block_c3_handle;
@@ -31,6 +32,8 @@ static int (*dl_grule_opt_set)(void * hdl, int level, int type, const void * opt
 static int (*dl_grule_connect)(void * hdl, const char * addr);
 static int (*dl_grule_send)(void * hdl, grule_t *rules, size_t rule_num, int flags);
 static int (*dl_grule_recv)(void * hdl, grule_result_t *rst, size_t rst_num, int flags);
+
+extern unsigned char g_send_gdev_ip_table[64][32];
 
 /*
 	2018-08-13, 
@@ -81,7 +84,7 @@ static int gdev_block_send_rule_tuple5(unsigned int sip_net, unsigned int dip_ne
 {
 	grule_t grule;
 	grule_result_t grule_result;
-	int send_ret, recv_ret;
+	int send_ret;
 
 	memset(&grule, 0, sizeof(grule_t));
 	
@@ -117,7 +120,7 @@ static int gdev_block_send_rule_tuple5(unsigned int sip_net, unsigned int dip_ne
 
 	send_ret = dl_grule_send(gdev_block_c3_handle, &grule, 1, 0);
 	if(send_ret < 0){
-		recv_ret = dl_grule_recv(gdev_block_c3_handle, &grule_result, 1, 0);
+		dl_grule_recv(gdev_block_c3_handle, &grule_result, 1, 0);
 		printf("grule_send errno is: %u\n", grule_result.result);
 	}
 	return send_ret;
@@ -278,7 +281,7 @@ err_exit:
 int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_type_t addrtype, 
 	char *raw_data, int datalen, int dir_reverse,char *feedback_buf, int *feedback_buf_len)
 {
-	const struct streaminfo_private *pstrem_pr =  (const struct streaminfo_private *)send_handle->user_arg;
+	//const struct streaminfo_private *pstrem_pr =  (const struct streaminfo_private *)send_handle->user_arg;
 	const struct streaminfo *pstream = (const struct streaminfo *)send_handle->user_arg;
     const struct streaminfo *tmpstream = pstream;
 	vxlan_header_t *vxlan_hdr;
@@ -372,8 +375,16 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 #endif
 
 	sock_addr_v4.sin_family = AF_INET;
-	inet_pton(AF_INET, "10.3.127.1", &sock_addr_v4.sin_addr.s_addr);
-	//sock_addr_v4.sin_addr.s_addr = ;/* TODO, 目的ID根据device_id查表获得*/
+	//inet_pton(AF_INET, "10.3.127.1", &sock_addr_v4.sin_addr.s_addr);
+	if(strlen(g_send_gdev_ip_table[mim_mem_hdr.dev_id]) > 0)
+    {
+        inet_pton(AF_INET, g_send_gdev_ip_table[mim_mem_hdr.dev_id], &sock_addr_v4.sin_addr.s_addr);
+    }
+    else
+    {
+        sapp_runtime_log(20, "packet_io_send_fake_pkt_by_gdev(): dev_id %d related gdev_ip not found!\n", mim_mem_hdr.dev_id);
+        return -1;
+    }
 	sock_addr_v4.sin_port = htons(4789);
 
     ret = sendto(send_handle->raw_udp_fd, data, datalen, 0,
