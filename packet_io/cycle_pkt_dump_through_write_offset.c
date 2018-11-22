@@ -467,6 +467,8 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 		}else{
 			pktdata =  (const unsigned char *)p_raw_pkt->raw_pkt_data + pkt_dump_data_offset;
 			pktlen = p_raw_pkt->raw_pkt_len - pkt_dump_data_offset;
+			for_bpf_filter_len = pktlen;
+			for_bpf_filter_data = pktdata;
 		}
 
 		/* 如果有正确的过滤条件, 不设采样率, 保证捕包尽量全, 符合调用者意图;

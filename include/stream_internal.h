@@ -30,7 +30,8 @@
 
 #define SAPP_INSECTICIDE				(0) /* 杀虫(DEBUG)临时开关, 在遇到莫名其妙的BUG时临时启用, 尽早发现问题, 早死早超生 */
 
-#define CYCLE_PKT_DUMP				(1 && DEBUG) /* 2015-04-16 lijia add, 解决在线流量无故coredump, 但找不到原因 */
+//#define CYCLE_PKT_DUMP				(1 && DEBUG) /* 2015-04-16 lijia add, 解决在线流量无故coredump, 但找不到原因 */
+#define CYCLE_PKT_DUMP				(1) /* 2015-04-16 lijia add, 解决在线流量无故coredump, 但找不到原因 */
 
 #define PCAP_CAP_FROM_IP				(0) /* 为了模拟pag等在线环境, 让pcap也模拟从IPv4头部开始获取 */
 
