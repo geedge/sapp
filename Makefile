@@ -6,7 +6,7 @@ CC=g++
 CCC=g++
 CFLAGS = 
 #CFLAGS = -march=native
-CFLAGS += -g -D__FAVOR_BSD=1 -D__USE_BSD=1 -D_GNU_SOURCE=1 -Werror
+CFLAGS += -g -D__FAVOR_BSD=1 -D__USE_BSD=1 -D_GNU_SOURCE=1 -Wall
 #CFLAGS += -D__FAVOR_BSD=1 -D__USE_BSD=1 -D_GNU_SOURCE=1
 LIBS= -L/opt/MESA/lib
 INC=-I./

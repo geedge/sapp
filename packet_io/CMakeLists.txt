@@ -41,7 +41,8 @@ endif()
 set(PACKET_IO_STATIC_SOURCE cycle_pkt_dump_through_write_offset.c  packet_io_lib_load.c pkt_dispatch_new.c
 iknow_info.c                           packet_io_log.c         sendpacket.c
 sendpacket_wrap.c   packet_io.c packet_io_device.c 
-packet_io_status_by_mesafs.cpp packet_io_status.cpp  packet_io_status_new.c )
+#packet_io_status_by_mesafs.cpp packet_io_status.cpp  packet_io_status_new.c )
+packet_io_status.cpp  packet_io_status_new.c )
 
 add_library(packet_io STATIC ${PACKET_IO_STATIC_SOURCE})
 

@@ -57,6 +57,7 @@ CFLAGS += -DIOMODE_DPDK=1
 endif
 
 INC+=-I../include 
+INC+=-I../include/support
 INC+=-I../include/net
 INC+=-I../dealpkt 
 INC += -I../packet_io

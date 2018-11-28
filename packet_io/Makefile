@@ -96,7 +96,7 @@ OBJS+=packet_io_status.o
 OBJS+=packet_io_status_new.o
 #OBJS += cycle_pkt_dump.o
 #OBJS += cycle_pkt_dump_unix.o
-OBJS += cycle_pkt_dump_through_write.o
+OBJS += cycle_pkt_dump_through_write_offset.o
 OBJS += packet_io_device.o
 OBJS += sapp_compat_wangyan_api.o
 
