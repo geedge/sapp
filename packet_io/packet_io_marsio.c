@@ -12,6 +12,7 @@ extern "C" {
 #include "MESA_sleep.h"
 #include "MESA_prof_load.h"
 #include <assert.h>
+#include <sys/prctl.h>
 
 /*
 	netconnection_mode:
@@ -580,6 +581,10 @@ static void *marsio4_worker(void *arg)
 	int tid = *((int *)arg);
 	raw_pkt_t raw_pkt;
 	int total_call_times = 0, rcv_pkt_tims = 0;
+
+	char  thread_name[32] = "";
+	sprintf(thread_name, "SAPP_WORKER_THREAD_%d", tid);
+	prctl(PR_SET_NAME, thread_name);
 
 	if(marsio4_thread_bind_mask != 0){
 		marsio_thread_init(mr4_instance);

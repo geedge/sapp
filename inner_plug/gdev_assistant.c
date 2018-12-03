@@ -376,9 +376,9 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 
 	sock_addr_v4.sin_family = AF_INET;
 	//inet_pton(AF_INET, "10.3.127.1", &sock_addr_v4.sin_addr.s_addr);
-	if(strlen(g_send_gdev_ip_table[mim_mem_hdr.dev_id]) > 0)
+	if(strlen((const char *)g_send_gdev_ip_table[mim_mem_hdr.dev_id]) > 0)
     {
-        inet_pton(AF_INET, g_send_gdev_ip_table[mim_mem_hdr.dev_id], &sock_addr_v4.sin_addr.s_addr);
+        inet_pton(AF_INET, (const char *)g_send_gdev_ip_table[mim_mem_hdr.dev_id], &sock_addr_v4.sin_addr.s_addr);
     }
     else
     {
