@@ -779,6 +779,25 @@ struct gtp_hdr{
 #endif
 };
 
+#define TEREDO_AUTH_HDR_FLAG (0x0001)
+#define TEREDO_INDICATION_HDR_FLAG (0x0000)
+
+#define TEREDO_INDICATION_HDR_LEN (8)
+
+struct teredo_auth_hdr{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+	unsigned short flags;
+	unsigned char id_len;
+	unsigned char au_len;
+#elif __BYTE_ORDER == __BIG_ENDIAN
+	unsigned char au_len;
+    unsigned char id_len;
+	unsigned short flags;
+#else
+#error "Please check <endian.h>"
+#endif
+};
+
 #define MAX_ADDR_TYPE_STRING_LEN	(64)
 #define MAX_ADDR_LIST_STRING_LEN	(2048)
 #define MAX_ADDR_EMBED_LAYER_NUM (20) /* 最大地址嵌套层数 */

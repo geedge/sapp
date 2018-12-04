@@ -176,11 +176,38 @@ static int udp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 		}
 		skip_len += 8; /* skip vxlan header */
 	}else if((3544 == usport) || (3544 == udport)){
-		/* teredo实际没有数据包头, 直接跳转到ipv6层即可 */
-		skip_len = ipv6_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
+		/* teredo实际没有数据包头, 直接跳转到ipv6层即可 , before 20181204*/
+		const char *next_layer_hdr = raw_data+sizeof(struct mesa_udp_hdr);
+        struct teredo_auth_hdr *p_teredo_hdr;
+		int teredo_layer_len = 0, tmp_hdr_len = 0;
+		while((*next_layer_hdr & 0xF0) != 0x60)
+		{
+			p_teredo_hdr = (struct teredo_auth_hdr *)next_layer_hdr;
+			if(p_teredo_hdr->flags == ntohs(TEREDO_AUTH_HDR_FLAG))
+			{
+				//rfc4380 5.1.1 teredo 负载0x0001时为Teredo authentication headers，需要跳过
+				tmp_hdr_len += sizeof(struct teredo_auth_hdr) + ntohs(p_teredo_hdr->au_len) + ntohs
+				(p_teredo_hdr->id_len) + 8 + 1;
+				next_layer_hdr += tmp_hdr_len;
+				teredo_layer_len += tmp_hdr_len;
+			}
+			else if(p_teredo_hdr->flags == ntohs(TEREDO_INDICATION_HDR_FLAG))
+			{
+				//rfc4380 teredo 负载0x0000时为Teredo indication headers，需要跳过
+				next_layer_hdr += TEREDO_INDICATION_HDR_LEN;
+				teredo_layer_len += TEREDO_INDICATION_HDR_LEN;
+			}
+            else
+            {
+                printf("TODO: jmp unsupport teredo hdr:0x%d!\n", (next_layer_hdr));
+                return -1;
+            }
+		}
+		skip_len = ipv6_jump_to_layer(next_layer_hdr, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
 		if(skip_len < 0){
 			return -1;
 		}
+		skip_len += teredo_layer_len;
 	}else{
 		/* 其他UDP类型不支持再跳转 */
 		return -1;

@@ -36,7 +36,7 @@ install(TARGETS sapp DESTINATION ${CMAKE_SOURCE_DIR}/run/)
 install(FILES ${CMAKE_SOURCE_DIR}/build/inner_plug/libsapp_assistant.so DESTINATION /opt/MESA/lib)
 
 if(CAPTURE_MODE MATCHES "MARSIO")
-	install(FILES ${CMAKE_SOURCE_DIR}/build/packet_io/libpacket_io_masrio.so
+	install(FILES ${CMAKE_SOURCE_DIR}/build/packet_io/libpacket_io_marsio.so
 	DESTINATION ${CMAKE_SOURCE_DIR}/run/platform_lib/packet_io_masrio.so)
 endif()
 #install(DIRECTORY conf/ DESTINATION ${CMAKE_SOURCE_DIR}/run/conf)

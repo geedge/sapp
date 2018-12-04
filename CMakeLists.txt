@@ -12,7 +12,7 @@ option(OPT_IOMODE_PPF "Capture network traffic with libppf" OFF)
 option(OPT_IOMODE_PFRING "Capture network traffic with PF-RING" OFF)
 option(OPT_IOMODE_DPDK "Capture network traffic with DPDK" OFF)
 option(OPT_IOMODE_PAG_N95 "Capture network traffic with N95" OFF)
-option(OPT_IOMODE_MARSIO "Capture network traffic with MARSIO" ON)
+option(OPT_IOMODE_MARSIO "Capture network traffic with MARSIO" OFF)
 
 if(OPT_IOMODE_PCAP)
 	set(CAPTURE_MODE "PCAP")	
