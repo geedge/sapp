@@ -113,7 +113,10 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 				break;
 			}			
 			int *out_value = (int *)void_value;
-			*out_value = ntohl(mr_ctrlzone->g_device_vpn_id);
+//modify by liuy 20181205
+//			*out_value = ntohl(mr_ctrlzone->g_device_vpn_id);
+			*out_value = ntohl(mr_ctrlzone->g_device_linkpair);
+//end
 		}
 		break;
 
