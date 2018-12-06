@@ -36,6 +36,9 @@ if(CAPTURE_MODE MATCHES "MARSIO")
 	set(PACKET_IO_SOURCE ${PACKET_IO_SOURCE} packet_io_marsio.c)
     add_library(packet_io_marsio SHARED ${PACKET_IO_SOURCE})
 	target_link_libraries(packet_io_marsio marsio)
+	#set_target_properties(packet_io_marsio  PROPERTIES OUTPUT_NAME "")
+	set_target_properties(packet_io_marsio  PROPERTIES PREFIX "")
+	#install(TARGETS packet_io_marsio DESTINATION ${CMAKE_SOURCE_DIR}/run/platform_lib/)
 endif()
 
 set(PACKET_IO_STATIC_SOURCE cycle_pkt_dump_through_write_offset.c  packet_io_lib_load.c pkt_dispatch_new.c

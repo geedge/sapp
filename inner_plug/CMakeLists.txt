@@ -15,5 +15,5 @@ add_definitions(-fPIC)
 add_library(sapp_assistant SHARED sapp_assistant.cpp)
 add_library(gdev_assistant SHARED gdev_assistant.c)
 
-install(TARGETS sapp_assistant DESTINATION ${MESA_SDK_PREFIX}/lib/)
-install(TARGETS gdev_assistant DESTINATION ${MESA_SDK_PREFIX}/lib/)
+#install(TARGETS sapp_assistant DESTINATION ${MESA_SDK_PREFIX}/lib/)
+#install(TARGETS gdev_assistant DESTINATION ${MESA_SDK_PREFIX}/lib/)

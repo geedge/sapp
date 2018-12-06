@@ -583,7 +583,7 @@ static void *marsio4_worker(void *arg)
 	int total_call_times = 0, rcv_pkt_tims = 0;
 
 	char  thread_name[32] = "";
-	sprintf(thread_name, "SAPP_WORKER_THREAD_%d", tid);
+	sprintf(thread_name, "sapp_marsio_%d", tid);
 	prctl(PR_SET_NAME, thread_name);
 
 	if(marsio4_thread_bind_mask != 0){

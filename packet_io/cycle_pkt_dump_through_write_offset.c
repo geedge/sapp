@@ -1183,6 +1183,8 @@ static void * cycle_pkt_dump_udp_socket_daemon_thread(void *arg)
 	pthread_setname_np(pthread_self(), "sapp_pkt_dump");
 #endif
 #endif
+	printf("\033[41m--------------[Notice] \033[41m'%s' \033[0m is ready, port %d !--------------\033[0m\n", "tcpdump_mesa",
+	        pkt_dump_tcp_bind_port);
 	
 	while(1){
 		cliaddr_len = sizeof(cliaddr);

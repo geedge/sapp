@@ -31,14 +31,14 @@ int guess_if_teredo(const struct streaminfo *pstream,  struct mesa_udp_hdr *udph
 	&& (TEREDO_DEFAULT_PORT != ntohs(udphdr->uh_dport))){
 		return 0;
 	}
-#endif
+#endif@
 	udp_payuload_len = ntohs(udphdr->uh_ulen) - sizeof(struct mesa_udp_hdr);
 	if(udp_payuload_len < (int)sizeof(struct mesa_ip6_hdr)){ /* 负载还不够一个完整IPv6包头 */
 		return 0;
 	}
 
 	ip6hdr = (struct mesa_ip6_hdr *)((char *)udphdr + sizeof(struct mesa_udp_hdr ));
-	if(ip6hdr->ip6_flags[0] != 0x60){
+	if(ip6hdr->ip6_flags[0] != 0x60  && ip6hdr->ip6_flags[0] != 0x00){
 		return 0;
 	}
 
@@ -70,7 +70,7 @@ int teredo_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,in
 	return PASS;
 #endif
 	struct mesa_udp_hdr *udphdr;
-	void *next_layer_hdr;
+	char *next_layer_hdr;
 
 	udphdr = (struct mesa_udp_hdr *)(this_layer_data);
 
@@ -80,8 +80,31 @@ int teredo_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,in
 	}
 #endif	
 
+	//next_layer_hdr = (char *)udphdr + sizeof(struct mesa_udp_hdr);
 	next_layer_hdr = (char *)udphdr + sizeof(struct mesa_udp_hdr);
-
+	struct teredo_auth_hdr *p_teredo_hdr;
+	int tmp_hdr_len = 0;
+	while((*next_layer_hdr & 0xF0) != 0x60)
+	{
+		p_teredo_hdr = (struct teredo_auth_hdr *)next_layer_hdr;
+		if(p_teredo_hdr->flags == ntohs(TEREDO_AUTH_HDR_FLAG))
+		{
+			//rfc4380 5.1.1 teredo 负载0x0001时为Teredo authentication headers，需要跳过
+			tmp_hdr_len += sizeof(struct teredo_auth_hdr) + ntohs(p_teredo_hdr->au_len) + ntohs
+					(p_teredo_hdr->id_len) + 8 + 1;
+			next_layer_hdr += tmp_hdr_len;
+		}
+		else if(p_teredo_hdr->flags == ntohs(TEREDO_INDICATION_HDR_FLAG))
+		{
+			//rfc4380 teredo 负载0x0000时为Teredo indication headers，需要跳过
+			next_layer_hdr += TEREDO_INDICATION_HDR_LEN;
+		}
+		else
+		{
+			printf("TODO: jmp unsupport teredo hdr:0x%d!\n", (next_layer_hdr));
+			return -1;
+		}
+	}
 	g_SysInputInfo[thread_num][TUNNEL_TEREDO]++;
 	g_SysInputInfo[thread_num][TUNNEL_TEREDO_LEN] += ntohs(udphdr->uh_ulen);
 
