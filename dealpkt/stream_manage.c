@@ -96,6 +96,8 @@ int tcp_flood_detect_model=TCP_FLOOD_DETECT_OFF;
 int tcp_support_all=TCP_SUPPORT_ENTRYALL_OFF;
 int tcp_dataflood_pktlen=5;
 extern int g_packet_io_thread_num;
+extern int g_reverse_ethernet_addr_sw;
+
 struct global_stream **G_MESA_GLOBAL_STREAM;
 
 //static struct stream_status stream_info[MAX_THREAD_NUM];
@@ -2167,11 +2169,14 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
 
 		case ADDR_TYPE_MAC: /* 2015-06-15 lijia add, 木马检测设备需求 */
 		{
-			const struct layer_addr_mac *mac_saddr = (const struct layer_addr_mac *)saddr;
-			struct layer_addr_mac *mac_daddr = (struct layer_addr_mac *)daddr;			
-			memcpy(mac_daddr->src_mac, mac_saddr->dst_mac, MAC_ADDR_LEN);
-			memcpy(mac_daddr->dst_mac, mac_saddr->src_mac, MAC_ADDR_LEN);
-		}	
+			if (g_reverse_ethernet_addr_sw == 1)//2018-12-07 yw add, mac地址中包含信息时无需翻转
+			{
+				const struct layer_addr_mac *mac_saddr = (const struct layer_addr_mac *) saddr;
+				struct layer_addr_mac *mac_daddr = (struct layer_addr_mac *) daddr;
+				memcpy(mac_daddr->src_mac, mac_saddr->dst_mac, MAC_ADDR_LEN);
+				memcpy(mac_daddr->dst_mac, mac_saddr->src_mac, MAC_ADDR_LEN);
+			}
+		}
 		break;
 
 		case __ADDR_TYPE_IP_PAIR_V4: /* 纯IPv4层, 通常是基于隧道模式 */

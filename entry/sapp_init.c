@@ -49,6 +49,7 @@ extern int g_use_MESA_sleep_sw;
 extern int g_raw_pkt_broken_check;
 extern int g_packet_io_cap_mode;
 extern int g_skip_ethernet_layer_sw;
+int g_reverse_ethernet_addr_sw;
 extern int g_discard_ack_sw;
 extern int g_kill_tcp_remedy_sw;
 extern int g_analyse_tcp_opt_sw;
@@ -380,7 +381,9 @@ int MESA_platform_init(int argc, char *argv[])
 
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"raw_pkt_broken_check", &g_raw_pkt_broken_check, 0);
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"skip_ethernet_layer", &g_skip_ethernet_layer_sw, 0);
-	
+	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"reverse_ethernet_addr", &g_reverse_ethernet_addr_sw, 0);
+
+
 	/* 平台内置固定开启的插件 */
 	stream_register_udp_raw(udp_teredo_identify_entry);
 	stream_register_udp_raw(udp_gtp_identify_entry);
