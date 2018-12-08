@@ -2176,6 +2176,10 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
 				memcpy(mac_daddr->src_mac, mac_saddr->dst_mac, MAC_ADDR_LEN);
 				memcpy(mac_daddr->dst_mac, mac_saddr->src_mac, MAC_ADDR_LEN);
 			}
+			else
+			{
+				memcpy(daddr, saddr, addrlen);
+			}
 		}
 		break;
 

@@ -71,12 +71,12 @@ char print_vxlan_info(struct streaminfo *a_tcp,  void **pme, int thread_seq,void
 	int opt_val_len = sizeof(vinfo);
 	int ret;
 
-	if(OP_STATE_PENDING == a_tcp->opstate){
+	if(OP_STATE_PENDING == a_tcp->opstate || OP_STATE_CLOSE == a_tcp->opstate){
 		ret = MESA_get_stream_opt(a_tcp, MSO_STREAM_VXLAN_INFO, &vinfo, &opt_val_len);
 		if(ret < 0){
 			printf("get vxlan info error!\n");
 		}else{
-			printf("tuple4:%s, vxlan info:\n", printaddr(&a_tcp->addr, thread_seq));
+			printf("OPSTATE:%d, tuple4:%s, vxlan info:\n", a_tcp->opstate, printaddr(&a_tcp->addr, thread_seq));
 			printf("\tencap_type:%d\n", vinfo.encap_type);
 			printf("\tntrance_id:%d\n", vinfo.entrance_id);
 			printf("\tdev_id:%d\n", vinfo.dev_id);

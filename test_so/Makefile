@@ -30,7 +30,7 @@ trace_delay.so: trace_delay.o
 
 terminal_tag.so: terminal_tag.o
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
-	cp $@ ../run/plug/business/terminal_tag/
+#	cp $@ ../run/plug/business/terminal_tag/
 
 g_device_plug.so: g_device_plug.o
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
