@@ -2387,8 +2387,8 @@ static int __do_kill_tcp_synack(struct streaminfo *stream, const void *ext_raw_p
 	if((NULL == raw_pkt) || (RAW_PKT_MAGIC_NUM != raw_pkt->magic_num)){
 		return -1;
 	}
-	
-	reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type);
+    send_handle->user_arg = (void *)stream;
+    reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type);
 	if((reserved_hdr_len < 0) || (-1 == low_net_layer_type)){
 		ret = -1;
 		goto fun_exit;
@@ -2600,6 +2600,7 @@ static int __do_inject_pkt(struct streaminfo *stream, const char *payload, int p
 		ret = -1;
 		goto err;
 	}
+	send_handle->user_arg = (void *)stream;
 	ret = packet_io_send(send_handle, reserved_hdr_len+payload_len, SEND_TYPE_LINK_INJECT, 
 						low_net_layer_type, stream->routedir, thread_num,
 						feedback_buf, feedback_buf_len);		
