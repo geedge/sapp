@@ -176,7 +176,30 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 			}			
 			memcpy(void_value, mr_ctrlzone->l_device_mac, 6);
 		}
-		break;		
+		break;
+
+		case RAW_PKT_GET_VIRTUAL_LINK_ID:
+		{
+			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
+			if(mr_ctrlzone->virtual_link_id <= 0){/* 非vxlan包, 肯定没有这些选项 */
+				ret = -1;
+				break;
+			}
+			unsigned long long *out_value = (unsigned long long *)void_value;
+			*out_value = mr_ctrlzone->virtual_link_id;
+		}
+		break;
+		case RAW_PKT_GET_REHASH_INDEX:
+		{
+			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
+			if(mr_ctrlzone->rehash_index <= 0){/* 非vxlan包, 肯定没有这些选项 */
+				ret = -1;
+				break;
+			}
+			unsigned long long *out_value = (unsigned long long *)void_value;
+			*out_value = mr_ctrlzone->rehash_index;
+		}
+		break;
 #endif
 		default:
 			ret = -1;

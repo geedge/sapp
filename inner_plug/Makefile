@@ -22,6 +22,7 @@ H_DIR += -I../dealpkt
 H_DIR += -I../packet_io
 H_DIR += -I/opt/MESA/include
 H_DIR += -I/opt/MESA/include/MESA
+H_DIR += -I/opt/mrzcpd/include
 
 LIB=-L/opt/MESA/lib
 

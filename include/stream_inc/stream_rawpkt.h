@@ -19,7 +19,9 @@ enum{
 	RAW_PKT_GET_VXLAN_ENCAP_TYPE,  //value type is char, 
 	RAW_PKT_GET_VXLAN_LINK_DIR,  //value type is char, 
 	RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC,  //value type is char[6],  
-	RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC,  //value type is char[6],  
+	RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC,  //value type is char[6],
+	RAW_PKT_GET_VIRTUAL_LINK_ID, //value type is uint64 *, out_value should be uint64 *
+	RAW_PKT_GET_REHASH_INDEX    // value type is uint64 *, out_value should be uint64 *
 };
 
 #ifdef __cplusplus

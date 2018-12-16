@@ -12,6 +12,7 @@ option(OPT_IOMODE_PPF "Capture network traffic with libppf" OFF)
 option(OPT_IOMODE_PFRING "Capture network traffic with PF-RING" OFF)
 option(OPT_IOMODE_DPDK "Capture network traffic with DPDK" OFF)
 option(OPT_IOMODE_PAG_N95 "Capture network traffic with N95" OFF)
+option(OPT_IOMODE_MARSIO "Capture network traffic with MARSIO" ON)
 
 if(OPT_IOMODE_PCAP)
 	set(CAPTURE_MODE "PCAP")	
@@ -37,6 +38,11 @@ if(OPT_IOMODE_PAG_N95)
 	set(CAPTURE_MODE "PAG_N95")
 endif()
 
+if(OPT_IOMODE_MARSIO)
+    set(CAPTURE_MODE "MARSIO")
+	set(MARSIO_SDK_PREFIX "/opt/mrzcpd/" CACHE STRING "MARSIO Prefix")
+endif()
+
 if(CAPTURE_MODE MATCHES "PCAP")
     set(CAPTURE_DEFINITIONS -DONLY_PCAP -DIOMODE_PCAP)
 endif()
@@ -55,6 +61,10 @@ endif()
 
 if(CAPTURE_MODE MATCHES "DPDK")
 	set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_DPDK)
+endif()
+
+if(CAPTURE_MODE MATCHES "MARSIO")
+    set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_MARSIO -DIOMODE_MARSIO)
 endif()
 
 # Memory Allocator

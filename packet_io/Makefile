@@ -26,6 +26,7 @@ H_DIR += -I../include/packet_io_lib_inc
 H_DIR += -I../dealpkt
 H_DIR += -I/opt/MESA/include
 H_DIR += -I/opt/MESA/include/MESA
+H_DIR += -I/opt/mrzcpd/include
 
 DLL_LIB=
 ifeq ($(iomode), $(_MODE_PCAP))

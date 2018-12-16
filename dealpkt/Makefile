@@ -22,6 +22,7 @@ H_DIR += -I../support/rbtree
 H_DIR += -I/usr/include/MESA/
 H_DIR += -I/opt/MESA/include
 H_DIR += -I/opt/MESA/include/MESA
+H_DIR += -I/opt/mrzcpd/include
 
 TARGET = libdealpkt.a
 

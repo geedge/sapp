@@ -16,6 +16,8 @@ enum {
     TUNNAT_CZ_ACTION_ENCAP_OUTER  = ( 1 << 2 ),
 	/* 隧道封装方法，直接构建，不查询Session表 */
 	TUNNAT_CZ_ACTION_ENCAP_NO_SESSION  = ( 1 << 3 )
+	/* 使用虚拟链路号封装 */
+	TUNNAT_CZ_ACTION_ENCAP_VIRTUAL_LINK_ID = ( 1 << 4),
 };
 
 enum
@@ -63,6 +65,11 @@ struct mr_tunnat_ctrlzone
     uint8_t g_device_outer_encap_type;
     /* 专用设备封装格式（内层）*/
     uint8_t g_device_inner_encap_type;
+
+	/* 虚拟链路号 */
+	uint64_t virtual_link_id;
+	/* 分流重计算索引 */
+	uint64_t rehash_index;
 };
 
 #ifdef __cplusplus
