@@ -42,7 +42,7 @@ static int g_marsio4_topology_mode = NET_CONN_PARALLEL;
 static int marsio4_work_thread_seq[MAX_THREAD_NUM];
 static pthread_t marsio4_work_tid[MAX_THREAD_NUM];
 extern int g_use_MESA_sleep_sw;
-static mr_instance * mr4_instance = NULL;
+static struct mr_instance * mr4_instance = NULL;
 static int g_mr4_device_num = 0;
 static char **g_mr4_up_device_name; /* 设备名称集合, meth0, meth1, meth2... */
 static char **g_mr4_down_device_name; /* 设备名称集合, meth0, meth1, meth2... */
