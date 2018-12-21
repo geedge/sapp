@@ -11,9 +11,13 @@ include_directories(${CMAKE_SOURCE_DIR}/dealpkt)
 
 add_definitions(-D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
 
-add_definitions(-fPIC)
-add_library(sapp_assistant SHARED sapp_assistant.cpp)
-add_library(gdev_assistant SHARED gdev_assistant.c)
-
+if(ENABLE_STATIC_LINK)
+    add_library(sapp_assistant STATIC sapp_assistant.cpp)
+    add_library(gdev_assistant STATIC gdev_assistant.c)
+else()
+    add_definitions(-fPIC)
+    add_library(sapp_assistant SHARED sapp_assistant.cpp)
+    add_library(gdev_assistant SHARED gdev_assistant.c)
+endif()
 #install(TARGETS sapp_assistant DESTINATION ${MESA_SDK_PREFIX}/lib/)
 #install(TARGETS gdev_assistant DESTINATION ${MESA_SDK_PREFIX}/lib/)
