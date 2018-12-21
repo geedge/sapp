@@ -786,7 +786,16 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 			sapp_runtime_log(20, "recv ipv4 carry L2TPv3, not support yet!\n");
 			ret = PASS;
 		break;
-		
+
+		case IPPROTO_ESP:
+			sapp_runtime_log(20, "recv IPPROTO_ESP, not support yet!\n");
+			ret = PASS;
+		break;
+		case IPPROTO_SCTP:
+			sapp_runtime_log(20, "recv IPPROTO_SCTP, not support yet!\n");
+			ret = PASS;
+		break;
+
 		default:	
 			/* unknown protocol */	
 			g_SysInputInfo[thread_num][PKT_UNKNOWN]++;

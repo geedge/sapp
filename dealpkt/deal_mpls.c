@@ -16,6 +16,9 @@ extern int ipv4_entry(struct streaminfo_private *pfstream, const void *this_laye
 extern int ipv6_entry(struct streaminfo_private *pfstream, const void *this_layer_data, int thread_num,
                       unsigned char routedir, const raw_pkt_t *raw_pkt, int);
 
+extern int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,int thread_num,
+					 unsigned char dir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr);
+
 static inline void set_mpls_addr(struct layer_addr_mpls *addr, struct mesa_mpls_hdr *this_mpls_hdr)
 {
 	memcpy(&addr->src_mpls_pkt, this_mpls_hdr, sizeof(struct mesa_mpls_hdr));
@@ -100,10 +103,14 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
         {
             ret = ipv6_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
         }
+        else if(*(short *)next_layer_hdr == 0)//pw ether control word, jump 4 byte
+		{
+			ret = eth_entry(pstream_pr,next_layer_hdr+4,thread_num,routedir,raw_pkt, next_layer_offset+4);
+		}
         else
         {
-            sapp_runtime_log(20, "MPLS next layer not IPv4 or IPv6, drop pkt !\n");
-            return PASS;
+            sapp_runtime_log(20, "MPLS next layer not IPv4 or IPv6, try to parse next layer as eth !\n");
+			ret = eth_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
         }
 
 	}else{
