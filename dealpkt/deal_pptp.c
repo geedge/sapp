@@ -311,7 +311,7 @@ int pptp_entry(struct streamindex *pindex, const void *this_layer_data,int threa
 	pstream_pr->cur_layer_raw_hdr_len = gre_hdr_len + ppp_hdr_len;
 	
 	pstream->addr.paddr = &pptp_addr; /* 注意: 在pptp_find_ctrl_info()之后在更新为pptp_addr, 因为pptp_find_ctrl_info()使用了gre层地址 */
-
+	pstream->addr.addrlen = sizeof(pptp_addr);
 	switch(ppp_next_layer_pro)
 	{
 		case PPP_PROTOCOL_IPv4:

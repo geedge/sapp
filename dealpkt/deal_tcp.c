@@ -1191,9 +1191,15 @@ void tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const 
 			pdetail_pr->apme=NULL;
 		}
 		if(pclient)
+		{
 				tcp_free_half(pclient,threadnum);
+				pclient = NULL;
+		}
 		if(pserver)
+		{
 				tcp_free_half(pserver,threadnum);
+				pserver = NULL;
+		}
 	}
 
 	//不论任何状态回调全包处理函数链表
@@ -1891,6 +1897,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 				/* 2016-05-12 lijia add, 解决因乱序包导致unorder_list超长BUG, 此处应将流置于nouse状态 */
 				if(STREAM_LINK_DATA == last_link_state){
 					tcp_change_stream_tonouse(pindex);
+					return DROP;
 				}
 				return PASS;
 			}
@@ -2025,7 +2032,7 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 				
 			}
 #else
-			tcp_deal_unorder(pindex,pstream,rcv,snd,CHECK_ORDER_DATA);
+			ret = tcp_deal_unorder(pindex,pstream,rcv,snd,CHECK_ORDER_DATA);
 #endif			
 			return ret;			
 		}
@@ -2062,6 +2069,9 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 	unsigned char *tcpdata=NULL;
 	unsigned char th_flags = this_tcphdr->th_flags;
 
+	assert(pstream != NULL);
+	assert(pdetail != NULL);
+
 	pdetail->lastmtime=(long)g_CurrentTime;
 	
 	tcp_deal_ack(pstream,this_tcphdr);
@@ -2078,7 +2088,9 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		snd=pdetail_pr->pserver;
 		rcv=pdetail_pr->pclient;
 	}
-	
+
+	assert(snd != NULL || rcv != NULL);
+
 	pcurhalf->pktcout++;
 	curseq=pcurhalf->first_data_seq + pcurhalf->count_ideal ;
 	thisseq=ntohl (this_tcphdr->th_seq);
@@ -2127,6 +2139,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		 }
 		 //乱序的rst报文，如果链接未建立，会丢弃，链接已经建立，会进入排序
 	}
+	assert(rcv->count >= 0);
 	//链接复用 
 	if (th_flags & TH_SYN)
 	{
@@ -2170,7 +2183,6 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		tcp_reset_stream(pindex,this_tcphdr,datalen);
 		return PASS;		
 	}
-
 	if(datalen + (th_flags & TH_FIN) +(th_flags & TH_RST)> 0)//处理TCP负载
 	{
 		tcpdata=(unsigned char*)(this_tcphdr) + 4 * this_tcphdr->th_off;
@@ -2201,17 +2213,24 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		{	
 			tcp_change_stream_tonouse(pindex);
 			return ret;
-        	}
+		}
 	}
-
+	assert(rcv->count >= 0);
 	if(pstream->dir==DIR_DOUBLE)
 	{
 		//if((snd->finstate ==FIN_CONFIRMED)&&(rcv->finstate ==FIN_CONFIRMED))
-		if((snd->finstate >=FIN_SENT)&&(rcv->finstate >=FIN_SENT))
+		if(rcv == NULL || snd == NULL)
 		{
 			pdetail_pr->link_state=STREAM_LINK_CLOSE;
 			finclose=1;
 		}
+		else if((snd->finstate >=FIN_SENT)&&(rcv->finstate >=FIN_SENT))
+		{
+			pdetail_pr->link_state=STREAM_LINK_CLOSE;
+			finclose=1;
+		}
+		else
+			;
 	}
 	else if(rcv->finstate==FIN_SENT)
 	{

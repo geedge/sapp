@@ -6,6 +6,24 @@ set(CMAKE_MACOSX_RPATH 0)
 #set(CMAKE_INSTALL_PREFIX /home/ceiec/sapp/)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/run/)
 
+#Debug option
+#ASAN option
+option(ENABLE_SANITIZE_ADDRESS "Enable AddressSanitizer" FALSE)
+option(ENABLE_SANITIZE_THREAD "Enable ThreadSanitizer" FALSE)
+
+if(ENABLE_SANITIZE_ADDRESS)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=address -fno-omit-frame-pointer")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=address -fno-omit-frame-pointer")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
+elseif(ENABLE_SANITIZE_THREAD)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=thread -fno-omit-frame-pointer")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=thread -fno-omit-frame-pointer")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
+endif()
+
+
 # MESA SDK Root
 set(MESA_SDK_PREFIX "/opt/MESA/" CACHE STRING "MESA Framework Prefix")
 # Capture Mode

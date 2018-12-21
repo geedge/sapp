@@ -2232,7 +2232,14 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
         }
             break;
 		/* TODO 1:PPTP-addr */
-		
+		case ADDR_TYPE_PPTP:
+		{
+			const struct layer_addr_pptp *pptp_saddr = (const struct layer_addr_pptp *)saddr;
+			struct layer_addr_pptp *pptp_daddr = (struct layer_addr_pptp *)daddr;
+			pptp_daddr->C2S_call_id = pptp_saddr->C2S_call_id;
+			pptp_daddr->S2C_call_id = pptp_saddr->S2C_call_id;
+		}
+			break;
 		default:
 			/* 其他地址类型, 如VLAN, L2TP等, 无方向性特征,直接copy */
 			memcpy(daddr, saddr, addrlen);
