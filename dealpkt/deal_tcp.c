@@ -1,38 +1,38 @@
 /*
-20120603 : 1)ĞŞ¸Ä½¨Á¢Á´½ÓµÄ²ßÂÔ £¬datalen>0µÄ°üÖ±½Ó½¨Á¢Á´½Ó
-		   2)Ó¦ÓÃ²ã²»ĞèÒªµÄÁ´½Ó£¬×ªÈënouse×´Ì¬£¬¶ø²»ÊÇÖ±½ÓÊÍ·Å
+20120603 : 1)ä¿®æ”¹å»ºç«‹é“¾æ¥çš„ç­–ç•¥ ï¼Œdatalen>0çš„åŒ…ç›´æ¥å»ºç«‹é“¾æ¥
+		   2)åº”ç”¨å±‚ä¸éœ€è¦çš„é“¾æ¥ï¼Œè½¬å…¥nouseçŠ¶æ€ï¼Œè€Œä¸æ˜¯ç›´æ¥é‡Šæ”¾
 
-20140322 : 1)Ô­À´Éè¼ÆÖ»ÓĞµ±½øÈëdata×´Ì¬ºó£¬²Å·ÖÅäpdetailµÄ¿Õ¼ä£»ÏÖÔÚĞŞ¸ÄÎª
-			Á÷Ò»½¨Á¢¾Í·ÖÅäpdetailµÄ¿Õ¼ä£¬µ±½øÈëdataºó²Å·ÖÅähalfµÄ¿Õ¼ä
-		    2)Ô­À´ºÍÁ÷Ïà¹ØµÄÒ»Ğ©±äÁ¿£¬È«²¿ÒÆÈëpdetail
-		    3) Á÷±íµÄ¹ÜÀí£¬ÓÃ×îÀï²ãµÄµØÖ·×öhash£¬ÓÃ¶à²ãµØÖ·½øĞĞ±È½Ï
+20140322 : 1)åŸæ¥è®¾è®¡åªæœ‰å½“è¿›å…¥dataçŠ¶æ€åï¼Œæ‰åˆ†é…pdetailçš„ç©ºé—´ï¼›ç°åœ¨ä¿®æ”¹ä¸º
+			æµä¸€å»ºç«‹å°±åˆ†é…pdetailçš„ç©ºé—´ï¼Œå½“è¿›å…¥dataåæ‰åˆ†é…halfçš„ç©ºé—´
+		    2)åŸæ¥å’Œæµç›¸å…³çš„ä¸€äº›å˜é‡ï¼Œå…¨éƒ¨ç§»å…¥pdetail
+		    3) æµè¡¨çš„ç®¡ç†ï¼Œç”¨æœ€é‡Œå±‚çš„åœ°å€åšhashï¼Œç”¨å¤šå±‚åœ°å€è¿›è¡Œæ¯”è¾ƒ
 		    
-20140329 1)»Ö¸´ÔÚtcpdetail¼ÇÂ¼±¾´Î¶ª°ü×Ö½ÚÊıpdetail->lostlen
-		 2)¿¼ÂÇÔÚtcpallpktÄ£Ê½ÖĞÓÉÓÚ²»½øĞĞÂÒĞòÖØ×é£¬²»ÄÜÈ·±£fin£¬rstµÈµÄµ½´ïshunx
-			Ë³Ğò£¬Òò´Ë²»ÄÜÖÃÁ÷±íclose×´Ì¬£¬Ö»ÄÜµÈÌÔÌ­£»
-	        3)ÔÚÁ÷±íÖĞ¼ÇÂ¼Ã¿²áµÄ°üÊı×Ö½ÚÊıµÄÎ»ÖÃµ÷Õû£¬ÎªÊµ¼Êµ½´ïµÄË³Ğò
-			¼ÇÂ¼£¬¼ÇÂ¼ÖĞ°üº¬ÁË²»´ø¸ºÔØµÄ°üÊıÄ¿£¬´«Í³ÏµÍ³ÖĞ¼ÇÂ¼ÁË´ø¸ºÔØµÄ°üÊı
+20140329 1)æ¢å¤åœ¨tcpdetailè®°å½•æœ¬æ¬¡ä¸¢åŒ…å­—èŠ‚æ•°pdetail->lostlen
+		 2)è€ƒè™‘åœ¨tcpallpktæ¨¡å¼ä¸­ç”±äºä¸è¿›è¡Œä¹±åºé‡ç»„ï¼Œä¸èƒ½ç¡®ä¿finï¼Œrstç­‰çš„åˆ°è¾¾shunx
+			é¡ºåºï¼Œå› æ­¤ä¸èƒ½ç½®æµè¡¨closeçŠ¶æ€ï¼Œåªèƒ½ç­‰æ·˜æ±°ï¼›
+	        3)åœ¨æµè¡¨ä¸­è®°å½•æ¯å†Œçš„åŒ…æ•°å­—èŠ‚æ•°çš„ä½ç½®è°ƒæ•´ï¼Œä¸ºå®é™…åˆ°è¾¾çš„é¡ºåº
+			è®°å½•ï¼Œè®°å½•ä¸­åŒ…å«äº†ä¸å¸¦è´Ÿè½½çš„åŒ…æ•°ç›®ï¼Œä¼ ç»Ÿç³»ç»Ÿä¸­è®°å½•äº†å¸¦è´Ÿè½½çš„åŒ…æ•°
 
-20141210 1)È«Ãæ¸üĞÂstreaminfoµÄÏà¹Ø½á¹¹Ìå£¬Ê¹ÓÃ·ÖÀë½á¹¹ÌåµÄ²»Í¬¶¨Òå
-20141213 1)¶ÔÓÚtcp_add_new_stream_bydataÀïÃæ°´tcplen=0µÄ°ü½¨Á´½Ó£¬½øÈënouseÁ´±í
-			nouseÁ´±íÓĞÁ½ÖÖÇé¿ö£¬Ò»ÖÖÊÇdata·ÖÎöÍêÁËopstate=close½øÈëµÄ
-			µÚ¶şÖÖÊÇ´ÓÒ»½¨Á¢¾Í½øÈëÁËnouse£¬ÕâÊ±opsate=pending,
-		 2) ¶ÔÉÏÊöµÚ¶şÖÖÇé¿önouseÁ´±íÓĞÊı¾İ°üÊ±£¬»Ö¸´µ½dataÁ´±í£¬
+20141210 1)å…¨é¢æ›´æ–°streaminfoçš„ç›¸å…³ç»“æ„ä½“ï¼Œä½¿ç”¨åˆ†ç¦»ç»“æ„ä½“çš„ä¸åŒå®šä¹‰
+20141213 1)å¯¹äºtcp_add_new_stream_bydataé‡Œé¢æŒ‰tcplen=0çš„åŒ…å»ºé“¾æ¥ï¼Œè¿›å…¥nouseé“¾è¡¨
+			nouseé“¾è¡¨æœ‰ä¸¤ç§æƒ…å†µï¼Œä¸€ç§æ˜¯dataåˆ†æå®Œäº†opstate=closeè¿›å…¥çš„
+			ç¬¬äºŒç§æ˜¯ä»ä¸€å»ºç«‹å°±è¿›å…¥äº†nouseï¼Œè¿™æ—¶opsate=pending,
+		 2) å¯¹ä¸Šè¿°ç¬¬äºŒç§æƒ…å†µnouseé“¾è¡¨æœ‰æ•°æ®åŒ…æ—¶ï¼Œæ¢å¤åˆ°dataé“¾è¡¨ï¼Œ
 
-20141217 1)¶ÔÓÚc2sµ¥ÏòÁ÷µÄµÚ¶ş°ü£¬´¿ack°üÊÇ·ñ±ØĞë´æÔÚ£¬Ò»Ö±´æÔÚÕùÒé£¬
-	   Ä¿Ç°°æ±¾ÖĞ²»×öÑÏ¸ñ¼ì²é
+20141217 1)å¯¹äºc2så•å‘æµçš„ç¬¬äºŒåŒ…ï¼Œçº¯ackåŒ…æ˜¯å¦å¿…é¡»å­˜åœ¨ï¼Œä¸€ç›´å­˜åœ¨äº‰è®®ï¼Œ
+	   ç›®å‰ç‰ˆæœ¬ä¸­ä¸åšä¸¥æ ¼æ£€æŸ¥
 
 
-20150114 ¶ÔÓÚº¯ÊıµÄµ÷ÓÃË³Ğò£¬ÊÇÏÈµ÷ÓÃtcpall½Ó¿Ú£¬»¹ÊÇÏÈµ÷ÓÃtcp½Ó¿Ú½øĞĞÁË·´¸´µ÷Õû
-	 Ô­À´ÏÈµ÷ÓÃtcpall£¬ºóµ÷ÓÃtcp£¬·¢ÏÖ¶ÔsynÖØ´«ÎŞ·¨ÅĞ¶ÏÊÇ·ñÓĞĞ§£¬ÊÇ·ñÖØÖÃ
-	 ºó¸ÄÎªÏÈµ÷ÓÃtcp£¬ÔÙµ÷ÓÃtcpall£¬·¢ÏÖ ÀàËÆÄ³Ë®ä°¹¤³Ì£¬tcp½Ó¿Ú£¬ÒÀÀµtcpallµÄ±êÇ©
-	 ÏÖÔÚµ÷ÕûÎª£¬ĞÂ½¨Á´½ÓÓÈÆädata½¨Á´½Ó£¬±ØĞëÏÈµ÷ÓÃall£¬ÔÚµ÷ÓÃtcp£¬	   
-20150126 ÁõÇìÔÆ
-	¶ÔÓÚtcp_free_stream,tcp_reset_streamµÄ²Ù×÷¶¼¸ÄÎªÏÈµ÷ÓÃtcp£¬ÔÙµ÷ÓÃtcpall
+20150114 å¯¹äºå‡½æ•°çš„è°ƒç”¨é¡ºåºï¼Œæ˜¯å…ˆè°ƒç”¨tcpallæ¥å£ï¼Œè¿˜æ˜¯å…ˆè°ƒç”¨tcpæ¥å£è¿›è¡Œäº†åå¤è°ƒæ•´
+	 åŸæ¥å…ˆè°ƒç”¨tcpallï¼Œåè°ƒç”¨tcpï¼Œå‘ç°å¯¹syné‡ä¼ æ— æ³•åˆ¤æ–­æ˜¯å¦æœ‰æ•ˆï¼Œæ˜¯å¦é‡ç½®
+	 åæ”¹ä¸ºå…ˆè°ƒç”¨tcpï¼Œå†è°ƒç”¨tcpallï¼Œå‘ç° ç±»ä¼¼æŸæ°´æµ’å·¥ç¨‹ï¼Œtcpæ¥å£ï¼Œä¾èµ–tcpallçš„æ ‡ç­¾
+	 ç°åœ¨è°ƒæ•´ä¸ºï¼Œæ–°å»ºé“¾æ¥å°¤å…¶dataå»ºé“¾æ¥ï¼Œå¿…é¡»å…ˆè°ƒç”¨allï¼Œåœ¨è°ƒç”¨tcpï¼Œ	   
+20150126 åˆ˜åº†äº‘
+	å¯¹äºtcp_free_stream,tcp_reset_streamçš„æ“ä½œéƒ½æ”¹ä¸ºå…ˆè°ƒç”¨tcpï¼Œå†è°ƒç”¨tcpall
 20150210 lqy
-	¶ÔÓÚsyn+ackÂıÓÚsyn²àÊı¾İµÄÇé¿ö£¬¸üĞÂ±¾²àÊı¾İseqÊ±ÒªÅĞ¶ÏÊÇ·ñ´øsyn
-	 nouseÁ´±íµÄµÚÈıÖÖÇé¿ö
-	Á´½Ó¸´ÓÃ ,syn×´Ì¬ĞèÒªÖØÖÃtcpµÄ×´Ì¬
+	å¯¹äºsyn+ackæ…¢äºsynä¾§æ•°æ®çš„æƒ…å†µï¼Œæ›´æ–°æœ¬ä¾§æ•°æ®seqæ—¶è¦åˆ¤æ–­æ˜¯å¦å¸¦syn
+	 nouseé“¾è¡¨çš„ç¬¬ä¸‰ç§æƒ…å†µ
+	é“¾æ¥å¤ç”¨ ,synçŠ¶æ€éœ€è¦é‡ç½®tcpçš„çŠ¶æ€
 */
 #include "stream_internal.h"
 #include "stream_manage.h"
@@ -67,8 +67,8 @@ int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *p
 void iterate_stream_list(const struct streaminfo *stream);
 int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index);
 
-int g_discard_ack_sw = 0; /* 2016-06-15 lijia add, ÊÇ·ñ¶ªÆú´¿TCP-ACK°ü */
-int g_kill_tcp_remedy_sw = 0; /* 2016-06-21 lijia add, ÊÇ·ñ½øĞĞFD²¹¾È */
+int g_discard_ack_sw = 0; /* 2016-06-15 lijia add, æ˜¯å¦ä¸¢å¼ƒçº¯TCP-ACKåŒ… */
+int g_kill_tcp_remedy_sw = 0; /* 2016-06-21 lijia add, æ˜¯å¦è¿›è¡ŒFDè¡¥æ•‘ */
 int g_analyse_tcp_opt_sw = 0;
 
 int G_TCP_FLOW_STAT_PROJECT_ID = -1; /* 2016-07-14 lijia copy from sapp */
@@ -116,9 +116,9 @@ static int checkcreatlinkseq(struct streaminfo_private*pstream_pr,int this_seq)
 		curseq=pdetail_pr->iclientseq;
 	}
 	//adjust by lqy 20120923 
-	//µÚÒ»´Î³öÏÖÊı¾İ£¬ÈÏÎªÊÇÕıĞò
+	//ç¬¬ä¸€æ¬¡å‡ºç°æ•°æ®ï¼Œè®¤ä¸ºæ˜¯æ­£åº
 	if(curseq==0) return 1;
-	//¶à´Î³öÏÖsyn£¬µÚÒ»¸öÊı¾İ°üĞòºÅÎª×¼
+	//å¤šæ¬¡å‡ºç°synï¼Œç¬¬ä¸€ä¸ªæ•°æ®åŒ…åºå·ä¸ºå‡†
 	if(pdetail_pr->multisynflag==1)
 	{
 		if(pstream->curdir == DIR_C2S)
@@ -149,7 +149,7 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 	const unsigned char *opt;
 	int opt_num = 0, opt_len;
 	struct tcp_option *out_raw_result = raw_result;
-	int parsed_opt; /* ÕıÈ·½âÎöµÄOPT±ê×¼Î» */
+	int parsed_opt; /* æ­£ç¡®è§£æçš„OPTæ ‡å‡†ä½ */
 
 	if((NULL == raw_result) || (res_num <= 0)){
 		return -1;
@@ -168,11 +168,11 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 		memset(out_raw_result, 0, sizeof(struct tcp_option));
 		
 		switch(*opt){
-			case TCP_OPT_EOL: /* ÎŞÊµ¼ÊÒâÒå, ²»¼ÇÂ¼ÔÚÑ¡Ïî×ÜÊıÀï */
+			case TCP_OPT_EOL: /* æ— å®é™…æ„ä¹‰, ä¸è®°å½•åœ¨é€‰é¡¹æ€»æ•°é‡Œ */
 				goto done;
 			break;
 
-			case TCP_OPT_NOP: /* ÎŞÊµ¼ÊÒâÒå, ²»¼ÇÂ¼ÔÚÑ¡Ïî×ÜÊıÀï */
+			case TCP_OPT_NOP: /* æ— å®é™…æ„ä¹‰, ä¸è®°å½•åœ¨é€‰é¡¹æ€»æ•°é‡Œ */
 				opt++;
 				opt_len--;
 			break;
@@ -229,7 +229,7 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 					goto err;
 				}
 				out_raw_result->len -= 2;
-				out_raw_result->char_value = 1; /* SACKÊµ¼ÊÃ»ÓĞÖµ, ´Ë´¦¸³Öµ½öÎªÁË±ãÓÚÍâ²¿²å¼şÊ¹ÓÃ */
+				out_raw_result->char_value = 1; /* SACKå®é™…æ²¡æœ‰å€¼, æ­¤å¤„èµ‹å€¼ä»…ä¸ºäº†ä¾¿äºå¤–éƒ¨æ’ä»¶ä½¿ç”¨ */
 				opt_len -= 2;
 				parsed_opt = 1;
 			break;
@@ -255,7 +255,7 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 				parsed_opt = 1;
 			break;
 
-			/* ¿ÉÒÔÊ¶±ğµ«Ôİ²»´¦ÀíµÄÑ¡Ïî, Ìø¹ı */
+			/* å¯ä»¥è¯†åˆ«ä½†æš‚ä¸å¤„ç†çš„é€‰é¡¹, è·³è¿‡ */
 			case TCP_OPT_SACK_EDGE:
 			case TCP_OPT_MD5:
 			case TCP_OPT_MULTI_PATH_TCP:
@@ -264,7 +264,7 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 				/*  */
 				int this_opt_len;
 				
-				if(opt_len <= 1){ /* µ±Ç°Ñ¡Ïî³¤¶ÈÎª0, »òÊ£ÓàÑ¡Ïî³¤¶ÈÖ»ÓĞÒ»¸ö×Ö½Ú, µ«Ñ¡ÏîÀàĞÍ·Ç0·Ç1, ´íÎó°ü! */
+				if(opt_len <= 1){ /* å½“å‰é€‰é¡¹é•¿åº¦ä¸º0, æˆ–å‰©ä½™é€‰é¡¹é•¿åº¦åªæœ‰ä¸€ä¸ªå­—èŠ‚, ä½†é€‰é¡¹ç±»å‹é0é1, é”™è¯¯åŒ…! */
 					goto err;
 				}
 				this_opt_len = opt[1];
@@ -281,7 +281,7 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 			{
 				int this_opt_len;
 				
-				if(opt_len <= 1){ /* µ±Ç°Ñ¡Ïî³¤¶ÈÎª0, »òÊ£ÓàÑ¡Ïî³¤¶ÈÖ»ÓĞÒ»¸ö×Ö½Ú, µ«Ñ¡ÏîÀàĞÍ·Ç0·Ç1, ´íÎó°ü! */
+				if(opt_len <= 1){ /* å½“å‰é€‰é¡¹é•¿åº¦ä¸º0, æˆ–å‰©ä½™é€‰é¡¹é•¿åº¦åªæœ‰ä¸€ä¸ªå­—èŠ‚, ä½†é€‰é¡¹ç±»å‹é0é1, é”™è¯¯åŒ…! */
 					goto err;
 				}
 				this_opt_len = opt[1];
@@ -322,7 +322,7 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 	const unsigned char *opt;
 	int opt_num = 0, opt_len;
 	struct tcp_option_ext *out_raw_result = raw_result;
-	int parsed_opt; /* ÕıÈ·½âÎöµÄOPT±ê×¼Î» */
+	int parsed_opt; /* æ­£ç¡®è§£æçš„OPTæ ‡å‡†ä½ */
 
 	if((NULL == raw_result) || (res_num <= 0)){
 		return -1;
@@ -341,11 +341,11 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 		memset(out_raw_result, 0, sizeof(struct tcp_option_ext));
 		
 		switch(*opt){
-			case TCP_OPT_EOL: /* ÎŞÊµ¼ÊÒâÒå, ²»¼ÇÂ¼ÔÚÑ¡Ïî×ÜÊıÀï */
+			case TCP_OPT_EOL: /* æ— å®é™…æ„ä¹‰, ä¸è®°å½•åœ¨é€‰é¡¹æ€»æ•°é‡Œ */
 				goto done;
 			break;
 
-			case TCP_OPT_NOP: /* ÎŞÊµ¼ÊÒâÒå, ²»¼ÇÂ¼ÔÚÑ¡Ïî×ÜÊıÀï */
+			case TCP_OPT_NOP: /* æ— å®é™…æ„ä¹‰, ä¸è®°å½•åœ¨é€‰é¡¹æ€»æ•°é‡Œ */
 				opt++;
 				opt_len--;
 			break;
@@ -402,7 +402,7 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 					goto err;
 				}
 				out_raw_result->len -= 2;
-				out_raw_result->char_value = 1; /* SACKÊµ¼ÊÃ»ÓĞÖµ, ´Ë´¦¸³Öµ½öÎªÁË±ãÓÚÍâ²¿²å¼şÊ¹ÓÃ */
+				out_raw_result->char_value = 1; /* SACKå®é™…æ²¡æœ‰å€¼, æ­¤å¤„èµ‹å€¼ä»…ä¸ºäº†ä¾¿äºå¤–éƒ¨æ’ä»¶ä½¿ç”¨ */
 				opt_len -= 2;
 				parsed_opt = 1;
 			break;
@@ -446,7 +446,7 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 			}
 			break;
 
-			/* ¿ÉÒÔÊ¶±ğµ«Ôİ²»´¦ÀíµÄÑ¡Ïî, Ìø¹ı */
+			/* å¯ä»¥è¯†åˆ«ä½†æš‚ä¸å¤„ç†çš„é€‰é¡¹, è·³è¿‡ */
 			case TCP_OPT_SACK_EDGE:
 			case TCP_OPT_MD5:
 			case TCP_OPT_RIVER_PROBE:
@@ -454,7 +454,7 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 				/*  */
 				int this_opt_len;
 				
-				if(opt_len <= 1){ /* µ±Ç°Ñ¡Ïî³¤¶ÈÎª0, »òÊ£ÓàÑ¡Ïî³¤¶ÈÖ»ÓĞÒ»¸ö×Ö½Ú, µ«Ñ¡ÏîÀàĞÍ·Ç0·Ç1, ´íÎó°ü! */
+				if(opt_len <= 1){ /* å½“å‰é€‰é¡¹é•¿åº¦ä¸º0, æˆ–å‰©ä½™é€‰é¡¹é•¿åº¦åªæœ‰ä¸€ä¸ªå­—èŠ‚, ä½†é€‰é¡¹ç±»å‹é0é1, é”™è¯¯åŒ…! */
 					goto err;
 				}
 				this_opt_len = opt[1];
@@ -471,7 +471,7 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 			{
 				int this_opt_len;
 				
-				if(opt_len <= 1){ /* µ±Ç°Ñ¡Ïî³¤¶ÈÎª0, »òÊ£ÓàÑ¡Ïî³¤¶ÈÖ»ÓĞÒ»¸ö×Ö½Ú, µ«Ñ¡ÏîÀàĞÍ·Ç0·Ç1, ´íÎó°ü! */
+				if(opt_len <= 1){ /* å½“å‰é€‰é¡¹é•¿åº¦ä¸º0, æˆ–å‰©ä½™é€‰é¡¹é•¿åº¦åªæœ‰ä¸€ä¸ªå­—èŠ‚, ä½†é€‰é¡¹ç±»å‹é0é1, é”™è¯¯åŒ…! */
 					goto err;
 				}
 				this_opt_len = opt[1];
@@ -557,8 +557,8 @@ static char tcp_processallpkt( struct streaminfo *pstream, const void *this_iphd
 	
 }
 
-/* LiJia comment: Èç¹ûÊÇĞÂ½¨Á¬½Ó, ¼´resetflag=0, ²ÎÊıpindexÖ¸ÏòÕ»ÀïµÄÄÚ´æ;
-				Èç¹ûÊÇËÄÔª×éÖØÓÃ, ²ÎÊıpindexÖ¸Ïò¶ÑÀïµÄÄÚ´æ;
+/* LiJia comment: å¦‚æœæ˜¯æ–°å»ºè¿æ¥, å³resetflag=0, å‚æ•°pindexæŒ‡å‘æ ˆé‡Œçš„å†…å­˜;
+				å¦‚æœæ˜¯å››å…ƒç»„é‡ç”¨, å‚æ•°pindexæŒ‡å‘å †é‡Œçš„å†…å­˜;
 */
 static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	const void *this_iphdr, struct mesa_tcp_hdr *this_tcphdr,int datalen,int resetflag, const raw_pkt_t *raw_pkt)
@@ -570,7 +570,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	struct streaminfo *pstream;
 	struct tcpdetail *pdetail=NULL;
 	struct tcpdetail_private *pdetail_pr=NULL;
-	int need_reverse = 0; /* copyµØÖ·Ê±, ÊÇ·ñĞèÒª½«src, dstµßµ¹ */
+	int need_reverse = 0; /* copyåœ°å€æ—¶, æ˜¯å¦éœ€è¦å°†src, dsté¢ å€’ */
 	//UCHAR close_reason;
 
 	if ((this_tcphdr->th_flags & TH_SYN)
@@ -589,12 +589,12 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	{
 		//runtime_log(RLOG_LV_FATAL, "[tcp_add_new_stream_bysyn]:","tcpflags=:%0x\n",this_tcphdr->th_flags);
 		//adjust by lqy 20130530 
-		//Ö»ÓĞµ±³õ´Î½¨Á¢Ê±Ö±½Ó·µ»Ø
+		//åªæœ‰å½“åˆæ¬¡å»ºç«‹æ—¶ç›´æ¥è¿”å›
 		if(resetflag==0)
 			return NULL;
 	}
 	if(likely(0 == resetflag)){
-		/* ´Ëº¯ÊıcopyÁËÕû¸öpindex½á¹¹, µ«addrµØÖ·ÄÚÈİÊÇÁíÒ»¿éÄÚ´æ, ËùÒÔ²¢Ã»ÓĞcopy, Êµ¼Ê»¹´æÓÚpindexÖ¸ÏòµÄÄÚ´æ¿éÀï */
+		/* æ­¤å‡½æ•°copyäº†æ•´ä¸ªpindexç»“æ„, ä½†addråœ°å€å†…å®¹æ˜¯å¦ä¸€å—å†…å­˜, æ‰€ä»¥å¹¶æ²¡æœ‰copy, å®é™…è¿˜å­˜äºpindexæŒ‡å‘çš„å†…å­˜å—é‡Œ */
 		pindex_tcp=malloc_and_copy_streamindex(threadnum, pindex);
 		
 		//memcpy(pindex_tcp,pindex,sizeof(struct streamindex));
@@ -602,9 +602,9 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pstream = &pstream_pr->stream_public;		
 
 		/* 2014-11-13 lijia modify */
-		if(DIR_C2S == createdir){ /* µ±Ç°µØÖ·ÔÚTCPÂß¼­²ãÃæÉÏ·ûºÏC->S´«Êä·½Ïò */
+		if(DIR_C2S == createdir){ /* å½“å‰åœ°å€åœ¨TCPé€»è¾‘å±‚é¢ä¸Šç¬¦åˆC->Sä¼ è¾“æ–¹å‘ */
 			if(1 == pstream_pr->layer_dir){
-				pstream_pr->stream_dir = 1; /* ÔÚµØÖ·´«Êä²ãÃæ, ºÍ"´óµØÖ·ÊÇ¿Í»§¶Ë"¹æÔòÏà·´ */
+				pstream_pr->stream_dir = 1; /* åœ¨åœ°å€ä¼ è¾“å±‚é¢, å’Œ"å¤§åœ°å€æ˜¯å®¢æˆ·ç«¯"è§„åˆ™ç›¸å */
 				//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir;
 			}else{
 				pstream_pr->stream_dir = 0;
@@ -612,9 +612,9 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 			}
 			need_reverse = 0;
 		}else{
-			need_reverse = 1; /* ±ØĞë½«µØÖ··½Ïòµßµ¹, ²å¼ş¶ÁÈ¡µØÖ·½á¹¹Ê±, src¹Ì¶¨Ö¸ÏòÂß¼­ÉÏµÄÔ´µØÖ· */
+			need_reverse = 1; /* å¿…é¡»å°†åœ°å€æ–¹å‘é¢ å€’, æ’ä»¶è¯»å–åœ°å€ç»“æ„æ—¶, srcå›ºå®šæŒ‡å‘é€»è¾‘ä¸Šçš„æºåœ°å€ */
 			if(1 == pstream_pr->layer_dir){
-				/* ÒòÎªÔÚcopy_stream_info_to_heap()ÖĞ»á×öµØÖ·µßµ¹, ËùÒÔ´Ë´¦¾ÍºÍ"´óµØÖ·ÊÇ¿Í»§¶Ë"¹æÔòÏàÍ¬ÁË */
+				/* å› ä¸ºåœ¨copy_stream_info_to_heap()ä¸­ä¼šåšåœ°å€é¢ å€’, æ‰€ä»¥æ­¤å¤„å°±å’Œ"å¤§åœ°å€æ˜¯å®¢æˆ·ç«¯"è§„åˆ™ç›¸åŒäº† */
 				pstream_pr->stream_dir = 0; 
 				//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir ^ 1;
 			}else{
@@ -625,9 +625,9 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 
 #if USE_RBTREE_INSTEAD_LIST
 		/* note:
-			ÒòÎª²åÈërbtreeÊ±ĞèÒªºÍÏÖÓĞÆäËûÁ÷×ö±È½Ï, ÓÃÒÔÈ·¶¨²åÈëleft»¹ÊÇright·ÖÖ§,
-			¶ÔÓÚ±¾Á÷À´Ëµ, layer_dir×ÔÉíÃ»ÓĞÒâÒåÁË, µ«ÒªÓÃÓÚºÍÆäËûÁ÷±È½ÏµØÖ·´óĞ¡, 
-			ËùÒÔ½«layer_dir = stream_dir;
+			å› ä¸ºæ’å…¥rbtreeæ—¶éœ€è¦å’Œç°æœ‰å…¶ä»–æµåšæ¯”è¾ƒ, ç”¨ä»¥ç¡®å®šæ’å…¥leftè¿˜æ˜¯rightåˆ†æ”¯,
+			å¯¹äºæœ¬æµæ¥è¯´, layer_dirè‡ªèº«æ²¡æœ‰æ„ä¹‰äº†, ä½†è¦ç”¨äºå’Œå…¶ä»–æµæ¯”è¾ƒåœ°å€å¤§å°, 
+			æ‰€ä»¥å°†layer_dir = stream_dir;
 		*/
 		pstream_pr->layer_dir = pstream_pr->stream_dir;
 #endif
@@ -638,11 +638,11 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 
 		pstream->pfather = (struct streaminfo *)copy_stream_info_to_heap((struct streaminfo_private *)pindex->stream.stream_public.pfather, need_reverse);	   
 
-		/* 2016-07-25 lijia add, ¼ÇÂ¼µ±Ç°Á÷×îµ×²ãËíµÀÀàĞÍ, Ã¿¸öÁ÷Ö»ÔÚ´´½¨Ê±×öÒ»´Î¼´¿É */
+		/* 2016-07-25 lijia add, è®°å½•å½“å‰æµæœ€åº•å±‚éš§é“ç±»å‹, æ¯ä¸ªæµåªåœ¨åˆ›å»ºæ—¶åšä¸€æ¬¡å³å¯ */
 		get_stream_carry_tunnel_type(pstream, NULL, &pstream_pr->stream_low_layer_tunnel_type);
 		
 #if 0
-		/* TCP²ã´æ´¢µÄÊÇÖ¸Õë, ÕæÊµµØÖ·Êı¾İ´æ´¢ÔÚIP²ã, Ğè¸üĞÂ */
+		/* TCPå±‚å­˜å‚¨çš„æ˜¯æŒ‡é’ˆ, çœŸå®åœ°å€æ•°æ®å­˜å‚¨åœ¨IPå±‚, éœ€æ›´æ–° */
 		//set_stream_addr(pindex_tcp->stream.pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, &pindex_tcp->stream.addr);
 		//set_stream_addr(pindex_tcp->stream.pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, &pindex_tcp->stream);
 
@@ -657,7 +657,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pindex_tcp->stream.stream_public.pdetail=(void *)pdetail_pr;
 		memset(pdetail_pr,0,sizeof(struct tcpdetail_private));   
 		pdetail->createtime=g_CurrentTime;
-		//adjust by lqy 20140515 Ö»ÓĞĞÂ½¨Ê±¼ÆÊı
+		//adjust by lqy 20140515 åªæœ‰æ–°å»ºæ—¶è®¡æ•°
 		if(createdir==DIR_S2C){
 			pdetail->clientpktnum++;
 			pdetail->clientbytes+= datalen; /* 2014-12-19 lijia add, for SYN pkt append data */
@@ -669,15 +669,15 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	else
 	{
 	 /* TODO:
-		Èç¹ûÁ¬½ÓÖØÖÃ, ×îºÃ²»Ê¹ÓÃÔ­À´µÄstreamindex½á¹¹, freeºóÔÙÉêÇëÒ»¸öĞÂµÄ,
-		¹ÊÒâÊ¹streamindexµØÖ·ÓëÔ­À´²»Ò»Ñù, Ö÷Òª±ãÓÚDEBUG.
+		å¦‚æœè¿æ¥é‡ç½®, æœ€å¥½ä¸ä½¿ç”¨åŸæ¥çš„streamindexç»“æ„, freeåå†ç”³è¯·ä¸€ä¸ªæ–°çš„,
+		æ•…æ„ä½¿streamindexåœ°å€ä¸åŸæ¥ä¸ä¸€æ ·, ä¸»è¦ä¾¿äºDEBUG.
 	 */
 	   pindex_tcp=pindex;
 		pstream_pr = &pindex_tcp->stream;
 		pstream = &pstream_pr->stream_public;	   
 	   pdetail_pr = (struct tcpdetail_private *)pstream->pdetail;
 	   pdetail=(struct tcpdetail *)pdetail_pr;
-		//add by lqy 20150107, ÖØÖÃ¼ÆÊı
+		//add by lqy 20150107, é‡ç½®è®¡æ•°
 		if(createdir==DIR_S2C)
 		{
 			pdetail->clientpktnum=1;
@@ -708,7 +708,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	
 	pstream->dir=createdir;
 	pstream->curdir=createdir;
-	//Î´¿ªÆôÈ«°ü½Ó¿ÚÄ£Ê½ÏÂ£¬Ö±½Ó¹Ø±Õ, add by lqy 20141213
+	//æœªå¼€å¯å…¨åŒ…æ¥å£æ¨¡å¼ä¸‹ï¼Œç›´æ¥å…³é—­, add by lqy 20141213
 	if(tcp_support_all==TCP_SUPPORT_ENTRYALL_OFF)
 	{
 		pstream->pktstate=OP_STATE_CLOSE;
@@ -722,17 +722,17 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 
 	if(createdir==DIR_S2C)
 	{
-		//ÔİÊ±»º´æÆğÊ¼µÄseq
+		//æš‚æ—¶ç¼“å­˜èµ·å§‹çš„seq
 		pdetail_pr->iclientseq =ntohl (this_tcphdr->th_seq) + 1;
 		pdetail_pr->iserverseq=ntohl (this_tcphdr->th_ack);
-		//pdetail->clientpkt++; //adjust by lqy 20140515 Ö»ÓĞĞÂ½¨Ê±¼ÆÊı
+		//pdetail->clientpkt++; //adjust by lqy 20140515 åªæœ‰æ–°å»ºæ—¶è®¡æ•°
 		pdetail_pr->S2C_first_ack_seq = pdetail_pr->iserverseq;
 	}
 	else if(createdir==DIR_C2S)
 	{
-		pdetail_pr->iclientseq = 0; /* 2017-12-06 lijia add, ´ËÊ±S2C·½ÏòµÄISN»¹Î´»ñÈ¡µ½ */
+		pdetail_pr->iclientseq = 0; /* 2017-12-06 lijia add, æ­¤æ—¶S2Cæ–¹å‘çš„ISNè¿˜æœªè·å–åˆ° */
 		pdetail_pr->iserverseq=ntohl (this_tcphdr->th_seq)+1;
-		//pdetail->serverpkt++; //adjust by lqy 20140515 Ö»ÓĞĞÂ½¨Ê±¼ÆÊı
+		//pdetail->serverpkt++; //adjust by lqy 20140515 åªæœ‰æ–°å»ºæ—¶è®¡æ•°
 		pdetail_pr->C2S_first_ack_seq = ntohl (this_tcphdr->th_ack);
 		
 	}
@@ -742,7 +742,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	pstream->stream_state=TCP_SYN_STATE;
 	streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[TCP_SYN_STATE]));
 
-	/* LiJia add, Ä³Ğ©ÏîÄ¿ÌØÊâÓ¦ÓÃ³õÊ¼»¯, Èç±êÇ©¡¢Ô­Ê¼IP·ÖÆ¬ÁĞ±íµÈ */
+	/* LiJia add, æŸäº›é¡¹ç›®ç‰¹æ®Šåº”ç”¨åˆå§‹åŒ–, å¦‚æ ‡ç­¾ã€åŸå§‹IPåˆ†ç‰‡åˆ—è¡¨ç­‰ */
 	pstream_pr->pproject = project_requirement_create(pstream->threadnum);
 
 	/* 2015-12-28 lijia add */
@@ -780,10 +780,10 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 }
 
 /*
-	1)Ô­ÓĞÉè¼ÆÎªÃ»ÓĞsynµÄÇé¿öÏÂ£¬Ö±½Ó¿¿µÚÒ»¸öÊı¾İ°ü½¨Á¢Á´½Ó
-	2) ÎªÁË¼æÈİÈ«°ü½Ó¿Ú£¬¶ÔÓÚÃ»ÓĞÊı¾İµÄ°üÒ²À´½¨Á¢Á´½Ó½øÈëNOUSE ×´Ì¬
+	1)åŸæœ‰è®¾è®¡ä¸ºæ²¡æœ‰synçš„æƒ…å†µä¸‹ï¼Œç›´æ¥é ç¬¬ä¸€ä¸ªæ•°æ®åŒ…å»ºç«‹é“¾æ¥
+	2) ä¸ºäº†å…¼å®¹å…¨åŒ…æ¥å£ï¼Œå¯¹äºæ²¡æœ‰æ•°æ®çš„åŒ…ä¹Ÿæ¥å»ºç«‹é“¾æ¥è¿›å…¥NOUSE çŠ¶æ€
 
-	2015-06-10 lijia add "resetflag", ÓÃÓÚÁ÷³¬Ê±ÌÔÌ­ĞÂ½¨Á¬½Ó.
+	2015-06-10 lijia add "resetflag", ç”¨äºæµè¶…æ—¶æ·˜æ±°æ–°å»ºè¿æ¥.
 */
 static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 			struct mesa_tcp_hdr *this_tcphdr, int datalen, int resetflag)
@@ -809,7 +809,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
  		
  		pstream->pfather = (struct streaminfo *)copy_stream_info_to_heap((struct streaminfo_private *)(pindex->stream.stream_public.pfather),  pstream_pr->layer_dir ^1);
 
- 		/* 2016-07-25 lijia add, ¼ÇÂ¼µ±Ç°Á÷×îµ×²ãËíµÀÀàĞÍ, Ã¿¸öÁ÷Ö»ÔÚ´´½¨Ê±×öÒ»´Î¼´¿É */
+ 		/* 2016-07-25 lijia add, è®°å½•å½“å‰æµæœ€åº•å±‚éš§é“ç±»å‹, æ¯ä¸ªæµåªåœ¨åˆ›å»ºæ—¶åšä¸€æ¬¡å³å¯ */
 		get_stream_carry_tunnel_type(pstream, NULL, &pstream_pr->stream_low_layer_tunnel_type);
 		
 		pstream->dir=createdir;
@@ -820,19 +820,19 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 
 #if USE_RBTREE_INSTEAD_LIST
 		if(1 == pstream_pr->layer_dir){
-			pstream_pr->stream_dir  = 1; /* ÒòÎªÊÇ°´DATA½¨Á¬½Ó, ËùÒÔstream_dir¿Ï¶¨ºÍÄ¬ÈÏ¹æÔòÏàÍ¬ */
+			pstream_pr->stream_dir  = 1; /* å› ä¸ºæ˜¯æŒ‰DATAå»ºè¿æ¥, æ‰€ä»¥stream_dirè‚¯å®šå’Œé»˜è®¤è§„åˆ™ç›¸åŒ */
 			//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir;
 			//set_stream_addr(pstream->pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, pstream);
 		}else{
-			pstream_pr->stream_dir  = 1; /* ÒòÎªÊÇ°´DATA½¨Á¬½Ó, ËùÒÔstream_dir¿Ï¶¨ºÍÄ¬ÈÏ¹æÔòÏàÍ¬ */
-			//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir ^ 1; /* IP²ã´´½¨Á÷µÄ·½ÏòÓëµ±Ç°°ü´«Êä·½ÏòÏà·´ */
+			pstream_pr->stream_dir  = 1; /* å› ä¸ºæ˜¯æŒ‰DATAå»ºè¿æ¥, æ‰€ä»¥stream_dirè‚¯å®šå’Œé»˜è®¤è§„åˆ™ç›¸åŒ */
+			//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir ^ 1; /* IPå±‚åˆ›å»ºæµçš„æ–¹å‘ä¸å½“å‰åŒ…ä¼ è¾“æ–¹å‘ç›¸å */
 			//set_stream_addr(pstream->pfather, this_tcphdr->th_dport, this_tcphdr->th_sport, pstream);
 		}
 
 		/* note:
-			ÒòÎª²åÈërbtreeÊ±ĞèÒªºÍÏÖÓĞÆäËûÁ÷×ö±È½Ï, ÓÃÒÔÈ·¶¨²åÈëleft»¹ÊÇright·ÖÖ§,
-			¶ÔÓÚ±¾Á÷À´Ëµ, layer_dir×ÔÉíÃ»ÓĞÒâÒåÁË, µ«ÒªÓÃÓÚºÍÆäËûÁ÷±È½ÏµØÖ·´óĞ¡, 
-			°´data½¨Á¬½ÓÖĞ, layer_dir = 1;
+			å› ä¸ºæ’å…¥rbtreeæ—¶éœ€è¦å’Œç°æœ‰å…¶ä»–æµåšæ¯”è¾ƒ, ç”¨ä»¥ç¡®å®šæ’å…¥leftè¿˜æ˜¯rightåˆ†æ”¯,
+			å¯¹äºæœ¬æµæ¥è¯´, layer_dirè‡ªèº«æ²¡æœ‰æ„ä¹‰äº†, ä½†è¦ç”¨äºå’Œå…¶ä»–æµæ¯”è¾ƒåœ°å€å¤§å°, 
+			æŒ‰dataå»ºè¿æ¥ä¸­, layer_dir = 1;
 		*/
 		pstream_pr->layer_dir = 1;
 #endif
@@ -868,9 +868,9 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	pstream->curdir=createdir;
 	//pindex_tcp->stream.stream_dir=pindex_tcp->stream.layer_dir;
 
-	//ÓĞÊı¾İ±¨ÎÄÖ±½Ó½øÈëdata×´Ì¬, by lqy 20141213
+	//æœ‰æ•°æ®æŠ¥æ–‡ç›´æ¥è¿›å…¥dataçŠ¶æ€, by lqy 20141213
 	//if(datalen>0)
-	//ÓĞÊıµÄµ«ÊÇ²»´ø½áÊø±êÖ¾µÄ±¨ÎÄadjust by lqy 20150215
+	//æœ‰æ•°çš„ä½†æ˜¯ä¸å¸¦ç»“æŸæ ‡å¿—çš„æŠ¥æ–‡adjust by lqy 20150215
 	if((datalen>0) && (!(this_tcphdr->th_flags & TH_FIN)) && (!(this_tcphdr->th_flags & TH_RST)))	
 	{
 		pstream->stream_state=TCP_DATA_STATE;
@@ -880,7 +880,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		pstream->stream_state=TCP_NOUSE_STATE;	
 	}
 	
-	/* TCP²ã´æ´¢µÄÊÇÖ¸Õë, ÕæÊµµØÖ·Êı¾İ´æ´¢ÔÚIP²ã, Ğè¸üĞÂ */
+	/* TCPå±‚å­˜å‚¨çš„æ˜¯æŒ‡é’ˆ, çœŸå®åœ°å€æ•°æ®å­˜å‚¨åœ¨IPå±‚, éœ€æ›´æ–° */
 	//set_stream_addr(pindex_tcp->stream.pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, &pindex_tcp->stream.addr);
 	//set_stream_addr(pindex_tcp->stream.pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, &pindex_tcp->stream);
 
@@ -888,12 +888,12 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	set_stream_addr(pindex_tcp->stream.pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, &pindex_tcp->stream);
 #else  /* 2014-12-16 lijia modify */
 	if(1 == pstream_pr->layer_dir){
-		pstream_pr->stream_dir  = 1; /* ÒòÎªÊÇ°´DATA½¨Á¬½Ó, ËùÒÔstream_dir¿Ï¶¨ºÍÄ¬ÈÏ¹æÔòÏàÍ¬ */
+		pstream_pr->stream_dir  = 1; /* å› ä¸ºæ˜¯æŒ‰DATAå»ºè¿æ¥, æ‰€ä»¥stream_dirè‚¯å®šå’Œé»˜è®¤è§„åˆ™ç›¸åŒ */
 		//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir;
 		//set_stream_addr(pstream->pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, pstream);
 	}else{
-		pstream_pr->stream_dir  = 1; /* ÒòÎªÊÇ°´DATA½¨Á¬½Ó, ËùÒÔstream_dir¿Ï¶¨ºÍÄ¬ÈÏ¹æÔòÏàÍ¬ */
-		//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir ^ 1; /* IP²ã´´½¨Á÷µÄ·½ÏòÓëµ±Ç°°ü´«Êä·½ÏòÏà·´ */
+		pstream_pr->stream_dir  = 1; /* å› ä¸ºæ˜¯æŒ‰DATAå»ºè¿æ¥, æ‰€ä»¥stream_dirè‚¯å®šå’Œé»˜è®¤è§„åˆ™ç›¸åŒ */
+		//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir ^ 1; /* IPå±‚åˆ›å»ºæµçš„æ–¹å‘ä¸å½“å‰åŒ…ä¼ è¾“æ–¹å‘ç›¸å */
 		//set_stream_addr(pstream->pfather, this_tcphdr->th_dport, this_tcphdr->th_sport, pstream);
 	}
 #endif
@@ -915,14 +915,14 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	pdetail->lastmtime=g_CurrentTime;
 	pdetail_pr->link_state=STREAM_LINK_DATA;	
 	//if(datalen>0)
-	//ÓĞÊıµÄµ«ÊÇ²»´ø½áÊø±êÖ¾µÄ±¨ÎÄadjust by lqy 20150325
+	//æœ‰æ•°çš„ä½†æ˜¯ä¸å¸¦ç»“æŸæ ‡å¿—çš„æŠ¥æ–‡adjust by lqy 20150325
 	if((datalen>0) && (!(this_tcphdr->th_flags & TH_FIN)) && (!(this_tcphdr->th_flags & TH_RST)))	
 	{
 		if(pstream->dir==DIR_C2S)
 		{
 			pdetail_pr->pserver=(struct half_tcpstream *)dictator_malloc(threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pserver,0,sizeof(struct half_tcpstream));
-			//´ıÍêÉÆ
+			//å¾…å®Œå–„
 			pdetail_pr->pserver->first_data_seq=(ntohl (this_tcphdr->th_seq) );
 			/* 2014-07-31 LiJia add, for set one stream unorder number */
 			pdetail_pr->pserver->maxunorder = tcp_default_unorder;
@@ -931,19 +931,19 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		{
 			pdetail_pr->pclient=(struct half_tcpstream *)dictator_malloc(threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pclient,0,sizeof(struct half_tcpstream));
-			//´ıÍêÉÆ
+			//å¾…å®Œå–„
 			pdetail_pr->pclient->first_data_seq=(ntohl (this_tcphdr->th_seq) );
 			/* 2014-07-31 LiJia add, for set one stream unorder number */
 			pdetail_pr->pclient->maxunorder = tcp_default_unorder;
 		}
 	}
-#if 0	 /* lijia 2017-12-08 lijia close, °´Êı¾İ½¨Á¬½ÓÊ±, °ÑµÚÒ»¸ö°üµÄĞòºÅ, ¼´ÈÏÎªÊÇISN, µ«È¡ISNÊ±»¹Òª¿´creat_mod±äÁ¿ */	
-	else //ÎŞÊı¾İµÄÇé¿ö¼ÇÂ¼ÁÙÊ±seqÖµ
+#if 0	 /* lijia 2017-12-08 lijia close, æŒ‰æ•°æ®å»ºè¿æ¥æ—¶, æŠŠç¬¬ä¸€ä¸ªåŒ…çš„åºå·, å³è®¤ä¸ºæ˜¯ISN, ä½†å–ISNæ—¶è¿˜è¦çœ‹creat_modå˜é‡ */	
+	else //æ— æ•°æ®çš„æƒ…å†µè®°å½•ä¸´æ—¶seqå€¼
 #endif
 	{
 		if(createdir==DIR_S2C)
 		{
-			//ÔİÊ±»º´æÆğÊ¼µÄseq
+			//æš‚æ—¶ç¼“å­˜èµ·å§‹çš„seq
 			pdetail_pr->iclientseq =ntohl (this_tcphdr->th_seq) ;
 			pdetail_pr->iserverseq=ntohl (this_tcphdr->th_ack);
 			
@@ -956,7 +956,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	}
 	pstream->pdetail=(void *)pdetail_pr;
 
-	/* 2014-03-26 LiJia add, Ä³Ğ©ÏîÄ¿ÌØÊâÓ¦ÓÃ³õÊ¼»¯, Èç±êÇ©¡¢Ô­Ê¼IP·ÖÆ¬ÁĞ±íµÈ */
+	/* 2014-03-26 LiJia add, æŸäº›é¡¹ç›®ç‰¹æ®Šåº”ç”¨åˆå§‹åŒ–, å¦‚æ ‡ç­¾ã€åŸå§‹IPåˆ†ç‰‡åˆ—è¡¨ç­‰ */
 	pstream_pr->pproject = project_requirement_create(threadnum);
 
 	/* 2016-07-14 lijia add */
@@ -974,7 +974,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 				pdetail_pr->flow_stat->S2C_all_byte = datalen;				
 			}
 		}
-		/* NOTE, tcp_data¼ÆÊıÔÚstream_process_tcpÖĞÀÛ¼Æ */
+		/* NOTE, tcp_dataè®¡æ•°åœ¨stream_process_tcpä¸­ç´¯è®¡ */
 	}
 	
 #if SAPP_INSECTICIDE
@@ -1012,9 +1012,9 @@ static void tcp_change_stream_todata(struct streamindex *pindex,struct mesa_tcp_
 		if(NULL == pdetail_pr->pserver){	//2015-03-19 lijia temp add
 			pdetail_pr->pserver=(struct half_tcpstream *)dictator_malloc(threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pserver,0,sizeof(struct half_tcpstream));
-			//´ıÍêÉÆ
+			//å¾…å®Œå–„
 			pdetail_pr->pserver->first_data_seq=pdetail_pr->iserverseq;
-			/* pdetail_pr->iserverseq=0; */  /* 2016-04-27 lijia modify, ÓÃÓÚ»ñÈ¡µ±Ç°Á÷µÄISN */
+			/* pdetail_pr->iserverseq=0; */  /* 2016-04-27 lijia modify, ç”¨äºè·å–å½“å‰æµçš„ISN */
 			
 			/* 2014-10-20 LiJia add, for set one stream unorder number */
 			pdetail_pr->pserver->maxunorder = tcp_default_unorder;
@@ -1025,9 +1025,9 @@ static void tcp_change_stream_todata(struct streamindex *pindex,struct mesa_tcp_
 		if(NULL == pdetail_pr->pclient){	//2015-03-19 lijia temp add
 			pdetail_pr->pclient=(struct half_tcpstream *)dictator_malloc(threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pclient,0,sizeof(struct half_tcpstream));
-			//´ıÍêÉÆ
+			//å¾…å®Œå–„
 			pdetail_pr->pclient->first_data_seq=pdetail_pr->iclientseq;
-			/* pdetail_pr->iclientseq=0; */ /* 2016-04-27 lijia modify, ÓÃÓÚ»ñÈ¡µ±Ç°Á÷µÄISN */
+			/* pdetail_pr->iclientseq=0; */ /* 2016-04-27 lijia modify, ç”¨äºè·å–å½“å‰æµçš„ISN */
 			
 			/* 2014-10-20 LiJia add, for set one stream unorder number */
 			pdetail_pr->pclient->maxunorder = tcp_default_unorder;
@@ -1075,18 +1075,18 @@ static void tcp_free_half(struct half_tcpstream *phalf,int threadnum)
 	//phalf = NULL;
 }
 
-/* ¿ìËÙÑéÖ¤pindexÊÇ·ñÔÚplistÖĞ */
+/* å¿«é€ŸéªŒè¯pindexæ˜¯å¦åœ¨plistä¸­ */
 static int inline stream_in_timeout_list(const struct streamindex *pindex, const struct stream_list *plist)
 {
 	if(plist->cnt <= 1){
-		/* Ö»ÓĞÒ»¸öÔªËØÊ±, head==tail==pindex */
+		/* åªæœ‰ä¸€ä¸ªå…ƒç´ æ—¶, head==tail==pindex */
 		if(plist->head == pindex){
 			return 1;
 		}else{
 			return 0;
 		}
 	}else{
-		/* ¶à¸öÔªËØÊ±, nextºÍprev±Ø¶¨ÓĞÒ»¸ö²»ÎªNULL */
+		/* å¤šä¸ªå…ƒç´ æ—¶, nextå’Œprevå¿…å®šæœ‰ä¸€ä¸ªä¸ä¸ºNULL */
 		if((NULL == pindex->next) &&(NULL == pindex->prev)){
 			return 0;
 		}
@@ -1106,8 +1106,8 @@ static void tcp_change_stream_tonouse(struct streamindex *pindex)
 
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]);
 	/* 2017-01-03 lijia add, 
-	   Èç¹ûÔÚtcp_reset_stream()º¯ÊıÕ»ÄÚ, µ÷ÓÃÁËtcp_change_stream_tonouse, 
-	   pindexÒÑ¾­±»ÒÆ³ıµ±Ç°ËùÔÚlist, ²»ÄÜÔÙ¼ÌĞøÖ´ĞĞstreamleavlistºÍstreamaddlistÁË.
+	   å¦‚æœåœ¨tcp_reset_stream()å‡½æ•°æ ˆå†…, è°ƒç”¨äº†tcp_change_stream_tonouse, 
+	   pindexå·²ç»è¢«ç§»é™¤å½“å‰æ‰€åœ¨list, ä¸èƒ½å†ç»§ç»­æ‰§è¡Œstreamleavlistå’Œstreamaddlistäº†.
 	*/
 	if(stream_in_timeout_list(pindex, plist) == 0){
 		return;
@@ -1133,22 +1133,22 @@ static void tcp_change_stream_tonouse(struct streamindex *pindex)
 	}
 
 	/* 2017-12-20 lijia add, 
-	   ÒòFIN½áÊøµÄÁ÷½øÈëNOUSE×´Ì¬,
-	   deal_tcp_stream()Ã¿´Î¶¼ÊÇTCP_SYN_STATE»òTCP_DATA_STATE×´Ì¬,
-	   ÎŞ·¨½«TCP_NOUSE_STATE×´Ì¬ÏÂµÄÁ÷ÌÔÌ­³öÈ¥,
-	   ËùÒÔ´Ë´¦ÔÙÉ¨ÃèÒ»´ÎTCP_NOUSE_STATEµÄ³¬Ê±Á÷.
+	   å› FINç»“æŸçš„æµè¿›å…¥NOUSEçŠ¶æ€,
+	   deal_tcp_stream()æ¯æ¬¡éƒ½æ˜¯TCP_SYN_STATEæˆ–TCP_DATA_STATEçŠ¶æ€,
+	   æ— æ³•å°†TCP_NOUSE_STATEçŠ¶æ€ä¸‹çš„æµæ·˜æ±°å‡ºå»,
+	   æ‰€ä»¥æ­¤å¤„å†æ‰«æä¸€æ¬¡TCP_NOUSE_STATEçš„è¶…æ—¶æµ.
 	 */
 	del_stream_by_time(plist, pindex);
 }
 
-/* 2017-08-03 lijia add, µ¥ÏòÁ÷½áÊøÊ±, ¿¿ackÍ³¼Æ¶Ô²àÊı¾İ */
+/* 2017-08-03 lijia add, å•å‘æµç»“æŸæ—¶, é ackç»Ÿè®¡å¯¹ä¾§æ•°æ® */
 #if 0
 static void tcp_reckon_one_way_stream_stats(struct streaminfo *pstream)
 {
 	struct tcpdetail *pdetail = pstream->ptcpdetail;
 	struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private*)pstream->pdetail;
 
-	/* 2017-08-03 lijia add, µ¥ÏòÁ÷½áÊøÊ±, ¿¿ackÍ³¼Æ¶Ô²àÊı¾İ */
+	/* 2017-08-03 lijia add, å•å‘æµç»“æŸæ—¶, é ackç»Ÿè®¡å¯¹ä¾§æ•°æ® */
 	if(DIR_C2S == pstream->dir){
 		pdetail->clientbytes = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq;
 		if(G_TCP_FLOW_STAT_PROJECT_ID != -1){
@@ -1185,42 +1185,42 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]);
 
 	/* do do, TODO, 
-		free·ÖÆ½Ì¨¿¿time, list_lruÔ­Òò, ´ËÊ±ÊôÓÚÕæÕıµÄfree,
-		Èç¹ûÊÇ²å¼ş·µ»ØCLOSEME, ÔòÖ»ÊÍ·ÅÏà¹ØpdetailÄÚ´æ, µ«ÈÔ½«tcpÁ÷½á¹¹±£Áô, ÎªÁËFD²¹¾È¹¦ÄÜ.
+		freeåˆ†å¹³å°é time, list_lruåŸå› , æ­¤æ—¶å±äºçœŸæ­£çš„free,
+		å¦‚æœæ˜¯æ’ä»¶è¿”å›CLOSEME, åˆ™åªé‡Šæ”¾ç›¸å…³pdetailå†…å­˜, ä½†ä»å°†tcpæµç»“æ„ä¿ç•™, ä¸ºäº†FDè¡¥æ•‘åŠŸèƒ½.
 
-		²ğ·ÖÎªÁ½¸öº¯Êı:
-		tcp_lite_free(); //Ö»free data, ±£Áô»ù´¡½á¹¹
+		æ‹†åˆ†ä¸ºä¸¤ä¸ªå‡½æ•°:
+		tcp_lite_free(); //åªfree data, ä¿ç•™åŸºç¡€ç»“æ„
 
-		tcp_struct_free(); //free Ó¦ÓÃ²ãÊı¾İ
+		tcp_struct_free(); //free åº”ç”¨å±‚æ•°æ®
 		
-		tcp_thorough_free(); // del_stream_by_time(), streamaddlist()Ê±³¬¹ı×î´óÊıÁ¿µÈº¯ÊıÒªµ÷ÓÃ, ÕæÕıµÄfree
-							// °üº¬tcp_light_free(); tcp_struct_free();Á½¸öº¯Êı
+		tcp_thorough_free(); // del_stream_by_time(), streamaddlist()æ—¶è¶…è¿‡æœ€å¤§æ•°é‡ç­‰å‡½æ•°è¦è°ƒç”¨, çœŸæ­£çš„free
+							// åŒ…å«tcp_light_free(); tcp_struct_free();ä¸¤ä¸ªå‡½æ•°
 
 		TODO:
-			Èç¹ûÔÚµ÷ÓÃtcp_deal_unorder()ºó, ÒòÂÒĞò°üÒı·¢µÄkill_tcp, Ó¦¸ÃÅĞ¶Ïstream_killed_flag±ê¼Ç, 
-			Èç¹ûstream_killed_flag=1, ÔòºóĞøµÄ°ü²»ÔÙ´¦Àí, Ö±½Ótcp_free_half()ÊÍ·Å.
+			å¦‚æœåœ¨è°ƒç”¨tcp_deal_unorder()å, å› ä¹±åºåŒ…å¼•å‘çš„kill_tcp, åº”è¯¥åˆ¤æ–­stream_killed_flagæ ‡è®°, 
+			å¦‚æœstream_killed_flag=1, åˆ™åç»­çš„åŒ…ä¸å†å¤„ç†, ç›´æ¥tcp_free_half()é‡Šæ”¾.
 	*/
 
-	/* 2014-07-24 lijia add, Á÷½áÊøÇ°´¦ÀíÂÒĞò°ü */
-	saved_curdir = pstream->curdir; /* 2015-11-16 LiJia add, ±£´æµ±Ç°Á÷·½Ïò, ´¦ÀíÂÒĞò°üºóÒª»Ö¸´µ±Ç°Öµ */
+	/* 2014-07-24 lijia add, æµç»“æŸå‰å¤„ç†ä¹±åºåŒ… */
+	saved_curdir = pstream->curdir; /* 2015-11-16 LiJia add, ä¿å­˜å½“å‰æµæ–¹å‘, å¤„ç†ä¹±åºåŒ…åè¦æ¢å¤å½“å‰å€¼ */
 	if(pclient && (pclient->unorderlist != NULL)){
-		pstream->curdir = DIR_S2C; /* ÁÙÊ±ĞŞ¸Ä */
+		pstream->curdir = DIR_S2C; /* ä¸´æ—¶ä¿®æ”¹ */
 		tcp_deal_unorder(pindex, pstream, pclient, pserver, !CHECK_ORDER_DATA);		
 	}
 	if(pserver && (pserver->unorderlist != NULL)){
-		pstream->curdir = DIR_C2S; /* ÁÙÊ±ĞŞ¸Ä */
+		pstream->curdir = DIR_C2S; /* ä¸´æ—¶ä¿®æ”¹ */
 		tcp_deal_unorder(pindex, pstream, pserver, pclient, !CHECK_ORDER_DATA);		
 	}
 	pstream->curdir = saved_curdir;
 
-	pstream_pr->raw_pkt = raw_pkt; /* 2017-11-17 lijia modify, ´Ë´¦Ê¹ÓÃ´«ÈëµÄ²ÎÊı, Èç¹ûÒò³¬Ê±free, raw_pktÎªNULL, ²»»á´¥·¢MESA_kill_tcp */
+	pstream_pr->raw_pkt = raw_pkt; /* 2017-11-17 lijia modify, æ­¤å¤„ä½¿ç”¨ä¼ å…¥çš„å‚æ•°, å¦‚æœå› è¶…æ—¶free, raw_pktä¸ºNULL, ä¸ä¼šè§¦å‘MESA_kill_tcp */
 	
 	if(pstream->stream_state==TCP_DATA_STATE)
 	{
 		if(pdetail_pr->apme!=NULL)
 		{
 			pstream->opstate=OP_STATE_CLOSE;
-			//tcp stream »Øµ÷
+			//tcp stream å›è°ƒ
 			pkt_ret = stream_process_tcp(pstream, this_ip_hdr, transport_hdr, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));  
 			pdetail_pr->apme=NULL;
 		}
@@ -1230,20 +1230,20 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 				tcp_free_half(pserver,threadnum);
 	}
 
-	//²»ÂÛÈÎºÎ×´Ì¬»Øµ÷È«°ü´¦Àíº¯ÊıÁ´±í
+	//ä¸è®ºä»»ä½•çŠ¶æ€å›è°ƒå…¨åŒ…å¤„ç†å‡½æ•°é“¾è¡¨
 	if(pdetail_pr->pAllpktpme!=NULL)
 	{
 			pstream->pktstate=OP_STATE_CLOSE;
-			//tcpall stream »Øµ÷
+			//tcpall stream å›è°ƒ
 #if 0			
 			pkt_ret = stream_process_tcp_allpkt(pstream, this_ip_hdr, transport_hdr, raw_pkt,&(pdetail_pr->pAllpktpme),&(pstream->pktstate));  
 #else
-			/* 2017-12-13 lijia modify, TCPALL¸ÄÎªÏÈµ÷ÓÃ, ËùÒÔÔÚtcp_free_streamÖĞ, ×îºóÖ»ÏòTCPALL²å¼ş´«µİÁ÷CLOSE×´Ì¬, ²»ÔÙ¸øÔ­Ê¼°ü, Ö¸Õë¹Ì¶¨ÎªNULL, ·ñÔò¾ÍÖØ¸´ÁË */
+			/* 2017-12-13 lijia modify, TCPALLæ”¹ä¸ºå…ˆè°ƒç”¨, æ‰€ä»¥åœ¨tcp_free_streamä¸­, æœ€ååªå‘TCPALLæ’ä»¶ä¼ é€’æµCLOSEçŠ¶æ€, ä¸å†ç»™åŸå§‹åŒ…, æŒ‡é’ˆå›ºå®šä¸ºNULL, å¦åˆ™å°±é‡å¤äº† */
 			pkt_ret = stream_process_tcp_allpkt(pstream, NULL, NULL, NULL, &(pdetail_pr->pAllpktpme),&(pstream->pktstate)); 
 #endif
 			pdetail_pr->pAllpktpme=NULL;
 	}
-	/* µ÷ÓÃÍê²å¼şºóÔÙ´Ó½á¹¹ÖĞÒÆ³ı, ÒòÎªµ÷ÓÃ²å¼şÊ±, ¿ÉÄÜ»áµ÷ÓÃstream_set_single_stream_timeout(), »á²Ù×÷µ±Ç°Á÷ÔÚLRUÁ´±íÖĞµÄÎ»ÖÃ */
+	/* è°ƒç”¨å®Œæ’ä»¶åå†ä»ç»“æ„ä¸­ç§»é™¤, å› ä¸ºè°ƒç”¨æ’ä»¶æ—¶, å¯èƒ½ä¼šè°ƒç”¨stream_set_single_stream_timeout(), ä¼šæ“ä½œå½“å‰æµåœ¨LRUé“¾è¡¨ä¸­çš„ä½ç½® */
 	streamleavlist(pindex, plist);
 	hash_del_stream(pindex);
 	
@@ -1259,7 +1259,7 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 	project_requirement_destroy(threadnum, pstream_pr->pproject);
 	pstream_pr->pproject = NULL;
 
-	if(pstream_pr->timeout > link_default_nopkt_time){ /* Á´½Ó¶ÀÓĞ³¬Ê±Ê±¼ä, ¼õÉÙ¼ÆÊı */
+	if(pstream_pr->timeout > link_default_nopkt_time){ /* é“¾æ¥ç‹¬æœ‰è¶…æ—¶æ—¶é—´, å‡å°‘è®¡æ•° */
 		sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
 	}
 	free_heap_stream_info(pstream, 0);
@@ -1288,7 +1288,7 @@ static void tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	UCHAR threadnum = pstream->threadnum;
 	UCHAR saved_curdir;
 	
-	 //add by lqy 20150107 »ØÍË¼ÆÊı
+	 //add by lqy 20150107 å›é€€è®¡æ•°
         if(pstream->curdir==DIR_S2C)
         {
                 pdetail->clientpktnum--;
@@ -1312,8 +1312,8 @@ static void tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]);
 
-	/* 2014-07-24 lijia add, Á÷½áÊøÇ°´¦ÀíÂÒĞò°ü */
-	saved_curdir = pstream->curdir; /* 2015-11-16 LiJia add, ±£´æµ±Ç°Á÷·½Ïò, ´¦ÀíÂÒĞò°üºóÒª»Ö¸´µ±Ç°Öµ */
+	/* 2014-07-24 lijia add, æµç»“æŸå‰å¤„ç†ä¹±åºåŒ… */
+	saved_curdir = pstream->curdir; /* 2015-11-16 LiJia add, ä¿å­˜å½“å‰æµæ–¹å‘, å¤„ç†ä¹±åºåŒ…åè¦æ¢å¤å½“å‰å€¼ */
 	if(pdetail_pr->pclient && pdetail_pr->pclient->unorderlist != NULL){
 		pstream->curdir = DIR_S2C; 
 		tcp_deal_unorder(pindex, pstream, pdetail_pr->pclient, pdetail_pr->pserver, !CHECK_ORDER_DATA);		
@@ -1322,13 +1322,13 @@ static void tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 		pstream->curdir = DIR_C2S;
 		tcp_deal_unorder(pindex, pstream, pdetail_pr->pserver, pdetail_pr->pclient, !CHECK_ORDER_DATA);		
 	}
-	/* tcp_deal_unorder()º¯Êı¿ÉÄÜ»áĞŞ¸Äpstream_pr->raw_pkt, ´Ë´¦»Ö¸´raw_pkt */
+	/* tcp_deal_unorder()å‡½æ•°å¯èƒ½ä¼šä¿®æ”¹pstream_pr->raw_pkt, æ­¤å¤„æ¢å¤raw_pkt */
 	pstream_pr->raw_pkt = raw_pkt;
 	pstream->curdir = saved_curdir;
 
 	/* 2015-02-04 lijia add, 
-	   ÏÈ½«¾ÉÁ÷Òò³¬Ê±»òÒòËÄÔª×éÖØÓÃÌÔÌ­, µ±Ç°°ü²»ÄÜ×öÎª¾ÉÁ÷µÄÔ­Ê¼°ü, 
-	   ²»ÄÜÒò´Ëµ÷ÓÃ²å¼şºó¶ø´¥·¢MESA_kill_xxx, ËùÒÔÉèpstream_pr->raw_pkt = NULL.
+	   å…ˆå°†æ—§æµå› è¶…æ—¶æˆ–å› å››å…ƒç»„é‡ç”¨æ·˜æ±°, å½“å‰åŒ…ä¸èƒ½åšä¸ºæ—§æµçš„åŸå§‹åŒ…, 
+	   ä¸èƒ½å› æ­¤è°ƒç”¨æ’ä»¶åè€Œè§¦å‘MESA_kill_xxx, æ‰€ä»¥è®¾pstream_pr->raw_pkt = NULL.
 	 */
 	const raw_pkt_t *saved_raw_pkt = pstream_pr->raw_pkt;
 	pstream_pr->raw_pkt = NULL; 
@@ -1358,22 +1358,22 @@ static void tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	if(pdetail_pr->pAllpktpme!=NULL)
 	{
 			pstream->pktstate=OP_STATE_CLOSE;
-			//tcp stream »Øµ÷
+			//tcp stream å›è°ƒ
 			stream_process_tcp_allpkt(pstream,NULL,NULL,NULL,&(pdetail_pr->pAllpktpme),&(pstream->pktstate));  
 			pdetail_pr->pAllpktpme=NULL;
 	}
 
-	/* µ÷ÓÃÍê²å¼şºóÔÙ´Ó½á¹¹ÖĞÒÆ³ı, ÒòÎªµ÷ÓÃ²å¼şÊ±, ¿ÉÄÜ»áµ÷ÓÃstream_set_single_stream_timeout(), »á²Ù×÷µ±Ç°Á÷ÔÚLRUÁ´±íÖĞµÄÎ»ÖÃ */
+	/* è°ƒç”¨å®Œæ’ä»¶åå†ä»ç»“æ„ä¸­ç§»é™¤, å› ä¸ºè°ƒç”¨æ’ä»¶æ—¶, å¯èƒ½ä¼šè°ƒç”¨stream_set_single_stream_timeout(), ä¼šæ“ä½œå½“å‰æµåœ¨LRUé“¾è¡¨ä¸­çš„ä½ç½® */
 	streamleavlist(pindex, plist);
 	
 	project_requirement_destroy(threadnum, pstream_pr->pproject);
 	pstream_pr->pproject = NULL;
 
-	/* »Ö¸´Ö®Ç°´æ´¢µÄraw_pkt */
+	/* æ¢å¤ä¹‹å‰å­˜å‚¨çš„raw_pkt */
 	pstream_pr->raw_pkt = saved_raw_pkt;
 
-	pstream_pr->syn_opt_num = 0;     /* Çå¿ÕÑ¡Ïî¼ÆÊı */
-	pstream_pr->synack_opt_num = 0; /* Çå¿ÕÑ¡Ïî¼ÆÊı */
+	pstream_pr->syn_opt_num = 0;     /* æ¸…ç©ºé€‰é¡¹è®¡æ•° */
+	pstream_pr->synack_opt_num = 0; /* æ¸…ç©ºé€‰é¡¹è®¡æ•° */
 	if(pstream_pr->syn_opt_array){
 		dictator_free(threadnum, pstream_pr->syn_opt_array);
 		pstream_pr->syn_opt_array = NULL;
@@ -1416,14 +1416,14 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 			{
 				if(thisack==curseq)
 				{
-					pstream->dir=DIR_DOUBLE; /* ¸üĞÂdir */
+					pstream->dir=DIR_DOUBLE; /* æ›´æ–°dir */
 			 		pdetail_pr->link_state=STREAM_LINK_RESET;
 					tcp_free_stream(pindex, this_iphdr, this_tcphdr, raw_pkt);
 					return PASS;
 				}			
 			}
 			else
-			//·´ÏòÀ´°ü£¬½¨Á¢Á´½Ó
+			//åå‘æ¥åŒ…ï¼Œå»ºç«‹é“¾æ¥
 			if(thisack==curseq)
 			{
 					pstream->dir=DIR_DOUBLE;
@@ -1439,9 +1439,9 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 			}
 			
 		}
-		else //Í¬²àÀ´°ü
+		else //åŒä¾§æ¥åŒ…
 		{
-			//ÕıĞò±¨ÎÄ
+			//æ­£åºæŠ¥æ–‡
 			 if(thisseq==curseq)
 			 {
 			 	if((this_tcphdr->th_flags & TH_RST)&&(datalen==0))
@@ -1450,8 +1450,8 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 					tcp_free_stream(pindex,  this_iphdr, this_tcphdr, raw_pkt);
 					return PASS;
 			        }	
-				//add by lqy 20130802 µ¥ÏòÁ÷·À¹¥»÷±ØĞëÓĞµÚÈı¸ö°ü
-			        //µ¥ÏòÁ÷µÚ¶ş¸öack
+				//add by lqy 20130802 å•å‘æµé˜²æ”»å‡»å¿…é¡»æœ‰ç¬¬ä¸‰ä¸ªåŒ…
+			        //å•å‘æµç¬¬äºŒä¸ªack
 			       else  if((this_tcphdr->th_flags == TH_ACK)&&(datalen==0))
 			       {
 			       	pdetail_pr->tcpstateflag=TCP_SYN_RECV;
@@ -1476,7 +1476,7 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 	    	{
 	    	if((this_tcphdr->th_flags & TH_RST)&&(datalen==0))
 		   {	
-		   		pstream->dir=DIR_DOUBLE; /* ¸üĞÂdir */
+		   		pstream->dir=DIR_DOUBLE; /* æ›´æ–°dir */
 		   		pdetail_pr->link_state=STREAM_LINK_RESET;
 				tcp_free_stream(pindex,  this_iphdr, this_tcphdr, raw_pkt);
 				return PASS;
@@ -1491,9 +1491,9 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 				return PASS;
 			}
 		}	
-		else //Í¬²àÀ´°ü
+		else //åŒä¾§æ¥åŒ…
 		{
-			//ÕıĞòrst
+			//æ­£åºrst
 			if((thisseq==curseq)
 			 	&&(this_tcphdr->th_flags & TH_RST)
 				&&(datalen==0))
@@ -1506,7 +1506,7 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 		}
 
 	}
-	//add by lqy 20130805 Ë«ÏòÁ÷£¬Èı´ÎÎÕÊÖÍêÕûºó´æÈëdata±í
+	//add by lqy 20130805 åŒå‘æµï¼Œä¸‰æ¬¡æ¡æ‰‹å®Œæ•´åå­˜å…¥dataè¡¨
 	else if( pstream->dir == DIR_DOUBLE)
 	{
 		if((pdetail_pr->tcpstateflag==TCP_SYN_RECV)&&(curdir==DIR_C2S))
@@ -1519,11 +1519,11 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 		 	}
 		}
 	}
-	//synÖØ´«
+	//syné‡ä¼ 
 	/*
 		TODO, 
-		ËÄÔª×éÏàÍ¬µÄÁ½¸öSYN°ü, »¹Òª½øÒ»²½ÅĞ¶ÏSEQÊÇ·ñÒ»ÖÂ²ÅÄÜËãÖØ´«, ¿ÉÄÜÊÇËÄÔª×éÖØÓÃ,
-		ĞèÒªreset.
+		å››å…ƒç»„ç›¸åŒçš„ä¸¤ä¸ªSYNåŒ…, è¿˜è¦è¿›ä¸€æ­¥åˆ¤æ–­SEQæ˜¯å¦ä¸€è‡´æ‰èƒ½ç®—é‡ä¼ , å¯èƒ½æ˜¯å››å…ƒç»„é‡ç”¨,
+		éœ€è¦reset.
 	*/
 	if((this_tcphdr->th_flags == TH_SYN))
 	{
@@ -1550,32 +1550,32 @@ static void tcp_half_handle_ack_and_seq(struct half_tcpstream *phalf, struct mes
 
 	rcv = phalf;
 
-	//Á÷¸Õ¿ªÊ¼£¬ack_seq±ØÎª0£¬´ËÊ±Ö±½Ó½«°üÍ·µÄack_seq¸³Öµ¸ørcv->ack_seq
+	//æµåˆšå¼€å§‹ï¼Œack_seqå¿…ä¸º0ï¼Œæ­¤æ—¶ç›´æ¥å°†åŒ…å¤´çš„ack_seqèµ‹å€¼ç»™rcv->ack_seq
 	if (0 == *cur_half_stream_ack)
 		*cur_half_stream_ack = ntohl(this_tcphdr->th_ack);
 	else
 	{
 		ackdiff = (int)(ntohl (this_tcphdr->th_ack) - *cur_half_stream_ack);
-#if 0 /* 20160930 lijia modify, Ïû³ı±àÒë¾¯¸æ */
-		if (ackdiff > 0 || ackdiff < -(2 << 30)) //·ÀÖ¹ÖØ´«¼°·­Ô½ĞòºÅÉÏÏŞ
+#if 0 /* 20160930 lijia modify, æ¶ˆé™¤ç¼–è¯‘è­¦å‘Š */
+		if (ackdiff > 0 || ackdiff < -(2 << 30)) //é˜²æ­¢é‡ä¼ åŠç¿»è¶Šåºå·ä¸Šé™
 #else
-		if (ackdiff > 0 || ackdiff < (int)0x80000000) //·ÀÖ¹ÖØ´«¼°·­Ô½ĞòºÅÉÏÏŞ
+		if (ackdiff > 0 || ackdiff < (int)0x80000000) //é˜²æ­¢é‡ä¼ åŠç¿»è¶Šåºå·ä¸Šé™
 #endif
 		{
 			*cur_half_stream_ack = ntohl (this_tcphdr->th_ack);
 		}
 	}
 
-	//Í¬Àí
+	//åŒç†
 	if (0 == rcv->seq)
 		rcv->seq = ntohl(this_tcphdr->th_seq);
 	else
 	{
 		seqdiff = (int)(ntohl(this_tcphdr->th_seq) - rcv->seq);
-#if 0	/* 20160930 lijia modify, Ïû³ı±àÒë¾¯¸æ, Ê¹ÓÃÁ¢¼´Êı0x80000000 */	
+#if 0	/* 20160930 lijia modify, æ¶ˆé™¤ç¼–è¯‘è­¦å‘Š, ä½¿ç”¨ç«‹å³æ•°0x80000000 */	
 		if (seqdiff > 0 || seqdiff < -(2 << 30))
 #else
-		if (seqdiff > 0 || seqdiff < (int)0x80000000) //·ÀÖ¹ÖØ´«¼°·­Ô½ĞòºÅÉÏÏŞ
+		if (seqdiff > 0 || seqdiff < (int)0x80000000) //é˜²æ­¢é‡ä¼ åŠç¿»è¶Šåºå·ä¸Šé™
 #endif
 		{
 			rcv->seq = ntohl(this_tcphdr->th_seq);
@@ -1628,7 +1628,7 @@ static int tcp_deal_ack(struct streaminfo *a_tcp,struct mesa_tcp_hdr *this_tcphd
 		{
 			phalf=pdetail_pr->pclient;
 			phother=pdetail_pr->pserver;
-			/* 2017-08-02 lijia modify, ¼ÇÂ¼±¾²àµÚÒ»¸öACKºÅ, ºÍack_seqÒ»Æğ¿ÉÒÔ¼ÆËã³öµ¥ÏòÁ÷¶Ô²àµÄÊı¾İ×ÜÁ¿ */
+			/* 2017-08-02 lijia modify, è®°å½•æœ¬ä¾§ç¬¬ä¸€ä¸ªACKå·, å’Œack_seqä¸€èµ·å¯ä»¥è®¡ç®—å‡ºå•å‘æµå¯¹ä¾§çš„æ•°æ®æ€»é‡ */
 			if(0 == pdetail_pr->S2C_first_ack_seq){
 				pdetail_pr->S2C_first_ack_seq = ntohl (this_tcphdr->th_ack);
 			}
@@ -1639,12 +1639,12 @@ static int tcp_deal_ack(struct streaminfo *a_tcp,struct mesa_tcp_hdr *this_tcphd
 		{
 			phalf=pdetail_pr->pserver;
 			phother=pdetail_pr->pclient;
-			/* 2017-08-02 lijia add, C2Sµ¥ÏòÁ÷»ñÈ¡¶Ô¶ËISN */
+			/* 2017-08-02 lijia add, C2Så•å‘æµè·å–å¯¹ç«¯ISN */
 			if((0 == pdetail_pr->iclientseq)
-			 &&(ntohl(this_tcphdr->th_seq) == pdetail_pr->iserverseq)){ /* C2S·½ÏòSYN°üºóµÄµÚÒ»¸öACK°ü */
+			 &&(ntohl(this_tcphdr->th_seq) == pdetail_pr->iserverseq)){ /* C2Sæ–¹å‘SYNåŒ…åçš„ç¬¬ä¸€ä¸ªACKåŒ… */
 				pdetail_pr->iclientseq = ntohl (this_tcphdr->th_ack);
 			}
-			/* 2017-08-02 lijia modify, ¼ÇÂ¼±¾²àµÚÒ»¸öACKºÅ, ºÍack_seqÒ»Æğ¿ÉÒÔ¼ÆËã³öµ¥ÏòÁ÷¶Ô²àµÄÊı¾İ×ÜÁ¿ */
+			/* 2017-08-02 lijia modify, è®°å½•æœ¬ä¾§ç¬¬ä¸€ä¸ªACKå·, å’Œack_seqä¸€èµ·å¯ä»¥è®¡ç®—å‡ºå•å‘æµå¯¹ä¾§çš„æ•°æ®æ€»é‡ */
 			if(0 == pdetail_pr->C2S_first_ack_seq){
 				pdetail_pr->C2S_first_ack_seq = ntohl (this_tcphdr->th_ack);
 			}
@@ -1652,7 +1652,7 @@ static int tcp_deal_ack(struct streaminfo *a_tcp,struct mesa_tcp_hdr *this_tcphd
 			cur_half_stream_ack = &pdetail_pr->C2S_ack_seq;
 		}
 
-		/* 2017-08-03 lijia add, µ¥ÏòÁ÷, ¿¿±¾¶ËackÍ³¼Æ¶Ô²àÊı¾İ */
+		/* 2017-08-03 lijia add, å•å‘æµ, é æœ¬ç«¯ackç»Ÿè®¡å¯¹ä¾§æ•°æ® */
 		if(DIR_C2S == a_tcp->dir){
 			pdetail = a_tcp->ptcpdetail;
 			pdetail->clientbytes = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq;
@@ -1705,19 +1705,19 @@ static void  tcp_set_new_data(struct streaminfo *a_tcp,struct  half_tcpstream  *
 	struct tcpdetail_private*pdetail_pr=(struct tcpdetail_private*)a_tcp->pdetail;
 	struct tcpdetail *pdetail=(struct tcpdetail *)&pdetail_pr->tcpdetail_public;
 
-   //²»Ò»¶¨ÊÇÂÒĞòµÄ¿ÉÄÜÊÇÖØ´«°üµ«ÊÇ³¤¶È±ÈÔ­À´´ó
+   //ä¸ä¸€å®šæ˜¯ä¹±åºçš„å¯èƒ½æ˜¯é‡ä¼ åŒ…ä½†æ˜¯é•¿åº¦æ¯”åŸæ¥å¤§
    if(this_seq< EXP_SEQ)
    {
    	havelen = EXP_SEQ - this_seq;
 	if (datalen - havelen > 0)
 	{
-		//20150225 ¼ÇÂ¼ÖØµşµÄ³¤¶È
+		//20150225 è®°å½•é‡å çš„é•¿åº¦
 		pdetail_pr->tcpoverlen=havelen;		
 	   len_new= datalen - havelen; 
 	   pdata_new=data+havelen;
 	}
    }
-   else //ÕıĞòµÄ±¨ÎÄ
+   else //æ­£åºçš„æŠ¥æ–‡
    {
    	  len_new=datalen;
 	    pdata_new=data;
@@ -1745,12 +1745,12 @@ static void  tcp_set_new_data(struct streaminfo *a_tcp,struct  half_tcpstream  *
 
 /*
 	LiJia add, to do:
-	Èç¹ûÒòÎª¶ª°üÂÒĞò, 1,2,3,4,x,6, µÚ5¸ö°ü¶ªÁË, µÚ6¸ö°ü±»»º´æ,
-	¼ÙÉèµÚ6¸ö°üÄÚÓĞÌØÊâĞÅÏ¢, ĞèÒªkill_tcp,
-	µ±µÚ5¸ö°üµ½À´Ê±, streaminfoÀï´æ´¢µÄ¶¼ÊÇµÚ5¸ö°üµÄĞÅÏ¢,
-	È»ºóÔÙ´¦Àí»º´æÖĞµÚ6¸ö°üµÄÊı¾İ, ´ËÊ±µ÷ÓÃkill_tcp, Ïà¹Ø²ÎÊıÊÇ²»¶ÔµÄ,
-	Êµ¼ÊµÄseqºÍackÊ¹ÓÃµÄÊÇµÚ5¸ö°üµÄ!
-	Ó¦¸ÃÊ¹ÓÃbuf_unorderÖĞµÄseqºÍack, ¶ø²»ÊÇµ±Ç°Á÷µÄÔ­Ê¼°ü.
+	å¦‚æœå› ä¸ºä¸¢åŒ…ä¹±åº, 1,2,3,4,x,6, ç¬¬5ä¸ªåŒ…ä¸¢äº†, ç¬¬6ä¸ªåŒ…è¢«ç¼“å­˜,
+	å‡è®¾ç¬¬6ä¸ªåŒ…å†…æœ‰ç‰¹æ®Šä¿¡æ¯, éœ€è¦kill_tcp,
+	å½“ç¬¬5ä¸ªåŒ…åˆ°æ¥æ—¶, streaminfoé‡Œå­˜å‚¨çš„éƒ½æ˜¯ç¬¬5ä¸ªåŒ…çš„ä¿¡æ¯,
+	ç„¶åå†å¤„ç†ç¼“å­˜ä¸­ç¬¬6ä¸ªåŒ…çš„æ•°æ®, æ­¤æ—¶è°ƒç”¨kill_tcp, ç›¸å…³å‚æ•°æ˜¯ä¸å¯¹çš„,
+	å®é™…çš„seqå’Œackä½¿ç”¨çš„æ˜¯ç¬¬5ä¸ªåŒ…çš„!
+	åº”è¯¥ä½¿ç”¨buf_unorderä¸­çš„seqå’Œack, è€Œä¸æ˜¯å½“å‰æµçš„åŸå§‹åŒ….
 */
 #if 0
 int tcp_save_unorder(struct streaminfo *a_tcp,struct  half_tcpstream  *rcv,char *rawdata,int rawlen,struct mesa_tcp_hdr *this_tcphdr,int tcpdatalen)
@@ -1769,9 +1769,9 @@ static int tcp_save_unorder(struct streaminfo *a_tcp,struct  half_tcpstream  *rc
 	pakiet = (struct buf_unorder*)dictator_malloc(threadnum,sizeof(struct buf_unorder));
 	memset(pakiet, 0, sizeof(struct buf_unorder));
 
-/* 2014-10-20 lijia modify, ÒòIP·ÖÆ¬ÖØ×éºó, raw_pktºÍtcpdatalen²»¶ÔÓ¦
-raw_pktÖ¸Ïò×îºóÒ»¸ö·ÖÆ¬°ü, ¶øtcpdatalenÊÇÖØ×éÍê³ÉºóµÄÍêÕûIP°ü¸ºÔØ!
-·Ö±ğ´æ´¢!
+/* 2014-10-20 lijia modify, å› IPåˆ†ç‰‡é‡ç»„å, raw_pktå’Œtcpdatalenä¸å¯¹åº”
+raw_pktæŒ‡å‘æœ€åä¸€ä¸ªåˆ†ç‰‡åŒ…, è€Œtcpdatalenæ˜¯é‡ç»„å®Œæˆåçš„å®Œæ•´IPåŒ…è´Ÿè½½!
+åˆ†åˆ«å­˜å‚¨!
 */		
 	if(tcpdatalen > 0){
 		pakiet->data = dictator_malloc(threadnum,tcpdatalen);
@@ -1900,7 +1900,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 					break;
 		if (after (pakiet->seq + pakiet->tcpdatalen+pakiet->fin+pakiet->rst, EXP_SEQ))
 		{                    
-			/* 2015-01-13 lijia add, Èç¹ûÒòÂÒĞò°ü´¥·¢kill_tcp»òinjectÏà¹Øº¯Êı, ĞèÒª¸üĞÂÔ­Ê¼°üĞÅÏ¢ */
+			/* 2015-01-13 lijia add, å¦‚æœå› ä¹±åºåŒ…è§¦å‘kill_tcpæˆ–injectç›¸å…³å‡½æ•°, éœ€è¦æ›´æ–°åŸå§‹åŒ…ä¿¡æ¯ */
 			update_stream_list_raw_pkt_pointer(a_tcp_pr, &pakiet->raw_pkt);
 			
 			if(pakiet->rst )//add by lqy 20100805)
@@ -1913,7 +1913,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 				pakiet->ipfrag_list = NULL;
 #endif				
 				tmpktype=a_tcp->addr.pkttype;
-				//a_tcp->addr.pkttype=tmpktype|PKT_TYPE_TCPUNORDER|a_tcp->pfather->addr.pkttype; /* lijia add, ½«IP·ÖÆ¬ÀàĞÍ´øµ½ÉÏ²ã */
+				//a_tcp->addr.pkttype=tmpktype|PKT_TYPE_TCPUNORDER|a_tcp->pfather->addr.pkttype; /* lijia add, å°†IPåˆ†ç‰‡ç±»å‹å¸¦åˆ°ä¸Šå±‚ */
 				a_tcp->addr.pkttype=PKT_TYPE_TCPREORDER;
 				//ret=stream_process_tcp(a_tcp,pakiet->data,&(pdetail->apme),&(a_tcp->opstate));
 				ret=stream_process_tcp(a_tcp,pakiet->this_ip_hdr, pakiet->this_tcp_hdr, &(pakiet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
@@ -1921,11 +1921,12 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 #if (0 == HIGH_PERF)					
 				raw_frags_list_free_stream(a_tcp->threadnum, a_tcp);/* lijia add for raw ip frag list */
 #endif		
-				/* 2016-05-12 lijia add, ½â¾öÒòÂÒĞò°üµ¼ÖÂunorder_list³¬³¤BUG, ´Ë´¦Ó¦½«Á÷ÖÃÓÚnouse×´Ì¬ */
+				/* 2016-05-12 lijia add, è§£å†³å› ä¹±åºåŒ…å¯¼è‡´unorder_listè¶…é•¿BUG, æ­¤å¤„åº”å°†æµç½®äºnouseçŠ¶æ€ */
 				if(STREAM_LINK_DATA == last_link_state){
 					tcp_change_stream_tonouse(pindex);
+					return DROP;
 				}
-				/* ÒòÎªµ÷ÓÃÁËupdate_stream_list_raw_pkt_pointer, ´Ë´¦²»ÄÜ·µ»Ø, ÏÈ»Ö¸´Ô­Ê¼°üÖ¸Õë */
+				/* å› ä¸ºè°ƒç”¨äº†update_stream_list_raw_pkt_pointer, æ­¤å¤„ä¸èƒ½è¿”å›, å…ˆæ¢å¤åŸå§‹åŒ…æŒ‡é’ˆ */
 				ret = PASS;
 				goto done;
 			}
@@ -1943,7 +1944,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 						orderflag = CHECK_ORDER_DATA;
 				}
 
-				//get tcpµÄdataºÍlen
+				//get tcpçš„dataå’Œlen
 #if 0	/* 2014-01-12 lijia modify */			
 				tcp_set_new_data(a_tcp,rcv,snd,(u_char *)(pakiet->data)+(pakiet->len-pakiet->tcpdatalen),
 					pakiet->tcpdatalen,pakiet->seq,pakiet->fin);
@@ -1967,13 +1968,13 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 					raw_frags_list_free_stream(a_tcp->threadnum, a_tcp);
 #endif					
 					tcp_clear_newdata(a_tcp,rcv);
-					//·¢ÏÖµ½ĞÅÏ¢£¬Á¢¼´·µ»Ø
+					//å‘ç°åˆ°ä¿¡æ¯ï¼Œç«‹å³è¿”å›
 					//if(ret!=PASS)
-					/* 2015-01-16 lijia modify, ²¢ÁªÄ£Ê½ÏÂ, ²å¼şµ÷ÓÃÁËKill_tcp(), µ«²»»á·µ»ØDROP, ÎªÁËÈÃÆäËû²å¼şÈÔ¿ÉÒÔ¿´µ½´Ë°ü */
+					/* 2015-01-16 lijia modify, å¹¶è”æ¨¡å¼ä¸‹, æ’ä»¶è°ƒç”¨äº†Kill_tcp(), ä½†ä¸ä¼šè¿”å›DROP, ä¸ºäº†è®©å…¶ä»–æ’ä»¶ä»å¯ä»¥çœ‹åˆ°æ­¤åŒ… */
 					//if((ret!=PASS) || (a_tcp_pr->stream_killed_flag != 0)) 
-					if(a_tcp_pr->stream_killed_flag != 0)  /* 2015-11-02 lqy modify, ÂÒĞò°ü´¦Àí²»ÅĞ¶Ï·µ»ØÖµ */
+					if(a_tcp_pr->stream_killed_flag != 0)  /* 2015-11-02 lqy modify, ä¹±åºåŒ…å¤„ç†ä¸åˆ¤æ–­è¿”å›å€¼ */
 					{
-						/* ÒòÎªµ÷ÓÃÁËupdate_stream_list_raw_pkt_pointer, ´Ë´¦²»ÄÜ·µ»Ø, ÏÈ»Ö¸´Ô­Ê¼°üÖ¸Õë */
+						/* å› ä¸ºè°ƒç”¨äº†update_stream_list_raw_pkt_pointer, æ­¤å¤„ä¸èƒ½è¿”å›, å…ˆæ¢å¤åŸå§‹åŒ…æŒ‡é’ˆ */
 						goto done;
 					}
 				}
@@ -2044,7 +2045,7 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 
 	if (!after (this_seq, EXP_SEQ))
 	{
-		//ÕıĞòÊı¾İ°ü
+		//æ­£åºæ•°æ®åŒ…
 		if (after(this_seq + datalen + 
 			(this_tcphdr->th_flags & TH_FIN), EXP_SEQ))
 		{
@@ -2054,24 +2055,24 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 				ret=stream_process_tcp(pstream,this_iphdr,(const void *)this_tcphdr, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
 				//tcp_clear_newdata(pstream,rcv); /*  2016-09-12 lijia move to outside if(datalen > 0) */
 			}
-			tcp_clear_newdata(pstream,rcv); /* 2016-09-12 lijia move to here, ²»ÂÛdatalenÊÇ·ñ>0, ÒòÎªµ÷ÓÃÁËtcp_set_new_data, ËùÒÔÒªµ÷ÓÃclear */
+			tcp_clear_newdata(pstream,rcv); /* 2016-09-12 lijia move to here, ä¸è®ºdatalenæ˜¯å¦>0, å› ä¸ºè°ƒç”¨äº†tcp_set_new_data, æ‰€ä»¥è¦è°ƒç”¨clear */
 
-#if 0	/* lqy 2015-11-02 modify, ¶ÔÂÒĞò°üµÄ´¦Àí½á¹û, ²»Ó°Ïìµ±Ç°°üµÄ·µ»ØÖµ */		
+#if 0	/* lqy 2015-11-02 modify, å¯¹ä¹±åºåŒ…çš„å¤„ç†ç»“æœ, ä¸å½±å“å½“å‰åŒ…çš„è¿”å›å€¼ */		
 			if(ret==PASS) 
 			{	
 				ret = tcp_deal_unorder(pindex,pstream,rcv,snd,CHECK_ORDER_DATA);
 				
 			}
 #else
-			tcp_deal_unorder(pindex,pstream,rcv,snd,CHECK_ORDER_DATA);
+			ret = tcp_deal_unorder(pindex,pstream,rcv,snd,CHECK_ORDER_DATA);
 #endif			
 			return ret;			
 		}
-		//´¦ÀíÔ­À´»º³åµÄÊı¾İ°üÊÇ·ñÒÑ¾­ÕıĞò£¬½øĞĞ´¦Àí
+		//å¤„ç†åŸæ¥ç¼“å†²çš„æ•°æ®åŒ…æ˜¯å¦å·²ç»æ­£åºï¼Œè¿›è¡Œå¤„ç†
 	}
 	else
 	{
-		//ÂÒĞòÊı¾İ°ü»º³å
+		//ä¹±åºæ•°æ®åŒ…ç¼“å†²
 		tcp_save_unorder(pstream,rcv,this_iphdr,raw_pkt,this_tcphdr,tcpdata, datalen);		
 		if(rcv->unorder_cnt > rcv->maxunorder)
 		{
@@ -2120,7 +2121,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 	pcurhalf->pktcout++;
 	curseq=pcurhalf->first_data_seq + pcurhalf->count_ideal ;
 	thisseq=ntohl (this_tcphdr->th_seq);
-	//ÖØ´«°ü¶ªÆú
+	//é‡ä¼ åŒ…ä¸¢å¼ƒ
 	//if((thisseq<curseq)&&(thisseq+datalen<=curseq)&&(!(this_tcphdr->th_flags & TH_SYN))){ // modify by lqy 20150325
 	if(before(thisseq,curseq)&&before(thisseq+datalen,curseq+1)&&(!(th_flags & TH_SYN))){
 		pstream->addr.pkttype = PKT_TYPE_TCPRETRANS;
@@ -2140,7 +2141,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		 //syn+rst drop packet
 		 if(th_flags & TH_SYN)
 			return PASS; 
-		 //ÕıĞòµÄrst±¨ÎÄ
+		 //æ­£åºçš„rstæŠ¥æ–‡
 		 //if((thisseq-curseq<=1)&&(datalen==0))
 		if(before(thisseq, curseq+2)&&(datalen==0))//modify by lqy 20150325
 		 {
@@ -2163,12 +2164,12 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		
 			return PASS;
 		 }
-		 //ÂÒĞòµÄrst±¨ÎÄ£¬Èç¹ûÁ´½ÓÎ´½¨Á¢£¬»á¶ªÆú£¬Á´½ÓÒÑ¾­½¨Á¢£¬»á½øÈëÅÅĞò
+		 //ä¹±åºçš„rstæŠ¥æ–‡ï¼Œå¦‚æœé“¾æ¥æœªå»ºç«‹ï¼Œä¼šä¸¢å¼ƒï¼Œé“¾æ¥å·²ç»å»ºç«‹ï¼Œä¼šè¿›å…¥æ’åº
 	}
-	//Á´½Ó¸´ÓÃ 
+	//é“¾æ¥å¤ç”¨ 
 	if (th_flags & TH_SYN)
 	{
-		//synÖØ´« add by lqy 20100808
+		//syné‡ä¼  add by lqy 20100808
 #if 0		
 	   if(thisseq+1 == rcv->first_data_seq) return PASS;
 #else
@@ -2180,7 +2181,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 #endif   
 	   //adjust by lqy 20150107
 	   //if(thisseq==rcv->first_data_seq) return PASS;
-	   //add by lqy 20110507 syn´øÊı¾İµÄÈÏÎªÊÇ¹¥»÷¶ªÆú
+	   //add by lqy 20110507 synå¸¦æ•°æ®çš„è®¤ä¸ºæ˜¯æ”»å‡»ä¸¢å¼ƒ
 	   //if(datalen>0) return PASS;
 	   //return PASS;	
 	   if(th_flags & TH_RST)
@@ -2191,21 +2192,21 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 	    pdetail_pr->link_state=STREAM_LINK_REUSE_BYSYN;
 		pstream->opstate= OP_STATE_CLOSE;
 		
-#if 0		//del by lqy 20150107 tcp_reset_streamÀïÃæ»á¸üÕı¼ÆÊıºóµ÷ÓÃ
+#if 0		//del by lqy 20150107 tcp_reset_streamé‡Œé¢ä¼šæ›´æ­£è®¡æ•°åè°ƒç”¨
 		ret=stream_process_tcp(pstream,raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
 #endif		
 		tcp_reset_stream(pindex,this_iphdr,this_tcphdr,datalen,raw_pkt);
 		return PASS;		
 	}
 
-	if(datalen + (th_flags & TH_FIN) +(th_flags & TH_RST)> 0)//´¦ÀíTCP¸ºÔØ
+	if(datalen + (th_flags & TH_FIN) +(th_flags & TH_RST)> 0)//å¤„ç†TCPè´Ÿè½½
 	{
 		tcpdata=(unsigned char*)(this_tcphdr) + 4 * this_tcphdr->th_off;
 		ret=tcp_deal_data(pindex,this_iphdr,raw_pkt,this_tcphdr,tcpdata,datalen);	
 
-/* 2016-05-12 lijia modify, ½â¾öÒòÂÒĞò°üµ¼ÖÂunorder_list³¬³¤BUG, µ±Ç°Á÷Èç¹ûÒÑ¾­ÊÇCLOSE×´Ì¬, ´Ë´¦Ó¦ÎŞÌõ¼şreturn, ²»ÓÃ¼ÌĞøÖ´ĞĞ */			
+/* 2016-05-12 lijia modify, è§£å†³å› ä¹±åºåŒ…å¯¼è‡´unorder_listè¶…é•¿BUG, å½“å‰æµå¦‚æœå·²ç»æ˜¯CLOSEçŠ¶æ€, æ­¤å¤„åº”æ— æ¡ä»¶return, ä¸ç”¨ç»§ç»­æ‰§è¡Œ */			
 		
-		//µ±ÉÏ²ã¹Ø±ÕÁ´½Ó£¬»òÕß´¦Àíµ½ÁËÂÒĞòµÄrst±¨ÎÄ
+		//å½“ä¸Šå±‚å…³é—­é“¾æ¥ï¼Œæˆ–è€…å¤„ç†åˆ°äº†ä¹±åºçš„rstæŠ¥æ–‡
 		if((pstream->opstate==OP_STATE_CLOSE)&&(pdetail_pr->link_state!=STREAM_LINK_RESET))
 		{	
 			tcp_change_stream_tonouse(pindex);
@@ -2215,12 +2216,12 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		if(ret==DROP)
 			return DROP;
 	}
-	//add by lqy 20120922 ÉÏ²ãĞèÒªackµÄĞÅÏ¢Ê±ÉÏ´«²»´øÊı¾İµÄ±¨ÎÄ
+	//add by lqy 20120922 ä¸Šå±‚éœ€è¦ackçš„ä¿¡æ¯æ—¶ä¸Šä¼ ä¸å¸¦æ•°æ®çš„æŠ¥æ–‡
 	else if(pdetail_pr->needackflag!=0)
 	{
 		ret=stream_process_tcp(pstream,this_iphdr,this_tcphdr, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
-		//µ±ÉÏ²ã¹Ø±ÕÁ´½Ó£¬»òÕß´¦Àíµ½ÁËÂÒĞòµÄrst±¨ÎÄ
-		/* 2017-08-01 lijia modify, »¹ÒªÅĞ¶ÏTCPALL²å¼ş×´Ì¬, µ¥¶ÀÖ»¹ÒÔØTCPALL²å¼şÊ±, opstateÒÑ¾­ÊÇCLOSEÁË, ²»ÄÜÖÃÓÚNOUSEÌ¬ */
+		//å½“ä¸Šå±‚å…³é—­é“¾æ¥ï¼Œæˆ–è€…å¤„ç†åˆ°äº†ä¹±åºçš„rstæŠ¥æ–‡
+		/* 2017-08-01 lijia modify, è¿˜è¦åˆ¤æ–­TCPALLæ’ä»¶çŠ¶æ€, å•ç‹¬åªæŒ‚è½½TCPALLæ’ä»¶æ—¶, opstateå·²ç»æ˜¯CLOSEäº†, ä¸èƒ½ç½®äºNOUSEæ€ */
 		if((pstream->opstate==OP_STATE_CLOSE)
 		 && (OP_STATE_CLOSE == pstream->pktstate)
 		 &&(pdetail_pr->link_state!=STREAM_LINK_RESET))
@@ -2244,13 +2245,13 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		pdetail_pr->link_state=STREAM_LINK_CLOSE;
 		finclose=1;
 	}
-	//ÕıĞò´øÊı¾İµÄrst±¨ÎÄÒª¹Ø±Õ	
+	//æ­£åºå¸¦æ•°æ®çš„rstæŠ¥æ–‡è¦å…³é—­	
 	if ((th_flags & TH_RST)&&(thisseq==curseq) &&(datalen!=0))
 	{
 		pdetail_pr->link_state=STREAM_LINK_RESET;
 		finclose=1;
 	}
-	/* 2015-11-12 lijia add, ²»»áÒòRST, FIN°ü½«Á÷½áÊø */
+	/* 2015-11-12 lijia add, ä¸ä¼šå› RST, FINåŒ…å°†æµç»“æŸ */
 	if(pdetail_pr->ignore_rst_fin != 0){
 		finclose = 0;
 	}
@@ -2258,7 +2259,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 	{
 		pstream->opstate = OP_STATE_CLOSE;
 		ret=stream_process_tcp(pstream,this_iphdr,this_tcphdr, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
-		//adjust by lqy Èç¹ûÓĞÈ«°ü½ÓÊÕµÄº¯Êı¹ÒÔØÊ±
+		//adjust by lqy å¦‚æœæœ‰å…¨åŒ…æ¥æ”¶çš„å‡½æ•°æŒ‚è½½æ—¶
 		if(pstream->pktstate!=OP_STATE_CLOSE)
 		{
 			tcp_change_stream_tonouse(pindex);
@@ -2275,10 +2276,10 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 
 /*
 	2017-10-16 lijia add,
-	ÅĞ¶ÏNOUSE×´Ì¬ÏÂ, ÊÕµ½SYN, SYN/ACKÊÇÕæµÄËÄÔª×éÖØÓÃ, »¹ÊÇÂÒĞòÖØ´«, »ò·ÖÁ÷»ã¾Ûµ¼ÖÂµÄSYN, SYN/ACK°üÊ±Ğò´íÂÒ.
+	åˆ¤æ–­NOUSEçŠ¶æ€ä¸‹, æ”¶åˆ°SYN, SYN/ACKæ˜¯çœŸçš„å››å…ƒç»„é‡ç”¨, è¿˜æ˜¯ä¹±åºé‡ä¼ , æˆ–åˆ†æµæ±‡èšå¯¼è‡´çš„SYN, SYN/ACKåŒ…æ—¶åºé”™ä¹±.
 
 	TODO:
-	    Ôö¼Ó³¬Ê±ÅĞ¶Ï, ÔÚÏßÍ³¼Æ·¢ÏÖ, ÕæÕıµÄËÄÔª×éÖØÓÃÍ¨³£¶¼ÔÚ30ÃëÒÔÉÏ.
+	    å¢åŠ è¶…æ—¶åˆ¤æ–­, åœ¨çº¿ç»Ÿè®¡å‘ç°, çœŸæ­£çš„å››å…ƒç»„é‡ç”¨é€šå¸¸éƒ½åœ¨30ç§’ä»¥ä¸Š.
 */
 static inline int tcp_tuple4_reuse(const struct streaminfo *pstream, const struct tcpdetail_private *pdetail_pr, const struct mesa_tcp_hdr *this_tcphdr)
 {
@@ -2302,7 +2303,7 @@ static inline int tcp_tuple4_reuse(const struct streaminfo *pstream, const struc
 	/* lijia 2017-12-06 add */
 	if((1 == is_reuse) && (sapp_global_single.tuple4_reuse_time_interval > 0)){
 		if(pdetail_pr->tcpdetail_public.createtime + sapp_global_single.tuple4_reuse_time_interval >= (UINT64)g_CurrentTime){
-			is_reuse = 0; /* ËÄÔª×éÏàÍ¬, µ«ĞòºÅ²»Í¬µÄÁ½¸öÁ÷¼ä¸ôÊ±¼äÌ«¶Ì, Ò»°ã30ÃëÒÔÉÏ, ÒÉËÆ¹¥»÷»òÌÓÒİ */
+			is_reuse = 0; /* å››å…ƒç»„ç›¸åŒ, ä½†åºå·ä¸åŒçš„ä¸¤ä¸ªæµé—´éš”æ—¶é—´å¤ªçŸ­, ä¸€èˆ¬30ç§’ä»¥ä¸Š, ç–‘ä¼¼æ”»å‡»æˆ–é€ƒé€¸ */
 		}
 	}
 
@@ -2315,7 +2316,7 @@ static int tcp_deal_nouse_stream(struct streamindex *pindex,const void *this_iph
 	struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private *)pstream->pdetail;
 
 	//add by lqy 20141213
-	//Èç¹ûÊÇ¿¿ack½¨Á¢µÄÁ´½Ó£¬Ó¦ÓÃ²ãÎ´·ÖÎö¹ı,Ôò»Ö¸´µ½Êı¾İÁ´½øĞĞ·ÖÎö
+	//å¦‚æœæ˜¯é ackå»ºç«‹çš„é“¾æ¥ï¼Œåº”ç”¨å±‚æœªåˆ†æè¿‡,åˆ™æ¢å¤åˆ°æ•°æ®é“¾è¿›è¡Œåˆ†æ
 	//if((pstream->opstate == OP_STATE_PENDING) && (datalen>0)) //modify by lqy 20150325
 	if((pstream->opstate == OP_STATE_PENDING) 
 	  && (datalen>0) 
@@ -2327,10 +2328,10 @@ static int tcp_deal_nouse_stream(struct streamindex *pindex,const void *this_iph
 	}
 
 
-	//finºÍrst¶¼ÓĞ¿ÉÄÜÊÇÂÒĞò±¨ÎÄ£¬Èç¹ûÔÚ´Ë´¦ÌÔÌ­£¬ÔòÂÒĞò±¨ÎÄÓĞ¿ÉÄÜ»á¼ÌĞøÈ¥°´ÕÕÊı¾İ½¨Á¢Á´½Ó£¬Òò´Ë²»ÌÔÌ­
+	//finå’Œrstéƒ½æœ‰å¯èƒ½æ˜¯ä¹±åºæŠ¥æ–‡ï¼Œå¦‚æœåœ¨æ­¤å¤„æ·˜æ±°ï¼Œåˆ™ä¹±åºæŠ¥æ–‡æœ‰å¯èƒ½ä¼šç»§ç»­å»æŒ‰ç…§æ•°æ®å»ºç«‹é“¾æ¥ï¼Œå› æ­¤ä¸æ·˜æ±°
 	
-	//Á´½Ó¸´ÓÃ add by lqy 20150210 µ±¸ÃÁ´½Óºó¼ÌÓĞÊı¾İÊ±ÄÜ»Ö¸´µ½dataÁ´±íÖĞ
-	//add by lqy 20130822 µ±ÓĞËùÓĞ°ü¶¼½ÓÊÕµÄº¯Êı¹ÒÔØÊ±£¬²»×öÖ÷¶¯ÌÔÌ­
+	//é“¾æ¥å¤ç”¨ add by lqy 20150210 å½“è¯¥é“¾æ¥åç»§æœ‰æ•°æ®æ—¶èƒ½æ¢å¤åˆ°dataé“¾è¡¨ä¸­
+	//add by lqy 20130822 å½“æœ‰æ‰€æœ‰åŒ…éƒ½æ¥æ”¶çš„å‡½æ•°æŒ‚è½½æ—¶ï¼Œä¸åšä¸»åŠ¨æ·˜æ±°
 	if (this_tcphdr->th_flags & TH_SYN)
 	{
 		if(1 == tcp_tuple4_reuse(pstream, pdetail_pr, this_tcphdr)){
@@ -2377,12 +2378,12 @@ static char tcp_process_newstreambydata(struct streamindex *pindex_tcp,const voi
 		}
 	}
 	
-	//ĞÂ½¨Á´½Ó±ØĞëÏÈµ÷ÓÃallº¯Êı
+	//æ–°å»ºé“¾æ¥å¿…é¡»å…ˆè°ƒç”¨allå‡½æ•°
 	ret=tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);	
 
 	if(DROP == ret){ 
 		/* 2016-06-08 lijia add,
-			for HMD, Èç¹ûÃüÖĞ¹æÔòµ±Ç°Á÷±»kill, ²»¼ÌĞøÔÙµ÷ÓÃºóĞø²å¼ş.
+			for HMD, å¦‚æœå‘½ä¸­è§„åˆ™å½“å‰æµè¢«kill, ä¸ç»§ç»­å†è°ƒç”¨åç»­æ’ä»¶.
 		*/
 		return DROP;
 	}
@@ -2399,7 +2400,7 @@ static char tcp_process_newstreambydata(struct streamindex *pindex_tcp,const voi
 	return ret;
 }
 
-/* LiJia comment: pindexÖ¸ÏòÕ»ÀïµÄÄÚ´æ */
+/* LiJia comment: pindexæŒ‡å‘æ ˆé‡Œçš„å†…å­˜ */
 //int deal_tcp_stream(struct streamindex *pstream,struct mesa_tcp_hdr *this_tcphdr,int tcplen,const void *rawippkt,int iplen)
 static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, struct mesa_tcp_hdr *this_tcphdr,
 	int tcplen,const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
@@ -2454,14 +2455,14 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		else
 		{
 			/*   2017-12-07 lijia add,  
-				TCPRFC¹æ¶¨, ÔÚÁ´½Ó»¹Î´½¨Á¢µÄÇé¿öÏÂ, ÊÕµ½¶Ô¶ËµÄÊı¾İ°ü, »ØÓ¦µÄRST°üĞòºÅÎª0, 
-				Èç¹ûÒ»¸öÁ÷µÄµÚÒ»¸ö°ü, ¾ÍÊÇ¸öseq=0µÄRST°ü, ÔİÊ±¶ªÆú²»´¦Àí, ÎŞÒâÒå.
+				TCPRFCè§„å®š, åœ¨é“¾æ¥è¿˜æœªå»ºç«‹çš„æƒ…å†µä¸‹, æ”¶åˆ°å¯¹ç«¯çš„æ•°æ®åŒ…, å›åº”çš„RSTåŒ…åºå·ä¸º0, 
+				å¦‚æœä¸€ä¸ªæµçš„ç¬¬ä¸€ä¸ªåŒ…, å°±æ˜¯ä¸ªseq=0çš„RSTåŒ…, æš‚æ—¶ä¸¢å¼ƒä¸å¤„ç†, æ— æ„ä¹‰.
 			*/
 			if((this_tcphdr->th_flags & TH_RST) && (0 == this_tcphdr->th_seq)){
 				return PASS;
 			}
 
-			//add by lqy 20141213È«°ü½Ó¿ÚÏÂ²ÅÓÃtcplen=0µÄ°ü½¨Á´½Ó
+			//add by lqy 20141213å…¨åŒ…æ¥å£ä¸‹æ‰ç”¨tcplen=0çš„åŒ…å»ºé“¾æ¥
 			if((tcplen==0)&&(tcp_support_all==TCP_SUPPORT_ENTRYALL_OFF))
 				return PASS;		
 			if(TCP_CTEAT_LINK_BYDATA  & tcp_creatlink_model )
@@ -2483,7 +2484,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 					pstream_pr = &pindex_tcp->stream;
 					pstream = &pstream_pr->stream_public;
 					pstream_pr->raw_pkt = raw_pkt;  //add by lijia 20171206
-					//add by lqy 20150114 ĞÂ½¨Á¢µÄÁ´½Ó±ØĞëÏÈµ÷ÓÃallº¯Êı
+					//add by lqy 20150114 æ–°å»ºç«‹çš„é“¾æ¥å¿…é¡»å…ˆè°ƒç”¨allå‡½æ•°
 					return tcp_process_newstreambydata(pindex_tcp,this_iphdr, this_tcphdr,tcplen,raw_pkt);
 				}
 			}
@@ -2501,13 +2502,13 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 //		pindex_tcp->stream.offset_to_raw_pkt_hdr = (char *)this_tcphdr - (char *)raw_pkt->raw_pkt_data;
 		//pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;	
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
-		/* 2015-11-04 lijia add, IP·ÖÆ¬ÀàĞÍ¸üĞÂ, pstreamÖ¸ÏòÁ÷±íÖĞµÄ½á¹¹, pindexÎªÕ»Àïµ±Ç°°ü½á¹¹ */	
+		/* 2015-11-04 lijia add, IPåˆ†ç‰‡ç±»å‹æ›´æ–°, pstreamæŒ‡å‘æµè¡¨ä¸­çš„ç»“æ„, pindexä¸ºæ ˆé‡Œå½“å‰åŒ…ç»“æ„ */	
 		pstream->addr.pktipfragtype = pindex->stream.stream_public.addr.pktipfragtype; 
 	}
 
-	/* 2014-10-11 lijia add, Fd²¹¾ÈÓÉÆ½Ì¨ÊµÏÖ */
+	/* 2014-10-11 lijia add, Fdè¡¥æ•‘ç”±å¹³å°å®ç° */
 	if(unlikely(pstream_pr->stream_killed_flag != 0)){
-		if((g_kill_tcp_remedy_sw != 0) && (tcplen > 0)){ /* ·ÀÖ¹flood¹¥»÷, Ö»ÓĞ´øÊı¾İµÄ°ü²Å·¢RST */
+		if((g_kill_tcp_remedy_sw != 0) && (tcplen > 0)){ /* é˜²æ­¢floodæ”»å‡», åªæœ‰å¸¦æ•°æ®çš„åŒ…æ‰å‘RST */
 			//MESA_kill_tcp(pstream, raw_pkt);
 			MESA_kill_tcp_remedy(pstream, raw_pkt);
 		}
@@ -2538,7 +2539,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		}
 	}
 	
-	/* note: reset»áÖØÖÃ¼ÆÊı, ·ÅÔÚclientbytes+=, clientpktnum++´úÂëÖ®ºó */
+	/* note: resetä¼šé‡ç½®è®¡æ•°, æ”¾åœ¨clientbytes+=, clientpktnum++ä»£ç ä¹‹å */
 	if(1 == lrustream(pindex_tcp)){
 		tcp_reset_stream(pindex_tcp, this_iphdr,this_tcphdr, tcplen,raw_pkt);		
 	}
@@ -2563,10 +2564,10 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		else if(pstream->stream_state==TCP_SYN_STATE)
 		{
 			ret=tcp_deal_syn_stream(pindex_tcp,raw_pkt,this_iphdr, this_tcphdr,tcplen);
-			// ²»Õı³£µÄ±¨ÎÄ£¬²»¼ÌĞø½øĞĞºó¼Ì´¦Àí
+			// ä¸æ­£å¸¸çš„æŠ¥æ–‡ï¼Œä¸ç»§ç»­è¿›è¡Œåç»§å¤„ç†
 			if(DROP==ret)
 			{
-				   //return PASS;//²»½øĞĞºó¼Ì´¦Àí£¬µ«ÊÇ±ØĞë·µ»ØPASS·ñÔò´®ÁªÂß¼­²»¶Ô
+				   //return PASS;//ä¸è¿›è¡Œåç»§å¤„ç†ï¼Œä½†æ˜¯å¿…é¡»è¿”å›PASSå¦åˆ™ä¸²è”é€»è¾‘ä¸å¯¹
 				   ret = PASS;
 				   goto fun_exit;
 			}
@@ -2576,7 +2577,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 				 //ret=tcp_deal_data_stream(pindex_tcp,rawippkt,iplen,this_tcphdr,tcplen);
 				 ret=tcp_deal_data_stream(pindex_tcp,this_iphdr,raw_pkt,this_tcphdr,tcplen);
 			}
-			//add by lqy 20150215 ĞÂ½¨Á´½Ó¸Õ¿ªÊ¼µÄÂÒĞò±¨ÎÄ
+			//add by lqy 20150215 æ–°å»ºé“¾æ¥åˆšå¼€å§‹çš„ä¹±åºæŠ¥æ–‡
 			else
 			{
 				pindex_tcp->stream.stream_public.addr.pkttype=PKT_TYPE_TCPUNORDER;
@@ -2588,11 +2589,11 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		}
 	}
 	
-	//adjust by lqy 20150107 ÎªÁË·ÀÖ¹SYNÖØ½¨Á´½ÓÊ±SYNÔÚµÚÒ»¸öÁ´½ÓÖĞ
+	//adjust by lqy 20150107 ä¸ºäº†é˜²æ­¢SYNé‡å»ºé“¾æ¥æ—¶SYNåœ¨ç¬¬ä¸€ä¸ªé“¾æ¥ä¸­
 
 	if(pindex_tcp && (pstream->pktstate != OP_STATE_CLOSE))
 	{
-		//È«°ü½Ó¿ÚÄÃµ½µÄÊı¾İÖ¸Ïòµ±Ç°°üµÄÔ­Ê¼Êı¾İ
+		//å…¨åŒ…æ¥å£æ‹¿åˆ°çš„æ•°æ®æŒ‡å‘å½“å‰åŒ…çš„åŸå§‹æ•°æ®
 		if(tcplen == 0)
 		{
 			pdetail->pdata = NULL;
@@ -2620,7 +2621,7 @@ fun_exit:
 
 /*
 	lijia 2015-01-12 add this_iphdr, 
-	Èç¹ûÊÇIP·ÖÆ¬ÖØ×éµÄ°ü, ±ØĞëÏÔÊ½µÄ´«µİIP°üÍ·, ·ñÔòÖ»´«tcp_hdrºÍraw_hdr, ÎŞ·¨»ñÈ¡ÖØ×éºóµÄIP°üÍ·.
+	å¦‚æœæ˜¯IPåˆ†ç‰‡é‡ç»„çš„åŒ…, å¿…é¡»æ˜¾å¼çš„ä¼ é€’IPåŒ…å¤´, å¦åˆ™åªä¼ tcp_hdrå’Œraw_hdr, æ— æ³•è·å–é‡ç»„åçš„IPåŒ…å¤´.
 */
 static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struct mesa_tcp_hdr *this_tcphdr, 
 	int thread_num,unsigned char routedir, int tcpdatalen, const raw_pkt_t *raw_packet, int offset_to_raw_pkt_hdr)
@@ -2631,7 +2632,7 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 	//struct layer_addr *tcp_stream_addr;
 #endif
 
-	/* IPPORT-union°æ±¾, IPºÍTCP²ãÊ¹ÓÃÍ¬Ò»¸öindex½á¹¹, ¼´Ö±½ÓÍ¨¹ıIP²ã´«µİµÄpfindex */
+	/* IPPORT-unionç‰ˆæœ¬, IPå’ŒTCPå±‚ä½¿ç”¨åŒä¸€ä¸ªindexç»“æ„, å³ç›´æ¥é€šè¿‡IPå±‚ä¼ é€’çš„pfindex */
 	//struct streamindex tmp_tcp_stream;
 	//struct streamindex *ptmp=&tmp_tcp_stream;
 	
@@ -2649,7 +2650,7 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 
 	pstream->addr.pkttype = PKT_TYPE_NORMAL;//add by lqy 20151222, init pkttype
 	
-	pstream_pr->addr_use_as_hash = 1; /* ËÄÔª×éĞÅÏ¢´æÓÚIP²ã */
+	pstream_pr->addr_use_as_hash = 1; /* å››å…ƒç»„ä¿¡æ¯å­˜äºIPå±‚ */
 //	ptmp->stream.p_layer_header = this_tcphdr;
 	//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_tcphdr - (char *)raw_packet->raw_pkt_data;
 	pstream_pr->offset_to_ip_hdr = (char *)this_tcphdr - (char *)this_iphdr;
@@ -2664,7 +2665,7 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 	return deal_tcp_stream(pfindex,this_iphdr, this_tcphdr,tcpdatalen, raw_packet, offset_to_raw_pkt_hdr);
 }
 
-/* lijia comment: this_iphdr¿ÉÄÜÊÇÕæÊµÔ­Ê¼°ü, Ò²¿ÉÄÜÊÇmallocµÄIPÖØ×é°ü, ¿¿addr.pkttypeÇø·Ö */
+/* lijia comment: this_iphdrå¯èƒ½æ˜¯çœŸå®åŸå§‹åŒ…, ä¹Ÿå¯èƒ½æ˜¯mallocçš„IPé‡ç»„åŒ…, é addr.pkttypeåŒºåˆ† */
 int dealipv4tcppkt(struct streamindex *pfindex, const struct mesa_ip4_hdr *this_iphdr,int thread_num,
 					unsigned char routedir, const raw_pkt_t *raw_pkt,  int offset_to_raw_pkt_hdr)
 {
@@ -2682,8 +2683,8 @@ int dealipv4tcppkt(struct streamindex *pfindex, const struct mesa_ip4_hdr *this_
 	if(unlikely(datalen < 0)){
 		return PASS;
 	}
-	/* lijia 2016-06-15 add, ĞÔÄÜÓÅ»¯, ¶ªÆú´¿ACK°ü */
-#if HIGH_PERF /* ¸ßĞÔÄÜÄ£Ê½ÏÂ×Ô¶¯¶ªÆúACK */
+	/* lijia 2016-06-15 add, æ€§èƒ½ä¼˜åŒ–, ä¸¢å¼ƒçº¯ACKåŒ… */
+#if HIGH_PERF /* é«˜æ€§èƒ½æ¨¡å¼ä¸‹è‡ªåŠ¨ä¸¢å¼ƒACK */
 	if((0 == datalen) && (TH_ACK == this_tcphdr->th_flags)){
 		return PASS;
 	}
@@ -2810,10 +2811,10 @@ int set_transport_addr(struct streaminfo *this_stream, UINT16 sport, UINT16 dpor
 	
 	if(__ADDR_TYPE_IP_PAIR_V4 == this_addr->addrtype){
 		struct stream_tuple4_v4 *ip4_addr = this_addr->tuple4_v4;
-		/* ÉèÖÃ¶Ë¿Ú, ÔÚIP-PORT-union°æ±¾ÒÔportË³Ğò×öÎªlayer_dirµÄ²ÎÕÕ,
-		   Í¬Ê±¸üĞÂlayer_dir, ÓÃÓÚ¼ÆËãHASHÊ±, µØÖ·³öÏÖË³Ğò */
+		/* è®¾ç½®ç«¯å£, åœ¨IP-PORT-unionç‰ˆæœ¬ä»¥porté¡ºåºåšä¸ºlayer_dirçš„å‚ç…§,
+		   åŒæ—¶æ›´æ–°layer_dir, ç”¨äºè®¡ç®—HASHæ—¶, åœ°å€å‡ºç°é¡ºåº */
 		if(ntohs(sport) > ntohs(dport)){
-			this_stream_pr->layer_dir = 1; /* °´¶Ë¿ÚË³Ğò¸üĞÂËÄÔª×élayer_dir */
+			this_stream_pr->layer_dir = 1; /* æŒ‰ç«¯å£é¡ºåºæ›´æ–°å››å…ƒç»„layer_dir */
 			this_stream->curdir = DIR_C2S;
 		}else{
 			if(unlikely(sport == dport)){
@@ -2831,7 +2832,7 @@ int set_transport_addr(struct streaminfo *this_stream, UINT16 sport, UINT16 dpor
 		}
 		ip4_addr->source = sport;
 		ip4_addr->dest = dport;
-		this_addr->addrtype = ADDR_TYPE_IPV4; /* ¼æÈİpappÆ½Ì¨, ´«Êä²ãµÄËÄÔª×éÊ¹ÓÃ'ADDR_TYPE_IPV4±íÊ¾' */
+		this_addr->addrtype = ADDR_TYPE_IPV4; /* å…¼å®¹pappå¹³å°, ä¼ è¾“å±‚çš„å››å…ƒç»„ä½¿ç”¨'ADDR_TYPE_IPV4è¡¨ç¤º' */
 		this_addr->addrlen = sizeof(struct stream_tuple4_v4);
 	}else if(__ADDR_TYPE_IP_PAIR_V6 == this_addr->addrtype){
 		struct stream_tuple4_v6 *ip6_addr = this_addr->tuple4_v6;
@@ -2855,7 +2856,7 @@ int set_transport_addr(struct streaminfo *this_stream, UINT16 sport, UINT16 dpor
 		
 		ip6_addr->source = sport;
 		ip6_addr->dest = dport;
-		this_addr->addrtype = ADDR_TYPE_IPV6; /* ¼æÈİpappÆ½Ì¨, ´«Êä²ãµÄËÄÔª×éÊ¹ÓÃ'ADDR_TYPE_IPV6±íÊ¾' */
+		this_addr->addrtype = ADDR_TYPE_IPV6; /* å…¼å®¹pappå¹³å°, ä¼ è¾“å±‚çš„å››å…ƒç»„ä½¿ç”¨'ADDR_TYPE_IPV6è¡¨ç¤º' */
 		this_addr->addrlen = sizeof(struct stream_tuple4_v6);
 	}else{
 		assert(0);
@@ -2891,7 +2892,7 @@ int set_stream_addr_transport(struct streaminfo_private *this_stream_pr, UINT16 
 		}
 		ip4_addr->source = sport;
 		ip4_addr->dest = dport;
-		this_addr->addrtype = ADDR_TYPE_IPV4; /* ¼æÈİpappÆ½Ì¨, TCP²ãµÄËÄÔª×éÊ¹ÓÃ'ADDR_TYPE_IPV4±íÊ¾' */
+		this_addr->addrtype = ADDR_TYPE_IPV4; /* å…¼å®¹pappå¹³å°, TCPå±‚çš„å››å…ƒç»„ä½¿ç”¨'ADDR_TYPE_IPV4è¡¨ç¤º' */
 		this_stream->addr.addrlen = sizeof(struct stream_tuple4_v4);
 	}else if(__ADDR_TYPE_IP_PAIR_V6 == this_stream->addr.addrtype){
 		struct stream_tuple4_v6 *ip6_addr = this_stream->addr.tuple4_v6;
@@ -2914,7 +2915,7 @@ int set_stream_addr_transport(struct streaminfo_private *this_stream_pr, UINT16 
 		}		
 		ip6_addr->source = sport;
 		ip6_addr->dest = dport;
-		this_addr->addrtype = ADDR_TYPE_IPV6;/* ¼æÈİpappÆ½Ì¨, TCP-v6²ãµÄËÄÔª×éÊ¹ÓÃ'ADDR_TYPE_IPV6±íÊ¾' */
+		this_addr->addrtype = ADDR_TYPE_IPV6;/* å…¼å®¹pappå¹³å°, TCP-v6å±‚çš„å››å…ƒç»„ä½¿ç”¨'ADDR_TYPE_IPV6è¡¨ç¤º' */
 		this_stream->addr.addrlen = sizeof(struct stream_tuple4_v6);
 	}else{
 		printf("set_stream_addr_transport() error, addr type is not IPv4 or IPv6!\n");
@@ -2923,14 +2924,14 @@ int set_stream_addr_transport(struct streaminfo_private *this_stream_pr, UINT16 
 	}
 
 	//this_addr->paddr = pfstream->addr.paddr;
-	//this_addr->pktipfragtype = pfstream->addr.pktipfragtype; /* 2015-01-29 lijia add, IP·ÖÆ¬ÀàĞÍ²ğ·Ö */
+	//this_addr->pktipfragtype = pfstream->addr.pktipfragtype; /* 2015-01-29 lijia add, IPåˆ†ç‰‡ç±»å‹æ‹†åˆ† */
 	return 0;
 }
 
 /* 
    2014-04-08 LiJia add,
-   Ã¿¸ö°üµÄµØÖ·ĞÅÏ¢ÁÙÊ±´æÓÚÕ»¿Õ¼ä, º¯Êı·µ»Øºó´Ë¿éÄÚ´æµØÖ·¾ÍÎŞĞ§ÁË, 
-   ´´½¨ĞÂÁ÷Ê±, Ğècopyµ½mallocµÄ¶Ñ¿Õ¼äÄÚ, ÓÃÓÚÒÔºóµÄµØÖ·±È¶Ô. 
+   æ¯ä¸ªåŒ…çš„åœ°å€ä¿¡æ¯ä¸´æ—¶å­˜äºæ ˆç©ºé—´, å‡½æ•°è¿”å›åæ­¤å—å†…å­˜åœ°å€å°±æ— æ•ˆäº†, 
+   åˆ›å»ºæ–°æµæ—¶, éœ€copyåˆ°mallocçš„å †ç©ºé—´å†…, ç”¨äºä»¥åçš„åœ°å€æ¯”å¯¹. 
  */
 struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream_pr, int reverse)
 {
@@ -2956,9 +2957,9 @@ struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_priv
 		
 	if(reverse){
 		heap_stream_pr->dirreverse=1;
-		heap_stream_pr->stream_dir = 1 ^ heap_stream_pr->layer_dir; /* lijia comment, Óë"src>=dst"Ä¬ÈÏ¹æÔò²»Ò»ÖÂ */
+		heap_stream_pr->stream_dir = 1 ^ heap_stream_pr->layer_dir; /* lijia comment, ä¸"src>=dst"é»˜è®¤è§„åˆ™ä¸ä¸€è‡´ */
 		//reverse_addr_new(heap_addr, heap_stream->addr.addrtype);
-		/* µØÖ·COPYÊ±, Èç¹ûĞèÒª·´×ª, Ö±½Ó·´ÏòCOPY, ²»ÒªÏÈmemcpy, ÔÙ½»»»µØÖ·Ô´¡¢Ä¿µÄµÄË³Ğò */
+		/* åœ°å€COPYæ—¶, å¦‚æœéœ€è¦åè½¬, ç›´æ¥åå‘COPY, ä¸è¦å…ˆmemcpy, å†äº¤æ¢åœ°å€æºã€ç›®çš„çš„é¡ºåº */
 		addr_reverse_memcpy(heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrtype, stack_stream->addr.addrlen);
 	}else{
 		heap_stream_pr->stream_dir = heap_stream_pr->layer_dir;
@@ -2972,7 +2973,7 @@ struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_priv
 	return (struct streaminfo_private *)heap_stream;
 }
 
-/* 2014-12-30 lijia add, ´úÀíÁ÷×öÎªÒ»¸öĞéÄâ½á¹¹, ²»×öÎª»ñÈ¡µØÖ·µÄÊµ¼Ê½á¹¹, Ìø¹ıÖ® */
+/* 2014-12-30 lijia add, ä»£ç†æµåšä¸ºä¸€ä¸ªè™šæ‹Ÿç»“æ„, ä¸åšä¸ºè·å–åœ°å€çš„å®é™…ç»“æ„, è·³è¿‡ä¹‹ */
 struct streaminfo *skip_proxy_phony_stream(struct streaminfo *a_tcp)
 {
 int proxy_layer_num = 0;
@@ -3010,26 +3011,26 @@ static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const v
 	//carry_ip_stream = skip_proxy_phony_stream(a_tcp->pfather);
 	carry_ip_stream = skip_proxy_phony_stream(a_tcp);
 
-	/* ´æ´¢Ô­Ê¼°ü */
+	/* å­˜å‚¨åŸå§‹åŒ… */
 	memcpy(&(uo_packet->raw_pkt),  stack_raw_pkt, sizeof(raw_pkt_t));	
 	uo_packet->raw_pkt.raw_pkt_data = dictator_malloc(a_tcp->threadnum, stack_raw_pkt->raw_pkt_len);
 	memcpy((void *)uo_packet->raw_pkt.raw_pkt_data, stack_raw_pkt->raw_pkt_data, stack_raw_pkt->raw_pkt_len);
 
 
-	/* 	iphdr·ÖÁ½ÀàÇé¿ö:
-		1)·ÇIP·ÖÆ¬°ü:
-			Ö»Ğè´æ´¢ÕæÕıµÄÔ­Ê¼°ü, ÆäËûµÄ¶¼ÓÃÖ¸ÕëÒıÓÃ, Ö»ĞèfreeÒ»´Î;
-		2)IPÖØ×éµÄ°ü:
-			´æ´¢ÕæÕıµÄÔ­Ê¼°ü(×îºóÒ»¸ö·ÖÆ¬), ºÍÖØ×éºómallocµÄIP°ü, ÆäËûÊ¹ÓÃÖ¸ÕëÒıÓÃ;
+	/* 	iphdråˆ†ä¸¤ç±»æƒ…å†µ:
+		1)éIPåˆ†ç‰‡åŒ…:
+			åªéœ€å­˜å‚¨çœŸæ­£çš„åŸå§‹åŒ…, å…¶ä»–çš„éƒ½ç”¨æŒ‡é’ˆå¼•ç”¨, åªéœ€freeä¸€æ¬¡;
+		2)IPé‡ç»„çš„åŒ…:
+			å­˜å‚¨çœŸæ­£çš„åŸå§‹åŒ…(æœ€åä¸€ä¸ªåˆ†ç‰‡), å’Œé‡ç»„åmallocçš„IPåŒ…, å…¶ä»–ä½¿ç”¨æŒ‡é’ˆå¼•ç”¨;
 	*/
 #if 0	 
 	if(carry_ip_stream->addr.pktipfragtype & PKT_TYPE_IPREBUILD){
 #else
-	/* ÒòÎªIPv4ÓĞ¿ÉÄÜ¶à²ãÇ¶Ì×, ±ÈÈç: MAC->IPv4->UDP->IPv6->IPv4->TCP->APP,
-		²»ÄÜ½öÅĞ¶Ïµ±Ç°Á÷µÄIPv4²ãÊÇ·ñÊÇ·ÖÆ¬, ×îµ×²ãµÄIPv4°üÒ²¿ÉÄÜÀ´Ô´ÓÚIP·ÖÆ¬ÖØ×éµÄ°ü.
-		ËùÒÔ, Ê¹ÓÃÔ­Ê¼°üÖ¸ÕëºÍµ±Ç°IPÍ·Ö¸ÕëµÄ¾ø¶ÔÖµÆ«ÒÆÀ´ÅĞ¶Ï, 
-		Õı³£µÄ°ü, µ±Ç°°üÍ·ºÍÔ­Ê¼°üÍ·µÄµØÖ·Æ«ÒÆÁ¿¿Ï¶¨ÔÚMTU·¶Î§ÄÚ,
-		Èç¹û³¬¹ıÁËMTU, Ôòµ±Ç°IP°ü¿Ï¶¨ÊÇĞÂmallocµÄ, ¼´·ÖÆ¬ÖØ×éµÄ°ü.
+	/* å› ä¸ºIPv4æœ‰å¯èƒ½å¤šå±‚åµŒå¥—, æ¯”å¦‚: MAC->IPv4->UDP->IPv6->IPv4->TCP->APP,
+		ä¸èƒ½ä»…åˆ¤æ–­å½“å‰æµçš„IPv4å±‚æ˜¯å¦æ˜¯åˆ†ç‰‡, æœ€åº•å±‚çš„IPv4åŒ…ä¹Ÿå¯èƒ½æ¥æºäºIPåˆ†ç‰‡é‡ç»„çš„åŒ….
+		æ‰€ä»¥, ä½¿ç”¨åŸå§‹åŒ…æŒ‡é’ˆå’Œå½“å‰IPå¤´æŒ‡é’ˆçš„ç»å¯¹å€¼åç§»æ¥åˆ¤æ–­, 
+		æ­£å¸¸çš„åŒ…, å½“å‰åŒ…å¤´å’ŒåŸå§‹åŒ…å¤´çš„åœ°å€åç§»é‡è‚¯å®šåœ¨MTUèŒƒå›´å†…,
+		å¦‚æœè¶…è¿‡äº†MTU, åˆ™å½“å‰IPåŒ…è‚¯å®šæ˜¯æ–°mallocçš„, å³åˆ†ç‰‡é‡ç»„çš„åŒ….
 	*/
 	if(abs((char *)this_iphdr - (char *)stack_raw_pkt->raw_pkt_data) > MTU_MAX){
 #endif
@@ -3061,7 +3062,7 @@ static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const v
 	uo_packet->urg = (this_tcphdr->th_flags & TH_URG);
 	uo_packet->urg_ptr = ntohs (this_tcphdr->th_urp);	
 
-	/* IP·ÖÆ¬Á´±íÖ¸ÕëÒÆ¶¯µ½pakiet½á¹¹ÖĞ, ½«È«¾ÖµÄG_IP_FRAG_LIST[tid]Ö¸ÕëÖÃ¿Õ, ±ÜÃâ±»ip_entry²ãÊÍ·Å */
+	/* IPåˆ†ç‰‡é“¾è¡¨æŒ‡é’ˆç§»åŠ¨åˆ°pakietç»“æ„ä¸­, å°†å…¨å±€çš„G_IP_FRAG_LIST[tid]æŒ‡é’ˆç½®ç©º, é¿å…è¢«ip_entryå±‚é‡Šæ”¾ */
 	uo_packet->ipfrag_list = raw_ip_frag_list_global_move_pkt(a_tcp);
 
 	a_tcp->addr.pkttype = PKT_TYPE_TCPUNORDER;//add by lqy 20151222, mark unorder
@@ -3104,24 +3105,24 @@ static int get_ip_pkt_tot_len(struct streaminfo *ipinfo, const void *this_iphdr)
 }
 
 /* 2015-01-13 lijia add, 
-	ÒòÎªkill_xxxÏµÁĞº¯ÊıÊ¹ÓÃstream_pr½á¹¹ÖĞµÄraw_pktÖ¸Õë,
-	Èç¹ûÊÇÂÒĞò°ü´¥·¢ÁËÄ³¹æÔò, µ÷ÓÃkill_xxxÏµÁĞº¯Êı,
-	´ËÊ±µÄ
+	å› ä¸ºkill_xxxç³»åˆ—å‡½æ•°ä½¿ç”¨stream_prç»“æ„ä¸­çš„raw_pktæŒ‡é’ˆ,
+	å¦‚æœæ˜¯ä¹±åºåŒ…è§¦å‘äº†æŸè§„åˆ™, è°ƒç”¨kill_xxxç³»åˆ—å‡½æ•°,
+	æ­¤æ—¶çš„
 */
 static inline void update_stream_list_raw_pkt_pointer(struct streaminfo_private *a_tcp_pr, const raw_pkt_t *raw_pkt)
 {
 	a_tcp_pr->raw_pkt = raw_pkt;
 
-	/* TODO: ÊÇ·ñĞèÒªµİ¹éµÄ½«a_tcp->pfather->raw_pktÒ²È«²¿¸üĞÂ?! */
+	/* TODO: æ˜¯å¦éœ€è¦é€’å½’çš„å°†a_tcp->pfather->raw_pktä¹Ÿå…¨éƒ¨æ›´æ–°?! */
 
 	return;
 }
 
-/* TODO: ¸üĞÂÃ¿¸öÁ÷µÄÆ½¾ù°üÊı, ×Ö½ÚÊı, Æ½¾ùÁ÷Ê±¼ä¿ç¶ÈÍ³¼Æ */
+/* TODO: æ›´æ–°æ¯ä¸ªæµçš„å¹³å‡åŒ…æ•°, å­—èŠ‚æ•°, å¹³å‡æµæ—¶é—´è·¨åº¦ç»Ÿè®¡ */
 #if DEBUG
 #include "iknow.h"
 typedef struct{
-	packet_io_status_base_t io_base_status; /* TCP°ü×Ü¼ÆÊı */
+	packet_io_status_base_t io_base_status; /* TCPåŒ…æ€»è®¡æ•° */
 	unsigned long long syn_pkt_num;
 	unsigned long long synack_pkt_num;
 	unsigned long long rst_pkt_num;
@@ -3139,11 +3140,11 @@ typedef struct{
 }packet_io_status_tcp_stream_t;
 
 typedef struct{
-	time_t max_live_time; /* È«¾Ö×î´óÉú´æÊ±¼ä, ¿ÉÄÜÊÇÕı³£½áÊø, Ò²¿ÉÄÜÊÇÒò³¬Ê±±»ÌÔÌ­µÄ */
+	time_t max_live_time; /* å…¨å±€æœ€å¤§ç”Ÿå­˜æ—¶é—´, å¯èƒ½æ˜¯æ­£å¸¸ç»“æŸ, ä¹Ÿå¯èƒ½æ˜¯å› è¶…æ—¶è¢«æ·˜æ±°çš„ */
 	time_t min_live_time;
 	time_t avg_live_time;
-	time_t normal_finish_max_live_time; /* Á÷Õı³£½áÊøµÄ×î´óÊ±¼ä, ¼´ÓĞFIN°ü»òRST°üµÄÁ÷ */
-	time_t normal_finish_avg_live_time; /* Á÷Õı³£½áÊøµÄ×î´óÊ±¼ä, ¼´ÓĞFIN°ü»òRST°üµÄÁ÷ */	
+	time_t normal_finish_max_live_time; /* æµæ­£å¸¸ç»“æŸçš„æœ€å¤§æ—¶é—´, å³æœ‰FINåŒ…æˆ–RSTåŒ…çš„æµ */
+	time_t normal_finish_avg_live_time; /* æµæ­£å¸¸ç»“æŸçš„æœ€å¤§æ—¶é—´, å³æœ‰FINåŒ…æˆ–RSTåŒ…çš„æµ */	
 }packet_io_status_tcp_stream_time_t;
 
 extern int g_packet_io_thread_num;
@@ -3168,8 +3169,8 @@ void packet_io_status_tcp_pkt_time_cb(void)
 	int i;
 	packet_io_status_tcp_pkt_t *p_tcp_pkt_status;
 
- 	memcpy((void *)&g_last_tcp_pkt_status, (void*)&g_cur_tcp_pkt_status, sizeof(packet_io_status_tcp_pkt_t)); /* ±£´æÉÏÒ»ÃëµÄÖµ */
- 	memset((void *)&g_cur_tcp_pkt_status, 0, sizeof(packet_io_status_tcp_pkt_t)); /* ÇåÁã */
+ 	memcpy((void *)&g_last_tcp_pkt_status, (void*)&g_cur_tcp_pkt_status, sizeof(packet_io_status_tcp_pkt_t)); /* ä¿å­˜ä¸Šä¸€ç§’çš„å€¼ */
+ 	memset((void *)&g_cur_tcp_pkt_status, 0, sizeof(packet_io_status_tcp_pkt_t)); /* æ¸…é›¶ */
 
 	for(i = 0; i < g_packet_io_thread_num; i++){
 		p_tcp_pkt_status = (packet_io_status_tcp_pkt_t *)(g_packet_io_status_pool[i]->packet_io_status[IO_STATUS_TCP_PKT]);
@@ -3275,7 +3276,7 @@ static inline void packet_io_status_tcp_stream_update(int tid, UCHAR stream_stat
 
 static long ifuncb_show_tcp_pkt_summary(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg, const char *cmd_args)
 {
-	/* È«¾Ö×Ü°üÊı, ×Ü×Ö½ÚÊı */
+	/* å…¨å±€æ€»åŒ…æ•°, æ€»å­—èŠ‚æ•° */
 
 	iprintf(ihandle, iconn,"NOTE: unit of byte for total is 'byte', for realtime is 'bps, bit per second'!\n");
 	iprintf(ihandle, iconn, "%8s %10s %12s %8s %10s %8s %10s %11s\n", " ", "packet", "byte", "SYN-PKT", "SYNACK-PKT", "RST-PKT", "NO-PAYLOAD", "AVG-PKT-LEN"); 
@@ -3455,7 +3456,7 @@ static void tcp_flow_stat_free(int thread_seq, void *project_req_value)
 }
 
 
-/* 2015-12-25 lijia add, for TCP/UDPÁ÷Á¿Í³¼Æ */
+/* 2015-12-25 lijia add, for TCP/UDPæµé‡ç»Ÿè®¡ */
 int tcp_flow_stat_init(void)
 {
 	int project_req_id;
@@ -3464,7 +3465,7 @@ int tcp_flow_stat_init(void)
 	if(project_req_id >= 0){
 		G_TCP_FLOW_STAT_PROJECT_ID = project_req_id;
 	}else{
-		/* ÅäÖÃÎÄ¼şÃ»ÓĞ'tcp_flow_stat'Ïî, ¹Ø±Õ´Ë¹¦ÄÜ */
+		/* é…ç½®æ–‡ä»¶æ²¡æœ‰'tcp_flow_stat'é¡¹, å…³é—­æ­¤åŠŸèƒ½ */
 		G_TCP_FLOW_STAT_PROJECT_ID = -1;
 	}
 
