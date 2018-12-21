@@ -7,6 +7,13 @@ set(CMAKE_MACOSX_RPATH 0)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/run/)
 
 #Debug option
+option(ENABLE_DEBUG_FLAGS "Enable Debug Flags" FALSE)
+
+if(ENABLE_DEBUG_FLAGS)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug")
+endif()
+
 #ASAN option
 option(ENABLE_SANITIZE_ADDRESS "Enable AddressSanitizer" FALSE)
 option(ENABLE_SANITIZE_THREAD "Enable ThreadSanitizer" FALSE)
