@@ -26,27 +26,26 @@ int guess_if_teredo(const struct streaminfo *pstream,  struct mesa_udp_hdr *udph
 		return 0; /* teredo只承载于IPv4 */
 	}
 
-#if 0	 /* 2018-03-13 lijia close, 某些隧道使用非标准端口, 逃避检测, 不再判断端口 */	
+	 /* 2018-03-13 lijia close, 某些隧道使用非标准端口, 逃避检测, 不再判断端口 */
 	if((TEREDO_DEFAULT_PORT != ntohs(udphdr->uh_sport))
 	&& (TEREDO_DEFAULT_PORT != ntohs(udphdr->uh_dport))){
 		return 0;
 	}
-#endif@
-	udp_payuload_len = ntohs(udphdr->uh_ulen) - sizeof(struct mesa_udp_hdr);
-	if(udp_payuload_len < (int)sizeof(struct mesa_ip6_hdr)){ /* 负载还不够一个完整IPv6包头 */
-		return 0;
-	}
 
-	ip6hdr = (struct mesa_ip6_hdr *)((char *)udphdr + sizeof(struct mesa_udp_hdr ));
-	if(ip6hdr->ip6_flags[0] != 0x60  && ip6hdr->ip6_flags[0] != 0x00){
-		return 0;
-	}
+    udp_payuload_len = ntohs(udphdr->uh_ulen) - sizeof(struct mesa_udp_hdr);
+    if(udp_payuload_len < (int)sizeof(struct mesa_ip6_hdr)){ /* 负载还不够一个完整IPv6包头 */
+        return 0;
+    }
+
+    ip6hdr = (struct mesa_ip6_hdr *)((char *)udphdr + sizeof(struct mesa_udp_hdr ));
+    if(ip6hdr->ip6_flags[0] != 0x60  && ip6hdr->ip6_flags[0] != 0x00){
+        return 0;
+    }
 
 	/* NOTE: RFC4380-Page12, ipv6源地址的第11-12字节, 与0xFFFF异或之后的值, 即底层UDP的源端口 */
 	if((ip6hdr->ip6_src.s6_addr16[5] ^ 0xFFFF) != udphdr->uh_sport){
 		return 0;
 	}
-
 	/* NOTE: RFC4380-Page12, ipv6地址的第13-16字节, 与0xFFFFFFFF异或之后的值, 即底层IPv4地址,
 		但IP-MAP规则用于Internet外网地址, NAT内部私有地址不适用, 读包测试可能无法识别, 
 		所以暂时关闭.
@@ -101,7 +100,7 @@ int teredo_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,in
 		}
 		else
 		{
-			printf("TODO: jmp unsupport teredo hdr:0x%d!\n", (next_layer_hdr));
+			printf("TODO: jmp unsupport teredo hdr:0x%u!\n", *(unsigned int *)(next_layer_hdr));
 			return -1;
 		}
 	}

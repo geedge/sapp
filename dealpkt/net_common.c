@@ -199,7 +199,7 @@ static int udp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 			}
             else
             {
-                printf("TODO: jmp unsupport teredo hdr:0x%d!\n", (next_layer_hdr));
+                printf("TODO: jmp unsupport teredo hdr:0x%d!\n", *(unsigned int *)(next_layer_hdr));
                 return -1;
             }
 		}

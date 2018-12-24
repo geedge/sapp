@@ -92,9 +92,11 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		pstream_pr = pfstream_pr;
 	}
 	
-	if(1 == this_mpls_hdr->mpls_bls) { /* 已到栈底, MPLS已结束 */
+	if(1 == this_mpls_hdr->mpls_bls)
+	{ /* 已到栈底, MPLS已结束 */
 		/* MPLS没有字段表示承载的协议类型, 如果MPLS承载的是IPv6协议，靠猜 */
 		((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+		struct iphdr  *ip4_hdr = (struct iphdr *)next_layer_hdr;
 		if((*next_layer_hdr & 0xF0) == 0x40)
         {
             ret = ipv4_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
@@ -103,7 +105,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
         {
             ret = ipv6_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
         }
-        else if(*(short *)next_layer_hdr == 0)//pw ether control word, jump 4 byte
+        else if(ip4_hdr->version == 0)//pw ether control word, jump 4 byte
 		{
 			ret = eth_entry(pstream_pr,next_layer_hdr+4,thread_num,routedir,raw_pkt, next_layer_offset+4);
 		}
