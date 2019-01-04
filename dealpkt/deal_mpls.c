@@ -101,7 +101,6 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
         {
             int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
 			if(left_pkt_len < 20 || ntohs(ip4_hdr->tot_len) > left_pkt_len)
-            //if(left_pkt_len < 20)
 			{
                 g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
                 g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
