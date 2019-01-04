@@ -99,6 +99,15 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		struct iphdr  *ip4_hdr = (struct iphdr *)next_layer_hdr;
 		if((*next_layer_hdr & 0xF0) == 0x40)
         {
+            int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
+			if(left_pkt_len < 20 || ntohs(ip4_hdr->tot_len) > left_pkt_len)
+            //if(left_pkt_len < 20)
+			{
+                g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+                g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+                sapp_runtime_log(20, "illegal left Ipv4 len %d, total len %d!\n", left_pkt_len, ntohs(ip4_hdr->tot_len));
+				return -1;
+			}
             ret = ipv4_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
         }
         else if((*next_layer_hdr & 0xF0) == 0x60)
