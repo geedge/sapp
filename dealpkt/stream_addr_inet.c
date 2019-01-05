@@ -1785,7 +1785,7 @@ const char *layer_addr_ntop(const struct streaminfo *pstream)
 char *layer_addr_ntop_r(const struct streaminfo *pstream, char *out_buf, int out_buf_len)
 {
 	int i, ret, addr_str_len;
-	static char tmp_buf[MAX_ADDR_LIST_STRING_LEN];
+	char tmp_buf[MAX_ADDR_LIST_STRING_LEN]=" ";
 	
 	if((NULL == pstream) || (NULL == out_buf)){
 		return NULL;
