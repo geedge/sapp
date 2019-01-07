@@ -395,7 +395,8 @@ int MESA_platform_init(int argc, char *argv[])
 		}
 	}
 
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"symbol_conflict_check", &int_tmp, 1); 
+	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"symbol_conflict_check", &int_tmp,
+			0);
 	if(int_tmp != 0){
 		/* NOTE: 符号名检测一定要在plugctrl_proc(), 即所有插件加载之后, 默认开启 */
 		symbol_check(); /* 2016-01-13 Lijia add, 检查全局符号名冲突 */

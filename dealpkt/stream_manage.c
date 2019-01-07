@@ -2600,6 +2600,10 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
 			*tunnel_type = (unsigned short)STREAM_TUNNLE_L2TP;
 		break;
 
+		case ADDR_TYPE_GPRS_TUNNEL:
+			/* gtp_entry()函数中已经将地址重置为ADDR_TYPE_GTP, 肯定就是GTP隧道 */
+			*tunnel_type = (unsigned short)STREAM_TUNNEL_GPRS_TUNNEL;
+			break;
 	}
 
 	return get_stream_carry_tunnel_type(pfather, this_stream, tunnel_type);
