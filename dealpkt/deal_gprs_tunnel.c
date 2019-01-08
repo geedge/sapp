@@ -36,10 +36,16 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     int next_layer_offset;
     unsigned int cur_seq = 0, seq_offset = 0;
 
-    //针对同一回话GTP网关源端口变化的情况，强制将栈上的streaminfo中，sip,sport,dip设置成0
+    //针对同一会话GTP网关源端口变化的情况，强制将栈上的streaminfo中，地址全部设置为0
+    pfstream_pr->stream_public.addr.tuple4_v4->source = 0;
+    pfstream_pr->stream_public.addr.tuple4_v4->dest = 0;
+    pfstream_pr->stream_public.addr.tuple4_v4->saddr = 0;
+    pfstream_pr->stream_public.addr.tuple4_v4->daddr = 0;
+#if 0
     if(pfstream_pr->stream_public.curdir == DIR_C2S)
     {
         pfstream_pr->stream_public.addr.tuple4_v4->source = 0;
+        pfstream_pr->stream_public.addr.tuple4_v4->dest = 0;
         pfstream_pr->stream_public.addr.tuple4_v4->saddr = 0;
         pfstream_pr->stream_public.addr.tuple4_v4->daddr = 0;
     }
@@ -49,6 +55,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
         pfstream_pr->stream_public.addr.tuple4_v4->daddr = 0;
         pfstream_pr->stream_public.addr.tuple4_v4->saddr = 0;
     }
+#endif
     /* 之前已经通过协议识别插件识别过, 所以在entry()里不用再次判断 */
     p_gtd_hdr = (const struct gtp_hdr *)((char *)this_layer_data + sizeof(struct mesa_udp_hdr));
 
