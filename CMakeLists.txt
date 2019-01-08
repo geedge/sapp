@@ -1,6 +1,9 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+include(Version)
+
 set(CMAKE_MACOSX_RPATH 0)
 
 #set(CMAKE_INSTALL_PREFIX /home/ceiec/sapp/)
@@ -9,7 +12,7 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/run/)
 option(PLATFORM_MODE_SERIAL "Using serial mode" FALSE)
 
 #static link option
-option(ENABLE_STATIC_LINK "Enable static link" FALSE)
+option(ENABLE_STATIC_LINK "Enable static link" TRUE)
 
 #ASAN option
 option(ENABLE_SANITIZE_ADDRESS "Enable AddressSanitizer" FALSE)
