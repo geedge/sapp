@@ -6,6 +6,8 @@ set(CMAKE_MACOSX_RPATH 0)
 #set(CMAKE_INSTALL_PREFIX /home/ceiec/sapp/)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/run/)
 
+option(PLATFORM_MODE_SERIAL "Using serial mode" FALSE)
+
 #static link option
 option(ENABLE_STATIC_LINK "Enable static link" FALSE)
 
@@ -113,8 +115,7 @@ add_subdirectory(plugin)
 add_subdirectory(project)
 add_subdirectory(inner_plug)
 add_subdirectory(entry)
-
-#set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/run/)
+add_subdirectory(test_so)
 
 install(PROGRAMS ${CMAKE_BINARY_DIR}/entry/sapp DESTINATION .)
 
@@ -143,35 +144,28 @@ if(CAPTURE_MODE MATCHES "PCAP")
 	install(FILES ${CMAKE_BINARY_DIR}/packet_io/packet_io_pcap.so DESTINATION platform_lib)
 endif()
 
-install(FILES run/plug/platform/conflist_platform.inf DESTINATION plug/platform)
 install(FILES run/plug/protocol/conflist_protocol.inf DESTINATION plug/protocol)
+
 install(FILES run/plug/protocol/isakmp_protocol_plug/isakmp_protocol_plug.inf DESTINATION plug/protocol/isakmp_protocol_plug)
-install(FILES run/plug/protocol/isakmp_protocol_plug/isakmp_protocol_plug.so DESTINATION plug/protocol/isakmp_protocol_plug)
+install(FILES ${CMAKE_BINARY_DIR}/inner_plug/isakmp_protocol_plug.so DESTINATION plug/protocol/isakmp_protocol_plug)
+
 install(FILES run/plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.inf DESTINATION plug/protocol/l2tp_protocol_plug)
-install(FILES run/plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.so DESTINATION plug/protocol/l2tp_protocol_plug)
+install(FILES ${CMAKE_BINARY_DIR}/inner_plug/l2tp_protocol_plug.so DESTINATION plug/protocol/l2tp_protocol_plug)
+
 install(FILES run/plug/protocol/pptp_protocol_plug/pptp_protocol_plug.inf DESTINATION plug/protocol/pptp_protocol_plug)
-install(FILES run/plug/protocol/pptp_protocol_plug/pptp_protocol_plug.so DESTINATION plug/protocol/pptp_protocol_plug)
+install(FILES ${CMAKE_BINARY_DIR}/inner_plug/pptp_protocol_plug.so DESTINATION plug/protocol/pptp_protocol_plug)
+
+
+install(FILES run/plug/platform/conflist_platform.inf DESTINATION plug/platform)
+
+if(PLATFORM_MODE_SERIAL)
+    install(FILES run/plug/platform/g_device_plug/g_device_plug.inf DESTINATION plug/platform/g_device_plug)
+    install(FILES ${CMAKE_BINARY_DIR}/inner_plug/g_device_plug.so DESTINATION plug/platform/g_device_plug)
+endif()
+
 install(FILES run/plug/business/conflist_business.inf DESTINATION plug/business)
-#install(FILES run/plug/business/g_device_plug/g_device_plug.inf DESTINATION plug/business/g_device_plug)
-#install(FILES run/plug/business/g_device_plug/g_device_plug.so DESTINATION plug/business/g_device_plug)
+
+install(FILES run/plug/business/conflist_business.inf DESTINATION plug/business)
 install(FILES run/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app)
-install(FILES run/plug/business/test_app/test_app_sapp.so DESTINATION plug/business/test_app)
-install(FILES run/plug/business/test_app/trace_delay.so DESTINATION plug/business/test_app)
-#install(FILES src/hello.h DESTINATION )
-
-set(CPACK_PACKAGE_NAME "sapp")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Simple CPack sapp")
-set(CPACK_PACKAGE_VENDOR "MESA")
-set(CPACK_PACKAGE_VERSION "1.0.0")
-set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
-set(CPACK_PACKAGE_VERSION_PATCH "0")
-set(CPACK_RPM_PACKAGE_GROUP "MESA")
-set(CPACK_RPM_PACKAGE_URL "http://git.mesalab.cn")
-set(CPACK_RPM_PACKAGE_DESCRIPTION "Sapp Server Dependencies")
-set(CPACK_PACKAGE_RELEASE 1)
-set(CPACK_RPM_PACKAGE_LICENSE "mesalab.cn")
-
-set(CPACK_GENERATOR "RPM")
-
-include(CPack)
+install(FILES ${CMAKE_BINARY_DIR}/test_so/test_app_sapp.so DESTINATION plug/business/test_app)
+install(FILES ${CMAKE_BINARY_DIR}/test_so/trace_delay.so DESTINATION plug/business/test_app)
