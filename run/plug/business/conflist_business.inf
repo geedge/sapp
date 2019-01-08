@@ -6,3 +6,4 @@
 #./plug/business/pptp_biz_sample/pptp_biz_sample.inf
 #./plug/business/terminal_tag/terminal_tag.inf
 #./plug/business/g_device_plug/g_device_plug.inf
+./plug/business/ntc_ip_comm/ntc_ip_comm.inf
