@@ -3,6 +3,28 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_MACOSX_RPATH 0)
 
+#set(CMAKE_INSTALL_PREFIX /home/ceiec/sapp/)
+set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/run/)
+
+#static link option
+option(ENABLE_STATIC_LINK "Enable static link" FALSE)
+
+#ASAN option
+option(ENABLE_SANITIZE_ADDRESS "Enable AddressSanitizer" FALSE)
+option(ENABLE_SANITIZE_THREAD "Enable ThreadSanitizer" FALSE)
+
+if(ENABLE_SANITIZE_ADDRESS)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=address -fno-omit-frame-pointer")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=address -fno-omit-frame-pointer")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
+elseif(ENABLE_SANITIZE_THREAD)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=thread -fno-omit-frame-pointer")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=thread -fno-omit-frame-pointer")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
+endif()
+
 # MESA SDK Root
 set(MESA_SDK_PREFIX "/opt/MESA/" CACHE STRING "MESA Framework Prefix")
 # Capture Mode
@@ -91,3 +113,55 @@ add_subdirectory(plugin)
 add_subdirectory(project)
 add_subdirectory(inner_plug)
 add_subdirectory(entry)
+add_subdirectory(test_so)
+
+install(PROGRAMS ${CMAKE_BINARY_DIR}/entry/sapp DESTINATION .)
+
+install(PROGRAMS run/r2 DESTINATION .)
+install(PROGRAMS run/r3 DESTINATION .)
+install(PROGRAMS run/vv.py DESTINATION .)
+install(PROGRAMS run/pag.conf DESTINATION .)
+install(PROGRAMS run/memchk.sh DESTINATION .)
+install(FILES run/conf/gdev_block.conf DESTINATION conf)
+install(FILES run/conf/gdev.conf DESTINATION conf)
+install(FILES run/conf/main.conf DESTINATION conf)
+install(FILES run/conf/project_list.conf DESTINATION conf)
+install(FILES run/conf/route_table.conf DESTINATION conf)
+install(FILES run/conf/send_gdev.conf DESTINATION conf)
+install(FILES run/conf/send_raw_pkt.conf DESTINATION conf)
+install(FILES run/conf/send_route.conf DESTINATION conf)
+install(FILES run/conf/streamid.txt DESTINATION conf)
+install(FILES run/conf/plugin/entrylist.conf DESTINATION conf/plugin)
+install(FILES run/conf/plugin/plugin.conf DESTINATION conf/plugin)
+
+if(CAPTURE_MODE MATCHES "MARSIO")
+	install(FILES ${CMAKE_BINARY_DIR}/packet_io/packet_io_marsio.so DESTINATION platform_lib)
+endif()
+
+if(CAPTURE_MODE MATCHES "PCAP")
+	install(FILES ${CMAKE_BINARY_DIR}/packet_io/packet_io_pcap.so DESTINATION platform_lib)
+endif()
+
+install(FILES run/plug/protocol/conflist_protocol.inf DESTINATION plug/protocol)
+
+install(FILES run/plug/protocol/isakmp_protocol_plug/isakmp_protocol_plug.inf DESTINATION plug/protocol/isakmp_protocol_plug)
+install(FILES ${CMAKE_BINARY_DIR}/inner_plug/isakmp_protocol_plug.so DESTINATION plug/protocol/isakmp_protocol_plug)
+
+install(FILES run/plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.inf DESTINATION plug/protocol/l2tp_protocol_plug)
+install(FILES ${CMAKE_BINARY_DIR}/inner_plug/l2tp_protocol_plug.so DESTINATION plug/protocol/l2tp_protocol_plug)
+
+install(FILES run/plug/protocol/pptp_protocol_plug/pptp_protocol_plug.inf DESTINATION plug/protocol/pptp_protocol_plug)
+install(FILES ${CMAKE_BINARY_DIR}/inner_plug/pptp_protocol_plug.so DESTINATION plug/protocol/pptp_protocol_plug)
+
+
+install(FILES run/plug/platform/conflist_platform.inf DESTINATION plug/platform)
+
+install(FILES run/plug/platform/g_device_plug/g_device_plug.inf DESTINATION plug/platform/g_device_plug)
+install(FILES ${CMAKE_BINARY_DIR}/inner_plug/g_device_plug.so DESTINATION plug/platform/g_device_plug)
+
+install(FILES run/plug/business/conflist_business.inf DESTINATION plug/business)
+
+install(FILES run/plug/business/conflist_business.inf DESTINATION plug/business)
+install(FILES run/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app)
+install(FILES ${CMAKE_BINARY_DIR}/test_so/test_app_sapp.so DESTINATION plug/business/test_app)
+install(FILES ${CMAKE_BINARY_DIR}/test_so/trace_delay.so DESTINATION plug/business/test_app)

@@ -81,6 +81,8 @@ extern char *timet_to_str(time_t timet, char *time_str, int time_str_len);
 static int vxlan_sport_service_map_init(void);
 extern void del_last_rn(char *data, int max_len);
 
+static unsigned char g_vxlan_sport_to_service_id[65536]; /* 数组下标为源端口, 值为service-id */
+
 
 static int gdev_kp_action_judge(int service_id)
 {
@@ -523,6 +525,8 @@ int gdev_keepalive_plug_init(void)
 		return -1;
 	}
 
+	memset(g_vxlan_sport_to_service_id, 0, sizeof(g_vxlan_sport_to_service_id));
+
 	memset(tmp_ip_buf, 0, 16);
 	MESA_load_profile_string_nodef((char *)"conf/gdev.conf", (char *)"Module", (char *)"sendto_gdev_ip", tmp_ip_buf, 16);
 	if(tmp_ip_buf[0] == '\0'){
@@ -535,13 +539,14 @@ int gdev_keepalive_plug_init(void)
 	MESA_load_profile_int_def((char *)"conf/gdev.conf", (char *)"Module", (char *)"default_keepalive_action", &g_dev_keepalive_default_action, 1);
 	MESA_load_profile_int_def((char *)"conf/gdev.conf", (char *)"Module", (char *)"gdev_status_switch", &GDEV_KEEPALIVE_LOG_SWITCH, 1);
 
-	vxlan_sport_service_map_init();
 
 	for(i = 0; i <  MAX_VXLAN_SERVICE_NUM; i++){
 		g_dev_keepalive_service_ctrl_array[i].service_num = i;
 		g_dev_keepalive_service_ctrl_array[i].keepalive_switch = g_dev_keepalive_default_action;
 	}
-	
+
+	vxlan_sport_service_map_init();
+
 	if(GDEV_KEEPALIVE_LOG_SWITCH){
 		pthread_t log_pid;
 		pthread_create(&log_pid, NULL, gdev_keepalive_log_thread, NULL);
@@ -663,8 +668,6 @@ int gdev_keepalive_get_opt(SAPP_TLV_T *tlv_value)
 	用于告知上层应用业务号, 和处理哪类业务是否需要保活.
 */
 
-static unsigned char g_vxlan_sport_to_service_id[65536]; /* 数组下标为源端口, 值为service-id */
-
 
 static int vxlan_sport_service_map_update(int service_id, unsigned short begin_sport_host, unsigned short end_sport_host)
 {
@@ -672,6 +675,7 @@ static int vxlan_sport_service_map_update(int service_id, unsigned short begin_s
 
 	for(i = begin_sport_host; i <= end_sport_host;i++){
 		g_vxlan_sport_to_service_id[i] = service_id;
+		g_dev_keepalive_service_ctrl_array[service_id].keepalive_switch = 1;
 	}
 
 	return 0;

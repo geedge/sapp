@@ -43,20 +43,20 @@ trace_delay.so: trace_delay.o
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
 	cp $@ ../run/plug/business/test_app/
 
-terminal_tag.so: terminal_tag.o
-	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
-	cp $@ ../run/plug/business/terminal_tag/
+#terminal_tag.so: terminal_tag.o
+#	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
+#	cp $@ ../run/plug/business/terminal_tag/
 
-test_http.so:test_http.o
-	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
-	cp $@ ../run/plug/business/test_http/
+#test_http.so:test_http.o
+#	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
+#	cp $@ ../run/plug/business/test_http/
 
 test_sapp_so:test_sapp_so.c
 	$(CC) -o $@ -fPIC $(CFLAGS) $^ $(INCS) -L/opt/MESA/lib -lMESA_IP_PLUG -lpcap -lmarsio
 
-test_ct_plug.so:test_ct_plug.c
-	$(CC) -o $@ -shared -fPIC $(CFLAGS) $(INCS) $^ $(MODULES)
-	cp $@ ../run/plug/business/test_ct_plug/
+#test_ct_plug.so:test_ct_plug.c
+#	$(CC) -o $@ -shared -fPIC $(CFLAGS) $(INCS) $^ $(MODULES)
+#	cp $@ ../run/plug/business/test_ct_plug/
 
 .c.o:  
 	$(CC) -c -o $@ $(CFLAGS) -I. $(INCS) $<

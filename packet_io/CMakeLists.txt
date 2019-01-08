@@ -20,6 +20,7 @@ add_definitions(-fPIC)
 if(CAPTURE_MODE MATCHES "PCAP")
     set(PACKET_IO_SOURCE ${PACKET_IO_SOURCE} packet_io_pcap.c)
     add_library(packet_io_pcap SHARED ${PACKET_IO_SOURCE})
+	set_target_properties(packet_io_pcap  PROPERTIES PREFIX "")
 endif()
 
 if(CAPTURE_MODE MATCHES "PAG")
@@ -47,12 +48,12 @@ endif()
 set(PACKET_IO_STATIC_SOURCE cycle_pkt_dump_through_write_offset.c  packet_io_lib_load.c pkt_dispatch_new.c
 iknow_info.c                           packet_io_log.c         sendpacket.c
 sendpacket_wrap.c   packet_io.c packet_io_device.c sapp_compat_wangyan_api.c
-#packet_io_status_by_mesafs.cpp packet_io_status.cpp  packet_io_status_new.c )
 packet_io_status.cpp  packet_io_status_new.c )
 
 add_library(packet_io STATIC ${PACKET_IO_STATIC_SOURCE})
+    
 if(CAPTURE_MODE MATCHES "MARSIO")
     target_link_libraries(packet_io marsio)
-endif()
+endif() 
 
 target_link_libraries(packet_io timestamp_record iknow)
