@@ -328,8 +328,8 @@ static int sapp_fs2_init(void)
 
 	FS_set_para(sapp_global_single.fs2_handle, STATS_SERVER_PORT, &sapp_global_single.fs2_server_port_host, sizeof(short));
 
-	sapp_global_single.fs2_filed_id_array[PKT_ETHERNET] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_STATUS, FS_CALC_CURRENT, "Ethernet_pps");
-	sapp_global_single.fs2_filed_id_array[PKT_ETHERNET_LEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_STATUS, FS_CALC_CURRENT, "Ethernet_bps");
+	sapp_global_single.fs2_filed_id_array[PKT_ETHERNET] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ethernet_pps");
+	sapp_global_single.fs2_filed_id_array[PKT_ETHERNET_LEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ethernet_bps");
 
 	sapp_global_single.fs2_filed_id_array[PKT_IP] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_pps");
 	sapp_global_single.fs2_filed_id_array[PKT_IPLEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_bps");
