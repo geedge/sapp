@@ -347,7 +347,15 @@ static int sapp_fs2_init(void)
 	sapp_global_single.fs2_filed_id_array[SYS_TCP_LINK_DEL] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_DEL");
 	sapp_global_single.fs2_filed_id_array[SYS_TCP_LINK_DATA] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_CONCURRENT");
 
-	sapp_global_single.fs2_filed_id_array[SEND_TCP_RST] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_RST");
+    sapp_global_single.fs2_filed_id_array[LINK_DOUBLE] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD,
+            FS_CALC_CURRENT, "TCP_LINK_DOUBLE");
+    sapp_global_single.fs2_filed_id_array[LINK_SINGLE_C2S] = FS_register(sapp_global_single.fs2_handle,
+            FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_C2S");
+    sapp_global_single.fs2_filed_id_array[LINK_SINGLE_S2C] = FS_register(sapp_global_single.fs2_handle,
+            FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_S2C");
+
+
+    sapp_global_single.fs2_filed_id_array[SEND_TCP_RST] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_RST");
 	sapp_global_single.fs2_filed_id_array[SEND_TCP_SYN_ACK] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_S/A");
 	sapp_global_single.fs2_filed_id_array[SEND_UDP_PKT] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_UDP");
 
