@@ -1301,13 +1301,13 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 		}
 		
 		MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_total_size", &total_files_size, 1000);
-		if(total_files_size < 1 || (unsigned int)total_files_size >= 1024*100 /* 100GB */){
+		if(total_files_size < 1 || (unsigned int)total_files_size >= 1024*1000 /* 1000GB */){
 			printf("pkt_dump_total_size  invalid!\n");
 			return -1;
 		}
 		
 		MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_file_max_size", &int_tmp, 100);
-		if(int_tmp < 2 || (unsigned int)int_tmp >= 1024*100 /* 100GB */){
+		if(int_tmp < 2 || (unsigned int)int_tmp >= 1024*1000 /* 1000GB */){
 			printf("pkt_dump_file_max_size  invalid!\n");
 			return -1;
 		}

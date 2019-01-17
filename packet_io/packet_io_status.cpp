@@ -209,9 +209,26 @@ void sysinfo_output(void)
 	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "UDP", sysinfo_new[SEND_UDP_PKT], byte_convert_human(sysinfo_new[SEND_UDP_PKT_LEN],1,1,s1),(sysinfo_new[SEND_UDP_PKT]-sysinfo_old[SEND_UDP_PKT]), byte_convert_human((sysinfo_new[SEND_UDP_PKT_LEN]-sysinfo_old[SEND_UDP_PKT_LEN]),1,8,s2));
 	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "SEND-ERR", sysinfo_new[SEND_PKT_ERR], byte_convert_human(sysinfo_new[SEND_PKT_ERR_LEN],1,1,s1),(sysinfo_new[SEND_PKT_ERR]-sysinfo_old[SEND_PKT_ERR]), byte_convert_human((sysinfo_new[SEND_PKT_ERR_LEN]-sysinfo_old[SEND_PKT_ERR_LEN]),1,8,s2));
 
-	fprintf(fp,"#################################################################\n\n");
+	fprintf(fp,"#################################################################\n");
 
-	/* 2018-08-29 lijia add field statsd */
+    fprintf(fp,"%-10s %12s %12s\n","TCP_LINK", "total_link", "link/s");
+    fprintf(fp,"%-10s %12llu %12llu\n", "TCP_NEW", sysinfo_new[SYS_TCP_LINK_NEW],
+            sysinfo_new[SYS_TCP_LINK_NEW] - sysinfo_old[SYS_TCP_LINK_NEW]);
+    //fprintf(fp,"%-10s %12llu %12llu\n", "TCP_DATA", sysinfo_new[SYS_TCP_LINK_DATA],
+    //        sysinfo_new[SYS_TCP_LINK_DATA] - sysinfo_old[SYS_TCP_LINK_DATA]);
+    fprintf(fp,"%-10s %12llu %12llu\n", "TCP_DEL", sysinfo_new[SYS_TCP_LINK_DEL],
+            sysinfo_new[SYS_TCP_LINK_DEL] - sysinfo_old[SYS_TCP_LINK_DEL]);
+    fprintf(fp,"%-10s %12llu %12llu\n", "TCP_DOU", sysinfo_new[LINK_DOUBLE],
+            sysinfo_new[LINK_DOUBLE] - sysinfo_old[LINK_DOUBLE]);
+    fprintf(fp,"%-10s %12llu %12llu\n", "TCP_C2S", sysinfo_new[LINK_SINGLE_C2S],
+            sysinfo_new[LINK_SINGLE_C2S] - sysinfo_old[LINK_SINGLE_C2S]);
+    fprintf(fp,"%-10s %12llu %12llu\n", "TCP_S2C", sysinfo_new[LINK_SINGLE_S2C],
+            sysinfo_new[LINK_SINGLE_S2C] - sysinfo_old[LINK_SINGLE_S2C]);
+
+    fprintf(fp,"#################################################################\n\n");
+
+
+    /* 2018-08-29 lijia add field statsd */
 #if 0	
 	sapp_statsd_add_para("Ethernet_pps", sysinfo_new[PKT_ETHERNET]-sysinfo_old[PKT_ETHERNET]);
 	sapp_statsd_add_para("Ethernet_bps", 8 *( sysinfo_new[PKT_ETHERNET_LEN]-sysinfo_old[PKT_ETHERNET_LEN]));
@@ -274,6 +291,10 @@ void sysinfo_output(void)
 	sapp_fs2_update(SYS_TCP_LINK_NEW,sysinfo_new[SYS_TCP_LINK_NEW]);
 	sapp_fs2_update(SYS_TCP_LINK_DEL, sysinfo_new[SYS_TCP_LINK_DEL]);
 	sapp_fs2_update(SYS_TCP_LINK_DATA, sysinfo_new[SYS_TCP_LINK_DATA]);
+
+	sapp_fs2_update(LINK_DOUBLE,sysinfo_new[LINK_DOUBLE]);
+	sapp_fs2_update(LINK_SINGLE_C2S, sysinfo_new[LINK_SINGLE_C2S]);
+	sapp_fs2_update(LINK_SINGLE_S2C, sysinfo_new[LINK_SINGLE_S2C]);
 
 	sapp_fs2_update(SEND_TCP_RST,  sysinfo_new[SEND_TCP_RST]);
 	sapp_fs2_update(SEND_TCP_SYN_ACK,  sysinfo_new[SEND_TCP_SYN_ACK]);
