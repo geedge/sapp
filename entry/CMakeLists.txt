@@ -12,7 +12,11 @@ add_executable(sapp sapp_init.c sapp_main.c sapp_global_val.c)
 target_link_libraries(sapp nsl pthread dl m pcap)
 target_link_libraries(sapp MESA_handle_logger MESA_prof_load sapp_assistant gdev_assistant)
 
-set(SAPP_MODULES -Wl,--whole-archive iknow timestamp_record dictator2 md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl -Wl,--no-whole-archive)
+set(SAPP_MODULES -Wl,--whole-archive iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl -Wl,--no-whole-archive)
+if(OPT_USE_DICTATOR)
+    set(SAPP_MODULES "${set(SAPP_MODULES}  -Wl,--whole-archive dictator2 -Wl,--no-whole-archive")
+endif()
+
 target_link_libraries(sapp ${SAPP_MODULES} ${SAPP_DEPEND_DYN_LIB})
 
 if(CAPTURE_MODE MATCHES "PAG")

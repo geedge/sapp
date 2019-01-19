@@ -96,21 +96,19 @@ endif()
 
 # Memory Allocator
 option(OPT_USE_DICTATOR	"Use Dictator2 memory allocator" OFF)
-option(OPT_USE_TXMEM "Use Dictator2 for TileGX memory allocator" OFF)
+#option(OPT_USE_TXMEM "Use Dictator2 for TileGX memory allocator" OFF)
 option(OPT_USE_TCMALLOC "Use TCmalloc memory allocator" OFF)
 option(OPT_USE_TCMALLOC_MINI "Use TCmalloc memory allocator MINI" OFF)
 option(OPT_USE_JEMALLOC "Use JEmalloc memory allocator" OFF)
 
 if(OPT_USE_DICTATOR)
 	set(MEM_POOL_DEFINITIONS -DUSE_MEM_POOL=1)
-endif()
-
-if(OPT_USE_TCMALLOC_MINI)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc_minimal")
+elseif(OPT_USE_TCMALLOC_MINI)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc_minimal -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 elseif(OPT_USE_TCMALLOC)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 elseif(OPT_USE_JEMALLOC)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 endif()
 
 add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
