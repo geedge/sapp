@@ -442,7 +442,9 @@ static int mpls_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 	}else if((*next_layer_data & 0x60) == 0x60){
 		skip_len = ipv6_jump_to_layer(next_layer_data, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
 	}else{
-		sapp_runtime_log(20, "TODO: jmp unsupport type in MPLS, 0x%x!\n",  (unsigned char)(*next_layer_data));
+		//skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MPLS, expect_layer_type);
+		sapp_runtime_log(20, "WARNING: jmp unsupport type in MPLS to Ethernet, 0x%x!\n",  (unsigned char)
+		(*next_layer_data));
 		return -1;
 	}
 
