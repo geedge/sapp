@@ -10,12 +10,13 @@ include_directories(${CMAKE_SOURCE_DIR}/dealpkt)
 include_directories(${CMAKE_SOURCE_DIR}/packet_io)
 
 add_executable(sapp sapp_init.c sapp_main.c sapp_global_val.c)
+target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
 target_link_libraries(sapp nsl pthread dl m pcap)
 target_link_libraries(sapp MESA_handle_logger MESA_prof_load)
 
 
 set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl)
-if(OPT_USE_DICTATOR)
+if(OPT_USE_DICTATOR OR OPT_USE_DICTATOR_DEBUG)
     set(SAPP_MODULES ${SAPP_MODULES}  dictator2 )
 endif()
 

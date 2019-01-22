@@ -94,13 +94,18 @@ endif()
 
 # Memory Allocator
 option(OPT_USE_DICTATOR	"Use Dictator2 memory allocator" OFF)
-option(OPT_USE_TXMEM "Use Dictator2 for TileGX memory allocator" OFF)
+option(OPT_USE_DICTATOR_DEBUG	"Use Dictator2 memory allocator" OFF)
 option(OPT_USE_TCMALLOC "Use TCmalloc memory allocator" OFF)
 option(OPT_USE_TCMALLOC_MINI "Use TCmalloc memory allocator" OFF)
 option(OPT_USE_JEMALLOC "Use JEmalloc memory allocator" OFF)
 
-if(OPT_USE_DICTATOR)
-	set(MEM_POOL_DEFINITIONS -DUSE_MEM_POOL=1)
+if(OPT_USE_DICTATOR_DEBUG)
+	set(MEM_POOL_DEFINITIONS -DDICTATOR_DEBUG)
+endif()
+
+if(OPT_USE_DICTATOR OR OPT_USE_DICTATOR_DEBUG)
+    set(MEM_POOL_DEFINITIONS ${MEM_POOL_DEFINITIONS} -DUSE_MEM_POOL=1
+        -DUSE_MEMPOOL)
 elseif(OPT_USE_TCMALLOC_MINI)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc_minimal -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 elseif(OPT_USE_TCMALLOC)
@@ -116,6 +121,7 @@ set(SAPP_DEPEND_DYN_LIB  MESA_handle_logger MESA_htable pthread MESA_field_stat2
 
 #set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG -fno-inline")
 
+add_subdirectory(test_so)
 add_subdirectory(support)
 add_subdirectory(dealpkt)
 add_subdirectory(packet_io)
@@ -123,7 +129,6 @@ add_subdirectory(plugin)
 add_subdirectory(project)
 add_subdirectory(inner_plug)
 add_subdirectory(entry)
-add_subdirectory(test_so)
 
 install(PROGRAMS ${CMAKE_BINARY_DIR}/entry/sapp DESTINATION .)
 
