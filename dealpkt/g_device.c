@@ -69,7 +69,7 @@ inline int is_private_addr_v6(struct in6_addr ip6_add)
 }
 
 /* 是否为IPv6组播地址 */
-inline int is_multicast_addr_v6(struct in6_addr ip6_add)
+int is_multicast_addr_v6(struct in6_addr ip6_add)
 {
 	/* IPv6 multicast address first 8 bits is 11111111 */
     if(ip6_add.s6_addr[0] == 0xFF)

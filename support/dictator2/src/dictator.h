@@ -21,7 +21,6 @@ void *__dictator_calloc(int t_seq,size_t nmemb, size_t size);
 
 void *malloc(size_t size);
 void *calloc(size_t nmemb, size_t size);
-void *calloc(size_t nmemb, size_t size);
 void free(void *p);
 
 #ifdef __cplusplus

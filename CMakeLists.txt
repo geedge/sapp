@@ -1,13 +1,16 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+include(Version)
+
 set(CMAKE_MACOSX_RPATH 0)
 
 #set(CMAKE_INSTALL_PREFIX /home/ceiec/sapp/)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/run/)
 
 #static link option
-option(ENABLE_STATIC_LINK "Enable static link" FALSE)
+option(ENABLE_STATIC_LINK "Enable static link" TRUE)
 
 #ASAN option
 option(ENABLE_SANITIZE_ADDRESS "Enable AddressSanitizer" FALSE)
@@ -93,10 +96,17 @@ endif()
 option(OPT_USE_DICTATOR	"Use Dictator2 memory allocator" OFF)
 option(OPT_USE_TXMEM "Use Dictator2 for TileGX memory allocator" OFF)
 option(OPT_USE_TCMALLOC "Use TCmalloc memory allocator" OFF)
+option(OPT_USE_TCMALLOC_MINI "Use TCmalloc memory allocator" OFF)
 option(OPT_USE_JEMALLOC "Use JEmalloc memory allocator" OFF)
 
 if(OPT_USE_DICTATOR)
 	set(MEM_POOL_DEFINITIONS -DUSE_MEM_POOL=1)
+elseif(OPT_USE_TCMALLOC_MINI)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc_minimal -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+elseif(OPT_USE_TCMALLOC)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+elseif(OPT_USE_JEMALLOC)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 endif()
 
 add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
