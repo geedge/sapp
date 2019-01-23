@@ -359,6 +359,18 @@ static int sapp_fs2_init(void)
 	sapp_global_single.fs2_filed_id_array[SEND_TCP_SYN_ACK] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_S/A");
 	sapp_global_single.fs2_filed_id_array[SEND_UDP_PKT] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_UDP");
 
+	for(int i = 0; i < g_packet_io_thread_num; i++)
+	{
+		char histogram_name[16];
+		sprintf(histogram_name, "tid_%d", i);
+		sapp_global_single.fs2_latency_id_array[i] = FS_register_histogram(sapp_global_single.fs2_handle,  //Field Stat句柄
+							  FS_CALC_CURRENT,    //输出累计值或瞬时值
+							  histogram_name,     //统计项名称，字符串
+							  1,                  //可追踪的最小值
+							  100000000,            //可追踪的最大值
+							  2);                 //精度，即小数点后几位，范围1~4
+
+	}
 	FS_start(sapp_global_single.fs2_handle);
 	
 	return 0;
@@ -421,6 +433,12 @@ void sapp_fs2_update(int field_index, unsigned  long long value)
 	}
 }
 
+void sapp_fs2_set_latency(int thead_seq, long long time_cost)
+{
+    if(sapp_global_single.fs2_handle != NULL){
+        FS_operate(sapp_global_single.fs2_handle, sapp_global_single.fs2_latency_id_array[thead_seq], 0, FS_OP_SET, time_cost);
+    }
+}
 
 int sapp_assistant_init(void)
 {

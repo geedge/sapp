@@ -287,6 +287,9 @@ struct sapp_global_single_t{
 	short __pad1;
 	int fs2_filed_id_array[COUNTER_NUM];
 
+	int fs2_latency_id_array[COUNTER_NUM];
+
+
 	int send_fake_pkt_mode; /* 2018-10-26 lijia add, for PanGu, 由于缺少FD路由, 需借用串联GDEV发送rst包, DNS-fake包等,mode 0： 协议栈三层发包， 1：协议栈二层发包，3：gdev注入发包，此模式下send_fake_pkt_gdev_sport有效 */
 	int send_fake_pkt_gdev_sport;  /* 2018-10-26 lijia add, for PanGu, 用于选择vxlan源端口 */
 	int send_fake_pkt_sip;
