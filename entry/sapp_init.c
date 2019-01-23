@@ -25,6 +25,7 @@ extern "C" {
 static int threadnum = 1;
 static volatile long stream_num = 0;
 int g_iThreadNum = 1;
+char g_app_instance_name[64];
 time_t g_CurrentTime;//add by lqy 20070606
 time_t g_sapp_start_time;
 volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
@@ -125,7 +126,14 @@ int MESA_platform_init(int argc, char *argv[])
 	/* 2016-09-22 lijia add, dictator在第一次被调用时有初始化代码, 防止多线程重入冲突, 平台先调用一次, 先要读取配置文件开关 */
 	MESA_load_profile_int_def("conf/main.conf","Module", "dictator_switch", &G_DICTATOR_SW, 1);	
 	sapp_dictator_init();
-	
+
+	memset(g_app_instance_name, 0, 64);
+	MESA_load_profile_string_nodef((char *)"conf/main.conf", (char *)"Module", (char *)"app_instance_name", g_app_instance_name, 64);
+	if(g_app_instance_name[0] == '\0'){
+		snprintf(g_app_instance_name, 64, "%s_%d", "sapp", (int)getpid());
+		printf("\033[33m[Warning]Not set main.conf->app_instance_name, use random name:%s\033[0m\n", g_app_instance_name);
+	}
+
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"ShowStatInfo", (char *)"platform_log_level", &g_sapp_log_level, 10);
 	g_sapp_log_handle = MESA_create_runtime_log_handle("./log/runtimelog", g_sapp_log_level);
 	if(NULL == g_sapp_log_handle)

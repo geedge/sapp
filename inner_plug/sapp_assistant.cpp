@@ -35,6 +35,8 @@ extern time_t g_CurrentTime;//add by lqy 20070606
 extern time_t g_sapp_start_time;
 extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
 extern int g_packet_io_thread_num;
+extern char g_app_instance_name[64];
+
 
 int sapp_assistant_version_VERSION_20181024;
 extern int MESA_get_dev_ipv4(const char *device, int *ip_add);
@@ -322,7 +324,9 @@ static int sapp_fs2_init(void)
 
 	FS_set_para(sapp_global_single.fs2_handle, OUTPUT_DEVICE, "fs2_sysinfo.log", strlen("fs2_sysinfo.log")+1);
 
-	FS_set_para(sapp_global_single.fs2_handle, APP_NAME, "sapp", strlen("sapp")+1);
+	//FS_set_para(sapp_global_single.fs2_handle, APP_NAME, "sapp", strlen("sapp")+1);
+
+    FS_set_para(sapp_global_single.fs2_handle, APP_NAME, g_app_instance_name, strlen(g_app_instance_name)+1);
 
 	FS_set_para(sapp_global_single.fs2_handle, STATS_SERVER_IP, (void *)sapp_global_single.fs2_server_ip, strlen(sapp_global_single.fs2_server_ip)+1);
 
@@ -364,7 +368,7 @@ static int sapp_fs2_init(void)
 		char histogram_name[16];
 		sprintf(histogram_name, "tid_%d", i);
 		sapp_global_single.fs2_latency_id_array[i] = FS_register_histogram(sapp_global_single.fs2_handle,  //Field Stat句柄
-							  FS_CALC_CURRENT,    //输出累计值或瞬时值
+							  FS_CALC_SPEED,    //输出累计值或瞬时值
 							  histogram_name,     //统计项名称，字符串
 							  1,                  //可追踪的最小值
 							  100000000,            //可追踪的最大值

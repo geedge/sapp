@@ -49,7 +49,7 @@ static char **g_mr4_down_device_name; /* 设备名称集合, meth0, meth1, meth2... */
 static struct mr_vdev **g_mr4_dev_up_handle_set, **g_mr4_dev_down_handle_set; /* 设备句柄集合 */
 static struct mr_sendpath **g_mr4_sendpath_up_set, **g_mr4_sendpath_down_set; /* 发包路径(句柄)集合 */
 static marsio4_io_handle *g_mario4_io_handle;
-
+extern char g_app_instance_name[64];
 #define MARSIO_BURST_PKT_MAX		(256)
 static int marsio4_burst_process_pkt_num = 32; /* 批处理包数量, 从pag.conf中获取 */
 static long marsio4_thread_bind_mask = 0;
@@ -368,16 +368,20 @@ int dl_io_init(int argc, char *argv[])
 		}
 	}	
 
-	char app_instance_name[64];
-	memset(app_instance_name, 0, 64);
-	MESA_load_profile_string_nodef((char *)"conf/main.conf", (char *)"Module", (char *)"app_instance_name", app_instance_name, 64);
-	if(app_instance_name[0] != '\0'){
-		marsio_init(mr4_instance, app_instance_name);
-	}else{
-		snprintf(app_instance_name, 64, "%s_%d", "sapp", (int)getpid());
-		marsio_init(mr4_instance, app_instance_name);
-		printf("\033[33m[Warning]In marsio mode, not set main.conf->app_instance_name, use random name:%s\033[0m\n", app_instance_name);
-	}
+	//char app_instance_name[64];
+	//memset(app_instance_name, 0, 64);
+	//MESA_load_profile_string_nodef((char *)"conf/main.conf", (char *)"Module", (char *)"app_instance_name",
+	//		app_instance_name, 64);
+	//if(app_instance_name[0] != '\0'){
+	//	marsio_init(mr4_instance, app_instance_name);
+	//}else{
+	//	snprintf(app_instance_name, 64, "%s_%d", "sapp", (int)getpid());
+	//	marsio_init(mr4_instance, app_instance_name);
+	//	printf("\033[33m[Warning]In marsio mode, not set main.conf->app_instance_name, use random name:%s\033[0m\n",
+	//		app_instance_name);
+	//}
+	marsio_init(mr4_instance, g_app_instance_name);
+
 
 	g_mr4_dev_up_handle_set = (struct mr_vdev **)malloc(sizeof(void *) * g_mr4_device_num);
 	g_mr4_dev_down_handle_set = (struct mr_vdev **)malloc(sizeof(void *) * g_mr4_device_num);	
