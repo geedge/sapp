@@ -341,7 +341,7 @@ void *time_event_thread(void *arg)
 		if(g_CurrentTime > last_log_time){
 			last_log_time = g_CurrentTime;
 			sysinfo_output();
-			pkt_runtime_output();
+			//pkt_runtime_output();
 		}
 		
 		usleep(1000);

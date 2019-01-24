@@ -569,13 +569,17 @@ static int packet_io_strip_L2E_hdr(raw_pkt_t *p_raw_pkt, unsigned char dir, int 
 
 	return ret;
 }
+extern void sapp_fs2_set_latency(int thead_seq, long long time_cost);
 
 static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, int thread_num)
 {
 	int ret = PASS;
 	long long before_call = 0, after_call, timecost;
 
-	before_call = sapp_get_cpu_cycle();
+    struct timespec start, end;
+
+    clock_gettime(CLOCK_MONOTONIC, &start);
+	//before_call = sapp_get_cpu_cycle();
 
 #if DEBUG
 	char raw_pkt_md5_before[16];
@@ -615,9 +619,12 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		}
 	}
 
-	after_call = sapp_get_cpu_cycle();
-	timecost = after_call - before_call;
+	//after_call = sapp_get_cpu_cycle();
+	//timecost = after_call - before_call;
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    timecost = (end.tv_sec - start.tv_sec)*1000000 + (end.tv_nsec - start.tv_nsec);
 	timestamp_region_update(thread_num,  timecost);
+	sapp_fs2_set_latency(thread_num,  timecost);
 		
 #if DEBUG
 	if(unlikely(g_timestamp_record_sw)){

@@ -124,6 +124,7 @@ enum stream_carry_tunnel_t{
 	STREAM_TUNNLE_L2TP		= 1 << 5,
 	STREAM_TUNNLE_TEREDO		= 1 << 6,
 	STREAM_TUNNEL_GPRS_TUNNEL = 1 << 7,
+	STREAM_TUNNEL_MULTI_MAC = 1 << 8,
 };
 
 typedef struct raw_ipfrag_list{

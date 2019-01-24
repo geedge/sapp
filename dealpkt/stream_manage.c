@@ -2572,6 +2572,13 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
 	const struct streaminfo *pfather = this_stream->pfather; 
 	
 	switch(this_stream->addr.addrtype){
+		case ADDR_TYPE_MAC:
+			pfather = this_stream->pfather;  //
+			if(pfather != NULL){
+					*tunnel_type = (unsigned short)STREAM_TUNNEL_MULTI_MAC;
+			}
+			break;
+
 		case ADDR_TYPE_IPV4:
 			pfather = this_stream->pfather;  /* IP-TCP/UDP被认为是一个整体, 更新pfather指针 */
 			if(pfather != NULL){

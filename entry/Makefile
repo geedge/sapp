@@ -74,7 +74,7 @@ $(TARGET):sapp_main.o  sapp_init.o sapp_global_val.o
 	g++ -g -Wl,--export-dynamic -o $@ $(CFLAGS) $(INC) $^ $(LDFLAGS) $(LIB_PATH)  -Wl,--whole-archive $(WHOLE_ARCH)  -Wl,--no-whole-archive $(LIB)
 	cp ../packet_io/*.so ../run/platform_lib/;
 	cp $@ ../run/;
-	ldconfig;
+	#ldconfig;
 
 .c.o:
 	$(CC) -c $(CFLAGS) -I. $(INC) $<

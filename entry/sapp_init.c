@@ -125,7 +125,7 @@ int MESA_platform_init(int argc, char *argv[])
 	/* 2016-09-22 lijia add, dictator在第一次被调用时有初始化代码, 防止多线程重入冲突, 平台先调用一次, 先要读取配置文件开关 */
 	MESA_load_profile_int_def("conf/main.conf","Module", "dictator_switch", &G_DICTATOR_SW, 1);	
 	sapp_dictator_init();
-	
+
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"ShowStatInfo", (char *)"platform_log_level", &g_sapp_log_level, 10);
 	g_sapp_log_handle = MESA_create_runtime_log_handle("./log/runtimelog", g_sapp_log_level);
 	if(NULL == g_sapp_log_handle)

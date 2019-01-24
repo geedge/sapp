@@ -6,6 +6,11 @@ include(Version)
 
 set(CMAKE_MACOSX_RPATH 0)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
+endif()
+
 #set(CMAKE_INSTALL_PREFIX /home/ceiec/sapp/)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/run/)
 
@@ -96,21 +101,24 @@ endif()
 
 # Memory Allocator
 option(OPT_USE_DICTATOR	"Use Dictator2 memory allocator" OFF)
-option(OPT_USE_TXMEM "Use Dictator2 for TileGX memory allocator" OFF)
+option(OPT_USE_DICTATOR_DEBUG	"Use Dictator2 memory allocator" OFF)
 option(OPT_USE_TCMALLOC "Use TCmalloc memory allocator" OFF)
-option(OPT_USE_TCMALLOC_MINI "Use TCmalloc memory allocator MINI" OFF)
+option(OPT_USE_TCMALLOC_MINI "Use TCmalloc memory allocator" OFF)
 option(OPT_USE_JEMALLOC "Use JEmalloc memory allocator" OFF)
 
-if(OPT_USE_DICTATOR)
-	set(MEM_POOL_DEFINITIONS -DUSE_MEM_POOL=1)
+if(OPT_USE_DICTATOR_DEBUG)
+	set(MEM_POOL_DEFINITIONS -DDICTATOR_DEBUG)
 endif()
 
-if(OPT_USE_TCMALLOC_MINI)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc_minimal")
+if(OPT_USE_DICTATOR OR OPT_USE_DICTATOR_DEBUG)
+    set(MEM_POOL_DEFINITIONS ${MEM_POOL_DEFINITIONS} -DUSE_MEM_POOL=1
+        -DUSE_MEMPOOL)
+elseif(OPT_USE_TCMALLOC_MINI)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc_minimal -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 elseif(OPT_USE_TCMALLOC)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 elseif(OPT_USE_JEMALLOC)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 endif()
 
 add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
@@ -120,6 +128,29 @@ set(SAPP_DEPEND_DYN_LIB  MESA_handle_logger MESA_htable pthread MESA_field_stat2
 
 set(CMAKE_C_FLAGS_RELEASE "-Werror")
 
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_base.h MD5_STREAM_BASE)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_control.h MD5_STREAM_CONTROL)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_entry.h MD5_STREAM_ENTRY)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_inject.h MD5_STREAM_INJECT)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_project.h MD5_STREAM_PROJECT)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_proxy.h MD5_STREAM_PROXY)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_rawpkt.h MD5_STREAM_RAWPKT)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_tunnel.h MD5_STREAM_TUNNEL)
+
+add_definitions(${HEADER_CHECK_DEFINITIONS}
+				-DSTREAM_BASE_MD5_CHECK="${MD5_STREAM_BASE}"
+				-DSTREAM_CONTROL_MD5_CHECK="${MD5_STREAM_CONTROL}"
+				-DSTREAM_ENTRY_MD5_CHECK="${MD5_STREAM_ENTRY}"
+			    -DSTREAM_INJECT_MD5_CHECK="${MD5_STREAM_INJECT}"
+				-DSTREAM_PROJECT_MD5_CHECK="${MD5_STREAM_PROJECT}"
+				-DSTREAM_PROXY_MD5_CHECK="${MD5_STREAM_PROXY}"
+				-DSTREAM_RAWPKT_MD5_CHECK="${MD5_STREAM_RAWPKT}"
+				-DSTREAM_TUNNEL_MD5_CHECK="${MD5_STREAM_TUNNEL}")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
+
+add_subdirectory(test_so)
 add_subdirectory(support)
 add_subdirectory(dealpkt)
 add_subdirectory(packet_io)
@@ -127,7 +158,6 @@ add_subdirectory(plugin)
 add_subdirectory(project)
 add_subdirectory(inner_plug)
 add_subdirectory(entry)
-add_subdirectory(test_so)
 
 install(PROGRAMS ${CMAKE_BINARY_DIR}/entry/sapp DESTINATION .)
 

@@ -426,8 +426,9 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
 	unsigned char *ptr;
 	unsigned long long smac_integer_type; /* 48bit mac转换为64bit的长整型数字存储, 便于操作 */
 
-	while(mim_stream){
-		if(ADDR_TYPE_MAC_IN_MAC == mim_stream->addr.addrtype || ADDR_TYPE_MAC == mim_stream->addr.addrtype){
+	while(mim_stream){//对于多层mac地址的情况，只从最外层MAC地址取vxlan_info
+		if((ADDR_TYPE_MAC_IN_MAC == mim_stream->addr.addrtype || ADDR_TYPE_MAC == mim_stream->addr.addrtype) &&
+				(mim_stream->pfather == NULL)){
 			break;
 		}else{
 			mim_stream = mim_stream->pfather;

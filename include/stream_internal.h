@@ -14,14 +14,14 @@
 #include "sysinfo.h"
 #include "MESA_handle_logger.h"
 
-#define STREAM_BASE_MD5_CHECK		"dd09b3b11993cc835200db477dad7d4b"
-#define STREAM_CONTROL_MD5_CHECK 	"75aab0821e489b84355fa22ad02a2e78"
-#define STREAM_ENTRY_MD5_CHECK		"7dab86d65114ebe5438e85e0d008645d"
-#define STREAM_INJECT_MD5_CHECK		"1e25b7a8cd812db2ad261264b6783d64"
-#define STREAM_PROJECT_MD5_CHECK		"fc2b981f7e2c99e73d8857e206cb4977"
-#define STREAM_PROXY_MD5_CHECK		"25cec664c9b44a8cac29f6e3e117eaa6"
-#define STREAM_RAWPKT_MD5_CHECK		"48fdc3294bced1c74a853e197db8fd67"
-#define STREAM_TUNNEL_MD5_CHECK		"d20aa6b4f5683b7b0040676547997be0"
+//#define STREAM_BASE_MD5_CHECK		"dd09b3b11993cc835200db477dad7d4b"
+//#define STREAM_CONTROL_MD5_CHECK 	"75aab0821e489b84355fa22ad02a2e78"
+//#define STREAM_ENTRY_MD5_CHECK		"7dab86d65114ebe5438e85e0d008645d"
+//#define STREAM_INJECT_MD5_CHECK		"1e25b7a8cd812db2ad261264b6783d64"
+//#define STREAM_PROJECT_MD5_CHECK		"fc2b981f7e2c99e73d8857e206cb4977"
+//#define STREAM_PROXY_MD5_CHECK		"25cec664c9b44a8cac29f6e3e117eaa6"
+//#define STREAM_RAWPKT_MD5_CHECK		"48fdc3294bced1c74a853e197db8fd67"
+//#define STREAM_TUNNEL_MD5_CHECK		"d20aa6b4f5683b7b0040676547997be0"
 
 #define IP_PORT_UNION_VERSION			(1) /* 是否将IP-PORT合并 */
 #define COMPAT_PAPP_FOR_BENCHMARK	(0) /* 2015-01-07 lijia add, 同papp对比结果时, 临时关闭嵌套、各种隧道协议, 否则不一致 */
@@ -286,6 +286,9 @@ struct sapp_global_single_t{
 	unsigned short fs2_server_port_host;
 	short __pad1;
 	int fs2_filed_id_array[COUNTER_NUM];
+
+	int fs2_latency_id_array[COUNTER_NUM];
+
 
 	int send_fake_pkt_mode; /* 2018-10-26 lijia add, for PanGu, 由于缺少FD路由, 需借用串联GDEV发送rst包, DNS-fake包等,mode 0： 协议栈三层发包， 1：协议栈二层发包，3：gdev注入发包，此模式下send_fake_pkt_gdev_sport有效 */
 	int send_fake_pkt_gdev_sport;  /* 2018-10-26 lijia add, for PanGu, 用于选择vxlan源端口 */
