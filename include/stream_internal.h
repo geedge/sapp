@@ -269,6 +269,7 @@ struct sapp_global_single_t{
 	unsigned short fs2_server_port_host;
 	short __pad1;
 	int fs2_filed_id_array[COUNTER_NUM];
+	int fs2_latency_id_array[COUNTER_NUM];
 	int treat_vlan_as_mac_in_mac_sw;
 };
 

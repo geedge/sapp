@@ -40,6 +40,7 @@ int iknow_info_init(void);
 extern void sesame_open_door(const char *lock_path, const char *lock_name);
 /* (0:pag,1:pcap,2:dumpfile,3:pfring,4:DPDK,5:ppf,6:NPacket,7:qnf,8:N95,9:pcap-dumpfile-list, 10:topsec) */
 int cap_mode = 2;
+int top_mode = 0;
 extern int G_DICTATOR_SW;
 extern struct global_stream **G_MESA_GLOBAL_STREAM;
 extern int G_SKIP_NOT_IP_LAYER; /* 跳过非IP协议的层, 用于双栈并联特殊环境下, RST包发送 */
@@ -103,7 +104,7 @@ static void sapp_dictator_init(void)
 
 int MESA_platform_init(int argc, char *argv[])
 {
-	int top_mode, queue_max_num, ipv6_switch = 0;
+	int queue_max_num, ipv6_switch = 0;
 	char pcap_dev1[128], pcap_dev2[128], snd_dev[128]; 
 	char cap_filter[1024] = {};
 	char gateway_mac[32] = {};

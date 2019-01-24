@@ -106,8 +106,9 @@ extern void ipv6_frag_per_thread_exit(int thread_seq);
 extern void pptp_per_thread_exit(int thread_seq);
 extern void __timestamp_print_max_tuple4(const raw_pkt_t *raw_pkt, long timedelay, int tid);
 extern int packet_io_device_alias_init(void);
+extern void sapp_fs2_set_latency(int thead_seq, long long time_cost);
 
-static const unsigned char phony_feedback_eth_hdr_ip4[ETHERNET_HDR_LEN] = 
+static const unsigned char phony_feedback_eth_hdr_ip4[ETHERNET_HDR_LEN] =
 			{0x50, 0x48, 0x4F, 0x4E, 0x59, 0x5F, 0x4D, 0x41, 0x43, 0x41, 0x44, 0x44, 0x08, 0x00}; /* PHONY_MACADD + ipv4 */
 static const unsigned char phony_feedback_eth_hdr_ip6[ETHERNET_HDR_LEN] = 
 			{0x50, 0x48, 0x4F, 0x4E, 0x59, 0x5F, 0x4D, 0x41, 0x43, 0x41, 0x44, 0x44, 0x86, 0xDD}; /* PHONY_MACADD + ipv6*/
@@ -490,6 +491,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	if(after_call > before_call){ //cross second
 		timecost = after_call - before_call;
 		timestamp_region_update(thread_num,  timecost);
+		sapp_fs2_set_latency(thread_num,  timecost);
 	}
 		
 #if DEBUG

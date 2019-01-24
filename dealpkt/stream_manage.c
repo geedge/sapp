@@ -1888,6 +1888,24 @@ void hash_del_stream(struct streamindex *pindex)
                  phashstream=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_table;
  		  pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_talbe_hash_count;
  		   g_SysInputInfo[threadnum][SYS_TCP_LINK_DEL]++;
+ 		   if(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum >= 3
+ 		   && ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes >= 5)
+           {
+               if(ptmp->dir == DIR_DOUBLE)
+               {
+                   g_SysInputInfo[threadnum][LINK_DOUBLE]++;
+               }
+               else if(ptmp->dir == DIR_C2S)
+               {
+                   g_SysInputInfo[threadnum][LINK_SINGLE_C2S]++;
+               }
+               else if(ptmp->dir == DIR_S2C)
+               {
+                   g_SysInputInfo[threadnum][LINK_SINGLE_S2C]++;
+               }
+               else
+                   ;
+           }
 	 }else{
          	phashstream = NULL;
          	pelementcount = 0;

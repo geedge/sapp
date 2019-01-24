@@ -231,7 +231,7 @@ unsigned char *dl_io_get_sendbuf(void *phandle, int thread_seq)
 	if(ret < 0){
 		return NULL;
 	}
-
+	g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 	data_buf = (unsigned char *)marsio_buff_mtod(mr4_handle->send_mbuf[0]);	
 #else
 	/* 发送时, 需要mbuf结构, 但此函数接口无法直接返回mbuf, 而是调用marsio_buff_mtod()之后的真实数据缓冲区, 暂时使用malloc */
@@ -249,6 +249,7 @@ void dl_io_free_sendbuf(void *phandle, int thread_seq)
 	marsio4_io_handle *mr4_handle = (marsio4_io_handle *)phandle;
 
 	marsio_buff_free(sapp_marsio4_instance, mr4_handle->send_mbuf, 1, -1, thread_seq);
+	g_SysInputInfo[tid][PKT_MARSIO_FREE]++;
 #else
 	free(mr4_handle->send_mbuf_mtod_ptr);
 #endif	
@@ -509,6 +510,7 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 		for(i = 0; i < g_mr4_device_num; i++){
 			rcv_res = marsio_recv_burst(g_mr4_dev_up_handle_set[i], tid, rx_buff, marsio4_burst_process_pkt_num);
 			if(rcv_res > 0){
+				g_SysInputInfo[tid][PKT_MARSIO_RCV]+=(unsigned long long)rcv_res;
 				for(j = 0; j < rcv_res; j++){
 
 					marsio4_pkt_hand(tid, rx_buff[j], raw_pkt, DIR_ROUTE_UP); /* 并联模式不关心返回值 */
@@ -516,6 +518,8 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 				}
 				pkt_num += rcv_res;
 				marsio_buff_free(sapp_marsio4_instance, rx_buff, rcv_res, MARSIO_SOCKET_ID_ANY, tid); /* 并联不涉及发送, 调用完业务插件后批量free */
+				g_SysInputInfo[tid][PKT_MARSIO_FREE]+=rcv_res;
+
 			}
 		}
 	}else if(NET_CONN_SERIAL_GDEV == g_marsio4_topology_mode){
@@ -561,28 +565,34 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 			/* 双网卡串联模式下, 为了防止极端特殊情况下, 只有两个主机在通信, syn->syn/ack->ack, 这种单包模式, 没有第一个包就不会有后续的包, 一次只能取一个包 */
 			rcv_res = marsio_recv_burst(g_mr4_dev_up_handle_set[i], tid, rx_buff, 1);
 			if(rcv_res > 0){
+				g_SysInputInfo[tid][PKT_MARSIO_RCV]+=(unsigned long long)rcv_res;
 				for(j = 0; j < rcv_res; j++){
 					hand_res = marsio4_pkt_hand(tid, rx_buff[j], raw_pkt, DIR_ROUTE_UP);
 					if((g_marsio4_topology_mode & __NET_CONN_SERIAL) && (PASS == hand_res)){
 						//marsio4_pkt_forward(tid, rx_buff[j]);
 						marsio_send_burst(g_mr4_sendpath_down_set[i], tid, &rx_buff[j], 1);
+						g_SysInputInfo[tid][PKT_MARSIO_SND]++;
 					}else{
 						/* 串联模式下单包free, 有可能需要回注/发送 */
 						marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);
+						g_SysInputInfo[tid][PKT_MARSIO_FREE]++;
 					}
 				}
 				pkt_num += rcv_res;
 			}
 			rcv_res = marsio_recv_burst(g_mr4_dev_down_handle_set[i], tid, rx_buff, 1);
 			if(rcv_res > 0){
+				g_SysInputInfo[tid][PKT_MARSIO_RCV]+=(unsigned long long)rcv_res;
 				for(j = 0; j < rcv_res; j++){
 					hand_res = marsio4_pkt_hand(tid, rx_buff[j], raw_pkt, DIR_ROUTE_DOWN);
 					if((g_marsio4_topology_mode & __NET_CONN_SERIAL) && (PASS == hand_res)){
 						//marsio4_pkt_forward(tid, rx_buff[j]);
 						marsio_send_burst(g_mr4_sendpath_up_set[i], tid, &rx_buff[j], 1);
+						g_SysInputInfo[tid][PKT_MARSIO_SND]++;
 					}else{
 						/* 串联模式下单包free, 有可能需要回注/发送 */
 						marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);
+						g_SysInputInfo[tid][PKT_MARSIO_FREE]++;
 					}
 				}
 				pkt_num += rcv_res;

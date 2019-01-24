@@ -193,7 +193,8 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 
 		case SPO_CURTIME_STRING:
 		{
-			if(*opt_val_len <= (int)strlen("1970-01-01 11:11:11")){
+			if(*opt_val_len <= (int)strlen("1970-01-01 11:11:11")){
+
 				ret = -1;
 				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;			
@@ -407,6 +408,7 @@ static int sapp_fs2_init(void)
 	char cfg_ip_str[32];
 	int cfg_port;
 	int fs2_opt;
+	int cycle;
 
 	MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "FS_switch", &module_switch, 0);
 	if(0 == module_switch){
@@ -434,7 +436,9 @@ static int sapp_fs2_init(void)
 		return -1;
 	}
 
-	sapp_global_single.fs2_server_port_host = (unsigned short)cfg_port;
+    MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "FS_cycle", &cycle, 3);
+
+    sapp_global_single.fs2_server_port_host = (unsigned short)cfg_port;
 
 	fs2_opt = 1;
 	FS_set_para(sapp_global_single.fs2_handle, STAT_CYCLE, &fs2_opt, sizeof(int));
@@ -453,8 +457,8 @@ static int sapp_fs2_init(void)
 
 	FS_set_para(sapp_global_single.fs2_handle, STATS_SERVER_PORT, &sapp_global_single.fs2_server_port_host, sizeof(short));
 
-	sapp_global_single.fs2_filed_id_array[PKT_ETHERNET] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_STATUS, FS_CALC_CURRENT, "Ethernet_pps");
-	sapp_global_single.fs2_filed_id_array[PKT_ETHERNET_LEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_STATUS, FS_CALC_CURRENT, "Ethernet_bps");
+	sapp_global_single.fs2_filed_id_array[PKT_ETHERNET] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ethernet_pps");
+	sapp_global_single.fs2_filed_id_array[PKT_ETHERNET_LEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ethernet_bps");
 
 	sapp_global_single.fs2_filed_id_array[PKT_IP] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_pps");
 	sapp_global_single.fs2_filed_id_array[PKT_IPLEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_bps");
@@ -472,15 +476,41 @@ static int sapp_fs2_init(void)
 	sapp_global_single.fs2_filed_id_array[SYS_TCP_LINK_DEL] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_DEL");
 	sapp_global_single.fs2_filed_id_array[SYS_TCP_LINK_DATA] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_CONCURRENT");
 
-	sapp_global_single.fs2_filed_id_array[SEND_TCP_RST] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_RST");
+    sapp_global_single.fs2_filed_id_array[LINK_DOUBLE] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD,
+            FS_CALC_CURRENT, "TCP_LINK_DOUBLE");
+    sapp_global_single.fs2_filed_id_array[LINK_SINGLE_C2S] = FS_register(sapp_global_single.fs2_handle,
+            FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_C2S");
+    sapp_global_single.fs2_filed_id_array[LINK_SINGLE_S2C] = FS_register(sapp_global_single.fs2_handle,
+            FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_S2C");
+
+
+    sapp_global_single.fs2_filed_id_array[SEND_TCP_RST] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_RST");
 	sapp_global_single.fs2_filed_id_array[SEND_TCP_SYN_ACK] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_S/A");
 	sapp_global_single.fs2_filed_id_array[SEND_UDP_PKT] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_UDP");
 
+	for(int i = 0; i < g_packet_io_thread_num; i++)
+	{
+		char histogram_name[16];
+		sprintf(histogram_name, "tid_%d", i);
+		sapp_global_single.fs2_latency_id_array[i] = FS_register_histogram(sapp_global_single.fs2_handle,  //Field Stat句柄
+							  FS_CALC_SPEED,    //输出累计值或瞬时值
+							  histogram_name,     //统计项名称，字符串
+							  1,                  //可追踪的最小值
+							  100000000,            //可追踪的最大值
+							  2);                 //精度，即小数点后几位，范围1~4
+
+	}
 	FS_start(sapp_global_single.fs2_handle);
 	
 	return 0;
 }
 
+void sapp_fs2_set_latency(int thead_seq, long long time_cost)
+{
+	if(sapp_global_single.fs2_handle != NULL){
+		FS_operate(sapp_global_single.fs2_handle, sapp_global_single.fs2_latency_id_array[thead_seq], 0, FS_OP_SET, time_cost);
+	}
+}
 
 int sapp_assistant_init(void)
 {
