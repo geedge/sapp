@@ -364,7 +364,7 @@ static int sapp_fs2_init(void)
 	for(int i = 0; i < g_packet_io_thread_num; i++)
 	{
 		char histogram_name[16];
-		sprintf(histogram_name, "tid_%d", i);
+		sprintf(histogram_name, "tid_%d(ns)", i);
 		sapp_global_single.fs2_latency_id_array[i] = FS_register_histogram(sapp_global_single.fs2_handle,  //Field Stat句柄
 							  FS_CALC_SPEED,    //输出累计值或瞬时值
 							  histogram_name,     //统计项名称，字符串
