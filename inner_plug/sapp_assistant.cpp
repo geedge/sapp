@@ -324,9 +324,7 @@ static int sapp_fs2_init(void)
 
 	FS_set_para(sapp_global_single.fs2_handle, OUTPUT_DEVICE, "fs2_sysinfo.log", strlen("fs2_sysinfo.log")+1);
 
-	//FS_set_para(sapp_global_single.fs2_handle, APP_NAME, "sapp", strlen("sapp")+1);
-
-    FS_set_para(sapp_global_single.fs2_handle, APP_NAME, g_app_instance_name, strlen(g_app_instance_name)+1);
+	FS_set_para(sapp_global_single.fs2_handle, APP_NAME, "sapp", strlen("sapp")+1);
 
 	FS_set_para(sapp_global_single.fs2_handle, STATS_SERVER_IP, (void *)sapp_global_single.fs2_server_ip, strlen(sapp_global_single.fs2_server_ip)+1);
 
