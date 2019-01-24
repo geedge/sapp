@@ -87,7 +87,7 @@ sapp:sapp_main.o  sapp_init.o sapp_global_val.o
 	g++ -g -Wl,--export-dynamic -o $@ $(CFLAGS) $(INC) $^ $(LDFLAGS) $(LIB_PATH)  -Wl,--whole-archive $(WHOLE_ARCH)  -Wl,--no-whole-archive $(LIB);
 	cp ../packet_io/*.so ../run/platform_lib/;
 	cp $@ ../run/;
-	ldconfig;
+	#ldconfig;
 
 MESA_IP_PLUG.so:sapp_plug.o  sapp_init.o sapp_global_val.o
 	g++ -g -o $@ -fPIC -shared  $^ -Wl,--whole-archive $(WHOLE_ARCH)  -Wl,--no-whole-archive $(LIB)

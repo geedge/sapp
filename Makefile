@@ -240,6 +240,32 @@ export USE_PAG_GET_FRAME
 export YES
 export NO
 
+MD5_STREAM_BASE=$(shell md5sum "./include/stream_inc/stream_base.h"|cut -d ' ' -f1)
+MD5_STREAM_ENTRY=$(shell md5sum "./include/stream_inc/stream_entry.h"|cut -d ' ' -f1)
+MD5_STREAM_CONTROL=$(shell md5sum "./include/stream_inc/stream_control.h"|cut -d ' ' -f1)
+MD5_STREAM_INJECT=$(shell md5sum "./include/stream_inc/stream_inject.h"|cut -d ' ' -f1)
+MD5_STREAM_PROJECT=$(shell md5sum "./include/stream_inc/stream_project.h"|cut -d ' ' -f1)
+MD5_STREAM_PROXY=$(shell md5sum "./include/stream_inc/stream_proxy.h"|cut -d ' ' -f1)
+MD5_STREAM_RAWPKT=$(shell md5sum "./include/stream_inc/stream_rawpkt.h"|cut -d ' ' -f1)
+MD5_STREAM_TUNNEL=$(shell md5sum "./include/stream_inc/stream_tunnel.h"|cut -d ' ' -f1)
+
+HEADER_CHECK_FLAGS +=   -DSTREAM_BASE_MD5_CHECK=\"$(MD5_STREAM_BASE)\"
+HEADER_CHECK_FLAGS +=   -DSTREAM_CONTROL_MD5_CHECK=\"$(MD5_STREAM_CONTROL)\"
+HEADER_CHECK_FLAGS +=   -DSTREAM_ENTRY_MD5_CHECK=\"$(MD5_STREAM_ENTRY)\"
+HEADER_CHECK_FLAGS +=   -DSTREAM_INJECT_MD5_CHECK=\"$(MD5_STREAM_INJECT)\"
+HEADER_CHECK_FLAGS +=   -DSTREAM_PROJECT_MD5_CHECK=\"$(MD5_STREAM_PROJECT)\"
+HEADER_CHECK_FLAGS +=   -DSTREAM_PROXY_MD5_CHECK=\"$(MD5_STREAM_PROXY)\"
+HEADER_CHECK_FLAGS +=   -DSTREAM_RAWPKT_MD5_CHECK=\"$(MD5_STREAM_RAWPKT)\"
+HEADER_CHECK_FLAGS +=   -DSTREAM_TUNNEL_MD5_CHECK=\"$(MD5_STREAM_TUNNEL)\"
+
+GIT_BRANCH=$(shell git symbolic-ref --short -q HEAD)
+GIT_SHA1=$(shell git rev-parse HEAD)
+MAKE_TIME=$(shell date "+%Y-%m-%d_%H:%M:%S")
+VERSION_FLAGS += -DGITVER=\"3.0.0-$(GIT_BRANCH)-$(GIT_SHA1)-$(MAKE_TIME)\"
+
+CFLAGS += ${HEADER_CHECK_FLAGS} ${VERSION_FLAGS}
+CXXFLAGS += ${HEADER_CHECK_FLAGS} ${VERSION_FLAGS}
+
 all:
 	#cp -r -f include/support/pcap* /opt/MESA/include
 	#ln -sf /usr/lib64/libpcap.so.1 /opt/MESA/lib/libpcap.so;

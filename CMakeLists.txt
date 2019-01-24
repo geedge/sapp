@@ -14,6 +14,8 @@ endif()
 #set(CMAKE_INSTALL_PREFIX /home/ceiec/sapp/)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/run/)
 
+option(PLATFORM_MODE_SERIAL "Using serial mode" TRUE)
+
 #static link option
 option(ENABLE_STATIC_LINK "Enable static link" TRUE)
 
@@ -124,7 +126,29 @@ add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
 
 set(SAPP_DEPEND_DYN_LIB  MESA_handle_logger MESA_htable pthread MESA_field_stat2)
 
-#set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG -fno-inline")
+set(CMAKE_C_FLAGS_RELEASE "-Werror")
+
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_base.h MD5_STREAM_BASE)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_control.h MD5_STREAM_CONTROL)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_entry.h MD5_STREAM_ENTRY)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_inject.h MD5_STREAM_INJECT)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_project.h MD5_STREAM_PROJECT)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_proxy.h MD5_STREAM_PROXY)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_rawpkt.h MD5_STREAM_RAWPKT)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_tunnel.h MD5_STREAM_TUNNEL)
+
+add_definitions(${HEADER_CHECK_DEFINITIONS}
+				-DSTREAM_BASE_MD5_CHECK="${MD5_STREAM_BASE}"
+				-DSTREAM_CONTROL_MD5_CHECK="${MD5_STREAM_CONTROL}"
+				-DSTREAM_ENTRY_MD5_CHECK="${MD5_STREAM_ENTRY}"
+			    -DSTREAM_INJECT_MD5_CHECK="${MD5_STREAM_INJECT}"
+				-DSTREAM_PROJECT_MD5_CHECK="${MD5_STREAM_PROJECT}"
+				-DSTREAM_PROXY_MD5_CHECK="${MD5_STREAM_PROXY}"
+				-DSTREAM_RAWPKT_MD5_CHECK="${MD5_STREAM_RAWPKT}"
+				-DSTREAM_TUNNEL_MD5_CHECK="${MD5_STREAM_TUNNEL}")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
 
 add_subdirectory(test_so)
 add_subdirectory(support)
@@ -176,8 +200,10 @@ install(FILES ${CMAKE_BINARY_DIR}/inner_plug/pptp_protocol_plug.so DESTINATION p
 
 install(FILES run/plug/platform/conflist_platform.inf DESTINATION plug/platform)
 
-install(FILES run/plug/platform/g_device_plug/g_device_plug.inf DESTINATION plug/platform/g_device_plug)
-install(FILES ${CMAKE_BINARY_DIR}/inner_plug/g_device_plug.so DESTINATION plug/platform/g_device_plug)
+if(PLATFORM_MODE_SERIAL)
+    install(FILES run/plug/platform/g_device_plug/g_device_plug.inf DESTINATION plug/platform/g_device_plug)
+    install(FILES ${CMAKE_BINARY_DIR}/inner_plug/g_device_plug.so DESTINATION plug/platform/g_device_plug)
+endif()
 
 install(FILES run/plug/business/conflist_business.inf DESTINATION plug/business)
 

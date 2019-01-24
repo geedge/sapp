@@ -1,2 +1,2 @@
 rm -rf ./build
-make -f cmake-makefile debug
+make -f makefile-cmake $1
