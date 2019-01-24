@@ -450,6 +450,10 @@ static int marsio4_pkt_forward(int tid, marsio_buff_t * mbufs)
 		ret = marsio_send_burst(sendpath, tid, &mbufs, 1);
 		g_SysInputInfo[tid][PKT_MARSIO_SND]++;
 	}
+	else
+	{
+		ret = -1;
+	}
 
 #if 0 /* 2018-06-01 close, marsio用不调用普通二层模式 */	
 	else{ /* standard ethernet */
@@ -534,7 +538,12 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 						    MARSIO主从模式独特性, 从虚拟网卡收包, 但要通过物理网卡回注包,  
 						*/
 #if 1	
-						marsio4_pkt_forward(tid, rx_buff[j]);
+						int ret = marsio4_pkt_forward(tid, rx_buff[j]);
+						if(ret < 0)
+						{
+							marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);
+							g_SysInputInfo[tid][PKT_MARSIO_FREE]++;
+						}
 #else
 						MESA_sendpacket_ethlayer(tid, marsio_buff_mtod(rx_buff[j]), marsio_buff_buflen(rx_buff[j]), 0);
 #endif
