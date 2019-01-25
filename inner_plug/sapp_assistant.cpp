@@ -36,6 +36,7 @@ extern time_t g_sapp_start_time;
 extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
 extern int g_packet_io_thread_num;
 extern char g_app_instance_name[64];
+extern int g_timestamp_record_sw;
 
 
 int sapp_assistant_version_VERSION_20181024;
@@ -360,18 +361,20 @@ static int sapp_fs2_init(void)
     sapp_global_single.fs2_filed_id_array[SEND_TCP_RST] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_RST");
 	sapp_global_single.fs2_filed_id_array[SEND_TCP_SYN_ACK] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_S/A");
 	sapp_global_single.fs2_filed_id_array[SEND_UDP_PKT] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_UDP");
-
-	for(int i = 0; i < g_packet_io_thread_num; i++)
+	if(unlikely(g_timestamp_record_sw))
 	{
-		char histogram_name[16];
-		sprintf(histogram_name, "tid_%d(ns)", i);
-		sapp_global_single.fs2_latency_id_array[i] = FS_register_histogram(sapp_global_single.fs2_handle,  //Field Stat句柄
-							  FS_CALC_SPEED,    //输出累计值或瞬时值
-							  histogram_name,     //统计项名称，字符串
-							  1,                  //可追踪的最小值
-							  100000000,            //可追踪的最大值
-							  2);                 //精度，即小数点后几位，范围1~4
+		for(int i = 0; i < g_packet_io_thread_num; i++)
+		{
+			char histogram_name[16];
+			sprintf(histogram_name, "tid_%d(ns)", i);
+			sapp_global_single.fs2_latency_id_array[i] = FS_register_histogram(sapp_global_single.fs2_handle,  //Field Stat句柄
+								  FS_CALC_SPEED,    //输出累计值或瞬时值
+								  histogram_name,     //统计项名称，字符串
+								  1,                  //可追踪的最小值
+								  1000000,            //可追踪的最大值
+								  2);                 //精度，即小数点后几位，范围1~4
 
+		}
 	}
 	FS_start(sapp_global_single.fs2_handle);
 	
