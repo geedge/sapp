@@ -578,9 +578,11 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 
     struct timespec start, end;
 
-    clock_gettime(CLOCK_MONOTONIC, &start);
-	//before_call = sapp_get_cpu_cycle();
-
+	if(unlikely(g_timestamp_record_sw))
+	{
+		clock_gettime(CLOCK_MONOTONIC, &start);
+		//before_call = sapp_get_cpu_cycle();
+	}
 #if DEBUG
 	char raw_pkt_md5_before[16];
 	char raw_pkt_md5_after[16];
@@ -621,11 +623,14 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 
 	//after_call = sapp_get_cpu_cycle();
 	//timecost = after_call - before_call;
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    timecost = (end.tv_sec - start.tv_sec)*1000000 + (end.tv_nsec - start.tv_nsec);
-	timestamp_region_update(thread_num,  timecost);
-	sapp_fs2_set_latency(thread_num,  timecost);
-		
+	if(unlikely(g_timestamp_record_sw))
+    {
+		clock_gettime(CLOCK_MONOTONIC, &end);
+    	timecost = (end.tv_sec - start.tv_sec)*1000000 + (end.tv_nsec - start.tv_nsec);
+
+		//timestamp_region_update(thread_num,  timecost);
+		sapp_fs2_set_latency(thread_num,  timecost);
+	}
 #if DEBUG
 	if(unlikely(g_timestamp_record_sw)){
 		if(timecost > g_timedelay_threshold){
