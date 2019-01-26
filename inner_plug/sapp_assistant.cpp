@@ -49,7 +49,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 	int i, ret = 0;
 	unsigned long long tmp_long;
 
-	if((NULL == opt_val) || (opt_val_len <= 0)){
+	if((NULL == opt_val) || (*opt_val_len <= 0)){
 		return -1;
 	}
 
