@@ -31,11 +31,11 @@ INIT_FUNC=CHAR_INIT
 #FUNC_FLAG=ALL
 #FUNC_NAME= TCP_ALL_RAW_ENTRY
 
-[TCP]
-FUNC_FLAG=ALL
+#[TCP]
+#FUNC_FLAG=ALL
 #FUNC_NAME=test_get_pkt_tcp_opts_ext
 #FUNC_NAME=print_stream_tunnel_type
-FUNC_NAME=test_inet_addr_list_addr
+#FUNC_NAME=test_inet_addr_list_addr
 #FUNC_NAME=test_layer_addr_ntop
 #FUNC_NAME=KILL_STREAM_FEEDBACK
 #FUNC_NAME=KILL_STREAM
@@ -50,14 +50,14 @@ FUNC_NAME=test_inet_addr_list_addr
 #FUNC_NAME=test_tcp_uni_stream_stats
 #FUNC_NAME=print_vxlan_info
 
-#[TCP_ALL]
-#FUNC_FLAG=ALL
+[TCP_ALL]
+FUNC_FLAG=ALL
 #FUNC_NAME=test_get_pkt_tcp_opts_ext
 #FUNC_NAME=test_print_mac
 #FUNC_NAME=TEST_STREAM
 #FUNC_NAME=KEEP_STREAM
 #FUNC_NAME=KILL_STREAM
-#FUNC_NAME=testtcpApp_allpkt
+FUNC_NAME=testtcpApp_allpkt
 #FUNC_NAME=TCP_ALL_DUMP
 #FUNC_NAME=test_allpkt_stream_checklen
 #FUNC_NAME=TCP_ENTRY_ALL

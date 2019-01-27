@@ -280,9 +280,11 @@ static int sapp_fs2_init(void)
 {
 	int module_switch;
 	char cfg_ip_str[32];
+	char fs_name[1024];
 	int cfg_port;
 	int fs2_opt;
 	int cycle;
+	int send_historgram;
 
 	MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "FS_switch", &module_switch, 0);
 	if(0 == module_switch){
@@ -301,6 +303,7 @@ static int sapp_fs2_init(void)
 		sapp_runtime_log(RLOG_LV_FATAL, "FS_switch is enable, but not found FS_server_ip config\n");
 		return -1;
 	}
+    MESA_load_profile_string_def("conf/main.conf", "ShowStatInfo", "FS_app_name", fs_name,sizeof(fs_name), "sapp");
 
 	sapp_global_single.fs2_server_ip = strdup(cfg_ip_str);
 
@@ -323,9 +326,14 @@ static int sapp_fs2_init(void)
 	MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "FS_print_switch", &fs2_opt, 0);	
 	FS_set_para(sapp_global_single.fs2_handle, PRINT_TRIGGER, &fs2_opt, sizeof(int));
 
-	FS_set_para(sapp_global_single.fs2_handle, OUTPUT_DEVICE, "fs2_sysinfo.log", strlen("fs2_sysinfo.log")+1);
+    MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "FS_send_histogram", &send_historgram, 0);
 
-	FS_set_para(sapp_global_single.fs2_handle, APP_NAME, "sapp", strlen("sapp")+1);
+    FS_set_para(sapp_global_single.fs2_handle, NOT_SEND_METRIC_TO_SERVER, &send_historgram, sizeof(int));
+
+
+    FS_set_para(sapp_global_single.fs2_handle, OUTPUT_DEVICE, "fs2_sysinfo.log", strlen("fs2_sysinfo.log")+1);
+
+	FS_set_para(sapp_global_single.fs2_handle, APP_NAME, fs_name, strlen(fs_name)+1);
 
 	FS_set_para(sapp_global_single.fs2_handle, STATS_SERVER_IP, (void *)sapp_global_single.fs2_server_ip, strlen(sapp_global_single.fs2_server_ip)+1);
 
@@ -373,7 +381,11 @@ static int sapp_fs2_init(void)
 								  1,                  //可追踪的最小值
 								  1000000,            //可追踪的最大值
 								  2);                 //精度，即小数点后几位，范围1~4
-
+			if(send_historgram == 0)
+            {
+                FS_set_para(sapp_global_single.fs2_handle, NOT_SEND_METRIC_TO_SERVER, &sapp_global_single
+                .fs2_latency_id_array[i], sizeof(int));
+            }
 		}
 	}
 	FS_start(sapp_global_single.fs2_handle);
