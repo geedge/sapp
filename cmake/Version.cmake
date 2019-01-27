@@ -35,9 +35,9 @@ endif()
 set(SAPP_VERSION "${SAPP_VERSION_MAJOR}.${SAPP_VERSION_MINOR}.${SAPP_VERSION_PATCH}")
 set(SAPP_VERSION_BUILD "${VCS_SHORT_HASH}")
 
-# print information
-message(STATUS "Sapp Version: ${SAPP_VERSION}-${SAPP_VERSION_BUILD}")
-
 set(SAPP_GIT_VERSION
     "${SAPP_VERSION}-${CMAKE_BUILD_TYPE}-${SAPP_VERSION_BUILD}-${VCS_BRANCH}-${VCS_TAG}-${VCS_DATE}")
 add_definitions(-DGITVER=\"${SAPP_GIT_VERSION}\")
+
+# print information
+message(STATUS "Sapp Version: ${SAPP_GIT_VERSION}")
