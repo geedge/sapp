@@ -21,6 +21,12 @@ option(PLATFORM_MODE_SERIAL "Using serial mode" FALSE)
 #static link option
 option(ENABLE_STATIC_LINK "Enable static link" TRUE)
 
+# CPU profiler
+option(OPT_USE_PROFILER	"Use gperf cpu profiler" OFF)
+if(OPT_USE_PROFILER)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
+endif()
+
 #ASAN option
 option(ENABLE_SANITIZE_ADDRESS "Enable AddressSanitizer" FALSE)
 option(ENABLE_SANITIZE_THREAD "Enable ThreadSanitizer" FALSE)
