@@ -141,14 +141,19 @@ int sapp_global_val_init(void)
 	int i;
 	
 	sapp_global_val_check();
-	
+
+#if 0
+	int i;
 	for(i = 0; i < g_packet_io_thread_num; i++){
 		sapp_global_mthread[i].tcp_stream_special_timeout_num = tcpstate_num[TCP_DATA_STATE]/10 + 1;
 		sapp_global_mthread[i].udp_stream_special_timeout_num = udpstate_num[UDP_TWO_STATE]/10 + 1;
 	}
+#endif
 
 	return 0;
 }
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -35,6 +35,8 @@ extern void sapp_statsd_flush_buf(void);
 extern void sapp_fs2_update(int field_index, unsigned long long value);
 extern int top_mode;
 extern int cap_mode;
+extern struct sapp_global_mthread_t sapp_global_mthread[MAX_THREAD_NUM];
+
 /* 转换成人容易读的网络流量字符串, 如123bps, 34.5Mbps */
 static char *byte_convert_human(unsigned long long bytes, int interval, int multiple, char * byte_str)
 {
@@ -184,38 +186,45 @@ void sysinfo_output(void)
 		}
 	}
 
-	fprintf(fp,"\n------------------------------- TCP statistics detail -----------------------------\n");
-	fprintf(fp,"%3s %-27s %-19s %-27s\n", "", "|-----------Current---------|", "|------Realtime-----|", "|--------From-of-startup---------|");
-	fprintf(fp,"%3s %8s %9s %10s %10s %10s %10s %9s %13s\n", "tid", "link-syn", "link-data", "link-nouse", "link-new/s", "link-del/s", "stream-num", "reset-num", "hash-list-max");
-	for(i = 0; i < g_packet_io_thread_num; i++){	
-		fprintf(fp, "%3d %8llu %9llu %10llu %10llu %10llu %10llu %9llu %13llu\n", 
-				i, 
-				g_SysInputInfo[i][SYS_TCP_LINK_SYN], 
-				g_SysInputInfo[i][SYS_TCP_LINK_DATA],
-				g_SysInputInfo[i][SYS_TCP_LINK_NOUSE], 
-				(g_SysInputInfo[i][SYS_TCP_LINK_NEW]-g_SysInputInfo_old[i][SYS_TCP_LINK_NEW]), 
-				(g_SysInputInfo[i][SYS_TCP_LINK_DEL]-g_SysInputInfo_old[i][SYS_TCP_LINK_DEL]),
-				g_SysInputInfo[i][SYS_TCP_LINK_NEW],
-				g_SysInputInfo[i][SYS_TCP_LINK_RESET],
-				g_SysInputInfo[i][SYS_HASH_LIST_MAX]);
-	}
+    fprintf(fp,"\n------------------------------- TCP statistics detail -----------------------------\n");
+    fprintf(fp,"%3s %-27s %-19s %-27s %-27s\n", "", "|-----------Current---------|", "|------Realtime-----|",
+            "|--------From-of-startup---------|", "|--------Special---------|");
+    fprintf(fp,"%3s %8s %9s %10s %10s %10s %10s %9s %13s %17s\n", "tid", "link-syn", "link-data", "link-nouse",
+            "link-new/s", "link-del/s", "stream-num", "reset-num", "hash-list-max", "special-timeout");
+    for(i = 0; i < g_packet_io_thread_num; i++){
+        fprintf(fp, "%3d %8llu %9llu %10llu %10llu %10llu %10llu %9llu %13llu %13llu\n",
+                i,
+                g_SysInputInfo[i][SYS_TCP_LINK_SYN],
+                g_SysInputInfo[i][SYS_TCP_LINK_DATA],
+                g_SysInputInfo[i][SYS_TCP_LINK_NOUSE],
+                (g_SysInputInfo[i][SYS_TCP_LINK_NEW]-g_SysInputInfo_old[i][SYS_TCP_LINK_NEW]),
+                (g_SysInputInfo[i][SYS_TCP_LINK_DEL]-g_SysInputInfo_old[i][SYS_TCP_LINK_DEL]),
+                g_SysInputInfo[i][SYS_TCP_LINK_NEW],
+                g_SysInputInfo[i][SYS_TCP_LINK_RESET],
+                g_SysInputInfo[i][SYS_HASH_LIST_MAX],
+                sapp_global_mthread[i].tcp_stream_special_timeout_num);
+    }
 
-	fprintf(fp,"\n-------------------------- UDP statistics detail ------------------------\n");
-	fprintf(fp,"%3s %-27s %-19s %-20s\n", "  ", "|-----------Current---------|", "|------Realtime-----|", "|--From-of-startup--|");
-	fprintf(fp,"%3s %8s %9s %10s %10s %10s %10s %9s\n", "tid", "link-one", "link-two", "link-more", "link-new/s", "link-del/s", "stream-num", "reset-num");
-	for(i = 0; i < g_packet_io_thread_num; i++){	
-		fprintf(fp, "%3d %8llu %9llu %10llu %10llu %10llu %10llu %9llu\n", 
-				i, 
-				g_SysInputInfo[i][SYS_UDP_LINK_ONE], 
-				g_SysInputInfo[i][SYS_UDP_LINK_TWO],
-				g_SysInputInfo[i][SYS_UDP_LINK_MORE], 
-				(g_SysInputInfo[i][SYS_UDP_LINK_NEW]-g_SysInputInfo_old[i][SYS_UDP_LINK_NEW]), 
-				(g_SysInputInfo[i][SYS_UDP_LINK_DEL]-g_SysInputInfo_old[i][SYS_UDP_LINK_DEL]),
-				g_SysInputInfo[i][SYS_UDP_LINK_NEW],
-				g_SysInputInfo[i][SYS_UDP_LINK_RESET]);
-	}
-	
-	fprintf(fp,"*****************************************************************\n\n");
+    fprintf(fp,"\n-------------------------- UDP statistics detail ------------------------\n");
+    fprintf(fp,"%3s %-27s %-19s %-20s %-20s\n", "  ", "|-----------Current---------|", "|------Realtime-----|",
+            "|--From-of-startup--|", "|--------Special---------|");
+    fprintf(fp,"%3s %8s %9s %10s %10s %10s %10s %9s %17s\n", "tid", "link-one", "link-two", "link-more", "link-new/s",
+            "link-del/s", "stream-num", "reset-num", "special-timeout");
+    for(i = 0; i < g_packet_io_thread_num; i++){
+        fprintf(fp, "%3d %8llu %9llu %10llu %10llu %10llu %10llu %9llu %13llu\n",
+                i,
+                g_SysInputInfo[i][SYS_UDP_LINK_ONE],
+                g_SysInputInfo[i][SYS_UDP_LINK_TWO],
+                g_SysInputInfo[i][SYS_UDP_LINK_MORE],
+                (g_SysInputInfo[i][SYS_UDP_LINK_NEW]-g_SysInputInfo_old[i][SYS_UDP_LINK_NEW]),
+                (g_SysInputInfo[i][SYS_UDP_LINK_DEL]-g_SysInputInfo_old[i][SYS_UDP_LINK_DEL]),
+                g_SysInputInfo[i][SYS_UDP_LINK_NEW],
+                g_SysInputInfo[i][SYS_UDP_LINK_RESET],
+                sapp_global_mthread[i].udp_stream_special_timeout_num);
+    }
+
+
+    fprintf(fp,"*****************************************************************\n\n");
 	fprintf(fp,"################# \033[41m%s\033[0m --- is same as above! #########\n", "sysinfo humanly");
 	fprintf(fp,"%-10s %12s %12s %12s %12s\n", "RCV-PKT", "total_pkt", "total_len","pps", "bps");
 	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n","Ethernet",sysinfo_new[PKT_ETHERNET],byte_convert_human(sysinfo_new[PKT_ETHERNET_LEN],1 ,1,s1),(sysinfo_new[PKT_ETHERNET]-sysinfo_old[PKT_ETHERNET]),byte_convert_human((sysinfo_new[PKT_ETHERNET_LEN]-sysinfo_old[PKT_ETHERNET_LEN]),1,8,s2));
@@ -224,12 +233,6 @@ void sysinfo_output(void)
 	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n","TCP",sysinfo_new[PKT_TCP],byte_convert_human(sysinfo_new[PKT_TCPLEN],1,1,s1),(sysinfo_new[PKT_TCP]-sysinfo_old[PKT_TCP]),byte_convert_human((sysinfo_new[PKT_TCPLEN]-sysinfo_old[PKT_TCPLEN]),1,8,s2));
 	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n","UDP",sysinfo_new[PKT_UDP],byte_convert_human(sysinfo_new[PKT_UDPLEN],1,1,s1),(sysinfo_new[PKT_UDP]-sysinfo_old[PKT_UDP]),byte_convert_human((sysinfo_new[PKT_UDPLEN]-sysinfo_old[PKT_UDPLEN]),1,8,s2));	
 	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n","Unknown",sysinfo_new[PKT_UNKNOWN],byte_convert_human(sysinfo_new[PKT_UNKNOWN_LEN],1,1,s1),(sysinfo_new[PKT_UNKNOWN]-sysinfo_old[PKT_UNKNOWN]),byte_convert_human((sysinfo_new[PKT_UNKNOWN_LEN]-sysinfo_old[PKT_UNKNOWN_LEN]),1,8,s2));
-	fprintf(fp,"#################################################################\n");
-	fprintf(fp,"%-10s %12s %12s %12s %12s\n","SND-PKT", "total_pkt", "total_len","pps", "bps");
-	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "TCP_RST", sysinfo_new[SEND_TCP_RST], byte_convert_human(sysinfo_new[SEND_TCP_RST_LEN], 1, 1, s1),(sysinfo_new[SEND_TCP_RST]-sysinfo_old[SEND_TCP_RST]), byte_convert_human((sysinfo_new[SEND_TCP_RST_LEN]-sysinfo_old[SEND_TCP_RST_LEN]), 1,8,s2));
-	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "TCP_S/A", sysinfo_new[SEND_TCP_SYN_ACK], byte_convert_human(sysinfo_new[SEND_TCP_SYN_ACK_LEN], 1, 1, s1),(sysinfo_new[SEND_TCP_SYN_ACK]-sysinfo_old[SEND_TCP_SYN_ACK]), byte_convert_human((sysinfo_new[SEND_TCP_SYN_ACK_LEN]-sysinfo_old[SEND_TCP_SYN_ACK_LEN]),1,8,s2));
-	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "UDP", sysinfo_new[SEND_UDP_PKT], byte_convert_human(sysinfo_new[SEND_UDP_PKT_LEN],1,1,s1),(sysinfo_new[SEND_UDP_PKT]-sysinfo_old[SEND_UDP_PKT]), byte_convert_human((sysinfo_new[SEND_UDP_PKT_LEN]-sysinfo_old[SEND_UDP_PKT_LEN]),1,8,s2));
-	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "SEND-ERR", sysinfo_new[SEND_PKT_ERR], byte_convert_human(sysinfo_new[SEND_PKT_ERR_LEN],1,1,s1),(sysinfo_new[SEND_PKT_ERR]-sysinfo_old[SEND_PKT_ERR]), byte_convert_human((sysinfo_new[SEND_PKT_ERR_LEN]-sysinfo_old[SEND_PKT_ERR_LEN]),1,8,s2));
 
 	fprintf(fp,"#################################################################\n");
 
@@ -246,6 +249,13 @@ void sysinfo_output(void)
             sysinfo_new[LINK_SINGLE_C2S] - sysinfo_old[LINK_SINGLE_C2S]);
     fprintf(fp,"%-10s %12llu %12llu\n", "TCP_S2C", sysinfo_new[LINK_SINGLE_S2C],
             sysinfo_new[LINK_SINGLE_S2C] - sysinfo_old[LINK_SINGLE_S2C]);
+
+    fprintf(fp,"#################################################################\n");
+    fprintf(fp,"%-10s %12s %12s %12s %12s\n","SND-PKT", "total_pkt", "total_len","pps", "bps");
+    fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "TCP_RST", sysinfo_new[SEND_TCP_RST], byte_convert_human(sysinfo_new[SEND_TCP_RST_LEN], 1, 1, s1),(sysinfo_new[SEND_TCP_RST]-sysinfo_old[SEND_TCP_RST]), byte_convert_human((sysinfo_new[SEND_TCP_RST_LEN]-sysinfo_old[SEND_TCP_RST_LEN]), 1,8,s2));
+    fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "TCP_S/A", sysinfo_new[SEND_TCP_SYN_ACK], byte_convert_human(sysinfo_new[SEND_TCP_SYN_ACK_LEN], 1, 1, s1),(sysinfo_new[SEND_TCP_SYN_ACK]-sysinfo_old[SEND_TCP_SYN_ACK]), byte_convert_human((sysinfo_new[SEND_TCP_SYN_ACK_LEN]-sysinfo_old[SEND_TCP_SYN_ACK_LEN]),1,8,s2));
+    fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "UDP", sysinfo_new[SEND_UDP_PKT], byte_convert_human(sysinfo_new[SEND_UDP_PKT_LEN],1,1,s1),(sysinfo_new[SEND_UDP_PKT]-sysinfo_old[SEND_UDP_PKT]), byte_convert_human((sysinfo_new[SEND_UDP_PKT_LEN]-sysinfo_old[SEND_UDP_PKT_LEN]),1,8,s2));
+    fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "SEND-ERR", sysinfo_new[SEND_PKT_ERR], byte_convert_human(sysinfo_new[SEND_PKT_ERR_LEN],1,1,s1),(sysinfo_new[SEND_PKT_ERR]-sysinfo_old[SEND_PKT_ERR]), byte_convert_human((sysinfo_new[SEND_PKT_ERR_LEN]-sysinfo_old[SEND_PKT_ERR_LEN]),1,8,s2));
 
     fprintf(fp,"#################################################################\n\n");
 
