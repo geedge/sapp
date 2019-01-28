@@ -62,16 +62,16 @@ void __timestamp_print_max_tuple4(const raw_pkt_t *raw_pkt, long timedelay, int 
 		thdr = (const struct mesa_tcp_hdr *)((char *)ip4hdr + ip4hdr->ip_hl * 4);
 		sport = ntohs(thdr->th_sport);
 		dport = ntohs(thdr->th_dport);
-		sapp_runtime_log(RLOG_LV_FATAL, "tid%d, timedaly CPU-CYCLE:%lld, TCP:%s:%u - %s:%u, ipid=%u, th_flags=0x%x\n", 
+		sapp_runtime_log(RLOG_LV_FATAL, "tid%d, timedelay %lld(ns), TCP:%s:%u - %s:%u, ipid=%u, th_flags=0x%x\n",
 						tid, timedelay, ipsrc_str, sport, ipdst_str, dport, ipid, thdr->th_flags);			
 	}else if(IPPROTO_UDP == ip4hdr->ip_p){
 		uhdr = (const struct mesa_udp_hdr *)((char *)ip4hdr + ip4hdr->ip_hl * 4);
 		sport = ntohs(uhdr->uh_sport);
 		dport = ntohs(uhdr->uh_dport);
-		sapp_runtime_log(RLOG_LV_FATAL, "tid:%d, timedaly CPU-CYCLE:%lld, UDP:%s:%u - %s:%u, ipid=%u\n", 
+		sapp_runtime_log(RLOG_LV_FATAL, "tid:%d, timedelay %lld(ns), UDP:%s:%u - %s:%u, ipid=%u\n",
 						tid,timedelay, ipsrc_str, sport, ipdst_str, dport, ipid);
 	}else{
-		sapp_runtime_log(RLOG_LV_FATAL, "tid:%d, timedaly CPU-CYCLE:%lld, IPPROTO:%u\n", 
+		sapp_runtime_log(RLOG_LV_FATAL, "tid:%d, timedelay %lld(ns), IPPROTO:%u\n",
 						tid,timedelay, ip4hdr->ip_p);
 	}
 
