@@ -687,19 +687,23 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 
 		case MSO_STREAM_CLOSE_REASON:
 		{
+			UCHAR *close_reason = (UCHAR *)opt_val;
+			
 			if(pstream->opstate != OP_STATE_CLOSE){
 				ret = -1;
 				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() MSO_STREAM_CLOSE_REASON error: stream %p has not closed!\n", pstream);
 				break;				
 			}
-			if(pstream->type != STREAM_TYPE_TCP){
+			if(STREAM_TYPE_TCP == pstream->type){
+				const struct tcpdetail_private *pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
+				*close_reason = pdetail_pr->link_state;
+			}else if(STREAM_TYPE_UDP == pstream->type){
+				const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
+				*close_reason = pstream_pr->stream_close_reason;
+			}else{
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() error:unsupport stream type:%d!\n", pstream->type);
-				break;
+				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() MSO_STREAM_CLOSE_REASON error:unsupport stream type:%d!\n", pstream->type);
 			}
-			UCHAR *close_reason = (UCHAR *)opt_val;
-			struct tcpdetail_private *pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
-			*close_reason = pdetail_pr->link_state;
 		}
 		break;
 

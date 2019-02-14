@@ -288,7 +288,7 @@ char test_set_stream_timeout(struct streaminfo *pstream,  void **pme, int thread
 			测试用nc产生3个udp流量, 端口分别为11111, 22222, 33333,
 			等11s之后, 11111应该结束,
 			22s之后, 22222应该结束,
-			33333如果不设全局超时淘汰, 在线pcap模式应该不会结束.
+			33333按照默认全局超时淘汰时间, 如果不设全局超时淘汰, 应该不会结束(dumpfile模式除外).
 		*/
 		if((pstream->addr.tuple4_v4->source == ntohs(11111))
 		|| (pstream->addr.tuple4_v4->dest == ntohs(11111))){
@@ -309,15 +309,16 @@ char test_set_stream_timeout(struct streaminfo *pstream,  void **pme, int thread
 				return APP_STATE_DROPME;
 			}			
 		}		
-	
-
 	}
 
 	if(pstream->opstate== OP_STATE_CLOSE){
 		opt_len = sizeof(char);
-		MESA_get_stream_opt(pstream, MSO_STREAM_CLOSE_REASON, &close_reason, &opt_len);
-		
-		printf("stream: %p %s closed, reason: %d!\n", pstream, printaddr(&pstream->addr, thread_seq), close_reason);
+		ret = MESA_get_stream_opt(pstream, MSO_STREAM_CLOSE_REASON, &close_reason, &opt_len);
+		if(ret >= 0){
+			printf("stream: %p %s closed, reason: %d!\n", pstream, printaddr(&pstream->addr, thread_seq), close_reason);
+		}else{
+			printf("stream: %p %s closed!\n", pstream, printaddr(&pstream->addr, thread_seq));
+		}
 	}
 
 	return APP_STATE_GIVEME;	
