@@ -548,6 +548,7 @@ static struct streaminfo *del_stream(struct streamindex *pindex)
 	
 	if(STREAM_TYPE_UDP==pstream->type)
 	{
+		pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_LRUOUT;
 		udp_free_stream(pindex);
 	}
 	else if (STREAM_TYPE_TCP==pstream->type)
@@ -808,6 +809,7 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 		}
 		else
 		{
+			pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_TIMEOUT;
 			udp_free_stream(pindex);
 		}		
 	}

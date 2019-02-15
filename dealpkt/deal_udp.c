@@ -350,6 +350,8 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 		pstream->opstate=OP_STATE_CLOSE;
 		pstream->pktstate=OP_STATE_CLOSE;  // add by lijia 20141202
 
+		pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_TIMEOUT;
+		
 		stream_process_udp(pstream,NULL,NULL,NULL,&(pdetail_pr->apme),&(pstream->opstate));  
 
 		project_requirement_destroy(threadnum, pstream_pr->pproject);
@@ -363,7 +365,7 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 		}
 		
 		//ÖØÖÃËùÓÐ×´Ì¬
-	       memset(pdetail,0,sizeof(struct udpdetail ));
+	    memset(pdetail,0,sizeof(struct udpdetail ));
 //		pstream->stream.opstate=OP_STATE_PENDING;
 		pstream->opstate=OP_STATE_PENDING;
 		pstream->pktstate=OP_STATE_PENDING;
