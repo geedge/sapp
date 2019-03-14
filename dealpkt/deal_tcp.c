@@ -1359,7 +1359,9 @@ static void tcp_reset_stream(struct streamindex *pindex,struct mesa_tcp_hdr *thi
 	if(this_tcphdr->th_flags & TH_SYN){
 		tcp_add_new_stream_bysyn(pindex,this_tcphdr,datalen,REUSE_OLD_LINK);
 	}else{
-		tcp_add_new_stream_bydata(pindex,this_tcphdr,datalen,REUSE_OLD_LINK);
+		if(TCP_CTEAT_LINK_BYDATA & tcp_creatlink_model){
+			tcp_add_new_stream_bydata(pindex,this_tcphdr,datalen,REUSE_OLD_LINK);
+		}
 	}	
 
 	g_SysInputInfo[threadnum][SYS_TCP_LINK_RESET]++;
