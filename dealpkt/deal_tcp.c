@@ -2767,11 +2767,12 @@ int  tcp_set_single_stream_takeoverflag(const struct streaminfo *pstream,int fla
 int tcp_set_single_stream_max_unorder(const struct streaminfo *pstream, UCHAR dir, UINT16 unorder_num)
 {
 	struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private *)pstream->pdetail;
-	int ret=0;
+	int ret=-1;
 	if((dir & DIR_C2S) && (pdetail_pr->pserver != NULL)){
 		if(pdetail_pr->pserver->maxunorder < unorder_num)
 		{
 			pdetail_pr->pserver->maxunorder = unorder_num;
+			ret = 0;
 		}	
 		else
 		{
@@ -2783,6 +2784,7 @@ int tcp_set_single_stream_max_unorder(const struct streaminfo *pstream, UCHAR di
 		if(pdetail_pr->pclient->maxunorder < unorder_num)
 		{
 			pdetail_pr->pclient->maxunorder = unorder_num;
+			ret = 0;
 		}
 		else
 		{
