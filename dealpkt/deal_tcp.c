@@ -186,7 +186,7 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 				
 				out_raw_result->len = *opt;
 				opt++;
-				if(out_raw_result->len !=4){
+				if(out_raw_result->len != 4){
 					goto err;
 				}
 				out_raw_result->len -= 2;
@@ -1407,7 +1407,7 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 						pdetail_pr->iclientseq=thisseq;
 					if(this_tcphdr->th_flags == (TH_SYN|TH_ACK)){
  					     pdetail_pr->tcpstateflag=TCP_SYN_RECV;	
- 					     // tcp_parse_opts(pstream_pr, DIR_S2C, (const struct tcphdr *)this_tcphdr); /* 2016-07-07 lijia add, for janus hijack */
+ 					     tcp_parse_opts(pstream_pr, DIR_S2C, (const struct tcphdr *)this_tcphdr); /* 2016-07-07 lijia add, for janus hijack */
  					}
 					return PASS;
 			}
