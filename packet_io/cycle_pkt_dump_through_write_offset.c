@@ -1183,7 +1183,7 @@ static void * cycle_pkt_dump_udp_socket_daemon_thread(void *arg)
 	pthread_setname_np(pthread_self(), "sapp_pkt_dump");
 #endif
 #endif
-	printf("\033[32m[Notice] \033[41m'%s' \033[0m is ready, port %d.\033[0m\n", "tcpdump_mesa",
+	printf("\033[32m[Notice]'%s'is ready, port %d.\033[0m\n", "tcpdump_mesa",
 	        pkt_dump_tcp_bind_port);
 	
 	while(1){

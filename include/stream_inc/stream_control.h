@@ -99,7 +99,7 @@ struct tcp_option_ts{
 
 struct tcp_option{
 	unsigned char type;
-	unsigned char len;
+	unsigned char len; /* pure payload len, not contain type and this len field */
 	union{
 		unsigned char char_value;
 		unsigned short short_value;

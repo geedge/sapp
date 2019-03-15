@@ -4,6 +4,7 @@ INC = -I../../include
 INC += -I../../include/net
 INC += -I../../dealpkt
 INC += -I../../include/stream_inc
+INC += -I../../include/support
 INC += -I../../packet_io
 INC += -I/opt/MESA/include
 INC += -I/opt/MESA/include/MESA
