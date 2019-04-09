@@ -444,7 +444,8 @@ static int marsio4_pkt_forward(int tid, marsio_buff_t * mbufs)
 
 	/* 批量获取, 但考虑特殊情况下, vxlan和其他封装模式混杂使用, 要对每个mbuf判断底层封装模式 */
 
-	if(ctrl_zone->__encap_len > 0){ /* 2018-06-01, marsio vxlan mode, 非vxlan封装的包不能回注 */
+	//if(ctrl_zone->__encap_len > 0){ /* 2018-06-01, marsio vxlan mode, 非vxlan封装的包不能回注 */
+	if(ctrl_zone->action & TUNNAT_CZ_ACTION_FORWARD){ /* 20190409 lijia modify, tunnel mode, 非隧道封装的包不能回注 */
 		/* vxlan封装内层数据转发不必做任何操作, 直接调用marsio_send_burst, 由marsio驱动负责 */
 		ctrl_zone->action = TUNNAT_CZ_ACTION_FORWARD;
 		marsio_buff_ctrlzone_set(mbufs, 0, ctrl_zone, sizeof(struct mr_tunnat_ctrlzone));

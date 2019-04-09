@@ -95,7 +95,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_GDEV_IP:
 		{
 			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+			if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
 				ret = -1;
 				break;
 			}
@@ -108,7 +108,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_VXLAN_ID:
 		{
 			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+			if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
 				ret = -1;
 				break;
 			}			
@@ -123,7 +123,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_VXLAN_SPORT:
 		{
 			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+			if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
 				ret = -1;
 				break;
 			}			
@@ -135,7 +135,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_VXLAN_ENCAP_TYPE:
 		{
 			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+			if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
 				ret = -1;
 				break;
 			}			
@@ -147,7 +147,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_VXLAN_LINK_DIR:
 		{
 			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+			if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
 				ret = -1;
 				break;
 			}			
@@ -159,7 +159,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC:
 		{
 			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+			if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
 				ret = -1;
 				break;
 			}			
@@ -170,7 +170,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC:
 		{
 			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-			if(mr_ctrlzone->__encap_len <= 0){/* 非vxlan包, 肯定没有这些选项 */
+			if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
 				ret = -1;
 				break;
 			}			
@@ -181,7 +181,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_VIRTUAL_LINK_ID:
 		{
 			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-			if(mr_ctrlzone->virtual_link_id <= 0){/* 非vxlan包, 肯定没有这些选项 */
+			if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
 				ret = -1;
 				break;
 			}
@@ -192,7 +192,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_REHASH_INDEX:
 		{
 			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-			if(mr_ctrlzone->rehash_index <= 0){/* 非vxlan包, 肯定没有这些选项 */
+			if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
 				ret = -1;
 				break;
 			}

@@ -55,6 +55,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 
 	if(NET_CONN_SERIAL_GDEV == g_topology_mode){
 		if(unlikely(sapp_identify_broad_multicast_pkt(this_layer_hdr, raw_pkt) != 0)){
+			g_SysInputInfo[thread_num][COUNTER_DROP_PKT]++;
 			return DROP;
 		}
 	}
@@ -147,8 +148,13 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
 			g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;		
 			if(NET_CONN_SERIAL_GDEV == g_topology_mode){
-				/* GDEV模式下, 什么时候都不应该把不认识的包再转发出去, 在线发现把SPT生成树协议再注回去, 导致网络故障 */
-				ret = DROP;
+				if(sapp_identify_tunnel_inner_pkt(raw_pkt) != 0){
+					ret = PASS;
+				}else{
+					/* GDEV模式下, 什么时候都不应该把非隧道内不认识的包再转发出去, 在线发现把SPT生成树协议再注回去, 导致网络故障 */
+					g_SysInputInfo[thread_num][COUNTER_DROP_PKT]++;
+					ret = DROP;
+				}
 			}else{			
 				ret = PASS;
 			}
