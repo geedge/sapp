@@ -65,6 +65,7 @@ static int sapp_identify_broad_multicast_init(void)
 	void *io_lib_handle;
 	
 	if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
+#if LINK_MODE_DYNAMIC	
 		io_lib_handle = dlopen("./platform_lib/packet_io_marsio.so", RTLD_NOW | RTLD_GLOBAL);
 		if(NULL == io_lib_handle){
 			printf("\033[1;31;40m[Error]dlopen %s error, %s!\033[0m\n", "./platform_lib/packet_io_marsio.so", dlerror());
@@ -77,8 +78,12 @@ static int sapp_identify_broad_multicast_init(void)
 		}
 
 		/* 此处不要用dlclose(), 因为后续还要用dlopen打开packet_io_marsio.so,  */
+#else
+	dl_marsio_buff_ctrlzone = (void * (*)(void *m, uint8_t id))marsio_buff_ctrlzone;
+#endif
 	}
 #endif
+
 	return 0;
 }
 

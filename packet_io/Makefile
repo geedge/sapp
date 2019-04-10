@@ -3,6 +3,10 @@
 
 #CC		= g++
 #CCC		= g++
+
+TARGET = libpacket_io.a 
+OBJS=sendpacket.o sendpacket_wrap.o packet_io.o packet_io_log.o
+
 CFLAGS     	+= -Wall 
 CFLAGS		+= -fPIC -shared -D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H
 CFLAGS		+= $(OPTFLAGS)
@@ -65,8 +69,11 @@ DLL_LIB += packet_io_ipfile.so
 endif
 
 ifeq ($(iomode), $(_MODE_MARSIO))                                                                                               
-DLL_LIB += packet_io_marsio.so
 CFLAGS += -DIOMODE_MARSIO=1
+DLL_LIB += packet_io_marsio.so
+    ifeq ($(link_mode), $(__LINK_MODE_STATIC))                                                                                               
+        OBJS += packet_io_marsio.o
+    endif
 endif
 
 ifeq ($(iomode), $(_MODE_SMITH))
@@ -89,9 +96,6 @@ DLL_LIB += packet_io_pag_marsio.so
 endif
 
 
-TARGET = libpacket_io.a 
-
-OBJS=sendpacket.o sendpacket_wrap.o packet_io.o packet_io_log.o
 OBJS+=packet_io_lib_load.o
 OBJS+=packet_io_status.o
 OBJS+=packet_io_status_new.o

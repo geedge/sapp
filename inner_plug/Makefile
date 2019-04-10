@@ -30,7 +30,16 @@ TARGET = isakmp_protocol_plug.so ipsec_biz_sample.so l2tp_protocol_plug.so l2tp_
 TARGET += pptp_protocol_plug.so pptp_biz_sample.so
 TARGET += g_device_plug.so
 TARGET += wangyan_keepalive_plug.so
-TARGET += libsapp_assistant.so
+
+OBJS=
+
+ifeq ($(link_mode), $(__LINK_MODE_STATIC))
+    OBJS += sapp_assistant.o
+    TARGET += libinner_plug.a
+else
+    TARGET += libsapp_assistant.so
+endif
+
 
 ifeq ($(iomode), $(_MODE_PCAP))
 CFLAGS += -DIOMODE_PCAP=1
@@ -77,6 +86,9 @@ all: $(TARGET)
 .cpp.o:
 	$(CCC) -c $(CFLAGS) -I. $(H_DIR) $<
 
+libinner_plug.a:$(OBJS)
+	rm -f $@ ;ar -r $@ $^;
+	cp $@ ../lib/
 
 #isakmp_protocol_plug.so:isakmp_protocol_plug.o
 isakmp_protocol_plug.so:isakmp_protocol_plug_add_nat.o
