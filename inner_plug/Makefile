@@ -24,7 +24,7 @@ H_DIR += -I/opt/MESA/include
 H_DIR += -I/opt/MESA/include/MESA
 H_DIR += -I/opt/mrzcpd/include
 
-LIB=-L/opt/MESA/lib
+LIB=-L/opt/MESA/lib -L/opt/mrzcpd/lib
 
 TARGET = isakmp_protocol_plug.so ipsec_biz_sample.so l2tp_protocol_plug.so l2tp_biz_sample.so 
 TARGET += pptp_protocol_plug.so pptp_biz_sample.so

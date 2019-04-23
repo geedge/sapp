@@ -18,7 +18,7 @@ CFLAGS += -DUSE_PAG_GET_FRAME=1
 endif
 
 RELEASE_PATH=../run/platform_lib/
-LIBPATH = -L../lib 
+LIBPATH = -L../lib -L/opt/mrzcpd/lib
 DEP = ../support/libnet_common.so
 
 H_DIR += $(INC)   

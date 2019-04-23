@@ -7,7 +7,7 @@ endif
 all: $(TARGET)
 
 LIB=
-LIB_PATH=-L../lib
+LIB_PATH=-L../lib -L/opt/mrzcpd/lib
 CFLAGS += -fPIC -D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD
 CFLAGS += -DPLATFORM_NSDPF_PAPP=1
 
