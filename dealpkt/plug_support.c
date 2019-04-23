@@ -361,6 +361,20 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		}	
 		break;
 
+		case MSO_TCPALL_VALID_AFTER_KILL:
+		{
+			if(STREAM_TYPE_TCP != pstream->type){
+				printf("MESA_set_stream_opt() error: stream type is not tcp!\n");
+				ret = -1;
+				break;
+			}
+			unsigned char tcpall_valid = *((unsigned char *)opt_val);
+			struct tcpdetail_private *pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
+			pdetail_pr->tcpall_valid_after_kill = (tcpall_valid == 1 ? 1 : 0);	
+			ret = 0;
+		}
+		break;
+		
 		default:
 			printf("MESA_set_stream_opt() error: unsupport MESA_stream_opt type!\n");
 			ret = -1;

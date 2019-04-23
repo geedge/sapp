@@ -648,6 +648,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 }
 
 static int test_tcpall_flow_id = -1;
+
 char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
 {
 	struct tcpdetail *pdetail=(struct tcpdetail *)pstream->pdetail;
@@ -721,6 +722,22 @@ char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq,voi
 	}
         return APP_STATE_GIVEME;
 }
+
+char tcpall_valid_after_kill(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
+{
+	unsigned char mopt = 1;
+
+	MESA_kill_tcp(pstream, a_packet);
+	
+	if(pstream->pktstate== OP_STATE_PENDING){
+		if(MESA_set_stream_opt(pstream, MSO_TCPALL_VALID_AFTER_KILL, &mopt, sizeof(mopt)) < 0){
+			abort();
+		}
+	}
+
+	return testtcpApp_allpkt(pstream, pme, thread_seq, a_packet);
+}
+
 struct stream_static
 {
    int pktnum;

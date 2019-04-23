@@ -2425,21 +2425,21 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	int try_to_update_addr_info = 0;
 	pindex_tcp = findstreamindex (pindex, raw_pkt);
 	if(unlikely(!pindex_tcp)){
-		 if(this_tcphdr->th_flags & TH_SYN)
+		if(this_tcphdr->th_flags & TH_SYN)
 		{
 			//add by yw to detect synflood attack
 			//if(g_RunSYNFloodDetect == 1)
 			if (unlikely(TCP_SYNFLOOD_DETECT_ON & tcp_flood_detect_model))
 			{
 				if( synflood_detector(pstream->threadnum) == ATTACKING)
-               		{     
-                 			    tcp_creatlink_model = TCP_CTEAT_LINK_BYDATA;
+               	{     
+                    tcp_creatlink_model = TCP_CTEAT_LINK_BYDATA;
 					return PASS;
-               		 }
-                		 else
-                		 {
-                  			  tcp_creatlink_model = TCP_CTEAT_LINK_BYSYN;
-                		 }
+               	}
+                else
+                {
+                	tcp_creatlink_model = TCP_CTEAT_LINK_BYSYN;
+                }
 			}
 
 			//end of add by yw to detect synflood attack		
@@ -2512,6 +2512,11 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		if((g_kill_tcp_remedy_sw != 0) && (tcplen > 0)){ /* 防止flood攻击, 只有带数据的包才发RST */
 			//MESA_kill_tcp(pstream, raw_pkt);
 			MESA_kill_tcp_remedy(pstream, raw_pkt);
+		}
+
+		pdetail_pr = (struct tcpdetail_private *)(pindex_tcp->stream.stream_public.pdetail);
+		if(pdetail_pr->tcpall_valid_after_kill != 0){
+			tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);
 		}
 		return DROP;
 	}
