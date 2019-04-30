@@ -785,7 +785,7 @@ char test_layer_addr_prefix_ntop(const struct streaminfo *stream,void **pme, int
 {
 	char addr_ntop_str_r[4096];
 	char *addr_ntop_str;
-	char *addr_type_ntop_str;
+	const char *addr_type_ntop_str;
 	const struct streaminfo *tmp = stream;
 	
 	if(OP_STATE_PENDING == stream->opstate){
@@ -799,6 +799,56 @@ char test_layer_addr_prefix_ntop(const struct streaminfo *stream,void **pme, int
 	}
 	return APP_STATE_GIVEME;
 }
+
+
+char test_get_rawpkt_options(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+{
+	int ret;
+	int gdev_ip;
+	int vxlan_id;
+	int vpn_id;
+	unsigned short vxlan_sport;
+	unsigned char service_id;
+	
+	ret = get_rawpkt_opt_from_streaminfo(stream, RAW_PKT_GET_GDEV_IP, &gdev_ip);
+	if(ret >= 0){
+		char tmp_ip_str[32];
+		inet_ntop(AF_INET, &gdev_ip, tmp_ip_str, 32);
+		printf("[debug], test_get_rawpkt_options get gdev-ip:%s\n", tmp_ip_str);
+	}else{
+		printf("[error], test_get_rawpkt_options GDEV_IP error\n");
+	}
+
+	ret = get_rawpkt_opt_from_streaminfo(stream, RAW_PKT_GET_VXLAN_ID, &vxlan_id);
+	if(ret >= 0){
+		printf("[debug], test_get_rawpkt_options get vlan-id:%d\n", vxlan_id);
+	}else{
+		printf("[error], test_get_rawpkt_options VXLAN_ID error\n");
+	}
+
+	ret = get_rawpkt_opt_from_streaminfo(stream, RAW_PKT_GET_VXLAN_VPNID, &vpn_id);
+	if(ret >= 0){
+		printf("[debug], test_get_rawpkt_options get VPNID:%d\n", ntohl(vpn_id)); /* to host order */
+	}else{
+		printf("[error], test_get_rawpkt_options VPNID error\n");
+	}
+	
+	service_id = vxlan_id_map_to_service_id(ntohl(vxlan_id));
+	printf("service id from vxlan_id: %u\n", service_id);
+	
+	ret = get_rawpkt_opt_from_streaminfo(stream, RAW_PKT_GET_VXLAN_SPORT, &vxlan_sport);
+	if(ret >= 0){
+		printf("[debug], test_get_rawpkt_options get sport:%u\n", ntohs(vxlan_sport));
+	}else{
+		printf("[error], test_get_rawpkt_options VXLAN_SPORT error\n");
+	}
+
+	service_id = vxlan_sport_map_to_service_id(ntohs(vxlan_sport));
+	printf("service id from sport: %u\n", service_id);
+	
+	return APP_STATE_GIVEME;
+}
+
 
 
 char test_inet_addr_list_addr(const struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
