@@ -1232,10 +1232,12 @@ void tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const 
 
 	if(pstream_pr->syn_opt_array){
 		dictator_free(threadnum, pstream_pr->syn_opt_array);
+		pstream_pr->syn_opt_array = NULL;
 	}
 
 	if(pstream_pr->synack_opt_array){
 		dictator_free(threadnum, pstream_pr->synack_opt_array);
+		pstream_pr->synack_opt_array = NULL;
 	}
 	
 	free_streamindex(threadnum,pindex);
@@ -1243,7 +1245,12 @@ void tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const 
 	return;
 }
 
-static void tcp_reset_stream(struct streamindex *pindex,struct mesa_tcp_hdr *this_tcphdr,int datalen)
+/*
+	return value:
+		1: reset and create new stream;
+		0: reset but free current stream;
+*/
+static int tcp_reset_stream(struct streamindex *pindex,struct mesa_tcp_hdr *this_tcphdr,int datalen)
 {
 	struct stream_list *plist=NULL;
 	struct streaminfo_private *pstream_pr=&(pindex->stream);
@@ -1252,6 +1259,7 @@ static void tcp_reset_stream(struct streamindex *pindex,struct mesa_tcp_hdr *thi
 	struct tcpdetail *pdetail = &pdetail_pr->tcpdetail_public;
 	UCHAR threadnum = pstream->threadnum;
 	UCHAR saved_curdir;
+	int ret = 0;
 	
 	 //add by lqy 20150107 回退计数
         if(pstream->curdir==DIR_S2C)
@@ -1314,7 +1322,7 @@ static void tcp_reset_stream(struct streamindex *pindex,struct mesa_tcp_hdr *thi
 			pstream->opstate=OP_STATE_CLOSE;
 			stream_process_tcp(pstream,NULL, NULL,NULL,&(pdetail_pr->apme),&(pstream->opstate));  
 			pdetail_pr->apme=NULL;
-			}
+		}
 		if(pdetail_pr->pclient!=NULL)
 		{
 			tcp_free_half(pdetail_pr->pclient,threadnum);
@@ -1358,13 +1366,31 @@ static void tcp_reset_stream(struct streamindex *pindex,struct mesa_tcp_hdr *thi
 	
 	if(this_tcphdr->th_flags & TH_SYN){
 		tcp_add_new_stream_bysyn(pindex,this_tcphdr,datalen,REUSE_OLD_LINK);
+		ret = 1;
 	}else{
 		if(TCP_CTEAT_LINK_BYDATA & tcp_creatlink_model){
 			tcp_add_new_stream_bydata(pindex,this_tcphdr,datalen,REUSE_OLD_LINK);
+			ret = 1;
+		}else{
+			/* 20190506 lijia add, reset之后如果不建新流, 直接free掉 */
+			hash_del_stream(pindex);
+			if(pstream->pdetail != NULL)
+			{
+				dictator_free(threadnum,pstream->pdetail);
+				pstream->pdetail=NULL;
+			}			
+			if(pstream_pr->timeout > link_default_nopkt_time){ /* 链接独有超时时间, 减少计数 */
+				sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
+			}			
+			free_heap_stream_info(pstream, 0);
+			free_streamindex(threadnum,pindex);
+			ret = 0;
 		}
 	}	
 
 	g_SysInputInfo[threadnum][SYS_TCP_LINK_RESET]++;
+
+	return ret;
 }
 
 
@@ -2306,7 +2332,8 @@ static int tcp_deal_nouse_stream(struct streamindex *pindex,const void *this_iph
 	if((pstream->opstate == OP_STATE_PENDING) 
 	  && (datalen>0) 
 	  && (!(this_tcphdr->th_flags & TH_FIN)) 
-	  && (!(this_tcphdr->th_flags & TH_RST)))
+	  && (!(this_tcphdr->th_flags & TH_RST))
+	  && (TCP_CTEAT_LINK_BYDATA & tcp_creatlink_model))
 	{
 		tcp_change_stream_todata(pindex,this_tcphdr,datalen);
 		return tcp_deal_data_stream(pindex,this_iphdr,raw_pkt,this_tcphdr,datalen);
@@ -2578,7 +2605,10 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	
 	/* note: reset会重置计数, 放在clientbytes+=, clientpktnum++代码之后 */
 	if(1 == lrustream(pindex_tcp)){
-		tcp_reset_stream(pindex_tcp, this_tcphdr, tcplen);		
+		ret = tcp_reset_stream(pindex_tcp, this_tcphdr, tcplen);
+		if(0 == ret){
+			return PASS;
+		}
 	}
 	pdetail->lastmtime=g_CurrentTime;
 

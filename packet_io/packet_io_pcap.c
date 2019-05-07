@@ -2,6 +2,7 @@
 extern "C" {
 #endif
 
+#include "MESA_prof_load.h"
 #include "stream_internal.h"
 #include "packet_io.h"
 #include "packet_io_internal.h"
@@ -22,8 +23,8 @@ extern "C" {
 
 #define PROCESS_BAR_SW 		(1)
 
-int g_pcap_version_VERSION_20180808; 
-static int g_pcap_version_internal = 20180808;
+int g_pcap_version_VERSION_20190506; 
+static int g_pcap_version_internal = 20190506;
 
 #define PCAP_SNAPLEN_MAX	(65535)
 
@@ -125,6 +126,20 @@ static unsigned long dumpfile_read_size = 0;
 static unsigned long  dump_times;
 static char process_bar[100][101];
 static unsigned long PKTps = 500000;
+static int dumpfile_according_timestamp = 0;
+static long long dumpfile_timestamp_diff_with_start = 0; /* 当前进程启动时间与收到第一个包的时间戳的差值 */
+
+static long long __get_current_time_in_ms(void)
+{
+	struct timeval t;
+	long long tms;
+
+	gettimeofday(&t, NULL);
+
+	tms = t.tv_sec * 1000 + t.tv_usec/1000;
+
+	return tms;
+}
 	
 static unsigned long __get_file_length(const char *file_name)
 {
@@ -656,6 +671,21 @@ static inline int pcap_raw_pkt_check(const struct pcap_pkthdr *hdr, u_char *user
 }
 
 
+static void dumpfile_wait_according_timestamp(const struct pcap_pkthdr *hdr)
+{
+	long long cur_time_ms;
+	long long pkt_time_ms;
+
+	pkt_time_ms = hdr->ts.tv_sec * 1000 + hdr->ts.tv_usec / 1000;
+	cur_time_ms = __get_current_time_in_ms() - dumpfile_timestamp_diff_with_start;
+
+	while(pkt_time_ms > cur_time_ms){
+		usleep(100);
+		cur_time_ms = __get_current_time_in_ms() - dumpfile_timestamp_diff_with_start;	
+	}
+}
+
+
 static void __pcap_pkt_handle(u_char *user, const struct pcap_pkthdr *hdr, const u_char *data)
 {
 	pkt_queue_t pkt_queue_node;
@@ -669,12 +699,19 @@ static void __pcap_pkt_handle(u_char *user, const struct pcap_pkthdr *hdr, const
 
 	thread_num = __pcap_dispatch_thread(data);
 
-#if PROCESS_BAR_SW
 	if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
+#if PROCESS_BAR_SW	
 		process_bar_print(hdr->caplen);	
+#endif		
+		if((dumpfile_according_timestamp != 0)){
+			if(0 == dumpfile_timestamp_diff_with_start){ /* first time */
+				dumpfile_timestamp_diff_with_start = __get_current_time_in_ms() - (hdr->ts.tv_sec * 1000 + hdr->ts.tv_usec / 1000);
+			}
+
+			dumpfile_wait_according_timestamp(hdr);
+		}
 	}
 	
-#endif	
 
 #if 0
 retry:	
@@ -1098,6 +1135,7 @@ int dl_io_init(int argc, char *argv[])
 {
 	char pcap_errbuf[PCAP_ERRBUF_SIZE];
 	int opt_len;
+	char cfg_buf[256];
 
 #if PCAP_CAP_FROM_IP	
 	printf("\033[41m Warning! 'PCAP_CAP_FROM_IP' is enable!. \033[0m\n");
@@ -1177,6 +1215,11 @@ int dl_io_init(int argc, char *argv[])
 	pcap_create_work_thread();
 
 	dispatch_thread_rnd_num = rand();
+
+	MESA_load_profile_string_def("conf/main.conf", "Module", "dumpfile_speed", cfg_buf, sizeof(cfg_buf), "topspeed");
+	if(strncasecmp(cfg_buf, "timestamp", strlen("timestamp")) == 0){
+		dumpfile_according_timestamp = 1;	
+	}
 
 	return 0;
 }
