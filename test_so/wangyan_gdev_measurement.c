@@ -18,6 +18,7 @@
 #include "gdev_keepalive.h"
 #include "mrtunnat.h"
 #include "sysinfo.h"
+#include "MESA_handle_logger.h"
 
 
 #ifdef __cplusplus
@@ -40,6 +41,7 @@ typedef struct {
 	unsigned int vxlan_dip_net_order;
 	unsigned short vxlan_sport_net_order;
 	unsigned short vxlan_dport_net_order;
+	char vxlan_link_dir; /* 原始基准包的vxlan->link_dir值 */
 	int vxlan_link_id;
 	int vxlan_vlan_num;
 	int sample_pkt_dir; /* 基准数据包捕获时的传输方向, C:in-to-out, vxlan dir is 0; I:out-to-in, vxlan dir is 1;  */
@@ -78,6 +80,7 @@ typedef struct{
 
 static send_pkt_realtime_t g_wangyan_send_fake_pkt_rt_stat[MAX_THREAD_NUM];
 
+static void *gdev_measure_logh;
 
 extern int get_thread_count(void);
 extern time_t g_CurrentTime;
@@ -279,6 +282,19 @@ static int wangyan_gdev_measure_parse_config(const char *config_file, wangyan_gd
 		return -1;
  	}
 
+ 	/************** C_DIR ***************/
+	ret = __load_profile_string_no_section(config_file, "C_DIR", ':', tmp_str);
+	if(ret < 0){
+		printf("get config %s error!\n", "C_DIR");
+		return -1;
+	}
+ 	tmp_int = atoi(tmp_str);
+ 	if(tmp_int != 0 && tmp_int != 1){ 
+		printf("Invalid config %s:%s!\n", "C_DIR", tmp_str);
+		return -1;
+ 	}
+ 	tmp_ins->send_pkt_para.vxlan_link_dir = (char)tmp_int;
+
 	/**********   CorI  **********/
 	ret = __load_profile_string_no_section(config_file, "CorI", ':',  tmp_str);
 	if(ret < 0){
@@ -324,7 +340,7 @@ static int wangyan_gdev_measure_parse_config(const char *config_file, wangyan_gd
 		}
 	}
 	
-	/************  wangyan dev measure plug config  ********************/
+	/*****************  wangyan dev measure plug config  **********************/
 
 	/**********   transport type ************************/
 	MESA_load_profile_string_def(config_file, "plug", "transport_type", tmp_str, 256,  "tcp");
@@ -352,6 +368,17 @@ static int wangyan_gdev_measure_parse_config(const char *config_file, wangyan_gd
 		return -1;
 	}
 	tmp_ins->send_pkt_para.send_pps = tmp_int;
+
+	/***************** send_CorI ************************/
+	MESA_load_profile_string_def(config_file, "plug", "send_CorI", tmp_str, 256, "#");
+	if(tmp_str[0] == 'C'){
+		tmp_ins->send_pkt_para.send_pkt_CorI = 0;
+	}else if(tmp_str[0] == 'I'){
+		tmp_ins->send_pkt_para.send_pkt_CorI = 1;
+	}else{
+		printf("parse config %s error!\n", "send_CorI");
+		return -1;
+	}
 	
 	/**********   vxlan_sport  **********/
 	MESA_load_profile_int_def(config_file, "plug", "vxlan_sport", &tmp_int, 50704);
@@ -496,10 +523,16 @@ char wangyan_polling_cb_send_fake_pkt_udp(int thread_seq, wangyan_gdev_measure_i
 	option[option_num].length = 1;
 	option[option_num].char_value = TUNNAT_TUNNEL_TYPE_ETHER;
 	option_num++;///////
+	
 	option[option_num].type = SAPP_SEND_OPT_VXLAN_LINK_DIR;
 	option[option_num].length = 1;
-	option[option_num].char_value = instance->send_pkt_para.send_pkt_CorI;
+	if(instance->send_pkt_para.sample_pkt_dir == instance->send_pkt_para.send_pkt_CorI){
+		option[option_num].char_value = instance->send_pkt_para.vxlan_link_dir;
+	}else{
+		option[option_num].char_value = instance->send_pkt_para.vxlan_link_dir ^ 1;
+	}
 	option_num++;///////
+	
 	option[option_num].type = SAPP_SEND_OPT_INNER_LINK_ENCAP_TYPE;
 	option[option_num].length = 1;
 	option[option_num].char_value = TUNNAT_TUNNEL_TYPE_ETHER;
@@ -590,10 +623,18 @@ char wangyan_polling_cb_send_fake_pkt_tcp(int thread_seq, wangyan_gdev_measure_i
 	option[option_num].length = 1;
 	option[option_num].char_value = TUNNAT_TUNNEL_TYPE_ETHER;
 	option_num++;///////
+
+	
 	option[option_num].type = SAPP_SEND_OPT_VXLAN_LINK_DIR;
 	option[option_num].length = 1;
-	option[option_num].char_value = instance->send_pkt_para.send_pkt_CorI;
+	if(instance->send_pkt_para.sample_pkt_dir == instance->send_pkt_para.send_pkt_CorI){
+		option[option_num].char_value = instance->send_pkt_para.vxlan_link_dir;
+	}else{
+		option[option_num].char_value = instance->send_pkt_para.vxlan_link_dir ^ 1;
+	}
 	option_num++;///////
+
+	
 	option[option_num].type = SAPP_SEND_OPT_INNER_LINK_ENCAP_TYPE;
 	option[option_num].length = 1;
 	option[option_num].char_value = TUNNAT_TUNNEL_TYPE_ETHER;
@@ -814,7 +855,8 @@ char wangyan_gdev_measure_polling_cb(struct streaminfo *__stream, void **__pme, 
 static int wangyan_gdev_measure_add_new_instance(wangyan_gdev_measure_instance_t *tmp_ins)
 {
 	if(wangyan_gdev_measure_instance_num >= GDEV_MEASURE_MAX_NUM){
-		printf("\033[1;31;40m[Error]instance number is over limit %s![0m\n", GDEV_MEASURE_MAX_NUM);
+		printf("\033[1;31;40m[Error]instance number is over limit %d![0m\n", GDEV_MEASURE_MAX_NUM);
+		MESA_handle_runtime_log(gdev_measure_logh, 30, "gdev", "instance number is over limit %d!", GDEV_MEASURE_MAX_NUM); 
 		return -1;
 	}
 
@@ -838,12 +880,14 @@ static int iterate_readdir(const char *conf_dir)
 	
     if(!S_ISDIR( fstat.st_mode)){
     	printf("\033[1;31;40m[Error]%s is not dir!\033[0m\n", conf_dir);
+    	MESA_handle_runtime_log(gdev_measure_logh, 30, "gdev", "%s is not dir!", conf_dir); 
 		return -1;
     }
 
     dir_h = opendir(conf_dir);
     if(NULL == dir_h){
     	printf("\033[1;31;40m[Error]opendir %s error!\033[0m\n", conf_dir);
+    	MESA_handle_runtime_log(gdev_measure_logh, 30, "gdev", "opendir %s error!", conf_dir); 
 		return -1;
     }
 
@@ -871,6 +915,8 @@ static int iterate_readdir(const char *conf_dir)
     }
 
 	closedir(dir_h);
+
+	MESA_handle_runtime_log(gdev_measure_logh, 10, "gdev", "parse conf succ, total valid config num:%d\n", wangyan_gdev_measure_instance_num);
 	
 	return 0;
 }
@@ -881,6 +927,8 @@ int wangyan_gdev_measure_init(void)
 {
 	int ret;
 
+	gdev_measure_logh = MESA_create_runtime_log_handle("./log/gdev_measure.log", 10);
+
 	if(get_thread_count() != 1){
 		printf("\033[1;31;40m[Error]wangyan_gdev_measure plug not support multithread!\033[0m\n");
 	}
@@ -889,6 +937,7 @@ int wangyan_gdev_measure_init(void)
 
 	if(wangyan_gdev_measure_instance_num <= 0){
 		printf("\033[1;31;40m[Error]No valid config in %s!\033[0m\n", GDEV_MEASURE_CONF_DIR);
+		MESA_handle_runtime_log(gdev_measure_logh, 30, "gdev", "No valid config in %s!", GDEV_MEASURE_CONF_DIR);
 		return -1;
 	}
 	
