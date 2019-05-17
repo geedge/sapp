@@ -1,0 +1,43 @@
+#################################################
+#                                               #
+#            dictator, version 0.01             #
+#                                               #
+#      Software Division, ICT, 2010.11          #
+#                                               #
+#################################################
+
+#CC=gcc -g
+CC	= g++
+
+INCLUDES	=
+LIBS	= -lpthread -ldl
+CFLAGS	= -g -Wall -fPIC
+
+
+SOURCES	= dictator.cpp 
+OBJECTS	= dictator.o dictator_debuger.o
+TARGET	= EXEditctator
+TARGETLIB	= libdictator.a
+
+.PHONY: all dep clean install
+
+.c.o:
+	$(CC) -c -o $@ $(CFLAGS) -I. $(INCS) $< -DDICTATOR_DEBUG
+
+.cpp.o:
+	$(CC) -c -o $@ $(CFLAGS) -I. $(INCS) $< -DDICTATOR_DEBUG
+all:$(OBJECTS)
+	cd D_internal/ && $(MAKE) clean && $(MAKE)
+	ar cqs $(TARGETLIB) *.o
+	cp $(TARGETLIB) ../lib/
+	cp $(TARGETLIB) ../../../lib/
+dictator.o: dictator.cpp dictator.h dictator_core.h
+	$(CC) -c -o $@ $(CFLAGS) $< -DDICTATOR_DEBUG
+dictator_debuger.o: dictator_debuger.cpp dictator.h dictator_core.h
+	$(CC) -c -o $@ $(CFLAGS) $< -DDICTATOR_DEBUG
+#	$(CC) $(OBJECTS) -o $(TARGET) $(LIBS)
+#	ld dictator.o $(LIBS)
+clean:
+	rm -f *.o $(TARGETLIB)
+	cd D_internal && $(MAKE) clean
+

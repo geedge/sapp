@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  *	\brief MARSIO Userspace ZeroCopy Driver Version 4
  *	
  *	This is the user api header file of MARSIOv4 ZeroCopy Driver
@@ -13,14 +13,14 @@
 
 typedef enum
 {
-	/* Êı¾İÃæÏß³ÌÊı£¬Ã»ÓĞÈ±Ê¡Öµ */
+	/* æ•°æ®é¢çº¿ç¨‹æ•°ï¼Œæ²¡æœ‰ç¼ºçœå€¼ */
 	MARSIO_OPT_THREAD_NUM,
-	/* Êı¾İÃæÏß³Ì°ó¶¨ÑÚÂë£¬Ã»ÓĞÈ±Ê¡Öµ 
-	 * ÉèÖÃ¸ÃÑÚÂëºó£¬Êı¾İÃæÏß³ÌÊıÑ¡Ïî½«±»ºöÂÔ¡£ 
+	/* æ•°æ®é¢çº¿ç¨‹ç»‘å®šæ©ç ï¼Œæ²¡æœ‰ç¼ºçœå€¼ 
+	 * è®¾ç½®è¯¥æ©ç åï¼Œæ•°æ®é¢çº¿ç¨‹æ•°é€‰é¡¹å°†è¢«å¿½ç•¥ã€‚ 
 	 */
 	MARSIO_OPT_THREAD_MASK,
-	/* ´¦ÀíSIGĞÅºÅ£¬È±Ê¡Öµ£ºÀàĞÍ£ºuint32_t£¬¹Ø±Õ£¨0£© 
-	 * ÆôÓÃ¸ÃÑ¡Ïîºó£¬½«×Ô¶¯´¦ÀíSIGINT¡¢SIGTERMĞÅºÅ
+	/* å¤„ç†SIGä¿¡å·ï¼Œç¼ºçœå€¼ï¼šç±»å‹ï¼šuint32_tï¼Œå…³é—­ï¼ˆ0ï¼‰ 
+	 * å¯ç”¨è¯¥é€‰é¡¹åï¼Œå°†è‡ªåŠ¨å¤„ç†SIGINTã€SIGTERMä¿¡å·
 	 */
 	MARSIO_OPT_EXIT_WHEN_ERR,
 
@@ -28,28 +28,66 @@ typedef enum
 
 typedef enum
 {
-    /* ·¢ËÍºó²»ÊÍ·ÅÊı¾İ°ü£¬ÓÉÓ¦ÓÃ×ÔĞĞÊÍ·ÅÊı¾İ°ü */
+    /* å‘é€åä¸é‡Šæ”¾æ•°æ®åŒ…ï¼Œç”±åº”ç”¨è‡ªè¡Œé‡Šæ”¾æ•°æ®åŒ… */
     MARSIO_SEND_OPT_NO_FREE = 1 << 0,
-    /* ·¢ËÍÊ±¼ÆËã·¢°ü¹şÏ£Öµ£¬ÓÃÓÚ·ÖÁ÷ */
+    /* å‘é€æ—¶è®¡ç®—å‘åŒ…å“ˆå¸Œå€¼ï¼Œç”¨äºåˆ†æµ */
     MARSIO_SEND_OPT_REHASH = 1 << 1,
-    /* ¿ìËÙ±¨ÎÄÂ·¾¶ */
-    MARSIO_SEND_OPT_FAST = 1 << 2
+    /* å¿«é€ŸæŠ¥æ–‡è·¯å¾„ */
+    MARSIO_SEND_OPT_FAST = 1 << 2,
+    /* æŠ¥æ–‡è¿½è¸ªæ ‡è®° */
+    MARSIO_SEND_OPT_TRACE = 1 << 3
+
 } marsio_opt_send_t;
+
+enum mr_sendpath_type
+{
+    /* å»å¾€ç‰¹å®šè™šè®¾å¤‡çš„å‘åŒ…è·¯å¾„ */
+    MR_SENDPATH_VDEV,
+    /* è·¯ç”±æŸ¥è¡¨ç¡®å®šå‘åŒ…è·¯å¾„ */
+    MR_SENDPATH_ROUTE_NORMAL,
+    /* ç‰¹å®šè®¾å¤‡è·¯ç”±æŸ¥è¡¨ç¡®å®šå‘åŒ…è·¯å¾„ */
+    MR_SENDPATH_ROUTE_SPEC_DEV,
+    /* MAXæ ‡è®° */
+    MR_SENDPATH_MAX
+};
+
+enum mr_sendpath_option
+{
+    /* æ„å»ºå››å±‚æŠ¥æ–‡å¤´ */
+    MR_SENDPATH_OPT_BUILD_L4 = 0,
+    /* æ„å»ºä¸‰å±‚æŠ¥æ–‡å¤´ */
+    MR_SENDPATH_OPT_BUILD_L3 = 1,
+    /* æ„å»ºäºŒå±‚æŠ¥æ–‡å¤´ */
+    MR_SENDPATH_OPT_BUILD_L2 = 2,
+	/* æ„å»ºå‰Hookç‚¹å›è°ƒ */
+	MR_SENDPATH_OPT_HOOK_PREBUILD = 50,
+	/* æ„å»ºåHookç‚¹å›è°ƒ */
+	MR_SENDPATH_OPT_HOOK_POSTBUILD = 51,
+};
+
+enum mr_clone_options
+{
+	/* æ‹·è´åŒºåŸŸ */
+	MR_BUFF_CLONE_DATA = 1 << 0,
+	MR_BUFF_CLONE_BUFF = 1 << 1,
+	MR_BUFF_CLONE_CTRLZONE = 1 << 2,
+};
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <netinet/in.h>
 
-#ifndef SOCKET_ID_ANY
-#define SOCKET_ID_ANY           -1
+#ifndef MARSIO_SOCKET_ID_ANY
+#define MARSIO_SOCKET_ID_ANY           -1
 #endif
 
-#ifndef LCORE_ID_ANY
-#define LCORE_ID_ANY            -1
+#ifndef MARSIO_LCORE_ID_ANY
+#define MARSIO_LCORE_ID_ANY            -1
 #endif
     
 typedef uint32_t device_id_t;
@@ -64,6 +102,9 @@ struct mr_vdev;
 
 struct mr_instance * marsio_create();
 struct mr_instance * marsio_current();
+
+typedef int(*fn_sendpath_hook_t)(struct mr_sendpath * sendpath, 
+	marsio_buff_t * mbuf[], unsigned int nr_mbuf, void * arg);
 
 int marsio_option_get(struct mr_instance * instance, int opt_type, void * out_opt, size_t out_opt_buffer);
 int marsio_option_set(struct mr_instance * instance, marsio_opt_type_t opt_type, void * opt, size_t sz_opt);
@@ -90,6 +131,10 @@ int marsio_ipv4_header_construct(marsio_buff_t * buff, uint32_t s_ip, uint32_t d
 struct mr_sendpath * marsio_sendpath_create_by_droute(struct mr_vdev * dest_device, struct in_addr addr);
 struct mr_sendpath * marsio_sendpath_create_by_route(struct mr_instance * instance, struct in_addr addr);
 struct mr_sendpath * marsio_sendpath_create_by_vdev(struct mr_vdev * dest_device);
+
+struct mr_sendpath * marsio_sendpath_create(struct mr_instance * instance, int type, ...);
+int marsio_sendpath_option_set(struct mr_instance * instance, struct mr_sendpath * sendpath, int opt, ...);
+int marsio_sendpath_option_get(struct mr_instance * instance, struct mr_sendpath * sendpath, int opt, ...);
 void marsio_sendpath_destory(struct mr_sendpath * sendpath);
 
 //simply get control zone data ptr.
@@ -136,7 +181,13 @@ uint16_t marsio_buff_tailroom(const marsio_buff_t *m);
 
 uint32_t marsio_get_pkt_type(marsio_buff_t *m);
 
-marsio_buff_t *marsio_buff_dup(struct mr_vdev * vdev, marsio_buff_t *m);
+void marsio_pktmbuf_dump(FILE *f, const marsio_buff_t *m, unsigned dump_len);
+
+marsio_buff_t * marsio_buff_clone_deep(struct mr_instance * instance,
+    marsio_buff_t * md, int socket_id, int thread_id);
+
+marsio_buff_t * marsio_buff_clone_with_options(struct mr_instance * instance,
+	marsio_buff_t * md, int socket_id, int thread_id, uint16_t options);
 
 int marsio_buff_malloc_device(struct mr_vdev * vdev, marsio_buff_t *marsio_buff[],
     unsigned int nr_mbufs, int socket_id, int thread_id);
@@ -146,6 +197,10 @@ int marsio_buff_malloc_global(struct mr_instance * instance, marsio_buff_t *mars
 
 void marsio_buff_free(struct mr_instance * instance, marsio_buff_t *marsio_buff[],
     unsigned int nr_mbufs, int socket_id, int thread_id);
+
+int marsio_buff_is_ctrlbuf(marsio_buff_t * m);
+
+void marsio_buff_set_ctrlbuf(marsio_buff_t *m);
 
 
 #ifdef __cplusplus

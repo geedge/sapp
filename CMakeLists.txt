@@ -6,6 +6,11 @@ include(Version)
 
 set(CMAKE_MACOSX_RPATH 0)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
+endif()
+
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Werror -DHIGH_PERF=1")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Werror -DHIGH_PERF=1")
 
@@ -13,8 +18,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Werror -DHIGH_PERF=1")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DDEBUG -DHIGH_PERF=0")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DHIGH_PERF=0")
 
-#set(CMAKE_INSTALL_PREFIX /home/ceiec/sapp/)
-set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/run/)
+set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/bin/)
 
 option(PLATFORM_MODE_SERIAL "Using serial mode" FALSE)
 
@@ -80,7 +84,8 @@ if(OPT_IOMODE_PAG_N95)
 endif()
 
 if(OPT_IOMODE_MARSIO)
-	set(CAPTURE_MODE "MARSIO")	
+    set(CAPTURE_MODE "MARSIO")
+	set(MARSIO_SDK_PREFIX "/opt/mrzcpd/" CACHE STRING "MARSIO Prefix")
 endif()
 
 if(CAPTURE_MODE MATCHES "PCAP")
@@ -135,21 +140,22 @@ add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
 set(SAPP_DEPEND_DYN_LIB  MESA_handle_logger MESA_htable pthread MESA_field_stat2)
 
 set(CMAKE_C_FLAGS_RELEASE "-Werror")
+set(CMAKE_C_FLAGS "-DLINK_MODE_DYNAMIC=1")
 
-file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_base.h MD5_STREAM_BASE)
-file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_control.h MD5_STREAM_CONTROL)
-file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_entry.h MD5_STREAM_ENTRY)
-file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_inject.h MD5_STREAM_INJECT)
-file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_project.h MD5_STREAM_PROJECT)
-file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_proxy.h MD5_STREAM_PROXY)
-file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_rawpkt.h MD5_STREAM_RAWPKT)
-file(MD5 ${PROJECT_SOURCE_DIR}/include/stream_inc/stream_tunnel.h MD5_STREAM_TUNNEL)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_base.h MD5_STREAM_BASE)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_control.h MD5_STREAM_CONTROL)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_entry.h MD5_STREAM_ENTRY)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_inject.h MD5_STREAM_INJECT)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_project.h MD5_STREAM_PROJECT)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_proxy.h MD5_STREAM_PROXY)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_rawpkt.h MD5_STREAM_RAWPKT)
+file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_tunnel.h MD5_STREAM_TUNNEL)
 
 add_definitions(${HEADER_CHECK_DEFINITIONS}
 				-DSTREAM_BASE_MD5_CHECK="${MD5_STREAM_BASE}"
 				-DSTREAM_CONTROL_MD5_CHECK="${MD5_STREAM_CONTROL}"
 				-DSTREAM_ENTRY_MD5_CHECK="${MD5_STREAM_ENTRY}"
-			    -DSTREAM_INJECT_MD5_CHECK="${MD5_STREAM_INJECT}"
+   			        -DSTREAM_INJECT_MD5_CHECK="${MD5_STREAM_INJECT}"
 				-DSTREAM_PROJECT_MD5_CHECK="${MD5_STREAM_PROJECT}"
 				-DSTREAM_PROXY_MD5_CHECK="${MD5_STREAM_PROXY}"
 				-DSTREAM_RAWPKT_MD5_CHECK="${MD5_STREAM_RAWPKT}"
@@ -158,64 +164,64 @@ add_definitions(${HEADER_CHECK_DEFINITIONS}
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
 
-add_subdirectory(test_so)
-add_subdirectory(support)
-add_subdirectory(dealpkt)
-add_subdirectory(packet_io)
-add_subdirectory(plugin)
-add_subdirectory(project)
-add_subdirectory(inner_plug)
-add_subdirectory(entry)
+add_subdirectory(./src/support)
+add_subdirectory(./src/dealpkt)
+add_subdirectory(./src/packet_io)
+add_subdirectory(./src/plugin)
+add_subdirectory(./src/project)
+add_subdirectory(./src/common)
+add_subdirectory(./src/inner_plug)
+add_subdirectory(./src/entry)
+add_subdirectory(./test)
 
-install(PROGRAMS ${CMAKE_BINARY_DIR}/entry/sapp DESTINATION .)
+install(PROGRAMS ${CMAKE_BINARY_DIR}src/entry/sapp DESTINATION .)
 
-install(PROGRAMS run/r2 DESTINATION .)
-install(PROGRAMS run/r3 DESTINATION .)
-install(PROGRAMS run/vv.py DESTINATION .)
-install(PROGRAMS run/pag.conf DESTINATION .)
-install(PROGRAMS run/memchk.sh DESTINATION .)
-install(FILES run/conf/gdev_block.conf DESTINATION conf)
-install(FILES run/conf/gdev.conf DESTINATION conf)
-install(FILES run/conf/main.conf DESTINATION conf)
-install(FILES run/conf/project_list.conf DESTINATION conf)
-install(FILES run/conf/route_table.conf DESTINATION conf)
-install(FILES run/conf/send_gdev.conf DESTINATION conf)
-install(FILES run/conf/send_raw_pkt.conf DESTINATION conf)
-install(FILES run/conf/send_route.conf DESTINATION conf)
-install(FILES run/conf/streamid.txt DESTINATION conf)
-install(FILES run/conf/plugin/entrylist.conf DESTINATION conf/plugin)
-install(FILES run/conf/plugin/plugin.conf DESTINATION conf/plugin)
+install(PROGRAMS bin/r2 DESTINATION .)
+install(PROGRAMS bin/r3 DESTINATION .)
+install(PROGRAMS bin/vv.py DESTINATION .)
+install(PROGRAMS bin/pag.conf DESTINATION .)
+install(PROGRAMS bin/memchk.sh DESTINATION .)
+install(FILES bin/conf/gdev_block.conf DESTINATION conf)
+install(FILES bin/conf/gdev.conf DESTINATION conf)
+install(FILES bin/conf/main.conf DESTINATION conf)
+install(FILES bin/conf/project_list.conf DESTINATION conf)
+install(FILES bin/conf/route_table.conf DESTINATION conf)
+install(FILES bin/conf/send_gdev.conf DESTINATION conf)
+install(FILES bin/conf/send_raw_pkt.conf DESTINATION conf)
+install(FILES bin/conf/send_route.conf DESTINATION conf)
+install(FILES bin/conf/streamid.txt DESTINATION conf)
+install(FILES bin/conf/plugin/entrylist.conf DESTINATION conf/plugin)
+install(FILES bin/conf/plugin/plugin.conf DESTINATION conf/plugin)
 
 if(CAPTURE_MODE MATCHES "MARSIO")
-	install(FILES ${CMAKE_BINARY_DIR}/packet_io/packet_io_marsio.so DESTINATION platform_lib)
+	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_marsio.so DESTINATION platform_lib)
 endif()
 
 if(CAPTURE_MODE MATCHES "PCAP")
-	install(FILES ${CMAKE_BINARY_DIR}/packet_io/packet_io_pcap.so DESTINATION platform_lib)
+	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_pcap.so DESTINATION platform_lib)
 endif()
 
 install(FILES run/plug/protocol/conflist_protocol.inf DESTINATION plug/protocol)
 
 install(FILES run/plug/protocol/isakmp_protocol_plug/isakmp_protocol_plug.inf DESTINATION plug/protocol/isakmp_protocol_plug)
-install(FILES ${CMAKE_BINARY_DIR}/inner_plug/isakmp_protocol_plug.so DESTINATION plug/protocol/isakmp_protocol_plug)
+install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/isakmp_protocol_plug.so DESTINATION plug/protocol/isakmp_protocol_plug)
 
 install(FILES run/plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.inf DESTINATION plug/protocol/l2tp_protocol_plug)
-install(FILES ${CMAKE_BINARY_DIR}/inner_plug/l2tp_protocol_plug.so DESTINATION plug/protocol/l2tp_protocol_plug)
+install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/l2tp_protocol_plug.so DESTINATION plug/protocol/l2tp_protocol_plug)
 
 install(FILES run/plug/protocol/pptp_protocol_plug/pptp_protocol_plug.inf DESTINATION plug/protocol/pptp_protocol_plug)
-install(FILES ${CMAKE_BINARY_DIR}/inner_plug/pptp_protocol_plug.so DESTINATION plug/protocol/pptp_protocol_plug)
+install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/pptp_protocol_plug.so DESTINATION plug/protocol/pptp_protocol_plug)
 
 
 install(FILES run/plug/platform/conflist_platform.inf DESTINATION plug/platform)
 
 if(PLATFORM_MODE_SERIAL)
     install(FILES run/plug/platform/g_device_plug/g_device_plug.inf DESTINATION plug/platform/g_device_plug)
-    install(FILES ${CMAKE_BINARY_DIR}/inner_plug/g_device_plug.so DESTINATION plug/platform/g_device_plug)
+    install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/g_device_plug.so DESTINATION plug/platform/g_device_plug)
 endif()
 
 install(FILES run/plug/business/conflist_business.inf DESTINATION plug/business)
 
 install(FILES run/plug/business/conflist_business.inf DESTINATION plug/business)
 install(FILES run/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app)
-install(FILES ${CMAKE_BINARY_DIR}/test_so/test_app_sapp.so DESTINATION plug/business/test_app)
-install(FILES ${CMAKE_BINARY_DIR}/test_so/trace_delay.so DESTINATION plug/business/test_app)
+install(FILES ${CMAKE_BINARY_DIR}/src/test/test_app_sapp.so DESTINATION plug/business/test_app)

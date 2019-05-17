@@ -1,0 +1,2 @@
+#!/bin/sh
+valgrind --tool=memcheck --leak-check=full --leak-resolution=high --error-limit=no --undef-value-errors=yes  --log-file=valgrind_master.log ./test_master

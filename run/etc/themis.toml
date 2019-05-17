@@ -1,0 +1,53 @@
+[SYSTEM]
+instance_name=nsdp
+
+[CPU]
+worker_threads=32
+bind_mask=1-32
+
+[PACKET_IO]
+#mirror, inline, transparent
+depolyment.mode=mirror
+
+[PACKET_IO.INTERNAL]
+interface.type=pcap
+interface.name=eth0
+
+[PACKET_IO.EXTERNAL]
+interface.type=pcap
+interface.name=eth0
+
+[STREAM]
+  [STREAM.TCP]
+  max=100000
+  timeout=30
+  #syn_mandatory options: on/off
+  syn_mandatory=on
+  reorder_pkt_max=5
+    [STREAM.TCP.INJECT]
+    rst.signature_seed1=65535
+    rst.signature_seed2=13
+    rst.mss=1460
+  [STREAM.UDP]
+  max=100000
+  timeout=30
+
+[PROFILING]
+sanity_check.raw_pkt_check=on
+pkt_latency.millisecond.threshold=100
+  [PROFILING.LOG]
+  #level options: debug/notice/warning/error/fatal
+  level=debug
+  interval=3
+  server_ip=192.168.1.1
+  server_port=12345
+
+[TOOLS]
+  [TOOLS.PKT_DUMP]
+   enabled=on
+   # mode options : storage/udp_socket
+   mode=storage
+   command_port=12345
+   storage_path=/dev/shm/pkt_dump
+   storage_size_max=10000
+   dump_thread_id = [1,2,3,4,5,6,7,8]

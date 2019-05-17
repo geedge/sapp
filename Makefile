@@ -8,10 +8,13 @@ CFLAGS =
 #CFLAGS = -march=native
 #CFLAGS += -D__FAVOR_BSD=1 -D__USE_BSD=1 -D_GNU_SOURCE=1 -Werror -DMESA_SAPP_PLATFORM=1
 CFLAGS += -D__FAVOR_BSD=1 -D__USE_BSD=1 -D_GNU_SOURCE=1  -DMESA_SAPP_PLATFORM=1
+CFLAGS += -DLINK_MODE_DYNAMIC=1
 LIBS= -L/opt/MESA/lib
 INC=-I./
 INC+=-I/opt/MESA/include
 OBJS=
+
+target_mode=elf
 
 _MODE_PCAP=pcap
 _MODE_PAG=pag
@@ -43,6 +46,21 @@ _DEBUG1=1
 _DEBUG2=2
 #default is 2
 debug=2
+__TARGET_MODE_ELF=elf
+__TARGET_MODE_SO=so
+
+ifeq ($(target_mode), $(__TARGET_MODE_ELF))
+	#
+else
+    ifeq ($(target_mode), $(__TARGET_MODE_SO))
+	#CFLAGS += -DSAPP_AS_TARGET_SO=1	 -fvisibility=hidden
+	CFLAGS += -DSAPP_AS_TARGET_SO=1
+	debug=0
+    else
+        $(error target mode args error, please use make help)
+        exit
+    endif
+endif
 
 ifeq ($(debug), $(_DEBUG0))
 #do nothing
@@ -164,6 +182,20 @@ else
     endif
 endif
 
+__LINK_MODE_DYNAMIC=dynamic
+__LINK_MODE_STATIC=static
+link_mode=dynamic
+
+ifeq ($(link_mode), $(__LINK_MODE_STATIC))
+       CFLAGS += -DLINK_MODE_STATIC=1
+else 
+       ifeq ($(link_mode), $(__LINK_MODE_DYNAMIC))
+           CFLAGS += -DLINK_MODE_DYNAMIC=1
+       else
+          $(error link_mode args error, please use make help)
+          exit
+       endif
+endif
 .PHONY:help clean target
 
 export CC
@@ -188,6 +220,12 @@ export _MODE_SMITH
 export _MODE_DPDK_VXLAN
 export _MODE_IPFILE
 export _MODE_PAG_MARSIO
+export target_mode
+export __TARGET_MODE_ELF
+export __TARGET_MODE_SO
+export link_mode
+export __LINK_MODE_STATIC
+export __LINK_MODE_DYNAMIC
 
 target:all
 
@@ -201,6 +239,8 @@ help:
 	@echo -e "\t\t\033[31;49;1m debug={0,1,2},0:release version; 1:-g; 2:-g -DDEBUG, default is 2.\033[0m"
 	@echo -e "\t\t\033[31;49;1m opt={0,1,2,3,high_perf}, optimize level, default is 0.\033[0m"
 	@echo -e "\t\t\033[31;49;1m iomode={pcap,ppf,pag,prfing,dpdk,tilera,topsec,ipfile,marsio,smith,dpdk_vxlan,pag_marsio}, default is pcap.\033[0m"
+	@echo -e "\t\t\033[31;49;1m target_mode={elf, so}, default is elf.\033[0m"
+	@echo -e "\t\t\033[31;49;1m link_mode={dynamic, static}, default is dynamic.\033[0m"
 
 ##################### MESA Makefile Common Definition End ####################
 
@@ -211,26 +251,6 @@ USE_MEM_POOL=$(YES)
 USE_PAG_GET_FRAME=$(YES)
 #USE_PAG_GET_FRAME=$(NO)
 INSTALL_PATH=./run
-
-#md5sum "./include/stream_inc/stream_base.h"
-
-MD5_STREAM_BASE=$(shell md5sum "./include/stream_inc/stream_base.h"|cut -d ' ' -f1)
-MD5_STREAM_ENTRY=$(shell md5sum "./include/stream_inc/stream_entry.h"|cut -d ' ' -f1)
-MD5_STREAM_CONTROL=$(shell md5sum "./include/stream_inc/stream_control.h"|cut -d ' ' -f1)
-MD5_STREAM_INJECT=$(shell md5sum "./include/stream_inc/stream_inject.h"|cut -d ' ' -f1)
-MD5_STREAM_PROJECT=$(shell md5sum "./include/stream_inc/stream_project.h"|cut -d ' ' -f1)
-MD5_STREAM_PROXY=$(shell md5sum "./include/stream_inc/stream_proxy.h"|cut -d ' ' -f1)
-MD5_STREAM_RAWPKT=$(shell md5sum "./include/stream_inc/stream_rawpkt.h"|cut -d ' ' -f1)
-MD5_STREAM_TUNNEL=$(shell md5sum "./include/stream_inc/stream_tunnel.h"|cut -d ' ' -f1)
-
-HEADER_CHECK_FLAGS += 	-DSTREAM_BASE_MD5_CHECK=\"$(MD5_STREAM_BASE)\"
-HEADER_CHECK_FLAGS += 	-DSTREAM_CONTROL_MD5_CHECK=\"$(MD5_STREAM_CONTROL)\" 
-HEADER_CHECK_FLAGS +=   -DSTREAM_ENTRY_MD5_CHECK=\"$(MD5_STREAM_ENTRY)\"
-HEADER_CHECK_FLAGS +=   -DSTREAM_INJECT_MD5_CHECK=\"$(MD5_STREAM_INJECT)\"
-HEADER_CHECK_FLAGS +=	-DSTREAM_PROJECT_MD5_CHECK=\"$(MD5_STREAM_PROJECT)\"
-HEADER_CHECK_FLAGS +=	-DSTREAM_PROXY_MD5_CHECK=\"$(MD5_STREAM_PROXY)\"
-HEADER_CHECK_FLAGS +=	-DSTREAM_RAWPKT_MD5_CHECK=\"$(MD5_STREAM_RAWPKT)\"
-HEADER_CHECK_FLAGS +=	-DSTREAM_TUNNEL_MD5_CHECK=\"$(MD5_STREAM_TUNNEL)\"
 
 GIT_BRANCH=$(shell git symbolic-ref --short -q HEAD)
 GIT_SHA1=$(shell git rev-parse HEAD)
@@ -247,49 +267,18 @@ export YES
 export NO
 
 all:
-	cd support/avl_tree; $(MAKE);
-	cd support/MESA_sleep; $(MAKE);
-	cd support/dictator2/src; $(MAKE);
-	cd support/md5; $(MAKE);
-	cd support/rb_tree; $(MAKE);
-	cd support/symbol_check; $(MAKE);
-	cd support/timestamp_record; $(MAKE);
-	cd support/iknow; $(MAKE);
-	cd support/MESA_socket_wrap; $(MAKE);
-	cd support/c3_client; $(MAKE);
-	cd dealpkt; $(MAKE);
-	cd packet_io; $(MAKE);
-	cd project; $(MAKE);
-	cd plugin; $(MAKE);
-	cd inner_plug; $(MAKE);
-	cd entry; $(MAKE);
-	nm run/sapp | grep version_VERSION;
+	cd src; $(MAKE);
 
 clean:
 	rm -rf build/*;
-	rm -f run/sapp;
-	rm -f lib/*.a;
-	cd test_so; $(MAKE) clean;
-	cd dealpkt; $(MAKE) clean;
-	cd packet_io; $(MAKE) clean;
-	cd project; $(MAKE) clean;
-	cd plugin; $(MAKE) clean; 
-	cd inner_plug; $(MAKE) clean;
-	cd entry; $(MAKE) clean;
-	cd support/c3_client; $(MAKE) clean;
-	cd support/dictator2/src; $(MAKE) clean;
-	cd support/MESA_sleep; $(MAKE) clean;
-	cd support/md5; $(MAKE) clean;
-	cd support/rb_tree; $(MAKE) clean;
-	cd support/symbol_check; $(MAKE) clean;
-	cd support/timestamp_record; $(MAKE) clean;
-	cd support/iknow; $(MAKE) clean;
-	cd support/MESA_socket_wrap; $(MAKE) clean;
-	cd support/avl_tree; $(MAKE) clean;
+	rm -f bin/sapp;
+	rm -f src/lib/*.a;
+	cd src; $(MAKE) clean;
+	cd test; $(MAKE) clean;
 
 install:
 	mkdir -p /opt/MESA/include;
 	mkdir -p /opt/MESA/lib;
-	cp -r -f include/support/pcap* /opt/MESA/include
 	ln -sf /usr/lib64/libpcap.so.1 /opt/MESA/lib/libpcap.so;
-	cp packet_io/*.so $(INSTALL_PATH)/platform_lib/
+	#cp -r -f include/support/pcap* /opt/MESA/include
+	#cp packet_io/*.so $(INSTALL_PATH)/platform_lib/
