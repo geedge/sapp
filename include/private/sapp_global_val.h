@@ -4,12 +4,13 @@
 #include "sapp_api.h"
 
 typedef struct{
-	unsigned int worker_threads;
-	unsigned char bind_mask[SAPP_MAX_THREADS];
+	int worker_threads;
+	long bind_mask_array[SAPP_MAX_THREADS];
+	long bind_mask; /* bind_mask_array中的每个变量做为bit_index转成的整数值 */
 }sapp_config_cpu_t;
 
 typedef struct{
-	unsigned char instance_name[NAME_MAX];
+	char instance_name[NAME_MAX];
 }sapp_config_system_t;
 
 
@@ -105,18 +106,25 @@ typedef struct{
 
 
 typedef struct{
-	sapp_config_t config;
-}sapp_gval_single_t;
+	
+}sapp_gval_individual_t;
 
 typedef struct{
 
-}sapp_gval_mthread_t; /*  for multi-thread */
+}sapp_gval_mthread_t; /*  for multi-thread, must 64byte alignment */
 
 
 typedef struct{
+	sapp_cmd_args_val_t **cmd_args_array;
+	int cmd_args_num;
+}sapp_cla_t;
+
+
+typedef struct{
+	sapp_cla_t cla;
 	sapp_config_t config;
-	sapp_gval_single_t single;
-	sapp_gval_mthread_t mthread;
+	sapp_gval_individual_t individual;
+	sapp_gval_mthread_t mthread[SAPP_MAX_THREADS];
 }sapp_global_t;
 
 

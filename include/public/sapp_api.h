@@ -30,6 +30,8 @@
 #include <link.h>
 #include <execinfo.h>
 #include <pcap/pcap.h>
+#include <getopt.h>
+
 
 /* MESA framework */
 #include "cJSON.h"
@@ -52,3 +54,4 @@
 #include "stream.h"
 
 #endif
+

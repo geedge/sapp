@@ -286,6 +286,7 @@ export YES
 export NO
 
 all:
+	cd support/tomlc99_wrap; $(MAKE);
 	cd support/libping; $(MAKE);
 	cd support/avl_tree; $(MAKE);
 	cd support/MESA_sleep; $(MAKE);
@@ -297,6 +298,7 @@ all:
 	cd support/iknow; $(MAKE);
 	cd support/MESA_socket_wrap; $(MAKE);
 	cd support/c3_client; $(MAKE);
+	cd config; $(MAKE);
 	cd common; $(MAKE);
 	cd dealpkt; $(MAKE);
 	cd packet_io; $(MAKE);
@@ -313,6 +315,7 @@ clean:
 	cd plugin; $(MAKE) clean; 
 	cd inner_plug; $(MAKE) clean;
 	cd entry; $(MAKE) clean;
+	cd config; $(MAKE) clean;
 	cd support/c3_client; $(MAKE) clean;
 	cd support/dictator2/src; $(MAKE) clean;
 	cd support/MESA_sleep; $(MAKE) clean;
@@ -324,6 +327,7 @@ clean:
 	cd support/MESA_socket_wrap; $(MAKE) clean;
 	cd support/avl_tree; $(MAKE) clean;
 	cd support/libping; $(MAKE) clean;
+	cd support/tomlc99_wrap; $(MAKE) clean;
 
 install:
 	mkdir -p /opt/MESA/include;

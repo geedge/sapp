@@ -5,6 +5,8 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
+sapp_global_t *sapp_global_val;
+
 struct sapp_global_single_t sapp_global_single;
 struct sapp_global_mthread_t sapp_global_mthread[MAX_THREAD_NUM];
 
@@ -114,7 +116,7 @@ void sapp_include_header_check(void)
 	sapp_include_header_check_file(tmp_file_path, STREAM_TUNNEL_MD5_CHECK);
 }
 
-void sapp_global_val_check(void)
+void sapp_global_val_sanity_check(void)
 {
 	/* 多线程全局变量size必须是64字节整数倍, 否则多核cache缓存冲突, 极大影响性能 */
 	if((sizeof(struct sapp_global_mthread_t) % 64) != 0){
@@ -133,21 +135,6 @@ void sapp_global_val_check(void)
 		abort();
 	}
 
-}
-
-int sapp_global_val_init(void)
-{
-	sapp_global_val_check();
-
-#if 0
-	int i;
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		sapp_global_mthread[i].tcp_stream_special_timeout_num = tcpstate_num[TCP_DATA_STATE]/10 + 1;
-		sapp_global_mthread[i].udp_stream_special_timeout_num = udpstate_num[UDP_TWO_STATE]/10 + 1;
-	}
-#endif
-
-	return 0;
 }
 
 

@@ -1,31 +1,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <getopt.h>
-#include <stdlib.h>
+
 #include "sapp_api.h"
+#include "sapp_private_api.h"
 
-
-typedef int args_legality_check_t(const char *opt_name, const char *opt_arg);
-
-typedef struct{
-	const char *long_opt_name;
-	args_legality_check_t *check_fun;
-	const char *usage;
-}sapp_cmd_args_usage_t;
-
-
-typedef struct{
-	const char *long_opt_name;
-	sapp_tlv_t arg_val;
-}sapp_cmd_args_val_t; 
-
-/* 用于存储解析后的命令行参数,不直接对外提供,其他模块靠 sapp_get_cla()获取 */
-static sapp_cmd_args_val_t **g_cmd_args_val;
-static int g_cmd_args_num = 0;
 
 static inline int dumpfile_speed_check(const char *opt_name, const char *opt_arg)
 {
@@ -42,25 +21,28 @@ static inline int dumpfile_speed_check(const char *opt_name, const char *opt_arg
 	return ret;
 }
 
-
-
+/* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const sapp_cmd_args_usage_t cmd_args_usage[] = 
 {
 	{"help", 	NULL,	"show help message"},
 	{"version", NULL,	"show platform version"},
+	{"sample-config", NULL, "generate sample config file"},
 	{"dumpfile", NULL,	"running as pcap dumpfile mode"},
 	{"dumpfile-speed",	dumpfile_speed_check, "\n  \ttop-speed\tprocess packets as fast as possible, this is default option\n  \ttimestamp\tprocess packets as pcap file timestamp interval"},
 	{NULL, 		NULL}
 };
 
+/* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const char *sapp_cla_short_options = "hv";
 
+/* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const struct option sapp_cla_long_options[] = 
 {
 	{"help",		no_argument,      NULL,      'h'},
 	{"version",		no_argument,      NULL,      'v'},
-	{"dumpfile",	no_argument,      NULL,      '#'},
-	{"dumpfile-speed",	required_argument,      NULL,      '#'},
+	{"dumpfile",	no_argument,      NULL,      '$'},
+	{"dumpfile-speed",	required_argument,      NULL,      '$'},
+	{"sample-config", no_argument,      NULL,      'c'},
 	{NULL,          0,      NULL,      0}
 };
 
@@ -107,20 +89,25 @@ static void usage(void)
 }
 
 
-int sapp_get_cla(const char *opt_long_name, char ** const opt_string_value)
+int sapp_get_cla_raw(const char *opt_long_name, char ** const opt_string_value)
 {
 	int i, ret = -1;
+	const sapp_cmd_args_val_t **local_tmp_array;
+	int local_tmp_cla_num;
 
 	if(NULL == opt_long_name || NULL == opt_string_value || NULL == *opt_string_value){
 		return -1;
 	}
 
-	for(i = 0; i < g_cmd_args_num; i++){
+	local_tmp_array = (const sapp_cmd_args_val_t **)sapp_global_val->cla.cmd_args_array;
+	local_tmp_cla_num = sapp_global_val->cla.cmd_args_num;
+	
+	for(i = 0; i < local_tmp_cla_num; i++){
 		/* 选项名称要用不同的长度比较两次, 防止dumpfile 与 dumpfile-speed使用较短长度比较, 而误命中的情况 */
-		if((strncasecmp(opt_long_name, g_cmd_args_val[i]->long_opt_name, strlen(opt_long_name)) == 0)
-		 && (strncasecmp(opt_long_name, g_cmd_args_val[i]->long_opt_name, strlen(g_cmd_args_val[i]->long_opt_name)) == 0)){
-			if(g_cmd_args_val[i]->arg_val.string_value != NULL){
-				*opt_string_value = g_cmd_args_val[i]->arg_val.string_value;
+		if((strncasecmp(opt_long_name, local_tmp_array[i]->long_opt_name, strlen(opt_long_name)) == 0)
+		 && (strncasecmp(opt_long_name, local_tmp_array[i]->long_opt_name, strlen(local_tmp_array[i]->long_opt_name)) == 0)){
+			if(local_tmp_array[i]->arg_val.string_value != NULL){
+				*opt_string_value = local_tmp_array[i]->arg_val.string_value;
 				ret = 1;
 			}else{
 				*opt_string_value = NULL;
@@ -134,12 +121,32 @@ int sapp_get_cla(const char *opt_long_name, char ** const opt_string_value)
 	return ret;
 }
 
+int sapp_get_cla_long(const char *opt_long_name, long *opt_long_value)
+{
+	int ret = -1;
+	char *opt_string_value;
+
+	if(NULL == opt_long_value){
+		return -1;
+	}
+
+	ret = sapp_get_cla_raw(opt_long_name, &opt_string_value);
+	if(ret <= 0){
+		return ret;
+	}
+
+	*opt_long_value = (long long)strtoull(opt_string_value, NULL, 10);
+
+	return ret;
+}
+
+
 static int store_cmd_args(const char *opt_name, const char *opt_arg)
 {
 	sapp_cmd_args_val_t *new_opt;
 	char *void_val;
 
-	if(sapp_get_cla(opt_name, &void_val) != -1){
+	if(sapp_get_cla_raw(opt_name, &void_val) != -1){
 		printf("Error! Duplicate option: %s\n", opt_name);
 		return -1;
 	}
@@ -150,15 +157,15 @@ static int store_cmd_args(const char *opt_name, const char *opt_arg)
 		new_opt->arg_val.string_value = strdup(opt_arg);
 	}
 	
-	if(NULL == g_cmd_args_val){
-		g_cmd_args_val = (sapp_cmd_args_val_t **)calloc(1, sizeof(void *));
+	if(NULL == sapp_global_val->cla.cmd_args_array){
+		sapp_global_val->cla.cmd_args_array = (sapp_cmd_args_val_t **)calloc(1, sizeof(void *));
 	}else{
-		g_cmd_args_val = (sapp_cmd_args_val_t **)realloc(g_cmd_args_val, sizeof(void *) * (g_cmd_args_num + 1));
+		sapp_global_val->cla.cmd_args_array = (sapp_cmd_args_val_t **)realloc(sapp_global_val->cla.cmd_args_array, sizeof(void *) * (sapp_global_val->cla.cmd_args_num + 1));
 	}
 
-	g_cmd_args_val[g_cmd_args_num] = new_opt;
+	sapp_global_val->cla.cmd_args_array[sapp_global_val->cla.cmd_args_num] = new_opt;
 
-	g_cmd_args_num++;
+	sapp_global_val->cla.cmd_args_num++;
 
 	return 0;
 }
@@ -183,7 +190,14 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 			break;
 
 			case 'v':
+#ifdef GITVER			
 				printf("Version: %s\n", GITVER);
+#endif				
+				exit(1);
+			break;
+
+			case 'c':
+				sapp_generate_sample_config();
 				exit(1);
 			break;
 

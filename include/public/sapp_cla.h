@@ -22,6 +22,17 @@ extern "C" {
 int sapp_get_cla_raw(const char *opt_long_name, char ** const opt_string_value);
 
 
+/*
+	For get command-line arguments(CLA).
+		
+	return value:
+		-1: not found opt_long_name;
+		 0: opt_long_name is set but no argument value. 
+		 1: opt_long_name is set and has valid argument store in *opt_long_value. 
+*/
+int sapp_get_cla_long(const char *opt_long_name, long long *opt_long_value);
+
+
 #ifdef __cplusplus
 }
 #endif

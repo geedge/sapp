@@ -52,6 +52,9 @@ ifeq ($(target_mode), $(__TARGET_MODE_SO))
 WHOLE_ARCH += ../lib/libpacket_io.a ../lib/plugctrl.a ../lib/libmd5.a ../lib/librbtree.a ../lib/libsymbol_check.a ../lib/libMESA_socket_wrap.a ../lib/libiknow.a 
 endif
 
+WHOLE_ARCH += ../lib/libtomlc99_wrap.a
+WHOLE_ARCH += ../lib/libconfig.a
+
 ifeq ($(debug), $(_DEBUG2))
 LIB += ../lib/libiknow.a -lpcap
 endif

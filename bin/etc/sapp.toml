@@ -1,12 +1,12 @@
 [SYSTEM]
-instance_name=nsdp
+instance_name=sapp_v4.0
 
 [CPU]
-worker_threads=32
-bind_mask=1-32
+worker_threads=4
+bind_mask=[1,2,3,4]
 
 [PACKET_IO]
-#mirror, inline, transparent
+#mirror, inline, transparent, dumpfile
 depolyment.mode=mirror
 
 [PACKET_IO.INTERNAL]
@@ -36,17 +36,17 @@ interface.name=eth0
 sanity_check.raw_pkt_check=on
 pkt_latency.millisecond.threshold=100
   [PROFILING.LOG]
-  #level options: debug/notice/warning/error/fatal
-  level=debug
+  level=20
   interval=3
   server_ip=192.168.1.1
   server_port=12345
 
 [TOOLS]
   [TOOLS.PKT_DUMP]
-   enabled=on
+   enabled=1
    # mode options : storage/udp_socket
-   mode=storage
+   mode=udp_socket
+   bpf_filter=ip
    command_port=12345
    storage_path=/dev/shm/pkt_dump
    storage_size_max=10000

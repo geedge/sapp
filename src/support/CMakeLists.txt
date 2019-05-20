@@ -8,6 +8,7 @@ add_subdirectory(MESA_sleep)
 add_subdirectory(md5)
 add_subdirectory(MESA_socket_wrap/src)
 add_subdirectory(dictator2/src)
+add_subdirectory(tomlc99_wrap)
 
 #if(OPT_USE_DICTATOR)
 #	add_subdirectory(dictator2)

@@ -71,11 +71,19 @@ static void signal_take_over(void)
 
 int main(int argc, char *argv[])
 {	
-	if(sapp_parse_cmd_args(argc, argv) < 0){
-		return -1;
-	}
-	
+	if(argc >= 2){
+		/* 如果有命令行参数, 先解析cla, 因为可能使用-h, -v等帮助信息       */
+		if(sapp_parse_cmd_args(argc, argv) < 0){
+			return -1;
+		}
 
+		sapp_parse_config();
+	}else{
+		sapp_parse_config();
+	}
+
+	sapp_cla_override_cfg_file();
+	
 	if((argc == 2) && (strncasecmp(argv[1], "-v", 2) == 0)){
         const char *sapp_version = GITVER;
 		printf("Platform version: %s\n", sapp_version);

@@ -4,8 +4,6 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
-sapp_global_t *sapp_global_val;
-
 /*
 	后台实时监测某些全局变量, 防止被意外修改!
 	比如配置文件, 命令行参数, 启动后保留一份副本, 跟当前的  sapp_global_val 比较,

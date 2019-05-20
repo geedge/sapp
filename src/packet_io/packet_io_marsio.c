@@ -28,8 +28,8 @@ typedef struct{
 	struct mr_sendpath *sendpath_up, *sendpath_down; /* 并联模式下, 直接使用sendpath_up; 同时兼容双网卡串联模式 */
 }marsio4_io_handle;
 
-int g_marsio4_version_VERSION_20170512;
-int g_marsio4_version_VERSION = 20170512;
+int g_marsio4_version_VERSION_20190520;
+int g_marsio4_version_VERSION = 20170520;
 static PACKET_IO_CB_T g_marsio4_work_fun;
 static int g_marsio4_work_thread_num = 1;
 static int g_marsio4_cap_level = CAP_LEVEL_MAC;
@@ -735,17 +735,7 @@ int dl_io_init(int argc, char *argv[])
 		}
 	}	
 
-	char app_instance_name[64];
-	memset(app_instance_name, 0, 64);
-	MESA_load_profile_string_nodef((char *)"conf/main.conf", (char *)"Module", (char *)"app_instance_name", app_instance_name, 64);
-	if(app_instance_name[0] != '\0'){
-		marsio_init(mr4_instance, app_instance_name);
-	}else{
-		snprintf(app_instance_name, 64, "%s_%d", "sapp", (int)getpid());
-		marsio_init(mr4_instance, app_instance_name);
-		printf("\033[33m[Warning]In marsio mode, not set main.conf->app_instance_name, use random name:%s\033[0m\n", app_instance_name);
-	}
-
+	marsio_init(mr4_instance, sapp_global_val->config.system.instance_name);
 
 	g_mr4_dev_up_handle_set = (struct mr_vdev **)malloc(sizeof(void *) * g_mr4_device_num);
 	g_mr4_dev_down_handle_set = (struct mr_vdev **)malloc(sizeof(void *) * g_mr4_device_num);	

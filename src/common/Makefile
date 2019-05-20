@@ -12,6 +12,7 @@ CFLAGS		+= -DPLATFORM_NSDPF_PAPP=1
 LIBPATH = ../lib
 
 H_DIR += $(INC)
+H_DIR += -I../../include
 H_DIR += -I../../include/private
 H_DIR += -I../../include/public
 H_DIR += -I../../include/support
@@ -21,8 +22,7 @@ H_DIR += -I/opt/MESA/include/MESA
 
 TARGET = libcommon.a
 
-OBJS=cmd_args.o
-
+OBJS= net_common.o stream_addr_inet.o linux_kernel_jhash.o
 
 ifeq ($(IIEFD_DUAL_STACK), $(YES))
 CFLAGS += -g -DIIEFD_DUAL_STACK=1

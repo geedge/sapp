@@ -392,7 +392,7 @@ int MESA_platform_init(int argc, char *argv[])
 		/* NOTE: 符号名检测一定要在plugctrl_proc(), 即所有插件加载之后, 默认开启 */
 		symbol_check(); /* 2016-01-13 Lijia add, 检查全局符号名冲突 */
 	}
-	sapp_global_val_init();
+	sapp_global_val_sanity_check();
 
 	if(g_PollingFunNum != 0){
 		printf("\n\033[33m[Warning]There are %d plugs on [POLLING] entry, this will increase latency of packet process!\033[0m\n", g_PollingFunNum);

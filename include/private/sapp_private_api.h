@@ -1,5 +1,5 @@
-#ifndef _TMS_PRIVATE_API_H_
-#define _TMS_PRIVATE_API_H_ 1
+#ifndef _SAPP_PRIVATE_API_H_
+#define _SAPP_PRIVATE_API_H_ 1
 
 #include "private/dictator.h"
 #include "private/compat.h"
@@ -18,7 +18,6 @@
 #include "private/g_device.h"
 #include "private/gdev_keepalive.h"
 #include "private/stream_internal.h"
-#include "private/tms_declaration.h"
 #include "private/iknow.h"
 #include "private/project_requirement.h"
 #include "private/project_internal.h"
@@ -30,6 +29,8 @@
 #include "private/plugin_protocol.h"
 #include "private/plugin_serial.h"
 #include "private/mesa_pkt_dump.h"
+#include "private/sapp_cla_private.h"
+#include "private/sapp_global_val.h"
 #include "private/sapp_declaration.h"
 
 #if IOMODE_MARSIO
