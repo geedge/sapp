@@ -1,26 +1,21 @@
 #ifndef __SYSINFO_H__
-#define __SYSINFO_H__
-
-
-#ifndef MAX_THREAD_NUM
-#define MAX_THREAD_NUM 	128
-#endif
+#define __SYSINFO_H__ 1
 
 #define SYS_COUNTER_ON 
 #define COUNTER_NUM (4096)   /*newly added  ---LiLei*/
 
 
-#define COUNTER_PKT         	240
-#define COUNTER_PKTLEN        241
-#define COUNTER_DROP_PKT    242
-#define COUNTER_DROP_PKTLEN 243
-#define COUNTER_DROPLINK    244  //2??¨¹¨º?¡Àe??1?¡À?¦Ì?¨¢¡ä?¨®
-#define COUNTER_CLOSELINK   245  //?¨¹1?¨º?¡Àe?a¨®|¨®?2?D-¨°¨¦¡ê?¦Ì?¨º?D-¨°¨¦¡ä?¨º??¨²¨¨Y2?D¨¨¨°a¡ä|¨¤¨ª¡ê??¨°??¡ä|¨¤¨ª1y3¨¬?D3?¡ä¨ª¡ê??¨¹?D¦Ì?¨¢¡ä?¨®
+//#define COUNTER_PKT         	240
+//#define COUNTER_PKTLEN        241
+#define SAPP_STAT_DROP    242
+//#define COUNTER_DROP_PKTLEN 243
+//#define COUNTER_DROPLINK    244  //2??¨¹¨º?¡Àe??1?¡À?¦Ì?¨¢¡ä?¨®
+//#define COUNTER_CLOSELINK   245  //?¨¹1?¨º?¡Àe?a¨®|¨®?2?D-¨°¨¦¡ê?¦Ì?¨º?D-¨°¨¦¡ä?¨º??¨²¨¨Y2?D¨¨¨°a¡ä|¨¤¨ª¡ê??¨°??¡ä|¨¤¨ª1y3¨¬?D3?¡ä¨ª¡ê??¨¹?D¦Ì?¨¢¡ä?¨®
 
 
 //---pkt info
 
-#define PKTINFO_BASE	    0
+//#define PKTINFO_BASE	    0
 #define PKT_ETHERNET	    0
 #define PKT_IP_FRAG		    1    
 #define PKT_IP       		    2   
@@ -34,26 +29,27 @@
 #define PKT_TCP_UNORDER    13  //?¨°D¨°¡ã¨¹¦Ì???¨ºy
 #define PKT_TCP_APP	 	     14
 #define PKT_TCP_APP_LEN		15
-#define HTTP_CON_NOGZ	   16
-#define HTTP_CON_GZ	   17
-#define HTTP_CON_NO_GZAV   18
-#define HTTP_CON_GZAV      19
+//#define HTTP_CON_NOGZ	   16
+//#define HTTP_CON_GZ	   17
+//#define HTTP_CON_NO_GZAV   18
+//#define HTTP_CON_GZAV      19
 
 //---link info
-#define LINKINFO_BASE       20
-#define LINK_TATAL		  20
-#define LINK_TATAL_DROP  21
-#define LINK_APPTATAL	  22
-#define LINK_DROP_NOUSE 23 //2??¨¹¨º?¡Àe??1?¡À?¦Ì?¨¢¡ä?¨®
-#ifndef PLATFORM_NSDPF_PAPP /* 2013-02-25 lijia modify,  LINK_CLOSE¨®?stream_manage.h?D3?¨ª?¡ê????? */		
-#define LINK_CLOSE            24 //?¨¹1?¨º?¡Àe?a¨®|¨®?2?D-¨°¨¦¡ê?¦Ì?¨º?D-¨°¨¦¡ä?¨º??¨²¨¨Y2?D¨¨¨°a¡ä|¨¤¨ª¡ê??¨°??¡ä|¨¤¨ª1y3¨¬?D3?¡ä¨ª¡ê??¨¹?D¦Ì?¨¢¡ä?¨®
-#else
-#define NIDS_LINK_CLOSE		24
-#endif
+//#define LINKINFO_BASE       20
+//#define LINK_TATAL		  20
+//#define LINK_TATAL_DROP  21
+//#define LINK_APPTATAL	  22
+//#define LINK_DROP_NOUSE 23 //2??¨¹¨º?¡Àe??1?¡À?¦Ì?¨¢¡ä?¨®
+//#ifndef PLATFORM_NSDPF_PAPP /* 2013-02-25 lijia modify,  LINK_CLOSE¨®?stream_manage.h?D3?¨ª?¡ê????? */		
+//#define LINK_CLOSE            24 //?¨¹1?¨º?¡Àe?a¨®|¨®?2?D-¨°¨¦¡ê?¦Ì?¨º?D-¨°¨¦¡ä?¨º??¨²¨¨Y2?D¨¨¨°a¡ä|¨¤¨ª¡ê??¨°??¡ä|¨¤¨ª1y3¨¬?D3?¡ä¨ª¡ê??¨¹?D¦Ì?¨¢¡ä?¨®
+//#else
+//#define NIDS_LINK_CLOSE		24
+//#endif
+
 #define LINK_SINGLE_C2S          25 //  ¦Ì£¤?¨°¨¢¡ä?¨®
 #define LINK_SINGLE_S2C          26 //  ¦Ì£¤?¨°¨¢¡ä?¨®
 #define LINK_DOUBLE        	 27 //
-#define LINK_KILL         	 28 //
+//#define LINK_KILL         	 28 //
 
 /* 2014-12-02 lijia add */
 #define PKT_IPV6       		31   
@@ -130,23 +126,11 @@
 
 //group info
 
-#define PKT_APP_BASE	  		1000
+//#define PKT_APP_BASE	  		1000
 //--app count (30)
-#define LINK_APP_BASE	  		1500
-#define IP_FRAG_GROUP_BASE	    2000
-#define TCP_UNORDER_GROUP_BASE	3000
-
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern volatile unsigned int  g_aiSysCounter[COUNTER_NUM]; /*newly modified   ---LiLei*/
-
-extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
-
-#ifdef __cplusplus
-}
-#endif
+//#define LINK_APP_BASE	  		1500
+//#define IP_FRAG_GROUP_BASE	    2000
+//#define TCP_UNORDER_GROUP_BASE	3000
 
 #endif
+

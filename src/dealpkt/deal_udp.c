@@ -10,9 +10,7 @@
 extern "C" {
 #endif
 
-extern int g_topology_mode;
 extern int udp_stream_table_size;
-extern unsigned short udp_reset_time;
 extern int raw_ip_frag_list_stream_attach(struct streaminfo *stream);
 extern int raw_ip_frag_list_stream_detach(struct streaminfo *stream);
 extern int set_transport_addr(struct streaminfo *pfstream, UINT16 sport, UINT16 dport);
@@ -319,7 +317,7 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 	struct udpdetail_private *pdetail_pr;
 	struct udpdetail *pdetail;
 	UCHAR threadnum;
-
+	
 	pstream_pr=&(pindex->stream);
 	if(0 == pstream_pr->timeout){ /* 没设置超时时间, 不能按时间重置 */
 		return 0;
@@ -329,6 +327,8 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 	pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 	pdetail=(struct udpdetail *)pstream->pdetail;
 	threadnum = pstream->threadnum;
+
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
 	
 	if((UINT16)((UINT64)g_CurrentTime-pdetail->lastmtime) > pstream_pr->timeout)
 	{
@@ -365,7 +365,8 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 //		streamaddlist(pstream,plist);
 		streamaddlist(pindex,plist);
 
-		g_SysInputInfo[threadnum][SYS_UDP_LINK_RESET]++;
+		//g_SysInputInfo[threadnum][SYS_UDP_LINK_RESET]++;
+		local_sys_stat->count[SAPP_STAT_UDP_STREAM_RESET]++;
 		return 1;
 	}
 	return 0;
@@ -422,6 +423,7 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 	void *tmpme=NULL;	
 	int hlen=0;
 	int ret=PASS;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	iplen = ntohs (this_iphdr->ip_len);
 	hlen=4 * this_iphdr->ip_hl;
@@ -453,8 +455,10 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
 
-	g_SysInputInfo[thread_num][PKT_UDP]++;
-	g_SysInputInfo[thread_num][PKT_UDPLEN] += ulen;
+	//g_SysInputInfo[thread_num][PKT_UDP]++;
+	//g_SysInputInfo[thread_num][PKT_UDPLEN] += ulen;
+	local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
+	local_sys_stat->count[SAPP_STAT_RCV_UDP]+=ulen;
 	
 	//add by lqy 20130530 
 	// udp有不开启流还原的功能需求，直接按单包单流处理
@@ -589,7 +593,8 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	struct udpdetail_private *pdetail_pr=NULL;
 	void *tmpme=NULL;
 	int ret=PASS;
-	
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+
 	iplen = ntohs (a_packet->ip6_payload_len);
 	ulen = ntohs (udph->uh_ulen);
 	
@@ -597,9 +602,11 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		return PASS;
 	}		
 
-	g_SysInputInfo[thread_num][PKT_UDP]++;
-	g_SysInputInfo[thread_num][PKT_UDPLEN] += ulen;
-
+	//g_SysInputInfo[thread_num][PKT_UDP]++;
+	//g_SysInputInfo[thread_num][PKT_UDPLEN] += ulen;
+	local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
+	local_sys_stat->count[SAPP_STAT_RCV_UDP]+=ulen;
+	
 	pstream->addr.addrlen=sizeof(struct layer_addr_udp);
 	pstream_pr->addr_use_as_hash = 0;
 	//ptmp->stream.p_layer_header = udph;
@@ -714,6 +721,7 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
      void *next_layer_hdr;
      int next_layer_offest;
      struct streaminfo_private *pfstream_pr = &(pfindex->stream); 
+     sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	ret=stream_process_ipv4(&(pfstream_pr->stream_public),(const struct ip *)a_packet,thread_num,routedir, raw_pkt);
 	if(unlikely(ret==DROP)){
@@ -744,9 +752,10 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offest;
 			//void *next_layer_hdr = (char *)a_packet + a_packet->ip_hl*4;
 			ret = ipv6_entry(pfstream_pr,next_layer_hdr,thread_num,routedir, raw_pkt, next_layer_offest);
-			g_SysInputInfo[thread_num][TUNNEL_6OVER4]++;
-			
-			g_SysInputInfo[thread_num][TUNNEL_6OVER4_LEN] += ntohs(a_packet->ip_len);
+			//g_SysInputInfo[thread_num][TUNNEL_6OVER4]++;
+			//g_SysInputInfo[thread_num][TUNNEL_6OVER4_LEN] += ntohs(a_packet->ip_len);
+			local_sys_stat->count[SAPP_STAT_TUNNEL_6OVER4]++;
+			local_sys_stat->count[SAPP_STAT_TUNNEL_6OVER4]+= ntohs(a_packet->ip_len);
 		}	
 		break;
 
@@ -764,8 +773,10 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 #endif		
 			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offest;
 			ret = ipv4_entry(pfstream_pr,next_layer_hdr,thread_num,routedir, raw_pkt, next_layer_offest);
-			g_SysInputInfo[thread_num][TUNNEL_IP_IN_IP]++;
-			g_SysInputInfo[thread_num][TUNNEL_IP_IN_IP] += ntohs(a_packet->ip_len);			
+			//g_SysInputInfo[thread_num][TUNNEL_IP_IN_IP]++;
+			//g_SysInputInfo[thread_num][TUNNEL_IP_IN_IP] += ntohs(a_packet->ip_len);			
+			local_sys_stat->count[SAPP_STAT_TUNNEL_IPIP]++;
+			local_sys_stat->count[SAPP_STAT_TUNNEL_IPIP]+= ntohs(a_packet->ip_len);			
 		break;
 
 		case IPPROTO_ICMP:
@@ -789,8 +800,10 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 
 		default:	
 			/* unknown protocol */	
-			g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-			g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;	
+			//g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+			//g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;	
+			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;				
 			sapp_runtime_log(20, "unsupport Ipv4 protocol:%u!\n", a_packet->ip_p);
 		break;
 	}

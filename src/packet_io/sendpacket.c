@@ -21,8 +21,8 @@ static volatile UINT64 g_rand_seed = 0x013579ABCDEF;
 
 /* 兼容老平台计算rand值的算法, 用于校验RST包是否为本系统发送 */
 static int randgroup[MAX_THREAD_NUM];
-static int g_iRandKey=13;
-static int g_iMaxRandVal=65535;
+//static int g_iRandKey=13;
+//static int g_iMaxRandVal=65535;
 
 typedef struct{
 	unsigned char ip_ttl;
@@ -62,7 +62,6 @@ extern char g_send_dev_name[DEV_NAME_STR_LEN];
 extern int g_packet_io_ipv6_switch;
 extern int g_packet_io_ipv6_raw_socket;
 extern int g_app_send_rst_type ;
-extern int g_packet_io_cap_level;
 extern int calc_l2tp_hdr_len(const struct l2tp_hdr_v2 *l2tp_hdr);
 extern int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_type, 
 					int low_layer_type, int dir,int thread_num,
@@ -172,7 +171,7 @@ static tcp_rst_finger_mark_t *make_tcp_rst_finger_mark(int thread_id,  const raw
 	/* NOTE, 只有IPv4能在ip_id上做些标记, IPv6暂不支持RST指纹 */
 	/* TODO 2, 此处如果有隧道, 靠jump_to_layer不知道跳到哪一层, 应该用stream_private->offset_to_ip_hdr偏移到本层的IP头部 */
 	ip4_hdr = (const struct mesa_ip4_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V4);
-	if((NULL == ip4_hdr) || (0 == sapp_global_single.cfg_kill_tcp_rst_signature)){ /* 随机填充, 无指纹信息 */
+	if((NULL == ip4_hdr) || (0 == ABBR_INJECT_RST_SIGN)){ /* 随机填充, 无指纹信息 */
 		rst_finger->ip_id_host_order = (unsigned short)MESA_rand();
 		rst_finger->ip_ttl = (unsigned short)MESA_rand_range(48, 120);
 		rst_finger->tcp_win_host_order = (unsigned short)MESA_rand_range(1000, 1460);
@@ -2202,6 +2201,7 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 	tcp_rst_finger_mark_t *tcp_rst_finger;
 	const raw_pkt_t *raw_pkt = NULL;
 	struct streaminfo_private *stream_pr;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	(void)ext_raw_pkt;
 
@@ -2238,7 +2238,7 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 	tcp_rst_finger = make_tcp_rst_finger_mark(thread_num, (const raw_pkt_t *)raw_pkt);
 	set_build_layer_ipv4_args(thread_num, tcp_rst_finger->ip_ttl, tcp_rst_finger->ip_id_host_order);
 
-	if(0 == sapp_global_single.cfg_kill_tcp_rst_signature){
+	if(0 == ABBR_INJECT_RST_SIGN){
 		set_build_layer_tcp_args(thread_num, TH_RST, tcp_rst_finger->tcp_win_host_order, 0);
 	}else{
 		set_build_layer_tcp_args(thread_num, TH_RST|TH_ACK, tcp_rst_finger->tcp_win_host_order, 0);
@@ -2264,8 +2264,9 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 		
 		packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
 
-		g_SysInputInfo[thread_num][SEND_TCP_RST]++;
-		g_SysInputInfo[thread_num][SEND_TCP_RST_LEN]+=send_len;
+		//g_SysInputInfo[thread_num][SEND_TCP_RST]++;
+		//g_SysInputInfo[thread_num][SEND_TCP_RST_LEN]+=send_len;
+		local_sys_stat->count[SAPP_STAT_SND_TCP_RST]++;
 		
  /* 并联模式下, 两个方向各发一个, 总计三次, 
     而不是先发C2S三次、再发S2C三次,
@@ -2289,8 +2290,9 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 			send_handle->tot_send_byte += send_len;
 		}
 		packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
-		g_SysInputInfo[thread_num][SEND_TCP_RST]++;
-		g_SysInputInfo[thread_num][SEND_TCP_RST_LEN]+=send_len;		
+		//g_SysInputInfo[thread_num][SEND_TCP_RST]++;
+		//g_SysInputInfo[thread_num][SEND_TCP_RST_LEN]+=send_len;	
+		local_sys_stat->count[SAPP_STAT_SND_TCP_RST]++;
 	}
 
 fun_exit:
@@ -2317,7 +2319,7 @@ fun_exit:
 int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
 {
 	/* 外部调用, 第一次FD, 发送KILL_TCP_RST_NUM次. */
-	return __do_kill_tcp(stream, ext_raw_pkt, sapp_global_single.cfg_kill_tcp_rst_num, (char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
+	return __do_kill_tcp(stream, ext_raw_pkt, ABBR_INJECT_RST_NUM, (char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
 }
 
 int MESA_kill_tcp_feedback(struct streaminfo *stream, const void *raw_pkt, char *feedback_buf, int *feedback_buf_len)
@@ -2328,7 +2330,7 @@ int MESA_kill_tcp_feedback(struct streaminfo *stream, const void *raw_pkt, char 
 	if(*feedback_buf_len <= 0){
 		return -2;
 	}
-	return __do_kill_tcp(stream, raw_pkt, sapp_global_single.cfg_kill_tcp_rst_num, feedback_buf, feedback_buf_len);
+	return __do_kill_tcp(stream, raw_pkt, ABBR_INJECT_RST_NUM, feedback_buf, feedback_buf_len);
 }
 
 /* 2016-06-15 lijia add  */
@@ -2357,6 +2359,7 @@ static int __do_kill_tcp_synack(struct streaminfo *stream, const void *ext_raw_p
 	tcp_rst_finger_mark_t *tcp_rst_finger;
 	const raw_pkt_t *raw_pkt = NULL;
 	struct streaminfo_private *stream_pr;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	(void)ext_raw_pkt;
 	
@@ -2400,8 +2403,9 @@ static int __do_kill_tcp_synack(struct streaminfo *stream, const void *ext_raw_p
 		}
 		
 		packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
-		g_SysInputInfo[thread_num][SEND_TCP_SYN_ACK]++;
-		g_SysInputInfo[thread_num][SEND_TCP_SYN_ACK_LEN]+=send_len;				
+		//g_SysInputInfo[thread_num][SEND_TCP_SYN_ACK]++;
+		//g_SysInputInfo[thread_num][SEND_TCP_SYN_ACK_LEN]+=send_len;		
+		local_sys_stat->count[SAPP_STAT_SND_TCP_SYNACK]++;
 	}
 fun_exit:
 	detach_build_layer_ipv4_args(thread_num);
@@ -2535,6 +2539,7 @@ static int __do_inject_pkt(struct streaminfo *stream, const char *payload, int p
 	int snd_dir_reverse;
 	const raw_pkt_t *raw_pkt;
 	struct streaminfo_private *stream_pr;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	(void)ext_raw_pkt;
 	
@@ -2596,11 +2601,15 @@ static int __do_inject_pkt(struct streaminfo *stream, const char *payload, int p
 	}
 
 	if(STREAM_TYPE_TCP == stream->type){
-		g_SysInputInfo[thread_num][SEND_TCP_PKT]++;
-		g_SysInputInfo[thread_num][SEND_TCP_PKT_LEN]+=send_len;	
+		//g_SysInputInfo[thread_num][SEND_TCP_PKT]++;
+		//g_SysInputInfo[thread_num][SEND_TCP_PKT_LEN]+=send_len;	
+		local_sys_stat->count[SAPP_STAT_SND_TCP]++;
+		local_sys_stat->length[SAPP_STAT_SND_TCP]+= raw_pkt->raw_pkt_len;	
 	}else{
-		g_SysInputInfo[thread_num][SEND_UDP_PKT]++;
-		g_SysInputInfo[thread_num][SEND_UDP_PKT_LEN]+=send_len;	
+		//g_SysInputInfo[thread_num][SEND_UDP_PKT]++;
+		//g_SysInputInfo[thread_num][SEND_UDP_PKT_LEN]+=send_len;	
+		local_sys_stat->count[SAPP_STAT_SND_UDP]++;
+		local_sys_stat->length[SAPP_STAT_SND_UDP]+= raw_pkt->raw_pkt_len;		
 	}
 
 err:	
@@ -2820,7 +2829,8 @@ static int __MESA_sendpacket_iplayer(int thread_index,const char *data,  int dat
 {
 	MESA_send_handle *send_handle;
 	int ret, offset = 0;
-
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
+	
 	send_handle = &g_send_handle[thread_index];
 
 	send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);
@@ -2852,8 +2862,12 @@ static int __MESA_sendpacket_iplayer(int thread_index,const char *data,  int dat
 
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
-	g_SysInputInfo[thread_index][SEND_IP_RAW_PKT]++;
-	g_SysInputInfo[thread_index][SEND_IP_RAW_PKT_LEN]+=ret;	
+	//g_SysInputInfo[thread_index][SEND_IP_RAW_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_IP_RAW_PKT_LEN]+=ret;	
+	if(ret > 0){
+		local_sys_stat->count[SAPP_STAT_SND_IPV4]++;
+		local_sys_stat->length[SAPP_STAT_SND_IPV4]+= ret;	
+	}
 	
 	return ret;
 }
@@ -2875,6 +2889,7 @@ int MESA_fakepacket_send_ipv4(int thread_index,u_int8_t ttl,
 	MESA_send_handle *send_handle;
 	int ret, offset = 0;
 	u_int16_t ipid;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
 
 	send_handle = &g_send_handle[thread_index];
 
@@ -2910,9 +2925,13 @@ int MESA_fakepacket_send_ipv4(int thread_index,u_int8_t ttl,
 							   
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
-	g_SysInputInfo[thread_index][SEND_IP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_IP_PKT_LEN]+=ret;	
-		
+	//g_SysInputInfo[thread_index][SEND_IP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_IP_PKT_LEN]+=ret;	
+	if(ret > 0){
+		local_sys_stat->count[SAPP_STAT_SND_IPV4]++;
+		local_sys_stat->length[SAPP_STAT_SND_IPV4]+= ret;	
+	}
+
 	return ret;	
 }
 
@@ -2922,6 +2941,7 @@ int MESA_fakepacket_send_ipv4_detail(int thread_index,u_int8_t ttl,
 {
 	MESA_send_handle *send_handle;
 	int ret, offset = 0;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
 
 	send_handle = &g_send_handle[thread_index];
 
@@ -2955,9 +2975,13 @@ int MESA_fakepacket_send_ipv4_detail(int thread_index,u_int8_t ttl,
 							   
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
-	g_SysInputInfo[thread_index][SEND_IP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_IP_PKT_LEN]+=ret;	
-		
+	//g_SysInputInfo[thread_index][SEND_IP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_IP_PKT_LEN]+=ret;	
+	if(ret > 0){
+		local_sys_stat->count[SAPP_STAT_SND_IPV4]++;
+		local_sys_stat->length[SAPP_STAT_SND_IPV4]+= ret;	
+	}
+
 	return ret;	
 }
 
@@ -2969,6 +2993,7 @@ int MESA_fakepacket_send_tcp(int thread_index,u_int sip_host_order,u_int dip_hos
 	MESA_send_handle *send_handle;
 	int ret, offset = 0;
 	u_int16_t tcp_win, ipid;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
 
 	send_handle = &g_send_handle[thread_index];
 
@@ -3011,9 +3036,13 @@ int MESA_fakepacket_send_tcp(int thread_index,u_int sip_host_order,u_int dip_hos
 							   
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
-	g_SysInputInfo[thread_index][SEND_TCP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_TCP_PKT_LEN]+=ret;	
-		
+	//g_SysInputInfo[thread_index][SEND_TCP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_TCP_PKT_LEN]+=ret;	
+	if(ret > 0){
+		local_sys_stat->count[SAPP_STAT_SND_TCP]++;
+		local_sys_stat->length[SAPP_STAT_SND_TCP]+= ret;	
+	}
+
 	return ret;	
 }
 
@@ -3025,6 +3054,7 @@ int MESA_fakepacket_send_tcp_detail(int thread_index,u_int sip_host_order,u_int 
 {
 	MESA_send_handle *send_handle;
 	int ret, offset = 0;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
 
 	send_handle = &g_send_handle[thread_index];
 
@@ -3064,9 +3094,12 @@ int MESA_fakepacket_send_tcp_detail(int thread_index,u_int sip_host_order,u_int 
 							   
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
-	g_SysInputInfo[thread_index][SEND_TCP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_TCP_PKT_LEN]+=ret;	
-		
+	//g_SysInputInfo[thread_index][SEND_TCP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_TCP_PKT_LEN]+=ret;	
+	if(ret > 0){
+		local_sys_stat->count[SAPP_STAT_SND_TCP]++;
+		local_sys_stat->length[SAPP_STAT_SND_TCP]+= ret;	
+	}		
 	return ret;	
 }
 int MESA_fakepacket_send_udp(int thread_index, u_int sip_host_order, u_int dip_host_order, 
@@ -3076,6 +3109,7 @@ int MESA_fakepacket_send_udp(int thread_index, u_int sip_host_order, u_int dip_h
 	MESA_send_handle *send_handle;
 	int ret, offset = 0;
 	u_int16_t  ipid;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
 
 	send_handle = &g_send_handle[thread_index];
 
@@ -3117,9 +3151,13 @@ int MESA_fakepacket_send_udp(int thread_index, u_int sip_host_order, u_int dip_h
 							   
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
-	g_SysInputInfo[thread_index][SEND_UDP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_UDP_PKT_LEN]+=ret;	
-	
+	//g_SysInputInfo[thread_index][SEND_UDP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_UDP_PKT_LEN]+=ret;	
+	if(ret > 0){
+		local_sys_stat->count[SAPP_STAT_SND_UDP]++;
+		local_sys_stat->length[SAPP_STAT_SND_UDP]+= ret;	
+	}
+
 	return ret;	
 }
 
@@ -3129,6 +3167,7 @@ int MESA_fakepacket_send_udp_detail(int thread_index, u_int sip_host_order, u_in
 {
 	MESA_send_handle *send_handle;
 	int ret, offset = 0;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
 
 	send_handle = &g_send_handle[thread_index];
 
@@ -3168,9 +3207,13 @@ int MESA_fakepacket_send_udp_detail(int thread_index, u_int sip_host_order, u_in
 							   
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
-	g_SysInputInfo[thread_index][SEND_UDP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_UDP_PKT_LEN]+=ret;	
-	
+	//g_SysInputInfo[thread_index][SEND_UDP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_UDP_PKT_LEN]+=ret;	
+	if(ret > 0){
+		local_sys_stat->count[SAPP_STAT_SND_UDP]++;
+		local_sys_stat->length[SAPP_STAT_SND_UDP]+= ret;	
+	}
+
 	return ret;	
 }
 
@@ -3180,7 +3223,6 @@ int MESA_fakepacket_send_udp_detail(int thread_index, u_int sip_host_order, u_in
 #include <dlfcn.h>
 static struct mr_instance *dl_io_marsio4_instance = NULL;
 extern struct dl_io_lib_name g_dl_io_lib_info[];
-extern int g_packet_io_cap_mode;
 extern int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath, queue_id_t sid, marsio_buff_t * mbufs[], int nr_mbufs, uint16_t options);
 static struct mr_instance *sapp_get_marsio_instance(void)
 {
@@ -3303,7 +3345,7 @@ static int __MESA_sendpacket_iplayer_options(int thread_index,const char *data, 
 	if(inner_ret < 0){
 		return -1;
 	}	
-	g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
+	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 	
 	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], data_len+sizeof(struct mesa_ethernet_hdr));
 	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
@@ -3331,10 +3373,9 @@ static int __MESA_sendpacket_iplayer_options(int thread_index,const char *data, 
 		return -1;
 	}
 								    
-	g_SysInputInfo[thread_index][SEND_IP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_IP_PKT_LEN] += data_len;	
-
-	g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
+	//g_SysInputInfo[thread_index][SEND_IP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_IP_PKT_LEN] += data_len;	
+	//g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
 	
 	return data_len;
 }
@@ -3343,13 +3384,32 @@ static int __MESA_sendpacket_iplayer_options(int thread_index,const char *data, 
 int MESA_sendpacket_iplayer_options(int thread_index,const char *data,  int data_len, 
     u_int8_t dir, SAPP_TLV_T *options, int opt_num)
 {
-	return __MESA_sendpacket_iplayer_options(thread_index, data, data_len, dir, options, opt_num, ETHERTYPE_IP);
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
+	int ret;
+
+	ret = __MESA_sendpacket_iplayer_options(thread_index, data, data_len, dir, options, opt_num, ETHERTYPE_IP);
+	if(ret > 0){
+		local_sys_stat->count[SAPP_STAT_SND_IPV4]++;
+		local_sys_stat->length[SAPP_STAT_SND_IPV4]+= data_len;	
+	}
+
+	return ret;
 }
 
 int MESA_sendpacket_ipv6_layer_options(int thread_index,const char *data,  int data_len, 
     u_int8_t dir, SAPP_TLV_T *options, int opt_num)
 {
-	return __MESA_sendpacket_iplayer_options(thread_index, data, data_len, dir, options, opt_num, ETHERTYPE_IPv6);
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
+	int ret;
+
+	ret = __MESA_sendpacket_iplayer_options(thread_index, data, data_len, dir, options, opt_num, ETHERTYPE_IPv6);
+
+	if(ret > 0){
+		local_sys_stat->count[SAPP_STAT_SND_IPV6]++;
+		local_sys_stat->length[SAPP_STAT_SND_IPV6]+= data_len;	
+	}
+
+	return ret;	
 }
 
 int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t protocol,
@@ -3363,6 +3423,7 @@ int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t p
 	u_int8_t ip_ttl = MESA_rand() % 64 + 32;
 	int thread_index = stream->threadnum;
 	int i;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
 	
 	struct mr_tunnat_ctrlzone mr_ctrlzone;
 	unsigned char *real_buf;
@@ -3375,7 +3436,7 @@ int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t p
 	if(inner_ret < 0){
 		return -1;
 	}	
-	g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
+	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
 	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr));
@@ -3418,10 +3479,12 @@ int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t p
 	}
 
 	snd_len = sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr) + payload_len;
-	g_SysInputInfo[thread_index][SEND_IP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_IP_PKT_LEN]+=snd_len;	
+	//g_SysInputInfo[thread_index][SEND_IP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_IP_PKT_LEN]+=snd_len;	
+	local_sys_stat->count[SAPP_STAT_SND_IPV4]++;
+	local_sys_stat->length[SAPP_STAT_SND_IPV4]+= snd_len;
 
-	g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
+	//g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
 	
 	return snd_len;	
 }
@@ -3438,6 +3501,7 @@ int MESA_fakepacket_send_ipv6_options(const struct streaminfo *stream, uint8_t p
 	marsio_buff_t *send_mbuf[1];
 	struct mr_tunnat_ctrlzone mr_ctrlzone;
 	unsigned char *real_buf;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
 
 	if(NULL == dl_io_marsio4_instance){
 		dl_io_marsio4_instance = sapp_get_marsio_instance();
@@ -3447,7 +3511,7 @@ int MESA_fakepacket_send_ipv6_options(const struct streaminfo *stream, uint8_t p
 	if(inner_ret < 0){
 		return -1;
 	}	
-	g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
+	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
 	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr));
@@ -3481,11 +3545,12 @@ int MESA_fakepacket_send_ipv6_options(const struct streaminfo *stream, uint8_t p
 	}
 
 	snd_len = sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr) + payload_len;
-	g_SysInputInfo[thread_index][SEND_IP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_IP_PKT_LEN]+=snd_len;	
+	//g_SysInputInfo[thread_index][SEND_IP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_IP_PKT_LEN]+=snd_len;	
+	//g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
+	local_sys_stat->count[SAPP_STAT_SND_IPV6]++;
+	local_sys_stat->length[SAPP_STAT_SND_IPV6]+= snd_len;
 
-	g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
-	
 	return snd_len;	
 }
 
@@ -3505,6 +3570,7 @@ int MESA_fakepacket_send_tcp_options(const struct streaminfo *stream,
 	unsigned short ipid = MESA_rand() & 0xFFFF;
 	unsigned short tcp_win = MESA_rand_range(8192, 32768);
 	unsigned char ip_ttl = MESA_rand_range(32,65);
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
 
 	if(NULL == dl_io_marsio4_instance){
 		dl_io_marsio4_instance = sapp_get_marsio_instance();
@@ -3514,7 +3580,7 @@ int MESA_fakepacket_send_tcp_options(const struct streaminfo *stream,
 	if(inner_ret < 0){
 		return -1;
 	}	
-	g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
+	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
 	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_tcp_hdr) + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr));
@@ -3560,11 +3626,12 @@ int MESA_fakepacket_send_tcp_options(const struct streaminfo *stream,
 
 	snd_len = sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr) +sizeof(struct mesa_tcp_hdr) + payload_len;
 	
-	g_SysInputInfo[thread_index][SEND_TCP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_TCP_PKT_LEN]+=snd_len;	
+	//g_SysInputInfo[thread_index][SEND_TCP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_TCP_PKT_LEN]+=snd_len;	
+	//g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
+	local_sys_stat->count[SAPP_STAT_SND_TCP]++;
+	local_sys_stat->length[SAPP_STAT_SND_TCP]+= snd_len;
 	
-	g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
-		
 	return snd_len;	
 }
 
@@ -3584,6 +3651,7 @@ int MESA_fakepacket_send_ipv6_tcp_options(const struct streaminfo *stream,
 	unsigned char *real_buf;
 	unsigned short tcp_win = MESA_rand_range(8192, 32768);
 	unsigned char ip_ttl = MESA_rand_range(32,65);
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
 
 	if(NULL == dl_io_marsio4_instance){
 		dl_io_marsio4_instance = sapp_get_marsio_instance();
@@ -3593,7 +3661,7 @@ int MESA_fakepacket_send_ipv6_tcp_options(const struct streaminfo *stream,
 	if(inner_ret < 0){
 		return -1;
 	}	
-	g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
+	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
 	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_tcp_hdr) + sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr));
@@ -3634,11 +3702,12 @@ int MESA_fakepacket_send_ipv6_tcp_options(const struct streaminfo *stream,
 	}
 
 	snd_len = sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr) +sizeof(struct mesa_tcp_hdr) + payload_len;
-	g_SysInputInfo[thread_index][SEND_TCP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_TCP_PKT_LEN]+=snd_len;	
-	
-	g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
-		
+	//g_SysInputInfo[thread_index][SEND_TCP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_TCP_PKT_LEN]+=snd_len;	
+	//g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
+	local_sys_stat->count[SAPP_STAT_SND_TCP]++;
+	local_sys_stat->length[SAPP_STAT_SND_TCP]+= snd_len;
+
 	return snd_len;	
 }
 
@@ -3655,6 +3724,7 @@ int MESA_fakepacket_send_udp_options(const struct streaminfo *stream,
 	unsigned char *real_buf;
 	unsigned short ipid = MESA_rand();
 	unsigned char ip_ttl = MESA_rand_range(32, 64);
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
 
 	if(NULL == dl_io_marsio4_instance){
 		dl_io_marsio4_instance = sapp_get_marsio_instance();
@@ -3664,7 +3734,7 @@ int MESA_fakepacket_send_udp_options(const struct streaminfo *stream,
 	if(inner_ret < 0){
 		return -1;
 	}	
-	g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
+	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
 	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr));
@@ -3709,11 +3779,12 @@ int MESA_fakepacket_send_udp_options(const struct streaminfo *stream,
 	}
 
 	snd_len = sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr) +sizeof(struct mesa_udp_hdr) + payload_len;
-	g_SysInputInfo[thread_index][SEND_TCP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_TCP_PKT_LEN]+=snd_len;	
+	//g_SysInputInfo[thread_index][SEND_TCP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_TCP_PKT_LEN]+=snd_len;	
+	//g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
 
-	g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
-		
+	local_sys_stat->count[SAPP_STAT_SND_TCP]++;
+	local_sys_stat->length[SAPP_STAT_SND_TCP]+= snd_len;		
 	return snd_len;	
 }
 
@@ -3729,6 +3800,7 @@ int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream,
 	struct mr_tunnat_ctrlzone mr_ctrlzone;
 	unsigned char *real_buf;
 	unsigned char ip_ttl = MESA_rand_range(32, 64);
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
 
 	if(NULL == dl_io_marsio4_instance){
 		dl_io_marsio4_instance = sapp_get_marsio_instance();
@@ -3738,7 +3810,7 @@ int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream,
 	if(inner_ret < 0){
 		return -1;
 	}	
-	g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
+	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
 	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr));
@@ -3777,11 +3849,12 @@ int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream,
 	}
 
 	snd_len = sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr) +sizeof(struct mesa_udp_hdr) + payload_len;
-	g_SysInputInfo[thread_index][SEND_TCP_PKT]++;
-	g_SysInputInfo[thread_index][SEND_TCP_PKT_LEN]+=snd_len;	
-
-	g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
-		
+	//g_SysInputInfo[thread_index][SEND_TCP_PKT]++;
+	//g_SysInputInfo[thread_index][SEND_TCP_PKT_LEN]+=snd_len;	
+	//g_SysInputInfo[thread_index][PKT_MARSIO_SND]++;
+	local_sys_stat->count[SAPP_STAT_SND_UDP]++;
+	local_sys_stat->length[SAPP_STAT_SND_UDP]+= snd_len;
+	
 	return snd_len;	
 }
 #endif
@@ -3826,11 +3899,11 @@ int sapp_forward_current_pkt(const struct streaminfo *stream, unsigned int targe
 										MR_BUFF_CLONE_BUFF  | MR_BUFF_CLONE_CTRLZONE);
 
 	assert(new_clone_buf);
-	g_SysInputInfo[stream->threadnum][PKT_MARSIO_MALLOC]++;
+	//g_SysInputInfo[stream->threadnum][PKT_MARSIO_MALLOC]++;
 
 	ret = marsio_send_burst((struct mr_sendpath *)g_packet_device_alias[target_id].dl_io_param, 
 									stream->threadnum, &new_clone_buf, 1); 
-	g_SysInputInfo[stream->threadnum][PKT_MARSIO_SND]++;
+	//g_SysInputInfo[stream->threadnum][PKT_MARSIO_SND]++;
 	
 #else
 	printf("sapp_forward_current_pkt() not support in non-marsio mode, TODO!\n");

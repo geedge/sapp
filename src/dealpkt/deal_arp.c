@@ -5,8 +5,6 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
-extern int g_topology_mode;
-
  int arp_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hdr, 
  		int thread_num, unsigned char dir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {

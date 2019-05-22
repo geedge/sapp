@@ -57,8 +57,8 @@ int sapp_packet_io_v = 20161101;
 int sapp_packet_io_v = 20170407;
 #endif
 
-int g_sapp_log_level = 20;
-void *g_sapp_log_handle;
+//int g_sapp_log_level = 20;
+///void *g_sapp_log_handle;
 
 #define STREAM_ONCE_DEL_NUM 1000
 void packet_io_status_stream_hash_update(int thread_seq, unsigned long hash_list_num);
@@ -70,17 +70,17 @@ static inline void __do_streamleavlist(struct streamindex *pindex,struct stream_
 int tcp_stream_table_size=0;
 int udp_stream_table_size=0;
 //add by lqy 
-unsigned short udp_reset_time=0;
-unsigned short link_default_nopkt_time=0;
+//unsigned short udp_reset_time=0;
+//unsigned short link_default_nopkt_time=0;
 int tcpstate_num[MAX_TCP_STATE]={8000,2000,4000};
 int udpstate_num[MAX_UDP_STATE]={2000,2000,2000};
 
-int tcp_default_unorder=5;
-int tcp_creatlink_model=TCP_CTEAT_LINK_BYSYN;
+//int tcp_default_unorder=5;
+//int tcp_creatlink_model=TCP_CTEAT_LINK_BYSYN;
 int tcp_flood_detect_model=TCP_FLOOD_DETECT_OFF;
 int tcp_support_all=TCP_SUPPORT_ENTRYALL_OFF;
 int tcp_dataflood_pktlen=5;
-extern int g_packet_io_thread_num;
+//extern int g_packet_io_thread_num;
 extern int g_reverse_ethernet_addr_sw;
 
 struct global_stream **G_MESA_GLOBAL_STREAM;
@@ -483,6 +483,7 @@ void udp_set_stream_resettime(unsigned short timeout)
 }
 #endif
 
+#if 0
 void udp_set_stream_timeout(unsigned short timeout)//2014-12-25 lijia add, ¼æÈİ¾ÉÆ½Ì¨, xj_fd
 {
 	udp_reset_time=(unsigned short)timeout;
@@ -491,7 +492,8 @@ void udp_set_stream_timeout(unsigned short timeout)//2014-12-25 lijia add, ¼æÈİ¾
 void udp_set_stream_resettime(unsigned short timeout)
 {
 	udp_reset_time=(unsigned short)timeout;
-}
+}#endif
+#endif
 
 int udp_set_stream_num(int udp1,int udp2,int udp3)
 {
@@ -582,7 +584,7 @@ void streamleavlist(struct streamindex *pindex,struct stream_list *plist)
 
 	update_stream_status(pstream->threadnum, pstream->type, pstream->stream_state, -1);
 
-#if DEBUG
+#if IKNOW_ENABLE
 	packet_io_status_stream_update(pstream->threadnum, pstream->type, pstream->stream_state, -1);	
 #endif
 }
@@ -670,7 +672,7 @@ printf("###### %s timeout is %d, remain %lld, can't be free!\n", printaddr(&tmps
 	}
 #endif		
 	update_stream_status(pstream->threadnum, pstream->type, pstream->stream_state, 1);
-#if DEBUG
+#if IKNOW_ENABLE
 	packet_io_status_stream_update(pstream->threadnum, pstream->type, pstream->stream_state, 1);	
 #endif
 }
@@ -1382,6 +1384,7 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 	int result;
 	unsigned long hash_list_num = 0;
 	UCHAR threadnum = psinsert_pr->stream_public.threadnum;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
 
 	while(phead!=NULL)
 	{  
@@ -1405,11 +1408,13 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 		hash_list_num++;
 	}
 
-	if(unlikely(hash_list_num > g_SysInputInfo[threadnum][SYS_HASH_LIST_MAX])){
-		g_SysInputInfo[threadnum][SYS_HASH_LIST_MAX] = hash_list_num;
+	//if(unlikely(hash_list_num > g_SysInputInfo[threadnum][SYS_HASH_LIST_MAX])){
+	if(unlikely(hash_list_num > local_sys_stat->count[SAPP_STAT_HASH_LIST_MAX])){
+		//g_SysInputInfo[threadnum][SYS_HASH_LIST_MAX] = hash_list_num;
+		local_sys_stat->count[SAPP_STAT_HASH_LIST_MAX] = hash_list_num;
 	}
 
-#if DEBUG
+#if IKNOW_ENABLE
 	packet_io_status_stream_hash_update(threadnum, hash_list_num+1);
 #endif
 
@@ -1624,17 +1629,20 @@ void hash_add_stream(struct streamindex *pindex)
 	struct streaminfo *ptmp = &pindex->stream.stream_public;
 	UCHAR threadnum = ptmp->threadnum;
 	struct rb_root *rb_root_table;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
 
 	if (STREAM_TYPE_TCP==ptmp->type)
 	 {
-	 	rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->tcp_rb_root_table;
- 	 	  g_SysInputInfo[threadnum][SYS_TCP_LINK_NEW]++;
+		rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->tcp_rb_root_table;
+		//g_SysInputInfo[threadnum][SYS_TCP_LINK_NEW]++;
+		local_sys_stat->count[SAPP_STAT_TCP_STREAM_NEW]++;
 	 }	
 	else if(STREAM_TYPE_UDP==ptmp->type)
-         {
+    {
 		rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->udp_rb_root_table;
-   		g_SysInputInfo[threadnum][SYS_UDP_LINK_NEW]++;
-         } 
+   		//g_SysInputInfo[threadnum][SYS_UDP_LINK_NEW]++;
+   		local_sys_stat->count[SAPP_STAT_UDP_STREAM_NEW]++;
+    } 
 	 
 	rb_sapp_insert(pindex, &rb_root_table[ptmp->hash_index]);	
 }
@@ -1644,17 +1652,20 @@ void hash_del_stream(struct streamindex *pindex)
 	struct streaminfo *ptmp = &pindex->stream.stream_public;
 	UCHAR threadnum = ptmp->threadnum;
 	struct rb_root *rb_root_table;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
 
 	if (STREAM_TYPE_TCP==ptmp->type)
 	 {
 	 	rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->tcp_rb_root_table;
- 	 	  g_SysInputInfo[threadnum][SYS_TCP_LINK_DEL]++;
+ 	 	  //g_SysInputInfo[threadnum][SYS_TCP_LINK_DEL]++;
+ 	 	  local_sys_stat->count[SAPP_STAT_TCP_STREAM_DEL]++;
 	 }	
 	else if(STREAM_TYPE_UDP==ptmp->type)
-         {
+    {
 		rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->udp_rb_root_table;
-   		g_SysInputInfo[threadnum][SYS_UDP_LINK_DEL]++;
-         } 
+   		///g_SysInputInfo[threadnum][SYS_UDP_LINK_DEL]++;
+   		local_sys_stat->count[SAPP_STAT_UDP_STREAM_DEL]++;
+    } 
 	 
 	rb_sapp_erase(pindex, &rb_root_table[ptmp->hash_index]);	
 }
@@ -1800,23 +1811,26 @@ void hash_add_stream(struct streamindex *pindex)
 	unsigned short *pelementcount;
 	UCHAR threadnum = ptmp->threadnum;
 	unsigned int hash_index = ptmp->hash_index;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
 
 	if (STREAM_TYPE_TCP==ptmp->type)
 	 {
-                 phashstream=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_table;
+          phashstream=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_table;
  	 	  pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_talbe_hash_count;
- 	 	  g_SysInputInfo[threadnum][SYS_TCP_LINK_NEW]++;
+ 	 	  //g_SysInputInfo[threadnum][SYS_TCP_LINK_NEW]++;
+ 	 	  local_sys_stat->count[SAPP_STAT_TCP_STREAM_NEW]++;
 	 }	
 	else if(STREAM_TYPE_UDP==ptmp->type)
-         {
-                 phashstream=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_table;
-	 	  pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_talbe_hash_count;
-   		g_SysInputInfo[threadnum][SYS_UDP_LINK_NEW]++;
-         } else{
-         	phashstream = NULL;
-         	pelementcount = 0;
+     {
+        phashstream=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_table;
+ 	    pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_talbe_hash_count;
+		//g_SysInputInfo[threadnum][SYS_UDP_LINK_NEW]++;
+		local_sys_stat->count[SAPP_STAT_UDP_STREAM_NEW]++;
+     } else{
+     	phashstream = NULL;
+     	pelementcount = 0;
 		assert(0);
-         }
+     }
 	 
 	
 #if 1 /* ·ÅÔÚHASH-SlotµÚÒ»¸öÎ»ÖÃ */
@@ -1869,41 +1883,48 @@ void hash_del_stream(struct streamindex *pindex)
 	struct streaminfo *ptmp = &pstream_pr->stream_public;	
 	unsigned short *pelementcount;
 	UCHAR threadnum = ptmp->threadnum;
-	
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
+
 	if(STREAM_TYPE_UDP==ptmp->type)
-         {
-                 phashstream=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_table;
-		  pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_talbe_hash_count;
-		g_SysInputInfo[threadnum][SYS_UDP_LINK_DEL]++;
-         }
+     {
+         phashstream=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_table;
+		pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_talbe_hash_count;
+		//g_SysInputInfo[threadnum][SYS_UDP_LINK_DEL]++;
+		local_sys_stat->count[SAPP_STAT_UDP_STREAM_DEL]++;
+     }
 	 else if (STREAM_TYPE_TCP==ptmp->type)
 	 {
-                 phashstream=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_table;
+          phashstream=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_table;
  		  pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_talbe_hash_count;
- 		   g_SysInputInfo[threadnum][SYS_TCP_LINK_DEL]++;
+ 		   //g_SysInputInfo[threadnum][SYS_TCP_LINK_DEL]++;
+ 		   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DEL]++;
+ 		   
  		   if(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum >= 3
- 		   && ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes >= 5)
+ 		    && ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes >= 5)
            {
                if(ptmp->dir == DIR_DOUBLE)
                {
-                   g_SysInputInfo[threadnum][LINK_DOUBLE]++;
+                   //g_SysInputInfo[threadnum][LINK_DOUBLE]++;
+                   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE]++;
                }
                else if(ptmp->dir == DIR_C2S)
                {
-                   g_SysInputInfo[threadnum][LINK_SINGLE_C2S]++;
+                   //g_SysInputInfo[threadnum][LINK_SINGLE_C2S]++;
+                   local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S]++;
                }
                else if(ptmp->dir == DIR_S2C)
                {
-                   g_SysInputInfo[threadnum][LINK_SINGLE_S2C]++;
+                   //g_SysInputInfo[threadnum][LINK_SINGLE_S2C]++;
+                   local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C]++;
                }
                else
                    ;
            }
 	 }else{
-         	phashstream = NULL;
-         	pelementcount = 0;
+      	phashstream = NULL;
+       	pelementcount = 0;
 		assert(0);
-         }
+     }
          
 	 if(pindex->phashprev!=NULL)
 	 {
@@ -2408,30 +2429,39 @@ void free_heap_stream_info(struct streaminfo *heap_stream, int layer)
 */
 static inline void update_stream_status(UCHAR threadnum, UCHAR stream_type, UCHAR stream_state,  int action)
 {
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
+	
+
 	if(STREAM_TYPE_TCP == stream_type){
 		switch(stream_state)
 		{
 			case TCP_DATA_STATE:
-					g_SysInputInfo[threadnum][SYS_TCP_LINK_DATA] += action;
+					//g_SysInputInfo[threadnum][SYS_TCP_LINK_DATA] += action;
+					local_sys_stat->count[SAPP_STAT_TCP_STREAM_DATA] += action;
 					break;
 			case TCP_NOUSE_STATE:
-					g_SysInputInfo[threadnum][SYS_TCP_LINK_NOUSE] += action;
+					//g_SysInputInfo[threadnum][SYS_TCP_LINK_NOUSE] += action;
+					local_sys_stat->count[SAPP_STAT_TCP_STREAM_NOUSE] += action;
 					break;
 			case TCP_SYN_STATE:
-					g_SysInputInfo[threadnum][SYS_TCP_LINK_SYN] += action;
+					//g_SysInputInfo[threadnum][SYS_TCP_LINK_SYN] += action;
+					local_sys_stat->count[SAPP_STAT_TCP_STREAM_SYN] += action;
 					break;					
 		}	
 	}else if(STREAM_TYPE_UDP == stream_type){
 		switch(stream_state)
 		{
 			case UDP_TWO_STATE:
-					g_SysInputInfo[threadnum][SYS_UDP_LINK_TWO] += action;
+					//g_SysInputInfo[threadnum][SYS_UDP_LINK_TWO] += action;
+					local_sys_stat->count[SAPP_STAT_UDP_STREAM_TWO] += action;
 					break;
 			case UDP_MORE_STATE:
-					g_SysInputInfo[threadnum][SYS_UDP_LINK_MORE] += action;
+					//g_SysInputInfo[threadnum][SYS_UDP_LINK_MORE] += action;
+					local_sys_stat->count[SAPP_STAT_UDP_STREAM_MORE] += action;
 					break;
 			case UDP_ONE_STATE:
-					g_SysInputInfo[threadnum][SYS_UDP_LINK_ONE] += action;
+					//g_SysInputInfo[threadnum][SYS_UDP_LINK_ONE] += action;
+					local_sys_stat->count[SAPP_STAT_UDP_STREAM_ONE] += action;
 					break;
 		}			
 	}
@@ -2450,7 +2480,7 @@ int thread_self_init(int thread_seq)
 
 
 
-#if DEBUG
+#if IKNOW_ENABLE
 #include "iknow.h"
 typedef struct{
 	packet_io_status_base_t io_base_status; 
@@ -2545,9 +2575,7 @@ void packet_io_status_stream_hash_update(int thread_seq, unsigned long hash_list
 		psh->max_hash_list_num = hash_list_num;
 	}
 }
-
 #endif
-
 
 
 int get_stream_carry_tunnel_type(const struct streaminfo *this_stream, 

@@ -39,9 +39,9 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 	unsigned char *mpls_pkt_data = (unsigned char *)this_layer_data;
 	char *next_layer_hdr = NULL;
 	int next_layer_offset = 0, i = 0;
-
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	
     memset(&addr, 0, sizeof(addr));
-
 	for(i = 0; i < MAX_MPLS_ADDR_LAYER; i++)
 	{
 		this_mpls_hdr = (const struct mesa_mpls_hdr *)mpls_pkt_data;
@@ -98,8 +98,10 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
             int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
 			if(left_pkt_len < 20 || ntohs(ip4_hdr->tot_len) > left_pkt_len)
 			{
-                g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-                g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+                //g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+                //g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;                
                 sapp_runtime_log(20, "illegal left Ipv4 len %d, total len %d!\n", left_pkt_len, ntohs(ip4_hdr->tot_len));
 				return -1;
 			}
@@ -141,8 +143,6 @@ int mpls_empty_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 	int next_layer_offset = 0;
 
 	memset(&addr, 0, sizeof(addr));
-
-
 
 	next_layer_offset = offset_to_raw_pkt_hdr;
 	next_layer_hdr = (char *)this_layer_data;

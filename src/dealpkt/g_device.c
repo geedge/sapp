@@ -10,7 +10,6 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
-extern int g_topology_mode;
 
 char pcap_gdev_card[128]; 		/* 2012-08-14 LiJia add, 特殊设备模式下，捕包网卡名称，通常与sendto_gdev_card一样 */
 char sendto_gdev_card[128];		/* 基于特殊设备的串联模式，发送数据接口名称 */

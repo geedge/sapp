@@ -1287,6 +1287,7 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	UCHAR threadnum = pstream->threadnum;
 	UCHAR saved_curdir;
 	int ret = 0;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
 	
 	 //add by lqy 20150107 回退计数
         if(pstream->curdir==DIR_S2C)
@@ -1417,8 +1418,8 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 		}
 	}	
 
-	g_SysInputInfo[threadnum][SYS_TCP_LINK_RESET]++;
-
+	//g_SysInputInfo[threadnum][SYS_TCP_LINK_RESET]++;
+	local_sys_stat->count[SAPP_STAT_TCP_STREAM_RESET]++;
 	return ret;
 }
 
@@ -2724,14 +2725,16 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 	/* IPPORT-union版本, IP和TCP层使用同一个index结构, 即直接通过IP层传递的pfindex */
 	//struct streamindex tmp_tcp_stream;
 	//struct streamindex *ptmp=&tmp_tcp_stream;
-	
 	struct streaminfo_private *pstream_pr = (struct streaminfo_private *)(&pfindex->stream);
 	struct streaminfo *pstream = (struct streaminfo *)(&pstream_pr->stream_public);
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	
-	g_SysInputInfo[thread_num][PKT_TCP]++;
-	g_SysInputInfo[thread_num][PKT_TCPLEN] += tcpdatalen;
+	//g_SysInputInfo[thread_num][PKT_TCP]++;
+	//g_SysInputInfo[thread_num][PKT_TCPLEN] += tcpdatalen;
+	local_sys_stat->count[SAPP_STAT_RCV_TCP]++;
+	local_sys_stat->length[SAPP_STAT_RCV_TCP]+=tcpdatalen;
 
-#if DEBUG
+#if IKNOW_ENABLE
 	packet_io_status_tcp_pkt_update(thread_num, this_tcphdr->th_flags, tcpdatalen);
 #endif
 
@@ -3211,7 +3214,7 @@ static inline void update_stream_list_raw_pkt_pointer(struct streaminfo_private 
 }
 
 /* TODO 1: 更新每个流的平均包数, 字节数, 平均流时间跨度统计 */
-#if DEBUG
+#if IKNOW_ENABLE
 #include "iknow.h"
 typedef struct{
 	packet_io_status_base_t io_base_status; /* TCP包总计数 */
@@ -3239,7 +3242,7 @@ typedef struct{
 	time_t normal_finish_avg_live_time; /* 流正常结束的最大时间, 即有FIN包或RST包的流 */	
 }packet_io_status_tcp_stream_time_t;
 
-extern int g_packet_io_thread_num;
+//extern int g_packet_io_thread_num;
 extern packet_io_status_t *g_packet_io_status_pool[MAX_THREAD_NUM];
 static volatile packet_io_status_tcp_pkt_t g_last_tcp_pkt_status, g_cur_tcp_pkt_status, g_realtime_tcp_pkt_status;
 static volatile packet_io_status_tcp_pkt_t g_thread_last_tcp_pkt_status[MAX_THREAD_NUM], g_thread_realtime_tcp_pkt_status[MAX_THREAD_NUM];
@@ -3440,6 +3443,7 @@ static long ifuncb_show_tcp_pkt_detail_realtime(iknow_handle ihandle, iknow_conn
 	return 0;
 }
 
+#if IKNOW_ENABLE
 void iknow_register_tcp_pkt_cb(void *ihandle)
 {
 	int ret;
@@ -3451,6 +3455,7 @@ void iknow_register_tcp_pkt_cb(void *ihandle)
 	ret = iknow_register_cmd(ihandle, "show tcp pkt detail realtime", "display tcp pkt detail realtime", ifuncb_show_tcp_pkt_detail_realtime, NULL, 0, NULL);
 	assert(0 == ret);	
 }
+#endif
 
 void *packet_io_status_tcp_stream_mem_init(void)
 {
@@ -3527,6 +3532,7 @@ void packet_io_status_tcp_stream_time_cb(void)
 	g_realtime_tcp_stream_status.del_nouse_num = g_cur_tcp_stream_status.del_nouse_num -g_last_tcp_stream_status.del_nouse_num;
 }
 
+#if IKNOW_ENABLE
 void iknow_register_tcp_stream_cb(void *ihandle)
 {
 	int ret;
@@ -3538,6 +3544,7 @@ void iknow_register_tcp_stream_cb(void *ihandle)
 	//ret = iknow_register_cmd(ihandle, "show tcp stream detail realtime", "display tcp stream detail realtime", ifuncb_show_tcp_stream_detail, NULL, 0, NULL);
 	//assert(0 == ret);		
 }
+#endif
 #endif
 
 

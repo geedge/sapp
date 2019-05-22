@@ -305,6 +305,7 @@ all:
 	cd project; $(MAKE);
 	cd plugin; $(MAKE);
 	cd inner_plug; $(MAKE);
+	cd timer; $(MAKE);
 	cd entry; $(MAKE);
 
 clean:
@@ -316,6 +317,7 @@ clean:
 	cd inner_plug; $(MAKE) clean;
 	cd entry; $(MAKE) clean;
 	cd config; $(MAKE) clean;
+	cd timer; $(MAKE) clean;
 	cd support/c3_client; $(MAKE) clean;
 	cd support/dictator2/src; $(MAKE) clean;
 	cd support/MESA_sleep; $(MAKE) clean;

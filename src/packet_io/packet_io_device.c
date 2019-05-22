@@ -5,8 +5,6 @@
 extern "C" {
 #endif
 
-extern int g_packet_io_cap_mode;
-
 /*
 	设备, 路径;
 	id->物理设备->逻辑设备.

@@ -22,7 +22,7 @@ H_DIR += -I/opt/MESA/include/MESA
 
 TARGET = libcommon.a
 
-OBJS= net_common.o stream_addr_inet.o linux_kernel_jhash.o
+OBJS= net_common.o stream_addr_inet.o linux_kernel_jhash.o sapp_log.o
 
 ifeq ($(IIEFD_DUAL_STACK), $(YES))
 CFLAGS += -g -DIIEFD_DUAL_STACK=1

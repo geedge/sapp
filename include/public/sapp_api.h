@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <assert.h>
 #include <errno.h>
@@ -31,6 +32,7 @@
 #include <execinfo.h>
 #include <pcap/pcap.h>
 #include <getopt.h>
+#include <sys/sysinfo.h>
 
 
 /* MESA framework */

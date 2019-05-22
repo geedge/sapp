@@ -13,7 +13,7 @@
 	#define LOG_ALL 1
 #endif
 
-extern time_t g_CurrentTime; 
+
 extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
 
 typedef struct _syn_count_elem

@@ -36,6 +36,7 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 	const  unsigned char *next_layer_data;
 	int next_layer_offset,  ret;
     unsigned short eth_type = 0; 
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	memset(&tmp_index, 0, sizeof(struct streamindex));
 	ptmp = &tmp_index;
@@ -99,8 +100,10 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 
 			default:
 				/* unknown protocol */
-				g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-				g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+				//g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+				//g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;				
 				sapp_runtime_log(20, "MAC-IN-MAC unknown protocol: 0x%x\n", ntohs(inner_ether_hdr->ether_type));
 				ret = PASS;
 			break;

@@ -29,6 +29,8 @@
 
 #define NON_PKT_THREAD_SEND_QUEUE		(64) /* 非包处理线程最大发送队列数量 */
 
+#define IKNOW_ENABLE					(0)
+
 #ifndef likely
 #define likely(x) __builtin_expect(!!(x), 1)
 #endif
@@ -274,8 +276,8 @@ struct sapp_global_single_t{
 	int ipentry_priority_over_ipfrag; /* IP_entry优先级高于IP_frag_entry, 默认为0, 适应WY串联特定需求 */
 	int kill_tcp_with_gdev; /* FD未生效时, 借助gdev串联规则 */
 	int cfg_send_tcp_offload_sw; /* 超过网卡MTU时, 主动切片成多个小于MTU的包发送 */
-	int cfg_kill_tcp_rst_num; /* kill_tcp发送rst包数量 */
-	int cfg_kill_tcp_rst_signature; /* kill_tcp发送的rst是否需要指纹信息, 用于识别 */
+	//int cfg_kill_tcp_rst_num; /* kill_tcp发送rst包数量 */
+	//int cfg_kill_tcp_rst_signature; /* kill_tcp发送的rst是否需要指纹信息, 用于识别 */
     int tuple4_reuse_time_interval; /* 四元组重用的最小间隔时间 */
 	void *fs2_handle;
 	const char *fs2_server_ip;
@@ -323,10 +325,6 @@ extern struct sapp_global_single_t sapp_global_single;
 extern struct sapp_global_mthread_t sapp_global_mthread[MAX_THREAD_NUM];
 
 extern int G_SKIP_NOT_IP_LAYER;
-extern int g_sapp_log_level;
-extern void *g_sapp_log_handle;
-
-#define sapp_runtime_log(log_level, format, args...)  do{if(log_level>=g_sapp_log_level){MESA_handle_runtime_log(g_sapp_log_handle, log_level, "sapp", format, ##args);}}while(0)
 
 
 int MESA_kill_tcp_remedy(struct streaminfo *stream, const void *ext_raw_pkt);

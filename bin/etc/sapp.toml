@@ -1,53 +1,104 @@
+###################################################################################################
+# NOTE:
+#    The format of this file is toml (https://github.com/cktan/tomlc99)
+#    to make vim editor display colorful easier to read, 
+#    you can create a symbolic links named sapp.ini to sapp.toml, ln -sf sapp.toml sapp.ini
+###################################################################################################
+
 [SYSTEM]
 instance_name=sapp_v4.0
 
 [CPU]
 worker_threads=4
+### note, bind_mask, if you do not want to bind thread to special CPU core, keep it empty as []
 bind_mask=[1,2,3,4]
 
 [PACKET_IO]
-#mirror, inline, transparent, dumpfile
-depolyment.mode=mirror
+   BSD_packet_filter=ip
+   
+### note, depolyment.mode options: [mirror, inline, transparent]
+  [packet_io.depolyment]
+  mode=mirror
 
-[PACKET_IO.INTERNAL]
-interface.type=pcap
-interface.name=eth0
+### note, interface.type options: [pag,pcap,marsio]
+  [packet_io.internal.interface]
+  type=pcap
+  name=eth0
 
-[PACKET_IO.EXTERNAL]
-interface.type=pcap
-interface.name=eth0
+  [packet_io.external.interface]
+  type=pcap
+  name=eth0
 
 [STREAM]
-  [STREAM.TCP]
+  [stream.tcp]
   max=100000
   timeout=30
-  #syn_mandatory options: on/off
-  syn_mandatory=on
+  syn_mandatory=1
   reorder_pkt_max=5
-    [STREAM.TCP.INJECT]
-    rst.signature_seed1=65535
-    rst.signature_seed2=13
-    rst.mss=1460
-  [STREAM.UDP]
+    [stream.tcp.inject]
+	  link_mss=1460
+	  
+	  [stream.tcp.inject.rst]
+	  number=3
+	  signature_enabled=1
+      signature_seed1=65535
+      signature_seed2=13
+	
+  [stream.udp]
   max=100000
   timeout=30
+
 
 [PROFILING]
-sanity_check.raw_pkt_check=on
-pkt_latency.millisecond.threshold=100
-  [PROFILING.LOG]
-  level=20
-  interval=3
-  server_ip=192.168.1.1
-  server_port=12345
+  [profiling.pkt_latency]
+    enabled=0
+	### note, threshold unit is microseconds (us)
+    threshold=10000
+	
+  [profiling.sanity_check]
+  raw_pkt_broken_enabled=0
+  symbol_conflict_enabled=0
+  
+  [profiling.log]
+    level=20
+    
+	[profiling.log.field_stat]
+	 interval=3
+     server_ip=192.168.1.1
+     server_port=12345
 
 [TOOLS]
-  [TOOLS.PKT_DUMP]
+  [tools.pkt_dump]
    enabled=1
-   # mode options : storage/udp_socket
+   ### note, mode options value:[storage, udp_socket]
    mode=udp_socket
-   bpf_filter=ip
-   command_port=12345
-   storage_path=/dev/shm/pkt_dump
-   storage_size_max=10000
-   dump_thread_id = [1,2,3,4,5,6,7,8]
+   BSD_packet_filter=ip
+   
+   [tools.pkt_dump.threads]
+   ### note, if you want enable pkt dump in all thread, set dump_thread_all_enabled=1,
+   ###       if dump_thread_all_enabled=0, then use dump_thread_id to specify separate thread.
+   all_threads_enabled=1
+   
+   ### note, dump_thread_id start from 0, max is CPU.worker_threads-1
+   dump_thread_id=[0,1,2,3,4]
+   
+   [tools.pkt_dump.udp]
+     command_port=12345
+
+   [tools.pkt_dump.storage]
+     ### note, path must be double quotation mark extension, for example,  path="/dev/shm/pkt_dump"
+     path="/dev/shm/pkt_dump"
+	 #### note, file size unit: MB
+     file_size_max_per_thread=10000 
+
+### note:
+### These configurations format is complex and difficult to describe with toml grammar,
+### so, create a Independent config file to description specific information.
+[SPECIAL_CONFIG_LINK]	 
+ project_conf="./etc/project_list.conf"
+ plugin_conf="./etc/plugin.conf"
+ plugin_entrylist_conf="./etc/entrylist.conf"
+ send_raw_conf="./etc/send_raw_pkt.conf"
+ vxlan_sport_service_map_conf="./etc/vxlan_sport_service_map.conf.conf"
+ 
+ 

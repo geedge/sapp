@@ -8,13 +8,36 @@
 #include <errno.h>
 #include <stdint.h>
 #include <ctype.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "toml.h"
+#include "tomlc99_wrap.h"
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 
-int libtomlc99_wrap_version_VERSION_20190516;
+int libtomlc99_wrap_version_VERSION_20190521;
+
+static inline int tmlc99_is_file_exist(const char *filename)
+{
+	struct stat fstat;
+	int fres, ret = 0;
+
+	fres = stat(filename, &fstat);
+	if(fres < 0){
+		if(ENOENT == errno){
+			ret = 0;
+		}
+	}else{
+		ret = 1;
+	}
+
+	return ret;
+}
+
 
 static toml_table_t *twrap_get_file_handle(const char *file, char *errbuf, int errbuf_size)
 {
@@ -28,6 +51,10 @@ static toml_table_t *twrap_get_file_handle(const char *file, char *errbuf, int e
 	}
 	conf_file_handle = toml_parse_file(fp, errbuf, errbuf_size);
 	fclose(fp);
+
+	if(NULL == conf_file_handle){
+		printf("parse config file %s error, %s\n", file, errbuf);
+	}
 
 	return conf_file_handle;
 }
@@ -84,18 +111,26 @@ int tomlc99_wrap_load_int_def(
 	char errbuf[256];
 	const char* raw_str;
 	int64_t intval;
+	int ret = TOMLC99_RET_PARSE_ERROR;
+
+	if(tmlc99_is_file_exist(file) == 0){
+		ret = TOMLC99_RET_FILE_NOT_EXIST;
+		goto def_val;
+	}
 
 	conf_file_handle = twrap_get_file_handle(file, errbuf, sizeof(errbuf));
 	if(NULL == conf_file_handle){
+		ret = TOMLC99_RET_PATTERN_ERROR;
 		goto def_val;
 	}
 
 	conf_section_handle = twrap_get_section_handle(conf_file_handle, section);
 	if(NULL == conf_section_handle){
+		ret = TOMLC99_RET_SECTION_NOT_EXIST;
 		goto err_1;
 	}	
 	
-	/* extract host config value */
+	/* extract config value */
 	raw_str = toml_raw_in(conf_section_handle, key);
 	if(NULL == raw_str){
 		goto err_1;
@@ -110,14 +145,14 @@ int tomlc99_wrap_load_int_def(
 	/* done with conf */
 	toml_free(conf_file_handle);
 
-	return 0;
+	return TOMLC99_RET_SUCCESS;
 
 err_1:
 	toml_free(conf_file_handle);
 
 def_val:
 	*val = dval;
-	return -1;
+	return ret;
 }
 
 
@@ -141,21 +176,30 @@ int tomlc99_wrap_load_int_array(
 	int cfg_array_num;
 	const char* raw_str;
 	int *int_val;
-	int ret = -1;
+	int ret = TOMLC99_RET_PARSE_ERROR;
+
+	if(tmlc99_is_file_exist(file) == 0){
+		ret = TOMLC99_RET_FILE_NOT_EXIST;
+		goto def_val;
+	}
+	
 
 	conf_file_handle = twrap_get_file_handle(file, errbuf, sizeof(errbuf));
 	if(NULL == conf_file_handle){
-		return -1;
+		ret =  TOMLC99_RET_PATTERN_ERROR;
+		goto def_val;
 	}
 
 	conf_section_handle = twrap_get_section_handle(conf_file_handle, section);
 	if(NULL == conf_section_handle){
+		ret = TOMLC99_RET_SECTION_NOT_EXIST;
 		goto err_1;
 	}	
 	
 	/* extract host config value */
 	cfg_array = toml_array_in(conf_section_handle, key);
 	if(NULL == cfg_array){
+		ret = TOMLC99_RET_PARSE_ERROR;
 		goto err_1;
 	}
 
@@ -163,7 +207,7 @@ int tomlc99_wrap_load_int_array(
 	
 	for (cfg_array_num = 0; NULL != (raw_str = toml_raw_at(cfg_array, cfg_array_num)); cfg_array_num++){
 		if(toml_rtoi(raw_str, (int64_t *)&int_val[cfg_array_num]) < 0){
-			ret = -1;
+			ret = TOMLC99_RET_PARSE_ERROR;
 			goto err_2;
 		}
 
@@ -171,7 +215,7 @@ int tomlc99_wrap_load_int_array(
 	}
 
 	if(cfg_array_num > *array_num){
-		ret = -2;
+		ret = TOMLC99_RET_ARRAY_NUM_OVERFLOW;
 		goto err_2;
 	}
 
@@ -182,7 +226,7 @@ int tomlc99_wrap_load_int_array(
 	toml_free(conf_file_handle);
 	free(int_val);
 
-	return 0;
+	return TOMLC99_RET_SUCCESS;
 
 err_2:
 	free(int_val);
@@ -190,6 +234,8 @@ err_2:
 err_1:
 	toml_free(conf_file_handle);
 
+def_val:
+	*array_num = 0;
 	return ret;
 }
 
@@ -214,15 +260,23 @@ int tomlc99_wrap_load_long_array(
 	int cfg_array_num;
 	const char* raw_str;
 	long *long_val;
-	int ret = -1;
+	int ret = TOMLC99_RET_PARSE_ERROR;
+
+	if(tmlc99_is_file_exist(file) == 0){
+		ret = TOMLC99_RET_FILE_NOT_EXIST;
+		goto def_val;
+	}
+	
 
 	conf_file_handle = twrap_get_file_handle(file, errbuf, sizeof(errbuf));
 	if(NULL == conf_file_handle){
-		return -1;
+		ret = TOMLC99_RET_PATTERN_ERROR;
+		goto def_val;
 	}
 
 	conf_section_handle = twrap_get_section_handle(conf_file_handle, section);
 	if(NULL == conf_section_handle){
+		ret = TOMLC99_RET_SECTION_NOT_EXIST;
 		goto err_1;
 	}	
 	
@@ -236,7 +290,7 @@ int tomlc99_wrap_load_long_array(
 	
 	for (cfg_array_num = 0; NULL != (raw_str = toml_raw_at(cfg_array, cfg_array_num)); cfg_array_num++){
 		if(toml_rtoi(raw_str, (int64_t *)&long_val[cfg_array_num]) < 0){
-			ret = -1;
+			ret = TOMLC99_RET_PARSE_ERROR;
 			goto err_2;
 		}
 
@@ -244,7 +298,7 @@ int tomlc99_wrap_load_long_array(
 	}
 
 	if(cfg_array_num > *array_num){
-		ret = -2;
+		ret = TOMLC99_RET_ARRAY_NUM_OVERFLOW;
 		goto err_2;
 	}
 
@@ -255,7 +309,7 @@ int tomlc99_wrap_load_long_array(
 	toml_free(conf_file_handle);
 	free(long_val);
 
-	return 0;
+	return TOMLC99_RET_SUCCESS;
 
 err_2:
 	free(long_val);
@@ -263,6 +317,8 @@ err_2:
 err_1:
 	toml_free(conf_file_handle);
 
+def_val:
+	*array_num = 0;
 	return ret;
 }
 
@@ -285,14 +341,22 @@ int tomlc99_wrap_load_string_def(
 	char errbuf[256];
 	const char* raw_str;
 	char *str_val;
+	int ret = TOMLC99_RET_PARSE_ERROR;
 
+	if(tmlc99_is_file_exist(file) == 0){
+		ret = TOMLC99_RET_FILE_NOT_EXIST;
+		goto def_val;
+	}
+	
 	conf_file_handle = twrap_get_file_handle(file, errbuf, sizeof(errbuf));
 	if(NULL == conf_file_handle){
+		ret = TOMLC99_RET_PATTERN_ERROR;
 		goto def_val;
 	}
 
 	conf_section_handle = twrap_get_section_handle(conf_file_handle, section);
 	if(NULL == conf_section_handle){
+		ret = TOMLC99_RET_SECTION_NOT_EXIST;
 		goto err_1;
 	}	
 	
@@ -315,14 +379,15 @@ int tomlc99_wrap_load_string_def(
 	/* done with conf */
 	toml_free(conf_file_handle);
 	
-	return 0;
+	return TOMLC99_RET_SUCCESS;
 
 err_1:
 	toml_free(conf_file_handle);
 
 def_val:
 	strncpy(val, dval, size);
-	return -1;
+	
+	return ret;
 }
 
 

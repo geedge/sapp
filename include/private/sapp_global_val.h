@@ -1,10 +1,11 @@
 #ifndef _SAPP_GLOBAL_VAL_H_
 #define _SAPP_GLOBAL_VAL_H_ 1
 
-#include "sapp_api.h"
+#include "sapp_pkt_stat.h"
 
 typedef struct{
 	int worker_threads;
+	int bind_mask_array_num;
 	long bind_mask_array[SAPP_MAX_THREADS];
 	long bind_mask; /* bind_mask_array中的每个变量做为bit_index转成的整数值 */
 }sapp_config_cpu_t;
@@ -16,12 +17,16 @@ typedef struct{
 
 typedef struct{
 	unsigned char enabled;
-	unsigned char mode;
-	unsigned short command_port; /* host order */
+	char mode_str[NAME_MAX];  /* storage/udp_socket */
+	int mode_bin;
+	unsigned int command_port; /* integer, host order, user should truncate to short */
 	unsigned int storge_size_max;
 	char *bpf_filter;
 	char *storge_path;
-	unsigned char dump_thread_id[SAPP_MAX_THREADS];
+	int dump_all_thread_enabled;
+	int dump_thread_id_array_num;
+	int dump_thread_id_array[SAPP_MAX_THREADS]; /* 用户配置文件原始数组, 格式: [0,1,2,3], 表示第0,1,2,3号线程启用捕包 */
+	unsigned char dump_thread_id_mask[SAPP_MAX_THREADS]; /* 根据原始数组解析后的掩码数组, 用线程id做为下标, 值不为0表示当前线程开启捕包, 值:{1,1,1,1} */
 }sapp_config_tools_pktdump_t;
 
 typedef struct{
@@ -31,10 +36,10 @@ typedef struct{
 
 typedef struct{
 	unsigned char rst_signature_enable;
-	unsigned char rst_pkt_num;
+	unsigned char rst_num;
 	unsigned short rst_signature_seed1;
 	unsigned short rst_signature_seed2;
-	unsigned short mss_size;
+	unsigned short link_mss;
 }sapp_config_stream_tcp_inject_t;
 
 
@@ -62,18 +67,23 @@ typedef struct{
 typedef struct{
 	unsigned char level;
 	unsigned char interval;
-	unsigned char server_ip[INET_ADDRSTRLEN]; /* string */
-	unsigned short server_port; /* host order */
+	char fs_server_ip[INET_ADDRSTRLEN]; /* string */
+	unsigned int fs_server_port; /* integer, host order, user should truncate to short */
 }sapp_config_profiling_log_t;
 
 
 typedef struct{
 	sapp_config_profiling_log_t log;
+	unsigned char pkt_latency_enabled;
+	unsigned char sanity_check_raw_pkt_broken_enabled;
+	unsigned char sanity_check_symbol_conflict_enabled;
+	unsigned int pkt_latency_threshold_in_us; /* microsecond */
 }sapp_config_profiling_t;
 
 typedef struct{
-	unsigned char type; /* marsio, pcap-online, pcap-dumpfile */
-	char *name;
+	char type_str[NAME_MAX]; /* pag,pcap,marsio */
+	char name[NAME_MAX];
+	enum cap_mode_t type_bin; /* 由字符串type转换为二进制数值 */
 }sapp_config_packet_io_interface_t;
 
 
@@ -90,7 +100,9 @@ enum __sapp_config_packet_io_depolyment_mode{
 };
 
 typedef struct{
-	unsigned char depolyment_mode; /* refer to enum __sapp_config_packet_io_depolyment_mode */
+	char *input_bpf_filter;
+	char depolyment_mode_str[NAME_MAX]; /* [mirror, inline, transparent, dumpfile] */
+	int depolyment_mode_bin; /* 方便程序内处理, 转成数值形式, 如1:mirror; 2:transparent; 3:inline等 */
 	sapp_config_packet_io_dev_t internal;
 	sapp_config_packet_io_dev_t external;
 }sapp_config_packet_io_t;
@@ -106,12 +118,31 @@ typedef struct{
 
 
 typedef struct{
-	
-}sapp_gval_individual_t;
+	void *log_handle;
+	time_t sapp_start_time;
+	int depolyment_mode_private; /* 根据配置sapp_global_val->config.packet_io.depolyment_mode_bin转换得到的内部值,  */
+	unsigned char create_stream_mode; /* 兼容原来的逻辑, 值从配置stream.tcp.syn_mandatory转换得到 */
+	int packet_io_cap_level; 
+}sapp_gval_individual_fixed_t;
 
 typedef struct{
+	unsigned long long count[SAPP_STAT_NUM_MAX];  /* 计数类, 如包数, 新建链接数, 并发链接数等 */
+	unsigned long long length[SAPP_STAT_NUM_MAX]; /* 长度类, 如数据包总字节数 */
+}sapp_gval_mthread_sys_stat_t;
 
-}sapp_gval_mthread_t; /*  for multi-thread, must 64byte alignment */
+
+
+typedef struct{
+	sapp_gval_mthread_sys_stat_t sys_stat;
+	char __padding[16];
+}sapp_gval_mthread_t; /*   for multi-thread, must 64byte alignment */
+
+
+typedef struct{
+	time_t current_time;
+	long long current_time_ms;
+	char __padding[48];
+}sapp_gval_individual_volatile_t;
 
 
 typedef struct{
@@ -123,8 +154,9 @@ typedef struct{
 typedef struct{
 	sapp_cla_t cla;
 	sapp_config_t config;
-	sapp_gval_individual_t individual;
-	sapp_gval_mthread_t mthread[SAPP_MAX_THREADS];
+	sapp_gval_individual_fixed_t individual_fixed; /* 初始化后不再改变的变量 */
+	sapp_gval_individual_volatile_t *individual_volatile; /* 程序运行时会实时更新的变量 */
+	sapp_gval_mthread_t *mthread_volatile[SAPP_MAX_THREADS];
 }sapp_global_t;
 
 

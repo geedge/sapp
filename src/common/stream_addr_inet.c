@@ -10,10 +10,6 @@
 #include "sapp_private_api.h"
 
 #ifdef __cplusplus
-extern "C" const addr_convert_t G_ADDR_CONVERT_HANDLE[];
-#endif
-
-#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -73,7 +69,7 @@ static int __addr_gtp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 
 
 
-const addr_convert_t G_ADDR_CONVERT_HANDLE[] = 
+static const addr_convert_t G_ADDR_CONVERT_HANDLE[] = 
 {
 	{__ADDR_TYPE_INIT,			STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL},
 #if (0 == IP_PORT_UNION_VERSION) /* 在IP-PORT合并的版本里, 没有纯IP地址层 */
@@ -1739,6 +1735,23 @@ const char *stream_addr_list_ntop_inward_r(const struct streaminfo *pstream, cha
 	/* 平台必须先将结果暂存于内部变量, 再copy到dst空间, 其实和调用者自行实现差不多, TODO吧 */
 
 	return 0;
+}
+
+const char *addr_type_to_string(enum addr_type_t layer_type)
+{
+	int i;
+	
+	if(layer_type <=  __ADDR_TYPE_INIT || layer_type >= __ADDR_TYPE_MAX){
+		return NULL;
+	}
+
+	for(i = __ADDR_TYPE_INIT+1; G_ADDR_CONVERT_HANDLE[i].addr_type_bin != __ADDR_TYPE_MAX; i++){
+		if(G_ADDR_CONVERT_HANDLE[i].addr_type_bin == layer_type){
+			return G_ADDR_CONVERT_HANDLE[i].addr_type_str;
+		}
+	}
+
+	return NULL;	
 }
 
 

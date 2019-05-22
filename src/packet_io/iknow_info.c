@@ -10,7 +10,7 @@ extern "C" {
 iknow_handle PLATFORM_IHANDLE;
 
 extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
-extern int g_packet_io_thread_num;
+//extern int g_packet_io_thread_num;
 
 
 static int iknow_cmd_init(void)

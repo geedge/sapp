@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 int G_DICTATOR_SW = 1;
-extern int g_packet_io_thread_num;
+//extern int g_packet_io_thread_num;
 
 extern const raw_ipfrag_list_t *get_raw_frag_list(const struct streaminfo *stream);
 

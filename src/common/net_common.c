@@ -75,26 +75,6 @@ char MESA_ascii_to_hex(char ascii)
 }
 
 
-
-
-const char *addr_type_to_string(enum addr_type_t layer_type)
-{
-	int i;
-	
-	if(layer_type <=  __ADDR_TYPE_INIT || layer_type >= __ADDR_TYPE_MAX){
-		return NULL;
-	}
-
-	for(i = __ADDR_TYPE_INIT+1; G_ADDR_CONVERT_HANDLE[i].addr_type_bin != __ADDR_TYPE_MAX; i++){
-		if(G_ADDR_CONVERT_HANDLE[i].addr_type_bin == layer_type){
-			return G_ADDR_CONVERT_HANDLE[i].addr_type_str;
-		}
-	}
-
-	return NULL;	
-}
-
-
 static inline int check_layer_type(int layer_type)
 {
 	if(NULL == addr_type_to_prefix((enum addr_type_t)layer_type)){

@@ -48,12 +48,11 @@ static pkt_dump_status_t PKT_DISCARD_STAT[MAX_THREAD_NUM];
 
 #endif
 
-extern int g_packet_io_cap_level;
 extern int g_use_MESA_sleep_sw;
 extern int MESA_mkdir_p(const char *pathname, mode_t mode);
 //extern time_t g_CurrentTime;
-extern int g_packet_io_thread_num;
-extern int g_iThreadNum; /* for dual_stack, start */
+//extern int g_packet_io_thread_num;
+//extern int g_iThreadNum; /* for dual_stack, start */
 static char G_PKT_DUMP_ROOT_DIR[PATH_MAX]; /* 可以指定为/dev/shm, 速度快 */
 static long G_PKT_DUMP_FILE_SIZE = 104857600; /* 默认100MB, 单线程 */
 int G_PKT_DUMP_SW = 0; /* 默认关闭 */
@@ -935,7 +934,7 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 			printf("Catch SIGSEGV error!\n");	
 		}
 
-#if DEBUG
+#if IKNOW_ENABLE
 		iknow_register_cmd(PLATFORM_IHANDLE, "show pkt dump summary", "display pkt dump summary", 
 						  ifuncb_show_pktdump_summary, NULL, 0, NULL);
 #endif	

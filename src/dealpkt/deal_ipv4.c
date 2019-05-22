@@ -28,8 +28,8 @@ extern "C" {
 
 static struct frag_manage *g_ipv4_frag_manage;
 static unsigned int FRAG_IP4_RANDOM;
-extern int g_packet_io_thread_num;
-extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
+//extern int g_packet_io_thread_num;
+//extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
 extern void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq);
 int update_global_ip_frag_list(raw_ipfrag_list_t *list_head, int thread_num, int type);
 extern void raw_frags_list_free_one(int thread_seq, void *project_req_value);
@@ -590,6 +590,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	struct streaminfo *pfstream = (struct streaminfo *)pfstream_pr;
 	struct streaminfo_private *pstream_pr;
 	struct streaminfo *pstream;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 #if DEBUG
 	//timestamp_record(TS_LEVEL_IP_ENTRY, raw_pkt, thread_num);
@@ -600,6 +601,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	   会造成平台coredump, 甚至会死循环, 一定要做头部合法性检查!! 
 	 */
 	if(unlikely(checkipv4pkt(a_packet, raw_pkt) < 0)){
+		local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
 		return PASS;
 	}
 
@@ -614,7 +616,8 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 		}
 */
 		if(is_multicast_addr_v4(ntohl(a_packet->ip_dst.s_addr))){
-			g_SysInputInfo[thread_num][COUNTER_DROP_PKT]++;
+			//g_SysInputInfo[thread_num][SAPP_STAT_DROP]++;
+			local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
 			return DROP;
 		}	
 	}
@@ -669,15 +672,17 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 #endif	    	
 	    	if(NULL == new_iph)
 	    	{
-			g_SysInputInfo[thread_num][PKT_IP_FRAG]++;
-			/* 纯IP分片, 还未重组完成, 此处只调用IPFRAG, 
-			   不必看sapp_global_single.ipentry_priority_over_ipfrag,
-			   如果是最后一个分片到达, 且全部IP包重组完成, 需要判断sapp_global_single.ipentry_priority_over_ipfrag,
-			   决定先调用ip_entry, 还是ip_frag_entry.
-			*/
-			stream_process_ipv4_frag(pstream, (const struct ip *)a_packet,
-									thread_num, routedir, raw_pkt);	
-			return PASS;
+				//g_SysInputInfo[thread_num][PKT_IP_FRAG]++;
+				local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;
+				local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG]++;
+				/* 纯IP分片, 还未重组完成, 此处只调用IPFRAG, 
+				   不必看sapp_global_single.ipentry_priority_over_ipfrag,
+				   如果是最后一个分片到达, 且全部IP包重组完成, 需要判断sapp_global_single.ipentry_priority_over_ipfrag,
+				   决定先调用ip_entry, 还是ip_frag_entry.
+				*/
+				stream_process_ipv4_frag(pstream, (const struct ip *)a_packet,
+										thread_num, routedir, raw_pkt);	
+				return PASS;
 	    	}
 	    	a_packet = new_iph;
 	    	need_free = 1;
@@ -713,8 +718,16 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 		}
   	}
 
-	g_SysInputInfo[thread_num][PKT_IPLEN] += ntohs(a_packet->ip_len);
-	g_SysInputInfo[thread_num][PKT_IP]++;
+	//g_SysInputInfo[thread_num][PKT_IPLEN] += ntohs(a_packet->ip_len);
+	//g_SysInputInfo[thread_num][PKT_IP]++;
+
+	if(need_free){
+		local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;
+		local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG] += ntohs(a_packet->ip_len);
+	}else{
+		local_sys_stat->count[SAPP_STAT_RCV_IPV4]++;
+		local_sys_stat->length[SAPP_STAT_RCV_IPV4] += ntohs(a_packet->ip_len);
+	}
 
 	if(unlikely(need_free)){
 #if (0 == HIGH_PERF)	

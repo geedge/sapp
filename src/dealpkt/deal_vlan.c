@@ -29,11 +29,12 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 	u_short ether_type;
 	char *next_layer_hdr = (char *)this_layer_data+ VLAN_TAG_LEN;
 	int next_layer_offset = offset_to_raw_pkt_hdr + VLAN_TAG_LEN;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	if(unlikely(0 == G_SKIP_NOT_IP_LAYER)){
 		memset(ptmp,0,sizeof(struct streamindex));
 		set_vlanid(&addr, (unsigned short *)this_layer_data);
-#if DEBUG
+#if IKNOW_ENABLE
 		packet_io_vlan_status_update(thread_num, &addr, raw_pkt->raw_pkt_len);
 #endif
 		pstream->addr.paddr=&addr;
@@ -88,8 +89,10 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 
 		default:
 			/* unknown protocol */	
-			g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-			g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+			//g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+			//g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;
 
 			sapp_runtime_log(20, "VLAN unknown protocol: 0x%x\n", ether_type);
 			
@@ -109,10 +112,10 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 	return ret;
 }
 
-#if DEBUG
+#if IKNOW_ENABLE
 #include "iknow.h"
 
-extern int g_packet_io_thread_num;
+//extern int g_packet_io_thread_num;
 extern packet_io_status_t *g_packet_io_status_pool[MAX_THREAD_NUM];
 
 /* 
@@ -158,6 +161,7 @@ static long ifuncb_show_vlan_summary(iknow_handle ihandle, iknow_conn iconn, con
 	return 0;
 }
 
+
 void iknow_register_vlan_cb(void *ihandle)
 {
 	int ret;
@@ -168,6 +172,7 @@ void iknow_register_vlan_cb(void *ihandle)
 	ret = iknow_register_cmd(ihandle, "show vlan id summary", "display vlan flow summary by id", ifuncb_show_vlan_id_summary, NULL, 0, NULL);
 	assert(0 == ret);		
 }
+
 
 void packet_io_status_vlan_time_cb(void)
 {

@@ -2,11 +2,11 @@
 extern "C" {
 #endif
 
-#if DEBUG
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
-extern int g_packet_io_thread_num;
+#if IKNOW_ENABLE
+//extern int g_packet_io_thread_num;
 extern iknow_handle PLATFORM_IHANDLE;
 void iknow_register_eth_cb(void *ihandle);
 void *packet_io_status_eth_mem_init(void);
@@ -36,21 +36,41 @@ typedef struct{
 
 static packet_io_status_individual_t packet_io_status_individual_fun[IO_STATUS_MAX] = 
 {
+#if IKNOW_ENABLE
 	{packet_io_status_eth_time_cb,	packet_io_status_eth_mem_init, 	iknow_register_eth_cb}, /* 0 */
+#else
+	{NULL,	packet_io_status_eth_mem_init, 	NULL}, /* 0 */
+#endif
 	{NULL,	NULL,	NULL},
 	{NULL,	NULL,	NULL},
+#if IKNOW_ENABLE	
 	{packet_io_status_vlan_time_cb,	packet_io_status_vlan_mem_init, iknow_register_vlan_cb},
+#else
+	{packet_io_status_vlan_time_cb, packet_io_status_vlan_mem_init, NULL},
+#endif	
 	{NULL,	NULL,	NULL},
 	{NULL,	NULL, 	NULL}, /* 5 */
 	{NULL,	NULL, 	NULL},
 	{NULL,	NULL, 	NULL},
+#if IKNOW_ENABLE		
 	{packet_io_status_tcp_pkt_time_cb,	packet_io_status_tcp_pkt_mem_init, 	iknow_register_tcp_pkt_cb},
+#else
+	{packet_io_status_tcp_pkt_time_cb,	packet_io_status_tcp_pkt_mem_init, 	NULL},
+#endif
 	{NULL,	NULL, 	NULL},
 	{NULL,	NULL, 	NULL}, /* 10 */
 	{NULL,	NULL, 	NULL},
+#if IKNOW_ENABLE		
 	{packet_io_status_tcp_stream_time_cb,	packet_io_status_tcp_stream_mem_init, 	iknow_register_tcp_stream_cb},
+#else
+	{packet_io_status_tcp_stream_time_cb,	packet_io_status_tcp_stream_mem_init, 	NULL},
+#endif
 	{NULL,	NULL, 	NULL},
-	{packet_io_status_stream_hash_time_cb,	packet_io_status_stream_hash_mem_init, 	iknow_register_stream_hash_cb}, 	
+#if IKNOW_ENABLE		
+	{packet_io_status_stream_hash_time_cb,	packet_io_status_stream_hash_mem_init, 	iknow_register_stream_hash_cb}, 
+#else
+	{packet_io_status_stream_hash_time_cb,	packet_io_status_stream_hash_mem_init, 	NULL}, 
+#endif
 };
 
 static void *packet_io_status_time_thread(void *arg)
@@ -95,12 +115,13 @@ int packet_io_status_init(void)
 			}
 		}
 	}
-
+#if IKNOW_ENABLE
 	for(i = 0; i < IO_STATUS_MAX; i++){
 		if(packet_io_status_individual_fun[i].iknow_register != NULL){
 			packet_io_status_individual_fun[i].iknow_register(PLATFORM_IHANDLE);
 		}
 	}
+#endif
 
 	pthread_create(&pid, NULL, packet_io_status_time_thread, NULL);
 

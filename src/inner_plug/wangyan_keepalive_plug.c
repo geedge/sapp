@@ -96,7 +96,6 @@ static int g_wkp_slave_local_plug_id = -1; /* 从应用运行的插件ID */
 
 static void *g_wkp_log_handle;
 
-extern time_t g_CurrentTime;
 extern int get_thread_count(void);
 
 static char *wkp_timet_to_str(time_t timet, char *time_str, int time_str_len)

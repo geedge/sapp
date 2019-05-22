@@ -902,14 +902,14 @@ static void print_tuple4(struct streaminfo *stream)
 
 /* 返回值 1:是自己的包  0:不是自己的包  -1:输入数据错误 */
 static int check_rst_ip_new (unsigned int dip_net_order,unsigned short dport_net_order, unsigned short ipid_host_order, 
-					unsigned short win_host_order, int g_iMaxRandVal, int g_iRandKey)
+					unsigned short win_host_order, int iMaxRandVal, int iRandKey)
 {
 
-	if((g_iMaxRandVal -ipid_host_order + dip_net_order%g_iRandKey) % g_iRandKey != 0){
+	if((iMaxRandVal -ipid_host_order + dip_net_order%iRandKey) % iRandKey != 0){
 		return 0;
 	}
 
-	if((g_iMaxRandVal -win_host_order + dport_net_order%g_iRandKey) % g_iRandKey != 0){
+	if((iMaxRandVal -win_host_order + dport_net_order%iRandKey) % iRandKey != 0){
 		return 0;
 	}
 	
@@ -918,7 +918,7 @@ static int check_rst_ip_new (unsigned int dip_net_order,unsigned short dport_net
 
 /* 返回值 1:是自己的包  0:不是自己的包  -1:输入数据错误 */
 static int check_rst_ip_old (unsigned int sip_net_order, unsigned int dip_net_order, unsigned short ipid, 
-					unsigned short window, int g_iMaxRandVal, int g_iRandKey)
+					unsigned short window, int iMaxRandVal, int iRandKey)
 {
         unsigned short window_compute;
         if (sip_net_order == INADDR_NONE) {
@@ -933,10 +933,10 @@ static int check_rst_ip_old (unsigned int sip_net_order, unsigned int dip_net_or
         if (window == 0)
                 return 0;
 
-        if ((g_iMaxRandVal - ipid + sip_net_order%window)%g_iRandKey != 0) // 必须整除才行
+        if ((iMaxRandVal - ipid + sip_net_order%window)%iRandKey != 0) // 必须整除才行
                 return 0;
-        int val = (g_iMaxRandVal - ipid + sip_net_order%window)/g_iRandKey;
-        window_compute = (unsigned short)(val+dip_net_order%g_iRandKey);
+        int val = (iMaxRandVal - ipid + sip_net_order%window)/iRandKey;
+        window_compute = (unsigned short)(val+dip_net_order%iRandKey);
         if (window == 0 )
                 return 0;
         if (window == 1 ) {
@@ -2204,8 +2204,8 @@ enum anti_flood_stat_type{
 };
 static unsigned long long anti_flood_stat[MAX_THREAD_NUM][8];
 static time_t last_log_time;
-extern int g_packet_io_thread_num;
-extern time_t g_CurrentTime;
+//extern int g_packet_io_thread_num;
+//extern time_t g_CurrentTime;
 static void anti_flood_stat_log(void)
 {
 	FILE *fp;

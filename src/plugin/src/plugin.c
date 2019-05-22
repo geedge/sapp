@@ -90,17 +90,9 @@ int stream_register_fun(int funtype,char (*x)(void));
 */
 
 
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <dlfcn.h>
-#include <assert.h>
-#include <sys/time.h>
-//#include <readline/readline.h>
-//#include <readline/history.h>
-#include "MESA_prof_load.h"
-#include "MESA_handle_logger.h"
-#include "stream.h"
+#include "sapp_api.h"
+#include "sapp_private_api.h"
+
 #include "plugin_proc.h"
 #include "plugin_platform.h"
 #include "plugin_protocol.h"
@@ -113,8 +105,6 @@ extern stBusinessPlugInfo* g_business_plug_info;
 extern stProtocolPlugInfo **g_protocol_plug_info_array;
 extern int g_timestamp_record_sw;
 extern long long g_timedelay_threshold;
-
-extern time_t g_CurrentTime;
 
 int g_plugin_plugid ;
 stEntryNameInfo* g_entryname_info;

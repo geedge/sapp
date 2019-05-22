@@ -17,7 +17,7 @@ extern "C" {
 static struct frag_manage *g_ipv6_frag_manage = NULL;
 static unsigned int FRAG_IP6_RANDOM;
 extern int g_packet_io_ipv6_switch;
-extern int g_packet_io_thread_num;
+//extern int g_packet_io_thread_num;
 extern void raw_frags_list_free_one(int thread_seq, void *project_req_value);
 int update_global_ip_frag_list(raw_ipfrag_list_t *list_head, int thread_num, int type);
 extern int dealipv6tcppkt(struct streamindex *pfindex, const struct mesa_ip6_hdr *this_iphdr,
@@ -763,6 +763,7 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 	struct layer_addr_ipv6 ip6_addr;
 	struct streamindex tmp_index;
 	struct streaminfo *plocal_stream = &tmp_index.stream.stream_public;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 #if IPV6_DEBUG
 	static unsigned int ipv6_frag_reassemble_num = 0;
 #endif
@@ -783,8 +784,10 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 
 	if((sapp_global_mthread[thread_num].ipv6_pkt_type_flag & PKT_TYPE_IPREBUILD) == 0){
 		/* IP分片重组的包会重入ipv6_entry, 不能再计数 */
-		g_SysInputInfo[thread_num][PKT_IPV6LEN] += payload_len + sizeof(struct mesa_ip6_hdr);
-		g_SysInputInfo[thread_num][PKT_IPV6]++;				
+		//g_SysInputInfo[thread_num][PKT_IPV6LEN] += payload_len + sizeof(struct mesa_ip6_hdr);
+		//g_SysInputInfo[thread_num][PKT_IPV6]++;	
+		local_sys_stat->count[SAPP_STAT_RCV_IPV6]++;
+		local_sys_stat->length[SAPP_STAT_RCV_IPV6]+=payload_len + sizeof(struct mesa_ip6_hdr);
 	}
 
 	set_ipv6_stream(pfstream_pr, &tmp_index, &ip6_addr, a_packet, routedir, thread_num, raw_pkt, offset_to_raw_pkt_hdr);
@@ -860,6 +863,8 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 					sapp_global_mthread[thread_num].ipv6_pkt_type_flag = PKT_TYPE_NORMAL;
 					IPV6_PRINT("ipv6_frag_reassemble_num: %u\n", ipv6_frag_reassemble_num++);
 				}
+				local_sys_stat->count[SAPP_STAT_RCV_IPV6_FRAG]++;
+				local_sys_stat->length[SAPP_STAT_RCV_IPV6_FRAG]+=payload_len + sizeof(struct mesa_ip6_hdr);
 				goto done;
 			break;
 
@@ -909,8 +914,10 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 				goto done;
 
 			default:
-				g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-				g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;	
+				//g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+				//g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+=raw_pkt->raw_pkt_len;
 				sapp_runtime_log(20, "unsupport Ipv6 protocol:%u!\n", next_hdr_type);			
 				goto err_exit;
 			break;

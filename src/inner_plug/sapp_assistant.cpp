@@ -12,10 +12,9 @@
 extern "C" {
 #endif
 
-extern time_t g_CurrentTime;//add by lqy 20070606
-extern time_t g_sapp_start_time;
+//extern time_t g_CurrentTime;//add by lqy 20070606
 extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
-extern int g_packet_io_thread_num;
+//extern int g_packet_io_thread_num;
 extern char g_app_instance_name[64];
 extern int g_timestamp_record_sw;
 
@@ -193,7 +192,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			time_t *stime = (time_t *)opt_val;
-			*stime = g_sapp_start_time;
+			*stime = ABBR_SAPP_START_TIME;
 		}
 		break;
 
@@ -205,7 +204,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			time_t *runtime = (time_t *)opt_val;
-			*runtime = g_CurrentTime - g_sapp_start_time;
+			*runtime = ABBR_CURRENT_TIME - ABBR_SAPP_START_TIME;
 		}
 		break;
 

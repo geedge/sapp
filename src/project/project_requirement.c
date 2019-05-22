@@ -5,7 +5,7 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
-extern int g_packet_io_thread_num;
+//extern int g_packet_io_thread_num;
 extern int project_req_terminal_tag_init(void);
 extern int raw_ip_frag_list_v4_init(void);
 extern int raw_ip_frag_list_v6_init(void);

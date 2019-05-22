@@ -48,10 +48,10 @@ char g_down_dev_name[DEV_NAME_STR_LEN];
 //static char g_cap_filter[CAP_FILTER_STR_LEN];
 //static int g_cap_buf_queue_num = 10000; /* IO线程和处理线程之间的缓冲队列长度 */
 int g_topology_config_raw_mode = 1;/* main.conf 配置文件的原始值 */
-int g_topology_mode = NET_CONN_PARALLEL; /* 通过topology_mode_convert()转换后的平台内部值 */
-int g_packet_io_cap_mode = CAP_MODEL_PCAP_ONLINE;
-int g_packet_io_cap_level = CAP_LEVEL_MAC; /* 捕包起始位置,默认MAC层 */
-int g_packet_io_thread_num = 1;
+//int g_topology_mode = NET_CONN_PARALLEL; /* 通过topology_mode_convert()转换后的平台内部值 */
+//int g_packet_io_cap_mode = CAP_MODEL_PCAP_ONLINE;
+///int g_packet_io_cap_level = CAP_LEVEL_MAC; /* 捕包起始位置,默认MAC层 */
+//int g_packet_io_thread_num = 1;
 int g_app_send_rst_type;
 extern int g_packet_io_ipv6_switch;
 int g_packet_io_ipv6_raw_socket = 0; /* 用于发送纯Ipv6 rst包 */
@@ -159,7 +159,7 @@ int packet_io_set_work_thread_num(int thread_num)
 		printf("Warning, packet io library not support 'dl_io_set_work_thread_num'!\n");
 	}
 
-	g_packet_io_thread_num = thread_num;
+	//g_packet_io_thread_num = thread_num;
 
 	return ret;
 }
@@ -221,7 +221,7 @@ int packet_io_set_topology_mode(int user_topology_mode)
 	}
 
 	g_topology_config_raw_mode = user_topology_mode;
-	g_topology_mode = private_top_mode;
+	//g_topology_mode = private_top_mode;
 
 	if(dl_io_fun_list.dl_io_set_topology_mode){
 		ret =  dl_io_fun_list.dl_io_set_topology_mode(private_top_mode);
@@ -732,7 +732,7 @@ void packet_io_run(void)
 
 	app_function_rationality_check();
 	
-	pthread_create(&pid, NULL, time_event_thread ,NULL);
+	pthread_create(&pid, NULL, sapp_time_event_thread ,NULL);
 	
 	dl_io_fun_list.dl_io_run();
 
@@ -823,6 +823,7 @@ static int packet_io_send_by_sys_routev4(MESA_send_handle *send_handle,int datal
 	struct sockaddr_in sock_addr_v4;
 	char *actual_data_ptr;
 	struct mesa_ip4_hdr *ip4_hdr;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[send_handle->threadnum]->sys_stat;
 
     offset = packet_io_calc_ethernet_offset_to_ip(send_handle->send_buf);
     if(offset < 0){
@@ -859,8 +860,9 @@ retry:
 		if(EINTR == errno){
 			goto retry; /* 被信号中断的IO调用需要重试 */
 		}else{
-			g_SysInputInfo[send_handle->threadnum][SEND_PKT_ERR]++;
-			g_SysInputInfo[send_handle->threadnum][SEND_PKT_ERR_LEN] += datalen;
+			//g_SysInputInfo[send_handle->threadnum][SEND_PKT_ERR]++;
+			//g_SysInputInfo[send_handle->threadnum][SEND_PKT_ERR_LEN] += datalen;
+			local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
 			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: sendto error, %s\n", __FILE__,__LINE__,strerror(errno));
 			return ret;
 		}
@@ -890,6 +892,7 @@ static int packet_io_send_by_sys_routev6(MESA_send_handle *send_handle,int datal
 	char *actual_data_ptr;
 	struct mesa_ip6_hdr *ip6_hdr;
 	int offset;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[send_handle->threadnum]->sys_stat;
 	
 	if(0 == g_packet_io_ipv6_raw_socket){
 		printf("IPv6 module is not support! Please check 'main.conf->IPv6_raw_socket'.\n");
@@ -925,8 +928,9 @@ retry:
 		if(EINTR == errno){
 			goto retry; /* 被信号中断的IO调用需要重试 */
 		}else{
-			g_SysInputInfo[send_handle->threadnum][SEND_PKT_ERR]++;
-			g_SysInputInfo[send_handle->threadnum][SEND_PKT_ERR_LEN] += datalen;		
+			//g_SysInputInfo[send_handle->threadnum][SEND_PKT_ERR]++;
+			//g_SysInputInfo[send_handle->threadnum][SEND_PKT_ERR_LEN] += datalen;	
+			local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
 			sapp_runtime_log(RLOG_LV_FATAL,"%s:%d: packet_io_send_by_sys_routev6() sendto error, %s\n", __FILE__,__LINE__,strerror(errno));
 			return ret;
 		}
@@ -948,7 +952,7 @@ retry:
 
 static int packet_io_get_sendroute_mac(char dev_id, char link_id, unsigned char *out_mac_addr)
 {
-    char *p_mac_addr = (char *)g_send_gateway_mac_table[dev_id][link_id];
+    char *p_mac_addr = (char *)&g_send_gateway_mac_table[dev_id][link_id][0];
     if(G_SND_ROUTE_INFO_NUM <= 0 || strlen(p_mac_addr) <= 0)return -1;
     else
     {

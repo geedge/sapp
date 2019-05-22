@@ -10,7 +10,6 @@ extern "C" {
 
 extern struct streaminfo *skip_proxy_phony_stream(struct streaminfo *a_tcp);
 extern int udp_stream_table_size;
-extern unsigned short udp_reset_time;
 
 /*
 20141017 : lqy

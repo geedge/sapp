@@ -5,7 +5,6 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
-extern time_t g_CurrentTime;
 extern void gdev_keepalive_log(void);
 extern void queue_full_detect(FILE *queue_log_fp);
 extern void pcap_detect_error(FILE *pcap_err_fp);

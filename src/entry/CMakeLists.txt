@@ -14,7 +14,7 @@ target_link_libraries(sapp MESA_handle_logger MESA_prof_load)
 target_link_libraries(sapp sapp_assistant gdev_assistant)
 
 
-set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config tomlc99_wrap)
+set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap)
 #if(OPT_USE_DICTATOR OR OPT_USE_DICTATOR_DEBUG)
 #    set(SAPP_MODULES ${SAPP_MODULES}  dictator2 )
 #endif()

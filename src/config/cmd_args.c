@@ -40,7 +40,7 @@ static const struct option sapp_cla_long_options[] =
 {
 	{"help",		no_argument,      NULL,      'h'},
 	{"version",		no_argument,      NULL,      'v'},
-	{"dumpfile",	no_argument,      NULL,      '$'},
+	{"dumpfile",	no_argument,      NULL,      'd'},
 	{"dumpfile-speed",	required_argument,      NULL,      '$'},
 	{"sample-config", no_argument,      NULL,      'c'},
 	{NULL,          0,      NULL,      0}
@@ -88,7 +88,18 @@ static void usage(void)
 	exit(1);
 }
 
-
+/*
+	For get command-line arguments(CLA).
+	
+	Note:
+		The string value 'opt_string_value' is read-only, 
+		caller must not modify or free it after call sapp_get_cla_raw().
+		
+	return value:
+		-1: not found opt_long_name;
+		 0: opt_long_name is set but no argument value. 
+		 1: opt_long_name is set and has valid argument store in *opt_string_value. 
+*/
 int sapp_get_cla_raw(const char *opt_long_name, char ** const opt_string_value)
 {
 	int i, ret = -1;
@@ -194,6 +205,9 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 				printf("Version: %s\n", GITVER);
 #endif				
 				exit(1);
+			break;
+
+			case 'd':
 			break;
 
 			case 'c':

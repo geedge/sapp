@@ -6,11 +6,10 @@
 extern "C" {
 #endif
 
-static int threadnum = 1;
+//static int threadnum = 1;
 static volatile long stream_num = 0;
-int g_iThreadNum = 1;
-time_t g_CurrentTime;//add by lqy 20070606
-time_t g_sapp_start_time;
+//int g_iThreadNum = 1;
+//time_t g_CurrentTime;//add by lqy 20070606
 volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
 extern int sapp_args_v;
 int ipv4_frag_init(int thread_count, unsigned int hash_size);
@@ -22,8 +21,8 @@ int runtime_log_init(char * file, int level);
 int iknow_info_init(void);
 extern void sesame_open_door(const char *lock_path, const char *lock_name);
 /* (0:pag,1:pcap,2:dumpfile,3:pfring,4:DPDK,5:ppf,6:NPacket,7:qnf,8:N95,9:pcap-dumpfile-list, 10:topsec) */
-int cap_mode = 2;
-int top_mode = 0;
+//int cap_mode = 2;
+//int top_mode = 0;
 extern int G_DICTATOR_SW;
 extern struct global_stream **G_MESA_GLOBAL_STREAM;
 extern int G_SKIP_NOT_IP_LAYER; /* 跳过非IP协议的层, 用于双栈并联特殊环境下, RST包发送 */
@@ -32,7 +31,6 @@ int g_timestamp_record_sw = 0;
 extern long long g_timedelay_threshold;
 extern int g_use_MESA_sleep_sw;
 extern int g_raw_pkt_broken_check;
-extern int g_packet_io_cap_mode;
 extern int g_skip_ethernet_layer_sw;
 int g_reverse_ethernet_addr_sw;
 extern int g_discard_ack_sw;
@@ -48,7 +46,6 @@ extern const char *stream_addr_list_ntop_inward(const struct streaminfo *pstream
 extern const struct streaminfo *stream_addr_list_pton_outward(const char *addr_list_str, int thread_index);
 extern const struct streaminfo *stream_addr_list_pton_inward(const char *addr_list_str, int thread_index);
 extern int cycle_pkt_dump_init(int argc, char *argv[]);
-extern void udp_set_stream_timeout(unsigned short timeout);
 extern char udp_teredo_identify_entry(const struct streaminfo *pstream, const void *this_hdr, const void *raw_pkt, void **pme);
 extern char udp_gtp_identify_entry(const struct streaminfo *pstream, const void *this_hdr, const void *raw_pkt, void **pme);
 
@@ -91,11 +88,11 @@ static void sapp_dictator_init(void)
 
 int MESA_platform_init(int argc, char *argv[])
 {
-	int top_mode, queue_max_num, ipv6_switch = 0;
+	int queue_max_num, ipv6_switch = 0;
 	char pcap_dev1[128], pcap_dev2[128], snd_dev[128]; 
 	char cap_filter[1024] = {};
 	char gateway_mac[32] = {};
-	int max_udp_stream_num, max_tcp_stream_num, create_link_mode;
+	//int create_link_mode;
 	int TcpAllEnable = 0;
 	//pthread_t gettimeThread;
 	int maxrandval, randkeyval;
@@ -104,49 +101,50 @@ int MESA_platform_init(int argc, char *argv[])
 	unsigned short link_timeout = 600;
 	int int_tmp;
 
-	g_CurrentTime = time(NULL);
-	g_sapp_start_time = g_CurrentTime;
+	ABBR_CURRENT_TIME = time(NULL);
+	ABBR_SAPP_START_TIME = time(NULL);
 
 	/* 2016-09-22 lijia add, dictator在第一次被调用时有初始化代码, 防止多线程重入冲突, 平台先调用一次, 先要读取配置文件开关 */
 	MESA_load_profile_int_def("conf/main.conf","Module", "dictator_switch", &G_DICTATOR_SW, 1);	
 	sapp_dictator_init();
 
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"ShowStatInfo", (char *)"platform_log_level", &g_sapp_log_level, 10);
-	g_sapp_log_handle = MESA_create_runtime_log_handle("./log/runtimelog", g_sapp_log_level);
-	if(NULL == g_sapp_log_handle)
-	{
-		printf("MESA_create_runtime_log_handle() error!\n");
-		return -1;
-	}
+	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"ShowStatInfo", (char *)"platform_log_level", &g_sapp_log_level, 10);
+	//g_sapp_log_handle = MESA_create_runtime_log_handle("./log/runtimelog", g_sapp_log_level);
+	//if(NULL == g_sapp_log_handle)
+	//{
+		//printf("MESA_create_runtime_log_handle() error!\n");
+		//return -1;
+	//}
 	
-	if(MESA_load_profile_int_def("conf/main.conf", "Module", "capdatamodlel", &cap_mode, 2) < 0){
-		printf("read conf 'capdatamodlel' error!\n");
-		exit(1);
-	}
+	//if(MESA_load_profile_int_def("conf/main.conf", "Module", "capdatamodlel", &cap_mode, 2) < 0){
+		//printf("read conf 'capdatamodlel' error!\n");
+		//exit(1);
+	//}
 
-	if(MESA_load_profile_int_def("conf/main.conf", "Module", "threadnum", &threadnum, 1) < 0){
-		printf("read conf 'threadnum' error!\n");
-		exit(1);
-	}	
-	g_iThreadNum = threadnum;
+	//if(MESA_load_profile_int_def("conf/main.conf", "Module", "threadnum", &threadnum, 1) < 0){
+		//printf("read conf 'threadnum' error!\n");
+		//exit(1);
+	//}	
+	//g_iThreadNum = threadnum;
 
-	MESA_load_profile_int_def("conf/main.conf","Module", "MaxUdpStreams",&max_udp_stream_num , 65536);
+	//MESA_load_profile_int_def("conf/main.conf","Module", "MaxUdpStreams",&max_udp_stream_num , 65536);
 #if HIGH_PERF
-	if(number_is_2powerN(max_udp_stream_num) == 0){
-		printf("\033[41m in high-mode '%s' must be power of 2! such as 32768,65536,131072...\033[0m\n", "MaxUdpStreams");
-		exit(1);		
-	}
+	//if(number_is_2powerN(max_udp_stream_num) == 0){
+		//printf("\033[41m in high-mode '%s' must be power of 2! such as 32768,65536,131072...\033[0m\n", "MaxUdpStreams");
+		//exit(1);		
+	//}
 #endif
 
-	MESA_load_profile_int_def("conf/main.conf","Module", "MaxTcpStreams",&max_tcp_stream_num, 65536);
+	//MESA_load_profile_int_def("conf/main.conf","Module", "MaxTcpStreams",&max_tcp_stream_num, 65536);
 #if HIGH_PERF
-	if(number_is_2powerN(max_tcp_stream_num) == 0){
-		printf("\033[41m in high-mode '%s' must be power of 2! such as 32768,65536,131072...\033[0m\n", "MaxTcpStreams");
-		exit(1);		
-	}
+	//if(number_is_2powerN(max_tcp_stream_num) == 0){
+		//printf("\033[41m in high-mode '%s' must be power of 2! such as 32768,65536,131072...\033[0m\n", "MaxTcpStreams");
+		//exit(1);		
+	//}
 #endif
 
-  	MESA_load_profile_int_def("conf/main.conf","Module", "CreatLinkMode", &create_link_mode, TCP_CTEAT_LINK_BYSYN);
+  	//MESA_load_profile_int_def("conf/main.conf","Module", "CreatLinkMode", &create_link_mode, TCP_CTEAT_LINK_BYSYN);
+  	
 	MESA_load_profile_int_def("conf/main.conf","Module", "TcpAllEnable",&TcpAllEnable, 0);
 	tcp_set_support_tcpall_model(TcpAllEnable);
 
@@ -158,35 +156,38 @@ int MESA_platform_init(int argc, char *argv[])
 #endif
 	MESA_load_profile_int_def("conf/main.conf","Module", "kill_tcp_remedy",&g_kill_tcp_remedy_sw, 0);
 	
-	MESA_load_profile_int_def("conf/main.conf","Module", "maxrandval", &maxrandval, 65535);
-	set_rst_max_rnd_val(maxrandval);
-	MESA_load_profile_int_def("conf/main.conf","Module", "randkeyval", &randkeyval, 13);
-  	set_rst_rand_key(randkeyval);
+	//MESA_load_profile_int_def("conf/main.conf","Module", "maxrandval", &maxrandval, 65535);
+	//set_rst_max_rnd_val(maxrandval);
+	//MESA_load_profile_int_def("conf/main.conf","Module", "randkeyval", &randkeyval, 13);
+  	//set_rst_rand_key(randkeyval);
 
-	MESA_load_profile_int_def("conf/main.conf","Module", "kill_tcp_rst_pkt_num", &sapp_global_single.cfg_kill_tcp_rst_num, 3);
-	if(sapp_global_single.cfg_kill_tcp_rst_num <= 0 || sapp_global_single.cfg_kill_tcp_rst_num > 3){
-		printf("\033[41mWarning! '%s' is %d, invalid, must in range [0,3], set it to 1!\033[0m\n", "kill_tcp_rst_pkt_num");
-		sleep(1);	
-	}
-	MESA_load_profile_int_def("conf/main.conf","Module", "kill_tcp_rst_signature", &sapp_global_single.cfg_kill_tcp_rst_signature,1);
+	//MESA_load_profile_int_def("conf/main.conf","Module", "kill_tcp_rst_pkt_num", &sapp_global_single.cfg_kill_tcp_rst_num, 3);
+	//if(sapp_global_single.cfg_kill_tcp_rst_num <= 0 || sapp_global_single.cfg_kill_tcp_rst_num > 3){
+		//printf("\033[41mWarning! '%s' is %d, invalid, must in range [0,3], set it to 1!\033[0m\n", "kill_tcp_rst_pkt_num");
+		//sleep(1);	
+	//}
+	
+	//MESA_load_profile_int_def("conf/main.conf","Module", "kill_tcp_rst_signature", &sapp_global_single.cfg_kill_tcp_rst_signature,1);
 
-	ipv4_frag_init(threadnum, 1024 * 512);
+	ipv4_frag_init(g_iThreadNum, 1024 * 512);
 	MESA_load_profile_int_def("conf/main.conf","Module", "IPv6_module_enable", &ipv6_switch, 1);
 	packet_io_set_ipv6_module_enable(ipv6_switch);
 	MESA_load_profile_int_def("conf/main.conf","Module", "IPv6_raw_socket", &ipv6_switch, 0); /* 为了便于部署, 此项默认关闭 */
 	packet_io_set_ipv6_raw_socket_enable(ipv6_switch);	
-	ipv6_frag_init(threadnum, 1024 * 256);
+	ipv6_frag_init(g_iThreadNum, 1024 * 256);
 
-	tcp_set_creatlink_model(create_link_mode);
-	MESA_load_profile_short_def("conf/main.conf","Module", "MaxUnorderNum",(short *)&max_unorder_num, 5);
-	tcp_set_default_unorder_num(max_unorder_num);
+	//tcp_set_creatlink_model(create_link_mode);
+	//MESA_load_profile_short_def("conf/main.conf","Module", "MaxUnorderNum",(short *)&max_unorder_num, 5);
+	//tcp_set_default_unorder_num(max_unorder_num);
+	
 	tcp_set_stream_num(max_tcp_stream_num*3,max_tcp_stream_num,max_tcp_stream_num*2);
 
-	MESA_load_profile_short_def("conf/main.conf","Module", "LinkTimeout", (short *)&link_timeout, 600);
-	stream_set_default_nopkt_time(link_timeout);
+	//MESA_load_profile_short_def("conf/main.conf","Module", "LinkTimeout", (short *)&link_timeout, 600);
+	//stream_set_default_nopkt_time(link_timeout);
 	
-	MESA_load_profile_short_def("conf/main.conf","Module", "UdpResetTime", (short *)&udp_stream_timeout, 300);
-	udp_set_stream_timeout(udp_stream_timeout);
+	//MESA_load_profile_short_def("conf/main.conf","Module", "UdpResetTime", (short *)&udp_stream_timeout, 300);
+	//udp_set_stream_timeout(udp_stream_timeout);
+	
 	udp_set_stream_num(max_udp_stream_num*3,max_udp_stream_num,max_udp_stream_num*2);
 
 	MESA_load_profile_int_def("conf/main.conf","Module", "skip_not_ip_layer", &G_SKIP_NOT_IP_LAYER, 0);
@@ -216,24 +217,24 @@ int MESA_platform_init(int argc, char *argv[])
 	}	
 
 	if((g_encapsulate_with_ddp != 0) && (g_encapsulate_with_L2E != 0)){
-		printf("\033[1;31;40m[Error]g_encapsulate_with_ddp is conflict with g_encapsulate_with_L2E, can't enable simultaneously at all!\033[0m\n", cap_mode);
+		printf("\033[1;31;40m[Error]g_encapsulate_with_ddp is conflict with g_encapsulate_with_L2E, can't enable simultaneously at all!\033[0m\n");
 		return -1;
 	}
 	
 #if (0 == SAPP_AS_TARGET_SO) /* 做为.so模式, 无需dlopen相关io.so */
-	if(packet_io_lib_load(cap_mode) < 0){
+	if(packet_io_lib_load(ABBR_INTERFACE_TYPE) < 0){
 		return -1;
 	}
 
-	packet_io_set_work_thread_num(threadnum);
+	packet_io_set_work_thread_num(g_packet_io_thread_num);
 
-	packet_io_set_cap_mode(cap_mode);
+	packet_io_set_cap_mode(ABBR_INTERFACE_TYPE);
 
 	/* 
 		(0:pag,1:pcap,2:dumpfile,3:pfring,4:DPDK,5:ppf,6:NPacket,7:qnf,8:N95,9:pcap-dumpfile-list, 10:topsec) 
 		11:ipfile, 12:marsio4, 13:agent_smith, 14:dpdk_vxlan, 15:marsio_vxlan, 16:pag_marsio.
 	*/
-	switch(cap_mode){
+	switch(ABBR_INTERFACE_TYPE){
 		case CAP_MODEL_PAG:
 		case CAP_MODEL_PAG_MARSIO:
 #if USE_PAG_GET_FRAME		
@@ -267,72 +268,72 @@ int MESA_platform_init(int argc, char *argv[])
 			packet_io_set_cap_level(CAP_LEVEL_MAC);
 			break;
 		default:
-			printf("Invalid cap_mode:%d\n", cap_mode);
+			printf("Invalid cap_mode:%d\n", ABBR_INTERFACE_TYPE);
 			exit(1);
 	}
 
-	if(MESA_load_profile_int_def("conf/main.conf", "Module", "net_connection_mode", &top_mode, 1) < 0){
-		printf("read conf 'net_connection_mode' error!\n");
-		exit(1);
-	}
-	packet_io_set_topology_mode(top_mode);
+	//if(MESA_load_profile_int_def("conf/main.conf", "Module", "net_connection_mode", &top_mode, 1) < 0){
+		//printf("read conf 'net_connection_mode' error!\n");
+		//exit(1);
+	//}
+	packet_io_set_topology_mode(sapp_global_val->config.packet_io.depolyment_mode_bin);
 
-	if(MESA_load_profile_string_def("conf/main.conf", "Module", "pcapdevice", pcap_dev1, 128, "eth0") < 0){
-		printf("read conf 'pcapdevice' error!\n");
-		exit(1);
-	}
-	packet_io_set_capdev_parallel(pcap_dev1);
+	//if(MESA_load_profile_string_def("conf/main.conf", "Module", "pcapdevice", pcap_dev1, 128, "eth0") < 0){
+		//printf("read conf 'pcapdevice' error!\n");
+		//exit(1);
+	//}
+	packet_io_set_capdev_parallel(sapp_global_val->config.packet_io.internal.interface.name);
 	
-	if(2 == top_mode){
-		if(MESA_load_profile_string_def("conf/main.conf", "Module", "pcapdevice2", pcap_dev2, 128, "eth1")  < 0){
-			printf("read main.conf  'pcapdevice2' error!\n");
-			exit(1);
-		}
-		packet_io_set_capdev_serial(pcap_dev1, pcap_dev2);
+	if(DEPOLYMENT_MODE_TRANSPARENT == g_topology_mode_raw){
+		//if(MESA_load_profile_string_def("conf/main.conf", "Module", "pcapdevice2", pcap_dev2, 128, "eth1")  < 0){
+			//printf("read main.conf  'pcapdevice2' error!\n");
+			//exit(1);
+		//}
+		packet_io_set_capdev_serial(sapp_global_val->config.packet_io.internal.interface.name, 
+									sapp_global_val->config.packet_io.external.interface.name);
 	}	
 	
-	if(MESA_load_profile_string_def("conf/main.conf", "Module", "pcapfilter", cap_filter, 1024, "") < 0){
-		printf("read conf 'pcapfilter' error!\n");
-		exit(1);
-	}
-	if(cap_filter[0] != '\0'){
-		printf("\033[33m[Warning] pcap filter is '%s'.\033[0m\n", cap_filter);
-		packet_io_set_capture_filter(cap_filter);
+	//if(MESA_load_profile_string_def("conf/main.conf", "Module", "pcapfilter", cap_filter, 1024, "") < 0){
+		//printf("read conf 'pcapfilter' error!\n");
+		//exit(1);
+	//}
+	
+	if(sapp_global_val->config.packet_io.input_bpf_filter != NULL){
+		printf("\033[33m[Warning] pcap filter is '%s'.\033[0m\n", sapp_global_val->config.packet_io.input_bpf_filter);
+		packet_io_set_capture_filter(sapp_global_val->config.packet_io.input_bpf_filter);
 	}
 
-	if(MESA_load_profile_int_def("conf/main.conf", "Module", "queue_max_num", &queue_max_num, 2000) < 0){
-		printf("read conf  'queue_max_num' error!\n");
-		exit(1);
-	}
+	//if(MESA_load_profile_int_def("conf/main.conf", "Module", "queue_max_num", &queue_max_num, 2000) < 0){
+		//printf("read conf  'queue_max_num' error!\n");
+		//exit(1);
+	//}
+	packet_io_set_cap_buf_queue(10000);
 	
-	packet_io_set_cap_buf_queue(queue_max_num);
-	
-	if(MESA_load_profile_string_nodef("conf/main.conf", "Module", "gateway_mac", gateway_mac, 32) < 0){
-		printf("read conf  'gateway_mac' error!\n");
-	}
-	packet_io_set_gateway_mac(gateway_mac); /*读取配置文件 */
+	//if(MESA_load_profile_string_nodef("conf/main.conf", "Module", "gateway_mac", gateway_mac, 32) < 0){
+		//printf("read conf  'gateway_mac' error!\n");
+	//}
+	//packet_io_set_gateway_mac(gateway_mac); /*读取配置文件 */
 
-	if(MESA_load_profile_string_nodef("conf/main.conf", "Module", "senddevice", snd_dev, 128) < 0){
-		printf("read conf  'senddevice' error!\n");
-		exit(1);
-	}	
-	packet_io_set_send_dev(snd_dev);
+	//if(MESA_load_profile_string_nodef("conf/main.conf", "Module", "senddevice", snd_dev, 128) < 0){
+		//printf("read conf  'senddevice' error!\n");
+		//exit(1);
+	//}	
+	//packet_io_set_send_dev(snd_dev);
 
 	MESA_load_profile_int_def("conf/main.conf", "Module", "signal_take_over_switch", &sapp_global_single.signal_take_over_sw, 0);
 	MESA_load_profile_int_def("conf/main.conf", "Module", "ipentry_priority_over_ipfrag", &sapp_global_single.ipentry_priority_over_ipfrag, 0);
 	MESA_load_profile_int_def("conf/main.conf", "Module", "tuple4_reuse_time_interval", &sapp_global_single.tuple4_reuse_time_interval, 3);
 #endif
 
-	init_stream_manage(threadnum);	
+	init_stream_manage(g_iThreadNum);	
 
-#if DEBUG
+#if 0
 	MESA_load_profile_int_def("conf/main.conf", "Module", "iknow_switch", &int_tmp, 1);
 	if(int_tmp != 0){
 		iknow_info_init();
 	}
-
-	timestamp_record_init();
 #endif
+	timestamp_record_init();
 
 	/* 2017-02-24 lijia modify,
 		NOTE:
@@ -348,11 +349,7 @@ int MESA_platform_init(int argc, char *argv[])
 		return -1;
 	}
 	
-	MESA_load_profile_int_def("conf/main.conf","Module", "load_plug_switch", &load_plug_sw, 1);
-	if(load_plug_sw){
-		plugctrl_proc();
-	}
-
+	plugctrl_proc();
 
 	
 #if CYCLE_PKT_DUMP

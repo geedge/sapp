@@ -1,0 +1,77 @@
+#ifndef _SAPP_PKT_STAT_H_
+#define _SAPP_PKT_STAT_H_ 1
+
+/*
+	使用enum定义, 代替原来sysinfo.h中用宏定义固定值方式,
+	因为这些变量不对外开放, 如果后期需要增加新类型, 在任意位置都可以增加新变量,
+	重新编译即可!
+*/
+
+enum __sapp_sys_stat_type{
+	/*************  receive packet  ****************/
+	SAPP_STAT_RCV_ETHERNET,
+	SAPP_STAT_RCV_IPV4,		 /* 不包括SAPP_STAT_RCV_IPV4_FRAG */
+	SAPP_STAT_RCV_IPV4_FRAG, /* 不含在SAPP_STAT_RCV_IPV4之内,  独立计数   */
+	SAPP_STAT_RCV_IPV6,		 /* 不包括SAPP_STAT_RCV_IPV6_FRAG */
+	SAPP_STAT_RCV_IPV6_FRAG, /* 不含在SAPP_STAT_RCV_IPV6之内,  独立计数   */
+	SAPP_STAT_RCV_TCP,
+	SAPP_STAT_RCV_UDP,
+
+	SAPP_STAT_RCV_UNKNOWN,
+	
+	/*************  send packet  *******************/
+	SAPP_STAT_SND_ETHERNET,
+	SAPP_STAT_SND_IPV4,
+	SAPP_STAT_SND_IPV6,
+	SAPP_STAT_SND_TCP,
+	SAPP_STAT_SND_TCP_RST,
+	SAPP_STAT_SND_TCP_SYNACK,
+	SAPP_STAT_SND_UDP,
+
+	SAPP_STAT_SND_ERROR,
+
+	/*************  special condition  *************/
+	SAPP_STAT_DROP_ETHERNET,
+	SAPP_STAT_DROP_IPV4,
+	SAPP_STAT_DROP_IPV6,
+	
+	/*************  tunnel stat  *******************/
+	SAPP_STAT_TUNNEL_4OVER6,
+	SAPP_STAT_TUNNEL_6OVER4,
+	SAPP_STAT_TUNNEL_IPIP,
+	SAPP_STAT_TUNNEL_TEREDO,
+	SAPP_STAT_TUNNEL_L2TP,
+	SAPP_STAT_TUNNEL_PPTP,
+	SAPP_STAT_TUNNEL_GTP,
+	SAPP_STAT_TUNNEL_GRE,
+	
+	/*************  stream stat  *******************/
+	SAPP_STAT_TCP_STREAM_SYN,
+	SAPP_STAT_TCP_STREAM_DATA,
+	SAPP_STAT_TCP_STREAM_NOUSE,
+
+	SAPP_STAT_TCP_STREAM_C2S,
+	SAPP_STAT_TCP_STREAM_S2C,
+	SAPP_STAT_TCP_STREAM_DOUBLE,
+
+	SAPP_STAT_TCP_STREAM_NEW,
+	SAPP_STAT_TCP_STREAM_DEL,
+	SAPP_STAT_TCP_STREAM_RESET,
+
+	SAPP_STAT_UDP_STREAM_ONE,
+	SAPP_STAT_UDP_STREAM_TWO,
+	SAPP_STAT_UDP_STREAM_MORE,
+	SAPP_STAT_UDP_STREAM_NEW,
+	SAPP_STAT_UDP_STREAM_DEL,
+	SAPP_STAT_UDP_STREAM_RESET,
+	
+
+	SAPP_STAT_HASH_LIST_MAX,
+	
+	/*************  memory stat  *******************/
+
+	/************** Maximum Value Definition *******/
+	SAPP_STAT_NUM_MAX,
+};
+
+#endif

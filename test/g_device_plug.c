@@ -26,7 +26,6 @@ extern "C" {
 #include "MESA_prof_load.h"
 
 static int sendto_gdev_card_ip; /* 与Gdev连接网卡的IP地址, 网络序 */
-extern int g_topology_mode;
 
 
 /* 特殊设备保活函数，ICMP协议 */

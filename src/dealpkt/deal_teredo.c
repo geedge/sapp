@@ -70,6 +70,7 @@ int teredo_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,in
 #endif
 	struct mesa_udp_hdr *udphdr;
 	char *next_layer_hdr;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	udphdr = (struct mesa_udp_hdr *)(this_layer_data);
 
@@ -104,8 +105,9 @@ int teredo_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,in
 			return -1;
 		}
 	}
-	g_SysInputInfo[thread_num][TUNNEL_TEREDO]++;
-	g_SysInputInfo[thread_num][TUNNEL_TEREDO_LEN] += ntohs(udphdr->uh_ulen);
+	//g_SysInputInfo[thread_num][TUNNEL_TEREDO]++;
+	//g_SysInputInfo[thread_num][TUNNEL_TEREDO_LEN] += ntohs(udphdr->uh_ulen);
+	local_sys_stat->count[SAPP_STAT_TUNNEL_TEREDO]++;
 
 	/* NOTE: Teredo实际传输时没有包结构, 也就无需分配stream结构, 直接跳到Ipv6层即可 */
 	return ipv6_entry(pfstream_pr, next_layer_hdr, thread_num, routedir, raw_packet, offset_to_raw_pkt_hdr);

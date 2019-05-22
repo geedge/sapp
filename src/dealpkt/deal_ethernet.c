@@ -9,14 +9,14 @@ extern "C" {
 #include "marsio.h"
 #include "mrtunnat.h"
 #endif
-#if DEBUG
+
+#if IKNOW_ENABLE
 #include "iknow.h"
 extern packet_io_status_t *g_packet_io_status_pool[MAX_THREAD_NUM];
-extern int g_packet_io_thread_num;
+//extern int g_packet_io_thread_num;
 static inline void packet_io_eth_status_update(int thread_seq,  int raw_pkt_len);
 #endif
 
-extern int g_topology_mode;
 extern int g_skip_ethernet_layer_sw;
 
 static inline void set_mac_addr(struct layer_addr_mac *addr, const struct mesa_ethernet_hdr *p_eth_hdr)
@@ -39,10 +39,12 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 	struct streamindex *ptmp;
 	struct streaminfo_private *pstream_pr;
 	struct streaminfo *pstream;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	if(NET_CONN_SERIAL_GDEV == g_topology_mode){
 		if(unlikely(sapp_identify_broad_multicast_pkt(this_layer_hdr, raw_pkt) != 0)){
-			g_SysInputInfo[thread_num][COUNTER_DROP_PKT]++;
+			//g_SysInputInfo[thread_num][SAPP_STAT_DROP]++;
+			local_sys_stat->count[SAPP_STAT_DROP_ETHERNET]++;
 			return DROP;
 		}
 	}
@@ -53,7 +55,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 		pstream = &pstream_pr->stream_public;
 		next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct mesa_ethernet_hdr);
 
-#if DEBUG
+#if IKNOW_ENABLE
 		packet_io_eth_status_update(thread_num, raw_pkt->raw_pkt_len);
 #endif
 		memset(ptmp, 0, sizeof(struct streamindex));
@@ -80,8 +82,10 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			pstream->curdir = DIR_S2C;
 		}
 
-		g_SysInputInfo[thread_num][PKT_ETHERNET]++;
-		g_SysInputInfo[thread_num][PKT_ETHERNET_LEN] += (unsigned long long)raw_pkt->raw_pkt_len;		
+		//g_SysInputInfo[thread_num][PKT_ETHERNET]++;
+		//g_SysInputInfo[thread_num][PKT_ETHERNET_LEN] += (unsigned long long)raw_pkt->raw_pkt_len;	
+		local_sys_stat->count[SAPP_STAT_RCV_ETHERNET]++;
+		local_sys_stat->length[SAPP_STAT_RCV_ETHERNET] += (unsigned long long)raw_pkt->raw_pkt_len;;
 	}else{
 		pstream_pr = NULL; /* 使上层承载协议的pfather为NULL */
 		next_layer_offset = 0;
@@ -149,14 +153,17 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 
 			default:
 				/* unknown protocol */
-				g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-				g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+				//g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+				//g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += (unsigned long long)raw_pkt->raw_pkt_len;				
 				if(NET_CONN_SERIAL_GDEV == g_topology_mode){
 					if(sapp_identify_tunnel_inner_pkt(raw_pkt) != 0){
 						ret = PASS;
 					}else{
 						/* GDEV模式下, 什么时候都不应该把非隧道内不认识的包再转发出去, 在线发现把SPT生成树协议再注回去, 导致网络故障 */
-						g_SysInputInfo[thread_num][COUNTER_DROP_PKT]++;
+						//g_SysInputInfo[thread_num][SAPP_STAT_DROP]++;
+						local_sys_stat->count[SAPP_STAT_DROP_ETHERNET]++;
 						ret = DROP;
 
 					}
@@ -168,7 +175,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 	return ret;
 }
 
-#if DEBUG
+#if IKNOW_ENABLE
 static packet_io_status_base_t g_io_eth_last_status, g_io_eth_cur_status, g_io_eth_realtime_status; 	
 long ifuncb_show_eth_summary(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg, const char *cmd_args)
 {
@@ -198,6 +205,7 @@ void iknow_register_eth_cb(void *ihandle)
 	ret = iknow_register_cmd(ihandle, "show eth summary", "display eth flow summary", ifuncb_show_eth_summary, NULL, 0, NULL);
 	assert(0 == ret);
 }
+
 
 static inline void packet_io_eth_status_update(int thread_seq,  int raw_pkt_len)
 {

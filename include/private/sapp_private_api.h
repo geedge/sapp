@@ -32,6 +32,7 @@
 #include "private/sapp_cla_private.h"
 #include "private/sapp_global_val.h"
 #include "private/sapp_declaration.h"
+#include "private/sapp_pkt_stat.h"
 
 #if IOMODE_MARSIO
 #include "marsio.h"

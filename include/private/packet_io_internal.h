@@ -58,8 +58,6 @@ typedef struct{
 
 #define VXLAN_HDR_RESERVED_LEN	(14+8+8+20) /* 发送vxlan数据包预留的头部空间, 使用ip_socket发送, 不含最外层的mac, 即inner_eth+vxlan+outer_udp+outer_ip */
 
-extern int g_topology_mode;
-
 typedef struct 
 {
 	unsigned char flags;
@@ -175,7 +173,7 @@ int packet_io_set_rand_key(int rand_key);
 MESA_send_handle *packet_io_get_send_handle(int thread_id);
 int packet_io_send(MESA_send_handle *send_handle,int datalen,int send_type, 
 					int low_layer_type, int dir,int thread_num, char *feedback_buf, int *feedback_buf_len);
-void *time_event_thread(void *arg);
+
 void sysinfo_output(void);
 int is_proxy_stream(const struct streaminfo *pstream);
 int packet_io_send_raw(int thread_num, char *data, int datalen,unsigned int target_id);

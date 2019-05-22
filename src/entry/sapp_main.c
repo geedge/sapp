@@ -69,6 +69,18 @@ static void signal_take_over(void)
 }
 
 
+static void show_mesa_log(void)
+{
+	int i;
+
+	for(i = 0; (i < sizeof(MESA_art_log)) && (MESA_art_log[i] != 0); i ++){
+		//putchar(MESA_log[i]);
+		printf("%c", MESA_art_log[i]);
+	}
+	printf("\n");
+	sapp_runtime_log(30, "\n\n%s", MESA_art_log);	
+}
+
 int main(int argc, char *argv[])
 {	
 	if(argc >= 2){
@@ -83,25 +95,11 @@ int main(int argc, char *argv[])
 	}
 
 	sapp_cla_override_cfg_file();
-	
-	if((argc == 2) && (strncasecmp(argv[1], "-v", 2) == 0)){
-        const char *sapp_version = GITVER;
-		printf("Platform version: %s\n", sapp_version);
-		exit(0);
-	}
 
-	int i;
-
-	for(i = 0; (i < sizeof(MESA_art_log)) && (MESA_art_log[i] != 0); i ++){
-		//putchar(MESA_log[i]);
-		printf("%c", MESA_art_log[i]);
-	}
-	printf("\n");
-	sapp_runtime_log(30, "\n\n%s", MESA_art_log);
+	show_mesa_log();
 
 #if SAPP_INSECTICIDE
 	printf("\033[33m[Warning]This sapp is a temp version for solve confounded bug!\033[0m\n");
-	sleep(1);
 #endif
 	
 #if COMPAT_PAPP_FOR_BENCHMARK

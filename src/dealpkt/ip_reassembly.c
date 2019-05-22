@@ -16,7 +16,6 @@ extern "C" {
 
 
 extern void raw_frags_list_free_one(int thread_num, void *);
-extern time_t g_CurrentTime;
 
 
 /* 申请size大小的一块内存，同时更新总内存占用值 */

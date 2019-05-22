@@ -10,7 +10,7 @@ sapp_global_t *sapp_global_val;
 struct sapp_global_single_t sapp_global_single;
 struct sapp_global_mthread_t sapp_global_mthread[MAX_THREAD_NUM];
 
-extern int g_packet_io_thread_num;
+//extern int g_packet_io_thread_num;
 extern int tcpstate_num[MAX_TCP_STATE];
 extern int udpstate_num[MAX_UDP_STATE];
 
@@ -116,14 +116,32 @@ void sapp_include_header_check(void)
 	sapp_include_header_check_file(tmp_file_path, STREAM_TUNNEL_MD5_CHECK);
 }
 
+static inline int mem_alignment_pad(int size)
+{
+	return 64 - (size % 64);
+}
+
 void sapp_global_val_sanity_check(void)
 {
 	/* 多线程全局变量size必须是64字节整数倍, 否则多核cache缓存冲突, 极大影响性能 */
 	if((sizeof(struct sapp_global_mthread_t) % 64) != 0){
 		printf("\033[1;31;40msizeof(struct sapp_global_mthread_t)=%u, is not multiple of 64B!\033[0m\n", sizeof(struct sapp_global_mthread_t));
+		printf("\033[1;31;40mYou must add %d bytes padding to sapp_global_mthread_t!\033[0m\n", mem_alignment_pad(sizeof(struct sapp_global_mthread_t)));
 		abort();
 	}
 
+	if((sizeof(sapp_gval_mthread_t) % 64) != 0){
+		printf("\033[1;31;40msizeof(sapp_gval_mthread_t)=%u, is not multiple of 64B!\033[0m\n", sizeof(sapp_gval_mthread_t));
+		printf("\033[1;31;40mYou must add %d bytes padding to sapp_gval_mthread_t!\033[0m\n", mem_alignment_pad(sizeof(sapp_gval_mthread_t)));
+		abort();
+	}
+
+	if((sizeof(sapp_gval_individual_volatile_t) % 64) != 0){
+		printf("\033[1;31;40msizeof(sapp_gval_individual_volatile_t)=%u, is not multiple of 64B!\033[0m\n", sizeof(sapp_gval_individual_volatile_t));
+		printf("\033[1;31;40mYou must add %d bytes padding to sapp_gval_individual_volatile_t!\033[0m\n", mem_alignment_pad(sizeof(sapp_gval_individual_volatile_t)));
+		abort();
+	}
+	
 	if((sizeof(layer_args_t) % 64) != 0){
 		printf("\033[1;31;40msizeof(struct layer_args_t)=%u, is not multiple of 64B!\033[0m\n", sizeof(layer_args_t));
 		abort();

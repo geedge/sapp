@@ -9,7 +9,6 @@ extern "C" {
 #define DL_IO_LIB_PATH					"./platform_lib"
 
 extern int sapp_packet_io_v;
-extern int g_packet_io_cap_mode;
 extern dl_io_fun_list_t dl_io_fun_list;
 
 static struct dl_io_lib_name g_dl_io_lib_info[] = 
@@ -233,7 +232,7 @@ int packet_io_lib_load(int cap_mode)
 	}
 #endif	
 
-	g_packet_io_cap_mode = cap_mode;
+	///g_packet_io_cap_mode = cap_mode;
 
 	return 0;
 }

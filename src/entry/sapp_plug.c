@@ -8,10 +8,8 @@ extern "C" {
 
 #if SAPP_AS_TARGET_SO
 extern int MESA_platform_init(int argc, char *argv[]);
-extern void *time_event_thread(void *arg);
 extern int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_data, int thread_num, 
 			unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr);
-extern int g_packet_io_cap_level;
 extern void packet_io_clean_thread_context(int thread_seq);
 
 #define DUMPFILE_EOF_FLAG	(void*)0xF1E2D3C4B5A6 /* 用一个独特变量表示当前dumpfile模式已结束, 清理内存 */
@@ -63,7 +61,7 @@ int MESA_PLUG_INIT(void)
 	g_packet_io_cap_level = CAP_LEVEL_IPV4; /* 挂载到IP层插件, 强制指定为IPv4 */
 
 	//MESA_platform_run(); /* 不能再调用MESA_platform_run */
-	pthread_create(&pid, NULL, time_event_thread ,NULL);
+	pthread_create(&pid, NULL, sapp_time_event_thread ,NULL);
 
 	chdir(save_cur_pwd); /* 恢复原运行目录 */
 	printf("after call MESA_PLUG_INIT pwd is: %s\n", get_current_dir_name());

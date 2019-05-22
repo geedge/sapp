@@ -16,7 +16,7 @@ typedef struct{
 	long ts_rd[__TS_LEVEL_MAX];
 	long __pad__[3]; /* 64×Ö½Úcache¶ÔÆë */
 }timestamp_record_t;
-extern int g_packet_io_thread_num;
+//extern int g_packet_io_thread_num;
 extern int g_timestamp_record_sw;
 static long timestamp_out_min = 0;
 

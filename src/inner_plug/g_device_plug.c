@@ -56,11 +56,10 @@ static struct gdev_keepalive_service_ctrl g_dev_keepalive_service_ctrl_array[MAX
 
 static int GDEV_KEEPALIVE_LOG_SWITCH = 1;
 
-extern int g_packet_io_thread_num;
-extern time_t g_CurrentTime;
+//extern int g_packet_io_thread_num;
+//extern time_t g_CurrentTime;
 static int g_dev_keepalive_default_action = 1; /* 对于g_dev_keepalive_service_ctrl_array里没有的业务号, 是保活还是不保活 */
 static unsigned int sendto_gdev_card_ip; /* 与Gdev连接网卡的IP地址, 网络序, network-order */
-extern int g_topology_mode;
 extern int sendpacket_build_icmpv4_echo(u_int8_t type, u_int8_t code, u_int16_t sum,
 	u_int16_t id, u_int16_t seq, u_int8_t *payload, u_int32_t payload_s, unsigned char *buf);
 extern char *timet_to_str(time_t timet, char *time_str, int time_str_len);
@@ -295,7 +294,7 @@ static int gdev_keepalive_plug(const raw_pkt_t *raw_pkt, int thread_id, unsigned
 	if(ret < 0){
 		goto err;
 	}
-	g_SysInputInfo[thread_id][PKT_MARSIO_MALLOC]++;
+	//g_SysInputInfo[thread_id][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
 	real_buf = marsio_buff_append(send_mbuf[0], send_len + 14);
@@ -304,7 +303,7 @@ static int gdev_keepalive_plug(const raw_pkt_t *raw_pkt, int thread_id, unsigned
 
 	ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, 
 								thread_id, send_mbuf, 1, MARSIO_SEND_OPT_FAST);
-	g_SysInputInfo[thread_id][PKT_MARSIO_SND]++;
+	//g_SysInputInfo[thread_id][PKT_MARSIO_SND]++;
 	/* mbuf 发送完后自动释放 */							
 #else
 	ret = packet_io_send(snd_handle, send_len, SEND_TYPE_LINK_INJECT, 
