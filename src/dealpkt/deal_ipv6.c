@@ -779,6 +779,8 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 	
 	/* NOTE: 在线环境下发现莫名其妙的IP包, 甚至会死循环, 一定要做头部合法性检查!! */
 	if(unlikely(checkipv6pkt(a_packet, (int)payload_len, raw_pkt->raw_pkt_len) < 0)){
+		local_sys_stat->count[SAPP_STAT_DROP_IPV6]++;
+		local_sys_stat->length[SAPP_STAT_DROP_IPV6]+=raw_pkt->raw_pkt_len;
 		return PASS;
 	}
 

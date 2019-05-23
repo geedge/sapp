@@ -16,7 +16,7 @@ typedef struct{
 
 
 typedef struct{
-	unsigned char enabled;
+	int  enabled;
 	char mode_str[NAME_MAX];  /* storage/udp_socket */
 	int mode_bin;
 	unsigned int command_port; /* integer, host order, user should truncate to short */
@@ -35,26 +35,26 @@ typedef struct{
 
 
 typedef struct{
-	unsigned char rst_signature_enable;
-	unsigned char rst_num;
-	unsigned short rst_signature_seed1;
-	unsigned short rst_signature_seed2;
-	unsigned short link_mss;
+	int rst_signature_enable;
+	int rst_num;
+	int rst_signature_seed1;
+	int rst_signature_seed2;
+	int link_mss;
 }sapp_config_stream_tcp_inject_t;
 
 
 typedef struct{
-	unsigned int max;  /* max stream number per thread */
-	unsigned short timeout;
-	unsigned short reorder_pkt_max;
-	unsigned char syn_mandatory;
+	int max;  /* max stream number per thread */
+	int timeout;
+	int reorder_pkt_max;
+	int syn_mandatory;
 	sapp_config_stream_tcp_inject_t inject;
 }sapp_config_stream_tcp_t;
 
 
 typedef struct{
-	unsigned int max;  /* max stream number per thread */
-	unsigned short timeout;
+	int max;  /* max stream number per thread */
+	int timeout;
 }sapp_config_stream_udp_t;
 
 
@@ -63,10 +63,11 @@ typedef struct{
 	sapp_config_stream_udp_t udp;
 }sapp_config_stream_t;
 
-
 typedef struct{
-	unsigned char level;
-	unsigned char interval;
+	int level;
+	int interval;
+	int fs_enabled;
+	char fs_app_name[NAME_MAX];
 	char fs_server_ip[INET_ADDRSTRLEN]; /* string */
 	unsigned int fs_server_port; /* integer, host order, user should truncate to short */
 }sapp_config_profiling_log_t;
@@ -100,12 +101,20 @@ enum __sapp_config_packet_io_depolyment_mode{
 };
 
 typedef struct{
-	char *input_bpf_filter;
+	const char *input_bpf_filter;
 	char depolyment_mode_str[NAME_MAX]; /* [mirror, inline, transparent, dumpfile] */
 	int depolyment_mode_bin; /* 方便程序内处理, 转成数值形式, 如1:mirror; 2:transparent; 3:inline等 */
 	sapp_config_packet_io_dev_t internal;
 	sapp_config_packet_io_dev_t external;
 }sapp_config_packet_io_t;
+
+typedef struct{
+	const char *project_list_path;
+	const char *plugin_path;
+	const char *entrylist_path;
+	const char *send_raw_pkt_path;
+	const char *vxlan_sport_service_map_path;
+}sapp_config_special_link_t;
 
 typedef struct{
 	sapp_config_cpu_t cpu;
@@ -114,8 +123,16 @@ typedef struct{
 	sapp_config_stream_t stream;
 	sapp_config_profiling_t profiling;
 	sapp_config_packet_io_t packet_io;
+	sapp_config_special_link_t special_conf_link;
 }sapp_config_t;
 
+
+typedef struct{
+	void *fs_handle;
+	int fs_id_count_array[SAPP_STAT_NUM_MAX];
+	int fs_id_length_array[SAPP_STAT_NUM_MAX];
+	int fs_latency_id_array[SAPP_MAX_THREADS];
+}sapp_gval_individual_fixed_fs_t; /* field stat info */
 
 typedef struct{
 	void *log_handle;
@@ -123,6 +140,7 @@ typedef struct{
 	int depolyment_mode_private; /* 根据配置sapp_global_val->config.packet_io.depolyment_mode_bin转换得到的内部值,  */
 	unsigned char create_stream_mode; /* 兼容原来的逻辑, 值从配置stream.tcp.syn_mandatory转换得到 */
 	int packet_io_cap_level; 
+	sapp_gval_individual_fixed_fs_t fs_para;
 }sapp_gval_individual_fixed_t;
 
 typedef struct{

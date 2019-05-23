@@ -132,7 +132,7 @@ int sapp_get_cla_raw(const char *opt_long_name, char ** const opt_string_value)
 	return ret;
 }
 
-int sapp_get_cla_long(const char *opt_long_name, long *opt_long_value)
+int sapp_get_cla_long(const char *opt_long_name, long long *opt_long_value)
 {
 	int ret = -1;
 	char *opt_string_value;

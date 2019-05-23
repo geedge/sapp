@@ -602,6 +602,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	 */
 	if(unlikely(checkipv4pkt(a_packet, raw_pkt) < 0)){
 		local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
+		local_sys_stat->length[SAPP_STAT_DROP_IPV4]+=raw_pkt->raw_pkt_len;
 		return PASS;
 	}
 
@@ -618,6 +619,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 		if(is_multicast_addr_v4(ntohl(a_packet->ip_dst.s_addr))){
 			//g_SysInputInfo[thread_num][SAPP_STAT_DROP]++;
 			local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
+			local_sys_stat->length[SAPP_STAT_DROP_IPV4]+=raw_pkt->raw_pkt_len;
 			return DROP;
 		}	
 	}

@@ -353,6 +353,50 @@ static int config_expression_convert(void)
 }
 
 /*
+	1: yes, go on!
+	0: no,  exit.
+*/
+static int get_user_intention(void)
+{
+	char input_buf[MAX_INPUT];
+	
+	while(fgets(input_buf, sizeof(input_buf), stdin)){
+		if(strncasecmp(input_buf, "y", 1) == 0){
+			return 1;
+		}else if(strncasecmp(input_buf, "n", 1) == 0){
+			return 0;
+		}else{
+			sapp_log(30, ~0, ~0, "Please input 'y' or 'n' : "); 
+			continue;
+		}
+	}
+
+	return 1;
+}
+
+
+static inline void old_config_file_detect(const char *old_filename, const char *new_filename)
+{
+	if(is_file_exist(old_filename)){
+		sapp_log(30, ~0, ~0, "[Error]This is sapp v4.0, detect obsolete config file:\"%s\"! please use \"%s\" instead!", old_filename, new_filename);
+		if(is_file_exist(new_filename)){
+			sapp_log(30, ~0, ~0, "You already have new config file:\"%s\", suggest you rename or delete obsolete file:\"%s\"!", new_filename, old_filename); 
+			sapp_log(30, ~0, ~0, "Are you sure you are using new config file? 'y' or 'n':");
+			if(0 == get_user_intention()){
+				exit(1);
+			}			
+		}else{
+			sapp_log(30, ~0, ~0, "Do you want to continue running, the sapp behavior is unpredictable! 'y' or 'n' : "); 
+			if(0 == get_user_intention()){
+				sapp_log(30, ~0, ~0, "You should run ./sapp --sample-config to generate sapp.toml!");
+				exit(1);
+			}
+		}
+	}
+}
+
+
+/*
 	配置文件合法性、相关性检查.
 	
 	return value:
@@ -418,6 +462,8 @@ static int config_sanity_check(void)
 		return -1;
 	}
 
+	old_config_file_detect("./conf/main.conf", "./etc/sapp.toml");
+
 	return 0;
 }
 
@@ -450,7 +496,7 @@ static inline void sapp_gval_init(void)
 int sapp_parse_config(void)
 {
 	int ret;
-	int tmp_int;
+	//int tmp_int;
 	sapp_config_t *pconfig;
 	char str_tmp[ARG_MAX];
 	
@@ -506,6 +552,8 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.sanity_check", (char *)"symbol_conflict_enabled", (int *)&pconfig->profiling.sanity_check_symbol_conflict_enabled, 0);
 	/*******************************  PROFILING.LOG ***************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log", (char *)"level", (int *)&pconfig->profiling.log.level, 20);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"enabled", (int *)&pconfig->profiling.log.fs_enabled, 1);
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"fs_app_name", pconfig->profiling.log.fs_app_name, NAME_MAX, "sapp");
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"interval", (int *)&pconfig->profiling.log.interval, 3);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"server_ip", pconfig->profiling.log.fs_server_ip, INET_ADDRSTRLEN, "#");
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"server_port", (int *)&pconfig->profiling.log.fs_server_port, 0);
@@ -530,6 +578,28 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"tools.pkt_dump.storage", (char *)"path", str_tmp, ARG_MAX, "/dev/shm/pkt_dump");
 	pconfig->tools.pkt_dump.storge_path = strdup(str_tmp);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.pkt_dump.storage", (char *)"file_size_max_per_thread", (int *)&pconfig->tools.pkt_dump.storge_size_max, 1000);
+
+	/*************************** SPECIAL_CONFIG_LINK *************************/
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"SPECIAL_CONFIG_LINK", (char *)"project_list_path", str_tmp, ARG_MAX, "./etc/project_list.conf");
+	if(str_tmp[0] != '\0'){
+		pconfig->special_conf_link.project_list_path = strdup(str_tmp);
+	}
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"SPECIAL_CONFIG_LINK", (char *)"plugin_path", str_tmp, ARG_MAX, "./etc/plugin.conf");
+	if(str_tmp[0] != '\0'){
+		pconfig->special_conf_link.plugin_path = strdup(str_tmp);
+	}
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"SPECIAL_CONFIG_LINK", (char *)"entrylist_path", str_tmp, ARG_MAX, "./etc/entrylist.conf");
+	if(str_tmp[0] != '\0'){
+		pconfig->special_conf_link.entrylist_path = strdup(str_tmp);
+	}
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"SPECIAL_CONFIG_LINK", (char *)"send_raw_pkt_path", str_tmp, ARG_MAX, "./etc/send_raw_pkt.conf");
+	if(str_tmp[0] != '\0'){
+		pconfig->special_conf_link.send_raw_pkt_path = strdup(str_tmp);
+	}
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"SPECIAL_CONFIG_LINK", (char *)"vxlan_sport_service_map_path", str_tmp, ARG_MAX, "./etc/vxlan_sport_service_map.conf");
+	if(str_tmp[0] != '\0'){
+		pconfig->special_conf_link.vxlan_sport_service_map_path = strdup(str_tmp);
+	}
 
 	log_handle_init();
 

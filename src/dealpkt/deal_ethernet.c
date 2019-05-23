@@ -45,6 +45,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 		if(unlikely(sapp_identify_broad_multicast_pkt(this_layer_hdr, raw_pkt) != 0)){
 			//g_SysInputInfo[thread_num][SAPP_STAT_DROP]++;
 			local_sys_stat->count[SAPP_STAT_DROP_ETHERNET]++;
+			local_sys_stat->length[SAPP_STAT_DROP_ETHERNET]+=raw_pkt->raw_pkt_len;
 			return DROP;
 		}
 	}
@@ -165,9 +166,9 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 						//g_SysInputInfo[thread_num][SAPP_STAT_DROP]++;
 						local_sys_stat->count[SAPP_STAT_DROP_ETHERNET]++;
 						ret = DROP;
-
 					}
 				}
+				sapp_log(20, 0, 20, "eth_entry() recv unknown pkt, protocol is:0x%04x", eth_type);
 			break;
 		}
 	}

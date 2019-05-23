@@ -6,7 +6,7 @@
 ###################################################################################################
 
 [SYSTEM]
-instance_name=sapp_v4.0
+instance_name = "sapp_v4.0"
 
 [CPU]
 worker_threads=4
@@ -14,7 +14,7 @@ worker_threads=4
 bind_mask=[1,2,3,4]
 
 [PACKET_IO]
-   BSD_packet_filter=ip
+   BSD_packet_filter="tcp or udp"
    
 ### note, depolyment.mode options: [mirror, inline, transparent]
   [packet_io.depolyment]
@@ -23,7 +23,7 @@ bind_mask=[1,2,3,4]
 ### note, interface.type options: [pag,pcap,marsio]
   [packet_io.internal.interface]
   type=pcap
-  name=eth0
+  name=ens33
 
   [packet_io.external.interface]
   type=pcap
@@ -31,9 +31,9 @@ bind_mask=[1,2,3,4]
 
 [STREAM]
   [stream.tcp]
-  max=100000
-  timeout=30
-  syn_mandatory=1
+  max=1000
+  timeout=10
+  syn_mandatory=0
   reorder_pkt_max=5
     [stream.tcp.inject]
 	  link_mss=1460
@@ -45,14 +45,14 @@ bind_mask=[1,2,3,4]
       signature_seed2=13
 	
   [stream.udp]
-  max=100000
-  timeout=30
+  max=1000
+  timeout=10
 
 
 [PROFILING]
   [profiling.pkt_latency]
     enabled=0
-	### note, threshold unit is microseconds (us)
+### note, threshold unit is microseconds (us)
     threshold=10000
 	
   [profiling.sanity_check]
@@ -63,42 +63,44 @@ bind_mask=[1,2,3,4]
     level=20
     
 	[profiling.log.field_stat]
+	 enabled=1
+	 fs_app_name=sapp
 	 interval=3
-     server_ip=192.168.1.1
+     server_ip="192.168.1.1"
      server_port=12345
 
 [TOOLS]
   [tools.pkt_dump]
    enabled=1
-   ### note, mode options value:[storage, udp_socket]
+### note, mode options value:[storage, udp_socket]
    mode=udp_socket
    BSD_packet_filter=ip
    
    [tools.pkt_dump.threads]
-   ### note, if you want enable pkt dump in all thread, set dump_thread_all_enabled=1,
-   ###       if dump_thread_all_enabled=0, then use dump_thread_id to specify separate thread.
+### note, if you want enable pkt dump in all thread, set dump_thread_all_enabled=1,
+###       if dump_thread_all_enabled=0, then use dump_thread_id to specify separate thread.
    all_threads_enabled=1
    
-   ### note, dump_thread_id start from 0, max is CPU.worker_threads-1
+### note, dump_thread_id start from 0, max is CPU.worker_threads-1
    dump_thread_id=[0,1,2,3,4]
    
    [tools.pkt_dump.udp]
      command_port=12345
 
    [tools.pkt_dump.storage]
-     ### note, path must be double quotation mark extension, for example,  path="/dev/shm/pkt_dump"
+### note, file path must be double quotation mark extension, for example,  path="/dev/shm/pkt_dump"
      path="/dev/shm/pkt_dump"
-	 #### note, file size unit: MB
+### note, file size unit: MB
      file_size_max_per_thread=10000 
 
 ### note:
 ### These configurations format is complex and difficult to describe with toml grammar,
 ### so, create a Independent config file to description specific information.
 [SPECIAL_CONFIG_LINK]	 
- project_conf="./etc/project_list.conf"
- plugin_conf="./etc/plugin.conf"
- plugin_entrylist_conf="./etc/entrylist.conf"
- send_raw_conf="./etc/send_raw_pkt.conf"
- vxlan_sport_service_map_conf="./etc/vxlan_sport_service_map.conf.conf"
- 
- 
+ project_list_path="./etc/project_list.conf"
+ plugin_path="./etc/plugin.conf"
+ entrylist_path="./etc/entrylist.conf"
+ send_raw_pkt_path="./etc/send_raw_pkt.conf"
+ vxlan_sport_service_map_path="./etc/vxlan_sport_service_map.conf"
+
+

@@ -458,7 +458,7 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 	//g_SysInputInfo[thread_num][PKT_UDP]++;
 	//g_SysInputInfo[thread_num][PKT_UDPLEN] += ulen;
 	local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
-	local_sys_stat->count[SAPP_STAT_RCV_UDP]+=ulen;
+	local_sys_stat->length[SAPP_STAT_RCV_UDP]+=ulen;
 	
 	//add by lqy 20130530 
 	// udp有不开启流还原的功能需求，直接按单包单流处理
@@ -605,7 +605,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	//g_SysInputInfo[thread_num][PKT_UDP]++;
 	//g_SysInputInfo[thread_num][PKT_UDPLEN] += ulen;
 	local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
-	local_sys_stat->count[SAPP_STAT_RCV_UDP]+=ulen;
+	local_sys_stat->length[SAPP_STAT_RCV_UDP]+=ulen;
 	
 	pstream->addr.addrlen=sizeof(struct layer_addr_udp);
 	pstream_pr->addr_use_as_hash = 0;
@@ -755,7 +755,7 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 			//g_SysInputInfo[thread_num][TUNNEL_6OVER4]++;
 			//g_SysInputInfo[thread_num][TUNNEL_6OVER4_LEN] += ntohs(a_packet->ip_len);
 			local_sys_stat->count[SAPP_STAT_TUNNEL_6OVER4]++;
-			local_sys_stat->count[SAPP_STAT_TUNNEL_6OVER4]+= ntohs(a_packet->ip_len);
+			local_sys_stat->length[SAPP_STAT_TUNNEL_6OVER4]+= ntohs(a_packet->ip_len);
 		}	
 		break;
 
@@ -776,12 +776,14 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 			//g_SysInputInfo[thread_num][TUNNEL_IP_IN_IP]++;
 			//g_SysInputInfo[thread_num][TUNNEL_IP_IN_IP] += ntohs(a_packet->ip_len);			
 			local_sys_stat->count[SAPP_STAT_TUNNEL_IPIP]++;
-			local_sys_stat->count[SAPP_STAT_TUNNEL_IPIP]+= ntohs(a_packet->ip_len);			
+			local_sys_stat->length[SAPP_STAT_TUNNEL_IPIP]+= ntohs(a_packet->ip_len);			
 		break;
 
 		case IPPROTO_ICMP:
+#if 0 /* 2017-05-19 lijia modify, GDEV保活转到g_device_plug插件中实现, 平台内部不再处理 */		
 			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offest;
 			ret = icmp_entry(pfstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offest);
+#endif			
 		break;
 
 		case IPPROTO_L2TPV3:
@@ -793,9 +795,15 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 			sapp_runtime_log(20, "recv IPPROTO_ESP, not support yet!\n");
 			ret = PASS;
 		break;
+		
 		case IPPROTO_SCTP:
 			sapp_runtime_log(20, "recv IPPROTO_SCTP, not support yet!\n");
 			ret = PASS;
+		break;
+
+		case IPPROTO_IGMP:
+			sapp_runtime_log(20, "recv IPPROTO_IGMP, not support yet!\n");
+			ret = PASS;		
 		break;
 
 		default:	
@@ -803,7 +811,7 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 			//g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
 			//g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;	
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
-			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;				
+			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;				
 			sapp_runtime_log(20, "unsupport Ipv4 protocol:%u!\n", a_packet->ip_p);
 		break;
 	}

@@ -1225,10 +1225,11 @@ static int parse_send_raw_pkt_conf(void)
 	char *saveptr;
 	char *section;
 
-	fp = fopen("conf/send_raw_pkt.conf", "r");
+	fp = fopen(ABBR_SEND_RAW_PKT_CONF_FILE, "r");
 	if(NULL == fp){
-		printf("open %s error!\n", "send_raw_pkt.conf");
-		return -1;
+		sapp_log(30, ~0, ~0, "open %s error!\n", ABBR_SEND_RAW_PKT_CONF_FILE);
+		//return -1;
+		exit(1);
 	}
 
 	while(fgets(conf_buf, 1024, fp)){

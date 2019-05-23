@@ -7,12 +7,18 @@ include_directories(${CMAKE_SOURCE_DIR}/include/private)
 include_directories(${CMAKE_SOURCE_DIR}/include/public)
 include_directories(${CMAKE_SOURCE_DIR}/include/support)
 
+LINK_DIRECTORIES(/opt/MESA/lib)
+
 add_executable(sapp sapp_init.c sapp_main.c sapp_global_val.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
 target_link_libraries(sapp nsl pthread dl m pcap)
 target_link_libraries(sapp MESA_handle_logger MESA_prof_load)
 target_link_libraries(sapp sapp_assistant gdev_assistant)
 
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)  
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)  
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin)  
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)  
 
 set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap)
 #if(OPT_USE_DICTATOR OR OPT_USE_DICTATOR_DEBUG)

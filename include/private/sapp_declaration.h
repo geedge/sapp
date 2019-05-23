@@ -28,6 +28,9 @@ enum depolyment_mode_config{
 #define ABBR_INJECT_RST_NUM 	sapp_global_val->config.stream.tcp.inject.rst_num
 #define ABBR_INJECT_RST_SIGN 	sapp_global_val->config.stream.tcp.inject.rst_signature_enable
 #define ABBR_INTERFACE_TYPE		sapp_global_val->config.packet_io.internal.interface.type_bin
+#define ABBR_PROJECT_LIST_CONF_FILE  	sapp_global_val->config.special_conf_link.project_list_path
+#define ABBR_SEND_RAW_PKT_CONF_FILE  	sapp_global_val->config.special_conf_link.send_raw_pkt_path
+
 
 extern sapp_global_t *sapp_global_val;
 
@@ -61,7 +64,9 @@ void sapp_generate_sample_config(void);
 void sapp_cla_override_cfg_file(void);
 void sapp_global_val_sanity_check(void);
 void *sapp_time_event_thread(void *arg);
-
+void sapp_fs2_update_count(int field_index, unsigned  long long value);
+void sapp_fs2_update_length(int field_index, unsigned  long long value);
+void sapp_fs2_set_latency(int thead_seq, long long time_cost);
 
 
 extern volatile unsigned int  g_aiSysCounter[COUNTER_NUM]; /*newly modified   ---LiLei*/

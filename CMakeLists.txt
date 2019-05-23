@@ -140,7 +140,6 @@ add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
 set(SAPP_DEPEND_DYN_LIB  MESA_handle_logger MESA_htable pthread MESA_field_stat2)
 
 set(CMAKE_C_FLAGS_RELEASE "-Werror")
-set(CMAKE_C_FLAGS "-DLINK_MODE_DYNAMIC=1")
 
 file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_base.h MD5_STREAM_BASE)
 file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_control.h MD5_STREAM_CONTROL)

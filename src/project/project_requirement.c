@@ -13,7 +13,7 @@ extern void del_last_rn(char *data, int max_len);
 extern int tcp_flow_stat_init(void);
 extern int G_UDP_FLOW_STAT_PROJECT_ID;
 
-#define PROJECT_CONF_NAME				"conf/project_list.conf"
+//#define ABBR_PROJECT_LIST_CONF_FILE				"conf/project_list.conf"
 #define PROJECT_REQ_MAX_PLUG_NUM			(128)
 
 enum pro_type_list{
@@ -54,7 +54,7 @@ static struct pro_req_type G_PROJECT_TYPE[PROGECT_REQ_VALUE_TYPE_MAX] =
 	{PROGECT_REQ_VALUE_TYPE_SIMPLE_SHORT,	(char *)"short"},
 	{PROGECT_REQ_VALUE_TYPE_SIMPLE_INT,		(char *)"int"},
 	{PROGECT_REQ_VALUE_TYPE_SIMPLE_LONG,	(char *)"long"},
-	{PROGECT_REQ_VALUE_TYPE_STRUCT,		(char *)"struct"},
+	{PROGECT_REQ_VALUE_TYPE_STRUCT,			(char *)"struct"},
 };
 
 static int project_req_str_to_type_id(const char *project_req_val_type)
@@ -91,7 +91,7 @@ static int __project_find_id_by_name(const char *project_req_name, const char *p
 		}
 	}
 	if(NULL == preq_man || -1 == pro_req_id){
-		//printf("can't found project name:'%s' in %s\n", project_req_name, PROJECT_CONF_NAME);
+		//printf("can't found project name:'%s' in %s\n", project_req_name, ABBR_PROJECT_LIST_CONF_FILE);
 		return -1;
 	}
 
@@ -133,10 +133,11 @@ int parse_project_req_conf(void)
 	int i, line_num = 1;
 	
 
-	fp = fopen(PROJECT_CONF_NAME, "r");
+	fp = fopen(ABBR_PROJECT_LIST_CONF_FILE, "r");
 	if(NULL == fp){
-		printf("Open '%s' error: %s\n ", PROJECT_CONF_NAME, strerror(errno));
-		return -1;
+		sapp_log(30, ~0, ~0, "Open '%s' error: %s", ABBR_PROJECT_LIST_CONF_FILE, strerror(errno));
+		//return -1;
+		exit(1);
 	}
 
 	while(fgets(line_buf, 1024, fp) != NULL){
@@ -148,13 +149,13 @@ int parse_project_req_conf(void)
 		
 		preq_name = strtok_r(line_buf, delim, &save_ptr);
 		if(NULL == preq_name){
-			printf("invalid conf in %s, line %d\n", PROJECT_CONF_NAME, line_num);
+			printf("invalid conf in %s, line %d\n", ABBR_PROJECT_LIST_CONF_FILE, line_num);
 			return -1;
 		}
 
 		preq_type = strtok_r(NULL, delim, &save_ptr);
 		if(NULL == preq_type){
-			printf("invalid conf in %s, line %d\n", PROJECT_CONF_NAME, line_num);
+			printf("invalid conf in %s, line %d\n", ABBR_PROJECT_LIST_CONF_FILE, line_num);
 			return -1;
 		}
 
@@ -163,7 +164,7 @@ int parse_project_req_conf(void)
 		/* search duplicate conf */
 		for(i = 0; i < G_PROJECT_PLUG_NUM; i++){
 			if(strncasecmp(preq_name, G_PROJECT_REQ_MANAGE[i].project_req_name, PROJECT_REQ_NAME_MAX_LEN) == 0){
-				printf("duplicate conf in %s, line %d\n", PROJECT_CONF_NAME, line_num);
+				printf("duplicate conf in %s, line %d\n", ABBR_PROJECT_LIST_CONF_FILE, line_num);
 				return -1;
 			}
 		}
@@ -172,7 +173,7 @@ int parse_project_req_conf(void)
 		strncpy(G_PROJECT_REQ_MANAGE[G_PROJECT_PLUG_NUM].project_req_name, preq_name, PROJECT_REQ_NAME_MAX_LEN);
 		G_PROJECT_REQ_MANAGE[G_PROJECT_PLUG_NUM].project_req_type = project_req_str_to_type_id(preq_type);
 		if(G_PROJECT_REQ_MANAGE[G_PROJECT_PLUG_NUM].project_req_type < 0){
-			printf("invalid conf in %s, line %d\n", PROJECT_CONF_NAME, line_num);
+			printf("invalid conf in %s, line %d\n", ABBR_PROJECT_LIST_CONF_FILE, line_num);
 			return -1;
 		}
 	
