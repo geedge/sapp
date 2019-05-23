@@ -23,7 +23,7 @@ bind_mask=[1,2,3,4]
 ### note, interface.type options: [pag,pcap,marsio]
   [packet_io.internal.interface]
   type=pcap
-  name=ens33
+  name=lo
 
   [packet_io.external.interface]
   type=pcap

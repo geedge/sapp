@@ -46,7 +46,7 @@ static inline void __print_critical_msg(void *fun_ptr, const char *libname, cons
 	}
 }
 
-#if LINK_MODE_DYNAMIC
+#if 1
 static int packet_io_lib_load_by_mode(int cap_mode, const char *full_lib_path)
 {
 	void *io_lib_handle;
