@@ -83,6 +83,8 @@ static void show_mesa_log(void)
 
 int main(int argc, char *argv[])
 {	
+	sapp_gval_init();
+	
 	if(argc >= 2){
 		/* 如果有命令行参数, 先解析cla, 因为可能使用-h, -v等帮助信息       */
 		if(sapp_parse_cmd_args(argc, argv) < 0){

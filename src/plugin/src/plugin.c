@@ -505,8 +505,10 @@ int process_conf_entryname()
 	fp = fopen(filename,"r");
 	if(fp == NULL)
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"fopen %s error!\n",filename);
-		return -1;
+		//MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"fopen %s error!\n",filename);
+		sapp_log(30, ~0, ~0, "open %s error!", filename);
+		//return -1;
+		exit(1);
 	}
 
 	g_entryname_info = (stEntryNameInfo*)malloc(sizeof(stEntryNameInfo));

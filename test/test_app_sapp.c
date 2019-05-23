@@ -2210,11 +2210,15 @@ static void anti_flood_stat_log(void)
 {
 	FILE *fp;
 	int tseq;
+	int tot_thread_count;
+	int opt_len = sizeof(int);
+
+	sapp_get_platform_opt(SPO_THREAD_COUNT, &tot_thread_count, &opt_len);
 
 	unsigned long long tmp_anti_flood_stat[8];
 	memset(tmp_anti_flood_stat, 0, sizeof(tmp_anti_flood_stat));
 	
-	for(tseq =0; tseq < g_packet_io_thread_num; tseq++){
+	for(tseq =0; tseq < tot_thread_count; tseq++){
 		tmp_anti_flood_stat[ANTI_FLOOD_TCP_SYN] += anti_flood_stat[tseq][ANTI_FLOOD_TCP_SYN];
 		tmp_anti_flood_stat[ANTI_FLOOD_UDP_DNS] += anti_flood_stat[tseq][ANTI_FLOOD_UDP_DNS];
 		tmp_anti_flood_stat[ANTI_FLOOD_UDP_NTP] += anti_flood_stat[tseq][ANTI_FLOOD_UDP_NTP];
@@ -2243,6 +2247,11 @@ char ANTI_FLOOD_STAT_IP_ENTRY( struct streaminfo *f_stream,unsigned char routedi
 	const struct mesa_tcp_hdr *tcphdr;
 	const struct mesa_udp_hdr *udphdr;
 
+	time_t cur_time;
+	int opt_len = sizeof(cur_time);
+
+	sapp_get_platform_opt(SPO_CURTIME_TIMET, &cur_time, &opt_len);
+
 	if(IPPROTO_TCP == ip4hdr->ip_p){
 		tcphdr = (const struct mesa_tcp_hdr *)((char *)a_packet + ip4hdr->ip_hl*4);
 		if(TH_SYN == tcphdr->th_flags){ 
@@ -2258,8 +2267,8 @@ char ANTI_FLOOD_STAT_IP_ENTRY( struct streaminfo *f_stream,unsigned char routedi
 	}
 
 	if(0 == thread_seq){
-		if(g_CurrentTime > last_log_time){
-			last_log_time = g_CurrentTime;
+		if(cur_time > last_log_time){
+			last_log_time = cur_time;
 			anti_flood_stat_log();
 		}	
 	}

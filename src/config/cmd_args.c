@@ -26,9 +26,9 @@ static const sapp_cmd_args_usage_t cmd_args_usage[] =
 {
 	{"help", 	NULL,	"show help message"},
 	{"version", NULL,	"show platform version"},
-	{"sample-config", NULL, "generate sample config file"},
+	{"sample-config", NULL, "generate sample config file->sapp.toml"},
 	{"dumpfile", NULL,	"running as pcap dumpfile mode"},
-	{"dumpfile-speed",	dumpfile_speed_check, "\n  \ttop-speed\tprocess packets as fast as possible, this is default option\n  \ttimestamp\tprocess packets as pcap file timestamp interval"},
+	{"dumpfile-speed",	dumpfile_speed_check, "\n  \ttop-speed\tprocess packets as fast as possible, this is default behavior\n  \ttimestamp\tprocess packets as pcap file timestamp interval"},
 	{NULL, 		NULL}
 };
 
@@ -106,7 +106,7 @@ int sapp_get_cla_raw(const char *opt_long_name, char ** const opt_string_value)
 	const sapp_cmd_args_val_t **local_tmp_array;
 	int local_tmp_cla_num;
 
-	if(NULL == opt_long_name || NULL == opt_string_value || NULL == *opt_string_value){
+	if(NULL == opt_long_name || NULL == opt_string_value){
 		return -1;
 	}
 
@@ -137,7 +137,7 @@ int sapp_get_cla_long(const char *opt_long_name, long long *opt_long_value)
 	int ret = -1;
 	char *opt_string_value;
 
-	if(NULL == opt_long_value){
+	if(NULL == opt_long_name || NULL == opt_long_value){
 		return -1;
 	}
 
@@ -205,9 +205,6 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 				printf("Version: %s\n", GITVER);
 #endif				
 				exit(1);
-			break;
-
-			case 'd':
 			break;
 
 			case 'c':

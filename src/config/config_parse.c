@@ -235,6 +235,8 @@ void sapp_generate_sample_config(void)
 {
 	FILE *fp;
 
+	system("mkdir -p ./etc");
+
 	fp = fopen(default_config_file, "w+");
 	if(NULL == fp){
 		printf("\033[1;31;40m[Error]open %s error, %s!\033[0m\n", default_config_file, strerror(errno));
@@ -380,17 +382,17 @@ static inline void old_config_file_detect(const char *old_filename, const char *
 	if(is_file_exist(old_filename)){
 		sapp_log(30, ~0, ~0, "[Error]This is sapp v4.0, detect obsolete config file:\"%s\"! please use \"%s\" instead!", old_filename, new_filename);
 		if(is_file_exist(new_filename)){
-			sapp_log(30, ~0, ~0, "You already have new config file:\"%s\", suggest you rename or delete obsolete file:\"%s\"!", new_filename, old_filename); 
-			sapp_log(30, ~0, ~0, "Are you sure you are using new config file? 'y' or 'n':");
-			if(0 == get_user_intention()){
+			sapp_log(30, ~0, ~0, "You already have new config file:\"%s\", you must rename or delete obsolete file:\"%s\"!", new_filename, old_filename); 
+			//sapp_log(30, ~0, ~0, "Are you sure you are using new config file? 'y' or 'n':");
+			//if(0 == get_user_intention()){
 				exit(1);
-			}			
+			//}			
 		}else{
-			sapp_log(30, ~0, ~0, "Do you want to continue running, the sapp behavior is unpredictable! 'y' or 'n' : "); 
-			if(0 == get_user_intention()){
+			//sapp_log(30, ~0, ~0, "Do you want to continue running, the sapp behavior is unpredictable! 'y' or 'n' : "); 
+			//if(0 == get_user_intention()){
 				sapp_log(30, ~0, ~0, "You should run ./sapp --sample-config to generate sapp.toml!");
 				exit(1);
-			}
+			//}
 		}
 	}
 }
@@ -412,8 +414,9 @@ static int config_sanity_check(void)
 	/*******************************  CPU  ********************************/
 	cur_cpu_num = get_nprocs();
 	if(cur_cpu_num < pconfig->cpu.worker_threads){
-		sapp_log(20, ~0, ~0, "[Warning]sapp.toml->CPU.worker_threads=%d more than current available processors:%d", sapp_global_val->config.cpu.worker_threads, cur_cpu_num);
-		usleep(1000 * 300);
+		printf("\033[33m[Warning]sapp.toml->CPU.worker_threads=%d more than current available processors:%d\033[0m\n", sapp_global_val->config.cpu.worker_threads, cur_cpu_num);		
+		sapp_log(20, 0, ~0, "[Warning]sapp.toml->CPU.worker_threads=%d more than current available processors:%d", sapp_global_val->config.cpu.worker_threads, cur_cpu_num); 	
+		sleep(1);
 	}
 
 	/*******************************  STREAM  ******************************/
@@ -479,7 +482,7 @@ static void log_handle_init(void)
 }
 
 
-static inline void sapp_gval_init(void)
+void sapp_gval_init(void)
 {
 	int tseq;
 	
@@ -504,8 +507,6 @@ int sapp_parse_config(void)
 		special_usage();
 		exit(1);
 	}
-
-	sapp_gval_init();
 	
 	pconfig = &sapp_global_val->config;
 
