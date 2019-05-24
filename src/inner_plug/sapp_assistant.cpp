@@ -28,6 +28,9 @@ int sapp_assistant_version_VERSION_20181024;
 extern int MESA_get_dev_ipv4(const char *device, int *ip_add);
 extern int MESA_get_dev_mac(const char *device, unsigned char mac[6]);
 
+void * (*dl_marsio_buff_ctrlzone)(void *m, uint8_t id);
+
+
 static int sapp_identify_broad_multicast_init(void)
 {
 #if IOMODE_MARSIO

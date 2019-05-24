@@ -9,8 +9,8 @@ extern "C" {
 
 #define PROCESS_BAR_SW 		(1)
 
-int g_pcap_version_VERSION_20190506; 
-static int g_pcap_version_internal = 20190506;
+int g_pcap_version_VERSION_20190524; 
+static int g_pcap_version_internal = 20190524;
 
 #define PCAP_SNAPLEN_MAX	(65535)
 
@@ -1218,11 +1218,22 @@ int dl_io_init(int argc, char *argv[])
 	pcap_create_work_thread();
 
 	dispatch_thread_rnd_num = rand();
-
+	
+#if 0 /* version3.0 */
 	MESA_load_profile_string_def("conf/main.conf", "Module", "dumpfile_speed", cfg_buf, sizeof(cfg_buf), "topspeed");
 	if(strncasecmp(cfg_buf, "timestamp", strlen("timestamp")) == 0){
 		dumpfile_according_timestamp = 1;	
 	}
+#else
+	char *dumpfile_speed_mode;
+	if(sapp_get_cla_raw("dumpfile-speed", &dumpfile_speed_mode) < 0){
+		dumpfile_according_timestamp = 0; /* default is top-speed */	
+	}else{
+		if(strncasecmp(dumpfile_speed_mode, "timestamp", strlen("timestamp")) == 0){
+			dumpfile_according_timestamp = 1;	
+		}
+	}
+#endif
 
 	return 0;
 }

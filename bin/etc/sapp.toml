@@ -35,6 +35,7 @@ bind_mask=[1,2,3,4]
   timeout=10
   syn_mandatory=0
   reorder_pkt_max=5
+  analyse_option_enabled=1
     [stream.tcp.inject]
 	  link_mss=1460
 	  

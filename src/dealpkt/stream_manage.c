@@ -30,13 +30,13 @@
 extern "C" {
 #endif
 
-int sapp_version_VERSION_20190515;
+int sapp_version_VERSION_20190524;
 
 /* 
 	下面的版本号用于packet_io_lib校验, 防止平台和dl.so不匹配导致运行异常, 或已修复的BUG未更新.
 */
 #if IOMODE_PCAP
-int sapp_packet_io_v = 20190506;
+int sapp_packet_io_v = 20190524;
 #elif IOMODE_PAG
 int sapp_packet_io_v = 20151106;
 #elif IOMODE_PFRING
@@ -78,7 +78,7 @@ int udpstate_num[MAX_UDP_STATE]={2000,2000,2000};
 //int tcp_default_unorder=5;
 //int tcp_creatlink_model=TCP_CTEAT_LINK_BYSYN;
 int tcp_flood_detect_model=TCP_FLOOD_DETECT_OFF;
-int tcp_support_all=TCP_SUPPORT_ENTRYALL_OFF;
+int tcp_support_all=TCP_SUPPORT_ENTRYALL_ON;
 int tcp_dataflood_pktlen=5;
 //extern int g_packet_io_thread_num;
 extern int g_reverse_ethernet_addr_sw;

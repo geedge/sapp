@@ -48,6 +48,7 @@ typedef struct{
 	int timeout;
 	int reorder_pkt_max;
 	int syn_mandatory;
+	int analyse_option_enabled;
 	sapp_config_stream_tcp_inject_t inject;
 }sapp_config_stream_tcp_t;
 

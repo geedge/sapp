@@ -11,7 +11,7 @@ extern "C" {
 extern int sapp_packet_io_v;
 extern dl_io_fun_list_t dl_io_fun_list;
 
-static struct dl_io_lib_name g_dl_io_lib_info[] = 
+struct dl_io_lib_name g_dl_io_lib_info[] = 
 {
 	{CAP_MODEL_PAG				,	(char *)"packet_io_pag.so" },
 	{CAP_MODEL_PCAP_ONLINE 		,	(char *)"packet_io_pcap.so" },
@@ -24,7 +24,7 @@ static struct dl_io_lib_name g_dl_io_lib_info[] =
 	{CAP_MODEL_N95				,	(char *)"packet_io_n95.so" },	
 	{CAP_MODEL_PCAP_DUMPLIST	,	(char *)"packet_io_pcap.so"},
 	{CAP_MODEL_TOPSEC			,	(char *)"packet_io_topsec.so"},
-	{CAP_MODEL_IPFILE				,	(char *)"packet_io_ipfile.so"},
+	{CAP_MODEL_IPFILE			,	(char *)"packet_io_ipfile.so"},
 	{CAP_MODEL_MARSIOV4			,	(char *)"packet_io_marsio.so"},
 	{CAP_MODEL_AGENT_SMITH		,	(char *)"packet_io_agent_smith.so"},	
 	{CAP_MODEL_DPDK_VXLAN		,	(char *)"packet_io_dpdk_vxlan.so"},

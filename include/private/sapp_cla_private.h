@@ -11,6 +11,7 @@ extern "C" {
 typedef int args_legality_check_t(const char *opt_name, const char *opt_arg);
 
 typedef struct{
+	const char *short_opt_name;
 	const char *long_opt_name;
 	args_legality_check_t *check_fun;
 	const char *usage;

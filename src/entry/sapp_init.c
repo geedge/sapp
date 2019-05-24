@@ -145,7 +145,7 @@ int MESA_platform_init(int argc, char *argv[])
 
   	//MESA_load_profile_int_def("conf/main.conf","Module", "CreatLinkMode", &create_link_mode, TCP_CTEAT_LINK_BYSYN);
   	
-	MESA_load_profile_int_def("conf/main.conf","Module", "TcpAllEnable",&TcpAllEnable, 0);
+	MESA_load_profile_int_def("conf/main.conf","Module", "TcpAllEnable", &TcpAllEnable, 1);
 	tcp_set_support_tcpall_model(TcpAllEnable);
 
 #if (0 == HIGH_PERF)

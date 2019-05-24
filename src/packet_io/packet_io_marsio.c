@@ -683,8 +683,8 @@ int dl_io_init(int argc, char *argv[])
 		return -1;
 	}
 	
-	mr4_instance = marsio_create();
-	if(NULL == mr4_instance) {
+	sapp_marsio4_instance = marsio_create();
+	if(NULL == sapp_marsio4_instance) {
 		fprintf(stderr,"%s\n","marsio_create error!\n");
 		return -1;
 	}
@@ -704,7 +704,7 @@ int dl_io_init(int argc, char *argv[])
 	}
 
 	g_mario4_io_handle = (marsio4_io_handle *)calloc(1, sizeof(marsio4_io_handle) * g_marsio4_work_thread_num);
-	marsio_option_set(mr4_instance, MARSIO_OPT_THREAD_NUM, &g_marsio4_work_thread_num, sizeof(int));
+	marsio_option_set(sapp_marsio4_instance, MARSIO_OPT_THREAD_NUM, &g_marsio4_work_thread_num, sizeof(int));
 	
 	MESA_load_profile_string_def((char *)"conf/main.conf", (char *)"Module", (char *)"cpu_bind_core_mask", bind_mask_string, 128, "$");
 	if(bind_mask_string[0] == '$'){
@@ -729,13 +729,13 @@ int dl_io_init(int argc, char *argv[])
 		return -1;
 	}
 	if(marsio4_thread_bind_mask != 0){
-		ret = marsio_option_set(mr4_instance, MARSIO_OPT_THREAD_MASK, &marsio4_thread_bind_mask, sizeof(long));
+		ret = marsio_option_set(sapp_marsio4_instance, MARSIO_OPT_THREAD_MASK, &marsio4_thread_bind_mask, sizeof(long));
 		if(ret < 0){
 			printf("\033[1;31;40m[Error] marsio set CPU-MASK '%lx' failed!\033[0m\n", marsio4_thread_bind_mask);
 		}
 	}	
 
-	marsio_init(mr4_instance, sapp_global_val->config.system.instance_name);
+	marsio_init(sapp_marsio4_instance, sapp_global_val->config.system.instance_name);
 
 	g_mr4_dev_up_handle_set = (struct mr_vdev **)malloc(sizeof(void *) * g_mr4_device_num);
 	g_mr4_dev_down_handle_set = (struct mr_vdev **)malloc(sizeof(void *) * g_mr4_device_num);	

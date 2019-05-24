@@ -21,27 +21,27 @@ static inline int dumpfile_speed_check(const char *opt_name, const char *opt_arg
 	return ret;
 }
 
-/* ��ֻ̬��ȫ�ֱ������Է����κδ����, ������sapp_global_val�� */
+/* ��ֻ̬��ȫ�ֱ������Է����κδ����? ������sapp_global_val�� */
 static const sapp_cmd_args_usage_t cmd_args_usage[] = 
 {
-	{"help", 	NULL,	"show help message"},
-	{"version", NULL,	"show platform version"},
-	{"sample-config", NULL, "generate sample config file->sapp.toml"},
-	{"dumpfile", NULL,	"running as pcap dumpfile mode"},
-	{"dumpfile-speed",	dumpfile_speed_check, "\n  \ttop-speed\tprocess packets as fast as possible, this is default behavior\n  \ttimestamp\tprocess packets as pcap file timestamp interval"},
-	{NULL, 		NULL}
+	{"-h", "help", 	NULL,	"show help message"},
+	{"-v", "version", NULL,	"show platform version"},
+	{"-c", "sample-config", NULL, "generate sample config file->sapp.toml"},
+	{"-d", "dumpfile", NULL,	"running as pcap dumpfile mode"},
+	{" ",  "dumpfile-speed",	dumpfile_speed_check, "\n  \t\ttop-speed\tprocess packets as fast as possible, this is default behavior\n  \t\ttimestamp\tprocess packets as pcap file timestamp interval"},
+	{NULL,	NULL, 		NULL}
 };
 
-/* ��ֻ̬��ȫ�ֱ������Է����κδ����, ������sapp_global_val�� */
-static const char *sapp_cla_short_options = "hv";
+/* ��ֻ̬��ȫ�ֱ������Է����κδ����? ������sapp_global_val�� */
+static const char *sapp_cla_short_options = "dhv";
 
-/* ��ֻ̬��ȫ�ֱ������Է����κδ����, ������sapp_global_val�� */
+/* ��ֻ̬��ȫ�ֱ������Է����κδ����? ������sapp_global_val�� */
 static const struct option sapp_cla_long_options[] = 
 {
 	{"help",		no_argument,      NULL,      'h'},
 	{"version",		no_argument,      NULL,      'v'},
 	{"dumpfile",	no_argument,      NULL,      'd'},
-	{"dumpfile-speed",	required_argument,      NULL,      '$'},
+	{"dumpfile-speed",	required_argument,      NULL,      0},
 	{"sample-config", no_argument,      NULL,      'c'},
 	{NULL,          0,      NULL,      0}
 };
@@ -52,7 +52,7 @@ static int check_args_legality(const char *opt_name, const char *opt_arg)
 	int index = 0, ret = 0;
 
 	while(cmd_args_usage[index].long_opt_name != NULL){
-		/* ѡ������Ҫ�ò�ͬ�ĳ��ȱȽ�����, ��ֹdumpfile �� dumpfile-speedʹ�ý϶̳��ȱȽ�, �������е���� */
+		/* ѡ������Ҫ�ò�ͬ�ĳ��ȱȽ�����, ��ֹdumpfile �� dumpfile-speedʹ�ý϶̳��ȱȽ�, �������е����?*/
 		if((strncasecmp(opt_name, cmd_args_usage[index].long_opt_name, strlen(opt_name)) == 0)
 		 && (strncasecmp(opt_name, cmd_args_usage[index].long_opt_name, strlen(cmd_args_usage[index].long_opt_name)) == 0)
 		 && (cmd_args_usage[index].check_fun != NULL)){
@@ -80,9 +80,10 @@ static void usage(void)
 {
 	int index = 0;
 
-	printf("Usage:\n");
+	printf("\033[32mUsage:\033[0m\n");
+	printf("\033[32m%10s %-15s\t%-15s\033[0m\n", "short-arg", "long-arg", "note");
 	while(cmd_args_usage[index].long_opt_name != NULL){
-		printf("  --%s\t%s\n", cmd_args_usage[index].long_opt_name, cmd_args_usage[index].usage);
+		printf("%10s --%-15s\t%s\n", cmd_args_usage[index].short_opt_name, cmd_args_usage[index].long_opt_name, cmd_args_usage[index].usage);
 		index++;
 	}
 	exit(1);
@@ -114,7 +115,7 @@ int sapp_get_cla_raw(const char *opt_long_name, char ** const opt_string_value)
 	local_tmp_cla_num = sapp_global_val->cla.cmd_args_num;
 	
 	for(i = 0; i < local_tmp_cla_num; i++){
-		/* ѡ������Ҫ�ò�ͬ�ĳ��ȱȽ�����, ��ֹdumpfile �� dumpfile-speedʹ�ý϶̳��ȱȽ�, �������е���� */
+		/* ѡ������Ҫ�ò�ͬ�ĳ��ȱȽ�����, ��ֹdumpfile �� dumpfile-speedʹ�ý϶̳��ȱȽ�, �������е����?*/
 		if((strncasecmp(opt_long_name, local_tmp_array[i]->long_opt_name, strlen(opt_long_name)) == 0)
 		 && (strncasecmp(opt_long_name, local_tmp_array[i]->long_opt_name, strlen(local_tmp_array[i]->long_opt_name)) == 0)){
 			if(local_tmp_array[i]->arg_val.string_value != NULL){
@@ -211,6 +212,11 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 				sapp_generate_sample_config();
 				exit(1);
 			break;
+
+			case 'd':
+				store_cmd_args("dumpfile", NULL);
+				continue;
+			break;			
 
 			case '?': /* invalid or unknown option */
 				ret = -1;
