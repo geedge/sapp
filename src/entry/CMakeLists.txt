@@ -33,24 +33,31 @@ set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_
 
 target_link_libraries(sapp -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive ${SAPP_DEPEND_DYN_LIB})
 
-if(CAPTURE_MODE MATCHES "PAG")
-	target_link_libraries(sapp pag)
+if(ENABLE_STATIC_LINK)
+	#if(CAPTURE_MODE MATCHES "PAG")
+	#	target_link_libraries(sapp pag)
+	#endif()
+	#
+	#if(CAPTURE_MODE MATCHES "PPF")
+	#	target_link_libraries(sapp ppf)
+	#endif()
+#
+	#if(CAPTURE_MODE MATCHES "PFRING")
+	#	target_link_libraries(sapp pfring)
+	#endif()
+#
+	#if(CAPTURE_MODE MATCHES "DPDK")
+	#	target_link_libraries(sapp nl2fwd)
+	#endif()
+	if(CAPTURE_MODE MATCHES "PCAP")
+		target_link_libraries(sapp packet_io_pcap)
+	endif()
+	if(CAPTURE_MODE MATCHES "MARSIO")
+		target_link_libraries(sapp packet_io_marsio)
+	endif()
 endif()
-
-if(CAPTURE_MODE MATCHES "PPF")
-	target_link_libraries(sapp ppf)
-endif()
-
-if(CAPTURE_MODE MATCHES "PFRING")
-	target_link_libraries(sapp pfring)
-endif()
-
-if(CAPTURE_MODE MATCHES "DPDK")
-	target_link_libraries(sapp nl2fwd)
-endif()
-
 # Target Install
-install(TARGETS sapp DESTINATION ${CMAKE_SOURCE_DIR}/bin/)
+#install(TARGETS sapp DESTINATION ${CMAKE_SOURCE_DIR}/bin/)
 #install(FILES ${CMAKE_BINARY_DIR}/inner_plug/libsapp_assistant.so DESTINATION /opt/MESA/lib)
 #install(FILES ${CMAKE_BINARY_DIR}/inner_plug/libgdev_assistant.so DESTINATION /opt/MESA/lib)
 

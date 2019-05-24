@@ -1,5 +1,8 @@
-
 cmake_minimum_required(VERSION 2.8)
+
+set(project_name sapp)
+
+project(${project_name})
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(Version)
@@ -24,6 +27,13 @@ option(PLATFORM_MODE_SERIAL "Using serial mode" FALSE)
 
 #static link option
 option(ENABLE_STATIC_LINK "Enable static link" TRUE)
+if(ENABLE_STATIC_LINK)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLINK_MODE_DYNAMIC=0")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLINK_MODE_DYNAMIC=0")
+else()
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLINK_MODE_DYNAMIC=1")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLINK_MODE_DYNAMIC=1")
+endif()
 
 # CPU profiler
 option(OPT_USE_PROFILER	"Use gperf cpu profiler" OFF)
@@ -232,3 +242,4 @@ install(FILES bin/plug/business/conflist_business.inf DESTINATION plug/business)
 install(FILES bin/plug/business/conflist_business.inf DESTINATION plug/business)
 install(FILES bin/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app)
 install(FILES ${CMAKE_BINARY_DIR}/test/test_app_sapp.so DESTINATION plug/business/test_app)
+include(Package)
