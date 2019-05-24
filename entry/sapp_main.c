@@ -80,7 +80,7 @@ static void signal_take_over(void)
 int main(int argc, char *argv[])
 {	
 	if((argc == 2) && (strncasecmp(argv[1], "-v", 2) == 0)){
-        const char *sapp_version = GITVER;
+        const char *sapp_version = GIT_VERSION;
 		printf("Platform version: %s\n", sapp_version);
 		exit(0);
 	}
