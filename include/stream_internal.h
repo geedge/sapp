@@ -170,7 +170,8 @@ struct tcpdetail_private
 	
 	/* ---8 bytes-- */
 	UCHAR  multisynflag:2;	  // multi syn
-	UCHAR  ignore_rst_fin:2;//不会因rst, fin结束, 只能因超时或lru结束
+	UCHAR  ignore_rst_fin:1;  //不会因rst, fin结束, 只能因超时或lru结束
+	UCHAR  tcpall_valid_after_kill:1;  //kill_tcp后, TCPALL插件依然有效, 继续处理后续数据包
 	UCHAR  needackflag:2;	  //需要上传ack报文
 	UCHAR  takeoverflag:2;
 	UCHAR  tcpstateflag;	   // 用于记录tcp的会话SYN相关状态

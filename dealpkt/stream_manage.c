@@ -44,14 +44,14 @@
 extern "C" {
 #endif
 
-int Stream_Analyse_Process_Platform_version_VERSION_20181116; /* nm sapp | grep version */
-int sapp_args_v = 20181116; /* ./sapp -v */
+int Stream_Analyse_Process_Platform_version_VERSION_20190423; /* nm sapp | grep version */
+int sapp_args_v = 20190423; /* ./sapp -v */
 
 /* 
 	下面的版本号用于packet_io_lib校验, 防止平台和dl.so不匹配导致运行异常, 或已修复的BUG未更新.
 */
 #if IOMODE_PCAP
-int sapp_packet_io_v = 20180808;
+int sapp_packet_io_v = 20190506;
 #elif IOMODE_PAG
 int sapp_packet_io_v = 20151106;
 #elif IOMODE_PFRING

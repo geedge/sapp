@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define STREAM_CONTROL_H_VERSION		(20181024)
+#define STREAM_CONTROL_H_VERSION		(20190423)
 
 #define TCP_CTEAT_LINK_BYSYN   			0x01  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
 #define TCP_CTEAT_LINK_BYDATA 			0x02  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
@@ -18,10 +18,10 @@ extern "C" {
 enum MESA_stream_opt{
 	__MSO_PAD			=	0,    /* placeholder */
 	MSO_MAX_UNORDER	=	1,  	/* opt_val type must be struct max_unorder_opt */
-	MSO_NEED_ACK,				/* opt_val type must be unsigned char */
-	MSO_TAKEOVER,				/* opt_val type must be int */
+	MSO_NEED_ACK,				/* opt_val type must be unsigned char, value only be [0,1] */
+	MSO_TAKEOVER,				/* opt_val type must be int, value only be [0,1] */
 	MSO_TIMEOUT,				/* opt_val type must be unsigned short */
-	MSO_IGNORE_RST_FIN, 		/* opt_val type must be unsigned char */
+	MSO_IGNORE_RST_FIN, 		/* opt_val type must be unsigned char, value only be [0,1] */
 	MSO_TCP_CREATE_LINK_MODE,  /* opt_val must be unsigned char, refer to TCP_CTEAT_LINK_xxx */
 	MSO_TCP_ISN_C2S, /* Host-order, opt_val type must be unsigned int */
 	MSO_TCP_ISN_S2C, /* Host-order, opt_val type must be unsigned int */
@@ -30,6 +30,7 @@ enum MESA_stream_opt{
 	MSO_STREAM_TUNNEL_TYPE,  /* opt_val must be unsigned short, refer to enum stream_carry_tunnel_t */
 	MSO_STREAM_CLOSE_REASON, /* opt_val type must be unsigned char, refer to stream_close_reason_t */
 	MSO_STREAM_VXLAN_INFO, /* opt_val type must be struct vxlan_info */
+	MSO_TCPALL_VALID_AFTER_KILL, /* opt_val type must be unsigned char, value only be [0,1] */
 	__MSO_MAX,
 };
 
