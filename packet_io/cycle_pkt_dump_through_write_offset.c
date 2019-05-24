@@ -467,6 +467,8 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 		}else{
 			pktdata =  (const unsigned char *)p_raw_pkt->raw_pkt_data + pkt_dump_data_offset;
 			pktlen = p_raw_pkt->raw_pkt_len - pkt_dump_data_offset;
+			for_bpf_filter_len = pktlen;
+			for_bpf_filter_data = pktdata;
 		}
 
 		/* 如果有正确的过滤条件, 不设采样率, 保证捕包尽量全, 符合调用者意图;
@@ -1181,6 +1183,8 @@ static void * cycle_pkt_dump_udp_socket_daemon_thread(void *arg)
 	pthread_setname_np(pthread_self(), "sapp_pkt_dump");
 #endif
 #endif
+	printf("\033[32m[Notice]'%s'is ready, port %d.\033[0m\n", "tcpdump_mesa",
+	        pkt_dump_tcp_bind_port);
 	
 	while(1){
 		cliaddr_len = sizeof(cliaddr);
@@ -1297,13 +1301,13 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 		}
 		
 		MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_total_size", &total_files_size, 1000);
-		if(total_files_size < 1 || (unsigned int)total_files_size >= 1024*100 /* 100GB */){
+		if(total_files_size < 1 || (unsigned int)total_files_size >= 1024*1000 /* 1000GB */){
 			printf("pkt_dump_total_size  invalid!\n");
 			return -1;
 		}
 		
 		MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_file_max_size", &int_tmp, 100);
-		if(int_tmp < 2 || (unsigned int)int_tmp >= 1024*100 /* 100GB */){
+		if(int_tmp < 2 || (unsigned int)int_tmp >= 1024*1000 /* 1000GB */){
 			printf("pkt_dump_file_max_size  invalid!\n");
 			return -1;
 		}

@@ -6,7 +6,8 @@ endif
 
 all: $(TARGET)
 
-LIB_PATH=-L../lib
+LIB=
+LIB_PATH=-L../lib -L/opt/mrzcpd/lib
 CFLAGS += -fPIC -D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD
 CFLAGS += -DPLATFORM_NSDPF_PAPP=1
 
@@ -31,10 +32,14 @@ WHOLE_ARCH=../lib/libdealpkt.a ../lib/libproject.a ../lib/libMESA_sleep.a ../lib
 WHOLE_ARCH+=../lib/libpacket_io.a
 endif
 
+ifeq ($(link_mode), $(__LINK_MODE_STATIC))
+    WHOLE_ARCH += ../lib/libinner_plug.a
+else
+    LIB += -lsapp_assistant
+endif
+
 LDFLAGS =
 LDFLAGS += $(LD_DICTATOR)
-
-LIB=
 LIB+=../lib/plugctrl.a
 LIB+=../lib/libmd5.a
 LIB+=../lib/librbtree.a
@@ -68,7 +73,7 @@ INC+=-I/opt/MESA/include/MESA/stream_inc
 LIB += -L/opt/MESA/lib -lpthread -ldl -lrt 
 LIB += -lMESA_htable -lMESA_handle_logger -lMESA_prof_load
 #LIB += -lsesame_door
-LIB += -lsapp_assistant
+LIB += -lMESA_field_stat2
 
 ifeq ($(iomode), $(_MODE_MARSIO))
 LIB += -lmarsio

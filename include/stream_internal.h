@@ -314,6 +314,7 @@ char biz_retval_to_platform(char biz_ret);
 char plat_state_to_biz(char plat_state);
 void idle_polling_call(int thread_seq);
 int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt_t *raw_pkt);
+int sapp_identify_tunnel_inner_pkt(const raw_pkt_t *raw_pkt);
 int sapp_assistant_init(void);
 
 static inline long long sapp_get_cpu_cycle(void)

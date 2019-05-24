@@ -1,5 +1,5 @@
 ##################### MESA Makefile Common Definition Start #################
-MESA_MAKE_VERSION=20170517
+MESA_MAKE_VERSION=20190410
 
 #CC=gcc
 CC=g++
@@ -183,6 +183,22 @@ else
     endif
 endif
 
+
+__LINK_MODE_DYNAMIC=dynamic
+__LINK_MODE_STATIC=static
+link_mode=dynamic
+
+ifeq ($(link_mode), $(__LINK_MODE_STATIC))
+       CFLAGS += -DLINK_MODE_STATIC=1
+else 
+       ifeq ($(link_mode), $(__LINK_MODE_DYNAMIC))
+           CFLAGS += -DLINK_MODE_DYNAMIC=1
+       else
+          $(error link_mode args error, please use make help)
+          exit
+       endif
+endif
+
 .PHONY:help clean target
 
 export CC
@@ -210,6 +226,9 @@ export _MODE_PAG_MARSIO
 export target_mode
 export __TARGET_MODE_ELF
 export __TARGET_MODE_SO
+export link_mode
+export __LINK_MODE_STATIC
+export __LINK_MODE_DYNAMIC
 
 target:all
 
@@ -224,6 +243,7 @@ help:
 	@echo -e "\t\t\033[31;49;1m opt={0,1,2,3,high_perf}, optimize level, default is 0.\033[0m"
 	@echo -e "\t\t\033[31;49;1m iomode={pcap,ppf,pag,prfing,dpdk,tilera,topsec,ipfile,marsio,smith,dpdk_vxlan,pag_marsio}, default is pcap.\033[0m"
 	@echo -e "\t\t\033[31;49;1m target_mode={elf, so}, default is elf.\033[0m"
+	@echo -e "\t\t\033[31;49;1m link_mode={dynamic, static}, default is dynamic.\033[0m"
 
 ##################### MESA Makefile Common Definition End ####################
 

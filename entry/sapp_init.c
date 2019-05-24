@@ -321,9 +321,13 @@ int MESA_platform_init(int argc, char *argv[])
 	timestamp_record_init();
 #endif
 
+	///20190411 lijia modify, call packet_io before plug!!!
+	if(packet_io_init(argc, argv) < 0){
+		return -1;
+	}
 	MESA_load_profile_int_def("conf/main.conf","Module", "load_plug_switch", &load_plug_sw, 1);
 	if(load_plug_sw){
-		plugctrl_proc();
+		plugctrl_proc(); ///20190411 lijia modify, call plugctrl_proc after packet_io_init!!!
 	}
 
 	/* 2017-02-24 lijia modify,
@@ -333,9 +337,6 @@ int MESA_platform_init(int argc, char *argv[])
 		那么后续的pthread_create的线程默认继承这个行为,
 		所以, 先初始化线程再初始化packet_io.
 	*/
-	if(packet_io_init(argc, argv) < 0){
-		return -1;
-	}
 
 	
 #if CYCLE_PKT_DUMP
