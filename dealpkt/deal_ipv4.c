@@ -630,6 +630,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 		}
 */
 		if(is_multicast_addr_v4(ntohl(a_packet->ip_dst.s_addr))){
+			g_SysInputInfo[thread_num][COUNTER_DROP_PKT]++;
 			return DROP;
 		}	
 	}

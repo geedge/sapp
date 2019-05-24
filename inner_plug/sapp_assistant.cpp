@@ -65,6 +65,7 @@ static int sapp_identify_broad_multicast_init(void)
 	void *io_lib_handle;
 	
 	if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
+#if LINK_MODE_DYNAMIC	
 		io_lib_handle = dlopen("./platform_lib/packet_io_marsio.so", RTLD_NOW | RTLD_GLOBAL);
 		if(NULL == io_lib_handle){
 			printf("\033[1;31;40m[Error]dlopen %s error, %s!\033[0m\n", "./platform_lib/packet_io_marsio.so", dlerror());
@@ -77,26 +78,31 @@ static int sapp_identify_broad_multicast_init(void)
 		}
 
 		/* 此处不要用dlclose(), 因为后续还要用dlopen打开packet_io_marsio.so,  */
+#else
+	dl_marsio_buff_ctrlzone = (void * (*)(void *m, uint8_t id))marsio_buff_ctrlzone;
+#endif
 	}
 #endif
+
 	return 0;
 }
 
-static int sapp_identify_datalink_mode_is_eth(const raw_pkt_t *raw_pkt)
+/* 识别是否隧道内部数据包           , 隧道内的包应该无条件转发/回注        */
+int sapp_identify_tunnel_inner_pkt(const raw_pkt_t *raw_pkt)
 {
 #if IOMODE_MARSIO
 	if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
 		const struct mr_tunnat_ctrlzone *mr_ctzone;
 		if(dl_marsio_buff_ctrlzone){
 			mr_ctzone = (const struct mr_tunnat_ctrlzone *)((*dl_marsio_buff_ctrlzone)((void *)raw_pkt->io_lib_pkt_reference, 0));
-			if(mr_ctzone->__encap_len > 0){
-				return 0;
+			if(mr_ctzone->action & TUNNAT_CZ_ACTION_FORWARD){
+				return 1;
 			}
 		}
 	}
 #endif
 
-	return 1;
+	return 0;
 }
 
 int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt_t *raw_pkt)
@@ -104,7 +110,7 @@ int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt
 	const struct mesa_ethernet_hdr *p_eth_hdr = (const struct mesa_ethernet_hdr *)this_layer_data;
 	unsigned short eth_type = p_eth_hdr->ether_type; /* 使用网络序直接判断, 避免每次都调用ntohs() */
 
-	if(sapp_identify_datalink_mode_is_eth(raw_pkt) == 0){
+	if(sapp_identify_tunnel_inner_pkt(raw_pkt) != 0){
 		return 0;
 	}
 
@@ -114,7 +120,7 @@ int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt
 			return 1;
 		}
 	}else{
-		/* 2017-10-10 lijia add, 组播MAC地址, 通常为局域网内控制类数据包, 如LLMNR, SPT等协议, 一般无需处理 */
+		/* 2017-10-10 lijia add, 组播MAC地址, 通常为局域网内控制类数据包, 如LLMNR, STP等协议, 一般无需处理 */
 		if((p_eth_hdr->ether_dhost[0] & 0x01) == 0x01){
 			return 1;
 		}

@@ -1,0 +1,9 @@
+[PLUGINFO]
+PLUGNAME=wangyan_gdev_measurement
+SO_PATH=./plug/business/wangyan_gdev_measurement/wangyan_gdev_measurement.so
+INIT_FUNC=wangyan_gdev_measure_init
+
+
+[POLLING]
+FUNC_FLAG=ALL
+FUNC_NAME=wangyan_gdev_measure_polling_cb

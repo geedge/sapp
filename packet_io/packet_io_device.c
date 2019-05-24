@@ -35,9 +35,11 @@ static void * (*dl_io_device_alias_fun)(unsigned target_id, char *device_args);
 
 extern void del_last_rn(char *data, int max_len);
 extern struct dl_io_lib_name g_dl_io_lib_info[];
+extern void * dl_io_device_alias(unsigned int target_id, char *device_args);
 
 static int get_dl_io_device_alias_fun_symbol(void)
 {
+#if LINK_MODE_DYNAMIC
 	void *dl_handle;
 	char lib_path[256];
 
@@ -54,6 +56,9 @@ static int get_dl_io_device_alias_fun_symbol(void)
 		printf("\033[41m[Error]dlsym %s from %s error!\033[0m\n", "dl_io_device_alias", lib_path);
 		return -1;
 	}
+#else
+	dl_io_device_alias_fun = (void *(*)(unsigned int, char *))dl_io_device_alias;
+#endif
 
 	return 0;
 }

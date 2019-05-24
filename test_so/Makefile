@@ -5,9 +5,10 @@ CFLAGS  += $(OPTFLAGS)
 OBJECTS = test_app_sapp.o  trace_delay.o terminal_tag.o g_device_plug.o
 MODULES	=  
 
-TARGET	= test_app_sapp.so  trace_delay.so terminal_tag.so test_http.so test_wangyan.so
-TARGET += test_ct_plug.so
+TARGET	= test_app_sapp.so  trace_delay.so test_wangyan.so
+#TARGET += test_ct_plug.so
 TARGET += wangyan_demo.so
+TARGET += wangyan_gdev_measurement.so
 
 INCS	= -I ../include 
 INCS	+= -I ../inner_plug/
@@ -57,6 +58,10 @@ test_sapp_so:test_sapp_so.c
 #test_ct_plug.so:test_ct_plug.c
 #	$(CC) -o $@ -shared -fPIC $(CFLAGS) $(INCS) $^ $(MODULES)
 #	cp $@ ../run/plug/business/test_ct_plug/
+
+wangyan_gdev_measurement.so:wangyan_gdev_measurement.c
+	$(CC) -o $@ -shared -fPIC $(INCS) $(CFLAGS) $^ $(MODULES)
+	cp $@ ../run/plug/business/wangyan_gdev_measurement/
 
 .c.o:  
 	$(CC) -c -o $@ $(CFLAGS) -I. $(INCS) $<

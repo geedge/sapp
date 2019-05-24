@@ -1277,7 +1277,12 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 	return pkt_ret;
 }
 
-static void tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
+/*
+	return value:
+		1: reset and create new stream;
+		0: reset but free current stream;
+*/
+static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 				struct mesa_tcp_hdr *this_tcphdr,int datalen,const raw_pkt_t *raw_pkt)
 {
 	struct stream_list *plist=NULL;
@@ -1287,6 +1292,7 @@ static void tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	struct tcpdetail *pdetail = &pdetail_pr->tcpdetail_public;
 	UCHAR threadnum = pstream->threadnum;
 	UCHAR saved_curdir;
+	int ret = 0;
 	
 	 //add by lqy 20150107 回退计数
         if(pstream->curdir==DIR_S2C)
@@ -1386,11 +1392,32 @@ static void tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	
 	if(this_tcphdr->th_flags & TH_SYN){
 		tcp_add_new_stream_bysyn(pindex,this_iphdr,this_tcphdr,datalen,REUSE_OLD_LINK,raw_pkt);
+		ret = 1;
 	}else{
-		tcp_add_new_stream_bydata(pindex,this_tcphdr,datalen,REUSE_OLD_LINK);
+		if(TCP_CTEAT_LINK_BYDATA & tcp_creatlink_model){
+			tcp_add_new_stream_bydata(pindex,this_tcphdr,datalen,REUSE_OLD_LINK);
+			ret = 1;
+		}else{
+			/* 20190506 lijia add, reset之后如果不建新流, 直接free掉 */
+			hash_del_stream(pindex);
+			if(pstream->pdetail != NULL)
+			{
+				dictator_free(threadnum,pstream->pdetail);
+				pstream->pdetail=NULL;
+			}			
+			if(pstream_pr->timeout > link_default_nopkt_time){ /* 链接独有超时时间, 减少计数 */
+				sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
+			}			
+			free_heap_stream_info(pstream, 0);
+			free_streamindex(threadnum,pindex);
+			ret = 0;
+		}
+
 	}	
 
 	g_SysInputInfo[threadnum][SYS_TCP_LINK_RESET]++;
+
+	return ret;
 }
 
 
@@ -2541,7 +2568,10 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	
 	/* note: reset会重置计数, 放在clientbytes+=, clientpktnum++代码之后 */
 	if(1 == lrustream(pindex_tcp)){
-		tcp_reset_stream(pindex_tcp, this_iphdr,this_tcphdr, tcplen,raw_pkt);		
+		ret = tcp_reset_stream(pindex_tcp, this_iphdr,this_tcphdr, tcplen,raw_pkt);	
+		if(0 == ret){
+			return PASS;
+		}		
 	}
 	pdetail->lastmtime=g_CurrentTime;
 
