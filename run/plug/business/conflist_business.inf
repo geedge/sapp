@@ -1,5 +1,5 @@
 #./plug/business/test_app/test_app.inf
-./plug/business/test_wangyan/test_wangyan.inf
+#./plug/business/test_wangyan/test_wangyan.inf
 #./plug/business/test_http/test_http.inf
 #./plug/business/ipsec_biz_sample/ipsec_biz_sample.inf
 #./plug/business/l2tp_biz_sample/l2tp_biz_sample.inf
