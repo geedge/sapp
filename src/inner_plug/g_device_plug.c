@@ -20,12 +20,12 @@ extern "C" {
 
 #if IOMODE_MARSIO	
 #include "marsio.h"
-extern struct mr_instance * sapp_marsio4_instance;
+static struct mr_instance * gdev_plug_extern_marsio4_instance; /* dlopen dynamic link sapp->marsio4 instance */
 extern int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath, queue_id_t sid, marsio_buff_t * mbufs[], int nr_mbufs, uint16_t options);
 
 #endif
 
-int gdev_keepalive_plug_version_VERSION_20180305;
+int gdev_keepalive_plug_version_VERSION_20190527;
 
 #define MAX_GDEV_STAT_LOG_NUM	(64)
 
@@ -52,7 +52,6 @@ static int g_dev_keepalive_flag = 1; /* 全局保活标志, 所有插件都不保活或者重要插
 
 #define MAX_VXLAN_SERVICE_NUM	(256) /* 目前最大支持255种不同业务 */
 static struct gdev_keepalive_service_ctrl g_dev_keepalive_service_ctrl_array[MAX_VXLAN_SERVICE_NUM];/* 控制某类业务号是否保活  */ 
-#define VXLAN_SPORT_SERVICE_MAP_FILE "./conf/vxlan_sport_service_map.conf"
 
 static int GDEV_KEEPALIVE_LOG_SWITCH = 1;
 
@@ -65,7 +64,7 @@ extern int sendpacket_build_icmpv4_echo(u_int8_t type, u_int8_t code, u_int16_t 
 extern char *timet_to_str(time_t timet, char *time_str, int time_str_len);
 static int vxlan_sport_service_map_init(void);
 extern void del_last_rn(char *data, int max_len);
-
+extern struct dl_io_lib_name g_dl_io_lib_info[];
 static unsigned char g_vxlan_sport_to_service_id[65536]; /* 数组下标为源端口, 值为service-id */
 
 
@@ -290,7 +289,7 @@ static int gdev_keepalive_plug(const raw_pkt_t *raw_pkt, int thread_id, unsigned
 	marsio_buff_t *send_mbuf[1];
 	char *real_buf;
 
-	ret = marsio_buff_malloc_global(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_id);
+	ret = marsio_buff_malloc_global(gdev_plug_extern_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_id);
 	if(ret < 0){
 		goto err;
 	}
@@ -494,52 +493,32 @@ static void *gdev_keepalive_log_thread(void *arg)
 	return NULL;
 }
 
-
-int gdev_keepalive_plug_init(void)
+#if IOMODE_MARSIO	
+static struct mr_instance *dynamic_get_marsio_instance(void)
 {
-	char tmp_ip_buf[16];
-	int i;
+	void *dl_handle;
+	char lib_path[256];
+	void *address_of_sapp_marsio4_instance;
 
-	assert(sizeof(gdev_keepalive_status_t) % 64 == 0);
+	snprintf(lib_path, 256, "%s/%s", "platform_lib", g_dl_io_lib_info[g_packet_io_cap_mode].lib_name);
 
-	gdev_kp_log_handle = MESA_create_runtime_log_handle("./log/gdev_keeplive.log", 0);
-
-	if(g_topology_mode != NET_CONN_SERIAL_GDEV){ /* 非G串联模式 */
-		MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]", 
-								"In non-gdev mode, can't load gdev_keepalive.so\n");
-		return -1;
+	dl_handle = dlopen(lib_path, RTLD_NOW);
+	if(NULL == dl_handle){
+		printf("\033[41m[Error]dlopen %s error!\033[0m\n", lib_path);
+		return NULL;
 	}
 
-	memset(g_vxlan_sport_to_service_id, 0, sizeof(g_vxlan_sport_to_service_id));
-
-	memset(tmp_ip_buf, 0, 16);
-	MESA_load_profile_string_nodef((char *)"conf/gdev.conf", (char *)"Module", (char *)"sendto_gdev_ip", tmp_ip_buf, 16);
-	if(tmp_ip_buf[0] == '\0'){
-		MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]","can't get 'sendto_gdev_ip'");
-		return -1;
+	address_of_sapp_marsio4_instance = dlsym(dl_handle, "sapp_marsio4_instance");
+	if(NULL == address_of_sapp_marsio4_instance){
+		printf("\033[41m[Error]dlsym %s from %s error!\033[0m\n", "sapp_marsio4_instance", lib_path);
+		return NULL;
 	}
 
-	inet_pton(AF_INET, tmp_ip_buf, &sendto_gdev_card_ip);
-
-	MESA_load_profile_int_def((char *)"conf/gdev.conf", (char *)"Module", (char *)"default_keepalive_action", &g_dev_keepalive_default_action, 1);
-	MESA_load_profile_int_def((char *)"conf/gdev.conf", (char *)"Module", (char *)"gdev_status_switch", &GDEV_KEEPALIVE_LOG_SWITCH, 1);
-
-
-	for(i = 0; i <  MAX_VXLAN_SERVICE_NUM; i++){
-		g_dev_keepalive_service_ctrl_array[i].service_num = i;
-		g_dev_keepalive_service_ctrl_array[i].keepalive_switch = g_dev_keepalive_default_action;
-	}
-
-	vxlan_sport_service_map_init();
-
-	if(GDEV_KEEPALIVE_LOG_SWITCH){
-		pthread_t log_pid;
-		pthread_create(&log_pid, NULL, gdev_keepalive_log_thread, NULL);
-	}
-	
-	return 0;
+	/* dlsym 获取的是sapp_marsio4_instance符号的起始地址, 对此首地址取8bytes值, 才是指针的真实值 */
+	memcpy(&gdev_plug_extern_marsio4_instance, address_of_sapp_marsio4_instance, sizeof(void *));
+	return gdev_plug_extern_marsio4_instance; 
 }
-
+#endif
 
 static int gdev_kp_update_service_ctrl(const struct gdev_keepalive_service_ctrl *service_ctrl)
 {
@@ -676,9 +655,9 @@ static int vxlan_sport_service_map_init(void)
 	char *section;
 	unsigned short begin_sport, end_sport;
 
-	fp = fopen(VXLAN_SPORT_SERVICE_MAP_FILE, "r");
+	fp = fopen(ABBR_VXLAN_SPOER_CONF_FILE, "r");
 	if(NULL == fp){
-		MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "open file %s error!\n", VXLAN_SPORT_SERVICE_MAP_FILE);
+		MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "open file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
 		return -1;
 	}
 
@@ -691,7 +670,7 @@ static int vxlan_sport_service_map_init(void)
 		/* service-id */
 		section = strtok_r(line_buf, delim, &save_ptr);
 		if(NULL == section){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", VXLAN_SPORT_SERVICE_MAP_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
 			goto done;
 		}
 		tmp_service_id = atoi(section);
@@ -699,19 +678,19 @@ static int vxlan_sport_service_map_init(void)
 		/* VPN-id, 暂时不用转换, 直接减100即是业务号 */
 		section = strtok_r(NULL, delim, &save_ptr);
 		if(NULL == section){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", VXLAN_SPORT_SERVICE_MAP_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
 			goto done;
 		}
 
 		/* begin-port */
 		section = strtok_r(NULL, delim, &save_ptr);
 		if(NULL == section){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", VXLAN_SPORT_SERVICE_MAP_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
 			goto done;
 		}
 		tmp_int = atoi(section);
 		if(tmp_int <= 0 || tmp_int > 65535){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", VXLAN_SPORT_SERVICE_MAP_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
 			goto done;
 		}
 		begin_sport = (unsigned short)tmp_int;
@@ -719,18 +698,18 @@ static int vxlan_sport_service_map_init(void)
 		/* end-port */
 		section = strtok_r(NULL, delim, &save_ptr);
 		if(NULL == section){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", VXLAN_SPORT_SERVICE_MAP_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
 			goto done;
 		}	
 		tmp_int = atoi(section);
 		if(tmp_int <= 0 || tmp_int > 65535){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", VXLAN_SPORT_SERVICE_MAP_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
 			goto done;
 		}	
 		end_sport = (unsigned short)tmp_int;
 
 		if(end_sport < begin_sport){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", VXLAN_SPORT_SERVICE_MAP_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
 			goto done;
 		}
 
@@ -754,6 +733,59 @@ unsigned char vxlan_id_map_to_service_id(int vxlan_id)
 {
 	return (unsigned char)(vxlan_id - 100);
 }
+
+int gdev_keepalive_plug_init(void)
+{
+	char tmp_ip_buf[16];
+	int i;
+	
+#if IOMODE_MARSIO	
+	gdev_plug_extern_marsio4_instance = dynamic_get_marsio_instance();
+	if(NULL == gdev_plug_extern_marsio4_instance){
+		return -1;
+	}
+#endif
+
+	assert(sizeof(gdev_keepalive_status_t) % 64 == 0);
+
+	gdev_kp_log_handle = MESA_create_runtime_log_handle("./log/gdev_keeplive.log", 0);
+
+	if(g_topology_mode != NET_CONN_SERIAL_GDEV){ /* 非G串联模式 */
+		MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]", 
+								"In non-gdev mode, can't load gdev_keepalive.so\n");
+		return -1;
+	}
+
+	memset(g_vxlan_sport_to_service_id, 0, sizeof(g_vxlan_sport_to_service_id));
+
+	memset(tmp_ip_buf, 0, 16);
+	MESA_load_profile_string_nodef((char *)"./etc/gdev.conf", (char *)"Module", (char *)"sendto_gdev_ip", tmp_ip_buf, 16);
+	if(tmp_ip_buf[0] == '\0'){
+		MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]","can't get 'sendto_gdev_ip'");
+		return -1;
+	}
+
+	inet_pton(AF_INET, tmp_ip_buf, &sendto_gdev_card_ip);
+
+	MESA_load_profile_int_def((char *)"./etc/gdev.conf", (char *)"Module", (char *)"default_keepalive_action", &g_dev_keepalive_default_action, 1);
+	MESA_load_profile_int_def((char *)"./etc/gdev.conf", (char *)"Module", (char *)"gdev_status_switch", &GDEV_KEEPALIVE_LOG_SWITCH, 1);
+
+
+	for(i = 0; i <  MAX_VXLAN_SERVICE_NUM; i++){
+		g_dev_keepalive_service_ctrl_array[i].service_num = i;
+		g_dev_keepalive_service_ctrl_array[i].keepalive_switch = g_dev_keepalive_default_action;
+	}
+
+	vxlan_sport_service_map_init();
+
+	if(GDEV_KEEPALIVE_LOG_SWITCH){
+		pthread_t log_pid;
+		pthread_create(&log_pid, NULL, gdev_keepalive_log_thread, NULL);
+	}
+	
+	return 0;
+}
+
 
 #ifdef __cplusplus
 }

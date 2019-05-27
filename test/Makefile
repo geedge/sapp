@@ -8,6 +8,7 @@ MODULES	=
 BIN_PATH = ../bin/
 
 TARGET	= test_app_sapp.so
+TARGET += wangyan_gdev_measurement.so
 #TARGET  += test_anti_flood_hijack
 
 INCS = 
@@ -46,6 +47,10 @@ test_http.so:test_http.o
 test_anti_flood_hijack:test_anti_flood_hijack.c ../lib/libavltree.a
 	g++ -o $@ $(CFLAGS) $^ -I../inner_plug -I../support/avl_tree -lpcap -lpthread -lanti_flood_hijack -lMESA_htable -lMESA_handle_logger
 
+wangyan_gdev_measurement.so:wangyan_gdev_measurement.c
+	$(CC) -o $@ -shared -fPIC $(INCS) $(CFLAGS) $^ $(MODULES)
+	cp $@ ../bin/plug/business/wangyan_gdev_measurement/$@
+	
 .c.o:  
 	$(CC) -c -o $@ $(CFLAGS) -I. $(INCS) $<
 clean:

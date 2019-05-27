@@ -138,7 +138,7 @@ typedef struct{
 typedef struct{
 	void *log_handle;
 	time_t sapp_start_time;
-	int depolyment_mode_private; /* 根据配置sapp_global_val->config.packet_io.depolyment_mode_bin转换得到的内部值,  */
+	int depolyment_mode_private; /* 根据配置sapp_global_val->config.packet_io.depolyment_mode_bin转换得到的内部值,例如:NET_CONN_PARALLEL  */
 	unsigned char create_stream_mode; /* 兼容原来的逻辑, 值从配置stream.tcp.syn_mandatory转换得到 */
 	int packet_io_cap_level; 
 	sapp_gval_individual_fixed_fs_t fs_para;

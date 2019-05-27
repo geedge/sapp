@@ -30,7 +30,7 @@ enum depolyment_mode_config{
 #define ABBR_INTERFACE_TYPE		sapp_global_val->config.packet_io.internal.interface.type_bin
 #define ABBR_PROJECT_LIST_CONF_FILE  	sapp_global_val->config.special_conf_link.project_list_path
 #define ABBR_SEND_RAW_PKT_CONF_FILE  	sapp_global_val->config.special_conf_link.send_raw_pkt_path
-
+#define ABBR_VXLAN_SPOER_CONF_FILE		sapp_global_val->config.special_conf_link.vxlan_sport_service_map_path
 
 extern sapp_global_t *sapp_global_val;
 

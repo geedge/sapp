@@ -33,6 +33,7 @@
 #include <pcap/pcap.h>
 #include <getopt.h>
 #include <sys/sysinfo.h>
+#include <dirent.h>
 
 
 /* MESA framework */

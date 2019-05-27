@@ -28,8 +28,8 @@ typedef struct{
 	struct mr_sendpath *sendpath_up, *sendpath_down; /* 并联模式下, 直接使用sendpath_up; 同时兼容双网卡串联模式 */
 }marsio4_io_handle;
 
-int g_marsio4_version_VERSION_20190520;
-int g_marsio4_version_VERSION = 20170520;
+int g_marsio4_version_VERSION_20190527;
+int g_marsio4_version_VERSION = 20190527;
 static PACKET_IO_CB_T g_marsio4_work_fun;
 static int g_marsio4_work_thread_num = 1;
 static int g_marsio4_cap_level = CAP_LEVEL_MAC;
@@ -37,7 +37,7 @@ static int g_marsio4_topology_mode = NET_CONN_PARALLEL;
 static int marsio4_work_thread_seq[MAX_THREAD_NUM];
 static pthread_t marsio4_work_tid[MAX_THREAD_NUM];
 extern int g_use_MESA_sleep_sw;
-static struct mr_instance * sapp_marsio4_instance = NULL;
+struct mr_instance * sapp_marsio4_instance = NULL; /* 暂时对外开放,不能设为static */
 static int g_mr4_device_num = 0;
 static char **g_mr4_up_device_name; /* 设备名称集合, meth0, meth1, meth2... */
 static char **g_mr4_down_device_name; /* 设备名称集合, meth0, meth1, meth2... */
@@ -89,7 +89,7 @@ int dl_io_set_capdev_parallel(const char *cap_dev)
 {
 	char *save_ptr, *tmp_cap_dev_name;
 	const char *delim = ", ";
-	char cfg_name_from_pag_conf[1024]; 
+	char cfg_name_from_conf[1024]; 
 	char *single_device;
 	
 	 /* marsio4模式捕包网卡可能有多个, 复用原有的pcapdevice配置, 靠逗号分隔 */
@@ -99,12 +99,17 @@ int dl_io_set_capdev_parallel(const char *cap_dev)
 	}
 
 	/* marsio模式支持多网卡, 逗号分隔模式 */
-	MESA_load_profile_string_def((char *)"conf/main.conf", (char *)"Module", (char *)"pcapdevice", cfg_name_from_pag_conf, 1024, "");
+#if 0	
+	MESA_load_profile_string_def((char *)"conf/main.conf", (char *)"Module", (char *)"pcapdevice", cfg_name_from_conf, 1024, "");
 	if('\0' == cfg_name_from_pag_conf[0]){
 		printf("\033[1;31;40m[Error]Can't get pcap device from ./conf/main.conf!\033[0m\n");
 		return -1;
 	}
-	tmp_cap_dev_name = cfg_name_from_pag_conf;
+#else
+	strncpy(cfg_name_from_conf, sapp_global_val->config.packet_io.internal.interface.name, sizeof(cfg_name_from_conf));
+#endif
+
+	tmp_cap_dev_name = cfg_name_from_conf;
 
 	while((single_device = strtok_r(tmp_cap_dev_name, delim, &save_ptr)) != NULL){
 		if(NULL == g_mr4_up_device_name){
@@ -118,8 +123,6 @@ int dl_io_set_capdev_parallel(const char *cap_dev)
 		g_mr4_device_num++;
 		tmp_cap_dev_name = NULL;
 	}
-
-
 
 	return 0;
 }
@@ -657,6 +660,7 @@ int dl_io_init(int argc, char *argv[])
 	char bind_mask_string[128];
 	char app_name[32];
 
+#if 0
 	MESA_load_profile_int_def((char *)"pag.conf", (char *)"pag", (char *)"burst_rx", &marsio4_burst_process_pkt_num, 32);
 	if(marsio4_burst_process_pkt_num >= MARSIO_BURST_PKT_MAX){
 		printf("\033[33m[Warning]pag.conf->burst_rx is too more, set to %d!!\033[0m\n", MARSIO_BURST_PKT_MAX - 1);
@@ -682,14 +686,13 @@ int dl_io_init(int argc, char *argv[])
 		printf("\033[41m[Error]main.conf->cpu_bind_core_mask value incorrect!\033[0m\n");
 		return -1;
 	}
-	
+#endif
+
 	sapp_marsio4_instance = marsio_create();
 	if(NULL == sapp_marsio4_instance) {
 		fprintf(stderr,"%s\n","marsio_create error!\n");
 		return -1;
 	}
-
-	/* TODO, get cpu core-mask */
 
 	if(NET_CONN_SERIAL_GDEV == g_marsio4_topology_mode){
 		if(g_mr4_device_num != 1){
@@ -705,7 +708,8 @@ int dl_io_init(int argc, char *argv[])
 
 	g_mario4_io_handle = (marsio4_io_handle *)calloc(1, sizeof(marsio4_io_handle) * g_marsio4_work_thread_num);
 	marsio_option_set(sapp_marsio4_instance, MARSIO_OPT_THREAD_NUM, &g_marsio4_work_thread_num, sizeof(int));
-	
+
+#if 0	
 	MESA_load_profile_string_def((char *)"conf/main.conf", (char *)"Module", (char *)"cpu_bind_core_mask", bind_mask_string, 128, "$");
 	if(bind_mask_string[0] == '$'){
 		marsio4_thread_bind_mask = 0;
@@ -728,12 +732,23 @@ int dl_io_init(int argc, char *argv[])
 		printf("\033[41m[Error]main.conf->cpu_bind_core_mask value incorrect!\033[0m\n");
 		return -1;
 	}
+#endif
+
+#if 0
 	if(marsio4_thread_bind_mask != 0){
 		ret = marsio_option_set(sapp_marsio4_instance, MARSIO_OPT_THREAD_MASK, &marsio4_thread_bind_mask, sizeof(long));
 		if(ret < 0){
 			printf("\033[1;31;40m[Error] marsio set CPU-MASK '%lx' failed!\033[0m\n", marsio4_thread_bind_mask);
 		}
 	}	
+#else
+	if(sapp_global_val->config.cpu.bind_mask != 0){
+		ret = marsio_option_set(sapp_marsio4_instance, MARSIO_OPT_THREAD_MASK, &sapp_global_val->config.cpu.bind_mask, sizeof(long));
+		if(ret < 0){
+			printf("\033[1;31;40m[Error] marsio set CPU-MASK '%lx' failed!\033[0m\n", sapp_global_val->config.cpu.bind_mask);
+		}
+	}
+#endif
 
 	marsio_init(sapp_marsio4_instance, sapp_global_val->config.system.instance_name);
 
@@ -747,7 +762,7 @@ int dl_io_init(int argc, char *argv[])
 											g_marsio4_work_thread_num, 
 											INDEPENDENT_SEND_QUEUE_MAX_NUM);
 		if(NULL == g_mr4_dev_up_handle_set[i]){
-			printf("\033[1;31;40m[Error]Open device '%s' error, please check pag.conf and main.conf->pcapdevice!\033[0m\n", 
+			printf("\033[1;31;40m[Error]Open device '%s' error, please check sapp.toml->packet_io.interface!\033[0m\n", 
 				g_mr4_up_device_name[i]);
 			return -1;
 		}
@@ -758,7 +773,7 @@ int dl_io_init(int argc, char *argv[])
 												g_marsio4_work_thread_num, 
 												INDEPENDENT_SEND_QUEUE_MAX_NUM);
 			if(NULL == g_mr4_dev_down_handle_set[i]){
-				printf("\033[1;31;40m[Error]Open device '%s' error, please check pag.conf and main.conf->pcapdevice2!\033[0m\n", 
+				printf("\033[1;31;40m[Error]Open device '%s' error, please check sapp.toml->packet_io.interface!\033[0m\n", 
 					g_mr4_up_device_name[i]);
 				return -1;
 			}

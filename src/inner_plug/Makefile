@@ -118,8 +118,8 @@ pptp_biz_sample.so:pptp_biz_sample.o
 
 g_device_plug.so: g_device_plug.o
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES);
-	mkdir -p $(RELEASE_BIZ_PATH)/g_device_plug;
-	cp $@ $(RELEASE_BIZ_PATH)/g_device_plug/
+	mkdir -p $(RELEASE_PLT_PATH)/g_device_plug;
+	cp $@ $(RELEASE_PLT_PATH)/g_device_plug/
 
 wangyan_keepalive_plug.so:wangyan_keepalive_plug.c ../lib/libping.a
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES) $(H_DIR)  $(LIB) ../lib/libping.a;

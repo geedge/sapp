@@ -47,7 +47,7 @@ char g_up_dev_name[DEV_NAME_STR_LEN]; /* 并联模式默认捕包网卡 */
 char g_down_dev_name[DEV_NAME_STR_LEN];
 //static char g_cap_filter[CAP_FILTER_STR_LEN];
 //static int g_cap_buf_queue_num = 10000; /* IO线程和处理线程之间的缓冲队列长度 */
-int g_topology_config_raw_mode = 1;/* main.conf 配置文件的原始值 */
+//int g_topology_config_raw_mode = 1;/* main.conf 配置文件的原始值 */
 //int g_topology_mode = NET_CONN_PARALLEL; /* 通过topology_mode_convert()转换后的平台内部值 */
 //int g_packet_io_cap_mode = CAP_MODEL_PCAP_ONLINE;
 ///int g_packet_io_cap_level = CAP_LEVEL_MAC; /* 捕包起始位置,默认MAC层 */
@@ -220,7 +220,7 @@ int packet_io_set_topology_mode(int user_topology_mode)
 		return -1;
 	}
 
-	g_topology_config_raw_mode = user_topology_mode;
+	//g_topology_config_raw_mode = user_topology_mode;
 	//g_topology_mode = private_top_mode;
 
 	if(dl_io_fun_list.dl_io_set_topology_mode){
@@ -640,7 +640,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	}	
 #endif
 	if(g_platform_action_cb_fun != NULL){
-		ret = g_platform_action_cb_fun(g_topology_config_raw_mode, ret);
+		ret = g_platform_action_cb_fun(sapp_global_val->config.packet_io.depolyment_mode_bin, ret);
 	}
 
 	return ret;
@@ -709,10 +709,9 @@ int packet_io_init(int argc, char *argv[])
 
 	parse_send_route_conf("conf/send_route.conf");
 
-	parse_send_raw_pkt_conf();
+	packet_io_device_alias_init();
 
 	packet_io_status_init();
-	packet_io_device_alias_init();
 
 	return 0;
 }
@@ -1217,87 +1216,6 @@ int parse_send_route_conf(const char *profile_path)
 	return 0;
 }
 
-static int parse_send_raw_pkt_conf(void)
-{
-	FILE *fp;
-	char conf_buf[1024];
-	const char *delim = "\t ";
-	char *saveptr;
-	char *section;
-
-	fp = fopen(ABBR_SEND_RAW_PKT_CONF_FILE, "r");
-	if(NULL == fp){
-		sapp_log(30, ~0, ~0, "open %s error!\n", ABBR_SEND_RAW_PKT_CONF_FILE);
-		//return -1;
-		exit(1);
-	}
-
-	while(fgets(conf_buf, 1024, fp)){
-		if('#' == conf_buf[0] || ' ' == conf_buf[0] || '\r' == conf_buf[0] || '\n' == conf_buf[0]){
-			continue;
-		}
-
-		del_last_rn(conf_buf, 1024);
-
-		/* target_id */
-		section = strtok_r(conf_buf, delim, &saveptr);
-		if(NULL == section){
-			return -1;
-		}
-		G_SND_RAW_PKT_INFO[G_SND_RAW_PKT_INFO_NUM].target_id = strtoul(section, NULL, 10);
-
-		/* PAG args, net_card name */
-		section = strtok_r(NULL, delim, &saveptr);
-		if(NULL == section){
-			return -1;
-		}
-		memcpy(G_SND_RAW_PKT_INFO[G_SND_RAW_PKT_INFO_NUM].send_args[CAP_MODEL_PAG].dev_name, section, 128);	
-		
-		/* pcap args, device name */
-		section = strtok_r(NULL, delim, &saveptr);
-		if(NULL == section){
-			return -1;
-		}
-		memcpy(G_SND_RAW_PKT_INFO[G_SND_RAW_PKT_INFO_NUM].send_args[CAP_MODEL_PCAP_ONLINE].dev_name, section, 128);
-
-		/* PFRING args, net_card index */
-		section = strtok_r(NULL, delim, &saveptr);
-		if(NULL == section){
-			return -1;
-		}
-		memcpy(G_SND_RAW_PKT_INFO[G_SND_RAW_PKT_INFO_NUM].send_args[CAP_MODEL_PFRING].dev_name, section, 128);
-
-		/* DPDK args, port number */
-		section = strtok_r(NULL, delim, &saveptr);
-		if(NULL == section){
-			return -1;
-		}
-		G_SND_RAW_PKT_INFO[G_SND_RAW_PKT_INFO_NUM].send_args[CAP_MODEL_DPDK].port_id = strtoul(section, NULL, 10);	
-
-		/* TODO 1, PPF args, port number */
-		section = strtok_r(NULL, delim, &saveptr);
-
-		/* TODO 1, PPF args, port number */
-		section = strtok_r(NULL, delim, &saveptr);
-
-		/* TODO 1, npacket args, port number */
-		section = strtok_r(NULL, delim, &saveptr);
-
-		/* TODO 1, qnf args, port number */
-		section = strtok_r(NULL, delim, &saveptr);
-
-		/* TODO 1, n95 args, port number */
-		section = strtok_r(NULL, delim, &saveptr);
-			
-		while(strtok_r(NULL, delim, &saveptr)); /* clear line buf */
-
-		G_SND_RAW_PKT_INFO_NUM++;
-	}
-
-	fclose(fp);
-
-	return 0;
-}
 
 int packet_io_send_raw(int thread_num, char *data, int datalen,unsigned int target_id)
 {

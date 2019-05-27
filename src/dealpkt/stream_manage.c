@@ -48,7 +48,7 @@ int sapp_packet_io_v = 20160426;
 #elif IOMODE_TOPSEC
 int sapp_packet_io_v = 20151014;
 #elif IOMODE_MARSIO
-int sapp_packet_io_v = 20170512;
+int sapp_packet_io_v = 20190527;
 #elif IOMODE_SMITH
 int sapp_packet_io_v = 20161027;
 #elif IOMODE_DPDK_VXLAN

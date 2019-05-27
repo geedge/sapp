@@ -1,36 +1,15 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
-#include <netinet/udp.h>
-#include <assert.h>
-#include <time.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <dirent.h>
-#include "stream.h"
-#include "stream_control.h"
-#include "mesa_net.h"
-#include "gserial_sendpacket.h"
-#include "gdev_keepalive.h"
-#include "mrtunnat.h"
-#include "sysinfo.h"
-#include "MESA_handle_logger.h"
-
+#include "sapp_api.h"
+#include "sapp_private_api.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif 
 
+int wangyan_gdev_measure_version_20190527;
 
 #define GDEV_MEASURE_CONF_DIR "conf/wangyan_gdev_measure/"
 #define GDEV_MEASURE_MAX_NUM	 (32) /* 最多同时支持多少个发送实例 */
 #define GDEV_MEASURE_SEND_MSS	(1400)
-
-
 
 
 typedef struct {
@@ -83,7 +62,6 @@ static send_pkt_realtime_t g_wangyan_send_fake_pkt_rt_stat[MAX_THREAD_NUM];
 static void *gdev_measure_logh;
 
 extern int get_thread_count(void);
-extern time_t g_CurrentTime;
 #if 0
 
 typedef struct {
@@ -133,6 +111,17 @@ static send_pkt_conf_parse_t g_send_pkt_conf_engine[] =
 	
 */
 #endif
+
+static inline time_t get_tmie_from_sapp(void)
+{
+	time_t cur_time;
+	int optlen = sizeof(time_t);
+	
+	sapp_get_platform_opt(SPO_CURTIME_TIMET, &cur_time, &optlen);
+
+	return cur_time;
+}
+
 
 /* 读取NingSi的配置文件, 没有[main], [module]等section, 无法直接使用prof_load接口, 自己模拟mesa_prof_load实现一个 */
 static int __load_profile_string_no_section(const char *filename, const char *key, int delim, char out_value[256])
@@ -816,12 +805,12 @@ static void *test_gdev_get_opt(void *arg)
 
 static void wangyan_gdev_measure_send_pkt(int thread_seq, wangyan_gdev_measure_instance_t *instance)
 {
-	if(instance->last_send_time == g_CurrentTime){
+	if(instance->last_send_time == get_tmie_from_sapp()){
 		if(instance->send_pkt_num >= instance->send_pkt_para.send_pps){
 			return;
 		}
 	}else{
-		instance->last_send_time = g_CurrentTime;
+		instance->last_send_time = get_tmie_from_sapp();
 		instance->send_pkt_num = 0; 
 	}
 

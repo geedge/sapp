@@ -60,9 +60,9 @@ static int parse_send_raw_pkt_conf(void)
 	int column_index = 0; /* 第几列 */
 	unsigned int tid;
 
-	fp = fopen("conf/send_raw_pkt.conf", "r");
+	fp = fopen(ABBR_SEND_RAW_PKT_CONF_FILE, "r");
 	if(NULL == fp){
-		printf("\033[41m[Error]open file '%s' error!\033[0m\n", "send_raw_pkt.conf");
+		printf("\033[41m[Error]open file '%s' error!\033[0m\n", ABBR_SEND_RAW_PKT_CONF_FILE);
 		return -1;
 	}
 
@@ -81,7 +81,7 @@ static int parse_send_raw_pkt_conf(void)
 		tid = strtoul(section, NULL, 0);
 
 		if(tid > 1000){
-			printf("\033[33mWarning! in '%s', target_id is too large!\033[0m\n", "conf/send_raw_pkt.conf");
+			printf("\033[33mWarning! in '%s', target_id is too large!\033[0m\n", ABBR_SEND_RAW_PKT_CONF_FILE);
 			usleep(100000);
 		}
 
@@ -90,7 +90,7 @@ static int parse_send_raw_pkt_conf(void)
 		while(g_packet_io_cap_mode != column_index){ /* 找到当前捕包模式对应的列 */
 			section = strtok_r(NULL, delim, &saveptr);
 			if(NULL == section){
-				printf("\033[41m[Error]packet_io_mode is %d, but in %s not found related args!\033[0m\n", g_packet_io_cap_mode, "conf/send_raw_pkt.conf");
+				printf("\033[41m[Error]packet_io_mode is %d, but in %s not found related args!\033[0m\n", g_packet_io_cap_mode, ABBR_SEND_RAW_PKT_CONF_FILE);
 				return -1;
 			}
 			column_index++;

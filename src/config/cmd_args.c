@@ -21,7 +21,7 @@ static inline int dumpfile_speed_check(const char *opt_name, const char *opt_arg
 	return ret;
 }
 
-/* ï¿½ï¿½Ì¬Ö»ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½ï¿½ÎºÎ´ï¿½ï¿½ï¿½ï¿? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sapp_global_valï¿½ï¿½ */
+/* ¾²Ì¬Ö»¶ÁÈ«¾Ö±äÁ¿¿ÉÒÔ·ÅÔÚÈÎºÎ´úÂë¶Î, ÎÞÐèÔÚsapp_global_valÀï */
 static const sapp_cmd_args_usage_t cmd_args_usage[] = 
 {
 	{"-h", "help", 	NULL,	"show help message"},
@@ -32,10 +32,10 @@ static const sapp_cmd_args_usage_t cmd_args_usage[] =
 	{NULL,	NULL, 		NULL}
 };
 
-/* ï¿½ï¿½Ì¬Ö»ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½ï¿½ÎºÎ´ï¿½ï¿½ï¿½ï¿? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sapp_global_valï¿½ï¿½ */
+/* ¾²Ì¬Ö»¶ÁÈ«¾Ö±äÁ¿¿ÉÒÔ·ÅÔÚÈÎºÎ´úÂë¶Î, ÎÞÐèÔÚsapp_global_valÀï */
 static const char *sapp_cla_short_options = "dhv";
 
-/* ï¿½ï¿½Ì¬Ö»ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½ï¿½ÎºÎ´ï¿½ï¿½ï¿½ï¿? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sapp_global_valï¿½ï¿½ */
+/* ¾²Ì¬Ö»¶ÁÈ«¾Ö±äÁ¿¿ÉÒÔ·ÅÔÚÈÎºÎ´úÂë¶Î, ÎÞÐèÔÚsapp_global_valÀï */
 static const struct option sapp_cla_long_options[] = 
 {
 	{"help",		no_argument,      NULL,      'h'},
@@ -52,7 +52,7 @@ static int check_args_legality(const char *opt_name, const char *opt_arg)
 	int index = 0, ret = 0;
 
 	while(cmd_args_usage[index].long_opt_name != NULL){
-		/* Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ã²ï¿½Í¬ï¿½Ä³ï¿½ï¿½È±È½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ö¹dumpfile ï¿½ï¿½ dumpfile-speedÊ¹ï¿½Ã½Ï¶Ì³ï¿½ï¿½È±È½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿?*/
+		/* Ñ¡ÏîÃû³ÆÒªÓÃ²»Í¬µÄ³¤¶È±È½ÏÁ½´Î, ·ÀÖ¹dumpfile Óë dumpfile-speedÊ¹ÓÃ½Ï¶Ì³¤¶È±È½Ï, ¶øÎóÃüÖÐµÄÇé¿ö */
 		if((strncasecmp(opt_name, cmd_args_usage[index].long_opt_name, strlen(opt_name)) == 0)
 		 && (strncasecmp(opt_name, cmd_args_usage[index].long_opt_name, strlen(cmd_args_usage[index].long_opt_name)) == 0)
 		 && (cmd_args_usage[index].check_fun != NULL)){
@@ -66,7 +66,7 @@ static int check_args_legality(const char *opt_name, const char *opt_arg)
 	return ret;
 }
 
-/* ï¿½ï¿½é²»Í¬ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½ï¿½à»¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµ */
+/* ¼ì²é²»Í¬²ÎÊýÖ®¼äµÄÏà»¥¹ØÁª¹ØÏµ */
 static int check_args_sanity(void)
 {
 	//TODO
@@ -115,7 +115,7 @@ int sapp_get_cla_raw(const char *opt_long_name, char ** const opt_string_value)
 	local_tmp_cla_num = sapp_global_val->cla.cmd_args_num;
 	
 	for(i = 0; i < local_tmp_cla_num; i++){
-		/* Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ã²ï¿½Í¬ï¿½Ä³ï¿½ï¿½È±È½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ö¹dumpfile ï¿½ï¿½ dumpfile-speedÊ¹ï¿½Ã½Ï¶Ì³ï¿½ï¿½È±È½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿?*/
+		/* Ñ¡ÏîÃû³ÆÒªÓÃ²»Í¬µÄ³¤¶È±È½ÏÁ½´Î, ·ÀÖ¹dumpfile Óë dumpfile-speedÊ¹ÓÃ½Ï¶Ì³¤¶È±È½Ï, ¶øÎóÃüÖÐµÄÇé¿ö */
 		if((strncasecmp(opt_long_name, local_tmp_array[i]->long_opt_name, strlen(opt_long_name)) == 0)
 		 && (strncasecmp(opt_long_name, local_tmp_array[i]->long_opt_name, strlen(local_tmp_array[i]->long_opt_name)) == 0)){
 			if(local_tmp_array[i]->arg_val.string_value != NULL){
@@ -248,6 +248,5 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 #ifdef __cplusplus
 }
 #endif
-
 
 
