@@ -406,8 +406,7 @@ int Gserial_sendpacket_ipv6_udp_detail(int plug_id,struct streaminfo *stream, st
 }
 
 #if IOMODE_MARSIO
-#include "marsio.h"
-#include "packet_io.h"
+
 /* 
 	发包的同时, 给tcpdump_mesa一份, 便于捕包分析,
 	回注的包无需tcpdump_mesa捕获, 直接在驱动底层捕获即可.

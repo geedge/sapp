@@ -415,7 +415,7 @@ static int sapp_fs2_init(void)
 	fs2_opt = 1; /* 1:Rewrite ,2: Append.  */
 	FS_set_para(fs2_handle, PRINT_MODE, &fs2_opt, sizeof(int));
 
-	fs2_opt = 0;
+	fs2_opt = 1;
 	FS_set_para(fs2_handle, PRINT_TRIGGER, &fs2_opt, sizeof(int));
 
 	fs2_opt = 0;

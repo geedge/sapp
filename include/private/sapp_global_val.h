@@ -107,6 +107,7 @@ typedef struct{
 	int depolyment_mode_bin; /* 方便程序内处理, 转成数值形式, 如1:mirror; 2:transparent; 3:inline等 */
 	sapp_config_packet_io_dev_t internal;
 	sapp_config_packet_io_dev_t external;
+	char pcap_dumpfile_name[NAME_MAX];
 }sapp_config_packet_io_t;
 
 typedef struct{

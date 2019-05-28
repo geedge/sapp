@@ -9,6 +9,10 @@ include_directories(${CMAKE_SOURCE_DIR}/include/support)
 
 LINK_DIRECTORIES(/opt/MESA/lib)
 
+if(OPT_IOMODE_MARSIO)
+	LINK_DIRECTORIES(/opt/mrzcpd/lib)
+endif()
+
 add_executable(sapp sapp_init.c sapp_main.c sapp_global_val.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
 target_link_libraries(sapp nsl pthread dl m pcap)

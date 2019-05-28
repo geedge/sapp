@@ -15,18 +15,18 @@ extern "C" {
 
 packet_io_device_alias_t *g_packet_device_alias; /* 直接用数组下标代表target_id, 提高查找效率 */
 int packet_device_alias_num = 0;
-static void * (*dl_io_device_alias_fun)(unsigned int target_id, char *device_args);
 
 extern void del_last_rn(char *data, int max_len);
-extern struct dl_io_lib_name g_dl_io_lib_info[];
 extern void * dl_io_device_alias(unsigned int target_id, char *device_args);
 extern void * get_dl_io_device_alias_fun_symbol(void);
 
 
 static int insert_to_device_alias(unsigned int target_id, char *device_args)
 {
+	void * (*dl_io_device_alias_fun)(unsigned int target_id, char *device_args);
+	
 	if(0 == packet_device_alias_num) {
-		g_packet_device_alias = (packet_io_device_alias_t *)malloc(sizeof(packet_io_device_alias_t) * (target_id + 1));
+		g_packet_device_alias = (packet_io_device_alias_t *)calloc(1, sizeof(packet_io_device_alias_t) * (target_id + 1));
 		packet_device_alias_num = target_id + 1;
 	}else{
 		if(packet_device_alias_num <= (int)target_id){
@@ -36,7 +36,8 @@ static int insert_to_device_alias(unsigned int target_id, char *device_args)
 	}
 
 	if(NULL == dl_io_device_alias_fun){
-		dl_io_device_alias_fun = (void * (*)(unsigned int, char *))get_dl_io_device_alias_fun_symbol();
+		//dl_io_device_alias_fun = (void * (*)(unsigned int, char *))get_dl_io_device_alias_fun_symbol();
+		dl_io_device_alias_fun = dl_io_fun_list.dl_io_device_alias;
 		if(NULL == dl_io_device_alias_fun){
 			return -1;
 		}

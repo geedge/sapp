@@ -7,9 +7,10 @@ CFLAGS = -D_GNU_SOURCE -D_BSD_SOURCE -std=c99 -Wall -Wextra -fPIC
 # to compile for no debug: make
 CFLAGS += -O0 -g
 
-EXEC = toml_json toml_cat test_toml
+EXEC = test_toml
 
 LIB = libtoml.a libtomlc99_wrap.so libtomlc99_wrap.a
+LIB_PATH = -L/opt/MESA/lib
 
 all: $(LIB) $(EXEC)
 
@@ -22,7 +23,7 @@ toml_json: toml_json.c $(LIB)
 toml_cat: toml_cat.c $(LIB)
 
 test_toml: test_toml.c 
-	gcc -o $@ -ltomlc99_wrap $^
+	gcc -o $@ $(LIB_PATH) -ltomlc99_wrap $^
 
 libtomlc99_wrap.so:tomlc99_wrap.o  toml.o
 	gcc -o $@ -shared -fPIC $^; cp tomlc99_wrap.h ../../../include/support/; 

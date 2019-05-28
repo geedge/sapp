@@ -35,8 +35,8 @@
 #include "private/sapp_pkt_stat.h"
 
 #if IOMODE_MARSIO
-#include "marsio.h"
-#include "mrtunnat.h"
+#include "/opt/mrzcpd/include/marsio.h"
+#include "/opt/mrzcpd/include/mrtunnat.h"
 #endif
 
 #endif

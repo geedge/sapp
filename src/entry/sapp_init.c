@@ -272,12 +272,6 @@ int MESA_platform_init(int argc, char *argv[])
 			exit(1);
 	}
 
-	//if(MESA_load_profile_int_def("conf/main.conf", "Module", "net_connection_mode", &top_mode, 1) < 0){
-		//printf("read conf 'net_connection_mode' error!\n");
-		//exit(1);
-	//}
-	packet_io_set_topology_mode(sapp_global_val->config.packet_io.depolyment_mode_bin);
-
 	//if(MESA_load_profile_string_def("conf/main.conf", "Module", "pcapdevice", pcap_dev1, 128, "eth0") < 0){
 		//printf("read conf 'pcapdevice' error!\n");
 		//exit(1);
@@ -292,6 +286,12 @@ int MESA_platform_init(int argc, char *argv[])
 		packet_io_set_capdev_serial(sapp_global_val->config.packet_io.internal.interface.name, 
 									sapp_global_val->config.packet_io.external.interface.name);
 	}	
+
+	//if(MESA_load_profile_int_def("conf/main.conf", "Module", "net_connection_mode", &top_mode, 1) < 0){
+		//printf("read conf 'net_connection_mode' error!\n");
+		//exit(1);
+	//}
+	packet_io_set_topology_mode(sapp_global_val->config.packet_io.depolyment_mode_bin);
 	
 	//if(MESA_load_profile_string_def("conf/main.conf", "Module", "pcapfilter", cap_filter, 1024, "") < 0){
 		//printf("read conf 'pcapfilter' error!\n");

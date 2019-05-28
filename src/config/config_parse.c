@@ -221,12 +221,16 @@ void sapp_cla_override_cfg_file(void)
 	sapp_config_t *pconfig = &sapp_global_val->config;
 	
 	if(sapp_get_cla_raw("dumpfile", &cmd_args) >= 0){ /* dumpfile模式自动覆盖interface配置 */
-			pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
-			sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
-			strcpy(pconfig->packet_io.internal.interface.type_str, "pcap");
-			pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_PCAP_DUMPFILE;
+		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
+		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
+		strcpy(pconfig->packet_io.internal.interface.type_str, "pcap");
+		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_PCAP_DUMPFILE;
 	}
 
+	if(sapp_get_cla_raw("dumpfile-file", &cmd_args) >= 0){
+		strncpy(sapp_global_val->config.packet_io.pcap_dumpfile_name, cmd_args, NAME_MAX);
+	}
+	
 	return;
 }
 
@@ -492,6 +496,9 @@ void sapp_gval_init(void)
 	for(tseq = 0; tseq < SAPP_MAX_THREADS; tseq++){
 		sapp_global_val->mthread_volatile[tseq] = (sapp_gval_mthread_t *)calloc(1, sizeof(sapp_gval_mthread_t));
 	}
+
+	/* set default value, maybe not input by user or config file */
+	snprintf(sapp_global_val->config.packet_io.pcap_dumpfile_name, NAME_MAX, "dumpfile");
 }
 
 

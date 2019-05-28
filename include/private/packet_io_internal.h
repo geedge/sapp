@@ -135,8 +135,10 @@ typedef struct{
 
 struct dl_io_lib_name{
 	int cap_mode;
-	char *lib_name;
+	const char *prefix;
+	const char *lib_name;
 };
+
 typedef struct{
 	unsigned int target_id; /* 配置文件中的ID */
 	char *device_args;    /* 配置文件中的原始配置字符串, 需要驱动层的回调函数转换成io_io_param; */
@@ -186,6 +188,115 @@ extern int get_pkt_len_from_eth_hdr(const struct mesa_ethernet_hdr *ehdr);
 extern int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_type_t addrtype, 
 	char *data, int datalen, int dir_reverse,char *feedback_buf, int *feedback_buf_len);
 unsigned long long MESA_rand_range(unsigned long long start, unsigned long long end);
+
+/********************** funcitons for dynamic link ***********************/
+extern int dl_io_set_cap_level(int cap_level);
+extern int dl_io_set_cap_mode(int cap_mode);
+extern int dl_io_set_topology_mode(int topology_mode);
+extern int dl_io_set_capdev_parallel(const char *cap_dev);
+extern int dl_io_set_capdev_serial(const char *up_dev, const char *down_dev);
+extern int dl_io_set_capture_filter(const char *filter_rule);
+extern int dl_io_set_cap_buf_queue(int queue_num_max);
+extern int dl_io_set_work_thread_num(int thread_num_max);
+extern long dl_io_get_app_drop_num(int thread_num);
+extern long dl_io_get_lib_drop_num(void);
+extern unsigned char * dl_io_get_sendbuf(void *, int );
+extern void dl_io_free_sendbuf(void *, int thread_num);
+extern void * dl_io_get_send_handle(int  thread_num);
+extern int dl_io_low_level_send(void *phandle, unsigned char *data,int datalen,
+						int eth_carry_layer_addr_type, int dir,int thread_num); /* 不含ethernet层 */
+extern int dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num); /* 全部原始包 */
+extern int dl_io_init(int argc, char *argv[]);
+extern void dl_io_run(void);
+extern int dl_io_register_cb(PACKET_IO_CB_T fun);
+extern int dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun); 
+extern int dl_io_get_version(void);
+extern void * dl_io_device_alias(unsigned int target_id, char *device_args);
+
+/********************** funcitons for dynamic link ***********************/
+
+
+/********************** pcap funcitons for dynamic link ***********************/
+extern int pcap_dl_io_set_cap_level(int cap_level);
+extern int pcap_dl_io_set_cap_mode(int cap_mode);
+extern int pcap_dl_io_set_topology_mode(int topology_mode);
+extern int pcap_dl_io_set_capdev_parallel(const char *cap_dev);
+extern int pcap_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev);
+extern int pcap_dl_io_set_capture_filter(const char *filter_rule);
+extern int pcap_dl_io_set_cap_buf_queue(int queue_num_max);
+extern int pcap_dl_io_set_work_thread_num(int thread_num_max);
+extern long pcap_dl_io_get_app_drop_num(int thread_num);
+extern long pcap_dl_io_get_lib_drop_num(void);
+extern unsigned char * pcap_dl_io_get_sendbuf(void *, int );
+extern void pcap_dl_io_free_sendbuf(void *, int thread_num);
+extern void * pcap_dl_io_get_send_handle(int  thread_num);
+extern int pcap_dl_io_low_level_send(void *phandle, unsigned char *data,int datalen,
+						int eth_carry_layer_addr_type, int dir,int thread_num); /* 不含ethernet层 */
+extern int pcap_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num); /* 全部原始包 */
+extern int pcap_dl_io_init(int argc, char *argv[]);
+extern void pcap_dl_io_run(void);
+extern int pcap_dl_io_register_cb(PACKET_IO_CB_T fun);
+extern int pcap_dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun); 
+extern int pcap_dl_io_get_version(void);
+extern void * pcap_dl_io_device_alias(unsigned int target_id, char *device_args);
+
+/********************** pcap funcitons for dynamic link ***********************/
+
+
+/********************** pag funcitons for dynamic link ***********************/
+extern int pag_dl_io_set_cap_level(int cap_level);
+extern int pag_dl_io_set_cap_mode(int cap_mode);
+extern int pag_dl_io_set_topology_mode(int topology_mode);
+extern int pag_dl_io_set_capdev_parallel(const char *cap_dev);
+extern int pag_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev);
+extern int pag_dl_io_set_capture_filter(const char *filter_rule);
+extern int pag_dl_io_set_cap_buf_queue(int queue_num_max);
+extern int pag_dl_io_set_work_thread_num(int thread_num_max);
+extern long pag_dl_io_get_app_drop_num(int thread_num);
+extern long pag_dl_io_get_lib_drop_num(void);
+extern unsigned char * pag_dl_io_get_sendbuf(void *, int );
+extern void pag_dl_io_free_sendbuf(void *, int thread_num);
+extern void * pag_dl_io_get_send_handle(int  thread_num);
+extern int pag_dl_io_low_level_send(void *phandle, unsigned char *data,int datalen,
+						int eth_carry_layer_addr_type, int dir,int thread_num); /* 不含ethernet层 */
+extern int pag_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num); /* 全部原始包 */
+extern int pag_dl_io_init(int argc, char *argv[]);
+extern void pag_dl_io_run(void);
+extern int pag_dl_io_register_cb(PACKET_IO_CB_T fun);
+extern int pag_dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun); 
+extern int pag_dl_io_get_version(void);
+extern void * pag_dl_io_device_alias(unsigned int target_id, char *device_args);
+
+/********************** pag funcitons for dynamic link ***********************/
+
+
+/********************** marsio funcitons for dynamic link *********************/
+extern int marsio_dl_io_set_cap_level(int cap_level);
+extern int marsio_dl_io_set_cap_mode(int cap_mode);
+extern int marsio_dl_io_set_topology_mode(int topology_mode);
+extern int marsio_dl_io_set_capdev_parallel(const char *cap_dev);
+extern int marsio_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev);
+extern int marsio_dl_io_set_capture_filter(const char *filter_rule);
+extern int marsio_dl_io_set_cap_buf_queue(int queue_num_max);
+extern int marsio_dl_io_set_work_thread_num(int thread_num_max);
+extern long marsio_dl_io_get_app_drop_num(int thread_num);
+extern long marsio_dl_io_get_lib_drop_num(void);
+extern unsigned char * marsio_dl_io_get_sendbuf(void *, int );
+extern void marsio_dl_io_free_sendbuf(void *, int thread_num);
+extern void * marsio_dl_io_get_send_handle(int  thread_num);
+extern int marsio_dl_io_low_level_send(void *phandle, unsigned char *data,int datalen,
+						int eth_carry_layer_addr_type, int dir,int thread_num); /* 不含ethernet层 */
+extern int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num); /* 全部原始包 */
+extern int marsio_dl_io_init(int argc, char *argv[]);
+extern void marsio_dl_io_run(void);
+extern int marsio_dl_io_register_cb(PACKET_IO_CB_T fun);
+extern int marsio_dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun); 
+extern int marsio_dl_io_get_version(void);
+extern void * marsio_dl_io_device_alias(unsigned int target_id, char *device_args);
+
+/********************** marsio funcitons for dynamic link *********************/
+
+
 
 #ifdef __cplusplus
 }

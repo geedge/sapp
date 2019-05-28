@@ -28,22 +28,24 @@ static const sapp_cmd_args_usage_t cmd_args_usage[] =
 	{"-v", "version", NULL,	"show platform version"},
 	{"-c", "sample-config", NULL, "generate sample config file->sapp.toml"},
 	{"-d", "dumpfile", NULL,	"running as pcap dumpfile mode"},
+	{"-r", "dumpfile-file", NULL,	"read packets from which pcap file"},
 	{" ",  "dumpfile-speed",	dumpfile_speed_check, "\n  \t\ttop-speed\tprocess packets as fast as possible, this is default behavior\n  \t\ttimestamp\tprocess packets as pcap file timestamp interval"},
 	{NULL,	NULL, 		NULL}
 };
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
-static const char *sapp_cla_short_options = "dhv";
+static const char *sapp_cla_short_options = "dhvr:";
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const struct option sapp_cla_long_options[] = 
 {
-	{"help",		no_argument,      NULL,      'h'},
-	{"version",		no_argument,      NULL,      'v'},
-	{"dumpfile",	no_argument,      NULL,      'd'},
-	{"dumpfile-speed",	required_argument,      NULL,      0},
-	{"sample-config", no_argument,      NULL,      'c'},
-	{NULL,          0,      NULL,      0}
+	{"help",			no_argument,      	NULL,      'h'},
+	{"version",			no_argument,      	NULL,      'v'},
+	{"dumpfile",		no_argument,      	NULL,      'd'},
+	{"dumpfile-file",	required_argument,  NULL,      'r'},
+	{"dumpfile-speed",	required_argument,  NULL,      0},
+	{"sample-config", 	no_argument,      	NULL,      'c'},
+	{NULL,          	0,      			NULL,      0}
 };
 
 
@@ -69,7 +71,23 @@ static int check_args_legality(const char *opt_name, const char *opt_arg)
 /* 检查不同参数之间的相互关联关系 */
 static int check_args_sanity(void)
 {
-	//TODO
+	char *no_use;
+	int dumpfile_mode_enabled = 0;
+
+	if(sapp_get_cla_raw("dumpfile", &no_use) >= 0){
+		dumpfile_mode_enabled = 1;
+	}
+	
+	if((sapp_get_cla_raw("dumpfile-file", &no_use) >= 0) && (0 == dumpfile_mode_enabled)){
+		sapp_log(30, ~0, ~0, "args --dumpfile-file must with --dumpfile!");
+		exit(1);
+	}
+
+	if((sapp_get_cla_raw("dumpfile-speed", &no_use) >= 0) && (0 == dumpfile_mode_enabled)){
+		sapp_log(30, ~0, ~0, "args --dumpfile-speed must with --dumpfile!");
+		exit(1);
+	}
+
 	return 0;
 }
 
@@ -216,7 +234,12 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 			case 'd':
 				store_cmd_args("dumpfile", NULL);
 				continue;
-			break;			
+			break;		
+
+			case 'r':
+				store_cmd_args("dumpfile-file", optarg);
+				continue;
+			break;
 
 			case '?': /* invalid or unknown option */
 				ret = -1;

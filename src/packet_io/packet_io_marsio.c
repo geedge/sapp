@@ -4,8 +4,6 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
-#include "marsio.h"
-#include "mrtunnat.h"
 
 
 /*
@@ -28,8 +26,8 @@ typedef struct{
 	struct mr_sendpath *sendpath_up, *sendpath_down; /* 并联模式下, 直接使用sendpath_up; 同时兼容双网卡串联模式 */
 }marsio4_io_handle;
 
-int g_marsio4_version_VERSION_20190527;
-int g_marsio4_version_VERSION = 20190527;
+int g_marsio4_version_VERSION_20190528;
+int g_marsio4_version_VERSION = 20190528;
 static PACKET_IO_CB_T g_marsio4_work_fun;
 static int g_marsio4_work_thread_num = 1;
 static int g_marsio4_cap_level = CAP_LEVEL_MAC;
@@ -53,20 +51,22 @@ static long marsio4_thread_bind_mask = 0;
 extern void timestamp_region_update_driver(int tid, long long cpu_cycle);
 extern int stream_process_polling(int thread_seq);
 
-int dl_io_set_cap_level(int cap_level)
+/************************  funcitons for dynamic link *************************/
+
+int marsio_dl_io_set_cap_level(int cap_level)
 {
 	g_marsio4_cap_level = cap_level;
 	
 	return 0;
 }
 
-int dl_io_set_cap_mode(int cap_mode)
+int marsio_dl_io_set_cap_mode(int cap_mode)
 {
 	(void)cap_mode;
 	return 0;
 }
 
-int dl_io_set_topology_mode(int topology_mode)
+int marsio_dl_io_set_topology_mode(int topology_mode)
 {
 	switch(topology_mode){
 		case NET_CONN_PARA_NOSEND:
@@ -85,7 +85,7 @@ int dl_io_set_topology_mode(int topology_mode)
 	return 0;
 }
 
-int dl_io_set_capdev_parallel(const char *cap_dev)
+int marsio_dl_io_set_capdev_parallel(const char *cap_dev)
 {
 	char *save_ptr, *tmp_cap_dev_name;
 	const char *delim = ", ";
@@ -127,7 +127,7 @@ int dl_io_set_capdev_parallel(const char *cap_dev)
 	return 0;
 }
 
-int dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
+int marsio_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 {
 	char *save_ptr;
 	const char *delim = ", ";
@@ -167,40 +167,40 @@ int dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 	return 0;
 }
 
-int dl_io_set_capture_filter(const char *filter_rule)
+int marsio_dl_io_set_capture_filter(const char *filter_rule)
 {
 	(void)filter_rule; /* marsio模式不支持过滤规则 */
 	return 0;
 }
 
-int dl_io_set_cap_buf_queue(int queue_num_max)
+int marsio_dl_io_set_cap_buf_queue(int queue_num_max)
 {
 	(void)queue_num_max; /* 驱动设置 */
 	return 0;
 }
 	
-int dl_io_set_work_thread_num(int thread_num_max)
+int marsio_dl_io_set_work_thread_num(int thread_num_max)
 {
 	g_marsio4_work_thread_num = thread_num_max;
 	return 0;
 }
 
 
-long dl_io_get_app_drop_num(int thread_num)
+long marsio_dl_io_get_app_drop_num(int thread_num)
 {
 	/* pag模式查看丢包有专用工具, 程序目前不提供此功能 */
 	(void)thread_num;
 	return 0;
 }
 
-long dl_io_get_lib_drop_num(void)
+long marsio_dl_io_get_lib_drop_num(void)
 {
 	/* pag模式查看丢包有专用工具, 程序目前不提供此功能 */
 	return 0;
 }
 
 
-unsigned char *dl_io_get_sendbuf(void *phandle, int thread_seq)
+unsigned char *marsio_dl_io_get_sendbuf(void *phandle, int thread_seq)
 {
 
 	marsio4_io_handle *mr4_handle = (marsio4_io_handle *)phandle;
@@ -227,7 +227,7 @@ unsigned char *dl_io_get_sendbuf(void *phandle, int thread_seq)
 	return (unsigned char *)mr4_handle->send_mbuf_mtod_ptr;
 }
 
-void dl_io_free_sendbuf(void *phandle, int thread_seq)
+void marsio_dl_io_free_sendbuf(void *phandle, int thread_seq)
 {
 	marsio4_io_handle *mr4_handle = (marsio4_io_handle *)phandle;
 	
@@ -242,7 +242,7 @@ void dl_io_free_sendbuf(void *phandle, int thread_seq)
 	return;
 }
 
-int dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_seq)
+int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_seq)
 {
 	int ret;
 	marsio_buff_t *send_mbuf[1];
@@ -271,7 +271,7 @@ int dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg
 	return datalen;
 }
 
-int dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
+int marsio_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 						int eth_carry_layer_addr_type, int dir,int thread_num)
 {
 	int ret;
@@ -280,22 +280,29 @@ int dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 
 	ehdr->ether_type = ntohs(ETHERTYPE_IP);/* 底层设为ethernte */
 	
-	ret = dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[0].dl_io_param, thread_num);
+	ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[0].dl_io_param, thread_num);
 	
 	return ret;
 }
 
 
-void *dl_io_get_send_handle(int thread_seq)
+void *marsio_dl_io_get_send_handle(int thread_seq)
 {
 	return (void *)&g_mario4_io_handle[thread_seq];
 }
 
 
-int dl_io_get_version(void)
+int marsio_dl_io_get_version(void)
 {
 	return g_marsio4_version_VERSION;
 }
+
+int marsio_dl_io_register_cb(PACKET_IO_CB_T fun)
+{
+	g_marsio4_work_fun = fun;
+	return 0;
+}
+
 
 #ifndef MAX
 #define MAX(a, b)  	(((a) > (b)) ? (a) : (b))
@@ -303,7 +310,7 @@ int dl_io_get_version(void)
 static int tmp_vdevice_num;
 static char **tmp_vdevice_name; /* 虚拟设备名称列表, 非pag.conf中的捕包设备, 用于主从应用模式回注 */
 static struct mr_sendpath **tmp_vdevice_sendpath;
-void * dl_io_device_alias(unsigned int target_id, char *device_args)
+void * marsio_dl_io_device_alias(unsigned int target_id, char *device_args)
 {
 	int i;
 	int len1, len2;
@@ -367,6 +374,9 @@ void * dl_io_device_alias(unsigned int target_id, char *device_args)
 	
 	return t_sendpath;
 }
+
+/************************  funcitons for dynamic link *************************/
+
 /*
 	计算一个整型数包含了多少个bit是1的.
 */
@@ -654,7 +664,7 @@ static void *marsio4_worker(void *arg)
 	return NULL;
 }
 
-int dl_io_init(int argc, char *argv[])
+int marsio_dl_io_init(int argc, char *argv[])
 {
 	int i, ret;
 	char bind_mask_string[128];
@@ -785,7 +795,7 @@ int dl_io_init(int argc, char *argv[])
 }
 
 
-void dl_io_run(void)
+void marsio_dl_io_run(void)
 {
 	int i=0;
 	
@@ -794,12 +804,6 @@ void dl_io_run(void)
 		marsio4_work_thread_seq[i] = i;
 		pthread_create(&(marsio4_work_tid[i]), NULL, marsio4_worker, (void *) &(marsio4_work_thread_seq[i]));
 	}
-}
-
-int dl_io_register_cb(PACKET_IO_CB_T fun)
-{
-	g_marsio4_work_fun = fun;
-	return 0;
 }
 
 

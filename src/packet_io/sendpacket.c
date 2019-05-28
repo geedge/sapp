@@ -3218,18 +3218,18 @@ int MESA_fakepacket_send_udp_detail(int thread_index, u_int sip_host_order, u_in
 }
 
 #if IOMODE_MARSIO
-#include "marsio.h"
-#include "mrtunnat.h"
-#include <dlfcn.h>
+
 static struct mr_instance *dl_io_marsio4_instance = NULL;
-extern struct dl_io_lib_name g_dl_io_lib_info[];
+extern struct mr_instance *sapp_marsio4_instance;
 extern int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath, queue_id_t sid, marsio_buff_t * mbufs[], int nr_mbufs, uint16_t options);
 static struct mr_instance *sapp_get_marsio_instance(void)
 {
+	void *address_of_sapp_marsio4_instance;
+	
+#if LINK_MODE_DYNAMIC
 	void *dl_handle;
 	char lib_path[256];
-	void *address_of_sapp_marsio4_instance;
-
+	
 	snprintf(lib_path, 256, "%s/%s", "platform_lib", g_dl_io_lib_info[g_packet_io_cap_mode].lib_name);
 
 	dl_handle = dlopen(lib_path, RTLD_NOW);
@@ -3246,6 +3246,9 @@ static struct mr_instance *sapp_get_marsio_instance(void)
 
 	/* dlsym 获取的是sapp_marsio4_instance符号的起始地址, 对此地址取8bytes值, 才是指针的真实值 */
 	memcpy(&dl_io_marsio4_instance, address_of_sapp_marsio4_instance, sizeof(void *));
+#else
+	dl_io_marsio4_instance = sapp_marsio4_instance;
+#endif
 	return dl_io_marsio4_instance; 
 }
 

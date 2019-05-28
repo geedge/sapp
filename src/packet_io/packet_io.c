@@ -90,7 +90,6 @@ static int G_SND_RAW_PKT_INFO_NUM = 0;
 void packet_io_exit(void);
 int packet_io_lib_load(int cap_mode);
 void del_last_rn(char *data, int max_len);
-static int parse_send_raw_pkt_conf(void);
 int parse_send_route_conf(const char *profile_path);
 int parse_send_gdev_ip_conf(const char *profile_path);
 extern void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt);

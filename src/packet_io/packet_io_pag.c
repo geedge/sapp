@@ -12,8 +12,8 @@ typedef struct{
 	UINT8 pag_send_buf[SENDPACKET_BUF_LEN];
 }pag_send_handle;
 
-int g_pag_version_VERSION_20160525;
-int g_pag_version_VERSION = 20160525;
+int g_pag_version_VERSION_20190528;
+int g_pag_version_VERSION = 20190528;
 static PACKET_IO_CB_T g_pag_work_fun;
 static int g_pag_work_thread_num = 1;
 static int g_pag_cap_level = CAP_LEVEL_IPV4;
@@ -23,21 +23,22 @@ static pthread_t pag_work_tid[MAX_THREAD_NUM];
 extern int g_use_MESA_sleep_sw;
 extern void bind_thread_to_cpuid(int thread_id);
 
+/************************  funcitons for dynamic link *************************/
 
-int dl_io_set_cap_level(int cap_level)
+int pag_dl_io_set_cap_level(int cap_level)
 {
 	g_pag_cap_level = cap_level;
 	
 	return 0;
 }
 
-int dl_io_set_cap_mode(int cap_mode)
+int pag_dl_io_set_cap_mode(int cap_mode)
 {
 	(void)cap_mode; /* pag模式无需设置 */
 	return 0;
 }
 
-int dl_io_set_topology_mode(int topology_mode)
+int pag_dl_io_set_topology_mode(int topology_mode)
 {
 	switch(topology_mode){
 		case NET_CONN_PARA_NOSEND:
@@ -54,7 +55,7 @@ int dl_io_set_topology_mode(int topology_mode)
 	return 0;
 }
 
-int dl_io_set_capdev_parallel(const char *cap_dev)
+int pag_dl_io_set_capdev_parallel(const char *cap_dev)
 {
 	 /* pag模式捕包网卡在pag.conf中设置 */
 	(void)cap_dev;
@@ -62,7 +63,7 @@ int dl_io_set_capdev_parallel(const char *cap_dev)
 	return 0;
 }
 
-int dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
+int pag_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 {
 	 /* pag模式捕包网卡在pag.conf中设置 */
 	(void)up_dev;
@@ -71,47 +72,47 @@ int dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 	return -1;
 }
 
-int dl_io_set_capture_filter(const char *filter_rule)
+int pag_dl_io_set_capture_filter(const char *filter_rule)
 {
 	(void)filter_rule; /* pag模式不支持过滤规则 */
 	return 0;
 }
 
-int dl_io_set_cap_buf_queue(int queue_num_max)
+int pag_dl_io_set_cap_buf_queue(int queue_num_max)
 {
 	(void)queue_num_max; /* pag模式无缓冲队列 */
 	return 0;
 }
 	
-int dl_io_set_work_thread_num(int thread_num_max)
+int pag_dl_io_set_work_thread_num(int thread_num_max)
 {
 	g_pag_work_thread_num = thread_num_max;
 	return 0;
 }
 
 
-long dl_io_get_app_drop_num(int thread_num)
+long pag_dl_io_get_app_drop_num(int thread_num)
 {
 	/* pag模式查看丢包有专用工具, 程序目前不提供此功能 */
 	(void)thread_num;
 	return 0;
 }
 
-long dl_io_get_lib_drop_num(void)
+long pag_dl_io_get_lib_drop_num(void)
 {
 	/* pag模式查看丢包有专用工具, 程序目前不提供此功能 */
 	return 0;
 }
 
 
-unsigned char *dl_io_get_sendbuf(void *phandle, int thread_num)
+unsigned char *pag_dl_io_get_sendbuf(void *phandle, int thread_num)
 {
 	pag_send_handle *send_handle = (pag_send_handle *)phandle;
 	
 	return send_handle->pag_send_buf;
 }
 
-void dl_io_free_sendbuf(void *phandle, int thread_num)
+void pag_dl_io_free_sendbuf(void *phandle, int thread_num)
 {
 	(void)phandle;
 	(void)thread_num;
@@ -120,7 +121,7 @@ void dl_io_free_sendbuf(void *phandle, int thread_num)
 	return;
 }
 
-int dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
+int pag_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 						int eth_carry_layer_addr_type, int dir,int thread_num)
 {
 	//TODO 2:
@@ -130,7 +131,7 @@ int dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 	return -1;
 }
 
-void *dl_io_get_send_handle(int thread_num)
+void *pag_dl_io_get_send_handle(int thread_num)
 {
 	pag_send_handle *send_handle = (pag_send_handle *)calloc(1, sizeof(pag_send_handle));
 
@@ -140,20 +141,19 @@ void *dl_io_get_send_handle(int thread_num)
 }
 
 
-int dl_io_get_version(void)
+int pag_dl_io_get_version(void)
 {
 	return g_pag_version_VERSION;
 }
 
-int dl_io_init(int argc, char *argv[])
+int pag_dl_io_register_cb(PACKET_IO_CB_T fun)
 {
-	if(pag_open()<0) {
-		fprintf(stderr,"%s\n","pag open err!\n");
-		return -1;
-	}
-
+	g_pag_work_fun = fun;
 	return 0;
 }
+
+
+/************************  funcitons for dynamic link *************************/
 
 
 #if USE_PAG_GET_FRAME
@@ -263,7 +263,18 @@ static void *pag_worker(void *arg)
 }
 
 
-void dl_io_run(void)
+int pag_dl_io_init(int argc, char *argv[])
+{
+	if(pag_open()<0) {
+		fprintf(stderr,"%s\n","pag open err!\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+
+void pag_dl_io_run(void)
 {
 	int i=0;
 	
@@ -274,11 +285,7 @@ void dl_io_run(void)
 	}
 }
 
-int dl_io_register_cb(PACKET_IO_CB_T fun)
-{
-	g_pag_work_fun = fun;
-	return 0;
-}
+
 
 
 #ifdef __cplusplus

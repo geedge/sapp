@@ -26,15 +26,32 @@ H_DIR += -I/opt/MESA/include
 H_DIR += -I/opt/MESA/include/MESA
 H_DIR += -I/opt/mrzcpd/include
 
+OBJS=sendpacket.o packet_io.o packet_io_log.o
+OBJS+=packet_io_lib_load.o
+OBJS+=packet_io_status.o
+OBJS+=packet_io_status_new.o
+#OBJS += cycle_pkt_dump.o
+#OBJS += cycle_pkt_dump_unix.o
+OBJS += cycle_pkt_dump_through_write_offset.o
+OBJS += packet_io_device.o
+OBJS += sapp_compat_wangyan_api.o
+
+
 DLL_LIB=
-ifeq ($(iomode), $(_MODE_PCAP))
+#ifeq ($(iomode), $(_MODE_PCAP))
 CFLAGS += -DIOMODE_PCAP=1
 DLL_LIB += packet_io_pcap.so 
+ifeq ($(link_mode), $(__LINK_MODE_STATIC))
+  OBJS += packet_io_pcap.o
 endif
+#endif
 
 ifeq ($(iomode), $(_MODE_PAG))
 CFLAGS += -DIOMODE_PAG=1
 DLL_LIB += packet_io_pag.so 
+  ifeq ($(link_mode), $(__LINK_MODE_STATIC))
+    OBJS += packet_io_pag.o
+  endif
 endif
 
 ifeq ($(iomode), $(_MODE_PPF))
@@ -91,16 +108,6 @@ endif
 
 
 TARGET = libpacket_io.a 
-
-OBJS=sendpacket.o packet_io.o packet_io_log.o
-OBJS+=packet_io_lib_load.o
-OBJS+=packet_io_status.o
-OBJS+=packet_io_status_new.o
-#OBJS += cycle_pkt_dump.o
-#OBJS += cycle_pkt_dump_unix.o
-OBJS += cycle_pkt_dump_through_write_offset.o
-OBJS += packet_io_device.o
-OBJS += sapp_compat_wangyan_api.o
 
 ifeq ($(debug), $(_DEBUG2))
 OBJS += iknow_info.o 

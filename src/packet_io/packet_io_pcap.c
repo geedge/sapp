@@ -71,7 +71,6 @@ extern void timestamp_record_lib(const raw_pkt_t *raw_pkt);
 
 
 extern const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
-extern int dl_forward_pkt(int thread_num, const unsigned char *data,int data_len,unsigned char dir);
 
 /* 2014-12-01 lijia add */
 #define PCAP_OP_FLAG_PKT			(0x01)
@@ -311,8 +310,102 @@ inline void process_bar_print(int len)
 }
 #endif
 
+static int sendpacket_tcp_offload(char *raw_data, int raw_datalen, int fd, const struct sockaddr *sa)
+{
+#define TCP_TSO_SPLIT_MTU 1400
+#define MIN(a, b)  	(((a) < (b)) ? (a) : (b))
+	char tmp_send_buf[MTU_MAX];
+	
+	const struct sendpacket_ethernet_hdr *raw_eth_hdr = (const struct sendpacket_ethernet_hdr *)raw_data;
+	const struct sendpacket_ip_hdr *raw_ip_hdr = (const struct sendpacket_ip_hdr *)((char *)raw_eth_hdr + sizeof(struct sendpacket_ethernet_hdr));
+	const struct mesa_tcp_hdr *raw_tcp_hdr = (const struct mesa_tcp_hdr *)((char *)raw_ip_hdr + raw_ip_hdr->ip_hl * 4);
+	struct sendpacket_ip_hdr *send_ip_hdr;
+	struct mesa_tcp_hdr *send_tcp_hdr;
+	char *data;
+	int leftlen;
+	int this_send_len;
+	int ret = 0;
+	unsigned int send_seq;
+	int local_errno;
+	int retry_times = 0;
+	int fix_hdr_len;
 
-int dl_io_set_topology_mode(int topology_mode)
+	if(ETHERTYPE_IP != ntohs(raw_eth_hdr->ether_type)){
+		sendto(fd, raw_data, raw_datalen, 0, (struct sockaddr *)sa, sizeof(struct sockaddr));
+		sapp_runtime_log(RLOG_LV_FATAL,"sendpacket","MTU more than %d, but protocol is not ip!\n", TCP_TSO_SPLIT_MTU);
+		return -1;
+	}
+
+	if(raw_ip_hdr->ip_p != IPPROTO_TCP){
+		sendto(fd, raw_data, raw_datalen, 0, (struct sockaddr *)sa, sizeof(struct sockaddr));
+		sapp_runtime_log(RLOG_LV_FATAL,"sendpacket","MTU more than %d, but protocol is not tcp!\n", TCP_TSO_SPLIT_MTU);
+		return -1;
+	}
+#if 0 //for test	
+	if((ntohl(raw_ip_hdr->ip_dst.s_addr) & 0xc0a80000) != 0xc0a80000){
+		sendto(fd, raw_data, raw_datalen, 0, (struct sockaddr *)sa, sizeof(struct sockaddr));
+		return -1;
+	}
+#endif
+
+	fix_hdr_len = sizeof(struct sendpacket_ethernet_hdr) + raw_ip_hdr->ip_hl * 4 + raw_tcp_hdr->th_off * 4; /* 固定头部长度, 可能有选项 */
+
+	memcpy(tmp_send_buf, raw_data, fix_hdr_len);
+	send_seq = ntohl(raw_tcp_hdr->th_seq);
+	leftlen = ntohs(raw_ip_hdr->ip_len) - raw_ip_hdr->ip_hl * 4 - raw_tcp_hdr->th_off * 4; /* 剩余的纯TCP负载部分长度 */
+	data = raw_data + fix_hdr_len;
+	send_ip_hdr = (struct sendpacket_ip_hdr *)(tmp_send_buf+ sizeof(struct sendpacket_ethernet_hdr));
+	send_tcp_hdr = (struct mesa_tcp_hdr *)(tmp_send_buf+ sizeof(struct sendpacket_ethernet_hdr) + send_ip_hdr->ip_hl*4);
+	
+	while(leftlen > 0){
+		retry_times = 0;
+		this_send_len = MIN(leftlen, TCP_TSO_SPLIT_MTU);
+
+		memcpy(tmp_send_buf + fix_hdr_len, data, this_send_len); /* 需要计算校验和, 不能修改原始包, copy到临时缓冲区 */
+		send_ip_hdr->ip_len = htons(raw_ip_hdr->ip_hl * 4 + raw_tcp_hdr->th_off * 4 + this_send_len);
+		send_tcp_hdr->th_seq = htonl(send_seq); /* 拆分TCP负载, 序号依次后移, ACK不变 */
+		/* NOTE:
+			注意, 此处不能使用固定长度sizeof(struct sendpacket_tcp_hdr),
+			因为实际包头中可能包含选项, 要使用原始包的实际长度: raw_tcp_hdr->th_off * 4.
+		*/
+		sendpacket_do_checksum((unsigned char *)send_ip_hdr, IPPROTO_TCP, raw_tcp_hdr->th_off*4 + this_send_len);
+		sendpacket_do_checksum((unsigned char *)send_ip_hdr, IPPROTO_IP, raw_ip_hdr->ip_hl * 4);
+
+send_again:		
+		ret = sendto(fd, tmp_send_buf, this_send_len+fix_hdr_len, 0, (struct sockaddr *)sa, sizeof(struct sockaddr));
+    		if(ret < 0){
+    			local_errno = errno;
+			if((EAGAIN == local_errno) 
+			  || (EINTR == local_errno) 
+			  || (EWOULDBLOCK==local_errno)
+			  || (ENOBUFS==local_errno)
+			  || (ENOMEM==local_errno))
+	  		{
+	  			if(retry_times++ < 3){
+					usleep(1);
+					goto send_again;
+	       		}else{
+					sapp_runtime_log(RLOG_LV_FATAL,"sendpacket","retry more than %d times, %s\n", retry_times, strerror(local_errno));
+					return -1;
+	       		}
+		    }
+		    	else
+		    	{
+				sapp_runtime_log(RLOG_LV_FATAL,"sendpacket","%s\n", strerror(local_errno));
+				return -1;
+			}			
+		}
+		data += this_send_len;
+		leftlen -= this_send_len;
+		send_seq += this_send_len;
+	}
+
+	return ret;
+}
+
+
+/************************  funcitons for dynamic link *************************/
+int pcap_dl_io_set_topology_mode(int topology_mode)
 {
 	switch(topology_mode){
 		case NET_CONN_PARA_NOSEND:
@@ -329,7 +422,7 @@ int dl_io_set_topology_mode(int topology_mode)
 	return 0;
 }
 
-int dl_io_set_cap_level(int cap_level)
+int pcap_dl_io_set_cap_level(int cap_level)
 {
 	g_pcap_cap_level = cap_level;
 
@@ -340,14 +433,14 @@ int dl_io_set_cap_level(int cap_level)
 	return 0;
 }
 
-int dl_io_set_cap_mode(int cap_mode)
+int pcap_dl_io_set_cap_mode(int cap_mode)
 {
 	g_pcap_cap_mode = cap_mode;
 
 	return 0;
 }
 
-int dl_io_set_capdev_parallel(const char *cap_dev)
+int pcap_dl_io_set_capdev_parallel(const char *cap_dev)
 {
 	int len;
 
@@ -359,7 +452,7 @@ int dl_io_set_capdev_parallel(const char *cap_dev)
 	return 0;
 }
 
-int dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
+int pcap_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 {
 	int len;
 
@@ -377,7 +470,7 @@ int dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 	
 }
 
-int dl_io_set_capture_filter(const char *filter_rule)
+int pcap_dl_io_set_capture_filter(const char *filter_rule)
 {
 	int len;
 	
@@ -389,14 +482,14 @@ int dl_io_set_capture_filter(const char *filter_rule)
 	return 0;	
 }
 
-int dl_io_set_cap_buf_queue(int queue_num_max)
+int pcap_dl_io_set_cap_buf_queue(int queue_num_max)
 {
 	g_pcap_buf_queue_num = queue_num_max;
 
 	return 0;
 }
 
-int dl_io_set_work_thread_num(int thread_num_max)
+int pcap_dl_io_set_work_thread_num(int thread_num_max)
 {
 	if(thread_num_max > MAX_THREAD_NUM){
 		return -1;
@@ -407,30 +500,184 @@ int dl_io_set_work_thread_num(int thread_num_max)
 }
 
 /* 此接口针对pag模式发送rst, 数据和日志, pcap模式不区别 */
-int dl_io_set_send_type(int send_type)
+int pcap_dl_io_set_send_type(int send_type)
 {
 	return 0;
 }
 
 
-long dl_io_get_app_drop_num(int thread_num)
+long pcap_dl_io_get_app_drop_num(int thread_num)
 {
 	return pcap_app_drop_num[thread_num];
 }
 
-long dl_io_get_lib_drop_num(void)
+long pcap_dl_io_get_lib_drop_num(void)
 {
 	get_pcap_lib_drop_flag = 1;
 	
 	return pcap_lib_drop_down_num + pcap_lib_drop_up_num;
 }
 
-void * dl_io_device_alias(unsigned int target_id, char *device_args)
+void * pcap_dl_io_device_alias(unsigned int target_id, char *device_args)
 {
 	/* 对于pcap模式来说, 就是设备名称 eth1, eth2, etc. */
 	return (void *)strdup(device_args);
 }
-static int dl_set_filter(pcap_t *handle, const char *filter_str)
+
+int pcap_dl_io_register_cb(PACKET_IO_CB_T fun)
+{
+	g_pcap_work_fun = fun;
+
+	return 0;
+}
+
+
+int pcap_dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun)
+{
+	g_pcap_exit_cb_fun = exit_fun;
+
+	return 0;
+}
+
+unsigned char *pcap_dl_io_get_sendbuf(void *phandle, int thread_num)
+{
+	pcap_send_handle *send_handle = (pcap_send_handle *)phandle;
+	
+	return send_handle->pcap_send_buf;
+}
+
+void pcap_dl_io_free_sendbuf(void *phandle, int thread_num)
+{
+	(void)phandle;
+	(void)thread_num;
+	
+	/* PCAP模式无需释放 */
+	return;
+}
+
+void *pcap_dl_io_get_send_handle(int thread_num)
+{
+	pcap_send_handle *send_handle = (pcap_send_handle *)calloc(1, sizeof(pcap_send_handle));
+
+	send_handle->raw_eth_fd = socket(PF_INET, SOCK_PACKET, htons(ETH_P_ALL));
+	if(send_handle->raw_eth_fd < 0){
+		printf("socket error: %s\n", strerror(errno));
+		goto err_exit;
+	}
+	send_handle->thread_num = thread_num;
+	strncpy(send_handle->saddr_up.sa_data, g_pcap_up_dev_name, sizeof(struct sockaddr));
+	strncpy(send_handle->saddr_down.sa_data, g_pcap_down_dev_name, sizeof(struct sockaddr));
+	send_handle->saddr_up.sa_family = PF_INET;
+	send_handle->saddr_down.sa_family = PF_INET;
+
+	return send_handle;
+
+err_exit:
+	free(send_handle);
+	return NULL;
+}
+
+int pcap_dl_io_get_version(void)
+{
+	return g_pcap_version_internal;
+}
+
+int pcap_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num)
+{
+	pcap_send_handle *send_handle = (pcap_send_handle *)phandle;
+	int ret;
+	struct sockaddr snd_addr;
+	send_raw_args_t *snd_raw_args;
+	int retry_times = 0;
+
+	snd_raw_args = (send_raw_args_t *)arg;
+	strncpy(snd_addr.sa_data, snd_raw_args->dev_name, sizeof(snd_addr.sa_data));	
+	snd_addr.sa_family = PF_INET;
+
+/* 2017-02-28 lijia add, for tcp offload sendback, 某些乱七八糟的破网卡, GRO, GSO等特性关不掉, 导致串联模式大包丢包 */
+	if(datalen > 1514){
+		if(sapp_global_single.cfg_send_tcp_offload_sw){
+			sapp_runtime_log(10, "send pkt len > 1514,  send packet by tcp_offload,  the slice pkt maybe different with raw pkt !\n");
+			ret = sendpacket_tcp_offload((char *)data, datalen, send_handle->raw_eth_fd, (struct sockaddr *)&snd_addr);
+			return ret;		
+		}
+
+		sapp_runtime_log(30, "send pkt len > 1514,  but main.conf->send_tcp_offload is disable !\n");
+		return -1;
+	}
+	
+send_again:
+	ret = sendto(send_handle->raw_eth_fd, data, datalen, 0, (struct sockaddr *)&snd_addr, sizeof(struct sockaddr));
+	if(ret < 0){
+		if(EINTR == errno){
+			goto send_again; /* 因中断或缓存满导致发送失败, 重试 */
+		}else if((EAGAIN == errno) || (ENOBUFS == errno)){
+			if(retry_times++ < 5){
+				goto send_again; 
+			}else{
+				sapp_runtime_log(30, "sendto error! %s\n", strerror(errno));
+				return -1;
+			}
+		}else{
+			sapp_runtime_log(30, "sendto error! %s\n", strerror(errno));
+			return -1;
+		}
+	}	
+
+	return ret;
+}
+
+
+int pcap_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
+						int eth_carry_layer_addr_type, int dir,int thread_num)
+{
+	pcap_send_handle *send_handle = (pcap_send_handle *)phandle;
+	int dir_reverse, ret;
+	struct sockaddr *snd_addr;
+
+	/* 2018-07-26 lijia add, 增加了插件自己创建的线程发包功能, 但是必须发送完整的ethernet包, 底层mac驱动层无法填充 */
+	if(thread_num >= g_pcap_work_thread_num){
+		printf("\033[1;31;40m send thread_seq is:%d, bigger than main.conf->thread_num(%d) !\033[0m\n", thread_num, g_pcap_work_thread_num);
+		return -1;
+	}
+	if(dir != raw_pkt_route_dir[thread_num]){
+		dir_reverse = 1;
+	}else{
+		dir_reverse = 0;
+	}
+
+	if(NET_CONN_SERIAL_GDEV == g_pcap_topology_mode){
+		snd_addr = &send_handle->saddr_up;
+	}else{
+		if(IO_DIR_UP == dir){
+			snd_addr = &send_handle->saddr_down;
+		}else{
+			snd_addr = &send_handle->saddr_up;
+		}
+	}
+
+	net_common_build_send_mac(data, raw_pkt_hdr[thread_num], eth_carry_layer_addr_type, dir_reverse,g_pcap_topology_mode);
+	/* delete by lijia 2014-12-10, datalen已经包含了mac地址长度 */
+	//datalen += sizeof(struct mesa_ethernet_hdr); 
+
+send_again:
+	ret = sendto(send_handle->raw_eth_fd, data, datalen, 0, (struct sockaddr *)snd_addr, sizeof(struct sockaddr));
+	if(ret < 0){
+		if((EAGAIN == errno) || (EINTR == errno) ){
+			goto send_again;
+		}else{
+			return -1;
+		}
+	}	
+
+	return ret;
+}
+
+
+/************************  funcitons for dynamic link *************************/
+
+
+static int pcap_set_filter(pcap_t *handle, const char *filter_str)
 {
 	struct bpf_program bpf_filter;
 
@@ -452,9 +699,41 @@ static int dl_set_filter(pcap_t *handle, const char *filter_str)
 	return 0;
 }
 
+
 extern void packet_io_clean_thread_context(int thread_seq);
 extern void bind_thread_to_cpuid(int thread_id);
 
+static int pcap_forward_pkt(int thread_num, const unsigned char *data,int data_len,unsigned char dir)
+{
+	int ret;
+	struct sockaddr *sock_addr;
+
+	if(NET_CONN_SERIAL_GDEV == g_pcap_topology_mode){
+		/* 特种设备模式, 收发使用同一块网卡 */
+		sock_addr = &work_thread_pool[thread_num].sock_addr_up;
+		net_common_adjust_forward_mac((struct mesa_ethernet_hdr *)data, g_pcap_topology_mode);
+	}else{	
+		if(IO_DIR_UP == dir){
+			sock_addr = &work_thread_pool[thread_num].sock_addr_down; /* the opposite device */
+		}else{
+			sock_addr = &work_thread_pool[thread_num].sock_addr_up;
+		}
+	}
+
+send_again:
+	ret = sendto(work_thread_pool[thread_num].sd_raw_eth, data, data_len, 0, 
+			   sock_addr, sizeof(struct sockaddr));
+	if(ret < 0){
+		if((EAGAIN == errno) || (EINTR == errno)){
+		 	goto send_again;
+		}else{
+			//printf("sendto error, %s\n", strerror(errno));
+			return -1;
+		}	
+	}
+
+	return (ret);	
+}
 static void *__pcap_work_thread(void *arg)
 {
 	int thread_num = (int)(*((short *)arg));
@@ -502,7 +781,7 @@ static void *__pcap_work_thread(void *arg)
 		ret = (*g_pcap_work_fun)(&(pkt_queue_node.raw_pkt), pkt_queue_node.route_dir, thread_num);
 		/* 串联模式且返回值为PASS, 需要转发包 */
 		if((g_pcap_topology_mode & __NET_CONN_SERIAL) && (PASS == ret)){
-			dl_forward_pkt(thread_num, (unsigned char *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data, 
+			pcap_forward_pkt(thread_num, (unsigned char *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data, 
 						pkt_queue_node.raw_pkt.__lib_raw_pkt_len, pkt_queue_node.route_dir);
 		}
 
@@ -893,248 +1172,8 @@ static void *pcap_io_thread(void *arg)
 }
 
 
-int dl_io_register_cb(PACKET_IO_CB_T fun)
-{
-	g_pcap_work_fun = fun;
 
-	return 0;
-}
-
-
-int dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun)
-{
-	g_pcap_exit_cb_fun = exit_fun;
-
-	return 0;
-}
-
-unsigned char *dl_io_get_sendbuf(void *phandle, int thread_num)
-{
-	pcap_send_handle *send_handle = (pcap_send_handle *)phandle;
-	
-	return send_handle->pcap_send_buf;
-}
-
-void dl_io_free_sendbuf(void *phandle, int thread_num)
-{
-	(void)phandle;
-	(void)thread_num;
-	
-	/* PCAP模式无需释放 */
-	return;
-}
-
-int dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
-						int eth_carry_layer_addr_type, int dir,int thread_num)
-{
-	pcap_send_handle *send_handle = (pcap_send_handle *)phandle;
-	int dir_reverse, ret;
-	struct sockaddr *snd_addr;
-
-	/* 2018-07-26 lijia add, 增加了插件自己创建的线程发包功能, 但是必须发送完整的ethernet包, 底层mac驱动层无法填充 */
-	if(thread_num >= g_pcap_work_thread_num){
-		printf("\033[1;31;40m send thread_seq is:%d, bigger than main.conf->thread_num(%d) !\033[0m\n", thread_num, g_pcap_work_thread_num);
-		return -1;
-	}
-	if(dir != raw_pkt_route_dir[thread_num]){
-		dir_reverse = 1;
-	}else{
-		dir_reverse = 0;
-	}
-
-	if(NET_CONN_SERIAL_GDEV == g_pcap_topology_mode){
-		snd_addr = &send_handle->saddr_up;
-	}else{
-		if(IO_DIR_UP == dir){
-			snd_addr = &send_handle->saddr_down;
-		}else{
-			snd_addr = &send_handle->saddr_up;
-		}
-	}
-
-	net_common_build_send_mac(data, raw_pkt_hdr[thread_num], eth_carry_layer_addr_type, dir_reverse,g_pcap_topology_mode);
-	/* delete by lijia 2014-12-10, datalen已经包含了mac地址长度 */
-	//datalen += sizeof(struct mesa_ethernet_hdr); 
-
-send_again:
-	ret = sendto(send_handle->raw_eth_fd, data, datalen, 0, (struct sockaddr *)snd_addr, sizeof(struct sockaddr));
-	if(ret < 0){
-		if((EAGAIN == errno) || (EINTR == errno) ){
-			goto send_again;
-		}else{
-			return -1;
-		}
-	}	
-
-	return ret;
-}
-
-static int sendpacket_tcp_offload(char *raw_data, int raw_datalen, int fd, const struct sockaddr *sa)
-{
-#define TCP_TSO_SPLIT_MTU 1400
-#define MIN(a, b)  	(((a) < (b)) ? (a) : (b))
-	char tmp_send_buf[MTU_MAX];
-	
-	const struct sendpacket_ethernet_hdr *raw_eth_hdr = (const struct sendpacket_ethernet_hdr *)raw_data;
-	const struct sendpacket_ip_hdr *raw_ip_hdr = (const struct sendpacket_ip_hdr *)((char *)raw_eth_hdr + sizeof(struct sendpacket_ethernet_hdr));
-	const struct mesa_tcp_hdr *raw_tcp_hdr = (const struct mesa_tcp_hdr *)((char *)raw_ip_hdr + raw_ip_hdr->ip_hl * 4);
-	struct sendpacket_ip_hdr *send_ip_hdr;
-	struct mesa_tcp_hdr *send_tcp_hdr;
-	char *data;
-	int leftlen;
-	int this_send_len;
-	int ret = 0;
-	unsigned int send_seq;
-	int local_errno;
-	int retry_times = 0;
-	int fix_hdr_len;
-
-	if(ETHERTYPE_IP != ntohs(raw_eth_hdr->ether_type)){
-		sendto(fd, raw_data, raw_datalen, 0, (struct sockaddr *)sa, sizeof(struct sockaddr));
-		sapp_runtime_log(RLOG_LV_FATAL,"sendpacket","MTU more than %d, but protocol is not ip!\n", TCP_TSO_SPLIT_MTU);
-		return -1;
-	}
-
-	if(raw_ip_hdr->ip_p != IPPROTO_TCP){
-		sendto(fd, raw_data, raw_datalen, 0, (struct sockaddr *)sa, sizeof(struct sockaddr));
-		sapp_runtime_log(RLOG_LV_FATAL,"sendpacket","MTU more than %d, but protocol is not tcp!\n", TCP_TSO_SPLIT_MTU);
-		return -1;
-	}
-#if 0 //for test	
-	if((ntohl(raw_ip_hdr->ip_dst.s_addr) & 0xc0a80000) != 0xc0a80000){
-		sendto(fd, raw_data, raw_datalen, 0, (struct sockaddr *)sa, sizeof(struct sockaddr));
-		return -1;
-	}
-#endif
-
-	fix_hdr_len = sizeof(struct sendpacket_ethernet_hdr) + raw_ip_hdr->ip_hl * 4 + raw_tcp_hdr->th_off * 4; /* 固定头部长度, 可能有选项 */
-
-	memcpy(tmp_send_buf, raw_data, fix_hdr_len);
-	send_seq = ntohl(raw_tcp_hdr->th_seq);
-	leftlen = ntohs(raw_ip_hdr->ip_len) - raw_ip_hdr->ip_hl * 4 - raw_tcp_hdr->th_off * 4; /* 剩余的纯TCP负载部分长度 */
-	data = raw_data + fix_hdr_len;
-	send_ip_hdr = (struct sendpacket_ip_hdr *)(tmp_send_buf+ sizeof(struct sendpacket_ethernet_hdr));
-	send_tcp_hdr = (struct mesa_tcp_hdr *)(tmp_send_buf+ sizeof(struct sendpacket_ethernet_hdr) + send_ip_hdr->ip_hl*4);
-	
-	while(leftlen > 0){
-		retry_times = 0;
-		this_send_len = MIN(leftlen, TCP_TSO_SPLIT_MTU);
-
-		memcpy(tmp_send_buf + fix_hdr_len, data, this_send_len); /* 需要计算校验和, 不能修改原始包, copy到临时缓冲区 */
-		send_ip_hdr->ip_len = htons(raw_ip_hdr->ip_hl * 4 + raw_tcp_hdr->th_off * 4 + this_send_len);
-		send_tcp_hdr->th_seq = htonl(send_seq); /* 拆分TCP负载, 序号依次后移, ACK不变 */
-		/* NOTE:
-			注意, 此处不能使用固定长度sizeof(struct sendpacket_tcp_hdr),
-			因为实际包头中可能包含选项, 要使用原始包的实际长度: raw_tcp_hdr->th_off * 4.
-		*/
-		sendpacket_do_checksum((unsigned char *)send_ip_hdr, IPPROTO_TCP, raw_tcp_hdr->th_off*4 + this_send_len);
-		sendpacket_do_checksum((unsigned char *)send_ip_hdr, IPPROTO_IP, raw_ip_hdr->ip_hl * 4);
-
-send_again:		
-		ret = sendto(fd, tmp_send_buf, this_send_len+fix_hdr_len, 0, (struct sockaddr *)sa, sizeof(struct sockaddr));
-    		if(ret < 0){
-    			local_errno = errno;
-			if((EAGAIN == local_errno) 
-			  || (EINTR == local_errno) 
-			  || (EWOULDBLOCK==local_errno)
-			  || (ENOBUFS==local_errno)
-			  || (ENOMEM==local_errno))
-	  		{
-	  			if(retry_times++ < 3){
-					usleep(1);
-					goto send_again;
-	       		}else{
-					sapp_runtime_log(RLOG_LV_FATAL,"sendpacket","retry more than %d times, %s\n", retry_times, strerror(local_errno));
-					return -1;
-	       		}
-		    }
-		    	else
-		    	{
-				sapp_runtime_log(RLOG_LV_FATAL,"sendpacket","%s\n", strerror(local_errno));
-				return -1;
-			}			
-		}
-		data += this_send_len;
-		leftlen -= this_send_len;
-		send_seq += this_send_len;
-	}
-
-	return ret;
-}
-
-int dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num)
-{
-	pcap_send_handle *send_handle = (pcap_send_handle *)phandle;
-	int ret;
-	struct sockaddr snd_addr;
-	send_raw_args_t *snd_raw_args;
-	int retry_times = 0;
-
-	snd_raw_args = (send_raw_args_t *)arg;
-	strncpy(snd_addr.sa_data, snd_raw_args->dev_name, sizeof(snd_addr.sa_data));	
-	snd_addr.sa_family = PF_INET;
-
-/* 2017-02-28 lijia add, for tcp offload sendback, 某些乱七八糟的破网卡, GRO, GSO等特性关不掉, 导致串联模式大包丢包 */
-	if(datalen > 1514){
-		if(sapp_global_single.cfg_send_tcp_offload_sw){
-			sapp_runtime_log(10, "send pkt len > 1514,  send packet by tcp_offload,  the slice pkt maybe different with raw pkt !\n");
-			ret = sendpacket_tcp_offload((char *)data, datalen, send_handle->raw_eth_fd, (struct sockaddr *)&snd_addr);
-			return ret;		
-		}
-
-		sapp_runtime_log(30, "send pkt len > 1514,  but main.conf->send_tcp_offload is disable !\n");
-		return -1;
-	}
-	
-send_again:
-	ret = sendto(send_handle->raw_eth_fd, data, datalen, 0, (struct sockaddr *)&snd_addr, sizeof(struct sockaddr));
-	if(ret < 0){
-		if(EINTR == errno){
-			goto send_again; /* 因中断或缓存满导致发送失败, 重试 */
-		}else if((EAGAIN == errno) || (ENOBUFS == errno)){
-			if(retry_times++ < 5){
-				goto send_again; 
-			}else{
-				sapp_runtime_log(30, "sendto error! %s\n", strerror(errno));
-				return -1;
-			}
-		}else{
-			sapp_runtime_log(30, "sendto error! %s\n", strerror(errno));
-			return -1;
-		}
-	}	
-
-	return ret;
-}
-
-void *dl_io_get_send_handle(int thread_num)
-{
-	pcap_send_handle *send_handle = (pcap_send_handle *)calloc(1, sizeof(pcap_send_handle));
-
-	send_handle->raw_eth_fd = socket(PF_INET, SOCK_PACKET, htons(ETH_P_ALL));
-	if(send_handle->raw_eth_fd < 0){
-		printf("socket error: %s\n", strerror(errno));
-		goto err_exit;
-	}
-	send_handle->thread_num = thread_num;
-	strncpy(send_handle->saddr_up.sa_data, g_pcap_up_dev_name, sizeof(struct sockaddr));
-	strncpy(send_handle->saddr_down.sa_data, g_pcap_down_dev_name, sizeof(struct sockaddr));
-	send_handle->saddr_up.sa_family = PF_INET;
-	send_handle->saddr_down.sa_family = PF_INET;
-
-	return send_handle;
-
-err_exit:
-	free(send_handle);
-	return NULL;
-}
-
-int dl_io_get_version(void)
-{
-	return g_pcap_version_internal;
-}
-
-int dl_io_init(int argc, char *argv[])
+int pcap_dl_io_init(int argc, char *argv[])
 {
 	char pcap_errbuf[PCAP_ERRBUF_SIZE];
 	int opt_len;
@@ -1160,9 +1199,9 @@ int dl_io_init(int argc, char *argv[])
 			strncpy(g_pcap_up_dev_name, "dumpfile", DEV_NAME_STR_LEN);
 		}
 #endif		
-		if((pcap_up_handle = pcap_open_offline("dumpfile", pcap_errbuf)) == NULL)
+		if((pcap_up_handle = pcap_open_offline(sapp_global_val->config.packet_io.pcap_dumpfile_name, pcap_errbuf)) == NULL)
 		{
-			printf("\033[1;31;40m[Error]Can't open file:'%s', %s\033[0m\n", "dumpfile", pcap_errbuf);
+			printf("\033[1;31;40m[Error]Can't open file:'%s', %s\033[0m\n", sapp_global_val->config.packet_io.pcap_dumpfile_name, pcap_errbuf);
 			return -1;
 		}
 #if PROCESS_BAR_SW
@@ -1173,7 +1212,7 @@ int dl_io_init(int argc, char *argv[])
 #if PROCESS_BAR_SW
 		process_bar_prt_init();
 #endif
-		dl_set_filter(pcap_up_handle, g_pcap_cap_filter);
+		pcap_set_filter(pcap_up_handle, g_pcap_cap_filter);
 		//g_pcap_topology_model = NET_CONN_PARA_NOSEND; /* 本地读包模式，网络拓扑模式设为并联不发包 */
 	}
 	else /* 网络抓包模式 */
@@ -1185,7 +1224,7 @@ int dl_io_init(int argc, char *argv[])
 			return -1;
 		}
 
-		dl_set_filter(pcap_up_handle, g_pcap_cap_filter);
+		pcap_set_filter(pcap_up_handle, g_pcap_cap_filter);
 		pcap_setdirection(pcap_up_handle, PCAP_D_IN);
 
 		opt_len = sizeof(int);
@@ -1210,7 +1249,7 @@ int dl_io_init(int argc, char *argv[])
 				printf("\033[41m Warning! '%s' MTU is %d!. \033[0m\n", g_pcap_down_dev_name, pcap_device_down_mtu);
 			}
 			pcap_device_down_mtu += sizeof(struct mesa_ethernet_hdr); /* MTU不含ethernet层长度, 但pcap捕包是包括的, 需要加上这个头部 */
-			dl_set_filter(pcap_down_handle, g_pcap_cap_filter);
+			pcap_set_filter(pcap_down_handle, g_pcap_cap_filter);
 			pcap_setdirection(pcap_down_handle, PCAP_D_IN);
 		}
 	}
@@ -1239,7 +1278,7 @@ int dl_io_init(int argc, char *argv[])
 }
 
 /* not return except some error occur. */
-void dl_io_run(void)
+void pcap_dl_io_run(void)
 {
 	pthread_t tid_up, tid_down;
 	char dir_up = IO_DIR_UP;
@@ -1256,38 +1295,6 @@ void dl_io_run(void)
 	}
 
 	return;
-}
-
-int dl_forward_pkt(int thread_num, const unsigned char *data,int data_len,unsigned char dir)
-{
-	int ret;
-	struct sockaddr *sock_addr;
-
-	if(NET_CONN_SERIAL_GDEV == g_pcap_topology_mode){
-		/* 特种设备模式, 收发使用同一块网卡 */
-		sock_addr = &work_thread_pool[thread_num].sock_addr_up;
-		net_common_adjust_forward_mac((struct mesa_ethernet_hdr *)data, g_pcap_topology_mode);
-	}else{	
-		if(IO_DIR_UP == dir){
-			sock_addr = &work_thread_pool[thread_num].sock_addr_down; /* the opposite device */
-		}else{
-			sock_addr = &work_thread_pool[thread_num].sock_addr_up;
-		}
-	}
-
-send_again:
-	ret = sendto(work_thread_pool[thread_num].sd_raw_eth, data, data_len, 0, 
-			   sock_addr, sizeof(struct sockaddr));
-	if(ret < 0){
-		if((EAGAIN == errno) || (EINTR == errno)){
-		 	goto send_again;
-		}else{
-			//printf("sendto error, %s\n", strerror(errno));
-			return -1;
-		}	
-	}
-
-	return (ret);	
 }
 
 

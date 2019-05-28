@@ -5,10 +5,6 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
-#if IOMODE_MARSIO
-#include "marsio.h"
-#include "mrtunnat.h"
-#endif
 
 #if IKNOW_ENABLE
 #include "iknow.h"

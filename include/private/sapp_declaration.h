@@ -71,9 +71,9 @@ void sapp_gval_init(void);
 
 
 extern volatile unsigned int  g_aiSysCounter[COUNTER_NUM]; /*newly modified   ---LiLei*/
-
 extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
-
+extern const struct dl_io_lib_name g_dl_io_lib_info[__CAP_MODEL_MAX];
+extern dl_io_fun_list_t dl_io_fun_list;
 
 #ifdef __cplusplus
 }

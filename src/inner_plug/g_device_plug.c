@@ -19,7 +19,6 @@ extern "C" {
 #include "sapp_private_api.h"
 
 #if IOMODE_MARSIO	
-#include "marsio.h"
 static struct mr_instance * gdev_plug_extern_marsio4_instance; /* dlopen dynamic link sapp->marsio4 instance */
 extern int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath, queue_id_t sid, marsio_buff_t * mbufs[], int nr_mbufs, uint16_t options);
 
@@ -64,7 +63,6 @@ extern int sendpacket_build_icmpv4_echo(u_int8_t type, u_int8_t code, u_int16_t 
 extern char *timet_to_str(time_t timet, char *time_str, int time_str_len);
 static int vxlan_sport_service_map_init(void);
 extern void del_last_rn(char *data, int max_len);
-extern struct dl_io_lib_name g_dl_io_lib_info[];
 static unsigned char g_vxlan_sport_to_service_id[65536]; /* 数组下标为源端口, 值为service-id */
 
 
