@@ -2283,7 +2283,13 @@ char IP_ENTRY( struct streaminfo *f_stream,unsigned char routedir,int thread_seq
 
 char IPv6_ENTRY(const struct streaminfo *pstream,unsigned char routedir,int thread_seq,const void *ipv6_hdr)
 {
-	printf("into IPv6_ENTRY()!\n");
+	char ips[128], ipd[128];
+	const struct mesa_ip6_hdr *ip6h = (const struct mesa_ip6_hdr *)ipv6_hdr;
+	
+	inet_ntop(AF_INET6, &ip6h->ip6_src, ips, 128);
+	inet_ntop(AF_INET6, &ip6h->ip6_dst, ipd, 128);
+	printf("recv ip6 pkt, %s --> %s, protocol:%u\n", ips, ipd, ip6h->ip6_nxt_hdr);
+
 	return APP_STATE_GIVEME;
 }
 

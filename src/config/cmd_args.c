@@ -79,12 +79,12 @@ static int check_args_sanity(void)
 	}
 	
 	if((sapp_get_cla_raw("dumpfile-file", &no_use) >= 0) && (0 == dumpfile_mode_enabled)){
-		sapp_log(30, ~0, ~0, "args --dumpfile-file must with --dumpfile!");
+		sapp_log(30, ~0, ~0, "args --dumpfile-file must used with --dumpfile!");
 		exit(1);
 	}
 
 	if((sapp_get_cla_raw("dumpfile-speed", &no_use) >= 0) && (0 == dumpfile_mode_enabled)){
-		sapp_log(30, ~0, ~0, "args --dumpfile-speed must with --dumpfile!");
+		sapp_log(30, ~0, ~0, "args --dumpfile-speed must used with --dumpfile!");
 		exit(1);
 	}
 

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 add_definitions(-D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD=1 -DHAVE_NET_ETHERNET_H)
 add_definitions(-DPLATFORM_NSDPF_PAPP=1)
 
+LINK_DIRECTORIES(/opt/mrzcpd/lib)
+
 include_directories(${MESA_SDK_PREFIX}/include)
 include_directories(${MESA_SDK_PREFIX}/include/MESA)
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -14,7 +16,7 @@ endif()
 
 add_definitions(-fPIC)
 
-if(CAPTURE_MODE MATCHES "PCAP")
+#if(CAPTURE_MODE MATCHES "PCAP")
     set(PACKET_IO_SOURCE ${PACKET_IO_SOURCE} packet_io_pcap.c)
     if(ENABLE_STATIC_LINK)
         add_library(packet_io_pcap STATIC ${PACKET_IO_SOURCE})
@@ -22,7 +24,7 @@ if(CAPTURE_MODE MATCHES "PCAP")
         add_library(packet_io_pcap SHARED ${PACKET_IO_SOURCE})
     endif()
 	set_target_properties(packet_io_pcap  PROPERTIES PREFIX "")
-endif()
+#endif()
 
 if(CAPTURE_MODE MATCHES "PAG")
 	set(PACKET_IO_SOURCE ${PACKET_IO_SOURCE} packet_io_pag_marsio.c)

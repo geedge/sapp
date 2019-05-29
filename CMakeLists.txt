@@ -67,7 +67,7 @@ option(OPT_IOMODE_PPF "Capture network traffic with libppf" OFF)
 option(OPT_IOMODE_PFRING "Capture network traffic with PF-RING" OFF)
 option(OPT_IOMODE_DPDK "Capture network traffic with DPDK" OFF)
 option(OPT_IOMODE_PAG_N95 "Capture network traffic with N95" OFF)
-option(OPT_IOMODE_MARSIO "Capture network traffic with MARSIO" OFF)
+option(OPT_IOMODE_MARSIO "Capture network traffic with MARSIO" ON)
 
 if(OPT_IOMODE_PCAP)
 	set(CAPTURE_MODE "PCAP")	
@@ -98,9 +98,9 @@ if(OPT_IOMODE_MARSIO)
 	set(MARSIO_SDK_PREFIX "/opt/mrzcpd/" CACHE STRING "MARSIO Prefix")
 endif()
 
-if(CAPTURE_MODE MATCHES "PCAP")
-    set(CAPTURE_DEFINITIONS -DONLY_PCAP -DIOMODE_PCAP)
-endif()
+#if(CAPTURE_MODE MATCHES "PCAP")
+set(CAPTURE_DEFINITIONS -DIOMODE_PCAP)
+#endif()
 
 if(CAPTURE_MODE MATCHES "PAG")
 	set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_PAG)
@@ -210,12 +210,16 @@ install(FILES bin/etc/project_list.conf DESTINATION etc)
 install(FILES bin/etc/plugin.conf DESTINATION etc)
 install(FILES bin/etc/entrylist.conf DESTINATION etc)
 
+if(NOT ENABLE_STATIC_LINK)
+
 if(CAPTURE_MODE MATCHES "MARSIO")
 	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_marsio.so DESTINATION platform_lib)
 endif()
 
 if(CAPTURE_MODE MATCHES "PCAP")
 	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_pcap.so DESTINATION platform_lib)
+endif()
+
 endif()
 
 install(FILES bin/plug/protocol/conflist_protocol.inf DESTINATION plug/protocol)

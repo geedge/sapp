@@ -3222,7 +3222,7 @@ int MESA_fakepacket_send_udp_detail(int thread_index, u_int sip_host_order, u_in
 static struct mr_instance *dl_io_marsio4_instance = NULL;
 extern struct mr_instance *sapp_marsio4_instance;
 extern int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath, queue_id_t sid, marsio_buff_t * mbufs[], int nr_mbufs, uint16_t options);
-static struct mr_instance *sapp_get_marsio_instance(void)
+struct mr_instance *sapp_get_marsio_instance(void)
 {
 	void *address_of_sapp_marsio4_instance;
 	
@@ -3305,16 +3305,16 @@ static void sapp_fakepacket_set_vxlan_options(struct mr_tunnat_ctrlzone *mr_ctrl
 
 		case SAPP_SEND_OPT_VIRTUAL_LINK_ID:
 			mr_ctrlzone->virtual_link_id = option->long_value;
-			mr_ctrlzone->action |= TUNNAT_CZ_ACTION_ENCAP_VIRTUAL_LINK_ID;  /* 直接构造好整个包再发送, 不需要驱动查表 */
+			mr_ctrlzone->action |= TUNNAT_CZ_ACTION_ENCAP_VIRTUAL_LINK_ID; 
 		break;
 
 		case SAPP_SEND_OPT_REHASH_INDEX:
 			mr_ctrlzone->rehash_index = option->long_value;
-			mr_ctrlzone->action |= TUNNAT_CZ_ACTION_ENCAP_VIRTUAL_LINK_ID;  /* 直接构造好整个包再发送, 不需要驱动查表 */
+			mr_ctrlzone->action |= TUNNAT_CZ_ACTION_ENCAP_VIRTUAL_LINK_ID;
 		break;
 
 		case SAPP_SEND_OPT_VXLAN_FLAGS:
-			//todo, dpdk driver not support, fix value 0x08
+			//dpdk driver not support, use fix value 0x08
 		break;
 
 		default:

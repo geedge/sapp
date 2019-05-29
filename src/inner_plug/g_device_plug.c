@@ -491,33 +491,6 @@ static void *gdev_keepalive_log_thread(void *arg)
 	return NULL;
 }
 
-#if IOMODE_MARSIO	
-static struct mr_instance *dynamic_get_marsio_instance(void)
-{
-	void *dl_handle;
-	char lib_path[256];
-	void *address_of_sapp_marsio4_instance;
-
-	snprintf(lib_path, 256, "%s/%s", "platform_lib", g_dl_io_lib_info[g_packet_io_cap_mode].lib_name);
-
-	dl_handle = dlopen(lib_path, RTLD_NOW);
-	if(NULL == dl_handle){
-		printf("\033[41m[Error]dlopen %s error!\033[0m\n", lib_path);
-		return NULL;
-	}
-
-	address_of_sapp_marsio4_instance = dlsym(dl_handle, "sapp_marsio4_instance");
-	if(NULL == address_of_sapp_marsio4_instance){
-		printf("\033[41m[Error]dlsym %s from %s error!\033[0m\n", "sapp_marsio4_instance", lib_path);
-		return NULL;
-	}
-
-	/* dlsym 获取的是sapp_marsio4_instance符号的起始地址, 对此首地址取8bytes值, 才是指针的真实值 */
-	memcpy(&gdev_plug_extern_marsio4_instance, address_of_sapp_marsio4_instance, sizeof(void *));
-	return gdev_plug_extern_marsio4_instance; 
-}
-#endif
-
 static int gdev_kp_update_service_ctrl(const struct gdev_keepalive_service_ctrl *service_ctrl)
 {
 	if((service_ctrl->service_num < 0) || (service_ctrl->service_num >= MAX_VXLAN_SERVICE_NUM)){
@@ -738,7 +711,7 @@ int gdev_keepalive_plug_init(void)
 	int i;
 	
 #if IOMODE_MARSIO	
-	gdev_plug_extern_marsio4_instance = dynamic_get_marsio_instance();
+	gdev_plug_extern_marsio4_instance = sapp_get_marsio_instance();
 	if(NULL == gdev_plug_extern_marsio4_instance){
 		return -1;
 	}

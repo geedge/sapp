@@ -68,6 +68,7 @@ void sapp_fs2_update_count(int field_index, unsigned  long long value);
 void sapp_fs2_update_length(int field_index, unsigned  long long value);
 void sapp_fs2_set_latency(int thead_seq, long long time_cost);
 void sapp_gval_init(void);
+struct mr_instance *sapp_get_marsio_instance(void);
 
 
 extern volatile unsigned int  g_aiSysCounter[COUNTER_NUM]; /*newly modified   ---LiLei*/

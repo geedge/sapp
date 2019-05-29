@@ -48,7 +48,7 @@ test_anti_flood_hijack:test_anti_flood_hijack.c ../lib/libavltree.a
 	g++ -o $@ $(CFLAGS) $^ -I../inner_plug -I../support/avl_tree -lpcap -lpthread -lanti_flood_hijack -lMESA_htable -lMESA_handle_logger
 
 wangyan_gdev_measurement.so:wangyan_gdev_measurement.c
-	$(CC) -o $@ -shared -fPIC $(INCS) $(CFLAGS) $^ $(MODULES)
+	$(CC) -o $@ -shared -fPIC $(INCS) $(CFLAGS) -DIOMODE_MARSIO=1 $^ $(MODULES)
 	cp $@ ../bin/plug/business/wangyan_gdev_measurement/$@
 	
 .c.o:  

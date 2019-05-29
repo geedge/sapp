@@ -278,7 +278,7 @@ int marsio_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 
 	struct mesa_ethernet_hdr *ehdr = (struct mesa_ethernet_hdr *)data;
 
-	ehdr->ether_type = ntohs(ETHERTYPE_IP);/* 底层设为ethernte */
+	///ehdr->ether_type = ntohs(ETHERTYPE_IP);/* 底层设为ethernet */
 	
 	ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[0].dl_io_param, thread_num);
 	
