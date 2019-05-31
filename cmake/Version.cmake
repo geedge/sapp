@@ -1,4 +1,3 @@
-
 # Using autorevision.sh to generate version information
 
 set(__SOURCE_AUTORESIVISION ${CMAKE_SOURCE_DIR}/autorevision.sh)
@@ -16,28 +15,32 @@ execute_process(COMMAND ${__AUTORESIVISION} -t cmake -o ${__VERSION_CACHE}
 include(${__VERSION_CONFIG})
 
 # extract major, minor, patch version from git tag
-string(REGEX REPLACE "^v([0-9]+)\\..*" "\\1" SAPP_VERSION_MAJOR "${VCS_TAG}")
-string(REGEX REPLACE "^v[0-9]+\\.([0-9]+).*" "\\1" SAPP_VERSION_MINOR "${VCS_TAG}")
-string(REGEX REPLACE "^v[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" SAPP_VERSION_PATCH "${VCS_TAG}")
+string(REGEX REPLACE "^v([0-9]+)\\..*" "\\1" VERSION_MAJOR "${VCS_TAG}")
+string(REGEX REPLACE "^v[0-9]+\\.([0-9]+).*" "\\1" VERSION_MINOR "${VCS_TAG}")
+string(REGEX REPLACE "^v[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" VERSION_PATCH "${VCS_TAG}")
 
-if(NOT SAPP_VERSION_MAJOR)
-    set(SAPP_VERSION_MAJOR 3)
+if(NOT VERSION_MAJOR)
+    set(VERSION_MAJOR 3)
 endif()
 
-if(NOT SAPP_VERSION_MINOR)
-    set(SAPP_VERSION_MINOR 0)
+if(NOT VERSION_MINOR)
+    set(VERSION_MINOR 0)
 endif()
 
-if(NOT SAPP_VERSION_PATCH)
-    set(SAPP_VERSION_PATCH 0)
+if(NOT VERSION_PATCH)
+    set(VERSION_PATCH 0)
 endif()
 
-set(SAPP_VERSION "${SAPP_VERSION_MAJOR}.${SAPP_VERSION_MINOR}.${SAPP_VERSION_PATCH}")
-set(SAPP_VERSION_BUILD "${VCS_SHORT_HASH}")
+set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+set(VERSION_BUILD "${VCS_SHORT_HASH}")
+
+set(GIT_VERSION
+        "${VERSION}-${CMAKE_BUILD_TYPE}-${VERSION_BUILD}-${VCS_BRANCH}-${VCS_TAG}-${VCS_DATE}")
+
+string(REGEX REPLACE "[-:+/\\.]" "_" GIT_VERSION ${GIT_VERSION})
+
+add_definitions(-DGIT_VERSION=\"${GIT_VERSION}\")
+
 
 # print information
-message(STATUS "Sapp Version: ${SAPP_VERSION}-${SAPP_VERSION_BUILD}")
-
-set(SAPP_GIT_VERSION
-        "${SAPP_VERSION}-${CMAKE_BUILD_TYPE}-${SAPP_VERSION_BUILD}-${VCS_BRANCH}-${VCS_TAG}-${VCS_DATE}")
-add_definitions(-DGITVER=\"${SAPP_GIT_VERSION}\")
+message(STATUS "Sapp Version: ${GIT_VERSION}")
