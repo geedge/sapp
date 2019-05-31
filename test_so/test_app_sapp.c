@@ -723,6 +723,35 @@ char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq,voi
         return APP_STATE_GIVEME;
 }
 
+
+char test_tcp_deduce_flow_stat(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
+{
+	int tcp_deduce_flow_id;
+	
+	if(pstream->pktstate== OP_STATE_CLOSE)
+	{	
+		tcp_deduce_flow_id = project_customer_register("tcp_deduce_flow_stat", "struct");
+		if(-1 == tcp_deduce_flow_id){
+			printf("'tcp_deduce_flow_stat' is disable, no statistics\n");
+			return APP_STATE_DROPME;
+		}
+
+		struct tcp_flow_stat *tflow_project = (struct tcp_flow_stat *)project_req_get_struct(pstream, tcp_deduce_flow_id);
+		if(tflow_project){
+			printf("tcp_deduce_flow_stat:C2S_data_pkt:%u, C2S_data_byte=%llu,S2C_data_pkt:%u,S2C_data_byte=%llu\n",
+					tflow_project->C2S_data_pkt,
+					tflow_project->C2S_data_byte,
+					tflow_project->S2C_data_pkt,
+					tflow_project->S2C_data_byte);
+		
+		}
+	}
+
+	return APP_STATE_GIVEME;
+}
+
+
+
 char tcpall_valid_after_kill(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
 {
 	unsigned char mopt = 1;
