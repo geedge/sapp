@@ -83,8 +83,12 @@ static void signal_take_over(void)
 int main(int argc, char *argv[])
 {	
 	if((argc == 2) && (strncasecmp(argv[1], "-v", 2) == 0)){
+#ifdef GIT_VERSION		
         const char *sapp_version = GIT_VERSION;
 		printf("Platform version: %s\n", sapp_version);
+#else
+		printf("Can't get version, because not found git info!\n");
+#endif	
 		exit(0);
 	}
 
