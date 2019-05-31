@@ -1653,7 +1653,7 @@ static int tcp_deal_ack(struct streaminfo *a_tcp,struct mesa_tcp_hdr *this_tcphd
 			//pdetail->clientbytes = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq;
 			if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
 				pdetail_pr->deduce_flow_stat->C2S_data_byte = pdetail->serverbytes; /* 单向流本端复制流结构体中的变量 */
-				pdetail_pr->deduce_flow_stat->C2S_data_pkt = pdetail->serverpktnum;/* 单向流本端复制流结构体中的变量 */
+				pdetail_pr->deduce_flow_stat->C2S_all_pkt = pdetail->serverpktnum;/* 单向流本端复制流结构体中的变量 */
 				
 				pdetail_pr->deduce_flow_stat->S2C_all_byte = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq; /* 推断出的结果, all和data是一样的, 但没有pkt */
 				pdetail_pr->deduce_flow_stat->S2C_data_byte = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq; /* 推断出的结果, all和data是一样的, 但没有pkt */
@@ -1663,7 +1663,7 @@ static int tcp_deal_ack(struct streaminfo *a_tcp,struct mesa_tcp_hdr *this_tcphd
 			//pdetail->serverbytes = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq;
 			if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
 				pdetail_pr->deduce_flow_stat->S2C_data_byte = pdetail->clientbytes; /* 单向流本端复制流结构体中的变量 */
-				pdetail_pr->deduce_flow_stat->S2C_data_pkt = pdetail->clientpktnum;/* 单向流本端复制流结构体中的变量 */
+				pdetail_pr->deduce_flow_stat->S2C_all_pkt = pdetail->clientpktnum;/* 单向流本端复制流结构体中的变量 */
 				
 				pdetail_pr->deduce_flow_stat->C2S_all_byte = pdetail_pr->S2C_ack_seq - pdetail_pr->S2C_first_ack_seq;
 				pdetail_pr->deduce_flow_stat->C2S_data_byte = pdetail_pr->S2C_ack_seq - pdetail_pr->S2C_first_ack_seq;
@@ -3541,7 +3541,7 @@ int tcp_flow_stat_init(void)
 	if(project_req_id >= 0){
 		G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID = project_req_id;
 	}else{
-		/* 配置文件没有'tcp_flow_stat'项, 关闭此功能 */
+		/* 配置文件没有'tcp_deduce_flow_stat'项, 关闭此功能 */
 		G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID = -1;
 	}
 	

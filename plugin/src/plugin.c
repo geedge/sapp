@@ -141,12 +141,18 @@ char* g_plugin_entryname[PLUGIN_MAX_ENTRYNUM] =
 
 int g_plugin_version_VERSION_20170511;
 
- /* 删除末尾的换行符"\r\n" */
-static void plugin_del_tail_rn(char *data, int max_len)
+ /* 删除开头的空格,tab, 以及末尾的换行符, 空格, tab等 "\r\n " */
+static void plugin_del_blank_rn(char *data, int max_len)
 {
-    int i;
+	int i;
+
+	while((' ' == *data) || ('\t' == *data)){
+		memmove(data, data+1, max_len);
+		max_len--;
+	}
+    
     for(i = 0; i < max_len; i++){
-        if(('\r' == data[i]) || ('\n' == data[i])){
+        if(('\r' == data[i]) || ('\n' == data[i]) || ('\t' == data[i]) || (' ' == data[i])){
             data[i] = '\0';
             return;
         }
@@ -154,6 +160,7 @@ static void plugin_del_tail_rn(char *data, int max_len)
 
     return;
 }
+
 
 
 /****************************************************************************
@@ -425,7 +432,7 @@ int check_plug_conf(char* filename,int plugtype)
 			break;
 		}
 
-		plugin_del_tail_rn(config_buf, strlen(config_buf));
+		plugin_del_blank_rn(config_buf, sizeof(config_buf));
 
 		//第一个字符不是"[",不做处理
 		if(memcmp(config_buf,KEYWORD_SPECIAL1,strlen(KEYWORD_SPECIAL1)) != 0)
@@ -534,7 +541,7 @@ int process_conf_entryname()
 		len = strlen(buf_entryname);
 		buf_entryname[len-2] = '\0';
 #else
-		plugin_del_tail_rn(buf_entryname, strlen(buf_entryname));
+		plugin_del_blank_rn(buf_entryname, sizeof(buf_entryname));
 #endif
 		if('\0' == buf_entryname[0]){
 			continue;
@@ -1267,9 +1274,10 @@ int process_conflist(char* filename,int plug_type)
 		{
 			continue;
 		}
+		plugin_del_blank_rn(buf_confname, sizeof(buf_confname));
 
-		len = strlen(buf_confname);
-		buf_confname[len-1] = '\0';
+	//	/len = strlen(buf_confname);
+		/////buf_confname[len-1] = '\0';
 
 		if(plug_type == PLUGTYPE_PROTOCOL)
 		{
