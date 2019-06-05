@@ -53,6 +53,7 @@
 #include "sapp_limits.h"
 #include "sapp_state.h"
 #include "sapp_cla.h"
+#include "sapp_timer.h"
 
 #include "stream.h"
 

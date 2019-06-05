@@ -1023,6 +1023,12 @@ long long sapp_get_cpu_cycle(void)
 #endif
 }
 
+void sapp_set_current_state(enum sapp_state_t state)
+{
+	sapp_global_val->individual_volatile->current_state = (int)state;
+}
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,6 +1,7 @@
 #ifndef _SAPP_GLOBAL_VAL_H_
 #define _SAPP_GLOBAL_VAL_H_ 1
 
+#include <pthread.h>
 #include "sapp_pkt_stat.h"
 
 typedef struct{
@@ -138,11 +139,13 @@ typedef struct{
 
 typedef struct{
 	void *log_handle;
+	void *sapp_timer_handle[SAPP_MAX_THREADS];
 	time_t sapp_start_time;
 	int depolyment_mode_private; /* 根据配置sapp_global_val->config.packet_io.depolyment_mode_bin转换得到的内部值,例如:NET_CONN_PARALLEL  */
 	unsigned char create_stream_mode; /* 兼容原来的逻辑, 值从配置stream.tcp.syn_mandatory转换得到 */
 	int packet_io_cap_level; 
 	sapp_gval_individual_fixed_fs_t fs_para;
+	pthread_t pkt_process_tid[SAPP_MAX_THREADS];
 }sapp_gval_individual_fixed_t;
 
 typedef struct{
@@ -159,9 +162,10 @@ typedef struct{
 
 
 typedef struct{
-	time_t current_time;
-	long long current_time_ms;
-	char __padding[48];
+	volatile time_t current_time;
+	volatile long long current_time_ms;
+	volatile int current_state;
+	char __padding[44];
 }sapp_gval_individual_volatile_t;
 
 

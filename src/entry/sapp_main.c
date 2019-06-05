@@ -84,6 +84,8 @@ static void show_mesa_log(void)
 int main(int argc, char *argv[])
 {	
 	sapp_gval_init();
+	sapp_set_current_state(SAPP_STATE_JUST_START);
+	sapp_set_current_state(SAPP_STATE_CONFIG_PARSE);
 	
 	if(argc >= 2){
 		/* 如果有命令行参数, 先解析cla, 因为可能使用-h, -v等帮助信息       */
@@ -97,7 +99,7 @@ int main(int argc, char *argv[])
 	}
 
 	sapp_cla_override_cfg_file();
-
+	
 	show_mesa_log();
 
 #if SAPP_INSECTICIDE

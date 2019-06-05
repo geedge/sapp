@@ -860,6 +860,8 @@ int stream_process_polling(int thread_seq)
 {
 	int i;
 
+	__st_pkt_proc_context_check_timeout(thread_seq);
+
 	for(i = 0; i < g_PollingFunNum; i++){
 		g_PollingFun[i].stream_fun(NULL, NULL, thread_seq, NULL);
 	}

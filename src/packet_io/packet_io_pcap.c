@@ -748,13 +748,28 @@ static void *__pcap_work_thread(void *arg)
 #endif
 	//bind_thread_to_cpuid(thread_num + 1);
 
+	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
+		usleep(1000);
+	}
+
 	while(1){
 		pthread_mutex_lock(&work_thread_pool[thread_num].mutex);
 		
+#if 0/* for sapp timer */		
 		while(0 == MESA_lqueue_get_count(work_thread_pool[thread_num].pkt_queue)){
 			pthread_cond_wait(&work_thread_pool[thread_num].cond, &work_thread_pool[thread_num].mutex);
 		}
+#else
+		if(0 == MESA_lqueue_get_count(work_thread_pool[thread_num].pkt_queue)){
+			pthread_mutex_unlock(&work_thread_pool[thread_num].mutex);
+			stream_process_polling(thread_num);
+			usleep(10);
+			continue;
+		}else{
+			stream_process_polling(thread_num);
+		}
 
+#endif
 		recv_len = sizeof(pkt_queue_t);
 		ret = MESA_lqueue_get_head(work_thread_pool[thread_num].pkt_queue, &pkt_queue_node, &recv_len);
 		pthread_mutex_unlock(&work_thread_pool[thread_num].mutex);
@@ -826,7 +841,10 @@ static int pcap_create_work_thread(void)
 		work_thread_pool[i].op_status = PCAP_OP_FLAG_PKT;
 		/* 注意:此处不用MESA_lqueue自带的线程安全锁, 为了实现__pcap_work_thread()的cond_wait功能. */
 		work_thread_pool[i].pkt_queue = MESA_lqueue_create(0, g_pcap_buf_queue_num+1);
-		pthread_create(&work_thread_pool[i].work_tid, NULL, __pcap_work_thread, &work_thread_pool[i].thread_num);
+
+		ret = pthread_create(&work_thread_pool[i].work_tid, NULL, __pcap_work_thread, &work_thread_pool[i].thread_num);
+		assert(ret == 0);
+		sapp_global_val->individual_fixed.pkt_process_tid[i] = work_thread_pool[i].work_tid;
 	}
 
 	return 0;
@@ -1144,11 +1162,16 @@ static void *pcap_io_thread(void *arg)
 		handle = pcap_down_handle;
 	}
 
-	if(g_PollingFunNum > 0){
-		pcap_setnonblock(handle, 1, pcap_errbuf);
+	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
+		usleep(1000);
 	}
+
+	//if(g_PollingFunNum > 0){
+		//pcap_setnonblock(handle, 1, pcap_errbuf);
+	//}
 	while(1){
-		if(0 == g_PollingFunNum){
+		//if(0 == g_PollingFunNum){
+		if(1){
 			pcap_ret = pcap_loop(handle, -1, __pcap_pkt_handle, (unsigned char *)&route_dir);
 		}else{
 			pcap_ret = pcap_dispatch(handle, -1, __pcap_pkt_handle, (unsigned char *)&route_dir);
@@ -1164,6 +1187,9 @@ static void *pcap_io_thread(void *arg)
 			}		
 		}else if(pcap_ret < 0){
 			printf("pcap err, %s\n", pcap_geterr(handle));
+			sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
+			sched_yield();
+			sleep(1);
 			exit(1);
 		}
 	}
@@ -1288,10 +1314,6 @@ void pcap_dl_io_run(void)
 
 	if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode){ /* 双网卡串联模式 */	
 		pthread_create(&tid_down, NULL, pcap_io_thread, (void *)&dir_down);
-	}
-
-	while(1){
-		pause();
 	}
 
 	return;

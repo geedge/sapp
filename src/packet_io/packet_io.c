@@ -483,7 +483,7 @@ static int packet_io_strip_L2E_hdr(raw_pkt_t *p_raw_pkt, unsigned char dir, int 
 #define L2E_HDR_TOTAL_LEN (78)
 #define L2E_PKT_HDR_MAGIC  0xD0BADABA
 	const struct mesa_ethernet_hdr *ethh = (const struct mesa_ethernet_hdr *)p_raw_pkt->raw_pkt_data;
-	const unsigned int *l2e_hdr_magic;
+	//const unsigned int *l2e_hdr_magic;
 	unsigned char *L2E_payload;
 	int L2E_len;
 	const L2E_msg_header_t *L2E_msg_hdr;
@@ -565,7 +565,8 @@ extern char (*g_platform_action_cb_fun)(int net_conn_mode, char plug_action);
 static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, int thread_num)
 {
 	int ret = PASS;
-	long long before_call = 0, after_call, timecost;
+	//long long before_call = 0, after_call;
+	long long timecost;
 
     struct timespec start, end;
 
@@ -649,6 +650,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 void packet_io_exit(void)
 {
 	/* 读包模式下, 给其他线程一些时间, 处理未完成数据, 比如MESA_tcp异步发送数据等等. */
+	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
 	sched_yield();
 	sleep(1);
 	sched_yield();
@@ -733,10 +735,6 @@ void packet_io_run(void)
 	pthread_create(&pid, NULL, sapp_time_event_thread ,NULL);
 	
 	dl_io_fun_list.dl_io_run();
-
-	while(1){
-		pause();
-	}
 }
 
 extern volatile int update_packet_io_status_sw;
@@ -951,9 +949,9 @@ retry:
 static int packet_io_get_sendroute_mac(char dev_id, char link_id, unsigned char *out_mac_addr)
 {
     char *p_mac_addr = (char *)&g_send_gateway_mac_table[dev_id][link_id][0];
-    if(G_SND_ROUTE_INFO_NUM <= 0 || strlen(p_mac_addr) <= 0)return -1;
-    else
-    {
+    if(G_SND_ROUTE_INFO_NUM <= 0 || strlen(p_mac_addr) <= 0){
+    	return -1;
+    }else{
 		if(MESA_mac_pton(p_mac_addr, ':', (char *)out_mac_addr) < 0){
 			printf("error, src mac:%s is not correct, for example:00:11:22:33:44:55\n", p_mac_addr);
 			return -1;

@@ -101,6 +101,8 @@ int MESA_platform_init(int argc, char *argv[])
 	unsigned short link_timeout = 600;
 	int int_tmp;
 
+	sapp_set_current_state(SAPP_STATE_PLATFORM_INITING);
+
 	ABBR_CURRENT_TIME = time(NULL);
 	ABBR_SAPP_START_TIME = time(NULL);
 
@@ -335,21 +337,8 @@ int MESA_platform_init(int argc, char *argv[])
 #endif
 	timestamp_record_init();
 
-	/* 2017-02-24 lijia modify,
-		NOTE:
-		先初始化插件, 插件内部可能会调用pthread_create动态创建线程,
-		问题是, 在DPDK模式下, dpdk初始化阶段就会绑定当前线程到某CPU核心,
-		那么后续的pthread_create的线程默认继承这个行为,
-		所以, 先初始化线程再初始化packet_io.
-	*/
-	/*
-		2019-04-11, marsio已经无上述问题, 再恢复成先调用packet_io_init(), 后调用plugctrl().
-	*/
-	if(packet_io_init(argc, argv) < 0){
-		return -1;
-	}
-	
-	plugctrl_proc();
+	/* timer before packet_io and plug_proc() */
+	__sapp_timer_platform_init();
 
 	
 #if CYCLE_PKT_DUMP
@@ -408,6 +397,27 @@ int MESA_platform_init(int argc, char *argv[])
 		printf("\n\033[33m[Warning]'treat_vlan_as_mac_in_mac' is enable, vlan packet will be treat as MAC_IN_MAC!\033[0m\n");
 		usleep(10000);
 	}
+	sapp_set_current_state(SAPP_STATE_PLATFORM_INITED);
+	
+	/* 2017-02-24 lijia modify,
+		NOTE:
+		先初始化插件, 插件内部可能会调用pthread_create动态创建线程,
+		问题是, 在DPDK模式下, dpdk初始化阶段就会绑定当前线程到某CPU核心,
+		那么后续的pthread_create的线程默认继承这个行为,
+		所以, 先初始化线程再初始化packet_io.
+	*/
+	/*
+		2019-04-11, marsio已经无上述问题, 再恢复成先调用packet_io_init(), 后调用plugctrl().
+	*/
+	sapp_set_current_state(SAPP_STATE_PKT_IO_INITING);
+	if(packet_io_init(argc, argv) < 0){
+		return -1;
+	}
+	sapp_set_current_state(SAPP_STATE_PKT_IO_INITED);
+
+	sapp_set_current_state(SAPP_STATE_PLUG_INITING);
+	plugctrl_proc();
+	sapp_set_current_state(SAPP_STATE_PLUG_INITED);
 	
 	return 0;	
 }
@@ -421,7 +431,17 @@ void MESA_platform_run(void)
 		放在所有初始化完成之后, packet_io_run()之前。
 	*/
 	atexit(forbid_call_exit_in_running_state);
+
+	__sapp_timer_platform_run();
+	
 	packet_io_run();
+
+	sapp_set_current_state(SAPP_STATE_PROCESSING);
+
+	while(1){
+		pause();
+	}
+
 #endif	
 }
 

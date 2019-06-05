@@ -242,6 +242,10 @@ static void *pag_worker(void *arg)
 
 	raw_pkt.magic_num = RAW_PKT_MAGIC_NUM;
 	raw_pkt.offset_to_raw_pkt_hdr = 0;
+
+	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
+		usleep(1000);
+	}
 	
 	while(1){
 		data = packet_io_pag_get(&raw_pkt, tid);

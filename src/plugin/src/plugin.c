@@ -139,12 +139,18 @@ char* g_plugin_entryname[PLUGIN_MAX_ENTRYNUM] =
 
 int g_plugin_version_VERSION_20170511;
 
- /* 删除末尾的换行符"\r\n" */
-static void plugin_del_tail_rn(char *data, int max_len)
+ /* 删除开头的空格,tab, 以及末尾的换行符, 空格, tab等 "\r\n " */
+static void plugin_del_blank_rn(char *data, int max_len)
 {
-    int i;
+	int i;
+
+	while((' ' == *data) || ('\t' == *data)){
+		memmove(data, data+1, max_len);
+		max_len--;
+	}
+    
     for(i = 0; i < max_len; i++){
-        if(('\r' == data[i]) || ('\n' == data[i])){
+        if(('\r' == data[i]) || ('\n' == data[i]) || ('\t' == data[i]) || (' ' == data[i])){
             data[i] = '\0';
             return;
         }
@@ -423,7 +429,7 @@ int check_plug_conf(char* filename,int plugtype)
 			break;
 		}
 
-		plugin_del_tail_rn(config_buf, strlen(config_buf));
+		plugin_del_blank_rn(config_buf, sizeof(config_buf));
 
 		//第一个字符不是"[",不做处理
 		if(memcmp(config_buf,KEYWORD_SPECIAL1,strlen(KEYWORD_SPECIAL1)) != 0)
@@ -534,7 +540,7 @@ int process_conf_entryname()
 		len = strlen(buf_entryname);
 		buf_entryname[len-2] = '\0';
 #else
-		plugin_del_tail_rn(buf_entryname, strlen(buf_entryname));
+		plugin_del_blank_rn(buf_entryname, sizeof(buf_entryname));
 #endif
 		if('\0' == buf_entryname[0]){
 			continue;
@@ -1235,6 +1241,81 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 	return 0;
 }
 
+static int fetch_section_name(char *filename, char *section_name)
+{
+	char *start_ptr;
+	filename++;
+	while(*filename == ' '){
+		memmove(filename, filename+1, strlen(filename));
+		filename++;
+	}
+	while(*filename == '\t'){
+		memmove(filename, filename+1, strlen(filename));
+		filename++;
+	}
+
+	start_ptr = filename;
+
+	while(*filename != ']'){
+		filename++;
+	}
+
+	*filename = '\0';
+
+	strcpy(section_name, start_ptr);
+
+	return 0;
+}
+
+
+static int process_conflist_single(char* filename, int plug_type, char *wanted_section_name)
+{
+	int rec;
+	char buf_confname[PLUGIN_FILENAME_MAXLEN] = {0};
+	char section_name[PLUGIN_FILENAME_MAXLEN];
+	
+	FILE* fp = fopen(filename,"r");
+	if(fp == NULL)
+	{
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"process_conflist() fopen %s error!\n",filename);
+		return -1;	
+	}
+
+	while(fgets(buf_confname,PLUGIN_FILENAME_MAXLEN,fp) != NULL){
+		if(('#' == buf_confname[0]) || ('\r' == buf_confname[0]) || ('\n' == buf_confname[0]))
+		{
+			continue;
+		}
+		plugin_del_blank_rn(buf_confname, sizeof(buf_confname));
+		
+		if('[' == buf_confname[0]){
+			fetch_section_name(buf_confname, section_name);
+			continue;
+		}
+		if(strncasecmp(wanted_section_name, section_name, PLUGIN_FILENAME_MAXLEN) != 0){
+			continue;
+		}
+
+		if(plug_type == PLUGTYPE_PROTOCOL)
+		{
+			rec = process_confelem_protocol(buf_confname);
+		}
+		else if(plug_type == PLUGTYPE_BUSENISS)
+		{
+			rec = process_confelem_business(buf_confname);
+		}
+		else
+		{
+			rec = process_confelem_platform(buf_confname);
+		}
+	}
+
+	fclose(fp);
+
+	return rec;
+}
+
+
 
 
 /****************************************************************************
@@ -1249,6 +1330,18 @@ int process_conflist(char* filename,int plug_type)
 	int rec;
 	int len;
 	char buf_confname[PLUGIN_FILENAME_MAXLEN] = {0};
+
+	/* 20190605 lijia modify, 使用单一配置文件, 代替原来的三个插件控制文件 */
+	if(PLUGTYPE_PLATFORM == plug_type){
+		rec = process_conflist_single("plug/conflist.inf", plug_type, "platform");
+	}else if(PLUGTYPE_PROTOCOL == plug_type){
+		rec = process_conflist_single("plug/conflist.inf", plug_type, "protocol");
+	}else{
+		rec = process_conflist_single("plug/conflist.inf", plug_type, "business");
+	}
+
+	return rec;
+	
 
 	FILE* fp = fopen(filename,"r");
 	if(fp == NULL)
@@ -1272,9 +1365,10 @@ int process_conflist(char* filename,int plug_type)
 		{
 			continue;
 		}
+		plugin_del_blank_rn(buf_confname, sizeof(buf_confname));
 
-		len = strlen(buf_confname);
-		buf_confname[len-1] = '\0';
+		///len = strlen(buf_confname);
+		/////buf_confname[len-1] = '\0';
 
 		if(plug_type == PLUGTYPE_PROTOCOL)
 		{

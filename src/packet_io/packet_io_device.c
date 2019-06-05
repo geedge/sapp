@@ -23,7 +23,7 @@ extern void * get_dl_io_device_alias_fun_symbol(void);
 
 static int insert_to_device_alias(unsigned int target_id, char *device_args)
 {
-	void * (*dl_io_device_alias_fun)(unsigned int target_id, char *device_args);
+	void * (*dl_io_device_alias_fun)(unsigned int target_id, char *device_args) = NULL;
 	
 	if(0 == packet_device_alias_num) {
 		g_packet_device_alias = (packet_io_device_alias_t *)calloc(1, sizeof(packet_io_device_alias_t) * (target_id + 1));
@@ -35,12 +35,11 @@ static int insert_to_device_alias(unsigned int target_id, char *device_args)
 		}
 	}
 
+
+	//dl_io_device_alias_fun = (void * (*)(unsigned int, char *))get_dl_io_device_alias_fun_symbol();
+	dl_io_device_alias_fun = dl_io_fun_list.dl_io_device_alias;
 	if(NULL == dl_io_device_alias_fun){
-		//dl_io_device_alias_fun = (void * (*)(unsigned int, char *))get_dl_io_device_alias_fun_symbol();
-		dl_io_device_alias_fun = dl_io_fun_list.dl_io_device_alias;
-		if(NULL == dl_io_device_alias_fun){
-			return -1;
-		}
+		return -1;
 	}
 
 	g_packet_device_alias[target_id].target_id = target_id;

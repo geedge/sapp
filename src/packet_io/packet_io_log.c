@@ -190,7 +190,7 @@ static int packet_io_log_path_update(char *log_path, int path_len)
 		return -1;
 	}
 
-	now = localtime(&g_CurrentTime);
+	now = localtime((time_t *)&g_CurrentTime);
 	strftime(date_now, 16, "%Y-%m-%d", now);
 
 	snprintf(log_path, path_len, "%s/%s", PACKET_IO_LOG_PREFIX, date_now);

@@ -644,6 +644,10 @@ static void *marsio4_worker(void *arg)
 	raw_pkt.low_layer_type = (enum addr_type_t)g_marsio4_cap_level;
 	raw_pkt.magic_num = RAW_PKT_MAGIC_NUM;
 	raw_pkt.offset_to_raw_pkt_hdr = 0;
+
+	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
+		usleep(1000);
+	}
 	
 	while(1){
 		if(marsio4_process_packet(tid, &raw_pkt) > 0){
@@ -797,12 +801,14 @@ int marsio_dl_io_init(int argc, char *argv[])
 
 void marsio_dl_io_run(void)
 {
-	int i=0;
+	int i = 0, ret;
 	
 	for(i = 0; i < g_marsio4_work_thread_num; i++)
 	{
 		marsio4_work_thread_seq[i] = i;
-		pthread_create(&(marsio4_work_tid[i]), NULL, marsio4_worker, (void *) &(marsio4_work_thread_seq[i]));
+		ret = pthread_create(&(marsio4_work_tid[i]), NULL, marsio4_worker, (void *) &(marsio4_work_thread_seq[i]));
+		assert(0 == ret);
+		sapp_global_val->individual_fixed.pkt_process_tid[i] = marsio4_work_tid[i];
 	}
 }
 

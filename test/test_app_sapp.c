@@ -578,6 +578,70 @@ char test_print_mac(struct streaminfo *pstream,void **pme, int thread_seq,void *
 }
 
 
+static void sapp_timer_test_cbfun(sapp_timer_handle h, sapp_timer_event ev, int pkt_process_thread_id, void *user_arg)
+{
+	struct streaminfo *pstream = user_arg;
+	struct timeval curt;
+
+	gettimeofday(&curt, NULL);
+
+	printf("tid:%d, tcpstream %s  timeout: %ld.%ld \n",
+			pstream->threadnum, 
+			printaddr(&(pstream->addr),pstream->threadnum),
+			curt.tv_sec, curt.tv_usec);
+}
+
+
+
+static void *sapp_timer_ev_new(int tid, void *arg)
+{
+	sapp_timer_handle th;
+	sapp_timer_event tev;
+	int iopt, ret;
+	struct timeval topt;
+
+	th = sapp_get_platform_timer(tid);
+	assert(th);
+	tev = sapp_timer_event_new(th);
+	assert(tev);
+
+	iopt = tid;
+	sapp_event_set_opt(tev, STEO_EFFECTIVE_THREAD_ID, &iopt, sizeof(iopt));
+	
+	topt.tv_sec = 1;
+	topt.tv_usec = 0;
+	sapp_event_set_opt(tev, STEO_TIMEOUT_VAL, &topt, sizeof(topt));
+	sapp_event_set_opt(tev, STEO_CALLBACK_FUN, (void *)&sapp_timer_test_cbfun, sizeof(void *));
+	sapp_event_set_opt(tev, STEO_CALLBACK_FUN_ARG, arg, sizeof(void *));
+
+	ret = sapp_timer_add(th, tev);
+	assert(ret >= 0);
+
+	return tev;
+}
+
+char on_tcp_sapp_timer_test(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
+{
+	sapp_timer_handle th;
+	sapp_timer_event tev;
+	
+	if(pstream->opstate== OP_STATE_PENDING){
+		tev = sapp_timer_ev_new(pstream->threadnum, pstream);
+		*pme = tev;
+	}else{
+		tev = *pme;
+
+		if(pstream->opstate== OP_STATE_CLOSE){
+			th = sapp_get_platform_timer(pstream->threadnum);
+			sapp_timer_del(th, tev);
+			printf("tid:%d, tcpstream close: %s, del timer\n",pstream->threadnum, printaddr(&(pstream->addr),pstream->threadnum));
+			return APP_STATE_DROPME;
+		}
+	}
+
+	return APP_STATE_GIVEME;
+}
+
 
 char testtcpApp_2(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
 {

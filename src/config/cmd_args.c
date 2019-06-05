@@ -222,7 +222,11 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 			case 'v':
 #ifdef GIT_VERSION
 				printf("Version: %s\n", GIT_VERSION);
-#endif				
+#endif	
+#ifdef GITVER
+				printf("Version: %s\n", GITVER);
+#endif	
+
 				exit(1);
 			break;
 

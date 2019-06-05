@@ -8,7 +8,7 @@ MODULES	=
 BIN_PATH = ../bin/
 
 TARGET	= test_app_sapp.so
-TARGET += wangyan_gdev_measurement.so
+#TARGET += wangyan_gdev_measurement.so
 #TARGET  += test_anti_flood_hijack
 
 INCS = 

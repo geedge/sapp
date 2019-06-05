@@ -8,8 +8,8 @@ extern "C" {
 #include "sapp_private_api.h"
 
 enum pkt_dump_mode{
-	PKT_DUMP_LOCAL_FILE		=	1, /* å†™æœ¬åœ°æ–‡ä»?*/
-	PKT_DUMP_UDP_SOCKET		=	2, /* å†™åˆ°UDP æŸä¸ªç«¯å£ */
+	PKT_DUMP_LOCAL_FILE		=	1, 
+	PKT_DUMP_UDP_SOCKET		=	2, 
 };
 
 enum depolyment_mode_config{
@@ -22,6 +22,7 @@ enum depolyment_mode_config{
 /* ÒòÇ¶Ì×²ã´ÎÌ«¶à, Ê¹ÓÃ¼ò³ÆÃèÊö */
 #define ABBR_SAPP_LOG_LEVEL 	sapp_global_val->config.profiling.log.level
 #define ABBR_SAPP_LOG_HANDLE 	sapp_global_val->individual_fixed.log_handle
+#define ABBR_SAPP_TIMER_HANDLE	sapp_global_val->individual_fixed.sapp_timer_handle
 #define ABBR_SAPP_START_TIME 	sapp_global_val->individual_fixed.sapp_start_time
 #define ABBR_CURRENT_TIME 		sapp_global_val->individual_volatile->current_time
 #define ABBR_CURRENT_TIME_MS 	sapp_global_val->individual_volatile->current_time_ms
@@ -69,6 +70,10 @@ void sapp_fs2_update_length(int field_index, unsigned  long long value);
 void sapp_fs2_set_latency(int thead_seq, long long time_cost);
 void sapp_gval_init(void);
 struct mr_instance *sapp_get_marsio_instance(void);
+int __sapp_timer_platform_init(void);
+void __st_pkt_proc_context_check_timeout(int tid);
+void __sapp_timer_platform_run(void);
+void sapp_set_current_state(enum sapp_state_t st);
 
 
 extern volatile unsigned int  g_aiSysCounter[COUNTER_NUM]; /*newly modified   ---LiLei*/

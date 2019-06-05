@@ -223,6 +223,7 @@ int tcp_set_single_stream_max_unorder(const struct streaminfo *stream, UCHAR dir
 int tcp_set_single_stream_needack(const struct streaminfo *pstream);
 int tcp_set_single_stream_takeoverflag(const struct streaminfo *pstream,int flag);
 int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned short timeout);
+int get_thread_count(void);
 /****************************************************************************************
 ****************************************************************************************
 ****************************************************************************************/

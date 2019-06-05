@@ -33,6 +33,7 @@
 #include "private/sapp_global_val.h"
 #include "private/sapp_declaration.h"
 #include "private/sapp_pkt_stat.h"
+#include "private/sapp_timer_private.h"
 
 #if IOMODE_MARSIO
 #include "/opt/mrzcpd/include/marsio.h"

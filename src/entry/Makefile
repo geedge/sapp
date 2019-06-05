@@ -55,6 +55,7 @@ endif
 WHOLE_ARCH += ../lib/libtomlc99_wrap.a
 WHOLE_ARCH += ../lib/libconfig.a
 WHOLE_ARCH += ../lib/libtimer.a
+WHOLE_ARCH += ../lib/libevent.a
 
 ifeq ($(debug), $(_DEBUG2))
 LIB += ../lib/libiknow.a -lpcap
