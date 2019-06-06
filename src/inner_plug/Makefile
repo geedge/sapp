@@ -78,6 +78,11 @@ endif
 
 all: $(TARGET)
 
+libinner_plug.a:sapp_assistant.o  gdev_assistant.o
+	rm -f $@;
+	ar -r $@ $^;
+	cp $@ ../lib;
+
 .c.o:
 	$(CC) -c $(CFLAGS) -I. $(H_DIR) $<
 
@@ -121,8 +126,8 @@ g_device_plug.so: g_device_plug.o
 	mkdir -p $(RELEASE_PLT_PATH)/g_device_plug;
 	cp $@ $(RELEASE_PLT_PATH)/g_device_plug/
 
-wangyan_keepalive_plug.so:wangyan_keepalive_plug.c ../lib/libping.a
-	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES) $(H_DIR)  $(LIB) ../lib/libping.a;
+wangyan_keepalive_plug.so:wangyan_keepalive_plug.c
+	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES) $(H_DIR)  $(LIB);
 	mkdir -p $(RELEASE_PLT_PATH)/wangyan_keepalive_plug;
 	cp $@ $(RELEASE_PLT_PATH)/wangyan_keepalive_plug/;
 	

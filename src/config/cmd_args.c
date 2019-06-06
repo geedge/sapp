@@ -34,7 +34,7 @@ static const sapp_cmd_args_usage_t cmd_args_usage[] =
 };
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
-static const char *sapp_cla_short_options = "dhvr:";
+static const char *sapp_cla_short_options = "cdhr:v";
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const struct option sapp_cla_long_options[] = 

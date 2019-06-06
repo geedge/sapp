@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-int sapp_version_VERSION_20190524;
+int sapp_version_4_0_20190606;
 
 /* 
 	下面的版本号用于packet_io_lib校验, 防止平台和dl.so不匹配导致运行异常, 或已修复的BUG未更新.
