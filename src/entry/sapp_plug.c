@@ -11,6 +11,8 @@ extern int MESA_platform_init(int argc, char *argv[]);
 extern int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_data, int thread_num, 
 			unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr);
 extern void packet_io_clean_thread_context(int thread_seq);
+extern void MESA_platform_run(void);
+extern int sapp_parse_config(void);
 
 #define DUMPFILE_EOF_FLAG	(void*)0xF1E2D3C4B5A6 /* 用一个独特变量表示当前dumpfile模式已结束, 清理内存 */
 
@@ -41,17 +43,12 @@ int MESA_PLUG_INIT(void)
 {	
 	int i;
 	pthread_t pid;
-	char save_cur_pwd[PATH_MAX];
 
-	getcwd(save_cur_pwd, PATH_MAX);
+	sapp_gval_init();
+	sapp_set_current_state(SAPP_STATE_JUST_START);
+	sapp_set_current_state(SAPP_STATE_CONFIG_PARSE);
 
-	printf("before call MESA_PLUG_INIT pwd is: %s\n", get_current_dir_name());
-
-	if(chdir("/home/mesasoft/sapp") != 0){
-		printf("chdir error, %s\n", strerror(errno));
-	}
-	printf("MESA_PLUG_INIT change dir to:%s\n", "/home/mesasoft/sapp");
-	printf("in MESA_PLUG_INIT pwd is: %s\n", get_current_dir_name());
+	sapp_parse_config();
 
 	if(MESA_platform_init(0, NULL) < 0){
 		sapp_runtime_log(30, "IIE plug init error!\n");
@@ -60,11 +57,7 @@ int MESA_PLUG_INIT(void)
 
 	g_packet_io_cap_level = CAP_LEVEL_IPV4; /* 挂载到IP层插件, 强制指定为IPv4 */
 
-	//MESA_platform_run(); /* 不能再调用MESA_platform_run */
-	pthread_create(&pid, NULL, sapp_time_event_thread ,NULL);
-
-	chdir(save_cur_pwd); /* 恢复原运行目录 */
-	printf("after call MESA_PLUG_INIT pwd is: %s\n", get_current_dir_name());
+	MESA_platform_run();
 	
 	return 1;
 }

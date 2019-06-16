@@ -1,5 +1,6 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "support/event2/event.h"
 
 #ifdef __cplusplus
 extern "C" {

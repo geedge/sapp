@@ -47,6 +47,7 @@
 #include "MESA_ring_queue.h"
 #include "wiredLB.h"
 #include "wired_cfg.h"
+//#include "field_stat2.h" //must compile with g++, so move it.
 
 /* sapp platform header */
 #include "sapp_std.h"

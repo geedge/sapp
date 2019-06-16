@@ -83,6 +83,8 @@ static void show_mesa_log(void)
 
 int main(int argc, char *argv[])
 {	
+	int ret;
+	
 	sapp_gval_init();
 	sapp_set_current_state(SAPP_STATE_JUST_START);
 	sapp_set_current_state(SAPP_STATE_CONFIG_PARSE);
@@ -93,9 +95,12 @@ int main(int argc, char *argv[])
 			return -1;
 		}
 
-		sapp_parse_config();
+		ret = sapp_parse_config();
 	}else{
-		sapp_parse_config();
+		ret = sapp_parse_config();
+	}
+	if(ret < 0){
+		return -1;
 	}
 
 	sapp_cla_override_cfg_file();

@@ -1,0 +1,9 @@
+SI/
+*.log
+*.o
+*.so
+*.si4project/
+*.a
+*.o
+*.d
+

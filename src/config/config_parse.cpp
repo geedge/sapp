@@ -5,6 +5,8 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 #include "support/tomlc99_wrap.h"
+#include "field_stat2.h"
+
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const char *default_config_file = "./etc/sapp.toml";
@@ -566,7 +568,15 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"interval", (int *)&pconfig->profiling.log.interval, 3);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"server_ip", pconfig->profiling.log.fs_server_ip, INET_ADDRSTRLEN, "#");
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"server_port", (int *)&pconfig->profiling.log.fs_server_port, 0);
-	
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"fs_metric_type", str_tmp, ARG_MAX, "default");
+	if(strncasecmp(str_tmp, "default", strlen("default")) == 0){
+		pconfig->profiling.log.fs_metrics_type = FS_METRIS_OUTPUT_DEFAULT;
+	}else if(strncasecmp(str_tmp, "json", strlen("json")) == 0){
+		pconfig->profiling.log.fs_metrics_type = FS_METRIS_OUTPUT_JSON;
+	}else{
+		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'fs_metric_type'");
+		return -1;
+	}
 
 	/*******************************  TOOLS **********************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.pkt_dump", (char *)"enabled", (int *)&pconfig->tools.pkt_dump.enabled, 0);

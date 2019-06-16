@@ -7,6 +7,8 @@
 #include "sapp_private_api.h"
 #include "MESA/field_stat2.h"
 
+static int sapp_fs2_init(void);
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -385,99 +387,6 @@ int sapp_get_device_opt(const char *device, enum sapp_device_opt opt_type, void 
 }
 
 
-static int sapp_fs2_init(void)
-{
-	char cfg_ip_str[32];
-	char fs_name[1024];
-	int cfg_port;
-	int fs2_opt;
-	int cycle;
-	int send_historgram;
-	void *fs2_handle;
-	unsigned short fs_server_port;
-	sapp_gval_individual_fixed_fs_t *pfs_para = &sapp_global_val->individual_fixed.fs_para;
-
-	if(0 == sapp_global_val->config.profiling.log.fs_enabled){
-		sapp_global_val->individual_fixed.fs_para.fs_handle = NULL;
-		return 0;
-	}
-
-	sapp_global_val->individual_fixed.fs_para.fs_handle = FS_create_handle();
-	if(NULL == sapp_global_val->individual_fixed.fs_para.fs_handle){
-		sapp_log(RLOG_LV_FATAL, 30, 30, "FS_create_handle() error: %s!\n", strerror(errno));
-		return -1;
-	}
-
-	fs2_handle = sapp_global_val->individual_fixed.fs_para.fs_handle;
-
-	FS_set_para(fs2_handle, STAT_CYCLE, &sapp_global_val->config.profiling.log.interval, sizeof(int));
-
-	fs2_opt = 1; /* 1:Rewrite ,2: Append.  */
-	FS_set_para(fs2_handle, PRINT_MODE, &fs2_opt, sizeof(int));
-
-	fs2_opt = 1;
-	FS_set_para(fs2_handle, PRINT_TRIGGER, &fs2_opt, sizeof(int));
-
-	fs2_opt = 0;
-    FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &fs2_opt, sizeof(int));
-
-    FS_set_para(fs2_handle, OUTPUT_DEVICE, "fs2_sysinfo.log", strlen("fs2_sysinfo.log")+1);
-	FS_set_para(fs2_handle, APP_NAME, sapp_global_val->config.profiling.log.fs_app_name, strlen(sapp_global_val->config.profiling.log.fs_app_name)+1);
-	FS_set_para(fs2_handle, STATS_SERVER_IP, (void *)sapp_global_val->config.profiling.log.fs_server_ip, strlen(sapp_global_val->config.profiling.log.fs_server_ip)+1);
-	fs_server_port = (unsigned short)sapp_global_val->config.profiling.log.fs_server_port;
-	FS_set_para(fs2_handle, STATS_SERVER_PORT, &fs_server_port, sizeof(short));
-
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ethernet_pps");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ethernet_bps");
-
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_IPV4] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_pps");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_IPV4] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_bps");
-
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_IPV6] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv6_pps");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_IPV6] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv6_bps");
-
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_pps");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_bps");
-
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "UDP_pps");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "UDP_bps");
-
-	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_NEW] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_NEW");
-	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DEL] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_DEL");
-	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DATA] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_CONCURRENT");
-
-    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DOUBLE] = FS_register(fs2_handle, FS_STYLE_FIELD,FS_CALC_CURRENT, "TCP_LINK_DOUBLE");
-    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_C2S] = FS_register(fs2_handle,FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_C2S");
-    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_S2C] = FS_register(fs2_handle,FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_S2C");
-
-
-    pfs_para->fs_id_count_array[SAPP_STAT_SND_TCP_RST] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_RST");
-	pfs_para->fs_id_count_array[SAPP_STAT_SND_TCP_SYNACK] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_S/A");
-	pfs_para->fs_id_count_array[SAPP_STAT_SND_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_UDP");
-	
-	if(unlikely(g_timestamp_record_sw))
-	{
-		for(int i = 0; i < g_packet_io_thread_num; i++)
-		{
-			char histogram_name[16];
-			sprintf(histogram_name, "tid_%d(ns)", i);
-			pfs_para->fs_latency_id_array[i] = FS_register_histogram(fs2_handle,  //Field Stat句柄
-								  FS_CALC_SPEED,    //输出累计值或瞬时值
-								  histogram_name,     //统计项名称，字符串
-								  1,                  //可追踪的最小值
-								  1000000,            //可追踪的最大值
-								  2);                 //精度，即小数点后几位，范围1~4
-			if(send_historgram == 0)
-            {
-                FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &pfs_para->fs_latency_id_array[i], sizeof(int));
-            }
-		}
-	}
-	FS_start(fs2_handle);
-	
-	return 0;
-}
-
 #if 0
 void sapp_statsd_flush_buf(void)
 {
@@ -567,4 +476,100 @@ int sapp_assistant_init(void)
 #ifdef __cplusplus
 }
 #endif
+
+static int sapp_fs2_init(void)
+{
+	char cfg_ip_str[32];
+	char fs_name[1024];
+	int cfg_port;
+	int fs2_opt;
+	int cycle;
+	int send_historgram;
+	void *fs2_handle;
+	unsigned short fs_server_port;
+	sapp_gval_individual_fixed_fs_t *pfs_para = &sapp_global_val->individual_fixed.fs_para;
+
+	if(0 == sapp_global_val->config.profiling.log.fs_enabled){
+		sapp_global_val->individual_fixed.fs_para.fs_handle = NULL;
+		return 0;
+	}
+
+	sapp_global_val->individual_fixed.fs_para.fs_handle = FS_create_handle();
+	if(NULL == sapp_global_val->individual_fixed.fs_para.fs_handle){
+		sapp_log(RLOG_LV_FATAL, 30, 30, "FS_create_handle() error: %s!\n", strerror(errno));
+		return -1;
+	}
+
+	fs2_handle = sapp_global_val->individual_fixed.fs_para.fs_handle;
+
+	FS_set_para(fs2_handle, STAT_CYCLE, &sapp_global_val->config.profiling.log.interval, sizeof(int));
+
+	fs2_opt = 1; /* 1:Rewrite ,2: Append.  */
+	FS_set_para(fs2_handle, PRINT_MODE, &fs2_opt, sizeof(int));
+
+	fs2_opt = 1;
+	FS_set_para(fs2_handle, PRINT_TRIGGER, &fs2_opt, sizeof(int));
+
+	fs2_opt = 0;
+    FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &fs2_opt, sizeof(int));
+
+    FS_set_para(fs2_handle, OUTPUT_DEVICE, "fs2_sysinfo.log", strlen("fs2_sysinfo.log")+1);
+	FS_set_para(fs2_handle, APP_NAME, sapp_global_val->config.profiling.log.fs_app_name, strlen(sapp_global_val->config.profiling.log.fs_app_name)+1);
+	FS_set_para(fs2_handle, STATS_SERVER_IP, (void *)sapp_global_val->config.profiling.log.fs_server_ip, strlen(sapp_global_val->config.profiling.log.fs_server_ip)+1);
+	fs_server_port = (unsigned short)sapp_global_val->config.profiling.log.fs_server_port;
+	FS_set_para(fs2_handle, STATS_SERVER_PORT, &fs_server_port, sizeof(short));
+
+	FS_set_para(fs2_handle, METRIS_FORMAT, &sapp_global_val->config.profiling.log.fs_metrics_type, sizeof(int));
+	
+	pfs_para->fs_id_count_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ethernet_pps");
+	pfs_para->fs_id_length_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ethernet_bps");
+
+	pfs_para->fs_id_count_array[SAPP_STAT_RCV_IPV4] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_pps");
+	pfs_para->fs_id_length_array[SAPP_STAT_RCV_IPV4] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_bps");
+
+	pfs_para->fs_id_count_array[SAPP_STAT_RCV_IPV6] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv6_pps");
+	pfs_para->fs_id_length_array[SAPP_STAT_RCV_IPV6] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv6_bps");
+
+	pfs_para->fs_id_count_array[SAPP_STAT_RCV_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_pps");
+	pfs_para->fs_id_length_array[SAPP_STAT_RCV_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_bps");
+
+	pfs_para->fs_id_count_array[SAPP_STAT_RCV_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "UDP_pps");
+	pfs_para->fs_id_length_array[SAPP_STAT_RCV_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "UDP_bps");
+
+	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_NEW] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_NEW");
+	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DEL] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_DEL");
+	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DATA] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_CONCURRENT");
+
+    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DOUBLE] = FS_register(fs2_handle, FS_STYLE_FIELD,FS_CALC_CURRENT, "TCP_LINK_DOUBLE");
+    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_C2S] = FS_register(fs2_handle,FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_C2S");
+    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_S2C] = FS_register(fs2_handle,FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_S2C");
+
+
+    pfs_para->fs_id_count_array[SAPP_STAT_SND_TCP_RST] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_RST");
+	pfs_para->fs_id_count_array[SAPP_STAT_SND_TCP_SYNACK] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_S/A");
+	pfs_para->fs_id_count_array[SAPP_STAT_SND_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_UDP");
+	
+	if(unlikely(g_timestamp_record_sw))
+	{
+		for(int i = 0; i < g_packet_io_thread_num; i++)
+		{
+			char histogram_name[16];
+			sprintf(histogram_name, "tid_%d(ns)", i);
+			pfs_para->fs_latency_id_array[i] = FS_register_histogram(fs2_handle,  //Field Stat句柄
+								  FS_CALC_SPEED,    //输出累计值或瞬时值
+								  histogram_name,     //统计项名称，字符串
+								  1,                  //可追踪的最小值
+								  1000000,            //可追踪的最大值
+								  2);                 //精度，即小数点后几位，范围1~4
+			if(send_historgram == 0)
+            {
+                FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &pfs_para->fs_latency_id_array[i], sizeof(int));
+            }
+		}
+	}
+	FS_start(fs2_handle);
+	
+	return 0;
+}
+
 

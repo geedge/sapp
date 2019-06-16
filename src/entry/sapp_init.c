@@ -410,9 +410,11 @@ int MESA_platform_init(int argc, char *argv[])
 		2019-04-11, marsio已经无上述问题, 再恢复成先调用packet_io_init(), 后调用plugctrl().
 	*/
 	sapp_set_current_state(SAPP_STATE_PKT_IO_INITING);
+#if (0 == SAPP_AS_TARGET_SO) /* 做为.so模式, 无需初始化packet_io */	
 	if(packet_io_init(argc, argv) < 0){
 		return -1;
 	}
+#endif	
 	sapp_set_current_state(SAPP_STATE_PKT_IO_INITED);
 
 	sapp_set_current_state(SAPP_STATE_PLUG_INITING);
@@ -425,7 +427,6 @@ int MESA_platform_init(int argc, char *argv[])
 
 void MESA_platform_run(void)
 {
-#if (0 == SAPP_AS_TARGET_SO)	
 	/* 
 		使用atexit()注册的函数, 调用与注册函数相反, 所以尽可能延后atexit()注册位置,
 		放在所有初始化完成之后, packet_io_run()之前。
@@ -438,11 +439,12 @@ void MESA_platform_run(void)
 
 	sapp_set_current_state(SAPP_STATE_PROCESSING);
 
+#if (0 == SAPP_AS_TARGET_SO)	
 	while(1){
 		pause();
 	}
-
 #endif	
+
 }
 
 #ifdef __cplusplus

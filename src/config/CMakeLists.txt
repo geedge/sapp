@@ -14,4 +14,4 @@ endif()
 add_definitions(-D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
 add_definitions(-DPLATFORM_NSDPF_PAPP=1)
 
-add_library(config cmd_args.c config_parse.c)
+add_library(config cmd_args.c config_parse.cpp)

@@ -17,7 +17,7 @@ libsymbol_check.a:libsymbol_check.o
 	cp $@ ../../lib/
 
 libsymbol_check.o:libsymbol_check.cpp
-	g++ -c $^ $(INC) -Wall -D_GNU_SOURCE=1 -ldl -g
+	g++ -c $^ $(INC) $(CFLAGS) -ldl -g
 
 clean:
 	rm -f test_symbol_check *.o *.a

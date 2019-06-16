@@ -12,8 +12,8 @@ EXEC = test_toml
 LIB = libtoml.a libtomlc99_wrap.so libtomlc99_wrap.a
 LIB_PATH = -L/opt/MESA/lib
 
-all: $(LIB) $(EXEC)
-
+#all: $(LIB) $(EXEC)
+all: $(LIB)
 
 libtoml.a: toml.o
 	ar -rcs $@ $^;

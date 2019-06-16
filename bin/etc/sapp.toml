@@ -66,6 +66,8 @@ bind_mask=[1,2,3,4]
 	[profiling.log.field_stat]
 	 enabled=1
 	 fs_app_name=sapp
+### note, fs_metric_type option value: [default, json]
+	 fs_metric_type=json
 	 interval=3
      server_ip="192.168.1.1"
      server_port=12345

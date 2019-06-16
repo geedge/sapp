@@ -69,6 +69,7 @@ typedef struct{
 	int level;
 	int interval;
 	int fs_enabled;
+	int fs_metrics_type; 
 	char fs_app_name[NAME_MAX];
 	char fs_server_ip[INET_ADDRSTRLEN]; /* string */
 	unsigned int fs_server_port; /* integer, host order, user should truncate to short */

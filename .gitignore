@@ -6,8 +6,6 @@ SI/
 *.a
 *.o
 *.d
-build/
 .idea/
-run/log/
-run/sapp
+bin/sapp
 version.txt

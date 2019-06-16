@@ -1327,7 +1327,7 @@ static void confilist_file_check(void)
 			sapp_log(30, 1, 1, "Error: plug conf list file:%s is not exist!", PLUG_CONTROL_INF);
 			sapp_log(30, 1, 1, "\tin sapp_v4.0, conflist_platform.inf, conflist_protocol.inf, conflist_business.inf are obsoleted, use plug/conflist.inf instead,");
 			sapp_log(30, 1, 1, "\tyou can copy and run the following command in sapp working directory, to generate a new conflist.inf:");
-			sapp_log(30, 1, 1, "\tcommand: \n\techo \"[platform]\" > plug/conflist.inf;cat plug/platform/conflist_platform.inf >> plug/conflist.inf;\n\techo [protocol]  >> plug/conflist.inf;cat plug/protocol/conflist_protocol.inf >> plug/conflist.inf;\n\techo [business]  >> plug/conflist.inf;cat plug/business/conflist_business.inf >> plug/conflist.inf;\n");
+			sapp_log(30, 1, 1, "\tcommand: \n\techo \"[platform]\" > plug/conflist.inf;cat plug/platform/conflist_platform.inf >> plug/conflist.inf;\n\techo \"[protocol]\"  >> plug/conflist.inf;cat plug/protocol/conflist_protocol.inf >> plug/conflist.inf;\n\techo \"[business]\"  >> plug/conflist.inf;cat plug/business/conflist_business.inf >> plug/conflist.inf;\n");
 			sapp_log(30, 1, 1, "\tyou can also run the shell script: '%s' in sapp working directory, to generate a new conflist.inf", "generate_v4.0_conflist.sh");
 
 			exit(1);

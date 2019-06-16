@@ -306,7 +306,8 @@ long packet_io_get_app_drop_num(int thread_num)
 	if(dl_io_fun_list.dl_io_get_app_drop_num){
 		ret = dl_io_fun_list.dl_io_get_app_drop_num(thread_num);
 	}else{
-		printf("Warning, packet io library not support 'dl_io_get_app_drop_num'!\n");
+		//printf("Warning, packet io library not support 'dl_io_get_app_drop_num'!\n");
+		ret = 0;
 	}
 	
 	return ret;
@@ -332,7 +333,8 @@ long packet_io_get_lib_drop_num(void)
 	if(dl_io_fun_list.dl_io_get_lib_drop_num){
 		ret = dl_io_fun_list.dl_io_get_lib_drop_num();
 	}else{
-		printf("Warning, packet io library not support 'dl_io_get_lib_drop_num'!\n");
+		//printf("Warning, packet io library not support 'dl_io_get_lib_drop_num'!\n");
+		ret = 0;
 	}
 	
 	return ret;
@@ -724,17 +726,20 @@ extern  int app_function_rationality_check(void);
 void packet_io_run(void)
 {
 	pthread_t pid;
+#if (0 == SAPP_AS_TARGET_SO)		
 	if(NULL == dl_io_fun_list.dl_io_run){
 		printf("Error, packet io library must support 'dl_io_run' !\n");
 		sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: Error, packet io library must support 'dl_io_run' !\n", __FILE__, __LINE__);
 		assert(0);
 	}
+#endif
 
 	app_function_rationality_check();
 	
 	pthread_create(&pid, NULL, sapp_time_event_thread ,NULL);
-	
+#if (0 == SAPP_AS_TARGET_SO)	
 	dl_io_fun_list.dl_io_run();
+#endif	
 }
 
 extern volatile int update_packet_io_status_sw;

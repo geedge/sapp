@@ -1028,6 +1028,11 @@ void sapp_set_current_state(enum sapp_state_t state)
 	sapp_global_val->individual_volatile->current_state = (int)state;
 }
 
+enum sapp_state_t sapp_get_current_state(void)
+{
+	return (enum sapp_state_t)sapp_global_val->individual_volatile->current_state;
+}
+
 
 #ifdef __cplusplus
 }
