@@ -136,7 +136,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 				ret = -1;
 				break;
 			}			
-			short *out_value = (short *)void_value;
+			unsigned short *out_value = (unsigned short *)void_value;
 			*out_value = mr_ctrlzone->l4_src_port;
 		}
 		break;
