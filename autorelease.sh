@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ $# -lt 8 ] ; then
+if [ $# -lt 7 ] ; then
     echo "USAGE: ./autorelease.sh [API_V4_URL] [PROJECT_URL]
     [PROJECT_ID] [TOKEN]
     [COMMIT_TAG] [JOB] [PROJECT_NAME] [COMMIT_REF_PROTECTED] [COMMIT_SHORT_SHA]"
