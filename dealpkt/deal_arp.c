@@ -23,6 +23,11 @@ extern int g_topology_mode;
 	}
 #endif
 
+	/* 如果是隧道内部的ARP, 应该是链路上正常的CS双方ARP包, 要回注 */
+	if(sapp_identify_tunnel_inner_pkt(raw_pkt) != 0){
+		return PASS;
+	}
+
 	/* NOTE: 其他模式什么时候都不应该把原始ARP包再转发出去, 即便是GDEV模式下 */
 	return DROP;
 }

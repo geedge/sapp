@@ -74,6 +74,7 @@ LIB += -L/opt/MESA/lib -lpthread -ldl -lrt
 LIB += -lMESA_htable -lMESA_handle_logger -lMESA_prof_load
 #LIB += -lsesame_door
 LIB += -lMESA_field_stat2
+LIB += -lcjson
 
 ifeq ($(iomode), $(_MODE_MARSIO))
 LIB += -lmarsio

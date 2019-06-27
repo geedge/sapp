@@ -50,7 +50,7 @@ static inline void __print_critical_msg(void *fun_ptr, const char *libname, cons
 	}
 }
 
-#if LINK_MODE_DYNAMIC
+#if 1 //version 3.0 don't support packet_io static link!
 static int packet_io_lib_load_by_mode(int cap_mode, const char *full_lib_path)
 {
 	void *io_lib_handle;
@@ -83,6 +83,7 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *full_lib_path)
 	dl_io_fun_list.dl_io_get_version = (int (*)(void))dlsym(io_lib_handle, "dl_io_get_version");
 	dl_io_fun_list.dl_io_device_alias = (void * (*)(unsigned int , char *))dlsym(io_lib_handle, "dl_io_device_alias");
 
+	return 0;
 }
 #else
 

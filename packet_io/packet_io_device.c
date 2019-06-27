@@ -39,7 +39,7 @@ extern void * dl_io_device_alias(unsigned int target_id, char *device_args);
 
 static int get_dl_io_device_alias_fun_symbol(void)
 {
-#if LINK_MODE_DYNAMIC
+#if 1 //version 3.0 don't support packet_io static link!
 	void *dl_handle;
 	char lib_path[256];
 
