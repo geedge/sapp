@@ -7,6 +7,5 @@ COPY build/*.rpm /tmp
 RUN     cd /tmp \
         && rpm -i *.rpm \
 		&& rm -rf /tmp/* \
-		&& rm /usr/local/bin/c* /usr/local/doc/* /usr/local/share/* /usr/local/libexec/* /usr/local/include/* -rf \
 		&& yum clean all \
 		&& rm -rf /var/cache/yum/*
