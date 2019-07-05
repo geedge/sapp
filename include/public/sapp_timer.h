@@ -38,11 +38,26 @@ typedef enum{
 typedef void * sapp_timer_handle;
 typedef void * sapp_timer_event;
 
+/* 
+    NOTE: 
+    This timer is active in sapp packet process threads context, 
+    similar to the entry function of plugins, is multithread.
+*/
+sapp_timer_handle sapp_get_platform_timer(int tid);
+
+/* 
+    NOTE: 
+    This timer is created by sapp, 
+    plugins only add timer event in sapp initialization phase,
+    in addition, the accuracy maybe decline if too many timer event add to one timer.
+    plugins also call sapp_standalone_timer_new() to create a private timer for it own use.
+*/
+sapp_timer_handle sapp_get_platform_standalone_timer(void);
+
+
 /* NOTE: this timer is active in a standalone thread context, is single thread. */
 sapp_timer_handle sapp_standalone_timer_new(void);
 
-/* NOTE: this timer is active in sapp packet process threads context, is multithread. */
-sapp_timer_handle sapp_get_platform_timer(int tid);
 
 /*
 	NOTE:

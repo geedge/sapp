@@ -79,7 +79,7 @@ INC+=-I/opt/MESA/include/MESA/stream_inc
 LIB += -L/opt/MESA/lib -lpthread -ldl
 LIB += -lMESA_htable -lMESA_handle_logger -lMESA_prof_load
 LIB += -lMESA_field_stat2
-LIB += -lsapp_assistant
+#LIB += -lsapp_assistant
 LIB += -lcjson
 #LIB += -lsesame_door
 

@@ -1,11 +1,14 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "public/sapp_timer.h"
 #include "support/event2/event.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+sapp_timer_handle sapp_get_platform_standalone_timer(void);
+static void *sapp_standalone_timer_check_timeout(void *arg);
 
 static inline int __st_is_platform_timer(void *h)
 {
@@ -19,7 +22,6 @@ static inline int __st_is_platform_timer(void *h)
 
 	return 0;
 }
-
 
 static void __st_libev_callback(evutil_socket_t sd, short event, void *sapp_args)
 {
@@ -215,6 +217,33 @@ void __st_pkt_proc_context_check_timeout(int tid)
 	event_base_loop(inner_h->libev_base, EVLOOP_NONBLOCK);
 }
 
+static void line_protocol_timer_cbfun(sapp_timer_handle h, sapp_timer_event ev, int pkt_process_thread_id, void *user_arg)
+{
+	line_protocol_update_metrics();
+}
+
+static void __st_add_time_event_entry(void)
+{
+	sapp_timer_handle th;
+	sapp_timer_event tev;
+	int iopt, ret;
+	struct timeval topt;
+
+	th = sapp_get_platform_standalone_timer();
+	assert(th);
+	tev = sapp_timer_event_new(th);
+	assert(tev);
+	
+	topt.tv_sec = sapp_global_val->config.profiling.log.interval;
+	topt.tv_usec = 0;
+	sapp_event_set_opt(tev, STEO_TIMEOUT_VAL, &topt, sizeof(topt));
+	sapp_event_set_opt(tev, STEO_CALLBACK_FUN, (void *)&line_protocol_timer_cbfun, sizeof(void *));
+
+	ret = sapp_timer_add(th, tev);
+	assert(ret >= 0);
+
+}
+
 
 int __sapp_timer_platform_init(void)
 {
@@ -223,6 +252,10 @@ int __sapp_timer_platform_init(void)
 	for(i = 0; i < g_iThreadNum; i++){
 		ABBR_SAPP_TIMER_HANDLE[i] = __st_timer_new(STO_EFFECTIVE_SCOPE_PKT_PROCESS_THREADS);
 	}
+
+	sapp_global_val->individual_fixed.sapp_standalone_timer = __st_timer_new(STO_EFFECTIVE_SCOPE_STANDALONE_THREAD);
+
+	__st_add_time_event_entry();
 	
 	return 0;
 }
@@ -231,12 +264,17 @@ void __sapp_timer_platform_run(void)
 {
 	int i;
 	sapp_timer_handle_inner_t *inner_h;
+	
 
 	for(i = 0; i < g_iThreadNum; i++){
 		inner_h = (sapp_timer_handle_inner_t *)ABBR_SAPP_TIMER_HANDLE[i];
 		inner_h->effective_thread_pid = sapp_global_val->individual_fixed.pkt_process_tid[i];
 		MESA_ATOMIC_SET(inner_h->running, 1);
 	}
+
+	inner_h = (sapp_timer_handle_inner_t *)sapp_global_val->individual_fixed.sapp_standalone_timer;
+	pthread_create(&inner_h->effective_thread_pid, NULL, sapp_standalone_timer_check_timeout, NULL);
+	MESA_ATOMIC_SET(inner_h->running, 1);
 }
 
 int sapp_event_set_opt(sapp_timer_event ev, sapp_event_opt ev_opt, void *ev_value, int ev_value_len)
@@ -337,6 +375,11 @@ sapp_timer_handle sapp_get_platform_timer(int thread_index)
 }
 
 
+sapp_timer_handle sapp_get_platform_standalone_timer(void)
+{
+	return (void *)sapp_global_val->individual_fixed.sapp_standalone_timer;
+}
+
 
 static inline long long sapp_get_current_time_in_ms(void)
 {
@@ -348,6 +391,22 @@ static inline long long sapp_get_current_time_in_ms(void)
 	tms = t.tv_sec * 1000 + t.tv_usec/1000;
 
 	return tms;
+}
+
+
+static void *sapp_standalone_timer_check_timeout(void *arg)
+{
+	sapp_timer_handle_inner_t *inner_h = (sapp_timer_handle_inner_t *)sapp_global_val->individual_fixed.sapp_standalone_timer;
+	
+	while(1){
+		if(MESA_ATOMIC_READ(inner_h->running)){
+			event_base_loop(inner_h->libev_base, EVLOOP_NONBLOCK);
+		}	
+		
+		usleep(1);
+	}
+
+	return NULL;
 }
 
 
@@ -365,7 +424,6 @@ void *sapp_time_event_thread(void *arg)
 	
 	while(1)
 	{
-		g_CurrentTime = time(NULL);
 		ABBR_CURRENT_TIME = time(NULL);
 		/*
 			NOTE:

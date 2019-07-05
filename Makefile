@@ -184,7 +184,7 @@ endif
 
 __LINK_MODE_DYNAMIC=dynamic
 __LINK_MODE_STATIC=static
-link_mode=dynamic
+link_mode=static
 
 ifeq ($(link_mode), $(__LINK_MODE_STATIC))
        CFLAGS += -DLINK_MODE_STATIC=1
@@ -240,7 +240,7 @@ help:
 	@echo -e "\t\t\033[31;49;1m opt={0,1,2,3,high_perf}, optimize level, default is 0.\033[0m"
 	@echo -e "\t\t\033[31;49;1m iomode={pcap,ppf,pag,prfing,dpdk,tilera,topsec,ipfile,marsio,smith,dpdk_vxlan,pag_marsio}, default is pcap.\033[0m"
 	@echo -e "\t\t\033[31;49;1m target_mode={elf, so}, default is elf.\033[0m"
-	@echo -e "\t\t\033[31;49;1m link_mode={dynamic, static}, default is dynamic.\033[0m"
+	@echo -e "\t\t\033[31;49;1m link_mode={dynamic, static}, default is static.\033[0m"
 
 ##################### MESA Makefile Common Definition End ####################
 

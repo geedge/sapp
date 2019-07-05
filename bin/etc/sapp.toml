@@ -62,16 +62,42 @@ bind_mask=[1,2,3,4]
   
   [profiling.log]
     level=20
+    interval=5
     
-	[profiling.log.field_stat]
+	[profiling.log.local]
 	 enabled=1
-	 fs_app_name=sapp
-### note, fs_metric_type option value: [default, json]
-	 fs_metric_type=json
-	 interval=3
-     server_ip="192.168.1.1"
-     server_port=12345
+### note, if "file_truncate_open_enabled=1", file will be truncated, otherwise open the file for appending.	 
+	 file_truncate_enabled = 1
+	 log_file_name = "fs2_sysinfo.log"
+     
+	[profiling.log.remote]
+	 enabled=1
+     server_ip="192.168.11.90"
+     server_port=8126
+### note, remote_send_out_type option value: [line_protocol, field_stat2]	 
+	 remote_send_out_type=line_protocol
 
+	 [profiling.log.remote.field_stat2]
+### note, is valid when "remote_send_out_type=field_stat2"	 
+### note, metric_type option value: [default, json]
+	 metric_type = default
+	 app_name=sapp
+	 
+	 [profiling.log.remote.line_protocol]
+### note, is valid when "remote_send_out_type=line_protocol"		 
+	 [profiling.log.remote.line_protocol.tags]
+	     tag_name = "tag1"
+	     tag_value = "value1"
+	 [profiling.log.remote.line_protocol.tags]
+	     tag_name = "tag2"
+	     tag_value = "value2"
+	 [profiling.log.remote.line_protocol.tags]
+	     tag_name = "tag2"
+	     tag_value = "value2"
+	     
+
+
+     
 [TOOLS]
   [tools.pkt_dump]
    enabled=1

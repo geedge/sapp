@@ -103,7 +103,7 @@ int stream_register_fun(int funtype,char (*x)(void));
 extern stProtocolPlugInfo* g_protocol_plug_info;
 extern stBusinessPlugInfo* g_business_plug_info;
 extern stProtocolPlugInfo **g_protocol_plug_info_array;
-extern int g_timestamp_record_sw;
+//extern int g_timestamp_record_sw;
 extern long long g_timedelay_threshold;
 
 int g_plugin_plugid ;

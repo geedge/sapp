@@ -2,6 +2,7 @@
 #define _SAPP_GLOBAL_VAL_H_ 1
 
 #include <pthread.h>
+#include <netinet/in.h>
 #include "sapp_pkt_stat.h"
 
 typedef struct{
@@ -65,14 +66,59 @@ typedef struct{
 	sapp_config_stream_udp_t udp;
 }sapp_config_stream_t;
 
+
+typedef struct{
+	int enabled;
+	int file_truncate_enabled; /* append or truncate */
+	char log_file_name[PATH_MAX];
+}sapp_config_profiling_log_local_t;
+
+
+typedef struct{
+	int metrics_type; 
+	char app_name[NAME_MAX];
+}sapp_config_profiling_log_remote_field_stat2_t;
+
+
+typedef struct{
+	char name[NAME_MAX];
+	char value[NAME_MAX];
+}log_line_protocol_tag_t;
+
+typedef struct{
+	int sock_fd;
+	struct sockaddr_in sock_addr;
+	time_t last_send_metrics_time;
+	unsigned long long history_count[SAPP_STAT_NUM_MAX];
+	unsigned long long history_length[SAPP_STAT_NUM_MAX];	
+}log_line_protocol_handle_t;
+
+
+#define LINE_PROTOCOL_TAG_NUM_MAX	16
+typedef struct{
+	log_line_protocol_tag_t tags[LINE_PROTOCOL_TAG_NUM_MAX];
+}sapp_config_profiling_log_remote_line_protocol_t;
+
+
+
+typedef struct{
+	int enabled;
+	char log_app_name[NAME_MAX];
+	char server_ip[INET_ADDRSTRLEN]; /* string */
+	unsigned int server_port; /* integer(4 byte), host order, user should truncate to short before use it */
+	char remote_send_out_type[NAME_MAX]; /* field_stat2 or line_protocol */
+	union{
+		sapp_config_profiling_log_remote_field_stat2_t field_stat2;
+		sapp_config_profiling_log_remote_line_protocol_t line_protocol;
+	};
+}sapp_config_profiling_log_remote_t;
+
+
 typedef struct{
 	int level;
 	int interval;
-	int fs_enabled;
-	int fs_metrics_type; 
-	char fs_app_name[NAME_MAX];
-	char fs_server_ip[INET_ADDRSTRLEN]; /* string */
-	unsigned int fs_server_port; /* integer, host order, user should truncate to short */
+	sapp_config_profiling_log_local_t local;
+	sapp_config_profiling_log_remote_t remote;
 }sapp_config_profiling_log_t;
 
 
@@ -132,20 +178,22 @@ typedef struct{
 
 
 typedef struct{
-	void *fs_handle;
+	void *field_stat2_handle; /* equal to profiling_log_remote_handle if log.enabled=1 and remote_send_out_type=field_stat2 */
 	int fs_id_count_array[SAPP_STAT_NUM_MAX];
 	int fs_id_length_array[SAPP_STAT_NUM_MAX];
 	int fs_latency_id_array[SAPP_MAX_THREADS];
 }sapp_gval_individual_fixed_fs_t; /* field stat info */
 
 typedef struct{
-	void *log_handle;
+	void *log_handle; /* runtime.log */
+	void *profiling_log_remote_handle; /* metric, field_stat2 or line_protocol */
 	void *sapp_timer_handle[SAPP_MAX_THREADS];
+	void *sapp_standalone_timer;
 	time_t sapp_start_time;
 	int depolyment_mode_private; /* 根据配置sapp_global_val->config.packet_io.depolyment_mode_bin转换得到的内部值,例如:NET_CONN_PARALLEL  */
 	unsigned char create_stream_mode; /* 兼容原来的逻辑, 值从配置stream.tcp.syn_mandatory转换得到 */
 	int packet_io_cap_level; 
-	sapp_gval_individual_fixed_fs_t fs_para;
+	sapp_gval_individual_fixed_fs_t field_stat2_para;
 	pthread_t pkt_process_tid[SAPP_MAX_THREADS];
 }sapp_gval_individual_fixed_t;
 

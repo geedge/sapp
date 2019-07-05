@@ -53,7 +53,7 @@ extern sapp_global_t *sapp_global_val;
 #define g_topology_mode_raw		sapp_global_val->config.packet_io.depolyment_mode_bin
 #define g_packet_io_cap_mode 	sapp_global_val->config.packet_io.internal.interface.type_bin
 #define g_packet_io_cap_level	sapp_global_val->individual_fixed.packet_io_cap_level
-
+#define g_timestamp_record_sw	sapp_global_val->config.profiling.pkt_latency_enabled
 
 #define sapp_runtime_log(log_level, format, args...)  do{if(log_level>=ABBR_SAPP_LOG_LEVEL){MESA_handle_runtime_log(ABBR_SAPP_LOG_HANDLE, log_level, "sapp", format, ##args);}}while(0)
 
@@ -74,6 +74,7 @@ int __sapp_timer_platform_init(void);
 void __st_pkt_proc_context_check_timeout(int tid);
 void __sapp_timer_platform_run(void);
 void sapp_set_current_state(enum sapp_state_t st);
+void line_protocol_update_metrics(void);
 
 
 extern volatile unsigned int  g_aiSysCounter[COUNTER_NUM]; /*newly modified   ---LiLei*/

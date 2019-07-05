@@ -8,6 +8,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include/public)
 include_directories(${CMAKE_SOURCE_DIR}/include/support)
 
 LINK_DIRECTORIES(/opt/MESA/lib)
+LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/lib)
 
 if(OPT_IOMODE_MARSIO)
 	LINK_DIRECTORIES(/opt/mrzcpd/lib)
@@ -23,6 +24,7 @@ target_link_libraries(sapp sapp_assistant gdev_assistant)
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)  
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin)  
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)  
+
 
 set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap event)
 #if(OPT_USE_DICTATOR OR OPT_USE_DICTATOR_DEBUG)

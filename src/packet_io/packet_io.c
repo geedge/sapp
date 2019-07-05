@@ -55,7 +55,7 @@ char g_down_dev_name[DEV_NAME_STR_LEN];
 int g_app_send_rst_type;
 extern int g_packet_io_ipv6_switch;
 int g_packet_io_ipv6_raw_socket = 0; /* 用于发送纯Ipv6 rst包 */
-extern int g_timestamp_record_sw;
+//extern int g_timestamp_record_sw;
 int g_encapsulate_with_ddp = 0; /* 使用DDP协议封装的原始包 */
 int g_encapsulate_with_L2E = 0; /* 使用DDP协议封装的x27原始IP包 */
  /* 
@@ -737,6 +737,7 @@ void packet_io_run(void)
 	app_function_rationality_check();
 	
 	pthread_create(&pid, NULL, sapp_time_event_thread ,NULL);
+	
 #if (0 == SAPP_AS_TARGET_SO)	
 	dl_io_fun_list.dl_io_run();
 #endif	

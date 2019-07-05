@@ -27,7 +27,7 @@ extern int G_DICTATOR_SW;
 extern struct global_stream **G_MESA_GLOBAL_STREAM;
 extern int G_SKIP_NOT_IP_LAYER; /* 跳过非IP协议的层, 用于双栈并联特殊环境下, RST包发送 */
 //static int __times = 0;
-int g_timestamp_record_sw = 0;
+//int g_timestamp_record_sw = 0;
 extern long long g_timedelay_threshold;
 extern int g_use_MESA_sleep_sw;
 extern int g_raw_pkt_broken_check;
@@ -198,7 +198,7 @@ int MESA_platform_init(int argc, char *argv[])
 		sleep(1);		
 	}
 
-	MESA_load_profile_int_def("conf/main.conf","Module", "timestamp_record", &g_timestamp_record_sw, 0);	
+	//MESA_load_profile_int_def("conf/main.conf","Module", "timestamp_record", &g_timestamp_record_sw, 0);	
 	MESA_load_profile_int_def("conf/main.conf","Module", "timedelay_threshold", &int_tmp, 10000000);
 	g_timedelay_threshold = (long long)int_tmp;
 	
@@ -337,7 +337,7 @@ int MESA_platform_init(int argc, char *argv[])
 #endif
 	timestamp_record_init();
 
-	/* timer before packet_io and plug_proc() */
+	/* timer must before packet_io and plug_proc() */
 	__sapp_timer_platform_init();
 
 	

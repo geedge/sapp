@@ -18,6 +18,10 @@ static const unsigned long long TO_MB = 0x100000ULL;
 static const unsigned long long TO_GB = 0x40000000ULL;
 static const unsigned long long TO_TB = 0x1000000000ULL;
 
+static unsigned long long cur_count[SAPP_STAT_NUM_MAX] = {0};
+static unsigned long long cur_length[SAPP_STAT_NUM_MAX] = {0};
+
+
 //extern int g_packet_io_thread_num;
 extern void sapp_statsd_add_para(const char *key, unsigned long long value);
 extern void pkt_runtime_output(void);
@@ -47,14 +51,110 @@ static char *byte_convert_human(unsigned long long bytes, int interval, int mult
 }
 
 
+void line_protocol_update_metrics(void)
+{
+	log_line_protocol_handle_t *lp_handle;
+	char metrics_buf[65000];
+	int buf_len;
+
+	if(0 == sapp_global_val->config.profiling.log.remote.enabled){
+		return;
+	}
+	
+	if(strncasecmp(sapp_global_val->config.profiling.log.remote.remote_send_out_type, "line_protocol", strlen("line_protocol")) != 0){
+		return;
+	}
+
+	lp_handle = (log_line_protocol_handle_t *)sapp_global_val->individual_fixed.profiling_log_remote_handle;
+
+	//if((sapp_global_val->individual_volatile->current_time % sapp_global_val->config.profiling.log.interval) != 0){ /* 每隔N秒发送一次 */
+		//return;
+	//}
+
+	sapp_log(30,1,1, "send line protocol, %lld\n", sapp_global_val->individual_volatile->current_time);
+
+	/* line_protocol的输出间隔跟sysinfo.log可能不一样, 不能用统一的瞬时值, 此处自行保存历史数值, 再用当前值相减 */
+	buf_len = snprintf(metrics_buf, 65000, "protocol,type=raw Eth_Pkt=%llu,Eth_Bit=%llu,Ipv4_Pkt=%llu,Ipv4_Bit=%llu,Ipv6_Pkt=%llu,Ipv6_Bit=%llu,Tcp_Pkt=%llu,Tcp_Bit=%llu,Udp_Pkt=%llu,Udp_Bit=%llu\n",
+				cur_count[SAPP_STAT_RCV_ETHERNET] - lp_handle->history_count[SAPP_STAT_RCV_ETHERNET], 
+				8 *( cur_length[SAPP_STAT_RCV_ETHERNET]) - 8 * lp_handle->history_length[SAPP_STAT_RCV_ETHERNET],
+				cur_count[SAPP_STAT_RCV_IPV4] - lp_handle->history_count[SAPP_STAT_RCV_IPV4], 
+				8 *( cur_length[SAPP_STAT_RCV_IPV4]) - 8 * lp_handle->history_length[SAPP_STAT_RCV_IPV4],
+				cur_count[SAPP_STAT_RCV_IPV6] - lp_handle->history_count[SAPP_STAT_RCV_IPV6], 
+				8 *( cur_length[SAPP_STAT_RCV_IPV6]) - 8 * lp_handle->history_length[SAPP_STAT_RCV_IPV6],
+				cur_count[SAPP_STAT_RCV_TCP] - lp_handle->history_count[SAPP_STAT_RCV_TCP],
+				8 *( cur_length[SAPP_STAT_RCV_TCP]) - 8 * lp_handle->history_length[SAPP_STAT_RCV_TCP],
+				cur_count[SAPP_STAT_RCV_UDP] - lp_handle->history_count[SAPP_STAT_RCV_UDP], 
+				8 *( cur_length[SAPP_STAT_RCV_UDP]) - 8 * lp_handle->history_length[SAPP_STAT_RCV_UDP]
+				);
+	sendto(lp_handle->sock_fd, metrics_buf, buf_len, 0, (const struct sockaddr *)&lp_handle->sock_addr, sizeof(struct sockaddr_in));			
+
+	/*
+		对于status类型的值入influxDB的说明:
+			Tcp_Concurrent这类值是二次计算得到的, 表示当前时间点的瞬时值, 并没有时序特性, 
+			但要在influxDB中存储, Grafana中显示, 要把这个值乘以输出间隔, 这样界面统一使用math()函数除以时间间隔, 才能显示的对.
+	*/
+	buf_len = snprintf(metrics_buf, 65000, "stream,type=raw Tcp_Concurrent=%llu,Tcp_Link_New=%llu,Tcp_Link_Del=%llu,Tcp_Link_Double=%llu,Tcp_Link_C2S=%llu,Tcp_Link_S2C=%llu\n",
+				cur_count[SAPP_STAT_TCP_STREAM_DATA] * sapp_global_val->config.profiling.log.interval, 
+				cur_count[SAPP_STAT_TCP_STREAM_NEW] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_NEW],
+				cur_count[SAPP_STAT_TCP_STREAM_DEL] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_DEL],
+				cur_count[SAPP_STAT_TCP_STREAM_DOUBLE] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_DOUBLE],
+				cur_count[SAPP_STAT_TCP_STREAM_C2S] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_C2S],
+				cur_count[SAPP_STAT_TCP_STREAM_S2C] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_S2C]
+				);
+	sendto(lp_handle->sock_fd, metrics_buf, buf_len, 0, (const struct sockaddr *)&lp_handle->sock_addr, sizeof(struct sockaddr_in));			
+	
+	memcpy(lp_handle->history_count, cur_count, sizeof(cur_count));
+	memcpy(lp_handle->history_length, cur_length, sizeof(cur_length));
+	
+}
+
+
+static void field_stat2_update_metrics(void)
+{
+	if((0 == sapp_global_val->config.profiling.log.local.enabled)
+	  &&(strncasecmp(sapp_global_val->config.profiling.log.remote.remote_send_out_type, "field_stat2", strlen("field_stat2")) != 0)){
+		return;
+	}
+	
+    /* 2018-08-29 lijia add field statsd */
+	sapp_fs2_update_count(SAPP_STAT_RCV_UNKNOWN, cur_count[SAPP_STAT_RCV_UNKNOWN]);
+	sapp_fs2_update_length(SAPP_STAT_RCV_UNKNOWN, 8 *( cur_length[SAPP_STAT_RCV_UNKNOWN])); /* to bps, bit per second */
+	
+	sapp_fs2_update_count(SAPP_STAT_RCV_ETHERNET, cur_count[SAPP_STAT_RCV_ETHERNET]);
+	sapp_fs2_update_length(SAPP_STAT_RCV_ETHERNET, 8 *( cur_length[SAPP_STAT_RCV_ETHERNET])); /* to bps, bit per second */
+	
+	sapp_fs2_update_count(SAPP_STAT_RCV_IPV4, cur_count[SAPP_STAT_RCV_IPV4]);
+	sapp_fs2_update_length(SAPP_STAT_RCV_IPV4, 8 *(cur_length[SAPP_STAT_RCV_IPV4]));
+
+	sapp_fs2_update_count(SAPP_STAT_RCV_IPV6, cur_count[SAPP_STAT_RCV_IPV6]);
+	sapp_fs2_update_length(SAPP_STAT_RCV_IPV6, 8 *(cur_length[SAPP_STAT_RCV_IPV6]));
+
+	sapp_fs2_update_count(SAPP_STAT_RCV_TCP, cur_count[SAPP_STAT_RCV_TCP]);
+	sapp_fs2_update_length(SAPP_STAT_RCV_TCP, 8 *(cur_length[SAPP_STAT_RCV_TCP]));
+	
+	sapp_fs2_update_count(SAPP_STAT_RCV_UDP, cur_count[SAPP_STAT_RCV_UDP]);	
+	sapp_fs2_update_length(SAPP_STAT_RCV_UDP, 8 *(cur_length[SAPP_STAT_RCV_UDP]));
+	
+	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_NEW,cur_count[SAPP_STAT_TCP_STREAM_NEW]);
+	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_DEL, cur_count[SAPP_STAT_TCP_STREAM_DEL]);
+	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_DATA, cur_count[SAPP_STAT_TCP_STREAM_DATA]);
+
+	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_DOUBLE,cur_count[SAPP_STAT_TCP_STREAM_DOUBLE]);
+	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_C2S, cur_count[SAPP_STAT_TCP_STREAM_C2S]);
+	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_S2C, cur_count[SAPP_STAT_TCP_STREAM_S2C]);
+
+	sapp_fs2_update_count(SAPP_STAT_SND_TCP_RST,  cur_count[SAPP_STAT_SND_TCP_RST]);
+	sapp_fs2_update_count(SAPP_STAT_SND_TCP_SYNACK,  cur_count[SAPP_STAT_SND_TCP_SYNACK]);
+	sapp_fs2_update_count(SAPP_STAT_SND_UDP,  cur_count[SAPP_STAT_SND_UDP]);
+}
+
 void sysinfo_output(void)
 {
 	int i, j;
 	FILE* fp;
 	//unsigned long long cur_count[COUNTER_NUM] = {0};
 	//static unsigned long long g_SysInputInfo_old[MAX_THREAD_NUM][COUNTER_NUM];
-	unsigned long long cur_count[SAPP_STAT_NUM_MAX] = {0};
-	unsigned long long cur_length[SAPP_STAT_NUM_MAX] = {0};
+
 	static unsigned long long history_count[SAPP_STAT_NUM_MAX];
 	static unsigned long long history_length[SAPP_STAT_NUM_MAX];
 	static sapp_gval_mthread_sys_stat_t history_threads_stat[SAPP_MAX_THREADS];
@@ -106,9 +206,9 @@ void sysinfo_output(void)
 	fprintf(fp,"%-10s %12ld\n\n", "lib", packet_io_get_lib_drop_num());
 	
 	fprintf(fp,"\n%12s %12s %12s\n", "Drop_by_sapp", "total_pkt", "total_len");
-	fprintf(fp,"%12s %12lu %12lu\n", "ETH", cur_count[SAPP_STAT_DROP_ETHERNET], cur_length[SAPP_STAT_DROP_ETHERNET]);
-	fprintf(fp,"%12s %12lu %12lu\n", "IPV4", cur_count[SAPP_STAT_DROP_IPV4], cur_length[SAPP_STAT_DROP_IPV4]);
-	fprintf(fp,"%12s %12lu %12lu\n", "IPV6", cur_count[SAPP_STAT_DROP_IPV6], cur_length[SAPP_STAT_DROP_IPV6]);
+	fprintf(fp,"%12s %12llu %12llu\n", "ETH", cur_count[SAPP_STAT_DROP_ETHERNET], cur_length[SAPP_STAT_DROP_ETHERNET]);
+	fprintf(fp,"%12s %12llu %12llu\n", "IPV4", cur_count[SAPP_STAT_DROP_IPV4], cur_length[SAPP_STAT_DROP_IPV4]);
+	fprintf(fp,"%12s %12llu %12llu\n", "IPV6", cur_count[SAPP_STAT_DROP_IPV6], cur_length[SAPP_STAT_DROP_IPV6]);
 
 	
 #if 0	/* 20190522 lijia close */
@@ -203,35 +303,9 @@ void sysinfo_output(void)
 
     fprintf(fp,"#################################################################\n\n");
 
+	field_stat2_update_metrics();
 
-    /* 2018-08-29 lijia add field statsd */
-
-	sapp_fs2_update_count(SAPP_STAT_RCV_ETHERNET, cur_count[SAPP_STAT_RCV_ETHERNET]);
-	sapp_fs2_update_length(SAPP_STAT_RCV_ETHERNET, 8 *( cur_length[SAPP_STAT_RCV_ETHERNET])); /* to bps, bit per second */
-	
-	sapp_fs2_update_count(SAPP_STAT_RCV_IPV4, cur_count[SAPP_STAT_RCV_IPV4]);
-	sapp_fs2_update_length(SAPP_STAT_RCV_IPV4, 8 *(cur_length[SAPP_STAT_RCV_IPV4]));
-
-	sapp_fs2_update_count(SAPP_STAT_RCV_IPV6, cur_count[SAPP_STAT_RCV_IPV6]);
-	sapp_fs2_update_length(SAPP_STAT_RCV_IPV6, 8 *(cur_length[SAPP_STAT_RCV_IPV6]));
-
-	sapp_fs2_update_count(SAPP_STAT_RCV_TCP, cur_count[SAPP_STAT_RCV_TCP]);
-	sapp_fs2_update_length(SAPP_STAT_RCV_TCP, 8 *(cur_length[SAPP_STAT_RCV_TCP]));
-	
-	sapp_fs2_update_count(SAPP_STAT_RCV_UDP, cur_count[SAPP_STAT_RCV_UDP]);	
-	sapp_fs2_update_length(SAPP_STAT_RCV_UDP, 8 *(cur_length[SAPP_STAT_RCV_UDP]));
-	
-	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_NEW,cur_count[SAPP_STAT_TCP_STREAM_NEW]);
-	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_DEL, cur_count[SAPP_STAT_TCP_STREAM_DEL]);
-	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_DATA, cur_count[SAPP_STAT_TCP_STREAM_DATA]);
-
-	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_DOUBLE,cur_count[SAPP_STAT_TCP_STREAM_DOUBLE]);
-	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_C2S, cur_count[SAPP_STAT_TCP_STREAM_C2S]);
-	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_S2C, cur_count[SAPP_STAT_TCP_STREAM_S2C]);
-
-	sapp_fs2_update_count(SAPP_STAT_SND_TCP_RST,  cur_count[SAPP_STAT_SND_TCP_RST]);
-	sapp_fs2_update_count(SAPP_STAT_SND_TCP_SYNACK,  cur_count[SAPP_STAT_SND_TCP_SYNACK]);
-	sapp_fs2_update_count(SAPP_STAT_SND_UDP,  cur_count[SAPP_STAT_SND_UDP]);
+	////line_protocol_update_metrics();
 
 	//memcpy(sysinfo_old,cur_count,sizeof(unsigned long long)*COUNTER_NUM);
 	///memcpy(g_SysInputInfo_old, (void *)g_SysInputInfo, sizeof(g_SysInputInfo));

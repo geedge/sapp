@@ -459,7 +459,9 @@ static int config_sanity_check(void)
 			return -1;
 		}
 	}
+	
 
+	/*******************************  PKT_DUMP  ******************************/
 	if(pconfig->tools.pkt_dump.dump_thread_id_array_num > pconfig->cpu.worker_threads){
 		sapp_log(30, ~0, ~0, "[Error] TOOLS.PKT_DUMP.dump_thread_id_array items more than CPU.worker_threads!");
 		return -1;
@@ -561,20 +563,37 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.pkt_latency", (char *)"threshold", (int *)&pconfig->profiling.pkt_latency_threshold_in_us, 10000);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.sanity_check", (char *)"raw_pkt_broken_enabled", (int *)&pconfig->profiling.sanity_check_raw_pkt_broken_enabled, 0);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.sanity_check", (char *)"symbol_conflict_enabled", (int *)&pconfig->profiling.sanity_check_symbol_conflict_enabled, 0);
+
 	/*******************************  PROFILING.LOG ***************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log", (char *)"level", (int *)&pconfig->profiling.log.level, 20);
-	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"enabled", (int *)&pconfig->profiling.log.fs_enabled, 1);
-	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"fs_app_name", pconfig->profiling.log.fs_app_name, NAME_MAX, "sapp");
-	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"interval", (int *)&pconfig->profiling.log.interval, 3);
-	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"server_ip", pconfig->profiling.log.fs_server_ip, INET_ADDRSTRLEN, "#");
-	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"server_port", (int *)&pconfig->profiling.log.fs_server_port, 0);
-	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.field_stat", (char *)"fs_metric_type", str_tmp, ARG_MAX, "default");
-	if(strncasecmp(str_tmp, "default", strlen("default")) == 0){
-		pconfig->profiling.log.fs_metrics_type = FS_METRIS_OUTPUT_DEFAULT;
-	}else if(strncasecmp(str_tmp, "json", strlen("json")) == 0){
-		pconfig->profiling.log.fs_metrics_type = FS_METRIS_OUTPUT_JSON;
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log", (char *)"interval", (int *)&pconfig->profiling.log.interval, 3);
+	/*******************************  PROFILING.LOG.local **********************/
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.local", (char *)"enabled", (int *)&pconfig->profiling.log.local.enabled, 1);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.local", (char *)"file_truncate_enabled", (int *)&pconfig->profiling.log.local.file_truncate_enabled, 1);
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.local", (char *)"log_file_name", pconfig->profiling.log.local.log_file_name, NAME_MAX, "fs2_sysinfo.log");
+	/*******************************  PROFILING.LOG.remote **********************/
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.remote", (char *)"enabled", (int *)&pconfig->profiling.log.remote.enabled, 0);
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote", (char *)"server_ip", pconfig->profiling.log.remote.server_ip, INET_ADDRSTRLEN, "#");
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.remote", (char *)"server_port", (int *)&pconfig->profiling.log.remote.server_port, 0);
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote", (char *)"remote_send_out_type", pconfig->profiling.log.remote.remote_send_out_type, NAME_MAX, "field_stat2");
+
+	/*******************************  PROFILING.LOG.remote.field_stat2 **********************/
+	if(strncasecmp(pconfig->profiling.log.remote.remote_send_out_type, "field_stat2", strlen("field_stat2")) == 0){
+		tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote.field_stat2", (char *)"app_name", pconfig->profiling.log.remote.field_stat2.app_name, NAME_MAX, "sapp");
+		tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote.field_stat2", (char *)"metric_type", str_tmp, ARG_MAX, "default");
+		if(strncasecmp(str_tmp, "default", strlen("default")) == 0){
+			pconfig->profiling.log.remote.field_stat2.metrics_type = FS_METRIS_OUTPUT_DEFAULT;
+		}else if(strncasecmp(str_tmp, "json", strlen("json")) == 0){
+			pconfig->profiling.log.remote.field_stat2.metrics_type = FS_METRIS_OUTPUT_JSON;
+		}else{
+			sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.log.remote.field_stat2.metric_type'");
+			return -1;
+		}
+	/*******************************  PROFILING.LOG.remote.line_protocol **********************/	
+	}else if(strncasecmp(pconfig->profiling.log.remote.remote_send_out_type, "line_protocol", strlen("line_protocol")) == 0){
+		//TODO, parse tags array
 	}else{
-		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'fs_metric_type'");
+		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.log.remote.remote_send_out_type'");
 		return -1;
 	}
 

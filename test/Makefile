@@ -1,4 +1,5 @@
 CC	= gcc
+CCC	= g++
 CFLAGS	= -g -fPIC 
 CFLAGS	+= -D__USE_BSD=1 -D__FAVOR_BSD=1 -D__USE_MISC=1 -D_GNU_SOURCE=1
 CFLAGS  += $(OPTFLAGS)
@@ -23,7 +24,7 @@ INCS	+= -I/opt/MESA/include
 INCS	+= -I/opt/MESA/include/MESA
 
 
-.PHONY: all clean 
+.PHONY: all 
 all: $(TARGET)
 	
 test_app_sapp.so: test_app_sapp.o
@@ -41,7 +42,6 @@ g_device_plug.so: g_device_plug.o
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
 	cp $@ $(BIN_PATH)/plug/business/g_device_plug/
 
-
 test_http.so:test_http.o
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
 	cp $@ $(BIN_PATH)/plug/business/test_http/
@@ -54,12 +54,14 @@ wangyan_gdev_measurement.so:wangyan_gdev_measurement.c
 	cp $@ ../bin/plug/business/wangyan_gdev_measurement/$@
 
 sapp_so_run:test_sapp_so.o
-	$(CC) -o $@ -g $(INCS) $(CFLAGS) $^ -lpcap
+	$(CC) -o $@ -g $(INCS) $(CFLAGS) $^ -lpcap -ldl
 	cp $@ ../bin;
-		
 	
 .c.o:  
-	$(CC) -c -o -g $@ $(CFLAGS) -I. $(INCS) $<
+	$(CC) -c -o $@ $(CFLAGS) -I. $(INCS) $<
+
+.cpp.o:  
+	$(CCC) -c -o  $@ $(CFLAGS) -I. $(INCS) $<
 
 clean:
 	rm -f $(TARGET)	$(OBJECTS) 
