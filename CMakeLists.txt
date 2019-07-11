@@ -175,6 +175,7 @@ add_definitions(${HEADER_CHECK_DEFINITIONS}
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
 
+add_subdirectory(./vendor)
 add_subdirectory(./src/support)
 add_subdirectory(./src/dealpkt)
 add_subdirectory(./src/packet_io)
@@ -186,7 +187,7 @@ add_subdirectory(./src/inner_plug)
 add_subdirectory(./src/timer)
 add_subdirectory(./src/entry)
 add_subdirectory(./test)
-add_subdirectory(./test/google_test)
+add_subdirectory(./test/sapp_module_test/src)
 
 install(PROGRAMS ${CMAKE_BINARY_DIR}/src/entry/sapp DESTINATION .)
 

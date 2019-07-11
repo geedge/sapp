@@ -298,7 +298,6 @@ all:
 	cd support/iknow; $(MAKE);
 	cd support/MESA_socket_wrap; $(MAKE);
 	cd support/c3_client; $(MAKE);
-	cd support/libevent; $(MAKE);
 	cd config; $(MAKE);
 	cd common; $(MAKE);
 	cd dealpkt; $(MAKE);

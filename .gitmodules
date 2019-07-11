@@ -1,6 +1,7 @@
-[submodule "test/benchmark_pcap"]
-	path = test/benchmark_pcap
-	url = https://lijia:4Tf5ayZQYrneNxbmNNfM@git.mesalab.cn/public_resources/benchmark_pcap.git
 [submodule "test/sapp_module_test"]
 	path = test/sapp_module_test
 	url = https://lijia:4Tf5ayZQYrneNxbmNNfM@git.mesalab.cn/Alpha_lib/sapp_module_test.git
+	
+[submodule "test/banchmark_pcap"]
+	path = test/banchmark_pcap
+	url = https://lijia:4Tf5ayZQYrneNxbmNNfM@git.mesalab.cn/public_resources/benchmark_pcap.git
