@@ -6,6 +6,7 @@ INC+=-I/opt/MESA/include/MESA
 INC+=-I../../../include/
 INC+=-I../../../include/public
 INC+=-I../../../include/private
+INC+=-I../../../include/support
 LIBS = -L/opt/MESA/lib
 CFLAGS = -D__FAVOR_BSD=1 -D__USE_BSD=1 -D_GNU_SOURCE=1 -fPIC
 

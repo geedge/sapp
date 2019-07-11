@@ -8,9 +8,9 @@ include_directories(/opt/MESA/include/)
 
 #add_definitions(-D_BSD_SOURCE -D_GNU_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
 add_custom_command(
-    OUTPUT   ${CMAKE_SOURCE_DIR}/lib/libevent.a
-    COMMAND ${CMAKE_COMMAND} -E cp libevent.a ${CMAKE_SOURCE_DIR}/lib)
+    OUTPUT  ${CMAKE_SOURCE_DIR}/src/lib/libevent.a
+    COMMAND cp libevent.a ${CMAKE_SOURCE_DIR}/src/lib)
 
 #add_library(event STATIC  libevent.a)
 #add_custom_target(event STATIC)
-link_directories(${CMAKE_SOURCE_DIR}/lib)
+link_directories(${CMAKE_SOURCE_DIR}/src/lib)

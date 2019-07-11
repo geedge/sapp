@@ -16,15 +16,14 @@ endif()
 
 add_definitions(-fPIC)
 
-#if(CAPTURE_MODE MATCHES "PCAP")
-    set(PACKET_IO_SOURCE ${PACKET_IO_SOURCE} packet_io_pcap.c)
-    if(ENABLE_STATIC_LINK)
-        add_library(packet_io_pcap STATIC ${PACKET_IO_SOURCE})
-     else()
-        add_library(packet_io_pcap SHARED ${PACKET_IO_SOURCE})
-    endif()
-	set_target_properties(packet_io_pcap  PROPERTIES PREFIX "")
-#endif()
+#always add libpcap
+set(PACKET_IO_SOURCE ${PACKET_IO_SOURCE} packet_io_pcap.c)
+if(ENABLE_STATIC_LINK)
+    add_library(packet_io_pcap STATIC ${PACKET_IO_SOURCE})
+else()
+    add_library(packet_io_pcap SHARED ${PACKET_IO_SOURCE})
+endif()
+set_target_properties(packet_io_pcap  PROPERTIES PREFIX "")
 
 if(CAPTURE_MODE MATCHES "PAG")
 	set(PACKET_IO_SOURCE ${PACKET_IO_SOURCE} packet_io_pag_marsio.c)

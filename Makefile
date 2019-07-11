@@ -272,7 +272,7 @@ all:
 clean:
 	rm -rf build/*;
 	rm -f bin/sapp;
-	rm -f src/lib/*.a;
+	#rm -f src/lib/*.a;
 	cd src; $(MAKE) clean;
 	cd test; $(MAKE) clean;
 

@@ -100,6 +100,7 @@ endif()
 
 #if(CAPTURE_MODE MATCHES "PCAP")
 set(CAPTURE_DEFINITIONS -DIOMODE_PCAP)
+add_definitions(-DIOMODE_PCAP=1)
 #endif()
 
 if(CAPTURE_MODE MATCHES "PAG")
@@ -120,6 +121,7 @@ endif()
 
 if(CAPTURE_MODE MATCHES "MARSIO")
 	set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_MARSIO -DIOMODE_MARSIO)
+	add_definitions(-DIOMODE_MARSIO=1)
 endif()
 
 # Memory Allocator
@@ -184,6 +186,7 @@ add_subdirectory(./src/inner_plug)
 add_subdirectory(./src/timer)
 add_subdirectory(./src/entry)
 add_subdirectory(./test)
+add_subdirectory(./test/google_test)
 
 install(PROGRAMS ${CMAKE_BINARY_DIR}/src/entry/sapp DESTINATION .)
 
@@ -209,6 +212,7 @@ install(FILES bin/etc/send_raw_pkt.conf DESTINATION etc)
 install(FILES bin/etc/project_list.conf DESTINATION etc)
 install(FILES bin/etc/plugin.conf DESTINATION etc)
 install(FILES bin/etc/entrylist.conf DESTINATION etc)
+install(FILES bin/plug/conflist.inf DESTINATION plug)
 
 if(NOT ENABLE_STATIC_LINK)
 
@@ -222,7 +226,7 @@ endif()
 
 endif()
 
-install(FILES bin/plug/protocol/conflist_protocol.inf DESTINATION plug/protocol)
+#install(FILES bin/plug/protocol/conflist_protocol.inf DESTINATION plug/protocol)
 
 install(FILES bin/plug/protocol/isakmp_protocol_plug/isakmp_protocol_plug.inf DESTINATION plug/protocol/isakmp_protocol_plug)
 install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/isakmp_protocol_plug.so DESTINATION plug/protocol/isakmp_protocol_plug)
@@ -234,16 +238,20 @@ install(FILES bin/plug/protocol/pptp_protocol_plug/pptp_protocol_plug.inf DESTIN
 install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/pptp_protocol_plug.so DESTINATION plug/protocol/pptp_protocol_plug)
 
 
-install(FILES bin/plug/platform/conflist_platform.inf DESTINATION plug/platform)
+#install(FILES bin/plug/platform/conflist_platform.inf DESTINATION plug/platform)
 
 if(PLATFORM_MODE_SERIAL)
     install(FILES bin/plug/platform/g_device_plug/g_device_plug.inf DESTINATION plug/platform/g_device_plug)
     install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/g_device_plug.so DESTINATION plug/platform/g_device_plug)
 endif()
 
-install(FILES bin/plug/business/conflist_business.inf DESTINATION plug/business)
 
-install(FILES bin/plug/business/conflist_business.inf DESTINATION plug/business)
 install(FILES bin/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app)
 install(FILES ${CMAKE_BINARY_DIR}/test/test_app_sapp.so DESTINATION plug/business/test_app)
+
+install(PROGRAMS ${CMAKE_BINARY_DIR}/test/google_test/gtest_sapp_v4 DESTINATION .)
+install(FILES ${CMAKE_BINARY_DIR}/test/google_test/libgtest_sapp.so DESTINATION plug/business/gtest_sapp)
+install(FILES bin/plug/business/gtest_sapp/gtest_sapp.inf  DESTINATION plug/business/gtest_sapp)
+
+
 include(Package)

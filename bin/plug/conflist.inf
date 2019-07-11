@@ -6,6 +6,7 @@
 
 [business]
 ./plug/business/test_app/test_app.inf
+./plug/business/gtest_sapp/gtest_sapp.inf
 #./plug/business/anti_flood/anti_flood.inf
 #./plug/business/test_http/test_http.inf
 #./plug/business/ipsec_biz_sample/ipsec_biz_sample.inf
