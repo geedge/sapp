@@ -14,122 +14,118 @@ worker_threads=1
 bind_mask=[1,2,3,4]
 
 [PACKET_IO]
-   BSD_packet_filter="tcp or udp"
+### note, packet filter, if you do not want to set any filter rule, keep it empty as ""
+   BSD_packet_filter=""
    
 ### note, depolyment.mode options: [mirror, inline, transparent]
   [packet_io.depolyment]
-  mode=mirror
+    mode=mirror
 
 ### note, interface.type options: [pag,pcap,marsio]
   [packet_io.internal.interface]
-  type=pcap
-  name=lo
+    type=pcap
+    name=lo
 
   [packet_io.external.interface]
-  type=pcap
-  name=eth0
+    type=pcap
+    name=lo
 
 [STREAM]
   [stream.tcp]
-  max=1000
-  timeout=10
-  syn_mandatory=0
-  reorder_pkt_max=5
-  analyse_option_enabled=1
-    [stream.tcp.inject]
-	  link_mss=1460
+    max=10000
+    timeout=60
+    syn_mandatory=0
+    reorder_pkt_max=5
+    analyse_option_enabled=1
+      [stream.tcp.inject]
+	    link_mss=1460
 	  
 	  [stream.tcp.inject.rst]
-	  number=3
-	  signature_enabled=1
-      signature_seed1=65535
-      signature_seed2=13
+	    number=3
+	    signature_enabled=1
+        signature_seed1=65535
+        signature_seed2=13
 	
   [stream.udp]
-  max=1000
-  timeout=10
+    max=10000
+    timeout=60
 
 
 [PROFILING]
   [profiling.pkt_latency]
     enabled=0
 ### note, threshold unit is microseconds (us)
-    threshold=10000
+    threshold=1000000
 	
   [profiling.sanity_check]
-  raw_pkt_broken_enabled=0
-  symbol_conflict_enabled=0
+    raw_pkt_broken_enabled=0
+    symbol_conflict_enabled=0
   
   [profiling.log]
     level=20
     interval=5
     
 	[profiling.log.local]
-	 enabled=1
+	  enabled=1
 ### note, if "file_truncate_open_enabled=1", file will be truncated, otherwise open the file for appending.	 
-	 file_truncate_enabled = 1
-	 log_file_name = "fs2_sysinfo.log"
+	  file_truncate_enabled = 1
+	  log_file_name = "fs2_sysinfo.log"
      
 	[profiling.log.remote]
-	 enabled=1
-     server_ip="192.168.11.90"
-     server_port=8126
+	  enabled=1
+      server_ip="192.168.11.90"
+      server_port=8126
 ### note, remote_send_out_type option value: [line_protocol, field_stat2]	 
-	 remote_send_out_type=line_protocol
+	  remote_send_out_type=field_stat2
 
-	 [profiling.log.remote.field_stat2]
+	  [profiling.log.remote.field_stat2]
 ### note, is valid when "remote_send_out_type=field_stat2"	 
 ### note, metric_type option value: [default, json]
-	 metric_type = default
-	 app_name=sapp
+	    metric_type = default
+	    app_name=sapp
 	 
-	 [profiling.log.remote.line_protocol]
+	  [profiling.log.remote.line_protocol]
 ### note, is valid when "remote_send_out_type=line_protocol"		 
-	 [profiling.log.remote.line_protocol.tags]
-	     tag_name = "tag1"
-	     tag_value = "value1"
-	 [profiling.log.remote.line_protocol.tags]
-	     tag_name = "tag2"
-	     tag_value = "value2"
-	 [profiling.log.remote.line_protocol.tags]
-	     tag_name = "tag2"
-	     tag_value = "value2"
+	    [[profiling.log.remote.line_protocol.tags]]
+	      tag_name = "tag1"
+	      tag_value = "value1"
+	    [[profiling.log.remote.line_protocol.tags]]
+	      tag_name = "tag2"
+	      tag_value = "value2"
+	    [[profiling.log.remote.line_protocol.tags]]
+	      tag_name = "tag3"
+	      tag_value = "value3"
 	     
-
-
-     
 [TOOLS]
   [tools.pkt_dump]
-   enabled=1
+    enabled=1
 ### note, mode options value:[storage, udp_socket]
-   mode=udp_socket
-   BSD_packet_filter=ip
+    mode=udp_socket
+    BSD_packet_filter="ip"
    
    [tools.pkt_dump.threads]
-### note, if you want enable pkt dump in all thread, set dump_thread_all_enabled=1,
-###       if dump_thread_all_enabled=0, then use dump_thread_id to specify separate thread.
-   all_threads_enabled=1
+### note, if you want enable pkt dump in all thread, set dump_thread_all_enabled=1, then 'dump_thread_id' is obsoleted.
+###       if dump_thread_all_enabled=0, then use dump_thread_id to specify separate specified thread index.
+     all_threads_enabled=1
    
 ### note, dump_thread_id start from 0, max is CPU.worker_threads-1
-   dump_thread_id=[0,1,2,3,4]
+     dump_thread_id=[0,1,2,3,4]
    
    [tools.pkt_dump.udp]
      command_port=12345
 
    [tools.pkt_dump.storage]
 ### note, file path must be double quotation mark extension, for example,  path="/dev/shm/pkt_dump"
-     path="/dev/shm/pkt_dump"
+      path="/dev/shm/pkt_dump"
 ### note, file size unit: MB
-     file_size_max_per_thread=10000 
+      file_size_max_per_thread=10000 
 
 ### note:
 ### These configurations format is complex and difficult to describe with toml grammar,
 ### so, create a Independent config file to description specific information.
 [SPECIAL_CONFIG_LINK]	 
- project_list_path="./etc/project_list.conf"
- plugin_path="./etc/plugin.conf"
- entrylist_path="./etc/entrylist.conf"
- send_raw_pkt_path="./etc/send_raw_pkt.conf"
- vxlan_sport_service_map_path="./etc/vxlan_sport_service_map.conf"
-
-
+  project_list_path="./etc/project_list.conf"
+  plugin_path="./etc/plugin.conf"
+  entrylist_path="./etc/entrylist.conf"
+  send_raw_pkt_path="./etc/send_raw_pkt.conf"
+  vxlan_sport_service_map_path="./etc/vxlan_sport_service_map.conf"

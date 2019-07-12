@@ -99,7 +99,7 @@ static void usage(void)
 	int index = 0;
 
 	printf("\033[32mUsage:\033[0m\n");
-	printf("\033[32m%10s %-15s\t%-15s\033[0m\n", "short-arg", "long-arg", "note");
+	printf("\033[32m%10s %-15s\t%-15s\033[0m\n", "short-arg", "long-arg", "description");
 	while(cmd_args_usage[index].long_opt_name != NULL){
 		printf("%10s --%-15s\t%s\n", cmd_args_usage[index].short_opt_name, cmd_args_usage[index].long_opt_name, cmd_args_usage[index].usage);
 		index++;

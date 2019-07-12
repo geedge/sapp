@@ -175,6 +175,9 @@ add_definitions(${HEADER_CHECK_DEFINITIONS}
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
 
+#for sapp_module_test
+option(SAPP_V4 "test for sapp v4.0" TRUE)
+
 add_subdirectory(./vendor)
 add_subdirectory(./src/support)
 add_subdirectory(./src/dealpkt)
@@ -250,8 +253,8 @@ endif()
 install(FILES bin/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app)
 install(FILES ${CMAKE_BINARY_DIR}/test/test_app_sapp.so DESTINATION plug/business/test_app)
 
-install(PROGRAMS ${CMAKE_BINARY_DIR}/test/google_test/gtest_sapp_v4 DESTINATION .)
-install(FILES ${CMAKE_BINARY_DIR}/test/google_test/libgtest_sapp.so DESTINATION plug/business/gtest_sapp)
+install(PROGRAMS ${CMAKE_BINARY_DIR}/test/sapp_module_test/src/gtest_sapp_v4 DESTINATION .)
+install(FILES ${CMAKE_BINARY_DIR}/test/sapp_module_test/src/libgtest_sapp.so DESTINATION plug/business/gtest_sapp)
 install(FILES bin/plug/business/gtest_sapp/gtest_sapp.inf  DESTINATION plug/business/gtest_sapp)
 
 
