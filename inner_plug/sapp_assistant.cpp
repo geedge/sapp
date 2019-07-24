@@ -328,9 +328,6 @@ static int sapp_fs2_init(void)
 
     MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "FS_send_histogram", &send_historgram, 0);
 
-    FS_set_para(sapp_global_single.fs2_handle, NOT_SEND_METRIC_TO_SERVER, &send_historgram, sizeof(int));
-
-
     FS_set_para(sapp_global_single.fs2_handle, OUTPUT_DEVICE, "fs2_sysinfo.log", strlen("fs2_sysinfo.log")+1);
 
 	FS_set_para(sapp_global_single.fs2_handle, APP_NAME, fs_name, strlen(fs_name)+1);

@@ -12,3 +12,4 @@ run/log/
 run/sapp
 version.txt
 cmake-build-debug
+.vscode/*
