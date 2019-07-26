@@ -71,8 +71,6 @@ void line_protocol_update_metrics(void)
 		//return;
 	//}
 
-	sapp_log(30,1,1, "send line protocol, %lld\n", sapp_global_val->individual_volatile->current_time);
-
 	/* line_protocol的输出间隔跟sysinfo.log可能不一样, 不能用统一的瞬时值, 此处自行保存历史数值, 再用当前值相减 */
 	buf_len = snprintf(metrics_buf, 65000, "protocol,type=raw Eth_Pkt=%llu,Eth_Bit=%llu,Ipv4_Pkt=%llu,Ipv4_Bit=%llu,Ipv6_Pkt=%llu,Ipv6_Bit=%llu,Tcp_Pkt=%llu,Tcp_Bit=%llu,Udp_Pkt=%llu,Udp_Bit=%llu\n",
 				cur_count[SAPP_STAT_RCV_ETHERNET] - lp_handle->history_count[SAPP_STAT_RCV_ETHERNET], 
@@ -91,15 +89,15 @@ void line_protocol_update_metrics(void)
 	/*
 		对于status类型的值入influxDB的说明:
 			Tcp_Concurrent这类值是二次计算得到的, 表示当前时间点的瞬时值, 并没有时序特性, 
-			但要在influxDB中存储, Grafana中显示, 要把这个值乘以输出间隔, 这样界面统一使用math()函数除以时间间隔, 才能显示的对.
+            直接写入InfluxDB, 显示时要使用MEAN, 按平均值显示即可.
 	*/
 	buf_len = snprintf(metrics_buf, 65000, "stream,type=raw Tcp_Concurrent=%llu,Tcp_Link_New=%llu,Tcp_Link_Del=%llu,Tcp_Link_Double=%llu,Tcp_Link_C2S=%llu,Tcp_Link_S2C=%llu\n",
-				cur_count[SAPP_STAT_TCP_STREAM_DATA] * sapp_global_val->config.profiling.log.interval, 
-				cur_count[SAPP_STAT_TCP_STREAM_NEW] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_NEW],
-				cur_count[SAPP_STAT_TCP_STREAM_DEL] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_DEL],
-				cur_count[SAPP_STAT_TCP_STREAM_DOUBLE] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_DOUBLE],
-				cur_count[SAPP_STAT_TCP_STREAM_C2S] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_C2S],
-				cur_count[SAPP_STAT_TCP_STREAM_S2C] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_S2C]
+				cur_count[SAPP_STAT_TCP_STREAM_DATA], 
+				(cur_count[SAPP_STAT_TCP_STREAM_NEW] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_NEW])/sapp_global_val->config.profiling.log.interval,
+				(cur_count[SAPP_STAT_TCP_STREAM_DEL] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_DEL])/sapp_global_val->config.profiling.log.interval,
+				(cur_count[SAPP_STAT_TCP_STREAM_DOUBLE] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_DOUBLE])/sapp_global_val->config.profiling.log.interval,
+				(cur_count[SAPP_STAT_TCP_STREAM_C2S] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_C2S])/sapp_global_val->config.profiling.log.interval,
+				(cur_count[SAPP_STAT_TCP_STREAM_S2C] - lp_handle->history_count[SAPP_STAT_TCP_STREAM_S2C])/sapp_global_val->config.profiling.log.interval
 				);
 	sendto(lp_handle->sock_fd, metrics_buf, buf_len, 0, (const struct sockaddr *)&lp_handle->sock_addr, sizeof(struct sockaddr_in));			
 	
@@ -154,7 +152,7 @@ void sysinfo_output(void)
 	FILE* fp;
 	//unsigned long long cur_count[COUNTER_NUM] = {0};
 	//static unsigned long long g_SysInputInfo_old[MAX_THREAD_NUM][COUNTER_NUM];
-
+	char time_string[32];
 	static unsigned long long history_count[SAPP_STAT_NUM_MAX];
 	static unsigned long long history_length[SAPP_STAT_NUM_MAX];
 	static sapp_gval_mthread_sys_stat_t history_threads_stat[SAPP_MAX_THREADS];
@@ -172,6 +170,11 @@ void sysinfo_output(void)
 		return;
 	}
 
+	memset(cur_count, 0, sizeof(cur_count));
+	memset(cur_length, 0, sizeof(cur_length));
+
+	timet_to_str(ABBR_CURRENT_TIME, time_string, sizeof(time_string));
+
 	for(i=0;i<g_packet_io_thread_num;i++){
 		for(j = 0; j < SAPP_STAT_NUM_MAX; j++){
 			cur_count[j] +=  mstat[i]->sys_stat.count[j];
@@ -179,7 +182,8 @@ void sysinfo_output(void)
 		}
 	}
 
-	fprintf(fp,"\n*********************** \033[41m%s\033[0m *************************\n", "sysinfo exactly");
+	fprintf(fp,"\n*********************** %s *********************\n", time_string);
+	fprintf(fp,"*********************** \033[41m%s\033[0m *************************\n", "sysinfo exactly");
 	fprintf(fp,"%-10s %12s %12s %12s %12s\n","RCV-PKT", "total_pkt", "total_len","pps", "Bps");
 	fprintf(fp,"%-10s %12llu %12llu %12llu %12llu\n", "Ethernet", cur_count[SAPP_STAT_RCV_ETHERNET],cur_length[SAPP_STAT_RCV_ETHERNET],(cur_count[SAPP_STAT_RCV_ETHERNET]-history_count[SAPP_STAT_RCV_ETHERNET]),(cur_length[SAPP_STAT_RCV_ETHERNET]-history_length[SAPP_STAT_RCV_ETHERNET]));
 	fprintf(fp,"%-10s %12llu %12llu %12llu %12llu\n", "IPv4", cur_count[SAPP_STAT_RCV_IPV4],cur_length[SAPP_STAT_RCV_IPV4],(cur_count[SAPP_STAT_RCV_IPV4]-history_count[SAPP_STAT_RCV_IPV4]),(cur_length[SAPP_STAT_RCV_IPV4]-history_length[SAPP_STAT_RCV_IPV4]));

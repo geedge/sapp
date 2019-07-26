@@ -26,7 +26,7 @@ target_link_libraries(sapp sapp_assistant gdev_assistant)
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)  
 
 
-set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap event)
+set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap libevent-static)
 #if(OPT_USE_DICTATOR OR OPT_USE_DICTATOR_DEBUG)
 #    set(SAPP_MODULES ${SAPP_MODULES}  dictator2 )
 #endif()

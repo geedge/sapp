@@ -75,6 +75,7 @@ void __st_pkt_proc_context_check_timeout(int tid);
 void __sapp_timer_platform_run(void);
 void sapp_set_current_state(enum sapp_state_t st);
 void line_protocol_update_metrics(void);
+char *timet_to_str(time_t timet, char *time_str, int time_str_len);
 
 
 extern volatile unsigned int  g_aiSysCounter[COUNTER_NUM]; /*newly modified   ---LiLei*/

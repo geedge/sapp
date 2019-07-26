@@ -190,7 +190,9 @@ add_subdirectory(./src/inner_plug)
 add_subdirectory(./src/timer)
 add_subdirectory(./src/entry)
 add_subdirectory(./test)
-add_subdirectory(./test/sapp_module_test/src)
+
+#by default, not include sapp_module_test dir
+#add_subdirectory(./test/sapp_module_test/src)
 
 install(PROGRAMS ${CMAKE_BINARY_DIR}/src/entry/sapp DESTINATION .)
 
