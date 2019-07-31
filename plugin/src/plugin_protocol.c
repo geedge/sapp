@@ -12,7 +12,7 @@
 
 stProtocolPlugInfo* g_protocol_plug_info;
 stProtocolPlugInfo **g_protocol_plug_info_array;
-extern int g_plugin_plugid;
+extern int g_plugin_proto_plugid;
 extern int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* pluginfo_pro,stBusinessPlugInfo* pluginfo_bus);
 extern int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname);
 
@@ -27,14 +27,14 @@ static void plugin_protocol_info_convert(void)
 		return;
 	}
 	
-	g_protocol_plug_info_array = malloc(sizeof(void *) * (g_plugin_plugid + 1));
-	memset(g_protocol_plug_info_array, 0, sizeof(void *) * (g_plugin_plugid + 1));
+	g_protocol_plug_info_array = malloc(sizeof(void *) * (g_plugin_proto_plugid + 1));
+	memset(g_protocol_plug_info_array, 0, sizeof(void *) * (g_plugin_proto_plugid + 1));
 
 	while(tmp_plug_info->next){
 		tmp_plug_info = tmp_plug_info->next;
 	}
 
-	for(i = 1; i <= g_plugin_plugid; i++){
+	for(i = 1; i <= g_plugin_proto_plugid; i++){
 		g_protocol_plug_info_array[i] = tmp_plug_info;
 		if(NULL == tmp_plug_info){
 			break;

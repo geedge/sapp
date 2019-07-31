@@ -336,36 +336,36 @@ static int sapp_fs2_init(void)
 
 	FS_set_para(sapp_global_single.fs2_handle, STATS_SERVER_PORT, &sapp_global_single.fs2_server_port_host, sizeof(short));
 
-	sapp_global_single.fs2_filed_id_array[PKT_ETHERNET] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ethernet_pps");
-	sapp_global_single.fs2_filed_id_array[PKT_ETHERNET_LEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ethernet_bps");
+	sapp_global_single.fs2_sysinfo_id_array[PKT_ETHERNET] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ethernet_pps");
+	sapp_global_single.fs2_sysinfo_id_array[PKT_ETHERNET_LEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ethernet_bps");
 
-	sapp_global_single.fs2_filed_id_array[PKT_IP] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_pps");
-	sapp_global_single.fs2_filed_id_array[PKT_IPLEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_bps");
+	sapp_global_single.fs2_sysinfo_id_array[PKT_IP] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_pps");
+	sapp_global_single.fs2_sysinfo_id_array[PKT_IPLEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv4_bps");
 
-	sapp_global_single.fs2_filed_id_array[PKT_IPV6] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv6_pps");
-	sapp_global_single.fs2_filed_id_array[PKT_IPV6LEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv6_bps");
+	sapp_global_single.fs2_sysinfo_id_array[PKT_IPV6] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv6_pps");
+	sapp_global_single.fs2_sysinfo_id_array[PKT_IPV6LEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "IPv6_bps");
 
-	sapp_global_single.fs2_filed_id_array[PKT_TCP] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_pps");
-	sapp_global_single.fs2_filed_id_array[PKT_TCPLEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_bps");
+	sapp_global_single.fs2_sysinfo_id_array[PKT_TCP] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_pps");
+	sapp_global_single.fs2_sysinfo_id_array[PKT_TCPLEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_bps");
 
-	sapp_global_single.fs2_filed_id_array[PKT_UDP] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "UDP_pps");
-	sapp_global_single.fs2_filed_id_array[PKT_UDPLEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "UDP_bps");
+	sapp_global_single.fs2_sysinfo_id_array[PKT_UDP] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "UDP_pps");
+	sapp_global_single.fs2_sysinfo_id_array[PKT_UDPLEN] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "UDP_bps");
 
-	sapp_global_single.fs2_filed_id_array[SYS_TCP_LINK_NEW] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_NEW");
-	sapp_global_single.fs2_filed_id_array[SYS_TCP_LINK_DEL] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_DEL");
-	sapp_global_single.fs2_filed_id_array[SYS_TCP_LINK_DATA] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_CONCURRENT");
+	sapp_global_single.fs2_sysinfo_id_array[SYS_TCP_LINK_NEW] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_NEW");
+	sapp_global_single.fs2_sysinfo_id_array[SYS_TCP_LINK_DEL] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_DEL");
+	sapp_global_single.fs2_sysinfo_id_array[SYS_TCP_LINK_DATA] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_CONCURRENT");
 
-    sapp_global_single.fs2_filed_id_array[LINK_DOUBLE] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD,
-            FS_CALC_CURRENT, "TCP_LINK_DOUBLE");
-    sapp_global_single.fs2_filed_id_array[LINK_SINGLE_C2S] = FS_register(sapp_global_single.fs2_handle,
-            FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_C2S");
-    sapp_global_single.fs2_filed_id_array[LINK_SINGLE_S2C] = FS_register(sapp_global_single.fs2_handle,
-            FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_S2C");
+    sapp_global_single.fs2_sysinfo_id_array[LINK_DOUBLE] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD,
+                                                                       FS_CALC_CURRENT, "TCP_LINK_DOUBLE");
+    sapp_global_single.fs2_sysinfo_id_array[LINK_SINGLE_C2S] = FS_register(sapp_global_single.fs2_handle,
+                                                                           FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_C2S");
+    sapp_global_single.fs2_sysinfo_id_array[LINK_SINGLE_S2C] = FS_register(sapp_global_single.fs2_handle,
+                                                                           FS_STYLE_FIELD, FS_CALC_CURRENT, "TCP_LINK_S2C");
 
 
-    sapp_global_single.fs2_filed_id_array[SEND_TCP_RST] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_RST");
-	sapp_global_single.fs2_filed_id_array[SEND_TCP_SYN_ACK] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_S/A");
-	sapp_global_single.fs2_filed_id_array[SEND_UDP_PKT] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_UDP");
+    sapp_global_single.fs2_sysinfo_id_array[SEND_TCP_RST] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_RST");
+	sapp_global_single.fs2_sysinfo_id_array[SEND_TCP_SYN_ACK] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_TCP_S/A");
+	sapp_global_single.fs2_sysinfo_id_array[SEND_UDP_PKT] = FS_register(sapp_global_single.fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "SEND_UDP");
 	if(unlikely(g_timestamp_record_sw))
 	{
 		for(int i = 0; i < g_packet_io_thread_num; i++)
@@ -440,16 +440,62 @@ void sapp_statsd_add_para(const char *key, unsigned long long value)
 }
 #endif
 
+void sapp_fs2_register_plug_id(int plug_id, const char *plug_name)
+{
+    if(sapp_global_single.fs2_handle != NULL)
+    {
+        char status_name[NAME_MAX];
+        sprintf(status_name, "%s(us)", plug_name);
+        sapp_global_single.fs2_plug_init_time_id_array[plug_id] = FS_register(sapp_global_single.fs2_handle,  FS_STYLE_STATUS, FS_CALC_CURRENT, status_name);
+        FS_set_para(sapp_global_single.fs2_handle, NOT_SEND_METRIC_TO_SERVER, &sapp_global_single
+                .fs2_plug_init_time_id_array[plug_id], sizeof(int));
+        if(unlikely(g_timestamp_record_sw))
+        {
+            for(int i = 0; i < g_packet_io_thread_num; i++)
+            {
+                char histogram_name[NAME_MAX];
+                sprintf(histogram_name, "%s_%d(ns)", plug_name, i);
+                sapp_global_single.fs2_plug_lantency_id_array[plug_id][i] = FS_register_histogram(sapp_global_single.fs2_handle,  //Field Stat句柄
+                                                                                                  FS_CALC_SPEED,    //输出累计值或瞬时值
+                                                                                                  histogram_name,     //统计项名称，字符串
+                                                                                                  1,                  //可追踪的最小值
+                                                                                                  1000000,            //可追踪的最大值
+                                                                                                  2);                 //精度，即小数点后几位，范围1~4
+                FS_set_para(sapp_global_single.fs2_handle, NOT_SEND_METRIC_TO_SERVER, &sapp_global_single
+                            .fs2_plug_lantency_id_array[plug_id][i], sizeof(int));
+            }
+        }
+    }
+}
+
+void sapp_fs2_set_plug_init_time(int plug_id, long long time_us)
+{
+    if(sapp_global_single.fs2_handle != NULL)
+    {
+        FS_operate(sapp_global_single.fs2_handle, sapp_global_single.fs2_plug_init_time_id_array[plug_id], 0, FS_OP_SET, (long long)time_us);
+    }
+}
+
+void sapp_fs2_set_plug_lantency(int plug_id, int thread_seq, long long time_cost)
+{
+    if(likely(sapp_global_single.fs2_handle != NULL) && unlikely(g_timestamp_record_sw))
+    {
+        FS_operate(sapp_global_single.fs2_handle, sapp_global_single.fs2_plug_lantency_id_array[plug_id][thread_seq], 0, FS_OP_SET, time_cost);
+    }
+}
+
 void sapp_fs2_update(int field_index, unsigned  long long value)
 {
-	if(sapp_global_single.fs2_handle != NULL){
-		FS_operate(sapp_global_single.fs2_handle, sapp_global_single.fs2_filed_id_array[field_index], 0, FS_OP_SET,  (long long)value);
+	if(sapp_global_single.fs2_handle != NULL)
+	{
+		FS_operate(sapp_global_single.fs2_handle, sapp_global_single.fs2_sysinfo_id_array[field_index], 0, FS_OP_SET, (long long)value);
 	}
 }
 
 void sapp_fs2_set_latency(int thead_seq, long long time_cost)
 {
-    if(sapp_global_single.fs2_handle != NULL){
+    if(sapp_global_single.fs2_handle != NULL)
+    {
         FS_operate(sapp_global_single.fs2_handle, sapp_global_single.fs2_latency_id_array[thead_seq], 0, FS_OP_SET, time_cost);
     }
 }

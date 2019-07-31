@@ -209,7 +209,7 @@ void iknow_register_eth_cb(void *ihandle)
 	int ret;
 
 	ret = iknow_register_cmd(ihandle, "show eth summary", "display eth flow summary", ifuncb_show_eth_summary, NULL, 0, NULL);
-	assert(0 == ret);
+	//assert(0 == ret);
 }
 
 static inline void packet_io_eth_status_update(int thread_seq,  int raw_pkt_len)

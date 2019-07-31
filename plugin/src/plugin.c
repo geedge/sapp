@@ -95,6 +95,9 @@ int stream_register_fun(int funtype,char (*x)(void));
 #include <unistd.h>
 #include <dlfcn.h>
 #include <assert.h>
+#include <bits/time.h>
+#include <time.h>
+#include <stream_register.h>
 //#include <readline/readline.h>
 //#include <readline/history.h>
 #include "MESA_prof_load.h"
@@ -111,8 +114,10 @@ extern stBusinessPlugInfo* g_business_plug_info;
 extern stProtocolPlugInfo **g_protocol_plug_info_array;
 extern int g_timestamp_record_sw;
 extern long long g_timedelay_threshold;
-
-int g_plugin_plugid ;
+extern sapp_fs2_register_plug_id(int plug_id, const char *plug_name);
+extern sapp_fs2_set_plug_init_time(int plug_id, long long time_us);
+int g_plugin_proto_plugid ;
+int g_plugin_other_plugid ;
 stEntryNameInfo* g_entryname_info;
 
 /*
@@ -693,16 +698,20 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 
 	}
 
-	
+    struct timespec start, end;
+    long elapsed = 0;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+
 	rec = fun_init();
 	if(rec < 0)
 	{
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s init error,don't load it\n",buf_sofilename);
 		return -1;
 	}
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsed = (end.tv_sec - start.tv_sec)*1000000 + (end.tv_nsec - start.tv_nsec)/1000;
 
-
-	//load FUNNAME_DESTROY
+    //load FUNNAME_DESTROY
 	memset(buf_funname,0,PLUGIN_MAX_CONFLEN);
 	MESA_load_profile_string_nodef(filename,SECTION_PLUGINFO,KEYWORD_FUNDESTROY,buf_funname,PLUGIN_MAX_CONFLEN);
 	if(buf_funname[0] !='\0')
@@ -745,7 +754,6 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 		pluginfo_pro->filepoint = filepoint;
 		pluginfo_pro->fun_destroy = fun_destroy;
 
-	
 		//dlsym GET_PLUGID()
 		memset(buf_funname,0,PLUGIN_MAX_CONFLEN);
 		MESA_load_profile_string_nodef(filename,SECTION_PLUGINFO,KEYWORD_FUNGETID,buf_funname,PLUGIN_MAX_CONFLEN);
@@ -767,10 +775,11 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 
 		}
 
-
-		g_plugin_plugid++;
-		fun_getplugid(g_plugin_plugid);
-		pluginfo_pro->plugid = g_plugin_plugid;
+		g_plugin_proto_plugid++;
+		fun_getplugid(g_plugin_proto_plugid);
+		pluginfo_pro->plugid = g_plugin_proto_plugid;
+        sapp_fs2_register_plug_id(g_plugin_proto_plugid, pluginfo_pro->plugname);
+        sapp_fs2_set_plug_init_time(g_plugin_proto_plugid, elapsed);
 
 		//dlsym flag_change
 		memset(buf_funname,0,PLUGIN_MAX_CONFLEN);
@@ -792,7 +801,6 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ\n",filename,buf_funname);
 
 		}
-
 
 		//dlsym flag_state
 		memset(buf_funname,0,PLUGIN_MAX_CONFLEN);
@@ -817,8 +825,13 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	//business plug
 	else
 	{
+        g_plugin_other_plugid+=1;
+        sapp_fs2_register_plug_id(g_plugin_other_plugid + MAX_FUN_NUM, pluginfo_bus->plugname);
+        sapp_fs2_set_plug_init_time(g_plugin_other_plugid +  MAX_FUN_NUM, elapsed);
+
 		pluginfo_bus->filepoint = filepoint;
 		pluginfo_bus->fun_destroy = fun_destroy;
+		pluginfo_bus->plugid = g_plugin_other_plugid+MAX_FUN_NUM;
 //		pluginfo_bus->fun_update = (int (*)(int,int,char*,char*))(dlsym(filepoint,FUNNAME_UPDATE));
 	}
 

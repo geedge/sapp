@@ -2541,9 +2541,9 @@ void iknow_register_stream_hash_cb(void *ihandle)
 	int ret;
 
 	ret = iknow_register_cmd(ihandle, "show stream summary", "display stream hash summary", ifuncb_show_stream_hash_summary, NULL, 0, NULL);
-	assert(0 == ret);
+	//assert(0 == ret);
 	ret = iknow_register_cmd(ihandle, "show stream detail", "display stream hash detail", ifuncb_show_stream_hash_detail, NULL, 0, NULL);
-	assert(0 == ret);		
+	//assert(0 == ret);
 }
 
 void packet_io_status_stream_hash_update(int thread_seq, unsigned long hash_list_num)
