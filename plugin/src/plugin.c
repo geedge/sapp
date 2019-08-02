@@ -1742,3 +1742,36 @@ char PROT_PROCESS(stSessionInfo* session_info, void **pme, int thread_seq,struct
 
 }
 
+extern stBusinessPlugInfo* g_platform_plug_info;
+extern stBusinessPlugInfo* g_business_plug_info;
+extern stProtocolPlugInfo* g_protocol_plug_info;
+
+void plugctrl_destroy_all_plug(void)
+{
+	stBusinessPlugInfo *plug_info;
+
+	plug_info = g_platform_plug_info;
+	while(plug_info){
+		if(plug_info->fun_destroy){
+			plug_info->fun_destroy();
+		}
+		plug_info = plug_info->next;
+	}
+
+	plug_info = g_protocol_plug_info;
+	while(plug_info){
+		if(plug_info->fun_destroy){
+			plug_info->fun_destroy();
+		}
+		plug_info = plug_info->next;
+	}
+
+	plug_info = g_business_plug_info;
+	while(plug_info){
+		if(plug_info->fun_destroy){
+			plug_info->fun_destroy();
+		}
+		plug_info = plug_info->next;
+	}	
+}
+

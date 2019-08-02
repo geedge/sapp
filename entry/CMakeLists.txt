@@ -8,11 +8,12 @@ include_directories(${CMAKE_SOURCE_DIR}/include/net)
 include_directories(${CMAKE_SOURCE_DIR}/dealpkt)
 include_directories(${CMAKE_SOURCE_DIR}/packet_io)
 
+LINK_DIRECTORIES(/opt/MESA/lib)
 add_executable(sapp sapp_init.c sapp_main.c sapp_global_val.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
 target_link_libraries(sapp nsl pthread dl m pcap)
 target_link_libraries(sapp MESA_handle_logger MESA_prof_load)
-target_link_libraries(sapp sapp_assistant gdev_assistant)
+target_link_libraries(sapp sapp_assistant gdev_assistant cjson)
 
 
 set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl)
