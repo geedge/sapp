@@ -113,6 +113,7 @@ void pptp_exit(void);
 extern void ipv4_frag_per_thread_exit(int thread_seq);
 extern void ipv6_frag_per_thread_exit(int thread_seq);
 extern void pptp_per_thread_exit(int thread_seq);
+extern void plugctrl_destroy_all_plug(void);
 extern void __timestamp_print_max_tuple4(const raw_pkt_t *raw_pkt, long timedelay, int tid);
 
 static const unsigned char phony_feedback_eth_hdr_ip4[ETHERNET_HDR_LEN] = 
@@ -659,6 +660,8 @@ void packet_io_exit(void)
 	sleep(1);
 	sched_yield();
 	sleep(1);
+
+	plugctrl_destroy_all_plug();
 	
 	exit(1);
 	
