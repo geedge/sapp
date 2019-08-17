@@ -104,6 +104,18 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		}
 		break;
 
+		case RAW_PKT_GET_VXLAN_LOCAL_IP:
+		{
+			const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
+			if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
+				ret = -1;
+				break;
+			}
+			int *out_value = (int *)void_value;
+			*out_value = mr_ctrlzone->l_device_in_addr;
+		}
+		break;
+		
 
 		case RAW_PKT_GET_VXLAN_ID:
 		{

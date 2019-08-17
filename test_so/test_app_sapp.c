@@ -819,6 +819,16 @@ char test_get_rawpkt_options(struct streaminfo *stream,void **pme, int thread_se
 		printf("[error], test_get_rawpkt_options GDEV_IP error\n");
 	}
 
+	ret = get_rawpkt_opt_from_streaminfo(stream, RAW_PKT_GET_VXLAN_LOCAL_IP, &gdev_ip);
+	if(ret >= 0){
+		char tmp_ip_str[32];
+		inet_ntop(AF_INET, &gdev_ip, tmp_ip_str, 32);
+		printf("[debug], test_get_rawpkt_options get vxlan-local-ip:%s\n", tmp_ip_str);
+	}else{
+		printf("[error], test_get_rawpkt_options get vxlan-local-ip error\n");
+	}
+	
+
 	ret = get_rawpkt_opt_from_streaminfo(stream, RAW_PKT_GET_VXLAN_ID, &vxlan_id);
 	if(ret >= 0){
 		printf("[debug], test_get_rawpkt_options get vlan-id:%d\n", vxlan_id);
