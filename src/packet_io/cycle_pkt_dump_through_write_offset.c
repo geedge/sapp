@@ -44,7 +44,7 @@ static pkt_dump_status_t PKT_DISCARD_STAT[MAX_THREAD_NUM];
 
 #endif
 
-const int tcpdump_mesa_version_VERSION_20181114 = 20181114;
+const int tcpdump_mesa_version_VERSION_20190820 = 20190820;
 
 extern int g_use_MESA_sleep_sw;
 extern void MESA_sleep(void);
@@ -64,6 +64,7 @@ static FILE *G_PKT_DUMP_FP[MAX_THREAD_NUM];
 static int G_FILENAME_INDEX[MAX_THREAD_NUM];
 static long G_PCAP_SIZE[MAX_THREAD_NUM];
 static char G_PKT_DUMP_FILTER_STR[PATH_MAX];
+
 static struct bpf_program G_PKT_DUMP_BPF_FILTER[MAX_THREAD_NUM];
 static pcap_t *phony_pcap_handle[MAX_THREAD_NUM]; /* 仅用于BPF过滤时使用 */
 static unsigned short pkt_dump_data_offset = 0; /* 捕包时可指定偏移量, 用于vxlan环境下捕获内层数据包 */
@@ -421,6 +422,7 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 	int pktlen, for_bpf_filter_len, ret;
 	char modify_pkt_buf[2048]; /* 需要修改原始包, 先copy到临时缓冲区 */
 	struct perceptive_info *pperceptive_info;
+	const sapp_config_tools_pktdump_t *pktdump_cfg = &sapp_global_val->config.tools.pkt_dump;
 
 	if(0 == pkt_dump_udp_socket_peer_alive){	
 		return;
@@ -519,6 +521,7 @@ static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 	pkt_dump_pkt_hdr_t pcap_hdr[2];
 	int write_hdr_len;
 	char dump_file_name[PATH_MAX];	
+	const sapp_config_tools_pktdump_t *pktdump_cfg = &sapp_global_val->config.tools.pkt_dump;
 
 	if(PKT_DUMP_LOCAL_FILE == G_PKT_DUMP_MODE){
 		if(0 == G_PKT_DUMP_PER_THREAD_SW[thread_seq]){
@@ -529,7 +532,7 @@ static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 		return;
 	}
 
-	if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
+	if(pktdump_cfg->bpf_filter[0] != '\0'){
 		if(g_packet_io_cap_level != (enum addr_type_t)CAP_LEVEL_MAC){
 			if(0 == bpf_filter(G_PKT_DUMP_BPF_FILTER[thread_seq].bf_insns, 
 						    (const unsigned char *)p_raw_pkt->raw_pkt_data-14, 
@@ -547,7 +550,7 @@ static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 
 	if(unlikely(NULL == G_PKT_DUMP_FP[thread_seq])){
 		snprintf(dump_file_name, PATH_MAX, "%s/pid_%d.tid_%d.%d.pcap", 
-				G_PKT_DUMP_ROOT_DIR, getpid(), thread_seq, G_FILENAME_INDEX[thread_seq]);
+				pktdump_cfg->storge_path, getpid(), thread_seq, G_FILENAME_INDEX[thread_seq]);
 		G_PKT_DUMP_FP[thread_seq] = fopen(dump_file_name, "wb+"); 		
 		if(NULL == G_PKT_DUMP_FP[thread_seq]){
 			printf("fopen %s error!\n", dump_file_name);
@@ -814,6 +817,7 @@ static int cycle_pkt_dump_get_core_num(void)
 	return core_num;
 }
 
+#if 0
 /* config is like: "0,1,2,3,4,5" */
 static int cycle_pkt_dump_parse_per_thread_switch(char *config_str)
 {
@@ -841,6 +845,7 @@ static int cycle_pkt_dump_parse_per_thread_switch(char *config_str)
 
 	return 0;
 }
+#endif
 
 
 static long cycle_pkt_dump_get_cur_files_size(void)
@@ -869,9 +874,10 @@ static long cycle_pkt_dump_get_cur_files_size(void)
 static int cycle_pkt_dump_get_cur_enable_thread(void)
 {
 	int i, sum = 0;
+	const sapp_config_tools_pktdump_t *pktdump_cfg = &sapp_global_val->config.tools.pkt_dump;
 
 	for(i = 0; i < MAX_THREAD_NUM; i++){
-		if(G_PKT_DUMP_PER_THREAD_SW[i] > 0){
+		if(G_PKT_DUMP_PER_THREAD_SW != 0){
 			sum++;
 		}
 	}
@@ -932,15 +938,20 @@ static void pkt_dump_sig_handle(int sig)
 
 static void pkt_dump_set_default_opt(void)
 {
+	int i;
+	const sapp_config_tools_pktdump_t *pktdump_cfg = &sapp_global_val->config.tools.pkt_dump;
 	udp_recv_addr.sin_family = AF_INET;
 	udp_recv_addr.sin_addr.s_addr = htonl(0x7f000001);
 	udp_recv_addr.sin_port = htons(12345);
-	
-	memset(G_PKT_DUMP_FILTER_STR, 0, sizeof(G_PKT_DUMP_FILTER_STR));
-	pkt_dump_data_offset = 0;
 
-	/* 默认所有线程全部开启 */
-	memset(G_PKT_DUMP_PER_THREAD_SW, 1,  sizeof(G_PKT_DUMP_PER_THREAD_SW));
+	/* 将原始配置复制一份, 因为udp模式下, 可能会输入-k参数改变此值 */
+	for(i = 0; i < MAX_THREAD_NUM; i++){
+		G_PKT_DUMP_PER_THREAD_SW[i] = pktdump_cfg->dump_thread_id_mask[i];
+	}	
+
+	if(pktdump_cfg->bpf_filter != NULL){
+		strncpy(G_PKT_DUMP_FILTER_STR, pktdump_cfg->bpf_filter, sizeof(G_PKT_DUMP_FILTER_STR)-1);
+	}
 }
 
 static void pkt_dump_parse_opt_rcv_port(const struct pkt_dump_opt *cmd_opt, const char *opt_val)
@@ -1032,10 +1043,12 @@ static void cycle_pkt_dump_command_parse(int connfd)
 	}
 
     /* 暂不严格限定对端tcpdump_mesa版本号, 只打印警告信息 */
+#if 0    
 	if(ntohl(pkt_hdr.version) != (unsigned int)tcpdump_mesa_version_VERSION_20181114){
 		printf("Remote tcpdump_mesa version is incompatible!\n");
 		sapp_runtime_log(20, "Remote tcpdump_mesa version is incompatible!\n");
 	}
+#endif	
 
 	pkt_dump_set_default_opt();
 
@@ -1210,71 +1223,50 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 	int int_tmp, total_files_size, core_num;
 	char per_thread_sw[PATH_MAX];
 	char pcap_errbuf[PCAP_ERRBUF_SIZE];
+	const sapp_config_tools_pktdump_t *pktdump_cfg = &sapp_global_val->config.tools.pkt_dump;
 
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_switch", &G_PKT_DUMP_SW, 0);
-
-	if(0 == G_PKT_DUMP_SW){
+	if(0 == pktdump_cfg->enabled){
 		return 0;
 	}
 
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_mode", &G_PKT_DUMP_MODE, 1);
-	if((G_PKT_DUMP_MODE != PKT_DUMP_LOCAL_FILE) && (G_PKT_DUMP_MODE != PKT_DUMP_UDP_SOCKET)){
-		printf("\n\033[41mError! pkt_dump_mode only support 1 or 2!\033[0m\n");
-		return -1;
+	G_PKT_DUMP_SW = pktdump_cfg->enabled;
+	pkt_dump_tcp_bind_port = (unsigned short)pktdump_cfg->command_port;
+	cur_conn_pkt_dump_ratio = pktdump_cfg->pkt_dump_ratio;
+	cur_conn_pkt_dump_ratio = pktdump_cfg->pkt_dump_ratio;
+	G_PKT_DUMP_MODE = pktdump_cfg->mode_bin;
+
+	/* 将原始配置复制一份, 因为udp模式下, 可能会输入-k参数改变此值 */
+	for(i = 0; i < MAX_THREAD_NUM; i++){
+		G_PKT_DUMP_PER_THREAD_SW[i] = pktdump_cfg->dump_thread_id_mask[i];
 	}
-
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_cmd_port", &int_tmp, 12345);
-	if((int_tmp <=0) || (int_tmp > 65535)){
-		printf("\n\033[41mError! pkt_dump_cmd_port invalid, %d!\033[0m\n", int_tmp);
-		return -1;
+	if(pktdump_cfg->bpf_filter != NULL){
+		strncpy(G_PKT_DUMP_FILTER_STR, pktdump_cfg->bpf_filter, sizeof(G_PKT_DUMP_FILTER_STR)-1);
 	}
-	pkt_dump_tcp_bind_port = (unsigned short)int_tmp;
-
-
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_ratio", &raw_cfg_pkt_dump_ratio, 30);
-	cur_conn_pkt_dump_ratio = raw_cfg_pkt_dump_ratio;
-	
-#if 0 == CYCLE_PKT_DUMP
-	printf("\n\033[33m[Warning]pkt_dump is enable, but sapp is not compile correct, please use debug=2.\033[0m\n");
-	sleep(1);
-#endif
-
 	if(PKT_DUMP_LOCAL_FILE == G_PKT_DUMP_MODE){
 		cycle_pkt_dump_set_thread_num(g_packet_io_thread_num);
 
-		core_num = cycle_pkt_dump_get_core_num();
-		if(core_num < 0 || core_num > 10){
-			printf("\033[33m[Warning]core.* number is more than 10, pkt dump is auto disabled!\n");
-			G_PKT_DUMP_SW = 0;
-			return 0;
-		}
-
-		MESA_load_profile_string_def((char *)"conf/main.conf",(char *)"pkt_dump", (char *)"pkt_dump_bpf_filter", G_PKT_DUMP_FILTER_STR, PATH_MAX, (char *)"");
-		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
+		if(pktdump_cfg->bpf_filter[0] != '\0'){
 			for(i = 0; i < g_packet_io_thread_num; i++){
 				phony_pcap_handle[i] = pcap_open_dead(DLT_EN10MB, 65535);
 				if(NULL == phony_pcap_handle[i]){
-					printf("pcap_open %s error, %s\n", "lo", pcap_errbuf);
-					printf("\n\033[41mpkt_dump_bpf_filter is not enable!\033[0m\n");
-					goto skip_bpf_filter;
+					sapp_log(30, 1, 1, "pcap_open %s error, %s\n", "lo", pcap_errbuf);
+					sapp_log(30, 1, 1, "pkt_dump_bpf_filter is not enable!\n");
+					return -1;
 				}		
-				if(pcap_compile(phony_pcap_handle[i], &G_PKT_DUMP_BPF_FILTER[i], G_PKT_DUMP_FILTER_STR, 100, 0) < 0){                
-					printf("Compile pcap filter '%s' error:%s\n", G_PKT_DUMP_FILTER_STR, pcap_geterr(phony_pcap_handle[i]));                
+				if(pcap_compile(phony_pcap_handle[i], &G_PKT_DUMP_BPF_FILTER[i], pktdump_cfg->bpf_filter, 100, 0) < 0){                
+					sapp_log(30, 1, 1, "Compile pcap filter '%s' error:%s\n", pktdump_cfg->bpf_filter, pcap_geterr(phony_pcap_handle[i]));                
 					return -1;        
 				}		
 			}
 		}
 
-	skip_bpf_filter:
-
-		MESA_load_profile_string_def((char *)"conf/main.conf",(char *)"pkt_dump", (char *)"pkt_dump_file_root_dir", G_PKT_DUMP_ROOT_DIR, PATH_MAX, (char *)"/tmp/pkt_dump");
-		MESA_mkdir_p(G_PKT_DUMP_ROOT_DIR, 0755);
-
-		MESA_load_profile_string_nodef((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_thread_seq", per_thread_sw, PATH_MAX);
-		if(cycle_pkt_dump_parse_per_thread_switch(per_thread_sw) < 0){
-			return 0;
+		if(MESA_mkdir_p(pktdump_cfg->storge_path, 0755) < 0){
+			sapp_log(30, 1, 1, "tools.pkt_dump.storage mkdir '%s' error!\n", pktdump_cfg->storge_path);				  
+			return -1;	
 		}
-		
+
+		G_PKT_DUMP_FILE_SIZE = pktdump_cfg->file_size_max_per_thread * 1024 * 1024 ;
+#if 0		
 		MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_total_size", &total_files_size, 1000);
 		if(total_files_size < 1 || (unsigned int)total_files_size >= 1024*1000 /* 1000GB */){
 			printf("pkt_dump_total_size  invalid!\n");
@@ -1290,19 +1282,14 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 		if(cycle_pkt_dump_set_file_size((long)total_files_size*1024*1024, (long)int_tmp*1024*512) < 0){
 			return 0;
 		}
-		
+#endif		
 		signal(SIGPIPE, SIG_IGN);
 		/* 捕获SIGSEGV信号, 保证程序异常终止时, 最后一个触发BUG的pcap包真正能写到硬盘 */
 		if((SIG_ERR == signal(SIGSEGV, pkt_dump_sig_handle))){
 			printf("Catch SIGSEGV error!\n");	
 		}
 
-#if IKNOW_ENABLE
-		iknow_register_cmd(PLATFORM_IHANDLE, "show pkt dump summary", "display pkt dump summary", 
-						  ifuncb_show_pktdump_summary, NULL, 0, NULL);
-#endif	
-		printf("\n\033[33m[Warning]pkt dump enable, this maybe encumber performance.\033[0m\n");
-		sleep(1);
+		sapp_log(20, 1, 1, "tools.pkt_dump enable, this maybe encumber performance!\n");
 	}else{
 		ret = cycle_pkt_dump_socket_init();
 	}

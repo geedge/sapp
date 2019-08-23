@@ -2528,7 +2528,7 @@ int MESA_kill_connection_feedback(struct streaminfo *stream, const void *ext_raw
 	return ret;
 }
 
-static int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_len, 
+int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_len, 
 						const void *ext_raw_pkt, UCHAR snd_routedir,
 						char *feedback_buf, int *feedback_buf_len)
 {

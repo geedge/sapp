@@ -55,7 +55,6 @@ endif
 WHOLE_ARCH += ../lib/libtomlc99_wrap.a
 WHOLE_ARCH += ../lib/libconfig.a
 WHOLE_ARCH += ../lib/libtimer.a
-WHOLE_ARCH += ../lib/libevent.a
 
 ifeq ($(debug), $(_DEBUG2))
 LIB += ../lib/libiknow.a -lpcap
@@ -82,6 +81,7 @@ LIB += -lMESA_field_stat2
 #LIB += -lsapp_assistant
 LIB += -lcjson
 #LIB += -lsesame_door
+LIB += -l event
 
 ifeq ($(iomode), $(_MODE_MARSIO))
 LIB += -lmarsio

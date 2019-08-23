@@ -237,7 +237,7 @@ static void __st_add_time_event_entry(void)
 	topt.tv_sec = sapp_global_val->config.profiling.log.interval;
 	topt.tv_usec = 0;
 	sapp_event_set_opt(tev, STEO_TIMEOUT_VAL, &topt, sizeof(topt));
-	sapp_event_set_opt(tev, STEO_CALLBACK_FUN, (void *)&line_protocol_timer_cbfun, sizeof(void *));
+	//sapp_event_set_opt(tev, STEO_CALLBACK_FUN, (void *)&line_protocol_timer_cbfun, sizeof(void *));
 
 	ret = sapp_timer_add(th, tev);
 	assert(ret >= 0);
@@ -255,7 +255,7 @@ int __sapp_timer_platform_init(void)
 
 	sapp_global_val->individual_fixed.sapp_standalone_timer = __st_timer_new(STO_EFFECTIVE_SCOPE_STANDALONE_THREAD);
 
-	__st_add_time_event_entry();
+	//__st_add_time_event_entry();
 	
 	return 0;
 }

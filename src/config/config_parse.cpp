@@ -8,7 +8,7 @@ extern "C" {
 #include "field_stat2.h"
 
 
-/* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
+/* 静态只读全局变量可以放在代码段, 无需在sapp_global_val里 */
 static const char *default_config_file = "./etc/sapp.toml";
 
 static const unsigned char sample_sapp_toml[] = 
@@ -473,6 +473,13 @@ static int config_sanity_check(void)
 		return -1;
 	}
 
+	if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "udp_socket" ,strlen("udp_socket")) == 0){
+		if(pconfig->tools.pkt_dump.command_port <=0 || pconfig->tools.pkt_dump.command_port > 65535){
+			sapp_log(30, ~0, ~0, "[Error] TOOLS.PKT_DUMP.command_port: %u invalid!", pconfig->tools.pkt_dump.command_port);
+			return -1;
+		}
+	}	
+
 	old_config_file_detect("./conf/main.conf", "./etc/sapp.toml");
 
 	return 0;
@@ -523,6 +530,11 @@ int sapp_parse_config(void)
 
 	/*******************************  SYSTEM *********************************/
 	ret = tomlc99_wrap_load_string_def(default_config_file, (char *)"SYSTEM", (char *)"instance_name", pconfig->system.instance_name, NAME_MAX, "sapp_v4.0");
+	if(TOMLC99_RET_PATTERN_ERROR == ret){
+		/* 首次解析判断如果是PATTERN_ERROR, 说明toml格式有问题, 不再继续解析 */
+		sapp_log(30, ~0, ~0, "parse config file %s error!", default_config_file);
+		exit(1);
+	}
 
 	/*******************************  CPU *********************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"CPU", (char *)"worker_threads", (int *)&pconfig->cpu.worker_threads, 1);
@@ -539,6 +551,7 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.internal.interface", (char *)"name", pconfig->packet_io.internal.interface.name, NAME_MAX, "lo");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.external.interface", (char *)"type", pconfig->packet_io.external.interface.type_str, NAME_MAX, "pcap");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.external.interface", (char *)"name", pconfig->packet_io.external.interface.name, NAME_MAX, "lo");
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.polling", (char *)"polling_priority", &pconfig->packet_io.polling_priority, 10);
 
 
 	/*******************************  STREAM.TCP ******************************/
@@ -575,8 +588,8 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.remote", (char *)"enabled", (int *)&pconfig->profiling.log.remote.enabled, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote", (char *)"server_ip", pconfig->profiling.log.remote.server_ip, INET_ADDRSTRLEN, "#");
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.remote", (char *)"server_port", (int *)&pconfig->profiling.log.remote.server_port, 0);
-	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote", (char *)"remote_send_out_type", pconfig->profiling.log.remote.remote_send_out_type, NAME_MAX, "field_stat2");
-
+#if 0
+	//tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote", (char *)"remote_send_out_type", pconfig->profiling.log.remote.remote_send_out_type, NAME_MAX, "field_stat2");
 	/*******************************  PROFILING.LOG.remote.field_stat2 **********************/
 	if(strncasecmp(pconfig->profiling.log.remote.remote_send_out_type, "field_stat2", strlen("field_stat2")) == 0){
 		tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote.field_stat2", (char *)"app_name", pconfig->profiling.log.remote.field_stat2.app_name, NAME_MAX, "sapp");
@@ -596,7 +609,19 @@ int sapp_parse_config(void)
 		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.log.remote.remote_send_out_type'");
 		return -1;
 	}
-
+#else
+	strncpy(pconfig->profiling.log.remote.remote_send_out_type, "field_stat2", strlen("field_stat2"));
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote.field_stat2", (char *)"app_name", pconfig->profiling.log.remote.field_stat2.app_name, NAME_MAX, "sapp");
+		tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote.field_stat2", (char *)"metric_type", str_tmp, ARG_MAX, "default");
+		if(strncasecmp(str_tmp, "default", strlen("default")) == 0){
+			pconfig->profiling.log.remote.field_stat2.metrics_type = FS_METRIS_OUTPUT_DEFAULT;
+		}else if(strncasecmp(str_tmp, "json", strlen("json")) == 0){
+			pconfig->profiling.log.remote.field_stat2.metrics_type = FS_METRIS_OUTPUT_JSON;
+		}else{
+			sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.log.remote.field_stat2.metric_type'");
+			return -1;
+		}
+#endif
 	/*******************************  TOOLS **********************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.pkt_dump", (char *)"enabled", (int *)&pconfig->tools.pkt_dump.enabled, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"tools.pkt_dump", (char *)"mode", pconfig->tools.pkt_dump.mode_str, NAME_MAX, "udp_socket");
@@ -612,10 +637,11 @@ int sapp_parse_config(void)
 	}
 	
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.pkt_dump.udp", (char *)"command_port", (int *)&pconfig->tools.pkt_dump.command_port, 0);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.pkt_dump.udp", (char *)"pkt_dump_ratio", (int *)&pconfig->tools.pkt_dump.pkt_dump_ratio, 30);
 
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"tools.pkt_dump.storage", (char *)"path", str_tmp, ARG_MAX, "/dev/shm/pkt_dump");
 	pconfig->tools.pkt_dump.storge_path = strdup(str_tmp);
-	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.pkt_dump.storage", (char *)"file_size_max_per_thread", (int *)&pconfig->tools.pkt_dump.storge_size_max, 1000);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.pkt_dump.storage", (char *)"file_size_max_per_thread", (int *)&pconfig->tools.pkt_dump.file_size_max_per_thread, 1000);
 
 	/*************************** SPECIAL_CONFIG_LINK *************************/
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"SPECIAL_CONFIG_LINK", (char *)"project_list_path", str_tmp, ARG_MAX, "./etc/project_list.conf");

@@ -4,12 +4,13 @@ add_definitions(-DPLATFORM_NSDPF_PAPP=1)
 
 LINK_DIRECTORIES(/opt/mrzcpd/lib)
 
-include_directories(${MESA_SDK_PREFIX}/include)
-include_directories(${MESA_SDK_PREFIX}/include/MESA)
-include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/include/private)
 include_directories(${CMAKE_SOURCE_DIR}/include/public)
 include_directories(${CMAKE_SOURCE_DIR}/include/support)
+include_directories(${MESA_SDK_PREFIX}/include)
+include_directories(${MESA_SDK_PREFIX}/include/MESA)
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
 if(OPT_IOMODE_MARSIO)
     include_directories(${MARSIO_SDK_PREFIX}/include)
 endif()
@@ -59,7 +60,8 @@ set(PACKET_IO_STATIC_SOURCE cycle_pkt_dump_through_write_offset.c  packet_io_lib
 iknow_info.c                           packet_io_log.c         sendpacket.c
 packet_io.c
 packet_io_status.cpp packet_io_status_new.c 
-packet_io_device.c sapp_compat_wangyan_api.c)
+packet_io_device.c sapp_compat_wangyan_api.c
+sapp_inject.c)
 
 add_library(packet_io STATIC ${PACKET_IO_STATIC_SOURCE})
 if(CAPTURE_MODE MATCHES "MARSIO")

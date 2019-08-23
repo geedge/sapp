@@ -1,7 +1,7 @@
 #ifndef _APP_STREAM_ENTRY_H_
 #define _APP_STREAM_ENTRY_H_ 
 
-#define STREAM_ENTRY_H_VERSION		(20160118)
+#define STREAM_ENTRY_H_VERSION		(20190818)
 
 /*
 	CHN : 业务层调用解析层时session_state状态;
@@ -63,6 +63,19 @@ char UDP_ENTRY_EXAMPLE(const struct streaminfo *a_udp,  void **pme, int thread_s
 
 char SAPP_PKT_EXAMPLE(const struct streaminfo *pstream, const void *this_hdr, const void *raw_pkt);
 char SAPP_STREAM_EXAMPLE(const struct streaminfo *pstream, const void *this_hdr, const void *raw_pkt, void **pme);
+
+#define POLLING_STATE_WORK 0x80
+#define POLLING_STATE_IDLE 0x40
+
+/*
+    每隔一定时间, 平台会调用当前接口, 无论网络中是否有数据包. 
+    stream, pme, a_packet固定都是NULL, thread_seq即收包线程的序号.
+
+    返回值:
+        POLLING_STATE_WORK: 此次回调插件做了若干有意义的事情;
+        POLLING_STATE_IDLE: 此次回调插件什么都没做, 或者想做而没做成, 比如非阻塞模式收包, 但实际没有收到包;
+*/
+char POLLING_ENTRY(struct streaminfo *stream,  void **pme, int thread_seq,void *a_packet);
 
 
 /* 

@@ -1,7 +1,7 @@
 #ifndef _APP_STREAM_RAWPKT_H_
 #define _APP_STREAM_RAWPKT_H_ 
 
-#define STREAM_RAWPKT_H_VERSION		(20160919)
+#define STREAM_RAWPKT_H_VERSION		(20190817)
 
 #include "stream_base.h"
 
@@ -22,6 +22,8 @@ enum{
 	RAW_PKT_GET_VIRTUAL_LINK_ID, //value type is uint64 *, out_value should be uint64 *
 	RAW_PKT_GET_REHASH_INDEX,    // value type is uint64 *, out_value should be uint64 *
 	RAW_PKT_GET_VXLAN_VPNID, // network-order, VPN_ID, value type is int, out_value should be int *
+	
+	RAW_PKT_GET_VXLAN_LOCAL_IP, // network-order, VXLAN Local IP, value type is int, out_value should be int *
 };
 
 #ifdef __cplusplus

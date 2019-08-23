@@ -26,8 +26,8 @@ typedef struct{
 	struct mr_sendpath *sendpath_up, *sendpath_down; /* 并联模式下, 直接使用sendpath_up; 同时兼容双网卡串联模式 */
 }marsio4_io_handle;
 
-int g_marsio4_version_VERSION_20190528;
-int g_marsio4_version_VERSION = 20190528;
+int g_marsio4_version_VERSION_20190820;
+int g_marsio4_version_VERSION = 20190820;
 static PACKET_IO_CB_T g_marsio4_work_fun;
 static int g_marsio4_work_thread_num = 1;
 static int g_marsio4_cap_level = CAP_LEVEL_MAC;
@@ -596,7 +596,7 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 static int marsio4_sleep_time_table[100] = 
 {
 	 5,  5,   5,   5,   5,   3,   3,   3,   3,   3,     
-	 1,  1,   1,   1,   1,    1,   1,  1,   1,    1, 
+	 2,  2,   2,   2,   2,    1,   1,  1,   1,    1, 
 	 1,  1,   1,   1,   1,    1,   1,  1,   1,    1, 
 	 1,   1,   1,   1,   1,   1,   1,   1,   1,   1, 
 	 1,   1,   1,   1,   1,   1,   1,   1,   1,   1, 
@@ -629,7 +629,7 @@ static void *marsio4_worker(void *arg)
 {
 	int tid = *((int *)arg);
 	raw_pkt_t raw_pkt;
-	int total_call_times = 0, rcv_pkt_tims = 0;
+	int total_call_times = 0, rcv_pkt_tims = 0, polling_work_times = 0;
 
 	char  thread_name[32] = "";
 	sprintf(thread_name, "sapp_marsio_%d", tid);
@@ -652,17 +652,31 @@ static void *marsio4_worker(void *arg)
 	while(1){
 		if(marsio4_process_packet(tid, &raw_pkt) > 0){
 			rcv_pkt_tims++;
-		}
-		total_call_times++;
-		stream_process_polling(tid);
-
-		if(total_call_times >= 100){
-			if(rcv_pkt_tims < 99){
-				marsio4_sleep(total_call_times, rcv_pkt_tims);
+		}else{
+			/* 无包时要调用polling接口 */
+			if(stream_process_polling(tid) > 0){
+				polling_work_times++;
 			}
+		}
+
+		total_call_times++;
+
+		if((rcv_pkt_tims % sapp_global_val->config.packet_io.polling_priority) == 0){
+			/* 如果流量巨大, 一直有包时, 每隔polling_priority个包也要调用polling接口 */
+			if(stream_process_polling(tid) > 0){
+				polling_work_times++;
+			}
+			total_call_times++;
+		}
+		
+		if(total_call_times >= 100){
+			marsio4_sleep(total_call_times, rcv_pkt_tims + polling_work_times);
 			total_call_times = 0;
 			rcv_pkt_tims = 0;
+			polling_work_times = 0;
 		}
+
+		
 	}
 
 	return NULL;

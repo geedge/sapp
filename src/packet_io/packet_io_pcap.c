@@ -9,8 +9,8 @@ extern "C" {
 
 #define PROCESS_BAR_SW 		(1)
 
-int g_pcap_version_VERSION_20190524; 
-static int g_pcap_version_internal = 20190524;
+int g_pcap_version_VERSION_20190820; 
+static int g_pcap_version_internal = 20190820;
 
 #define PCAP_SNAPLEN_MAX	(65535)
 
@@ -740,6 +740,7 @@ static void *__pcap_work_thread(void *arg)
 	pkt_queue_t pkt_queue_node;
 	long recv_len;
 	int ret;
+	int total_call_times = 0, rcv_pkt_tims = 0, polling_work_times = 0;
 
 #if(__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__ >= 480) /* 版本判断, 很多旧系统无法编译 */
 #ifdef _GNU_SOURCE
@@ -753,28 +754,40 @@ static void *__pcap_work_thread(void *arg)
 	}
 
 	while(1){
-		pthread_mutex_lock(&work_thread_pool[thread_num].mutex);
-		
-#if 0/* for sapp timer */		
-		while(0 == MESA_lqueue_get_count(work_thread_pool[thread_num].pkt_queue)){
-			pthread_cond_wait(&work_thread_pool[thread_num].cond, &work_thread_pool[thread_num].mutex);
-		}
-#else
 		if(0 == MESA_lqueue_get_count(work_thread_pool[thread_num].pkt_queue)){
-			pthread_mutex_unlock(&work_thread_pool[thread_num].mutex);
-			stream_process_polling(thread_num);
-			usleep(10);
-			continue;
-		}else{
-			stream_process_polling(thread_num);
-		}
+			if(stream_process_polling(thread_num) != 0){
+				polling_work_times++;
+			}
+			total_call_times++;
 
-#endif
+			if(total_call_times >= 100){
+				total_call_times = 0;
+				rcv_pkt_tims = 0;
+				polling_work_times = 0;
+				usleep(1);
+			}
+			continue;
+		}	
+		pthread_mutex_lock(&work_thread_pool[thread_num].mutex);
 		recv_len = sizeof(pkt_queue_t);
 		ret = MESA_lqueue_get_head(work_thread_pool[thread_num].pkt_queue, &pkt_queue_node, &recv_len);
 		pthread_mutex_unlock(&work_thread_pool[thread_num].mutex);
 		if(ret < 0){
 			continue;
+		}
+
+		total_call_times++;
+		if(total_call_times >= sapp_global_val->config.packet_io.polling_priority){
+			/* 如果流量巨大, 一直有包时, 每隔polling_priority个包也要调用polling接口 */
+			if(stream_process_polling(thread_num) > 0){
+				polling_work_times++;
+			}
+		}
+		if(total_call_times >= 100){
+			total_call_times = 0;
+			rcv_pkt_tims = 0;
+			polling_work_times = 0;
+			usleep(1);
 		}
 
 		if(PCAP_OP_FLAG_IDLE_POLLING == pkt_queue_node.op_flag){

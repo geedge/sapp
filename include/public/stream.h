@@ -9,6 +9,8 @@
 #include "stream_inc/stream_entry.h"
 #include "stream_inc/stream_rawpkt.h"
 #include "stream_inc/stream_tunnel.h"
+#include "stream_inc/sapp_inject.h"
+
 
 #define STREAM_H_VERSION		(20170911)
 

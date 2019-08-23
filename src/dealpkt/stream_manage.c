@@ -30,13 +30,13 @@
 extern "C" {
 #endif
 
-int sapp_version_v4_20190705;
+int sapp_version_v4_20190820;
 
 /* 
 	下面的版本号用于packet_io_lib校验, 防止平台和dl.so不匹配导致运行异常, 或已修复的BUG未更新.
 */
 #if IOMODE_PCAP
-int sapp_packet_io_v = 20190524;
+int sapp_packet_io_v = 20190820;
 #elif IOMODE_PAG
 int sapp_packet_io_v = 20151106;
 #elif IOMODE_PFRING
@@ -48,7 +48,7 @@ int sapp_packet_io_v = 20160426;
 #elif IOMODE_TOPSEC
 int sapp_packet_io_v = 20151014;
 #elif IOMODE_MARSIO
-int sapp_packet_io_v = 20190527;
+int sapp_packet_io_v = 20190820;
 #elif IOMODE_SMITH
 int sapp_packet_io_v = 20161027;
 #elif IOMODE_DPDK_VXLAN
@@ -145,15 +145,15 @@ static int init_stream_detail(struct global_stream *g_stream)
     for (i = 0; i < g_stream->freeList.max_cnt-1; i++)
     {
     	g_stream->freeList.head[i].next= &(g_stream->freeList.head[i + 1]);
-	g_stream->freeList.head[i+1].prev=&(g_stream->freeList.head[i]);
-	//g_stream->freeList.index=i; // 为每个链接增加一个全局索引号
-	 //adjust by lqy 20150113
-	g_stream->freeList.head[i].stream.stream_public.stream_index=i;	
+		g_stream->freeList.head[i+1].prev=&(g_stream->freeList.head[i]);
+		//g_stream->freeList.index=i; // 为每个链接增加一个全局索引号
+		 //adjust by lqy 20150113
+		g_stream->freeList.head[i].stream.stream_public.stream_index=i;	
     }
     g_stream->freeList.head[g_stream->freeList.max_cnt-1].next=NULL;
 	 //adjust by lqy 20150113
 	g_stream->freeList.head[g_stream->freeList.max_cnt-1].stream.stream_public.stream_index=i;	    
-    g_stream->freeList.cnt= 	g_stream->freeList.max_cnt;
+    g_stream->freeList.cnt=g_stream->freeList.max_cnt;
     g_stream->freeList.tail= &(g_stream->freeList.head[g_stream->freeList.max_cnt-1]);	
 
     return 0;

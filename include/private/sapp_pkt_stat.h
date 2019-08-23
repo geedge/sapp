@@ -34,6 +34,9 @@ enum __sapp_sys_stat_type{
 	SAPP_STAT_DROP_ETHERNET,
 	SAPP_STAT_DROP_IPV4,
 	SAPP_STAT_DROP_IPV6,
+
+	SAPP_POLLING_WORK,
+	SAPP_POLLING_IDLE,
 	
 	/*************  tunnel stat  *******************/
 	SAPP_STAT_TUNNEL_4OVER6,

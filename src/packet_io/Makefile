@@ -35,7 +35,7 @@ OBJS+=packet_io_status_new.o
 OBJS += cycle_pkt_dump_through_write_offset.o
 OBJS += packet_io_device.o
 OBJS += sapp_compat_wangyan_api.o
-
+OBJS += sapp_inject.o
 
 DLL_LIB=
 #ifeq ($(iomode), $(_MODE_PCAP))

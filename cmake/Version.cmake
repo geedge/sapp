@@ -21,7 +21,7 @@ string(REGEX REPLACE "^v[0-9]+\\.([0-9]+).*" "\\1" VERSION_MINOR "${VCS_TAG}")
 string(REGEX REPLACE "^v[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" VERSION_PATCH "${VCS_TAG}")
 
 if(NOT VERSION_MAJOR)
-    set(VERSION_MAJOR 3)
+    set(VERSION_MAJOR 4)
 endif()
 
 if(NOT VERSION_MINOR)

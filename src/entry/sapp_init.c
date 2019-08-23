@@ -341,7 +341,7 @@ int MESA_platform_init(int argc, char *argv[])
 	__sapp_timer_platform_init();
 
 	
-#if CYCLE_PKT_DUMP
+#if 1
 	if(cycle_pkt_dump_init(argc , argv) < 0){
 		return -1;
 	}

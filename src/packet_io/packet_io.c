@@ -705,7 +705,8 @@ int packet_io_init(int argc, char *argv[])
 			printf("Warning, can't get %s mac addr!\n", g_send_dev_name);
 		}
 	}else{
-		printf("Warning, not assign send device!\n");
+		//printf("Warning, not assign send device!\n");
+		;
 	}
 
     parse_send_gdev_ip_conf("conf/send_gdev.conf");

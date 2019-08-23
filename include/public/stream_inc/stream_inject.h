@@ -163,7 +163,7 @@ int sapp_forward_current_pkt(const struct streaminfo *stream, unsigned int targe
 
 enum sapp_send_pkt_opt_type{
 	SAPP_SEND_OPT_IP_ID			= 0x10,			
-	SAPP_SEND_OPT_IP_TTL			= 0x11,
+	SAPP_SEND_OPT_IP_TTL		= 0x11,
 	
 	SAPP_SEND_OPT_TCP_WIN		= 0x20,
 	
@@ -184,7 +184,7 @@ enum sapp_send_pkt_opt_type{
 	SAPP_SEND_OPT_INNER_DMAC	= 0x1303, /* 内层目的MAC */
 	SAPP_SEND_OPT_INNER_VLANID	= 0x1304, /* 内层如果有VLAN需设置 */
 	SAPP_SEND_OPT_VIRTUAL_LINK_ID = 0x1305, /* 设置虚拟链路号， 同时需要置TUNNAT_CZ_ACTION_ENCAP_VIRTUAL_LINK_ID*/
-	SAPP_SEND_OPT_REHASH_INDEX = 0x1306, /*设置rehash index， 同时需要置TUNNAT_CZ_ACTION_ENCAP_VIRTUAL_LINK_ID*/
+	SAPP_SEND_OPT_REHASH_INDEX 	= 0x1306, /*设置rehash index， 同时需要置TUNNAT_CZ_ACTION_ENCAP_VIRTUAL_LINK_ID*/
 };
 
 int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t protocol,

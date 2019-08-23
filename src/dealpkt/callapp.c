@@ -859,14 +859,24 @@ int stream_process_ipv6_frag(struct streaminfo *pstream,const struct ip6_hdr *th
 int stream_process_polling(int thread_seq)
 {
 	int i;
+	char plug_ret, fun_ret = 0;
 
 	__st_pkt_proc_context_check_timeout(thread_seq);
 
 	for(i = 0; i < g_PollingFunNum; i++){
-		g_PollingFun[i].stream_fun(NULL, NULL, thread_seq, NULL);
+		plug_ret = g_PollingFun[i].stream_fun(NULL, NULL, thread_seq, NULL);
+		if(plug_ret & POLLING_STATE_WORK){
+			fun_ret = POLLING_STATE_WORK;
+		}
 	}
 
-	return 0;
+	if(POLLING_STATE_WORK == fun_ret){
+		sapp_global_val->mthread_volatile[thread_seq]->sys_stat.count[SAPP_POLLING_WORK]++;
+	}else{
+		sapp_global_val->mthread_volatile[thread_seq]->sys_stat.count[SAPP_POLLING_IDLE]++;
+	}
+
+	return fun_ret;
 }
 
 extern int g_use_MESA_sleep_sw;

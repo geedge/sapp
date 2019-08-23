@@ -468,16 +468,29 @@ void sapp_fs2_set_latency(int thead_seq, long long time_cost)
 int sapp_assistant_init(void)
 {
 	sapp_fs2_init();
-	sapp_line_protocol_init();
+	//sapp_line_protocol_init();
 	sapp_identify_broad_multicast_init();
 	pthread_mutex_init(&g_plug_Independent_thread_mutex, NULL);
 	return 1;
 }
 
+
+int sapp_inject_pkt_with_feedback(struct streaminfo *stream, 
+  enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir, 
+  char *feedback_buf, int *feedback_buf_len)
+{
+
+
+}
+
+
+
+
 #ifdef __cplusplus
 }
 #endif
 
+/************************ C++ compiler **************************************/
 static int sapp_fs2_init(void)
 {
 	char cfg_ip_str[32];

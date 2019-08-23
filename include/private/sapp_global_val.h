@@ -22,13 +22,14 @@ typedef struct{
 	char mode_str[NAME_MAX];  /* storage/udp_socket */
 	int mode_bin;
 	unsigned int command_port; /* integer, host order, user should truncate to short */
-	unsigned int storge_size_max;
+	unsigned int file_size_max_per_thread; /* MB */
 	char *bpf_filter;
 	char *storge_path;
 	int dump_all_thread_enabled;
 	int dump_thread_id_array_num;
 	int dump_thread_id_array[SAPP_MAX_THREADS]; /* 用户配置文件原始数组, 格式: [0,1,2,3], 表示第0,1,2,3号线程启用捕包 */
 	unsigned char dump_thread_id_mask[SAPP_MAX_THREADS]; /* 根据原始数组解析后的掩码数组, 用线程id做为下标, 值不为0表示当前线程开启捕包, 值:{1,1,1,1} */
+	int pkt_dump_ratio; /* capture one packet every 'pkt_dump_ratio' packets */
 }sapp_config_tools_pktdump_t;
 
 typedef struct{
@@ -106,11 +107,8 @@ typedef struct{
 	char log_app_name[NAME_MAX];
 	char server_ip[INET_ADDRSTRLEN]; /* string */
 	unsigned int server_port; /* integer(4 byte), host order, user should truncate to short before use it */
-	char remote_send_out_type[NAME_MAX]; /* field_stat2 or line_protocol */
-	union{
-		sapp_config_profiling_log_remote_field_stat2_t field_stat2;
-		sapp_config_profiling_log_remote_line_protocol_t line_protocol;
-	};
+	char remote_send_out_type[NAME_MAX]; /* field_stat2 */
+	sapp_config_profiling_log_remote_field_stat2_t field_stat2;
 }sapp_config_profiling_log_remote_t;
 
 
@@ -156,6 +154,7 @@ typedef struct{
 	sapp_config_packet_io_dev_t internal;
 	sapp_config_packet_io_dev_t external;
 	char pcap_dumpfile_name[NAME_MAX];
+	int polling_priority;
 }sapp_config_packet_io_t;
 
 typedef struct{
@@ -206,7 +205,7 @@ typedef struct{
 
 typedef struct{
 	sapp_gval_mthread_sys_stat_t sys_stat;
-	char __padding[16];
+	char __padding[48];
 }sapp_gval_mthread_t; /*   for multi-thread, must 64byte alignment */
 
 
