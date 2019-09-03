@@ -163,10 +163,10 @@ void iknow_register_vlan_cb(void *ihandle)
 	int ret;
 
 	ret = iknow_register_cmd(ihandle, "show vlan summary", "display vlan flow summary", ifuncb_show_vlan_summary, NULL, 0, NULL);
-	assert(0 == ret);
+//	assert(0 == ret);
 
 	ret = iknow_register_cmd(ihandle, "show vlan id summary", "display vlan flow summary by id", ifuncb_show_vlan_id_summary, NULL, 0, NULL);
-	assert(0 == ret);		
+//	assert(0 == ret);
 }
 
 void packet_io_status_vlan_time_cb(void)

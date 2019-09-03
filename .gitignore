@@ -12,3 +12,8 @@ run/log/
 run/sapp
 version.txt
 cmake-build-debug
+.vscode/*
+.DS_Store
+GPATH
+GRTAGS
+GTAGS

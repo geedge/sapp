@@ -3421,11 +3421,11 @@ void iknow_register_tcp_pkt_cb(void *ihandle)
 	int ret;
 
 	ret = iknow_register_cmd(ihandle, "show tcp pkt summary", "display tcp pkt summary", ifuncb_show_tcp_pkt_summary, NULL, 0, NULL);
-	assert(0 == ret);
+	//assert(0 == ret);
 	ret = iknow_register_cmd(ihandle, "show tcp pkt detail total", "display tcp pkt detail total", ifuncb_show_tcp_pkt_detail_total, NULL, 0, NULL);
-	assert(0 == ret);	
+	//assert(0 == ret);
 	ret = iknow_register_cmd(ihandle, "show tcp pkt detail realtime", "display tcp pkt detail realtime", ifuncb_show_tcp_pkt_detail_realtime, NULL, 0, NULL);
-	assert(0 == ret);	
+	//assert(0 == ret);
 }
 
 void *packet_io_status_tcp_stream_mem_init(void)
@@ -3508,7 +3508,7 @@ void iknow_register_tcp_stream_cb(void *ihandle)
 	int ret;
 
 	ret = iknow_register_cmd(ihandle, "show tcp stream summary", "display tcp stream summary", ifuncb_show_tcp_stream_summary, NULL, 0, NULL);
-	assert(0 == ret);
+	//assert(0 == ret);
 	//ret = iknow_register_cmd(ihandle, "show tcp stream detail total", "display tcp stream detail total", ifuncb_show_tcp_stream_detail, NULL, 0, NULL);
 	//assert(0 == ret);	
 	//ret = iknow_register_cmd(ihandle, "show tcp stream detail realtime", "display tcp stream detail realtime", ifuncb_show_tcp_stream_detail, NULL, 0, NULL);

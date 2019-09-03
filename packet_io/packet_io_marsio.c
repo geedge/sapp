@@ -296,26 +296,6 @@ int dl_io_init(int argc, char *argv[])
 		marsio4_burst_process_pkt_num = MARSIO_BURST_PKT_MAX - 1;
 	}
 
-	/* TODO, 支持不连续COREID配置, 如1,2,3,5,9 */
-	MESA_load_profile_string_def((char *)"conf/main.conf", (char *)"Module", (char *)"cpu_bind_core_mask", bind_mask_string, 128, "");
-	if(bind_mask_string[0] == '\0'){
-		marsio4_thread_bind_mask = 0;
-		printf("\033[33m[Warning]In marsio mode, not set main.conf->cpu_bind_core_mask value, maybe cause CPU preemption!\033[0m\n");
-		sleep(1);
-	}else if(strncmp("0x", bind_mask_string, 2) == 0){
-		marsio4_thread_bind_mask = strtoul(bind_mask_string, NULL, 16);
-		if(calc_integer_bit_num(marsio4_thread_bind_mask) != g_marsio4_work_thread_num){
-			printf("\033[41m[Error]main.conf->cpu_bind_core_mask value is not match main.conf->threadnum!\033[0m\n");
-			printf("\033[41m          main.conf->cpu_bind_core_mask bit numer must match main.conf->threadnum, \033[0m\n");
-			printf("\033[41m          for example, threadnum=8, core_mask shoule be 0xFF, 0xFF0, 0xFF00, etc.\033[0m\n");
-			printf("\033[41m          for example, threadnum=16, core_mask shoule be 0xFFFF, 0xFFFF0, 0xFFFF00, etc.\033[0m\n");
-			return -1;
-		}
-	}else{
-		printf("\033[41m[Error]main.conf->cpu_bind_core_mask value incorrect!\033[0m\n");
-		return -1;
-	}
-	
 	mr4_instance = marsio_create();
 	if(NULL == mr4_instance) {
 		fprintf(stderr,"%s\n","marsio_create error!\n");
@@ -338,35 +318,78 @@ int dl_io_init(int argc, char *argv[])
 
 	g_mario4_io_handle = (marsio4_io_handle *)calloc(1, sizeof(marsio4_io_handle) * g_marsio4_work_thread_num);
 	marsio_option_set(mr4_instance, MARSIO_OPT_THREAD_NUM, &g_marsio4_work_thread_num, sizeof(int));
-	
-	MESA_load_profile_string_def((char *)"conf/main.conf", (char *)"Module", (char *)"cpu_bind_core_mask", bind_mask_string, 128, "$");
-	if(bind_mask_string[0] == '$'){
-		marsio4_thread_bind_mask = 0;
-		printf("\033[33m[Warning]In marsio mode, not set main.conf->cpu_bind_core_mask value, maybe cause CPU preemption!\033[0m\n");
-		sleep(1);
-	}else if(strncmp("0x", bind_mask_string, 2) == 0){
-		marsio4_thread_bind_mask = strtoul(bind_mask_string, NULL, 16);
-		if(calc_integer_bit_num(marsio4_thread_bind_mask) != g_marsio4_work_thread_num){
+
+	unsigned int cpu_mask_array[sizeof(cpu_set_t) * 8] = {0};
+	int cpu_mask_num = MESA_load_profile_uint_range((char *)"conf/main.conf", (char *)"Module", (char *)"cpu_bind_core", sizeof(cpu_set_t) * 8, cpu_mask_array);
+	if (cpu_mask_num > 0 )
+	{
+		if (cpu_mask_num != g_marsio4_work_thread_num)
+		{
 			printf("\033[41m[Error]main.conf->cpu_bind_core_mask value is not match main.conf->threadnum!\033[0m\n");
-			printf("\033[41m          main.conf->cpu_bind_core_mask bit numer must match main.conf->threadnum, \033[0m\n");
-			printf("\033[41m          for example, threadnum=8, core_mask shoule be 0xFF, 0xFF0, 0xFF00, etc.\033[0m\n");
-			printf("\033[41m          for example, threadnum=16, core_mask shoule be 0xFFFF, 0xFFFF0, 0xFFFF00, etc.\033[0m\n");
+			printf("\033[41m          main.conf->cpu_bind_core bit numer must match main.conf->threadnum, \033[0m\n");
+			printf("\033[41m          for example, threadnum=8, bind_core shoule be 1-8 or 2-9 etc.\033[0m\n");
+			printf("\033[41m          for example, threadnum=16, bind_core shoule be 1-16 or 2-17 etc.\033[0m\n");
 			return -1;
 		}
-	}else if(atoi(bind_mask_string) == 0){
-		marsio4_thread_bind_mask = 0;
-		printf("\033[33m[Warning]In marsio mode, main.conf->cpu_bind_core_mask value is 0, same as not set, maybe cause CPU preemption!\033[0m\n");
-		sleep(1);
-	}else{
-		printf("\033[41m[Error]main.conf->cpu_bind_core_mask value incorrect!\033[0m\n");
-		return -1;
-	}
-	if(marsio4_thread_bind_mask != 0){
-		ret = marsio_option_set(mr4_instance, MARSIO_OPT_THREAD_MASK, &marsio4_thread_bind_mask, sizeof(long));
-		if(ret < 0){
-			printf("\033[1;31;40m[Error] marsio set CPU-MASK '%lx' failed!\033[0m\n", marsio4_thread_bind_mask);
+		else
+		{
+			cpu_set_t cpu_mask;
+			CPU_ZERO(&cpu_mask);
+			for (i = 0; i < cpu_mask_num; i++)
+			{
+				CPU_SET(cpu_mask_array[i], &cpu_mask);
+			}
+			ret = marsio_option_set(mr4_instance, MARSIO_OPT_THREAD_MASK_IN_CPUSET, &cpu_mask, sizeof(cpu_mask));
+			if (ret < 0)
+			{
+				MESA_load_profile_string_nodef((char *)"conf/main.conf", (char *)"Module", (char *)"cpu_bind_core", bind_mask_string, sizeof(bind_mask_string));
+				printf("\033[1;31;40m[Error] marsio set CPU-MASK '%s' failed!\033[0m\n", bind_mask_string);
+				return 0;
+			}
 		}
-	}	
+	}
+	else
+	{
+		ret = MESA_load_profile_string_def((char *)"conf/main.conf", (char *)"Module", (char *)"cpu_bind_core_mask", bind_mask_string, 128, "$");
+			if (bind_mask_string[0] == '$')
+			{
+				marsio4_thread_bind_mask = 0;
+				printf("\033[33m[Warning]In marsio mode, not set main.conf->cpu_bind_core_mask value, maybe cause CPU preemption!\033[0m\n");
+				sleep(1);
+			}
+			else if (strncmp("0x", bind_mask_string, 2) == 0)
+			{
+				marsio4_thread_bind_mask = strtoul(bind_mask_string, NULL, 16);
+				if (calc_integer_bit_num(marsio4_thread_bind_mask) != g_marsio4_work_thread_num)
+				{
+					printf("\033[41m[Error]main.conf->cpu_bind_core_mask value is not match main.conf->threadnum!\033[0m\n");
+					printf("\033[41m          main.conf->cpu_bind_core_mask bit numer must match main.conf->threadnum, \033[0m\n");
+					printf("\033[41m          for example, threadnum=8, core_mask shoule be 0xFF, 0xFF0, 0xFF00, etc.\033[0m\n");
+					printf("\033[41m          for example, threadnum=16, core_mask shoule be 0xFFFF, 0xFFFF0, 0xFFFF00, etc.\033[0m\n");
+					return -1;
+				}
+			}
+			else if (atoi(bind_mask_string) == 0)
+			{
+				marsio4_thread_bind_mask = 0;
+				printf("\033[33m[Warning]In marsio mode, main.conf->cpu_bind_core_mask value is 0, same as not set, maybe cause CPU preemption!\033[0m\n");
+				sleep(1);
+			}
+			else
+			{
+				printf("\033[41m[Error]main.conf->cpu_bind_core_mask value incorrect!\033[0m\n");
+				return -1;
+			}
+			if (marsio4_thread_bind_mask != 0)
+			{
+				ret = marsio_option_set(mr4_instance, MARSIO_OPT_THREAD_MASK, &marsio4_thread_bind_mask, sizeof(long));
+				if (ret < 0)
+				{
+					printf("\033[1;31;40m[Error] marsio set CPU-MASK '%lx' failed!\033[0m\n", marsio4_thread_bind_mask);
+				}
+			}
+	}
+	
 
 	char app_instance_name[64];
 	memset(app_instance_name, 0, 64);
@@ -586,7 +609,7 @@ static void *marsio4_worker(void *arg)
 	sprintf(thread_name, "sapp_marsio_%d", tid);
 	prctl(PR_SET_NAME, thread_name);
 
-	if(marsio4_thread_bind_mask != 0){
+	if(g_marsio4_work_thread_num != 0){
 		marsio_thread_init(mr4_instance);
 	}
 	memset(&raw_pkt, 0, sizeof(raw_pkt_t));

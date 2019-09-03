@@ -28,7 +28,7 @@ set_target_properties(isakmp_protocol_plug  PROPERTIES PREFIX "")
 add_library(g_device_plug SHARED g_device_plug.c)
 set_target_properties(g_device_plug  PROPERTIES PREFIX "")
 
-if(ENABLE_STATIC_LINK)
+if(STATIC_LINK)
     add_library(sapp_assistant STATIC sapp_assistant.cpp)
     add_library(gdev_assistant STATIC gdev_assistant.c)
 else()

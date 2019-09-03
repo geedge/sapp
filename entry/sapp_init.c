@@ -139,7 +139,7 @@ int MESA_platform_init(int argc, char *argv[])
 		exit(1);
 	}
 
-	if(MESA_load_profile_int_def("conf/main.conf", "Module", "threadnum", &threadnum, 1) < 0){
+	if(MESA_load_profile_int_def("conf/main.conf", "Module", "threadnum", &threadnum, 1) < 0 || threadnum <= 0){
 		printf("read conf 'threadnum' error!\n");
 		exit(1);
 	}	
@@ -340,13 +340,15 @@ int MESA_platform_init(int argc, char *argv[])
 	init_stream_manage(threadnum);	
 
 #if DEBUG
-	MESA_load_profile_int_def("conf/main.conf", "Module", "iknow_switch", &int_tmp, 1);
+	MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "iknow_switch", &int_tmp, 0);
 	if(int_tmp != 0){
 		iknow_info_init();
 	}
 
 	timestamp_record_init();
 #endif
+
+    sapp_assistant_init();
 
 	MESA_load_profile_int_def("conf/main.conf","Module", "load_plug_switch", &load_plug_sw, 1);
 	if(load_plug_sw){
@@ -411,8 +413,6 @@ int MESA_platform_init(int argc, char *argv[])
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"create_mpls_anyway",  &sapp_global_single.create_mpls_anyway, 0);
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_mode",  &sapp_global_single.send_fake_pkt_mode, 0);
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_gdev_sport",  &sapp_global_single.send_fake_pkt_gdev_sport, 15);
-	
-	sapp_assistant_init();
 
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_tcp_offload", &sapp_global_single.cfg_send_tcp_offload_sw, 0);
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"treat_vlan_as_mac_in_mac", &sapp_global_single.treat_vlan_as_mac_in_mac_sw, 0);

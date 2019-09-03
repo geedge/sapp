@@ -122,6 +122,9 @@
 #define PKT_UNKNOWN			(98)
 #define PKT_UNKNOWN_LEN		(99)
 
+#define TCP_LINK_DISPOSABLE (100)
+#define UDP_LINK_DISPOSABLE (101)
+#define  STREAM_DISPOSABLE (102)
 
 //group info
 
