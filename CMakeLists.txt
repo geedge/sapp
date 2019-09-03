@@ -68,7 +68,7 @@ endif()
 set(MESA_SDK_PREFIX "/opt/MESA/" CACHE STRING "MESA Framework Prefix")
 
 # Capture Mode
-set(CAPTURE_MODE "MARSIO" CACHE STRING
+set(CAPTURE_MODE "PCAP" CACHE STRING
     "CAPTURE_MODE set Capture network traffic chosen by the user, using PCAP as default")
 
 set_property(CACHE CAPTURE_MODE PROPERTY STRINGS PCAP MARSIO PAG)
