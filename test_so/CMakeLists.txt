@@ -10,7 +10,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include/support)
 include_directories(${CMAKE_SOURCE_DIR}/include/stream_inc)
 include_directories(${CMAKE_SOURCE_DIR}/dealpkt)
 
-if(OPT_IOMODE_MARSIO)
+if(CAPTURE_MODE MATCHES "MARSIO")
     include_directories(${MARSIO_SDK_PREFIX}/include)
 endif()
 
@@ -23,9 +23,10 @@ set_target_properties(test_app_sapp  PROPERTIES PREFIX "")
 add_library(trace_delay SHARED trace_delay.c)
 set_target_properties(trace_delay  PROPERTIES PREFIX "")
 
-add_library(wangyan_demo SHARED wangyan_demo.c)
-set_target_properties(wangyan_demo  PROPERTIES PREFIX "")
+if(CAPTURE_MODE MATCHES "MARSIO")
+    add_library(wangyan_demo SHARED wangyan_demo.c)
+    set_target_properties(wangyan_demo  PROPERTIES PREFIX "")
 
-add_library(test_wangyan SHARED test_wangyan.c)
-set_target_properties(test_wangyan  PROPERTIES PREFIX "")
-
+    add_library(test_wangyan SHARED test_wangyan.c)
+    set_target_properties(test_wangyan  PROPERTIES PREFIX "")
+endif()

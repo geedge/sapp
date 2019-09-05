@@ -10,8 +10,8 @@ include_directories(${CMAKE_SOURCE_DIR}/include/stream_inc)
 include_directories(${CMAKE_SOURCE_DIR}/include/support)
 include_directories(${CMAKE_SOURCE_DIR}/dealpkt)
 
-if(OPT_IOMODE_MARSIO)
-	include_directories(${MARSIO_SDK_PREFIX}/include)
+if(CAPTURE_MODE MATCHES "MARSIO")
+    include_directories(${MARSIO_SDK_PREFIX}/include)
 endif()
 
 add_definitions(-D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)

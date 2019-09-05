@@ -1,0 +1,63 @@
+image: "docker:stable"
+stages:
+- build
+#- test
+#- package
+- release
+- docker
+
+variables:
+  ARTIFACTS_JOB: "build"
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+
+build:
+  image: "git.mesalab.cn:7443/mesa_framework/framework:master"
+  stage: build
+  script:
+    - source //etc/profile.d/MESA.sh
+    - mkdir -p build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=$BUILD_PREFIX
+    - make
+    - make package
+  tags:
+    - share
+  variables:
+    BUILD_TYPE: "Debug"
+    BUILD_PREFIX: "/opt/MESA/"
+  only:
+    - pushes
+    - tags
+    - master
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      -  ./build/*.rpm
+
+release:
+  image: "git.mesalab.cn:7443/mesa_framework/framework:master"
+  stage: release
+  tags:
+    - share
+  only:
+    - tags
+    - master
+  script:
+     - /bin/bash -x ./autorelease.sh $CI_API_V4_URL $CI_PROJECT_URL $CI_PROJECT_ID $CI_TOKEN $CI_COMMIT_TAG $ARTIFACTS_JOB $CI_PROJECT_NAME $CI_COMMIT_SHORT_SHA
+     
+docker:
+  stage: docker
+  services:
+    - docker:dind
+  tags:
+    - share
+  only:
+    - master
+  script:
+     - ls -l build
+     - ls -l /tmp/
+     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+     - docker build -t $IMAGE_TAG .
+     - docker push $IMAGE_TAG
