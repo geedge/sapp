@@ -49,8 +49,6 @@ release:
      
 docker:
   stage: docker
-  services:
-    - docker:dind
   tags:
     - share
   only:
