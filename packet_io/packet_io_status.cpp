@@ -236,21 +236,30 @@ void sysinfo_output(void)
 
 	fprintf(fp,"#################################################################\n");
 
-    fprintf(fp,"%-10s %12s %12s\n","TCP_LINK", "total_link", "link/s");
-    fprintf(fp,"%-10s %12llu %12llu\n", "TCP_NEW", sysinfo_new[SYS_TCP_LINK_NEW],
-            sysinfo_new[SYS_TCP_LINK_NEW] - sysinfo_old[SYS_TCP_LINK_NEW]);
-    //fprintf(fp,"%-10s %12llu %12llu\n", "TCP_DATA", sysinfo_new[SYS_TCP_LINK_DATA],
-    //        sysinfo_new[SYS_TCP_LINK_DATA] - sysinfo_old[SYS_TCP_LINK_DATA]);
-    fprintf(fp,"%-10s %12llu %12llu\n", "TCP_DEL", sysinfo_new[SYS_TCP_LINK_DEL],
-            sysinfo_new[SYS_TCP_LINK_DEL] - sysinfo_old[SYS_TCP_LINK_DEL]);
-    fprintf(fp,"%-10s %12llu %12llu\n", "TCP_DOU", sysinfo_new[LINK_DOUBLE],
-            sysinfo_new[LINK_DOUBLE] - sysinfo_old[LINK_DOUBLE]);
-    fprintf(fp,"%-10s %12llu %12llu\n", "TCP_C2S", sysinfo_new[LINK_SINGLE_C2S],
-            sysinfo_new[LINK_SINGLE_C2S] - sysinfo_old[LINK_SINGLE_C2S]);
-    fprintf(fp,"%-10s %12llu %12llu\n", "TCP_S2C", sysinfo_new[LINK_SINGLE_S2C],
-            sysinfo_new[LINK_SINGLE_S2C] - sysinfo_old[LINK_SINGLE_S2C]);
+	fprintf(fp, "%-10s %12s %12s\n", "TCP_LINK", "total_link", "link/s");
+	fprintf(fp, "%-10s %12llu %12llu\n", "TCP_NEW", sysinfo_new[SYS_TCP_LINK_NEW],
+			sysinfo_new[SYS_TCP_LINK_NEW] - sysinfo_old[SYS_TCP_LINK_NEW]);
+	fprintf(fp, "%-10s %12llu %12llu\n", "TCP_DIS", sysinfo_new[TCP_LINK_DISPOSABLE],
+			sysinfo_new[TCP_LINK_DISPOSABLE] - sysinfo_old[TCP_LINK_DISPOSABLE]);
+	//fprintf(fp,"%-10s %12llu %12llu\n", "TCP_DATA", sysinfo_new[SYS_TCP_LINK_DATA],
+	//        sysinfo_new[SYS_TCP_LINK_DATA] - sysinfo_old[SYS_TCP_LINK_DATA]);
+	fprintf(fp, "%-10s %12llu %12llu\n", "TCP_DEL", sysinfo_new[SYS_TCP_LINK_DEL],
+			sysinfo_new[SYS_TCP_LINK_DEL] - sysinfo_old[SYS_TCP_LINK_DEL]);
+	fprintf(fp, "%-10s %12llu %12llu\n", "TCP_DOU", sysinfo_new[LINK_DOUBLE],
+			sysinfo_new[LINK_DOUBLE] - sysinfo_old[LINK_DOUBLE]);
+	fprintf(fp, "%-10s %12llu %12llu\n", "TCP_C2S", sysinfo_new[LINK_SINGLE_C2S],
+			sysinfo_new[LINK_SINGLE_C2S] - sysinfo_old[LINK_SINGLE_C2S]);
+	fprintf(fp, "%-10s %12llu %12llu\n", "TCP_S2C", sysinfo_new[LINK_SINGLE_S2C],
+			sysinfo_new[LINK_SINGLE_S2C] - sysinfo_old[LINK_SINGLE_S2C]);
 
-    fprintf(fp,"#################################################################\n");
+	fprintf(fp, "#################################################################\n");
+	fprintf(fp, "%-10s %12s %12s\n", "UDP_LINK", "total_link", "link/s");
+	fprintf(fp, "%-10s %12llu %12llu\n", "UDP_NEW", sysinfo_new[SYS_UDP_LINK_NEW],
+			sysinfo_new[SYS_UDP_LINK_NEW] - sysinfo_old[SYS_UDP_LINK_NEW]);
+	fprintf(fp, "%-10s %12llu %12llu\n", "UDP_DIS", sysinfo_new[UDP_LINK_DISPOSABLE],
+			sysinfo_new[UDP_LINK_DISPOSABLE] - sysinfo_old[UDP_LINK_DISPOSABLE]);
+
+	fprintf(fp,"#################################################################\n");
     fprintf(fp,"%-10s %12s %12s %12s %12s\n","SND-PKT", "total_pkt", "total_len","pps", "bps");
     fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "TCP_RST", sysinfo_new[SEND_TCP_RST], byte_convert_human(sysinfo_new[SEND_TCP_RST_LEN], 1, 1, s1),(sysinfo_new[SEND_TCP_RST]-sysinfo_old[SEND_TCP_RST]), byte_convert_human((sysinfo_new[SEND_TCP_RST_LEN]-sysinfo_old[SEND_TCP_RST_LEN]), 1,8,s2));
     fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "TCP_S/A", sysinfo_new[SEND_TCP_SYN_ACK], byte_convert_human(sysinfo_new[SEND_TCP_SYN_ACK_LEN], 1, 1, s1),(sysinfo_new[SEND_TCP_SYN_ACK]-sysinfo_old[SEND_TCP_SYN_ACK]), byte_convert_human((sysinfo_new[SEND_TCP_SYN_ACK_LEN]-sysinfo_old[SEND_TCP_SYN_ACK_LEN]),1,8,s2));

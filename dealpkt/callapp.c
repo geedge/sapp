@@ -437,6 +437,14 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 		else
 		{
 			*opstate= OP_STATE_CLOSE;
+			if (a_stream->type == STREAM_TYPE_TCP)
+			{
+				g_SysInputInfo[threadnum][TCP_LINK_DISPOSABLE]++;
+			}
+			if (a_stream->type == STREAM_TYPE_UDP)
+			{
+				g_SysInputInfo[threadnum][UDP_LINK_DISPOSABLE]++;
+			}
 		}
 		return ret;
 	

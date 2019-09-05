@@ -415,6 +415,7 @@ static int sapp_fs2_init(void)
 	int cfg_port;
 	int fs2_opt;
 	int cycle;
+	int send_historgram;
 
 	MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "FS_switch", &module_switch, 0);
 	if(0 == module_switch){
@@ -454,6 +455,8 @@ static int sapp_fs2_init(void)
 
 	MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "FS_print_switch", &fs2_opt, 0);	
 	FS_set_para(sapp_global_single.fs2_handle, PRINT_TRIGGER, &fs2_opt, sizeof(int));
+
+	MESA_load_profile_int_def("conf/main.conf", "ShowStatInfo", "FS_send_histogram", &send_historgram, 0);
 
 	FS_set_para(sapp_global_single.fs2_handle, OUTPUT_DEVICE, "fs2_sysinfo.log", strlen("fs2_sysinfo.log")+1);
 
@@ -504,7 +507,10 @@ static int sapp_fs2_init(void)
 							  1,                  //可追踪的最小值
 							  100000000,            //可追踪的最大值
 							  2);                 //精度，即小数点后几位，范围1~4
-
+		if (send_historgram == 0)
+		{
+			FS_set_para(sapp_global_single.fs2_handle, NOT_SEND_METRIC_TO_SERVER, &sapp_global_single.fs2_latency_id_array[i], sizeof(int));
+		}
 	}
 	FS_start(sapp_global_single.fs2_handle);
 	

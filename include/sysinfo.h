@@ -128,6 +128,11 @@
 #define PKT_MARSIO_MALLOC	(102)
 #define PKT_MARSIO_FREE		(103)
 
+#define TCP_LINK_DISPOSABLE (100)
+#define UDP_LINK_DISPOSABLE (101)
+#define STREAM_DISPOSABLE (102)
+
+
 //group info
 
 #define PKT_APP_BASE	  		1000

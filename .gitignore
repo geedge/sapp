@@ -11,3 +11,8 @@ build/
 run/log/
 run/sapp
 version.txt
+.vscode
+cmake-build-debug
+GPATH
+GRTAGS
+GTAGS
