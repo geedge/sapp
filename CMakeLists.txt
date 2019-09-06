@@ -255,9 +255,9 @@ endif()
 install(FILES bin/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app)
 install(FILES ${CMAKE_BINARY_DIR}/test/test_app_sapp.so DESTINATION plug/business/test_app)
 
-install(PROGRAMS ${CMAKE_BINARY_DIR}/test/sapp_module_test/src/gtest_sapp_v4 DESTINATION .)
-install(FILES ${CMAKE_BINARY_DIR}/test/sapp_module_test/src/libgtest_sapp.so DESTINATION plug/business/gtest_sapp)
-install(FILES bin/plug/business/gtest_sapp/gtest_sapp.inf  DESTINATION plug/business/gtest_sapp)
+#install(PROGRAMS ${CMAKE_BINARY_DIR}/test/sapp_module_test/src/gtest_sapp_v4 DESTINATION .)
+#install(FILES ${CMAKE_BINARY_DIR}/test/sapp_module_test/src/libgtest_sapp.so DESTINATION plug/business/gtest_sapp)
+#install(FILES bin/plug/business/gtest_sapp/gtest_sapp.inf  DESTINATION plug/business/gtest_sapp)
 
 
 include(Package)

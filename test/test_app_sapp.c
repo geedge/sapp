@@ -1392,6 +1392,78 @@ char test_inject_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,co
 	return APP_STATE_DROPME;
 }
 
+/* 使用新的发包接口  sapp_inject_pkt()发送伪造包 */
+static int send_by_sapp_inject_pkt(struct streaminfo *a_tcp, const struct mesa_ip4_hdr *raw_ip4hdr)
+{
+#define HIJACK_RESPONSE_HDR "HTTP/1.1 200 OK\r\nServer: hijack.com\r\nContent-Length:%d\r\nContent-Type: text/html; charset=UTF-8\r\nConnection: close\r\n\r\n"
+#define HIJACK_RESPONSE_BODY "<!Doctype html><html xmlns=http://www.w3.org/1999/xhtml><title>Your web page was hijacked!</title><body><strong><span style=\"color:#E53333;\">Your web page was hijacked!</span></strong></body></html>"
+		
+	static char http_hijack_buf[1500];
+	static int http_hijack_len;
+
+	const struct mesa_tcp_hdr *raw_thdr = (struct mesa_tcp_hdr *)((char *)raw_ip4hdr + raw_ip4hdr->ip_hl * 4); //no options
+
+	struct mesa_ip4_hdr *send_ip4hdr = (struct mesa_ip4_hdr *)http_hijack_buf;
+	struct mesa_tcp_hdr *send_thdr = (struct mesa_tcp_hdr *)((char *)send_ip4hdr + sizeof(struct mesa_ip4_hdr)); //no options
+
+	int hdr_len = snprintf(http_hijack_buf+sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), 
+	                   1500, HIJACK_RESPONSE_HDR, strlen(HIJACK_RESPONSE_BODY));
+	int body_len = snprintf(http_hijack_buf+sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr)+hdr_len, 
+	                   1500-hdr_len, "%s", HIJACK_RESPONSE_BODY);
+
+	http_hijack_len = sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr) + hdr_len + body_len;
+	
+
+	send_thdr->th_sport = raw_thdr->th_dport;
+	send_thdr->th_dport = raw_thdr->th_sport;
+	send_thdr->th_seq = raw_thdr->th_ack;
+	send_thdr->th_ack = htonl(ntohl(raw_thdr->th_seq) + ntohs(raw_ip4hdr->ip_len) - raw_ip4hdr->ip_hl * 4 - raw_thdr->th_off*4);
+	send_thdr->th_off = 5;
+	send_thdr->th_win = 0x222;
+	send_thdr->th_sum = 0;
+	send_thdr->th_flags = 0x18;
+	
+
+	send_ip4hdr->ip_v = 4;
+	send_ip4hdr->ip_hl = 5;
+	send_ip4hdr->ip_len = htons(http_hijack_len);
+	send_ip4hdr->ip_id = 0x3333;
+	send_ip4hdr->ip_off = 0;
+	send_ip4hdr->ip_ttl = 128;
+	send_ip4hdr->ip_p = 6;
+	send_ip4hdr->ip_sum = 0;
+	send_ip4hdr->ip_src.s_addr = raw_ip4hdr->ip_dst.s_addr;
+	send_ip4hdr->ip_dst.s_addr = raw_ip4hdr->ip_src.s_addr;
+
+	sendpacket_do_checksum(http_hijack_buf, IPPROTO_TCP, sizeof(struct mesa_tcp_hdr) + hdr_len + body_len);
+	sendpacket_do_checksum(http_hijack_buf, IPPROTO_IP, sizeof(struct mesa_ip4_hdr));
+	
+	sapp_inject_pkt(a_tcp, SIO_EXCLUDE_THIS_LAYER_HDR, http_hijack_buf, http_hijack_len, MESA_dir_reverse(a_tcp->routedir));
+
+}
+
+
+#include "http.h"
+char test_sapp_inject_http(stSessionInfo* session_info, void **param, int thread_seq, struct streaminfo *a_tcp, void *a_packet)
+{
+	http_infor *a_http = (http_infor *)(session_info->app_info);
+
+	switch(session_info->prot_flag)
+	{
+		case HTTP_MESSAGE_URL:
+			if(memmem((char*)session_info->buf, session_info->buflen, "hijack", strlen("hijack"))){
+				send_by_sapp_inject_pkt(a_tcp, (struct mesa_ip4_hdr *)a_packet);
+				//printf("----hit key, hijack it!!\n");
+				printf("hijack stream: %s, URL: %s\n", printaddr(&a_tcp->addr, thread_seq), (char*)session_info->buf);
+			}
+		break;
+
+	}
+
+	return PROT_STATE_GIVEME;
+}
+
+
 char test_sapp_inject_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
 	char MESA_inject_pkt_payload[] = "send by MESA_inject_pkt    ";

@@ -247,7 +247,7 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	int ret;
 	marsio_buff_t *send_mbuf[1];
 	char *real_buf;
-	struct mr_tunnat_ctrlzone mr_ctrlzone;
+	struct mr_tunnat_ctrlzone mr_ctrlzone = {};
 
 	ret = marsio_buff_malloc_global(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
 	if(ret < 0){
@@ -260,10 +260,13 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	
 	memcpy(real_buf, data, datalen);
 
-	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
+	mr_ctrlzone.action = TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
 	marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 
-	marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, MARSIO_SEND_OPT_FAST);
+	ret = marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, MARSIO_SEND_OPT_FAST|MARSIO_SEND_OPT_REHASH);
+	if(ret < 0){
+		return -1;
+	}
 	//g_SysInputInfo[thread_seq][PKT_MARSIO_SND]++;
 	/* 发送接口自动free */
 	//marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);

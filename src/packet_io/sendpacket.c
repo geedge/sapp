@@ -1399,6 +1399,28 @@ static int __get_tcp_network_addr(struct streaminfo *stream, void *src_addr, voi
 }
 #endif
 
+static int build_net_layer_ethernet(struct streaminfo_private *stream_pr, unsigned short eth_type_host,
+			int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt)
+{
+	struct mesa_ethernet_hdr *raw_hdr;
+	struct mesa_ethernet_hdr *send_hdr = (struct mesa_ethernet_hdr *)buf;
+	
+	raw_hdr = (struct mesa_ethernet_hdr *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
+
+	if(reverse){
+		memcpy(send_hdr->ether_shost, raw_hdr->ether_dhost, ETHER_ADDR_LEN);
+		memcpy(send_hdr->ether_dhost, raw_hdr->ether_shost, ETHER_ADDR_LEN);
+	}else{
+		memcpy(send_hdr->ether_shost, raw_hdr->ether_shost, ETHER_ADDR_LEN);
+		memcpy(send_hdr->ether_dhost, raw_hdr->ether_dhost, ETHER_ADDR_LEN);
+	}
+
+	send_hdr->ether_type = htons(eth_type_host);
+
+	return sizeof(struct mesa_ethernet_hdr);
+}
+
+
 static int build_net_layer_tcp(struct streaminfo_private *stream_pr, int carry_layer_type,
 			int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt)
 {
@@ -2042,13 +2064,21 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 		case ADDR_TYPE_MAC:
 		{
 			buf -= sizeof(struct mesa_ethernet_hdr); 
-			/* 此处可以不构造mac地址, 仅告知packet_io_send_fake_pkt函数底层类型, MAC还是MAC_IN_MAC */
-			struct mesa_ethernet_hdr * ehdr = (struct mesa_ethernet_hdr *)buf;
-			ehdr->ether_type = htons(net_layer_to_ethernet_protocol(carry_layer_type));
-			this_layer_len = 0; 
-			//this_layer_len = build_net_layer_ethernet(stream, payload, payload_len, buf, reverse, net_layer);
-			//net_layer = NET_LAYER_ETHERNET;
-			/* 并联模式下, 可以直接靠系统sendto发送, 所以MAC地址不在build系列函数中添加, 在dl_io中填充 */
+			/* 如果是并联模式, 此处可以不构造mac地址, 仅告知packet_io_send_fake_pkt函数底层类型, MAC还是MAC_IN_MAC 
+				串联模式需要根据当前原始包, 和send_dir构造mac地址.
+			*/
+			unsigned short eth_type_host = net_layer_to_ethernet_protocol(carry_layer_type);
+			if((unsigned short)-1 == eth_type_host){
+				return -1;
+			}
+			if(g_topology_mode & __NET_CONN_PARALLEL){
+				struct mesa_ethernet_hdr * ehdr = (struct mesa_ethernet_hdr *)buf;
+				ehdr->ether_type = htons(eth_type_host);
+			}else{
+				build_net_layer_ethernet(stream_pr, eth_type_host, carry_layer_len, buf, reverse, raw_pkt);
+			}
+
+			this_layer_len = sizeof(struct mesa_ethernet_hdr);
 			return carry_layer_len;
 		}
 		break;
@@ -2591,7 +2621,7 @@ int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_
 	}
 	send_handle->user_arg = (void *)stream;
 	ret = packet_io_send(send_handle, reserved_hdr_len+payload_len, SEND_TYPE_LINK_INJECT, 
-						low_net_layer_type, stream->routedir, thread_num,
+						low_net_layer_type, snd_routedir, thread_num,
 						feedback_buf, feedback_buf_len);		
 	if(ret < 0){
 		send_handle->tot_send_err++;
@@ -2645,6 +2675,136 @@ int MESA_inject_pkt_feedback(struct streaminfo *stream, const char *payload, int
 	
 	return __do_inject_pkt(stream, payload, payload_len, ext_raw_pkt, snd_routedir, 
 						feedback_buf, feedback_buf_len);
+}
+
+
+static int get_eth_carry_layer_type(struct streaminfo *stream)
+{
+	int ret = -1;
+
+	while(stream){
+		if(CAP_LEVEL_MAC == g_packet_io_cap_level) {
+			if(stream->pfather 
+			 && ((ADDR_TYPE_MAC_IN_MAC == stream->pfather->addr.addrtype) || (ADDR_TYPE_MAC == stream->pfather->addr.addrtype))){
+				/* 记录MAC层之上的协议地址类型, 用于填充Ethernet->type字段, 对于MAC-in-MAC的inner_eth, 记录上层协议类型 */
+				ret = (int)stream->addr.addrtype;
+			}
+		}else{
+			/* to do:
+				如果捕包库自动屏蔽了ethernet层, 甚至剥掉了vlan等层而且还要发包怎么办?
+			*/
+			if(NULL == stream->pfather){
+				if(g_packet_io_cap_level == stream->addr.addrtype){
+					ret = (int)stream->addr.addrtype;
+				}
+				if((CAP_LEVEL_IPV4 == g_packet_io_cap_level)
+				 && (ADDR_TYPE_IPV4 == stream->addr.addrtype)){
+					ret = CAP_LEVEL_IPV4;
+				}			
+			}
+		}
+
+		stream = stream->pfather;
+	}
+
+	return ret;
+}
+
+int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio, 
+  const void *payload, int payload_len, unsigned char snd_routedir, void *user_arg)
+
+{
+	int ret = -1, reserved_hdr_len = 0, send_len = 0;
+	MESA_send_handle *send_handle;
+	int thread_num = raw_stream->threadnum;
+	int low_net_layer_type;
+	int snd_dir_reverse;
+	const raw_pkt_t *raw_pkt;
+	struct streaminfo_private *raw_stream_pr;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	int carry_layer_type;
+	struct streaminfo *inject_stream;
+	struct streaminfo_private *inject_stream_pr;
+	
+	if(NULL == raw_stream){
+		return -1;
+	}
+	
+	if(dir_check(snd_routedir) < 0){
+		return -1;
+	}
+
+	carry_layer_type = raw_stream->addr.addrtype;
+	inject_stream = raw_stream;
+	inject_stream_pr = (struct streaminfo_private *)raw_stream;
+
+	if((SIO_EXCLUDE_THIS_LAYER_HDR & sio) != 0){
+		/* 跳过当前层 */
+		inject_stream = raw_stream->pfather;
+		inject_stream_pr = (struct streaminfo_private *)inject_stream;
+	}
+	
+	raw_stream_pr = (struct streaminfo_private *)raw_stream;
+	/* 因改变了某些回调函数的原始包类型为IP包头, 所以不需要插件传输原始包, 信息都存储于私有流结构体内 */
+	raw_pkt = (const raw_pkt_t *)raw_stream_pr->raw_pkt;
+	if((NULL == raw_pkt) || (RAW_PKT_MAGIC_NUM != raw_pkt->magic_num)){
+		return -1;
+	}
+	
+	snd_dir_reverse = ((snd_routedir == raw_stream->routedir) ? 0: 1);
+	
+	send_handle = &g_send_handle[thread_num];
+
+	reserved_hdr_len = calc_reserved_hdr_len(inject_stream, &low_net_layer_type);
+	if(reserved_hdr_len < 0){
+		return -1;
+	}
+
+	low_net_layer_type = get_eth_carry_layer_type(raw_stream);
+	if(low_net_layer_type < 0){
+		sapp_runtime_log(RLOG_LV_FATAL, "sapp_inject_pkt(): can't get ethernet carry layer type");
+		return -1;
+	}
+	
+	if(payload_len + reserved_hdr_len > MTU_MAX){
+		sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: MESA_inject_pkt() error! payload_len too long:%d.\n", 
+		                 __FILE__, __LINE__, payload_len + reserved_hdr_len);	
+		return -1;
+	}
+
+	send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
+
+	memcpy(send_handle->send_buf + reserved_hdr_len, payload, payload_len);
+	
+	send_len = build_net_layer_pkt(inject_stream_pr, carry_layer_type, payload_len, 
+							   send_handle->send_buf + reserved_hdr_len, snd_dir_reverse, raw_pkt);
+	if(send_len < 0){
+		ret = -1;
+		goto err;
+	}
+	send_handle->user_arg = (void *)raw_stream;
+	ret = packet_io_send(send_handle, reserved_hdr_len+payload_len, SEND_TYPE_LINK_INJECT, 
+						low_net_layer_type, snd_routedir, thread_num,
+						(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);		
+	if(ret < 0){
+		send_handle->tot_send_err++;
+	}else{
+		send_handle->tot_send_pkt++;
+		send_handle->tot_send_byte += send_len;
+
+		if(STREAM_TYPE_TCP == raw_stream->type){
+			local_sys_stat->count[SAPP_STAT_SND_TCP]++;
+			local_sys_stat->length[SAPP_STAT_SND_TCP]+= raw_pkt->raw_pkt_len;	
+		}else{
+			local_sys_stat->count[SAPP_STAT_SND_UDP]++;
+			local_sys_stat->length[SAPP_STAT_SND_UDP]+= raw_pkt->raw_pkt_len;		
+		}
+	}
+
+err:	
+	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
+
+	return ret;
 }
 
 unsigned long packet_io_get_send_pkt_num(int thread_num)

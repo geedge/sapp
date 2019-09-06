@@ -19,9 +19,10 @@ extern "C" {
 */
 
 
-extern int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_len, const void *ext_raw_pkt, UCHAR snd_routedir, char *feedback_buf, int *feedback_buf_len);
+extern int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio, 
+  const void *payload, int payload_len, unsigned char snd_routedir, void *user_arg);
 
-
+#if 0
 int __sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir, void *user_arg)
 {
 	int ret = -1;
@@ -42,6 +43,9 @@ int __sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const
 
 	return ret;
 }
+#endif
+
+
 
 int sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir)
 {

@@ -475,17 +475,6 @@ int sapp_assistant_init(void)
 }
 
 
-int sapp_inject_pkt_with_feedback(struct streaminfo *stream, 
-  enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir, 
-  char *feedback_buf, int *feedback_buf_len)
-{
-
-
-}
-
-
-
-
 #ifdef __cplusplus
 }
 #endif

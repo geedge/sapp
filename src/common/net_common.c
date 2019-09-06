@@ -828,7 +828,7 @@ UINT16 net_layer_to_ethernet_protocol(int addr_type)
 		
 		default:
 			/* to do, unknown type */
-			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: Ethernet addr type:%d!\n", __FILE__, __LINE__, addr_type);
+			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: unknown ethernet carry addr type:%d!\n", __FILE__, __LINE__, addr_type);
 			ether_type = -1;
 		break;
 	}
