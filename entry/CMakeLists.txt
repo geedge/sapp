@@ -9,6 +9,11 @@ include_directories(${CMAKE_SOURCE_DIR}/include/stream_inc)
 include_directories(${CMAKE_SOURCE_DIR}/dealpkt)
 include_directories(${CMAKE_SOURCE_DIR}/packet_io)
 
+LINK_DIRECTORIES(/opt/MESA/lib)
+if(CAPTURE_MODE MATCHES "MARSIO")
+    LINK_DIRECTORIES(/opt/mrzcpd/lib)
+endif()
+
 add_executable(sapp sapp_init.c sapp_main.c sapp_global_val.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
 target_link_libraries(sapp nsl pthread dl m pcap)
