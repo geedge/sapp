@@ -121,7 +121,8 @@ void iterate_stream_list(const struct streaminfo *stream)
 #endif
 
 #if 1
-static struct streamindex *udp_add_new_stream(struct streamindex *pindex,struct mesa_udp_hdr *this_udphdr)
+static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
+			struct mesa_udp_hdr *this_udphdr, const raw_pkt_t *raw_pkt)
 {
 	struct streamindex *pindex_udp=NULL;
 	struct udpdetail_private *pdetail_pr=NULL;
@@ -206,6 +207,8 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,struct 
 		project_req_add_struct(pstream_udp, G_UDP_FLOW_STAT_PROJECT_ID, pdetail_pr->flow_stat);
 	}
 
+	save_polling_inject_context(pstream_udp_pr, raw_pkt);
+	
 	return pindex_udp;
 }
 #else
@@ -303,6 +306,8 @@ void udp_free_stream(struct streamindex *pindex)
 		free_heap_stream_info(pstream, 0);
 	}
 
+	free_polling_inject_context(pstream_pr);
+	
 	free_streamindex(threadnum,pindex);
 }
 
@@ -511,7 +516,7 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 		a_index =(struct streamindex * ) findstreamindex (pindex, raw_pkt);
 		if (unlikely(!a_index)){
 			//a_index = udp_add_new_stream (ptmp, udph);
-			a_index = udp_add_new_stream(pindex, udph);
+			a_index = udp_add_new_stream(pindex, udph, raw_pkt);
 		}
 		//add by lqy 只有当链接未重置时进行lru
 		else if(udp_reset_stream_bytime(a_index)==0)
@@ -529,6 +534,8 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 		pstream=&(pstream_pr->stream_public);		
 		//pstream->addr.pktipfragtype = pstream->stream_public.addr.pktipfragtype; /* 2015-11-04 lijia add, IP分片类型更新 */
 
+		update_polling_inject_context(pstream_pr, raw_pkt);
+		
 		udp_change_stream_state(a_index,udph);
 		//udp stream 回调
 
@@ -678,7 +685,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	
 		a_index =(struct streamindex * ) findstreamindex (pindex, raw_pkt);
 		if(unlikely(!a_index)){
-			a_index = udp_add_new_stream(pindex, udph);
+			a_index = udp_add_new_stream(pindex, udph, raw_pkt);
 		}
 		//add by lqy 只有当链接未重置时进行lru
 		else if( udp_reset_stream_bytime(a_index)==0)
@@ -696,6 +703,8 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		/* 更新pstream指针 */
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);
+
+		update_polling_inject_context(pstream_pr, raw_pkt);
 
 /* IP, UDP层合并后, 不再更新UDP层的offset_to_raw_pkt_hdr */
 #if 0

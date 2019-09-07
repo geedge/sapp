@@ -2221,6 +2221,43 @@ err:
 }
 
 
+static raw_pkt_t *update_raw_pkt(struct streaminfo_private *stream_pr, uchar snd_dir, int *inject_dir_reverse)
+{
+	raw_pkt_t *inject_raw_pkt;
+	
+	if((stream_pr->packet_io_context != 0)
+	|| (0 == sapp_global_val->config.packet_io.polling_enabled)){
+		/* 在包处理上下文, 或者没有开启polling, do nothing */
+		*inject_dir_reverse = ((snd_dir == stream_pr->stream_public.routedir) ? 0: 1);
+		return (raw_pkt_t *)stream_pr->raw_pkt;
+	}
+
+	if((DIR_ROUTE_DOWN & snd_dir) == DIR_ROUTE_DOWN){
+		inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_down;
+		if(inject_raw_pkt){
+			*inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 0: 1);
+		}else{/* 本端还没收到过包,使用对端数据包构造本端的包,对于某些非对称协议,如GRE, MPLS等,会有问题! reverse需要反向 */
+			inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_up;
+			*inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 1: 0);
+		}
+	}else{
+		inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_up;
+		if(inject_raw_pkt){
+			*inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 1: 0);
+		}else{/* 本端还没收到过包,使用对端数据包构造本端的包,对于某些非对称协议,如GRE, MPLS等,会有问题! reverse需要反向 */
+			inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_down;
+			*inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 0: 1);
+		}		
+	}
+	
+	if((NULL == inject_raw_pkt) || (RAW_PKT_MAGIC_NUM != inject_raw_pkt->magic_num)){
+		return NULL;
+	}
+
+	return inject_raw_pkt;
+}
+
+
 static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int kill_num,
 								char *feedback_buf, int *feedback_buf_len)
 {
@@ -2746,12 +2783,8 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	
 	raw_stream_pr = (struct streaminfo_private *)raw_stream;
 	/* 因改变了某些回调函数的原始包类型为IP包头, 所以不需要插件传输原始包, 信息都存储于私有流结构体内 */
-	raw_pkt = (const raw_pkt_t *)raw_stream_pr->raw_pkt;
-	if((NULL == raw_pkt) || (RAW_PKT_MAGIC_NUM != raw_pkt->magic_num)){
-		return -1;
-	}
-	
-	snd_dir_reverse = ((snd_routedir == raw_stream->routedir) ? 0: 1);
+	raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_dir_reverse);
+	assert(raw_pkt != NULL);	
 	
 	send_handle = &g_send_handle[thread_num];
 

@@ -117,6 +117,12 @@ struct half_tcpstream
   struct buf_unorder *unorderlisttail;	/*乱序包的链表尾部指针*/
 };
 
+/* 保存每个流两个方向第一个包, 用于polling entry发包使用 */
+typedef struct {
+	const raw_pkt_t *raw_pkt_up;
+	const raw_pkt_t *raw_pkt_down;
+}polling_inject_context_t;
+
 struct streaminfo_private
 {
 	/* 对外结构放置在结构体最前, 指针地址可以互相强转 */
@@ -142,7 +148,9 @@ struct streaminfo_private
 	unsigned int hash_slave; /* 2015-12-14 lijia add, 使用linux_jhash计算时, 可以同时得到两个以上的HASH值, 主HASH用于确定在HASH表的SLOT位置, slave_HASH用于快速比较地址是否相等 */
 	unsigned char hash_not_head_times;/* 2015-12-15 lijia add, 当前index不在HASH SLOT的第一位的次数 */
 	unsigned char cur_layer_raw_hdr_len; /* 2017-10-31 lijia add, 当前层的原始包地址长度, 因ppp头部压缩, 原来版本无法保存这个状态, 发包时也无法得知地址如何填充 */
-	char __pad:4;
+	//char __pad:4;
+	char __pad:3;
+	char packet_io_context:1; /* 2019-09-07 lijia add, for polling entry send packet */
 	unsigned char stream_close_reason:4; /* 2019-02-14 lijia add, 对于TCP使用tcpdetail_private的link_state变量, 对于UDP之前没有, 拆分pad新增此变量 */
 	unsigned char gdev_block_timer;
 	/* ===8 bytes=== */
@@ -157,6 +165,8 @@ struct streaminfo_private
 	
 	struct tcp_option *syn_opt_array;
 	struct tcp_option *synack_opt_array;
+
+	polling_inject_context_t *polling_inject_context;
 };
 
 struct tcpdetail_private
@@ -340,6 +350,9 @@ int gdev_block_init(void);
 int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt_t *raw_pkt);
 int sapp_identify_tunnel_inner_pkt(const raw_pkt_t *raw_pkt);
 int sapp_assistant_init(void);
+int save_polling_inject_context(struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt);
+void free_polling_inject_context(struct streaminfo_private *pstream_pr);
+int update_polling_inject_context(struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt);
 
 
 #ifdef __cplusplus

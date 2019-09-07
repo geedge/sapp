@@ -1510,6 +1510,77 @@ char test_sapp_inject_pkt(struct streaminfo *stream,void **pme, int thread_seq,c
 }
 
 
+static struct streaminfo *g_polling_stream = NULL;
+char polling_inject_tcpall_entry(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+{
+	/* polling_inject_tcp_entry在polling上下文, 拿不到stream, 靠tcpall_entry更新全局变量g_polling_stream,以获取某个流上下文 */
+
+	if((OP_STATE_DATA == stream->pktstate) && (stream->addr.tuple4_v4->dest == htons(22))){
+		printf("update polling stream %p: %s \n", stream, printaddr(&stream->addr, thread_seq));
+		g_polling_stream = stream;
+	}
+
+	return APP_STATE_GIVEME;
+}
+
+
+char polling_inject_tcp_entry(struct streaminfo *no_stream,void **no_pme, int thread_seq, const void *no_raw_pkt)
+{
+	char MESA_inject_pkt_payload[] = "send by MESA_inject_pkt    ";
+	char sapp_inject_pkt_def_payload[] = "send by sapp_inject_pkt def";
+	char sapp_inject_pkt_no_hdr_payload[256];
+	struct stream_tuple4_v4 *tuple_v4;
+
+	struct streaminfo *stream = g_polling_stream;
+	if(NULL == stream){
+		//printf("stream is NULL return!\n");
+		return APP_STATE_GIVEME;
+	}
+	if(OP_STATE_DATA != stream->opstate){
+		//printf("stream opstate is %d, return!\n", stream->opstate);
+		return APP_STATE_GIVEME;
+
+	}
+
+	tuple_v4 = (struct stream_tuple4_v4 *)(stream->addr.paddr);
+
+	MESA_inject_pkt(stream, MESA_inject_pkt_payload, strlen("send by MESA_inject_pkt    "), NULL, stream->routedir);
+	sapp_inject_pkt(stream, SIO_DEFAULT, sapp_inject_pkt_def_payload, strlen("send by sapp_inject_pkt def"), stream->routedir);
+
+	struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)sapp_inject_pkt_no_hdr_payload;
+	struct mesa_tcp_hdr *thdr = (struct mesa_tcp_hdr *)((char *)ip4hdr + sizeof(struct mesa_ip4_hdr)); //no options
+
+	thdr->th_sport = tuple_v4->source;
+	thdr->th_dport = tuple_v4->dest;
+	thdr->th_seq = 0x11111111;
+	thdr->th_ack = 0x22222222;
+	thdr->th_off = 5;
+	thdr->th_win = 100;
+	thdr->th_sum = 0;
+	thdr->th_flags = 0x18;
+
+	ip4hdr->ip_v = 4;
+	ip4hdr->ip_hl = 5;
+	ip4hdr->ip_len = htons(sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr) + strlen("send by sapp_inject_pkt hdr"));
+	ip4hdr->ip_id = 0x3333;
+	ip4hdr->ip_off = 0;
+	ip4hdr->ip_ttl = 128;
+	ip4hdr->ip_p = 6;
+	ip4hdr->ip_sum = 0;
+	ip4hdr->ip_src.s_addr = tuple_v4->saddr;
+	ip4hdr->ip_dst.s_addr = tuple_v4->daddr;
+	
+	strcpy(sapp_inject_pkt_no_hdr_payload + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), "send by sapp_inject_pkt hdr");
+
+	int ret = sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, sapp_inject_pkt_no_hdr_payload, ntohs(ip4hdr->ip_len), 0);
+	printf("polling inject pkt dir = 0: %s, ret = %d \n", printaddr(&stream->addr, thread_seq), ret);
+
+	ret = sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, sapp_inject_pkt_no_hdr_payload, ntohs(ip4hdr->ip_len), 1);
+	printf("polling inject pkt dir = 1: %s, ret = %d \n", printaddr(&stream->addr, thread_seq), ret);
+	
+	return APP_STATE_GIVEME;
+}
+
 
 char test_project_add(struct streaminfo *pstream,void **pme, int thread_seq,const void *a_packet)
 {

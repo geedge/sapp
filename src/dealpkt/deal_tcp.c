@@ -781,6 +781,8 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	iterate_stream_list(pstream);
 #endif
 
+	save_polling_inject_context(pstream_pr, raw_pkt);
+
 	return pindex_tcp;
 }
 
@@ -791,7 +793,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	2015-06-10 lijia add "resetflag", 用于流超时淘汰新建连接.
 */
 static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
-			struct mesa_tcp_hdr *this_tcphdr, int datalen, int resetflag)
+ struct mesa_tcp_hdr *this_tcphdr, int datalen, int resetflag, const raw_pkt_t * raw_pkt)
 {
 	struct streamindex *pindex_tcp=NULL;
 	struct tcpdetail *pdetail=NULL;
@@ -999,6 +1001,8 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 #if SAPP_INSECTICIDE
 	iterate_stream_list(pstream);
 #endif
+
+	save_polling_inject_context(pstream_pr, raw_pkt);
 
 	return pindex_tcp;
 }
@@ -1265,6 +1269,8 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 		dictator_free(threadnum, pstream_pr->synack_opt_array);
 		pstream_pr->synack_opt_array = NULL;
 	}
+
+	free_polling_inject_context(pstream_pr);
 	
 	free_streamindex(threadnum,pindex);
 	
@@ -1399,7 +1405,7 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 		ret = 1;
 	}else{
 		if(TCP_CTEAT_LINK_BYDATA & tcp_creatlink_model){
-			tcp_add_new_stream_bydata(pindex,this_tcphdr,datalen,REUSE_OLD_LINK);
+			tcp_add_new_stream_bydata(pindex,this_tcphdr,datalen,REUSE_OLD_LINK, raw_pkt);
 			ret = 1;
 		}else{
 			/* 20190506 lijia add, reset之后如果不建新流, 直接free掉 */
@@ -2536,7 +2542,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 					}
 				}
 				//end of add by yw to detect dataflood attack			
-			pindex_tcp=tcp_add_new_stream_bydata(pindex,this_tcphdr,tcplen,CTREAT_LINK);
+			pindex_tcp=tcp_add_new_stream_bydata(pindex,this_tcphdr,tcplen,CTREAT_LINK, raw_pkt);
 			if(likely(pindex_tcp != NULL))
 			{
 				pstream_pr = &pindex_tcp->stream;
@@ -2577,7 +2583,6 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		}
 		return DROP;
 	}
-
 
 
 	pdetail_pr =(struct tcpdetail_private*)(pstream->pdetail);
@@ -2627,6 +2632,8 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			pdetail_pr->deduce_flow_stat->S2C_all_byte += tcplen;
 		}
 	}
+
+	update_polling_inject_context(pstream_pr, raw_pkt);
 	
 	/* note: reset会重置计数, 放在clientbytes+=, clientpktnum++代码之后 */
 	if(1 == lrustream(pindex_tcp)){

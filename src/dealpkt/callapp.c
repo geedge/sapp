@@ -603,6 +603,7 @@ int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const v
 #endif
 {
 	int ret;
+	struct streaminfo_private *a_tcp_pr = (struct streaminfo_private *)a_tcp;
 
 #if 0 /* 测试完整包处理延时, 暂时关闭 */
 	if(PKT_TYPE_NORMAL == a_tcp->addr.pkttype){ 
@@ -630,8 +631,13 @@ int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const v
 		raw_ip_frag_list_stream_attach(a_tcp);
 	}
 #endif	
-	ret = stream_process(a_tcp, this_iphdr, transport_hdr, raw_pkt,g_StreamTcpFunNum, g_StreamTcpFun,apme,popstate);	
 
+	a_tcp_pr->packet_io_context = 1;
+	a_tcp_pr->raw_pkt = raw_pkt;
+	ret = stream_process(a_tcp, this_iphdr, transport_hdr, raw_pkt,g_StreamTcpFunNum, g_StreamTcpFun,apme,popstate);	
+	a_tcp_pr->packet_io_context = 0;
+	a_tcp_pr->raw_pkt = NULL;
+	
 #if (0 == HIGH_PERF)		
 	if(a_tcp->addr.pkttype != PKT_TYPE_TCPREORDER){
 		raw_ip_frag_list_stream_detach(a_tcp);
@@ -658,6 +664,7 @@ int stream_process_udp(struct streaminfo *a_udp, const void *this_iphdr, const v
 #endif
 {
 	int ret;
+	struct streaminfo_private *a_udp_pr = (struct streaminfo_private *)a_udp;
 
 #if 0 /* 测试完整包处理延时, 暂时关闭 */
 	if(PKT_TYPE_NORMAL == a_udp->addr.pkttype){ 
@@ -669,8 +676,12 @@ int stream_process_udp(struct streaminfo *a_udp, const void *this_iphdr, const v
 	raw_ip_frag_list_stream_attach(a_udp);
 #endif
 
+	a_udp_pr->packet_io_context = 1;
+	a_udp_pr->raw_pkt = raw_pkt;
 	ret = stream_process(a_udp, this_iphdr, transport_hdr,raw_pkt,g_StreamUdpFunNum, g_StreamUdpFun,apme,popstate);
-
+	a_udp_pr->packet_io_context = 0;
+	a_udp_pr->raw_pkt = NULL;
+	
 #if (0 == HIGH_PERF)		
 	raw_ip_frag_list_stream_detach(a_udp);
 #endif
@@ -860,6 +871,10 @@ int stream_process_polling(int thread_seq)
 {
 	int i;
 	char plug_ret, fun_ret = 0;
+
+	if(0 == sapp_global_val->config.packet_io.polling_enabled){
+		return POLLING_STATE_IDLE;
+	}
 
 	__st_pkt_proc_context_check_timeout(thread_seq);
 

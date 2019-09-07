@@ -9,8 +9,8 @@ extern "C" {
 
 #define PROCESS_BAR_SW 		(1)
 
-int g_pcap_version_VERSION_20190820; 
-static int g_pcap_version_internal = 20190820;
+int g_pcap_version_VERSION_20190907; 
+static int g_pcap_version_internal = 20190907;
 
 #define PCAP_SNAPLEN_MAX	(65535)
 
@@ -640,23 +640,24 @@ int pcap_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 		printf("\033[1;31;40m send thread_seq is:%d, bigger than main.conf->thread_num(%d) !\033[0m\n", thread_num, g_pcap_work_thread_num);
 		return -1;
 	}
-	if(dir != raw_pkt_route_dir[thread_num]){
-		dir_reverse = 1;
-	}else{
-		dir_reverse = 0;
-	}
+	
+	//if(dir != raw_pkt_route_dir[thread_num]){
+	//	dir_reverse = 1;
+	//}else{
+	//	dir_reverse = 0;
+	//}
 
 	if(NET_CONN_SERIAL_GDEV == g_pcap_topology_mode){
 		snd_addr = &send_handle->saddr_up;
-	}else{
-		if(IO_DIR_UP == dir){
-			snd_addr = &send_handle->saddr_down;
-		}else{
+	}else{/* transparent */
+		if((DIR_ROUTE_DOWN & dir) == DIR_ROUTE_DOWN){
 			snd_addr = &send_handle->saddr_up;
+		}else{
+			snd_addr = &send_handle->saddr_down;
 		}
 	}
 
-	net_common_build_send_mac(data, raw_pkt_hdr[thread_num], eth_carry_layer_addr_type, dir_reverse,g_pcap_topology_mode);
+	//net_common_build_send_mac(data, raw_pkt_hdr[thread_num], eth_carry_layer_addr_type, dir_reverse,g_pcap_topology_mode);
 	/* delete by lijia 2014-12-10, datalen已经包含了mac地址长度 */
 	//datalen += sizeof(struct mesa_ethernet_hdr); 
 
@@ -713,10 +714,10 @@ static int pcap_forward_pkt(int thread_num, const unsigned char *data,int data_l
 		sock_addr = &work_thread_pool[thread_num].sock_addr_up;
 		net_common_adjust_forward_mac((struct mesa_ethernet_hdr *)data, g_pcap_topology_mode);
 	}else{	
-		if(IO_DIR_UP == dir){
-			sock_addr = &work_thread_pool[thread_num].sock_addr_down; /* the opposite device */
+		if((DIR_ROUTE_DOWN & dir) == DIR_ROUTE_DOWN){
+			sock_addr = &work_thread_pool[thread_num].sock_addr_up; /* the opposite device */
 		}else{
-			sock_addr = &work_thread_pool[thread_num].sock_addr_up;
+			sock_addr = &work_thread_pool[thread_num].sock_addr_down;
 		}
 	}
 
@@ -956,7 +957,7 @@ retry:
 
 static inline int pcap_raw_pkt_check(const struct pcap_pkthdr *hdr, u_char *user)
 {
-	if(*user == IO_DIR_UP){
+	if(0 == (*user & DIR_ROUTE_DOWN)){
 		if(hdr->caplen > pcap_device_up_mtu){
 			if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
 				sapp_runtime_log(20, "pcap recv pkt from %s, but length is %d, you should be disable GRO, GSO,TSO, etc.\n", g_pcap_up_dev_name, hdr->caplen);
@@ -1098,7 +1099,7 @@ retry:
 
 	if(get_pcap_lib_drop_flag != 0){
 		struct pcap_stat pcap_st = {};
-		if(IO_DIR_UP == *((unsigned char *)user)){
+		if(0 == (DIR_ROUTE_DOWN & *((unsigned char *)user))){
 			if(pcap_stats(pcap_up_handle, &pcap_st) == 0){
 				pcap_lib_drop_up_num = pcap_st.ps_drop + pcap_st.ps_ifdrop;
 			}
@@ -1110,7 +1111,7 @@ retry:
 		get_pcap_lib_drop_flag = 0;	
 	}
 
-	if(IO_DIR_UP == *((unsigned char *)user)){
+	if(0 == (DIR_ROUTE_DOWN & *((unsigned char *)user))){
 		tot_up_rcv_pkt_num++;
 	}else{
 		tot_down_rcv_pkt_num++;
@@ -1169,7 +1170,7 @@ static void *pcap_io_thread(void *arg)
 #endif
 #endif
 
-	if(IO_DIR_UP == route_dir){
+	if(0 == (DIR_ROUTE_DOWN & route_dir)){
 		handle = pcap_up_handle;
 	}else{
 		handle = pcap_down_handle;
@@ -1320,8 +1321,8 @@ int pcap_dl_io_init(int argc, char *argv[])
 void pcap_dl_io_run(void)
 {
 	pthread_t tid_up, tid_down;
-	char dir_up = IO_DIR_UP;
-	char dir_down = IO_DIR_DOWN;
+	char dir_up = DIR_ROUTE_UP;
+	char dir_down = DIR_ROUTE_DOWN;
 	
 	pthread_create(&tid_up, NULL, pcap_io_thread, (void *)&dir_up);
 

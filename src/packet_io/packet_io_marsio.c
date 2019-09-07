@@ -26,8 +26,8 @@ typedef struct{
 	struct mr_sendpath *sendpath_up, *sendpath_down; /* 并联模式下, 直接使用sendpath_up; 同时兼容双网卡串联模式 */
 }marsio4_io_handle;
 
-int g_marsio4_version_VERSION_20190820;
-int g_marsio4_version_VERSION = 20190820;
+int g_marsio4_version_VERSION_20190907;
+int g_marsio4_version_VERSION = 20190907;
 static PACKET_IO_CB_T g_marsio4_work_fun;
 static int g_marsio4_work_thread_num = 1;
 static int g_marsio4_cap_level = CAP_LEVEL_MAC;
@@ -282,6 +282,8 @@ int marsio_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 	struct mesa_ethernet_hdr *ehdr = (struct mesa_ethernet_hdr *)data;
 
 	///ehdr->ether_type = ntohs(ETHERTYPE_IP);/* 底层设为ethernet */
+
+	//TODO, 在双网卡透明模式(transparent)下, 根据dir选择up or down device发出.
 	
 	ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[0].dl_io_param, thread_num);
 	

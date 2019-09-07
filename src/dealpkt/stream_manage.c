@@ -2704,6 +2704,95 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 }
 
 
+static inline raw_pkt_t *sapp_raw_pkt_dup(int thread_index, const raw_pkt_t *raw_pkt)
+{
+	int hdr_offset;
+	
+	raw_pkt_t *new_raw_pkt = (raw_pkt_t *)dictator_malloc(thread_index, sizeof(raw_pkt_t));
+	memcpy(new_raw_pkt, raw_pkt, sizeof(raw_pkt_t));
+	
+	new_raw_pkt->__lib_raw_pkt_data = dictator_malloc(thread_index, raw_pkt->__lib_raw_pkt_len);
+	memcpy((void *)(new_raw_pkt->__lib_raw_pkt_data), raw_pkt->__lib_raw_pkt_data, raw_pkt->__lib_raw_pkt_len);
+	
+	/* ¸üÐÂraw_pkt_dataÖ¸Õë */
+	hdr_offset = (char *)raw_pkt->raw_pkt_data - (char *)raw_pkt->__lib_raw_pkt_data;
+	assert(hdr_offset <= 2048);	
+	new_raw_pkt->raw_pkt_data = (char *)new_raw_pkt->__lib_raw_pkt_data + hdr_offset;
+
+	return new_raw_pkt;
+}
+
+
+int update_polling_inject_context(struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt)
+{
+	int thread_index;
+
+	if(0 == sapp_global_val->config.packet_io.polling_enabled){
+		return 0;
+	}
+
+	thread_index = pstream_pr->stream_public.threadnum;
+	if((DIR_ROUTE_DOWN & pstream_pr->stream_public.routedir) == DIR_ROUTE_DOWN){
+		if(NULL == pstream_pr->polling_inject_context->raw_pkt_down){
+			pstream_pr->polling_inject_context->raw_pkt_down = sapp_raw_pkt_dup(thread_index, raw_pkt);
+		}
+	}else{
+		if(NULL == pstream_pr->polling_inject_context->raw_pkt_up){
+			pstream_pr->polling_inject_context->raw_pkt_up = sapp_raw_pkt_dup(thread_index, raw_pkt);
+		}
+	}
+
+	return 0;
+}
+
+int save_polling_inject_context(struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt)
+{
+	int thread_index;
+
+	if(0 == sapp_global_val->config.packet_io.polling_enabled){
+		return 0;
+	}
+
+	thread_index = pstream_pr->stream_public.threadnum;
+
+	pstream_pr->polling_inject_context = (polling_inject_context_t *)dictator_malloc(thread_index, sizeof(polling_inject_context_t));
+	memset(pstream_pr->polling_inject_context, 0, sizeof(polling_inject_context_t));
+
+	if((DIR_ROUTE_DOWN & pstream_pr->stream_public.routedir) == DIR_ROUTE_DOWN){
+		pstream_pr->polling_inject_context->raw_pkt_down = sapp_raw_pkt_dup(thread_index, raw_pkt);
+	}else{
+		pstream_pr->polling_inject_context->raw_pkt_up = sapp_raw_pkt_dup(thread_index, raw_pkt);
+	}
+
+	return 0;
+}
+
+static inline void sapp_raw_pkt_free(int thread_index, raw_pkt_t *raw_pkt)
+{
+	dictator_free(thread_index, (void *)raw_pkt->__lib_raw_pkt_data);
+	dictator_free(thread_index, (void *)raw_pkt);
+}
+
+void free_polling_inject_context(struct streaminfo_private *pstream_pr)
+{
+	int thread_index;
+	
+	if(0 == sapp_global_val->config.packet_io.polling_enabled){
+		return;
+	}
+
+	thread_index = pstream_pr->stream_public.threadnum;
+	if(pstream_pr->polling_inject_context->raw_pkt_up){
+		sapp_raw_pkt_free(thread_index, (raw_pkt_t *)pstream_pr->polling_inject_context->raw_pkt_up);
+	}
+	if(pstream_pr->polling_inject_context->raw_pkt_down){
+		sapp_raw_pkt_free(thread_index, (raw_pkt_t *)pstream_pr->polling_inject_context->raw_pkt_down);
+	}	
+
+	dictator_free(thread_index, pstream_pr->polling_inject_context);
+}
+
+
 #ifdef __cplusplus
 }
 #endif
