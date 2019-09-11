@@ -45,7 +45,7 @@ static marsio4_io_handle *g_mario4_io_handle;
 
 #define MARSIO_BURST_PKT_MAX		(256)
 static int marsio4_burst_process_pkt_num = 32; /* 批处理包数量, 从pag.conf中获取 */
-static long marsio4_thread_bind_mask = 0;
+//static long marsio4_thread_bind_mask = 0;
 #define TIME_DELAY_MONITOR	(1) /* 单包处理延时监测 */
 
 extern void timestamp_region_update_driver(int tid, long long cpu_cycle);
@@ -469,9 +469,11 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 {
 	int ret;
 	struct mr_tunnat_ctrlzone *mr_ctrlzone = (struct mr_tunnat_ctrlzone *)marsio_buff_ctrlzone(rx_buff, 0); /* index */
-	
-	raw_pkt->raw_pkt_data = marsio_buff_mtod(rx_buff);
-	raw_pkt->raw_pkt_len = marsio_buff_datalen(rx_buff);
+
+	raw_pkt->__lib_raw_pkt_data = marsio_buff_mtod(rx_buff);
+	raw_pkt->raw_pkt_data = raw_pkt->__lib_raw_pkt_data;
+	raw_pkt->__lib_raw_pkt_len = marsio_buff_datalen(rx_buff);
+	raw_pkt->raw_pkt_len = raw_pkt->__lib_raw_pkt_len;
 	raw_pkt->io_lib_pkt_reference = rx_buff;
 
 	ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, mr_ctrlzone->route_dir, tid);
@@ -640,7 +642,7 @@ static void *marsio4_worker(void *arg)
 	sprintf(thread_name, "sapp_marsio_%d", tid);
 	prctl(PR_SET_NAME, thread_name);
 
-	if(marsio4_thread_bind_mask != 0){
+	if(sapp_global_val->config.cpu.bind_mask_array_num > 0){
 		marsio_thread_init(sapp_marsio4_instance);
 	}
 	memset(&raw_pkt, 0, sizeof(raw_pkt_t));
@@ -774,11 +776,26 @@ int marsio_dl_io_init(int argc, char *argv[])
 			printf("\033[1;31;40m[Error] marsio set CPU-MASK '%lx' failed!\033[0m\n", marsio4_thread_bind_mask);
 		}
 	}	
-#else
+#elif 0
 	if(sapp_global_val->config.cpu.bind_mask != 0){
 		ret = marsio_option_set(sapp_marsio4_instance, MARSIO_OPT_THREAD_MASK, &sapp_global_val->config.cpu.bind_mask, sizeof(long));
 		if(ret < 0){
 			printf("\033[1;31;40m[Error] marsio set CPU-MASK '%lx' failed!\033[0m\n", sapp_global_val->config.cpu.bind_mask);
+		}
+	}
+#else
+	if(sapp_global_val->config.cpu.bind_mask_array_num > 0){
+		cpu_set_t cpu_mask;
+		CPU_ZERO(&cpu_mask);
+		for (i = 0; i < sapp_global_val->config.cpu.bind_mask_array_num; i++)
+		{
+			CPU_SET(sapp_global_val->config.cpu.bind_mask_array[i], &cpu_mask);
+		}
+		ret = marsio_option_set(sapp_marsio4_instance, MARSIO_OPT_THREAD_MASK_IN_CPUSET, &cpu_mask, sizeof(cpu_mask));
+		if (ret < 0)
+		{
+			printf("\033[1;31;40m[Error] marsio set CPU->bind_mask failed!\033[0m\n");
+			return -1;
 		}
 	}
 #endif

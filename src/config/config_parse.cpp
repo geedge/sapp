@@ -425,6 +425,12 @@ static int config_sanity_check(void)
 		sleep(1);
 	}
 
+	if((pconfig->cpu.bind_mask_array_num > 0) &&(pconfig->cpu.worker_threads != pconfig->cpu.bind_mask_array_num)){
+		printf("\033[41m[Error]etc/sapp.toml->CPU->bind_mask value is not match etc/sapp.toml->CPU->worker_threads!\033[0m\n");
+		printf("\033[41m for example, worker_threads=8, bind_mask shoule be [1,2,3,4,5,6,7,8] etc.\033[0m\n");
+		return -1;
+	}
+
 	/*******************************  STREAM  ******************************/
 	if(pconfig->stream.tcp.inject.rst_num <= 0 || pconfig->stream.tcp.inject.rst_num >= 10){
 		sapp_log(30, ~0, ~0, "[Error]sapp.toml->stream.tcp.inject.rst.number=%d, is Illegal!", pconfig->stream.tcp.inject.rst_num);

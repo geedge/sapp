@@ -183,7 +183,7 @@ endif
 
 __LINK_MODE_DYNAMIC=dynamic
 __LINK_MODE_STATIC=static
-link_mode=dynamic
+link_mode=static
 
 ifeq ($(link_mode), $(__LINK_MODE_STATIC))
        CFLAGS += -DLINK_MODE_STATIC=1
