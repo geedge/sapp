@@ -9,6 +9,11 @@ include(Version)
 
 set(CMAKE_MACOSX_RPATH 0)
 
+set(CMAKE_BUILD_TYPE "DEBUG" CACHE STRING
+    " set CMAKE_BUILD_TYPE chosen by the user, using DEBUG as default")
+set_property(CACHE CMAKE_BUILD_TYPE  PROPERTY STRINGS DEBUG RELEASE
+    RELWITHDEBINFO MINSIZEREL)
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
@@ -23,7 +28,11 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DHIGH_PERF=0")
 
 set(CMAKE_INSTALL_PREFIX /home/mesasoft/sapp_run/)
 
-option(PLATFORM_MODE_SERIAL "Using serial mode" FALSE)
+set(PLATFORM_MODE "MIRROR" CACHE STRING
+    " set platform mode chosen by the user, using mirror as default")
+set_property(CACHE PLATFORM_MODE PROPERTY STRINGS MIRROR INLINE)
+message(STATUS "PLATFORM_MODE='${PLATFORM_MODE}'")
+
 
 #static link option
 option(ENABLE_STATIC_LINK "Enable static link" TRUE)
@@ -36,21 +45,28 @@ else()
 endif()
 
 # CPU profiler
-option(OPT_USE_PROFILER	"Use gperf cpu profiler" OFF)
-if(OPT_USE_PROFILER)
+set(CPU_PROFILE "OFF" CACHE STRING
+    " set cpu profiler chosen by the user, using OFF as default")
+set_property(CACHE CPU_PROFILE  PROPERTY STRINGS OFF GPERF GPROF)
+message(STATUS "CPU_PROFILE='${CPU_PROFILE}'")
+if(CPU_PROFILE MATCHES "GPERF")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
+elseif(CPU_PROFILE MATCHES "GPROF")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lpg")
 endif()
 
 #ASAN option
-option(ENABLE_SANITIZE_ADDRESS "Enable AddressSanitizer" FALSE)
-option(ENABLE_SANITIZE_THREAD "Enable ThreadSanitizer" FALSE)
+set(ASAN_OPTION "OFF" CACHE STRING
+    " set asan type chosen by the user, using OFF as default")
+set_property(CACHE ASAN_OPTION  PROPERTY STRINGS OFF ADDRESS THREAD)
+message(STATUS "ASAN_OPTION='${ASAN_OPTION}'")
 
-if(ENABLE_SANITIZE_ADDRESS)
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=address -fno-omit-frame-pointer")
+if(ASAN_OPTION MATCHES "ADDRESS")
+    set(CMAKE_C_FLAGS "${CMAKADDRESS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=address -fno-omit-frame-pointer")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=address -fno-omit-frame-pointer")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
-elseif(ENABLE_SANITIZE_THREAD)
+elseif(ASAN_OPTION MATCHES "THREAD")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=thread -fno-omit-frame-pointer")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=thread -fno-omit-frame-pointer")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
@@ -58,65 +74,27 @@ elseif(ENABLE_SANITIZE_THREAD)
 endif()
 
 
+
+
 # MESA SDK Root
 set(MESA_SDK_PREFIX "/opt/MESA/" CACHE STRING "MESA Framework Prefix")
 # Capture Mode
-option(OPT_IOMODE_PCAP "Capture network traffic with libpcap" ON)
-option(OPT_IOMODE_PAG "Capture network traffic with libpag" OFF)
-option(OPT_IOMODE_PPF "Capture network traffic with libppf" OFF)
-option(OPT_IOMODE_PFRING "Capture network traffic with PF-RING" OFF)
-option(OPT_IOMODE_DPDK "Capture network traffic with DPDK" OFF)
-option(OPT_IOMODE_PAG_N95 "Capture network traffic with N95" OFF)
-option(OPT_IOMODE_MARSIO "Capture network traffic with MARSIO" ON)
+set(CAPTURE_MODE "PCAP" CACHE STRING
+    "CAPTURE_MODE set Capture network traffic chosen by the user, using PCAP as default")
 
-if(OPT_IOMODE_PCAP)
-	set(CAPTURE_MODE "PCAP")	
-endif()
+set_property(CACHE CAPTURE_MODE PROPERTY STRINGS PCAP MARSIO PAG)
 
-if(OPT_IOMODE_PAG)
-	set(CAPTURE_MODE "PAG")
-endif()
+message(STATUS "CAPTURE_MODE='${CAPTURE_MODE}'")
 
-if(OPT_IOMODE_PPF)
-	set(CAPTURE_MODE "PPF")
-endif()
-
-if(OPT_IOMODE_PFRING)
-	set(CAPTURE_MODE "PFRING")
-endif()
-
-if(OPT_IOMODE_DPDK)
-	set(CAPTURE_MODE "DPDK")
-endif()
-
-if(OPT_IOMODE_PAG_N95)
-	set(CAPTURE_MODE "PAG_N95")
-endif()
-
-if(OPT_IOMODE_MARSIO)
-    set(CAPTURE_MODE "MARSIO")
-	set(MARSIO_SDK_PREFIX "/opt/mrzcpd/" CACHE STRING "MARSIO Prefix")
-endif()
-
-#if(CAPTURE_MODE MATCHES "PCAP")
 set(CAPTURE_DEFINITIONS -DIOMODE_PCAP)
 add_definitions(-DIOMODE_PCAP=1)
-#endif()
+
+if(CAPTURE_MODE MATCHES "PCAP")
+    set(CAPTURE_DEFINITIONS -DONLY_PCAP -DIOMODE_PCAP)
+endif()
 
 if(CAPTURE_MODE MATCHES "PAG")
 	set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_PAG)
-endif()
-
-if(CAPTURE_MODE MATCHES "PPF")
-	set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_PPF)
-endif()
-
-if(CAPTURE_MODE MATCHES "PFRING")
-	set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_PFRING)
-endif()
-
-if(CAPTURE_MODE MATCHES "DPDK")
-	set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_DPDK)
 endif()
 
 if(CAPTURE_MODE MATCHES "MARSIO")
@@ -124,27 +102,28 @@ if(CAPTURE_MODE MATCHES "MARSIO")
 	add_definitions(-DIOMODE_MARSIO=1)
 endif()
 
+
 # Memory Allocator
-option(OPT_USE_DICTATOR	"Use Dictator2 memory allocator" OFF)
-option(OPT_USE_DICTATOR_DEBUG	"Use Dictator2 memory allocator" OFF)
-option(OPT_USE_TCMALLOC "Use TCmalloc memory allocator" OFF)
-option(OPT_USE_TCMALLOC_MINI "Use TCmalloc memory allocator" OFF)
-option(OPT_USE_JEMALLOC "Use JEmalloc memory allocator" OFF)
+set(MEM_POOL "OFF" CACHE STRING
+    " set mem alloc chosen by the user, using off as default")
+set_property(CACHE MEM_POOL PROPERTY STRINGS OFF DICTATOR DICTATOR_DEBUG
+    TCMALLOC TCMALLOC_MINI JEMALLOC)
+message(STATUS "MEM_POOL='${MEM_POOL}'")
 
-if(OPT_USE_DICTATOR_DEBUG)
+if(MEM_POOL MATCHES "DICTATOR")
 	set(MEM_POOL_DEFINITIONS -DDICTATOR_DEBUG)
-endif()
 
-if(OPT_USE_DICTATOR OR OPT_USE_DICTATOR_DEBUG)
+elseif(MEM_POOL MATCHES "DICTATOR_DEBUG")
     set(MEM_POOL_DEFINITIONS ${MEM_POOL_DEFINITIONS} -DUSE_MEM_POOL=1
         -DUSE_MEMPOOL)
-elseif(OPT_USE_TCMALLOC_MINI)
+elseif(MEM_POOL MATCHES "TCMALLOC_MINI")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc_minimal -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
-elseif(OPT_USE_TCMALLOC)
+elseif(MEM_POOL MATCHES "TCMALLOC")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
-elseif(OPT_USE_JEMALLOC)
+elseif(MEM_POOL MATCHES "JEMALLOC")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 endif()
+
 
 add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
     -D__USE_BSD=1 -D_GNU_SOURCE=1  -DMESA_SAPP_PLATFORM=1)
@@ -198,20 +177,7 @@ install(PROGRAMS ${CMAKE_BINARY_DIR}/src/entry/sapp DESTINATION .)
 
 install(PROGRAMS bin/r2 DESTINATION .)
 install(PROGRAMS bin/r3 DESTINATION .)
-#install(PROGRAMS bin/vv.py DESTINATION .)
-#install(PROGRAMS bin/pag.conf DESTINATION .)
-#install(PROGRAMS bin/memchk.sh DESTINATION .)
-#install(FILES bin/conf/gdev_block.conf DESTINATION conf)
-#install(FILES bin/conf/gdev.conf DESTINATION conf)
-#install(FILES bin/conf/main.conf DESTINATION conf)
-#install(FILES bin/conf/project_list.conf DESTINATION conf)
-#install(FILES bin/conf/route_table.conf DESTINATION conf)
-#install(FILES bin/conf/send_gdev.conf DESTINATION conf)
-#install(FILES bin/conf/send_raw_pkt.conf DESTINATION conf)
-#install(FILES bin/conf/send_route.conf DESTINATION conf)
-#install(FILES bin/conf/streamid.txt DESTINATION conf)
-#install(FILES bin/conf/plugin/entrylist.conf DESTINATION conf/plugin)
-#install(FILES bin/conf/plugin/plugin.conf DESTINATION conf/plugin)
+
 
 install(FILES bin/etc/sapp.toml DESTINATION etc)
 install(FILES bin/etc/send_raw_pkt.conf DESTINATION etc)
@@ -246,7 +212,7 @@ install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/pptp_protocol_plug.so DESTINATI
 
 #install(FILES bin/plug/platform/conflist_platform.inf DESTINATION plug/platform)
 
-if(PLATFORM_MODE_SERIAL)
+if(PLATFORM_MODE MATCHES "INLINE")
     install(FILES bin/plug/platform/g_device_plug/g_device_plug.inf DESTINATION plug/platform/g_device_plug)
     install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/g_device_plug.so DESTINATION plug/platform/g_device_plug)
 endif()
@@ -254,10 +220,5 @@ endif()
 
 install(FILES bin/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app)
 install(FILES ${CMAKE_BINARY_DIR}/test/test_app_sapp.so DESTINATION plug/business/test_app)
-
-#install(PROGRAMS ${CMAKE_BINARY_DIR}/test/sapp_module_test/src/gtest_sapp_v4 DESTINATION .)
-#install(FILES ${CMAKE_BINARY_DIR}/test/sapp_module_test/src/libgtest_sapp.so DESTINATION plug/business/gtest_sapp)
-#install(FILES bin/plug/business/gtest_sapp/gtest_sapp.inf  DESTINATION plug/business/gtest_sapp)
-
 
 include(Package)

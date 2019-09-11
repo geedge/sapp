@@ -8,7 +8,7 @@ include_directories(${MESA_SDK_PREFIX}/include)
 include_directories(${MESA_SDK_PREFIX}/include/MESA)
 
 
-if(OPT_IOMODE_MARSIO)
+if(CAPTURE_MODE MATCHES "MARSIO")
     include_directories(${MARSIO_SDK_PREFIX}/include)
 endif()
 

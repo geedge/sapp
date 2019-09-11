@@ -1443,6 +1443,7 @@ static int send_by_sapp_inject_pkt(struct streaminfo *a_tcp, const struct mesa_i
 }
 
 
+#if 0
 #include "http.h"
 char test_sapp_inject_http(stSessionInfo* session_info, void **param, int thread_seq, struct streaminfo *a_tcp, void *a_packet)
 {
@@ -1462,6 +1463,7 @@ char test_sapp_inject_http(stSessionInfo* session_info, void **param, int thread
 
 	return PROT_STATE_GIVEME;
 }
+#endif
 
 
 char test_sapp_inject_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)

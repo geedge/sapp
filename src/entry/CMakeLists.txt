@@ -11,7 +11,7 @@ include_directories(${MESA_SDK_PREFIX}/include/MESA)
 LINK_DIRECTORIES(/opt/MESA/lib)
 LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/lib)
 
-if(OPT_IOMODE_MARSIO)
+if(CAPTURE_MODE MATCHES "MARSIO")
 	LINK_DIRECTORIES(/opt/mrzcpd/lib)
 endif()
 
@@ -28,15 +28,6 @@ target_link_libraries(sapp sapp_assistant gdev_assistant)
 
 
 set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap libevent-static)
-#if(OPT_USE_DICTATOR OR OPT_USE_DICTATOR_DEBUG)
-#    set(SAPP_MODULES ${SAPP_MODULES}  dictator2 )
-#endif()
-#
-#if(ENABLE_STATIC_LINK)
-#    set(SAPP_MODULES ${SAPP_MODULES} sapp_assistant gdev_assistant )
-#else()
-#    target_link_libraries(sapp sapp_assistant gdev_assistant)
-#endif()
 
 target_link_libraries(sapp -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive ${SAPP_DEPEND_DYN_LIB})
 

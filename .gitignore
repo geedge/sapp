@@ -10,3 +10,7 @@ SI/
 run/log/
 run/sapp
 version.txt
+cmake-build-debug
+.vscode
+build
+version.txt
