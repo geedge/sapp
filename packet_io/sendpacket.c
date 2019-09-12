@@ -2603,7 +2603,8 @@ static int __do_inject_pkt(struct streaminfo *stream, const char *payload, int p
 	}
 	send_handle->user_arg = (void *)stream;
 	ret = packet_io_send(send_handle, reserved_hdr_len+payload_len, SEND_TYPE_LINK_INJECT, 
-						low_net_layer_type, stream->routedir, thread_num,
+						//low_net_layer_type, stream->routedir, thread_num,
+						low_net_layer_type, snd_routedir, thread_num,
 						feedback_buf, feedback_buf_len);		
 	if(ret < 0){
 		send_handle->tot_send_err++;
