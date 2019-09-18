@@ -1,0 +1,8 @@
+[PLUGINFO]
+PLUGNAME=g_device_udp_plug
+SO_PATH=./plug/platform/g_device_plug/g_device_plug.so
+INIT_FUNC=gdev_keepalive_plug_init
+
+[UDP]
+FUNC_FLAG=ALL
+FUNC_NAME=gdev_keepalive_udp_entry
