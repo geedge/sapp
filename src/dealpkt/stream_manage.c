@@ -2732,6 +2732,7 @@ int update_polling_inject_context(struct streaminfo_private *pstream_pr, const r
 	}
 
 	thread_index = pstream_pr->stream_public.threadnum;
+	/* 保存当前流C2S, S2C方向的第一个包 */
 	if((DIR_ROUTE_DOWN & pstream_pr->stream_public.routedir) == DIR_ROUTE_DOWN){
 		if(NULL == pstream_pr->polling_inject_context->raw_pkt_down){
 			pstream_pr->polling_inject_context->raw_pkt_down = sapp_raw_pkt_dup(thread_index, raw_pkt);
