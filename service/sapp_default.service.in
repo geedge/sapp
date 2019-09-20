@@ -1,0 +1,13 @@
+[Unit]
+Description=sapp service
+Requires=sapp-env.service
+After=sapp-env.service
+
+[Service]
+WorkingDirectory=/opt/sapp/bin/
+ExecStart=/opt/sapp/bin/fake_sapp
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

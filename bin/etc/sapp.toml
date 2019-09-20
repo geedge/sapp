@@ -11,7 +11,7 @@ instance_name = "sapp_v4.0"
 [CPU]
 worker_threads=1
 ### note, bind_mask, if you do not want to bind thread to special CPU core, keep it empty as []
-bind_mask=[1,2,3,4]
+bind_mask=[1]
 
 [PACKET_IO]
 ### note, BSD_packet_filter, if you do not want to set any filter rule, keep it empty as ""
@@ -38,7 +38,7 @@ BSD_packet_filter=""
     [stream.tcp]
     max=10000
     timeout=60
-    syn_mandatory=0
+    syn_mandatory=1
     reorder_pkt_max=5
     analyse_option_enabled=1
         [stream.tcp.inject]
