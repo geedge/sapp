@@ -1159,7 +1159,7 @@ static void wait_all_work_thread(void)
 
 static void *pcap_io_thread(void *arg)
 {
-	unsigned char route_dir = *((unsigned char *)arg);
+	unsigned char route_dir = (unsigned char)arg;
 	pcap_t *handle;
 	int pcap_ret;
 	char pcap_errbuf[PCAP_ERRBUF_SIZE];
@@ -1324,10 +1324,10 @@ void pcap_dl_io_run(void)
 	char dir_up = DIR_ROUTE_UP;
 	char dir_down = DIR_ROUTE_DOWN;
 	
-	pthread_create(&tid_up, NULL, pcap_io_thread, (void *)&dir_up);
+	pthread_create(&tid_up, NULL, pcap_io_thread, (void *)dir_up);
 
 	if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode){ /* Ë«Íø¿¨´®ÁªÄ£Ê½ */	
-		pthread_create(&tid_down, NULL, pcap_io_thread, (void *)&dir_down);
+		pthread_create(&tid_down, NULL, pcap_io_thread, (void *)dir_down);
 	}
 
 	return;
