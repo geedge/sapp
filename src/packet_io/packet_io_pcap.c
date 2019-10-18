@@ -1159,7 +1159,8 @@ static void wait_all_work_thread(void)
 
 static void *pcap_io_thread(void *arg)
 {
-	unsigned char route_dir = (unsigned char)arg;
+	long route_dir_arg = (long)arg; /* ÌÓ¹ý±àÒëÆ÷precision¼ì²é */
+	unsigned char route_dir = (unsigned char)route_dir_arg;
 	pcap_t *handle;
 	int pcap_ret;
 	char pcap_errbuf[PCAP_ERRBUF_SIZE];
@@ -1321,8 +1322,8 @@ int pcap_dl_io_init(int argc, char *argv[])
 void pcap_dl_io_run(void)
 {
 	pthread_t tid_up, tid_down;
-	char dir_up = DIR_ROUTE_UP;
-	char dir_down = DIR_ROUTE_DOWN;
+	long dir_up = DIR_ROUTE_UP;
+	long dir_down = DIR_ROUTE_DOWN;
 	
 	pthread_create(&tid_up, NULL, pcap_io_thread, (void *)dir_up);
 
