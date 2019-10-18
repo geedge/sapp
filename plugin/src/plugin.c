@@ -552,11 +552,11 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	char buf_sofilename[PLUGIN_MAX_CONFLEN]={0};
 	char buf_funname[PLUGIN_MAX_CONFLEN]= {0};
 
-	void* filepoint;
+	void* filepoint = NULL;
 	
-	int (*fun_init)();
-	void  (*fun_destroy)();	
-	void (*fun_getplugid)(unsigned short plugid);
+	int (*fun_init)() = NULL;
+	void  (*fun_destroy)() = NULL;	
+	void (*fun_getplugid)(unsigned short plugid) = NULL;
 
 
 	//load FILENAME 
