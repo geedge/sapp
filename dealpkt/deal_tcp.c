@@ -2447,6 +2447,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	struct tcpdetail_private *pdetail_pr=NULL;
 	int ret=PASS;
 	int retAll=PASS;
+	int call_tcpall_after_reset = 0; /* 2019-10-18 lijia modify, 当前流被reset之后,保证先调用tcpall,再调用tcp */
 	struct streaminfo_private *pstream_pr = &pindex->stream;
 	struct streaminfo *pstream = &pstream_pr->stream_public;
 	int try_to_update_addr_info = 0;
@@ -2609,6 +2610,13 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		if(0 == ret){
 			return PASS;
 		}
+
+		ret = tcp_processallpkt(pstream, this_iphdr, this_tcphdr, tcplen, raw_pkt);
+		if(DROP == ret){
+			return DROP;
+		}
+
+		call_tcpall_after_reset = 1;
 	}
 	pdetail->lastmtime=g_CurrentTime;
 
@@ -2656,7 +2664,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	}
 	
 	//adjust by lqy 20150107 为了防止SYN重建链接时SYN在第一个链接中
-	if(pindex_tcp && (pstream->pktstate!=OP_STATE_CLOSE))
+	if((0 == call_tcpall_after_reset) && pindex_tcp && (pstream->pktstate!=OP_STATE_CLOSE))
 	{
 		//全包接口拿到的数据指向当前包的原始数据
 		if(tcplen == 0)

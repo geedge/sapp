@@ -643,11 +643,10 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	char buf_sofilename[PLUGIN_MAX_CONFLEN]={0};
 	char buf_funname[PLUGIN_MAX_CONFLEN]= {0};
 
-	void* filepoint;
-	
-	int (*fun_init)();
-	void  (*fun_destroy)();	
-	void (*fun_getplugid)(unsigned short plugid);
+	void* filepoint = NULL;
+	int (*fun_init)() = NULL;
+	void  (*fun_destroy)() = NULL;	
+	void (*fun_getplugid)(unsigned short plugid) = NULL;
 
 
 	//load FILENAME 
@@ -1762,6 +1761,7 @@ extern stProtocolPlugInfo* g_protocol_plug_info;
 void plugctrl_destroy_all_plug(void)
 {
 	stBusinessPlugInfo *plug_info;
+	stProtocolPlugInfo *pro_plug_info;
 
 	plug_info = g_platform_plug_info;
 	while(plug_info){
@@ -1771,12 +1771,12 @@ void plugctrl_destroy_all_plug(void)
 		plug_info = plug_info->next;
 	}
 
-	plug_info = g_protocol_plug_info;
-	while(plug_info){
-		if(plug_info->fun_destroy){
-			plug_info->fun_destroy();
+	pro_plug_info = g_protocol_plug_info;
+	while(pro_plug_info){
+		if(pro_plug_info->fun_destroy){
+			pro_plug_info->fun_destroy();
 		}
-		plug_info = plug_info->next;
+		pro_plug_info = pro_plug_info->next;
 	}
 
 	plug_info = g_business_plug_info;
