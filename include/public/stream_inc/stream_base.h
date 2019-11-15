@@ -92,6 +92,11 @@ enum addr_type_t{
 #define APP_STATE_FAWPKT   0x00
 #define APP_STATE_DROPPKT  0x10
 
+
+#define APP_STATE_KILL_FOLLOW 0x40 /* 强制CLOSE当前插件后续的所有插件 */
+#define APP_STATE_KILL_OTHER  0x80 /* 强制CLOSE除当前插件外的所有插件 */
+
+
 /* CHN : 流的类型定义 */
 /* ENG : stream type */
 enum stream_type_t{

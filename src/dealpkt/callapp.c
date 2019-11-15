@@ -320,6 +320,31 @@ char plugin_call_ipentry(int type,IPv4_CB_FUN_T stream_fun,SAPP_PKT_CB_FUN_T sap
 	return rec;
 }
 
+
+/* 将剩余插件entry链全部CLOSE */
+static void plug_entry_kick_out_tot_list(StreamFunInfo *list_head, struct streaminfo *a_stream)
+{
+	UCHAR saved_opstate = a_stream->opstate;
+	UCHAR saved_pktstate = a_stream->pktstate;
+	StreamFunInfo *tmp_ptr;
+	
+	while(list_head){
+		if(is_raw_cb(list_head->funtype)){
+			plugin_call_streamentry(CALL_FUN_TYPE_RAW, list_head, a_stream, NULL, a_stream->threadnum, NULL);
+		}else{
+			plugin_call_streamentry(CALL_FUN_TYPE_NORAW, list_head, a_stream, NULL, a_stream->threadnum, NULL);
+		}	
+
+		tmp_ptr = list_head->next;
+		dictator_free(a_stream->threadnum, list_head);
+		list_head = tmp_ptr;
+	}
+
+	a_stream->opstate = saved_opstate;
+	a_stream->pktstate = saved_pktstate;			
+}
+
+
 //add end
 int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
 				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate)
@@ -331,6 +356,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 	StreamFunInfo *pFunInfo=NULL;
 	StreamFunInfo *pNext=NULL,*pPrev=NULL;
 	UCHAR threadnum = a_stream->threadnum;
+	UCHAR local_app_ret;
 
 	if(funnum==0)
 	{
@@ -387,14 +413,14 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 				pFunInfo->appState= plugin_call_streamentry(CALL_FUN_TYPE_NORAW,pFunInfo,a_stream,NULL,threadnum,this_iphdr);
 #endif
 			}
+			local_app_ret = pFunInfo->appState;
 			if(pFunInfo->appState&APP_STATE_DROPPKT)	
 			{
 				ret=DROP;
 			}
-//			if(pFunInfo->appState==APP_STATE_GIVEME)
+
 			if(!(pFunInfo->appState&APP_STATE_DROPME))
 			{
-				
 				if(pFunList==NULL)
 				{
 					pFunList=pFunInfo;
@@ -403,16 +429,38 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 				{
 					pPrev->next=pFunInfo;
 				}
+				
+				/* 2019-11-15 lijia add for plug kill other */
+				if(local_app_ret & APP_STATE_KILL_OTHER){
+					pPrev->next = NULL; /* 把当前plug info从链表中先移除 */
+					plug_entry_kick_out_tot_list(pFunList, a_stream);
+					pFunList = pFunInfo; /* 只剩当前插件 */
+				}
+
 				pPrev=pFunInfo;
 				pFunInfo=NULL;
+			}else{
+				/* 2019-11-15 lijia add for plug kill other */
+				if(local_app_ret & APP_STATE_KILL_OTHER){
+					/* 当前插件返回了DROPME, 且KILL_OTHER, 说明所有插件都结束 */
+					plug_entry_kick_out_tot_list(pFunList, a_stream);
+					pFunList = NULL;
+					break;
+				}
 			}
-			
+				
+			/* 2019-11-15 lijia add for plug kill other */
+			if(local_app_ret & (APP_STATE_KILL_FOLLOW | APP_STATE_KILL_OTHER)){
+				/* 如果在pending阶段, KILL FOLLOW直接退出循环即可 */
+				break;
+			}
 		}
+		
 		//不需要再次送入包的fun，在这里释放
 		if(pFunInfo!=NULL)
 		{
 			dictator_free(threadnum,pFunInfo);
-			pFunInfo = NULL;
+			pFunInfo = NULL;		
 		}
 
 		//有需要再次送包的回调函数
@@ -436,6 +484,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 		*opstate= OP_STATE_CLOSE;
 		return ret;
 	}
+	
 	if( *opstate==OP_STATE_DATA)
 	{
 		pFunInfo=pFunList;
@@ -466,6 +515,8 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 				pFunInfo->appState= plugin_call_streamentry(CALL_FUN_TYPE_NORAW,pFunInfo,a_stream,NULL,threadnum,this_iphdr);
 #endif
 			}
+			local_app_ret = pFunInfo->appState;
+			
 			if(pFunInfo->appState&APP_STATE_DROPPKT)	
 			{
 				ret=DROP;			
@@ -483,17 +534,40 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 					pPrev->next=pFunInfo->next;
 				}
 				pNext=pFunInfo->next;
-				
 				dictator_free(threadnum,pFunInfo);
 				pFunInfo=pNext;
+				
+				/* 2019-11-15 lijia add for plug kill other */
+				if(local_app_ret & APP_STATE_KILL_OTHER){
+					plug_entry_kick_out_tot_list(pFunList, a_stream);
+					pFunList = NULL; /* 全部插件CLOSE */
+				}				
 			}
 			else
 			{
+				/* 2019-11-15 lijia add for plug kill other */
+				if(local_app_ret & APP_STATE_KILL_OTHER){
+					if(pPrev){
+						pPrev->next = NULL; /* 把当前plug info从链表中先移除 */
+						plug_entry_kick_out_tot_list(pFunList, a_stream);
+					}else{
+						/* 当前插件在pfunlist第一位, 把剩余的全CLOSE */
+						plug_entry_kick_out_tot_list(pFunList->next, a_stream);
+					}
+					
+					pFunList = pFunInfo; /* 只剩当前一个插件 */
+				}	
+				
 				pPrev=pFunInfo;
 				pFunInfo=pFunInfo->next;
 			}
-			
+
+			/* 2019-11-15 lijia add for plug kill other */
+			if(local_app_ret & (APP_STATE_KILL_FOLLOW | APP_STATE_KILL_OTHER)){
+				break;
+			}
 		}
+
 		//处理过程中大家都不需要了
 		if(pFunList==NULL)
 		{
@@ -769,6 +843,11 @@ int stream_process_ipv4(struct streaminfo *pfstream, const struct ip* this_layer
 
 		}
 
+		/* 2019-11-15 lijia add for plug kill other */
+		if((appret & APP_STATE_KILL_FOLLOW) || (appret & APP_STATE_KILL_OTHER)){
+			sapp_runtime_log(20, "not support KILL_FOLLOW and KILL_OTHER in ip entry!");
+		}
+
 		if(unlikely(appret&APP_STATE_DROPPKT))
 		{		
 			return DROP;
@@ -799,6 +878,12 @@ int stream_process_ipv6(struct streaminfo *pfstream,const struct ip6_hdr *this_l
 //			appret=g_Ipv6Fun[i].sapp_pkt_fun(pfstream,this_layer_hdr,raw_pkt);
 			appret= plugin_call_ipentry(CALL_FUN_TYPE_NORAW,NULL,g_Ipv6Fun[i].sapp_pkt_fun,pfstream,this_layer_hdr,thread_num,routedir, raw_pkt);
 		}
+		
+		/* 2019-11-15 lijia add for plug kill other */
+		if((appret & APP_STATE_KILL_FOLLOW) || (appret & APP_STATE_KILL_OTHER)){
+			sapp_runtime_log(20, "not support KILL_FOLLOW and KILL_OTHER in ip entry!");
+		}		
+		
 		if(appret&APP_STATE_DROPPKT)
 		{
 			ret=DROP;			
@@ -825,6 +910,11 @@ int stream_process_ipv4_frag(struct streaminfo *pstream, const struct ip* this_l
 		{
 			appret=g_Ipv4FragFun[i].sapp_pkt_fun(pstream,this_layer_hdr,raw_pkt);
 		}
+		
+		/* 2019-11-15 lijia add for plug kill other */
+		if((appret & APP_STATE_KILL_FOLLOW) || (appret & APP_STATE_KILL_OTHER)){
+			sapp_runtime_log(20, "not support KILL_FOLLOW and KILL_OTHER in ip entry!");
+		}	
 
 		if(appret&APP_STATE_DROPPKT)
 		{
@@ -852,6 +942,10 @@ int stream_process_ipv6_frag(struct streaminfo *pstream,const struct ip6_hdr *th
 		{
 			appret=g_Ipv6FragFun[i].sapp_pkt_fun(pstream,this_layer_hdr,raw_pkt);
 		}
+		/* 2019-11-15 lijia add for plug kill other */
+		if((appret & APP_STATE_KILL_FOLLOW) || (appret & APP_STATE_KILL_OTHER)){
+			sapp_runtime_log(20, "not support KILL_FOLLOW and KILL_OTHER in ip entry!");
+		}			
 		if(appret&APP_STATE_DROPPKT)
 		{
 			ret=DROP;			
