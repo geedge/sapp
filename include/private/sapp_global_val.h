@@ -63,6 +63,8 @@ typedef struct{
 
 
 typedef struct{
+	char stream_id_base_time_str[32];
+	unsigned int stream_id_base_time_t;
 	sapp_config_stream_tcp_t tcp;
 	sapp_config_stream_udp_t udp;
 }sapp_config_stream_t;
@@ -206,7 +208,8 @@ typedef struct{
 
 typedef struct{
 	sapp_gval_mthread_sys_stat_t sys_stat;
-	char __padding[48];
+	unsigned short stream_seq_per_thread;
+	char __padding[46];
 }sapp_gval_mthread_t; /*   for multi-thread, must 64byte alignment */
 
 

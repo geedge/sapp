@@ -842,6 +842,22 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			}
 			ret = sapp_get_vxlan_info_from_streaminfo(pstream, (struct vxlan_info *)opt_val);
 		break;
+
+		case MSO_GLOBAL_STREAM_ID:
+		{
+			const struct streaminfo_private *pstream_pr;
+			if(*opt_val_len != sizeof(long long)){
+				return -1;
+			}
+			pstream_pr = (const struct streaminfo_private *)pstream;
+			unsigned long long *out_args = (unsigned long long *)opt_val;
+			unsigned long long dev_id = *out_args;
+			unsigned long long local_global_id = pstream_pr->global_stream_id;
+
+			*out_args = local_global_id | (dev_id << 51);
+			ret = 0;
+		}
+		break;
 		
 		default:
 			sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n", opt);

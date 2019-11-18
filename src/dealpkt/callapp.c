@@ -421,6 +421,12 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 
 			if(!(pFunInfo->appState&APP_STATE_DROPME))
 			{
+				/* 2019-11-15 lijia add for plug kill other */
+				if(local_app_ret & APP_STATE_KILL_OTHER){
+					plug_entry_kick_out_tot_list(pFunList, a_stream);
+					pFunList = NULL; /* 将其余插件全部CLOSE, 只剩当前插件 */
+				}
+
 				if(pFunList==NULL)
 				{
 					pFunList=pFunInfo;
@@ -430,13 +436,6 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 					pPrev->next=pFunInfo;
 				}
 				
-				/* 2019-11-15 lijia add for plug kill other */
-				if(local_app_ret & APP_STATE_KILL_OTHER){
-					pPrev->next = NULL; /* 把当前plug info从链表中先移除 */
-					plug_entry_kick_out_tot_list(pFunList, a_stream);
-					pFunList = pFunInfo; /* 只剩当前插件 */
-				}
-
 				pPrev=pFunInfo;
 				pFunInfo=NULL;
 			}else{
@@ -536,27 +535,36 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 				pNext=pFunInfo->next;
 				dictator_free(threadnum,pFunInfo);
 				pFunInfo=pNext;
-				
+
+				if(local_app_ret & APP_STATE_KILL_FOLLOW){
+					plug_entry_kick_out_tot_list(pNext, a_stream);
+					pPrev->next = NULL;
 				/* 2019-11-15 lijia add for plug kill other */
-				if(local_app_ret & APP_STATE_KILL_OTHER){
+				}else if(local_app_ret & APP_STATE_KILL_OTHER){
 					plug_entry_kick_out_tot_list(pFunList, a_stream);
 					pFunList = NULL; /* 全部插件CLOSE */
-				}				
+				}
 			}
 			else
 			{
 				/* 2019-11-15 lijia add for plug kill other */
 				if(local_app_ret & APP_STATE_KILL_OTHER){
-					if(pPrev){
-						pPrev->next = NULL; /* 把当前plug info从链表中先移除 */
-						plug_entry_kick_out_tot_list(pFunList, a_stream);
+					/* 把当前plug info从链表中先移除 */
+					if(pPrev==NULL){
+						pFunList=pFunInfo->next;
 					}else{
-						/* 当前插件在pfunlist第一位, 把剩余的全CLOSE */
-						plug_entry_kick_out_tot_list(pFunList->next, a_stream);
+						pPrev->next=pFunInfo->next;
 					}
+					/* 把剩余的全CLOSE */
+					plug_entry_kick_out_tot_list(pFunList, a_stream);
 					
-					pFunList = pFunInfo; /* 只剩当前一个插件 */
-				}	
+					pFunList = pFunInfo;
+					pFunList->next = NULL;
+					*apme= pFunList;
+				}else if(local_app_ret & APP_STATE_KILL_FOLLOW){
+					plug_entry_kick_out_tot_list(pFunInfo->next, a_stream);
+					pFunInfo->next = NULL;
+				}
 				
 				pPrev=pFunInfo;
 				pFunInfo=pFunInfo->next;

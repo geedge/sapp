@@ -677,6 +677,8 @@ printf("###### %s timeout is %d, remain %lld, can't be free!\n", printaddr(&tmps
 #endif
 }
 
+
+
 //struct streamindex *malloc_streamindex(int threadnum)
 struct streamindex *malloc_and_copy_streamindex(int threadnum, struct streamindex *pindex_stack)
 {
@@ -697,6 +699,8 @@ struct streamindex *malloc_and_copy_streamindex(int threadnum, struct streaminde
 	pindex->stream.hash_not_head_times = 0;
 	pindex->stream.stream_carry_up_layer_tunnel_type = 0;
 	pindex->stream.stream_low_layer_tunnel_type = 0;
+
+	pindex->stream.global_stream_id = get_global_stream_id(threadnum);
 	
 	return pindex;
 	
@@ -2791,6 +2795,25 @@ void free_polling_inject_context(struct streaminfo_private *pstream_pr)
 	}	
 
 	dictator_free(thread_index, pstream_pr->polling_inject_context);
+}
+
+/* 全局流id, stream_index历史上已经表示单机内唯一id, 此处要保证集群所有机器不重复, 所以新建变量;  
+	高位 --- 低位
+	1 |  12bit device_id | 8bit thread_id | 28bit timestamp in sec | 15bit sequence per thread
+*/
+unsigned long long get_global_stream_id(unsigned long long thread_seq)
+{
+#define RELATIVE_TIME_MAX (268435456L)
+	unsigned long long glo_sid = 0;
+	unsigned long long stream_seq; 
+	unsigned long long relative_base_time;
+
+	stream_seq = sapp_global_val->mthread_volatile[thread_seq]->stream_seq_per_thread++;
+	relative_base_time = (sapp_global_val->individual_volatile->current_time - sapp_global_val->config.stream.stream_id_base_time_t) % RELATIVE_TIME_MAX;
+	
+	glo_sid = (thread_seq << 43) | (relative_base_time << 15) | (stream_seq);
+
+	return glo_sid;
 }
 
 

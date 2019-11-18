@@ -78,8 +78,8 @@ static inline toml_table_t *twrap_get_section_handle(toml_table_t *file_handle, 
 		while((sub_section = strtok_r(tmp_csv_str, ".", &save_ptr)) != NULL){
 			section_handle = toml_table_in(section_handle, sub_section);
 			if(NULL == section_handle){
-				return NULL;
 				free(saved_input_section);
+				return NULL;
 			}
 
 			tmp_csv_str = NULL;

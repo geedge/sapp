@@ -1,7 +1,7 @@
 #ifndef _APP_STREAM_BASE_H_
 #define _APP_STREAM_BASE_H_ 
 
-#define STREAM_BASE_H_VERSION		(20170616)
+#define STREAM_BASE_H_VERSION		(20191118)
 
 #include <sys/types.h>
 #include <netinet/in.h>            

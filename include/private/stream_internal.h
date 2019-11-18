@@ -167,6 +167,12 @@ struct streaminfo_private
 	struct tcp_option *synack_opt_array;
 
 	polling_inject_context_t *polling_inject_context;
+
+	/* 全局流id, stream_index历史上已经表示单机内唯一id, 此处要保证集群所有机器不重复, 所以新建变量;  
+		高位 --- 低位
+		1 |  12bit device_id | 8bit thread_id | 28bit timestamp in sec | 15bit sequence per thread
+	*/
+	unsigned long long global_stream_id; 
 };
 
 struct tcpdetail_private
@@ -353,6 +359,7 @@ int sapp_assistant_init(void);
 int save_polling_inject_context(struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt);
 void free_polling_inject_context(struct streaminfo_private *pstream_pr);
 int update_polling_inject_context(struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt);
+unsigned long long get_global_stream_id(unsigned long long thread_seq);
 
 
 #ifdef __cplusplus
