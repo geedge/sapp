@@ -35,8 +35,8 @@ BSD_packet_filter=""
     polling_priority=1
 
 [STREAM]
-### note, stream_id_base_time format is "1970-01-01 01:02:03" 
-	stream_id_base_time="2019-11-18 11:11:11"
+### note, stream_id_base_time format is "%Y-%m-%d %H:%M:%S" 
+	stream_id_base_time="2018-08-08 08:00:00"
     [stream.tcp]
     max=10000
     timeout=60

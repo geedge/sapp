@@ -852,6 +852,10 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			pstream_pr = (const struct streaminfo_private *)pstream;
 			unsigned long long *out_args = (unsigned long long *)opt_val;
 			unsigned long long dev_id = *out_args;
+			if(dev_id < 0 || dev_id > 4095){
+				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() MSO_GLOBAL_STREAM_ID error:invalid dev_id:%llu!\n", dev_id);
+				return -1;
+			}
 			unsigned long long local_global_id = pstream_pr->global_stream_id;
 
 			*out_args = local_global_id | (dev_id << 51);

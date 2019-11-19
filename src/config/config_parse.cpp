@@ -347,19 +347,24 @@ static int config_expression_convert(void)
 	/******************************  STREAM  *******************************/
 	struct tm ttm;
 	time_t tt;
-	if(strptime(sapp_global_val->config.stream.stream_id_base_time_str, "%Y-%m-%d %H:%M:%S", &ttm) == NULL){
-	  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->STREAM.stream_id_base_time format error, must like '1970-01-01 01:02:03'");
-		return -1;
+	if(sapp_global_val->config.stream.stream_id_base_time_str[0] == '\0'){
+		sapp_log(20, ~0, ~0, "[Warning]sapp.toml->STREAM.stream_id_base_time is not set, use '1970-01-01 00:00:00' as default!");
+		sapp_global_val->config.stream.stream_id_base_time_t = 0;
+	}else{
+		if(strptime(sapp_global_val->config.stream.stream_id_base_time_str, "%Y-%m-%d %H:%M:%S", &ttm) == NULL){
+		  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->STREAM.stream_id_base_time format error, must like '1970-01-01 01:02:03'");
+			return -1;
+		}
+		if(mktime(&ttm) > time(NULL)){
+		  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->STREAM.stream_id_base_time value error, is after current system time!");
+			return -1;
+		}
+		if(time(NULL) - mktime(&ttm) > 268435456L){
+		  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->STREAM.stream_id_base_time value error, sapp stream id support max time range is 8.5 year!");
+			return -1;
+		}
+		sapp_global_val->config.stream.stream_id_base_time_t = mktime(&ttm);
 	}
-	if(mktime(&ttm) > time(NULL)){
-	  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->STREAM.stream_id_base_time value error, is after current system time!");
-		return -1;
-	}
-	if(time(NULL) - mktime(&ttm) > 268435456L){
-	  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->STREAM.stream_id_base_time value error, sapp stream id support max time range is 8.5 year!");
-		return -1;
-	}
-	sapp_global_val->config.stream.stream_id_base_time_t = mktime(&ttm);
 
 	/******************************  TOOLS   *******************************/
 	if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "storage" ,strlen("storage")) == 0){

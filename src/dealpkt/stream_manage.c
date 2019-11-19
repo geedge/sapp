@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-int sapp_version_v4_20191018;
+int sapp_version_v4_20191119;
 
 /* 
 	����İ汾������packet_io_libУ��, ��ֹƽ̨��dl.so��ƥ�䵼�������쳣, �����޸���BUGδ����.
@@ -2797,7 +2797,7 @@ void free_polling_inject_context(struct streaminfo_private *pstream_pr)
 	dictator_free(thread_index, pstream_pr->polling_inject_context);
 }
 
-/* 全局流id, stream_index历史上已经表示单机内唯一id, 此处要保证集群所有机器不重复, 所以新建变量;  
+/* 全局流id, stream_index历史上已经表示单机内唯一id, 此处要保证集群所有机器不重复, 所以新建变�?  
 	高位 --- 低位
 	1 |  12bit device_id | 8bit thread_id | 28bit timestamp in sec | 15bit sequence per thread
 */

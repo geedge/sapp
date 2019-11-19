@@ -327,6 +327,10 @@ static void plug_entry_kick_out_tot_list(StreamFunInfo *list_head, struct stream
 	UCHAR saved_opstate = a_stream->opstate;
 	UCHAR saved_pktstate = a_stream->pktstate;
 	StreamFunInfo *tmp_ptr;
+
+	/* 临时修改为CLOSE, 再恢复原状态 */
+	a_stream->opstate = OP_STATE_CLOSE;
+	a_stream->pktstate = OP_STATE_CLOSE;
 	
 	while(list_head){
 		if(is_raw_cb(list_head->funtype)){
@@ -818,7 +822,7 @@ int stream_process_ipv4(struct streaminfo *pfstream, const struct ip* this_layer
 				int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt)
 {
 	int i;
-	//int ret;
+	int platform_ret = PASS;
 	int appret;
 	
 	for(i=0;i<g_Ipv4FunNum;i++)
@@ -852,17 +856,21 @@ int stream_process_ipv4(struct streaminfo *pfstream, const struct ip* this_layer
 		}
 
 		/* 2019-11-15 lijia add for plug kill other */
-		if((appret & APP_STATE_KILL_FOLLOW) || (appret & APP_STATE_KILL_OTHER)){
-			sapp_runtime_log(20, "not support KILL_FOLLOW and KILL_OTHER in ip entry!");
+		if(appret & APP_STATE_KILL_OTHER){
+			sapp_runtime_log(20, "not support APP_STATE_KILL_OTHER in ip entry!");
 		}
 
 		if(unlikely(appret&APP_STATE_DROPPKT))
-		{		
+		{
 			return DROP;
 		}	
+
+		if(appret & APP_STATE_KILL_FOLLOW){
+			break;
+		}
 	}
 	
-	return PASS;
+	return platform_ret;
 }
 
 
@@ -870,7 +878,7 @@ int stream_process_ipv6(struct streaminfo *pfstream,const struct ip6_hdr *this_l
 				int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt)
 {
 	int i=0;
-	int ret=PASS;
+	int platform_ret = PASS;
 	int appret=APP_STATE_GIVEME;
 	
 	for(i=0;i<g_Ipv6FunNum;i++)
@@ -888,17 +896,20 @@ int stream_process_ipv6(struct streaminfo *pfstream,const struct ip6_hdr *this_l
 		}
 		
 		/* 2019-11-15 lijia add for plug kill other */
-		if((appret & APP_STATE_KILL_FOLLOW) || (appret & APP_STATE_KILL_OTHER)){
-			sapp_runtime_log(20, "not support KILL_FOLLOW and KILL_OTHER in ip entry!");
-		}		
+		if(appret & APP_STATE_KILL_OTHER){
+			sapp_runtime_log(20, "not support APP_STATE_KILL_OTHER in ip entry!");
+		}	
 		
 		if(appret&APP_STATE_DROPPKT)
 		{
-			ret=DROP;			
-			return ret;
-		}	
+			return DROP;			
+		}
+
+		if(appret & APP_STATE_KILL_FOLLOW){
+			break;
+		}
 	}
-	return ret;
+	return platform_ret;
 }
 
 int stream_process_ipv4_frag(struct streaminfo *pstream, const struct ip* this_layer_hdr,

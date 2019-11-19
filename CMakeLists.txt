@@ -170,6 +170,7 @@ add_subdirectory(./src/timer)
 add_subdirectory(./src/entry)
 add_subdirectory(./test)
 add_subdirectory(./service)
+add_subdirectory(./tools)
 
 #by default, not include sapp_module_test dir
 #add_subdirectory(./test/sapp_module_test/src)
@@ -221,5 +222,7 @@ endif()
 
 install(FILES bin/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app)
 install(FILES ${CMAKE_BINARY_DIR}/test/test_app_sapp.so DESTINATION plug/business/test_app)
+
+install(PROGRAMS ${CMAKE_BINARY_DIR}/tools/stream_id_decode DESTINATION ./tools/)
 
 include(Package)
