@@ -2578,11 +2578,13 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			//MESA_kill_tcp(pstream, raw_pkt);
 			MESA_kill_tcp_remedy(pstream, raw_pkt);
 		}
-
+		
+#if 0 /* MSO_TCPALL_VALID_AFTER_KILL option is obsoleted! */ 
 		pdetail_pr = (struct tcpdetail_private *)(pindex_tcp->stream.stream_public.pdetail);
 		if(pdetail_pr->tcpall_valid_after_kill != 0){
 			tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);
 		}
+#endif		
 		return DROP;
 	}
 

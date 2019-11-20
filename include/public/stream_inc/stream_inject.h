@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-#define STREAM_INJECT_H_VERSION		(20161010)
+#define STREAM_INJECT_H_VERSION		(20191120)
 
 
 /* 

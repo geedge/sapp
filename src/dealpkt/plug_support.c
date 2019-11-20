@@ -409,12 +409,12 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_MAX_UNORDER:
 		{
 			if(STREAM_TYPE_TCP != pstream->type){
-				printf("MESA_set_stream_opt() error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error:stream type is not tcp!\n");
 				ret = -1;
 				break;
 			}
 			if(opt_val_len != sizeof(struct max_unorder_opt)){
-				printf("MESA_set_stream_opt() error:opt_val_len invalid, must be sizeof(struct max_unorder_opt)\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error:opt_val_len invalid, must be sizeof(struct max_unorder_opt)\n");
 				ret = -1;
 				break;
 			}
@@ -426,7 +426,7 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_NEED_ACK:
 		{
 			if(STREAM_TYPE_TCP != pstream->type){
-				printf("MESA_set_stream_opt() error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error:stream type is not tcp!\n");
 				ret = -1;
 				break;
 			}
@@ -440,7 +440,7 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_TAKEOVER:
 		{
 			if(STREAM_TYPE_TCP != pstream->type){
-				printf("MESA_set_stream_opt() error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error:stream type is not tcp!\n");
 				ret = -1;
 				break;
 			}
@@ -454,7 +454,7 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_TIMEOUT:
 		{
 			if(sizeof(short) != opt_val_len){
-				printf("MESA_set_stream_opt() error:opt_val_len invalid, must be sizeof(short)\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error:opt_val_len invalid, must be sizeof(short)\n");
 				ret = -1;
 				break;
 			}
@@ -466,7 +466,7 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_IGNORE_RST_FIN:
 		{
 			if(STREAM_TYPE_TCP != pstream->type){
-				printf("MESA_set_stream_opt() error: stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error: stream type is not tcp!\n");
 				ret = -1;
 				break;
 			}
@@ -479,6 +479,7 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 
 		case MSO_TCPALL_VALID_AFTER_KILL:
 		{
+#if 0		
 			if(STREAM_TYPE_TCP != pstream->type){
 				printf("MESA_set_stream_opt() error: stream type is not tcp!\n");
 				ret = -1;
@@ -488,11 +489,24 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			struct tcpdetail_private *pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
 			pdetail_pr->tcpall_valid_after_kill = (tcpall_valid == 1 ? 1 : 0);	
 			ret = 0;
+#else
+			ret = -1;
+			sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error: MSO_TCPALL_VALID_AFTER_KILL option is obsoleted!\n");
+#endif
+		}
+		break;
+
+		case MSO_DROP_STREAM:
+		{
+			int drop_flag = *((int *)opt_val);
+			struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private*)(pstream->pdetail);
+			pdetail_pr->drop_stream_flag = (drop_flag != 0 ? 1:0);
+			ret = 0;
 		}
 		break;
 		
 		default:
-			printf("MESA_set_stream_opt() error: unsupport MESA_stream_opt type!\n");
+			sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error: unsupport MESA_stream_opt type!\n");
 			ret = -1;
 			break;
 	}
@@ -633,12 +647,12 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_MAX_UNORDER:
 		{
 			if(STREAM_TYPE_TCP != pstream->type){
-				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error:stream type is not tcp!\n");
 				ret = -1;
 				break;
 			}		
 			if(*opt_val_len < (int)sizeof(struct max_unorder_opt)){
-				sapp_runtime_log(RLOG_LV_DEBUG,"MESA_get_stream_opt() error:opt_val_len invalid, must be sizeof(struct max_unorder_opt)\n");
+				sapp_runtime_log(RLOG_LV_INFO,"MESA_get_stream_opt() error:opt_val_len invalid, must be sizeof(struct max_unorder_opt)\n");
 				ret = -1;
 				break;
 			}
@@ -650,7 +664,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_NEED_ACK:
 		{
 			if(STREAM_TYPE_TCP != pstream->type){
-				sapp_runtime_log(RLOG_LV_DEBUG,"MESA_get_stream_opt() error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO,"MESA_get_stream_opt() error:stream type is not tcp!\n");
 				ret = -1;
 				break;
 			}
@@ -668,7 +682,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			if(STREAM_TYPE_TCP != pstream->type){
-				sapp_runtime_log(RLOG_LV_DEBUG,"MESA_get_stream_opt() error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO,"MESA_get_stream_opt() error:stream type is not tcp!\n");
 				ret = -1;
 				break;
 			}
@@ -682,7 +696,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_TIMEOUT:
 		{
 			if(sizeof(short) != *opt_val_len){
-				sapp_runtime_log(RLOG_LV_DEBUG,"MESA_get_stream_opt() error:opt_val_len invalid, must be sizeof(short)\n");
+				sapp_runtime_log(RLOG_LV_INFO,"MESA_get_stream_opt() error:opt_val_len invalid, must be sizeof(short)\n");
 				ret = -1;
 				break;
 			}
@@ -696,7 +710,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_IGNORE_RST_FIN:
 		{
 			if(STREAM_TYPE_TCP != pstream->type){
-				sapp_runtime_log(RLOG_LV_DEBUG,"MESA_get_stream_opt() error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO,"MESA_get_stream_opt() error:stream type is not tcp!\n");
 				ret = -1;
 				break;
 			}
@@ -712,7 +726,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			UCHAR *out_val = (UCHAR *)opt_val;
 			if(STREAM_TYPE_TCP != pstream->type){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG,"MESA_get_stream_opt() error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO,"MESA_get_stream_opt() error:stream type is not tcp!\n");
 				break;
 			}
 			
@@ -728,19 +742,19 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			UINT32 *out_val = (UINT32 *)opt_val;
 			if(STREAM_TYPE_TCP != pstream->type){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error:stream type is not tcp!\n");
 				break;
 			}
  
 			pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
 			if(pdetail_pr->creat_mod != TCP_CTEAT_LINK_BYSYN){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() error: stream create mode is not by SYN!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error: stream create mode is not by SYN!\n");
 				break;
 			}
 			if(0 == pdetail_pr->iserverseq){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() error: can't get SYN seq!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error: can't get SYN seq!\n");
 				break;
 			}
 			
@@ -756,19 +770,19 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			UINT32 *out_val = (UINT32 *)opt_val;
 			if(STREAM_TYPE_TCP != pstream->type){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error:stream type is not tcp!\n");
 				break;
 			}
 			pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
 			if(pdetail_pr->creat_mod != TCP_CTEAT_LINK_BYSYN){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() error: stream create mode is not by SYN!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error: stream create mode is not by SYN!\n");
 				break;
 			}
 
 			if(0 == pdetail_pr->iclientseq){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() error: can't get SYN/ACK seq!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error: can't get SYN/ACK seq!\n");
 				break;
 			}
 
@@ -831,7 +845,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				*close_reason = pstream_pr->stream_close_reason;
 			}else{
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() MSO_STREAM_CLOSE_REASON error:unsupport stream type:%d!\n", pstream->type);
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_STREAM_CLOSE_REASON error:unsupport stream type:%d!\n", pstream->type);
 			}
 		}
 		break;
@@ -853,7 +867,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			unsigned long long *out_args = (unsigned long long *)opt_val;
 			unsigned long long dev_id = *out_args;
 			if(dev_id < 0 || dev_id > 4095){
-				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() MSO_GLOBAL_STREAM_ID error:invalid dev_id:%llu!\n", dev_id);
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_GLOBAL_STREAM_ID error:invalid dev_id:%llu!\n", dev_id);
 				return -1;
 			}
 			unsigned long long local_global_id = pstream_pr->global_stream_id;
@@ -864,7 +878,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		break;
 		
 		default:
-			sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n", opt);
+			sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n", opt);
 			ret = -1;
 			break;		
 	}
