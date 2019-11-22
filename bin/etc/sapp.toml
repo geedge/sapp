@@ -47,6 +47,7 @@ BSD_packet_filter=""
         link_mss=1460
 	  
         [stream.tcp.inject.rst]
+        auto_remedy=0
         number=3
         signature_enabled=1
         signature_seed1=65535

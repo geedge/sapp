@@ -504,6 +504,19 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			ret = 0;
 		}
 		break;
+
+		case MSO_TCP_RST_REMEDY:
+		{
+			if(STREAM_TYPE_TCP != pstream->type){
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() MSO_TCP_RST_REMEDY error: stream type is not tcp!\n");
+				ret = -1;
+				break;
+			}
+			int remedy_flag = *((int *)opt_val);
+			struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private*)(pstream->pdetail);
+			pdetail_pr->auto_remedy_flag = (remedy_flag != 0 ? 1:0);
+			ret = 0;
+		}
 		
 		default:
 			sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error: unsupport MESA_stream_opt type!\n");

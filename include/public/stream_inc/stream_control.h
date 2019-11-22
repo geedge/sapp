@@ -33,7 +33,7 @@ enum MESA_stream_opt{
 	MSO_TCPALL_VALID_AFTER_KILL, /* opt_val type must be unsigned char, value only be [0,1] */
 	MSO_GLOBAL_STREAM_ID, /* opt_val type must be unsigned long long, is value-result argument, IN: device_id, value range[0, 4095]; OUT:global stream id */
 	MSO_DROP_STREAM, /* opt_val type must be int, value only be [0,1]; similar to DROPPKT, but effective scope is stream. */
-	MSO_TCP_RST_REMEDY, /* opt_val type must be int, value only be [0,1]; if not set this, default is enable. */
+	MSO_TCP_RST_REMEDY, /* opt_val type must be int, value only be [0,1]; if not set this, default is disable. */
 	__MSO_MAX,
 };
 

@@ -38,6 +38,7 @@ typedef struct{
 
 
 typedef struct{
+	int auto_remedy; /* 平台全局配置, 对于每个流, 可以设置auto_remedy_flag, 优先级高于全局auto_remedy */
 	int rst_signature_enable;
 	int rst_num;
 	int rst_signature_seed1;

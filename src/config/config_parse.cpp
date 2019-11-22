@@ -595,6 +595,7 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp", (char *)"reorder_pkt_max", (int *)&pconfig->stream.tcp.reorder_pkt_max, 5);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp", (char *)"analyse_option_enabled", (int *)&pconfig->stream.tcp.analyse_option_enabled, 1);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject", (char *)"link_mss", (int *)&pconfig->stream.tcp.inject.link_mss, 1460);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject.rst", (char *)"auto_remedy", (int *)&pconfig->stream.tcp.inject.auto_remedy, 0);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject.rst", (char *)"signature_enabled", (int *)&pconfig->stream.tcp.inject.rst_signature_enable, 1);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject.rst", (char *)"signature_seed1", (int *)&pconfig->stream.tcp.inject.rst_signature_seed1, 65535);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject.rst", (char *)"signature_seed2", (int *)&pconfig->stream.tcp.inject.rst_signature_seed2, 13);
