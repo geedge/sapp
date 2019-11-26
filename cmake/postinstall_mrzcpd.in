@@ -1,0 +1,21 @@
+#!/bin/sh
+
+sapp_install_dir=`rpm -qa --queryformat '%{instprefixes}\n' sapp`
+
+echo "[Unit]" > /tmp/.sapp.service.tmp
+echo "Description=sapp service" >> /tmp/.sapp.service.tmp
+echo "Requires=mrzcpd.service" >> /tmp/.sapp.service.tmp
+echo "After=mrzcpd.service" >> /tmp/.sapp.service.tmp
+echo "[Service]" >> /tmp/.sapp.service.tmp
+echo "WorkingDirectory=$sapp_install_dir" >> /tmp/.sapp.service.tmp
+echo "ExecStart=$sapp_install_dir/sapp" >> /tmp/.sapp.service.tmp
+echo "Restart=always" >> /tmp/.sapp.service.tmp
+echo "RestartSec=5s" >> /tmp/.sapp.service.tmp
+echo "[Install]" >> /tmp/.sapp.service.tmp
+echo "WantedBy=multi-user.target" >> /tmp/.sapp.service.tmp
+
+cp -f /tmp/.sapp.service.tmp /usr/lib/systemd/system/sapp.service
+rm -f /tmp/.sapp.service.tmp
+
+systemctl enable sapp
+systemctl daemon-reload

@@ -61,8 +61,7 @@ iknow_info.c                           packet_io_log.c         sendpacket.c
 packet_io.c
 packet_io_status.cpp packet_io_status_new.c 
 packet_io_device.c sapp_compat_wangyan_api.c
-sapp_inject.c
-sendpacket_plus.cpp)
+sapp_inject.c)
 
 add_library(packet_io STATIC ${PACKET_IO_STATIC_SOURCE})
 if(CAPTURE_MODE MATCHES "MARSIO")

@@ -58,7 +58,7 @@ static void pcap_run(void)
 	pcap_loop(pcap_handle, -1, __pcap_pkt_cb, NULL);
 
 	/* pcap_loop()函数退出, 表示读包已结束, 调用上层插件, 通知EOF事件 */
-	MESA_IP_PLUG_ENTRY(DUMPFILE_EOF_FLAG, 0, 0, NULL);
+	MESA_IP_PLUG_ENTRY((const streaminfo*)DUMPFILE_EOF_FLAG, 0, 0, NULL);
 }
 
 static void usage(const char *prog_name)

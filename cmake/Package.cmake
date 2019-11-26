@@ -33,4 +33,22 @@ else()
     #    set(CPACK_STRIP_FILES TRUE)
 endif()
 
+#set(CPACK_RPM_PRE_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/cmake/preinstall.in)
+
+if(CAPTURE_MODE MATCHES "MARSIO")
+    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE  ${CMAKE_SOURCE_DIR}/cmake/postinstall_mrzcpd.in)
+else()
+    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE  ${CMAKE_SOURCE_DIR}/cmake/postinstall_pcap.in)
+endif()	
+
+# setup %config(noreplace)
+set(CPACK_RPM_USER_FILELIST "%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/gdev.conf"
+                            "%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/sapp.toml"
+							"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/send_raw_pkt.conf"
+							"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/project_list.conf"
+							"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/plugin.conf"
+							"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/entrylist.conf"
+							"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/plug/conflist.inf")
+
+
 include(CPack)

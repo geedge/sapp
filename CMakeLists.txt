@@ -169,7 +169,7 @@ add_subdirectory(./src/inner_plug)
 add_subdirectory(./src/timer)
 add_subdirectory(./src/entry)
 add_subdirectory(./test)
-add_subdirectory(./service)
+#add_subdirectory(./service)
 add_subdirectory(./tools)
 
 #by default, not include sapp_module_test dir
@@ -186,6 +186,7 @@ install(FILES bin/etc/send_raw_pkt.conf DESTINATION etc)
 install(FILES bin/etc/project_list.conf DESTINATION etc)
 install(FILES bin/etc/plugin.conf DESTINATION etc)
 install(FILES bin/etc/entrylist.conf DESTINATION etc)
+install(FILES bin/etc/gdev.conf DESTINATION etc)
 install(FILES bin/plug/conflist.inf DESTINATION plug)
 
 if(NOT ENABLE_STATIC_LINK)

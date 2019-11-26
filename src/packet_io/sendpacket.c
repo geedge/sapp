@@ -2632,142 +2632,178 @@ int MESA_kill_connection_feedback(struct streaminfo *stream, const void *ext_raw
 	return ret;
 }
 
-
-static tcp_rst_finger_mark_t *__MESA_rst_tcp_make_finger_mark(int thread_id, struct streaminfo_private *stream_pr,
-					const raw_pkt_t *raw_pkt, unsigned short signature_seed1, unsigned short signature_seed2)
+static int build_tcp_rst_pkt_finger(struct streaminfo *stream,
+					unsigned short signature_seed1, unsigned short signature_seed2, tcp_rst_finger_mark_t *rst_finger)
 {
-	tcp_rst_finger_mark_t *rst_finger;
+	const raw_pkt_t *raw_pkt;
+	struct streaminfo_private *stream_pr;
 	const struct mesa_ip4_hdr *ip4_hdr;
 
-	rst_finger = &g_tcp_rst_finger[thread_id];
+	stream_pr = (struct streaminfo_private *)stream;
+	raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
 
-	/* NOTE, 只有IPv4能在ip_id上做些标记, IPv6暂不支持RST指纹 */
-	/* TODO 2, 此处如果有隧道, 靠jump_to_layer不知道跳到哪一层, 应该用stream_private->offset_to_ip_hdr偏移到本层的IP头部 */
 	ip4_hdr = (const struct mesa_ip4_hdr *)((char *)raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr);
-	if((0 == signature_seed1) || (0 == signature_seed2)){ /* 表示随机填充, 不加指纹信息 */
-		rst_finger->ip_id_host_order = (unsigned short)MESA_rand();
-		rst_finger->ip_ttl = (unsigned short)MESA_rand_range(48, 120);
-		rst_finger->tcp_win_host_order = (unsigned short)MESA_rand_range(1000, 1460);
+	
+	if(ADDR_TYPE_IPV4 == stream->addr.addrtype){
+		if(signature_seed1 && signature_seed2){
+			trick_algo_getrandval_with_seed(stream->threadnum, 
+								  ip4_hdr->ip_src.s_addr,  
+								  ip4_hdr->ip_dst.s_addr,  
+								  &rst_finger->ip_id_host_order,
+								  &rst_finger->tcp_win_host_order,
+								  &rst_finger->ip_ttl,
+								  (int)signature_seed2,
+								  (int)signature_seed1);
+
+		}else{
+			if(sapp_global_val->config.stream.tcp.inject.rst_signature_enable != 0){
+				trick_algo_getrandval_with_seed(stream->threadnum, 
+									  ip4_hdr->ip_src.s_addr, 
+									  ip4_hdr->ip_dst.s_addr,  
+									  &rst_finger->ip_id_host_order,
+									  &rst_finger->tcp_win_host_order,
+									  &rst_finger->ip_ttl,
+									  (int)sapp_global_val->config.stream.tcp.inject.rst_signature_seed2,
+									  (int)sapp_global_val->config.stream.tcp.inject.rst_signature_seed1);
+
+			}else{
+				goto use_rand_value;
+			}
+		}
 	}else{
-		trick_algo_getrandval_with_seed(thread_id, 
-							  ip4_hdr->ip_src.s_addr, /* 2015-10-27 lijia modify */
-							  ip4_hdr->ip_dst.s_addr,  /* 2015-10-27 lijia modify */
-							  &rst_finger->ip_id_host_order,
-							  &rst_finger->tcp_win_host_order,
-							  &rst_finger->ip_ttl,
-							  (int)signature_seed1,
-							  (int)signature_seed2);
+		goto use_rand_value;
 	}
 
-	return rst_finger;
+	return 0;
+
+use_rand_value:
+	rst_finger->ip_ttl = (unsigned char)MESA_rand_range(48, 120);
+	rst_finger->ip_id_host_order = (unsigned short)MESA_rand();
+	rst_finger->tcp_win_host_order = (unsigned short)MESA_rand_range(1000, 1460);
+
+	return 0;
 }
 
 /* 2019-11-20 lijia add */
-int __MESA_rst_tcp_c(struct streaminfo *stream, unsigned char rst_th_flags, int rst_pkt_num, unsigned char snd_rst_dir, 
+int __MESA_rst_tcp(struct streaminfo *stream, unsigned char rst_th_flags, int rst_pkt_num, unsigned char snd_rst_dir, 
 							unsigned short signature_seed1, unsigned short signature_seed2)
 {
 	int i, ret = -1, reserved_hdr_len, send_len = 0;
-	MESA_send_handle *send_handle;
 	const raw_pkt_t *raw_pkt;
+	int threadnum = stream->threadnum;
 	struct streaminfo_private *stream_pr;
-	int thread_num;
-	tcp_rst_finger_mark_t *tcp_rst_finger;
-	int low_net_layer_type = -1;
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	unsigned char rst_pkt_buf[256]; /* must > ipv6 address x2 + tcp max header  */
+	int rst_pkt_len = 0;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
+	tcp_rst_finger_mark_t rst_finger;
 
-	if((NULL == stream) || (STREAM_TYPE_TCP != stream->type)){
-		sapp_runtime_log(RLOG_LV_INFO, "MESA_rst_tcp() error: stream type is not tcp!\n");
-		return -1;
-	}	
-
-	raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
-
-	if((NULL == raw_pkt) || (RAW_PKT_MAGIC_NUM != raw_pkt->magic_num)){
-		return -1;
-	}
-	thread_num = stream->threadnum;
 	stream_pr = (struct streaminfo_private *)stream;
-	send_handle = &g_send_handle[thread_num];
-
-	/* 因改变了某些回调函数的原始包类型为IP包头(兼容之前papp平台), 所以不需要插件传输原始包, 信息都存储于私有流结构体内 */
 	raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
-
-	if((NULL == raw_pkt) || (RAW_PKT_MAGIC_NUM != raw_pkt->magic_num)){
-		return -1;
-	}
-
-	reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type);
-	if((reserved_hdr_len < 0) || (-1 == low_net_layer_type)){
-		sapp_runtime_log(RLOG_LV_INFO, "MESA_kill_tcp().calc_reserved_hdr_len() error !");
-		ret = -1;
-		goto fun_exit;
-	}
-
-	send_handle->user_arg = (void *)stream;
-
-	if(sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_GDEV){ /* gdev注入模式时预留底层封装vxlan包的空间, 避免再二次copy */
-		reserved_hdr_len += sizeof(vxlan_header_t);
-	}
-
-#if 0
-	tcp_rst_finger = make_tcp_rst_finger_mark(thread_num, (const raw_pkt_t *)raw_pkt);
-#else
-	tcp_rst_finger = __MESA_rst_tcp_make_finger_mark(thread_num, stream_pr, raw_pkt, signature_seed1, signature_seed2);
-#endif
-	set_build_layer_ipv4_args(thread_num, tcp_rst_finger->ip_ttl, tcp_rst_finger->ip_id_host_order);
-	set_build_layer_tcp_args(thread_num, rst_th_flags, tcp_rst_finger->tcp_win_host_order, 0);
 
 	for(i = 0; i < rst_pkt_num; i++){
+		build_tcp_rst_pkt_finger(stream, signature_seed1, signature_seed2, &rst_finger);
+		set_build_layer_ipv4_args(threadnum, rst_finger.ip_ttl, rst_finger.ip_id_host_order);
+		set_build_layer_tcp_args(threadnum, rst_th_flags, rst_finger.tcp_win_host_order, 0);
+		
 		if((DIR_DOUBLE == snd_rst_dir) || (stream->curdir & snd_rst_dir)){
-			send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
-			
-			send_len = build_net_layer_pkt(stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 0, raw_pkt);
-			if(send_len < 0){
-				ret = -1;
-				goto fun_exit;
-			}
-			ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
-								low_net_layer_type, stream->routedir, thread_num,
-								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);		
-			if(ret < 0){
-				send_handle->tot_send_err++;
+			if(ADDR_TYPE_IPV4 == stream->addr.addrtype){
+				rst_pkt_len = sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr);
+				build_net_layer_tcp(stream_pr, stream->addr.addrtype, 0, rst_pkt_buf+sizeof(struct mesa_ip4_hdr), 0, raw_pkt);	
+				build_net_layer_ipv4(stream_pr, ADDR_TYPE_TCP, sizeof(struct mesa_tcp_hdr), rst_pkt_buf, 0, raw_pkt);
+				/* 使用SIO_EXCLUDE_THIS_LAYER_HDR类型, 需要自行计算校验和 */
+				checksum_for_carry_layer(rst_pkt_buf, __ADDR_TYPE_IP_PAIR_V4, ADDR_TYPE_TCP, sizeof(struct mesa_tcp_hdr));				
 			}else{
-				send_handle->tot_send_pkt++;
-				send_handle->tot_send_byte += send_len;
+				rst_pkt_len = sizeof(struct mesa_ip6_hdr) + sizeof(struct mesa_tcp_hdr);
+				build_net_layer_tcp(stream_pr, stream->addr.addrtype, 0, rst_pkt_buf+sizeof(struct mesa_ip6_hdr), 0, raw_pkt);	
+				build_net_layer_ipv6(stream_pr, ADDR_TYPE_TCP, sizeof(struct mesa_tcp_hdr), rst_pkt_buf, 0, raw_pkt);
+				checksum_for_carry_layer(rst_pkt_buf, __ADDR_TYPE_IP_PAIR_V6, ADDR_TYPE_TCP, sizeof(struct mesa_tcp_hdr));				
 			}
-			packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
+		
+			ret = sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, rst_pkt_buf, rst_pkt_len, stream->routedir);
+			if(ret < 0){
+				return -1;
+			}
 			local_sys_stat->count[SAPP_STAT_SND_TCP_RST]++;
 		}
-		if((DIR_DOUBLE == snd_rst_dir) || ((stream->curdir ^ snd_rst_dir) & 0x3) == DIR_DOUBLE){ /* 反向发包 */
-			send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
-			send_len = build_net_layer_pkt(stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 1, raw_pkt);
-			if(send_len < 0){
-				ret = -1;
-				goto fun_exit;
-				break;
-			}
-			ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
-								low_net_layer_type, stream->routedir ^ 1, thread_num,
-								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);	
-			if(ret < 0){
-				send_handle->tot_send_err++;
+		/* 可能是双向发包, 所以这里不是else if */
+		if((DIR_DOUBLE == snd_rst_dir) || ((stream->curdir ^ snd_rst_dir) & 0x3) == DIR_DOUBLE){ /* 反向发包 */	
+			if(ADDR_TYPE_IPV4 == stream->addr.addrtype){
+				rst_pkt_len = sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr);
+				build_net_layer_tcp(stream_pr, stream->addr.addrtype, 0, rst_pkt_buf+sizeof(struct mesa_ip4_hdr), 1, raw_pkt);	
+				build_net_layer_ipv4(stream_pr, ADDR_TYPE_TCP, sizeof(struct mesa_tcp_hdr), rst_pkt_buf, 1, raw_pkt);
+				checksum_for_carry_layer(rst_pkt_buf, __ADDR_TYPE_IP_PAIR_V4, ADDR_TYPE_TCP, sizeof(struct mesa_tcp_hdr));
 			}else{
-				send_handle->tot_send_pkt++;
-				send_handle->tot_send_byte += send_len;
+				rst_pkt_len = sizeof(struct mesa_ip6_hdr) + sizeof(struct mesa_tcp_hdr);
+				build_net_layer_tcp(stream_pr, stream->addr.addrtype, 0, rst_pkt_buf+sizeof(struct mesa_ip6_hdr), 1, raw_pkt);	
+				build_net_layer_ipv6(stream_pr, ADDR_TYPE_TCP, sizeof(struct mesa_tcp_hdr), rst_pkt_buf, 1, raw_pkt);
+				checksum_for_carry_layer(rst_pkt_buf, __ADDR_TYPE_IP_PAIR_V6, ADDR_TYPE_TCP, sizeof(struct mesa_tcp_hdr));
+			}		
+
+				
+			ret = sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, rst_pkt_buf, rst_pkt_len, MESA_dir_reverse(stream->routedir));
+			if(ret < 0){
+				return -1;
 			}
-			packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
 			local_sys_stat->count[SAPP_STAT_SND_TCP_RST]++;
 		}
 	}
-
-fun_exit:
-
-	detach_build_layer_ipv4_args(thread_num);
-	detach_build_layer_tcp_args(thread_num);
 
 	stream_pr->stream_killed_flag = 1;
 
+	detach_build_layer_ipv4_args(threadnum);
+	detach_build_layer_tcp_args(threadnum);
+	
 	return ret;
+}
+
+
+int MESA_rst_tcp(const struct streaminfo *stream, const struct rst_tcp_para *paras)
+{
+	unsigned short tmp_signature_seed1, tmp_signature_seed2;
+	
+	if((NULL == stream) || (NULL == paras)){
+		sapp_runtime_log(RLOG_LV_INFO, "MESA_rst_tcp() error: mandatory args is NULL!\n");
+		return -1;
+	}
+
+	if(STREAM_TYPE_TCP != stream->type){
+		sapp_runtime_log(RLOG_LV_INFO, "MESA_rst_tcp() error: stream type is not tcp!\n");
+		return -1;
+	}	
+	
+
+	if((TH_RST != paras->th_flags) && ((TH_RST|TH_ACK) != paras->th_flags)){
+		sapp_runtime_log(RLOG_LV_INFO, "MESA_rst_tcp() error: th_flags is invalid!\n");
+		return -1;
+	}
+
+	if((DIR_C2S != paras->dir)
+	&& (DIR_S2C != paras->dir)
+	&& (DIR_DOUBLE != paras->dir)){
+		sapp_runtime_log(RLOG_LV_INFO, "MESA_rst_tcp() error: dir is invalid!\n");
+		return -1;
+	}
+
+	if((paras->rst_pkt_num < 1) || (paras->rst_pkt_num > 3)){
+		sapp_runtime_log(RLOG_LV_INFO, "MESA_rst_tcp() error: rst pkt number range [1-3]!\n");
+		return -1;
+	}
+
+	if((0 == paras->signature_seed1) && (0 == paras->signature_seed2)){
+		if(0 == sapp_global_val->config.stream.tcp.inject.rst_signature_enable){
+			tmp_signature_seed1 = 0;
+			tmp_signature_seed2 = 0;
+		}else{
+			tmp_signature_seed1 = sapp_global_val->config.stream.tcp.inject.rst_signature_seed1;
+			tmp_signature_seed2 = sapp_global_val->config.stream.tcp.inject.rst_signature_seed2;
+		}
+	}else{
+		tmp_signature_seed1 = paras->signature_seed1;
+		tmp_signature_seed2 = paras->signature_seed2;
+	}
+
+	return __MESA_rst_tcp((struct streaminfo *)stream, paras->th_flags, paras->rst_pkt_num, paras->dir, 
+						  tmp_signature_seed1, tmp_signature_seed2);
 }
 
 
