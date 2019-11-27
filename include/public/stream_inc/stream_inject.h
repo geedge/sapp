@@ -31,9 +31,11 @@ int MESA_kill_connection(struct streaminfo *stream, const void *ext_raw_pkt);
 struct rst_tcp_para{
 	unsigned char  th_flags; /* TCP头部标志位, 可选值为[TH_RST, TH_RST|TH_ACK] */
 	unsigned char  rst_pkt_num;  /* 调用一次MESA_rst_tcp()发送的rst包数量, 可选值[1,2,3], 针对单个方向, 即rst_pkt_num=2, dir=DIR_DOUBLE时,总发包数量是4个  */
-	/* 发送rst包方向, 可选值为[DIR_C2S, DIR_S2C, DIR_DOUBLE], 此值参考streaminfo->curdir,  
+	/*  
+	    dir:
+	    发送rst包方向, 可选值为[DIR_C2S, DIR_S2C, DIR_DOUBLE], 此值参考:streaminfo->curdir,  
 		如果待发送的包与当前包同向, dir = stream->curdir, 
-		如果待发送的包与当前包反向, dir = reverse(stream->curdir).
+		如果待发送的包与当前包反向, dir = stream->curdir ^ 3, 即反向.
 		如果是双向发送, dir = DIR_DOUBLE;
 	*/
 	unsigned char  dir; 
@@ -55,6 +57,11 @@ struct rst_tcp_para{
 };
 
 /*
+	args:
+		stream: 当前流上下文;
+		paras : 发送rst相关参数, 详见struct rst_tcp_para结构体说明;
+		para_len: sizeof(struct rst_tcp_para), 预留后续升级需求, 根据此长度判断版本.
+		
 	MESA_rst_tcp与MESA_kill_tcp区别:
 		MESA_kill_tcp实际上是几个动作的大杂烩: 发送RST包, 类似返回了APP_STATE_KILL_OTHER, 及DROP当前流后续所有包;
 		MESA_rst_tcp只专心做一件事情: 发送RST包!
@@ -68,7 +75,7 @@ struct rst_tcp_para{
 		>= 0: success.
 		-1  : error.
 */
-int MESA_rst_tcp(const struct streaminfo *stream, const struct rst_tcp_para *paras);
+int MESA_rst_tcp(struct streaminfo *stream, struct rst_tcp_para *paras, int para_len);
 
 
 

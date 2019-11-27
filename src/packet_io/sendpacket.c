@@ -2757,7 +2757,7 @@ int __MESA_rst_tcp(struct streaminfo *stream, unsigned char rst_th_flags, int rs
 }
 
 
-int MESA_rst_tcp(const struct streaminfo *stream, const struct rst_tcp_para *paras)
+int MESA_rst_tcp(struct streaminfo *stream, struct rst_tcp_para *paras, int struct_para_len)
 {
 	unsigned short tmp_signature_seed1, tmp_signature_seed2;
 	
@@ -2771,7 +2771,6 @@ int MESA_rst_tcp(const struct streaminfo *stream, const struct rst_tcp_para *par
 		return -1;
 	}	
 	
-
 	if((TH_RST != paras->th_flags) && ((TH_RST|TH_ACK) != paras->th_flags)){
 		sapp_runtime_log(RLOG_LV_INFO, "MESA_rst_tcp() error: th_flags is invalid!\n");
 		return -1;
@@ -2787,6 +2786,10 @@ int MESA_rst_tcp(const struct streaminfo *stream, const struct rst_tcp_para *par
 	if((paras->rst_pkt_num < 1) || (paras->rst_pkt_num > 3)){
 		sapp_runtime_log(RLOG_LV_INFO, "MESA_rst_tcp() error: rst pkt number range [1-3]!\n");
 		return -1;
+	}
+
+	if(struct_para_len > sizeof(struct rst_tcp_para)){
+		sapp_runtime_log(RLOG_LV_INFO, "MESA_rst_tcp() warning: the caller version is newer than sapp, not support new paras!\n");
 	}
 
 	if((0 == paras->signature_seed1) && (0 == paras->signature_seed2)){
