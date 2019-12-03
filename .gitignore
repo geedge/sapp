@@ -7,10 +7,9 @@ SI/
 *.o
 *.d
 .idea/
-run/log/
-run/sapp
-version.txt
+bin/log/
+bin/sapp
 cmake-build-debug
 .vscode
-build
-version.txt
+build/
+

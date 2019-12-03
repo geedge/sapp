@@ -324,13 +324,18 @@ char plugin_call_ipentry(int type,IPv4_CB_FUN_T stream_fun,SAPP_PKT_CB_FUN_T sap
 /* 将剩余插件entry链全部CLOSE */
 static void plug_entry_kick_out_tot_list(StreamFunInfo *list_head, struct streaminfo *a_stream)
 {
+	UCHAR saved_linkstate;
+	StreamFunInfo *tmp_ptr;
+	struct tcpdetail_private *ptcpdetail_pr = (struct tcpdetail_private *)a_stream->ptcpdetail;
+
 	UCHAR saved_opstate = a_stream->opstate;
 	UCHAR saved_pktstate = a_stream->pktstate;
-	StreamFunInfo *tmp_ptr;
-
+	saved_linkstate = ptcpdetail_pr->link_state;
+	
 	/* 临时修改为CLOSE, 再恢复原状态 */
 	a_stream->opstate = OP_STATE_CLOSE;
 	a_stream->pktstate = OP_STATE_CLOSE;
+	ptcpdetail_pr->link_state = STREAM_FAKE_CLOSE_BY_DEPRIVE;
 	
 	while(list_head){
 		if(is_raw_cb(list_head->funtype)){
@@ -345,7 +350,8 @@ static void plug_entry_kick_out_tot_list(StreamFunInfo *list_head, struct stream
 	}
 
 	a_stream->opstate = saved_opstate;
-	a_stream->pktstate = saved_pktstate;			
+	a_stream->pktstate = saved_pktstate;	
+	ptcpdetail_pr->link_state = saved_linkstate;
 }
 
 

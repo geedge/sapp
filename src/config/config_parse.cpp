@@ -223,6 +223,7 @@ void sapp_cla_override_cfg_file(void)
 	sapp_config_t *pconfig = &sapp_global_val->config;
 	
 	if(sapp_get_cla_raw("dumpfile", &cmd_args) >= 0){ /* dumpfile模式自动覆盖interface配置 */
+		strcpy(pconfig->packet_io.depolyment_mode_str, "dumpfile");
 		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
 		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
 		strcpy(pconfig->packet_io.internal.interface.type_str, "pcap");

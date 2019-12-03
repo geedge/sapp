@@ -55,6 +55,7 @@ extern int tcp_support_all;
 #define STREAM_LINK_RESET 4
 #define STREAM_LINK_TIMEOUT 5
 #define STREAM_LINK_LRU_OUT	6
+#define STREAM_FAKE_CLOSE_BY_DEPRIVE 7 /* 其他插件返回KILL_FOLLOW, KILL_OTHER后, 被强制CLOSE的插件状态 */
 
 #define SINGLE_ACK_RECEVED_NO  0
 #define SINGLE_ACK_RECEVED        1
