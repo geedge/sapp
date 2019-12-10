@@ -57,8 +57,8 @@ void iterate_stream_list(const struct streaminfo *stream);
 int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index);
 
 int g_discard_ack_sw = 0; /* 2016-06-15 lijia add, 是否丢弃纯TCP-ACK包 */
-int g_kill_tcp_remedy_sw = 0; /* 2016-06-21 lijia add, 是否进行FD补救 */
-int g_analyse_tcp_opt_sw = 0;
+//int g_kill_tcp_remedy_sw = 0; /* 2016-06-21 lijia add, 是否进行FD补救 */
+int g_analyse_tcp_opt_sw = 1;
 
 int G_TCP_FLOW_STAT_PROJECT_ID = -1; /* 2016-07-14 lijia copy from sapp */
 int G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID = -1; /* 单向流, 根据ACK序号推断出的对端理论接收的数据长度 */
@@ -783,6 +783,8 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 
 	save_polling_inject_context(pstream_pr, raw_pkt);
 
+	pdetail_pr->auto_remedy_flag = sapp_global_val->config.stream.tcp.inject.auto_remedy;
+
 	return pindex_tcp;
 }
 
@@ -1003,6 +1005,8 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 #endif
 
 	save_polling_inject_context(pstream_pr, raw_pkt);
+
+	pdetail_pr->auto_remedy_flag = sapp_global_val->config.stream.tcp.inject.auto_remedy;
 
 	return pindex_tcp;
 }
@@ -2572,23 +2576,29 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		pstream->addr.pktipfragtype = pindex->stream.stream_public.addr.pktipfragtype; 
 	}
 
+	pdetail_pr =(struct tcpdetail_private*)(pstream->pdetail);
+	pdetail =(struct tcpdetail *)(&pdetail_pr->tcpdetail_public);
+
 	/* 2014-10-11 lijia add, Fd补救由平台实现 */
 	if(unlikely(pstream_pr->stream_killed_flag != 0)){
-		if((g_kill_tcp_remedy_sw != 0) && (tcplen > 0)){ /* 防止flood攻击, 只有带数据的包才发RST */
+		if((pdetail_pr->auto_remedy_flag != 0) && (tcplen > 0)){ /* 防止flood攻击, 只有带数据的包才发RST */
 			//MESA_kill_tcp(pstream, raw_pkt);
 			MESA_kill_tcp_remedy(pstream, raw_pkt);
 		}
-
+		
+#if 0 /* MSO_TCPALL_VALID_AFTER_KILL option is obsoleted! */ 
 		pdetail_pr = (struct tcpdetail_private *)(pindex_tcp->stream.stream_public.pdetail);
 		if(pdetail_pr->tcpall_valid_after_kill != 0){
 			tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);
 		}
+#endif		
+		//return DROP; /* 2019-11-20 lijia modify, kill_tcp后默认行为不是DROP, 取决于drop_stream_flag */
+	}
+
+	if(unlikely(pdetail_pr->drop_stream_flag != 0)){
 		return DROP;
 	}
 
-
-	pdetail_pr =(struct tcpdetail_private*)(pstream->pdetail);
-	pdetail =(struct tcpdetail *)(&pdetail_pr->tcpdetail_public);
 	if(pstream->curdir==DIR_S2C)
 	{
 		if(pdetail->clientpktnum == 0) /* 当前方向的第一个包, 尝试更新底层隧道的单向地址信息(如MPLS, GTP) */

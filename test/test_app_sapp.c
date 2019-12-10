@@ -1,6 +1,10 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 static int test_tcp_flow_id = -1;
 static unsigned short phony_protocol_plugid; 
@@ -45,8 +49,8 @@ char phony_protocol_test(struct streaminfo *a_tcp,  void **pme, int thread_seq,v
 
 	stinfo.plugid = phony_protocol_plugid;
 	stinfo.session_state = SESSION_STATE_PENDING;
-	stinfo.buf = "hello, lijia!\n";
-	stinfo.buflen = strlen("hello, lijia!\n");
+	stinfo.buf = (void *)"hello!\n";
+	stinfo.buflen = strlen("hello!\n");
 	stinfo.prot_flag = 0xFFFF;
 
 	printf("I am protocol plug\n");
@@ -543,11 +547,11 @@ char tcp_data_dump(struct streaminfo *pstream,void **pme, int thread_seq,void *a
 		assert(0);
 	}
 	if(pstream->ptcpdetail->datalen > 0){
-		fwrite(pstream->ptcpdetail->pdata, pstream->ptcpdetail->datalen, 1, *pme);
+		fwrite(pstream->ptcpdetail->pdata, pstream->ptcpdetail->datalen, 1, (FILE *)(*pme));
 	}
 
 	if(pstream->opstate== OP_STATE_CLOSE){
-		fclose(*pme);
+		fclose((FILE *)(*pme));
 	}
 
 	return APP_STATE_GIVEME;
@@ -580,7 +584,7 @@ char test_print_mac(struct streaminfo *pstream,void **pme, int thread_seq,void *
 
 static void sapp_timer_test_cbfun(sapp_timer_handle h, sapp_timer_event ev, int pkt_process_thread_id, void *user_arg)
 {
-	struct streaminfo *pstream = user_arg;
+	struct streaminfo *pstream = (struct streaminfo *)user_arg;
 	struct timeval curt;
 
 	gettimeofday(&curt, NULL);
@@ -2004,7 +2008,7 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 
 	ret = get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_DATA, &raw_pkt_hdr);
 	if(ret == 1){
-		raw_ipfrag_list_t *tlist = raw_pkt_hdr;
+		raw_ipfrag_list_t *tlist = (raw_ipfrag_list_t *)raw_pkt_hdr;
 		while(tlist){
 			printf("pkt len:%d\n", tlist->pkt_len);
 			tlist = tlist->next;
@@ -2263,7 +2267,7 @@ char TCP_ALL_DUMP_PCAP_PKT(struct streaminfo *pstream,  void **pme, int thread_s
 		fwrite(&test_pcap_file_hdr, sizeof(pcap_file_hdr_t), 1, fp);
 		*pme = fp;
 	}else if(OP_STATE_CLOSE == pstream->pktstate){
-		fclose(*pme);
+		fclose((FILE *)(*pme));
 		return APP_STATE_DROPME;
 	}
 
@@ -2368,6 +2372,22 @@ char KILL_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_p
 	MESA_kill_connection(a_tcp, a_packet);
 	return APP_STATE_GIVEME | APP_STATE_DROPPKT;
 }
+
+char RST_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
+{
+	struct rst_tcp_para rst_args;
+	rst_args.th_flags = TH_RST;
+	rst_args.rst_pkt_num = 1;
+	rst_args.dir = DIR_S2C;
+	rst_args.signature_seed1 = 65535;
+	rst_args.signature_seed2 = 17;
+	
+	MESA_rst_tcp(a_tcp, &rst_args, sizeof(struct rst_tcp_para));
+	printf("call MESA_rst_tcp()\n");
+	
+	return APP_STATE_GIVEME;
+}
+
 
 char TEST_STREAM(struct streaminfo *stream,  void **pme, int thread_seq,void *a_packet)
 {
@@ -2577,3 +2597,9 @@ void test_destroy(void)
 {
 	;
 }
+
+#ifdef __cplusplus
+}
+#endif
+
+

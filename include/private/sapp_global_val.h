@@ -38,6 +38,7 @@ typedef struct{
 
 
 typedef struct{
+	int auto_remedy; /* 平台全局配置, 对于每个流, 可以设置auto_remedy_flag, 优先级高于全局auto_remedy */
 	int rst_signature_enable;
 	int rst_num;
 	int rst_signature_seed1;
@@ -63,6 +64,8 @@ typedef struct{
 
 
 typedef struct{
+	char stream_id_base_time_str[32];
+	unsigned int stream_id_base_time_t;
 	sapp_config_stream_tcp_t tcp;
 	sapp_config_stream_udp_t udp;
 }sapp_config_stream_t;
@@ -206,7 +209,8 @@ typedef struct{
 
 typedef struct{
 	sapp_gval_mthread_sys_stat_t sys_stat;
-	char __padding[48];
+	unsigned short stream_seq_per_thread;
+	char __padding[46];
 }sapp_gval_mthread_t; /*   for multi-thread, must 64byte alignment */
 
 

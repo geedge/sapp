@@ -282,6 +282,17 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			pthread_mutex_unlock(&g_plug_Independent_thread_mutex);
 		}
 		break;		
+
+		case SPO_DEPLOYMENT_MODE_STR:
+		{
+			if(*opt_val_len <= strlen(sapp_global_val->config.packet_io.depolyment_mode_str)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() SPO_DEPLOYMENT_MODE_STR error:opt_val_len:%d is not enough!\n", *opt_val_len);
+				break;
+			}
+			strncpy((char *)opt_val, sapp_global_val->config.packet_io.depolyment_mode_str, *opt_val_len);
+		}
+		break;
 		
 		default:
 			sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_type:%d not support!\n", (int)opt);

@@ -35,6 +35,8 @@ BSD_packet_filter=""
     polling_priority=1
 
 [STREAM]
+### note, stream_id_base_time format is "%Y-%m-%d %H:%M:%S" 
+	stream_id_base_time="2018-08-08 08:00:00"
     [stream.tcp]
     max=10000
     timeout=60
@@ -45,6 +47,7 @@ BSD_packet_filter=""
         link_mss=1460
 	  
         [stream.tcp.inject.rst]
+        auto_remedy=0
         number=3
         signature_enabled=1
         signature_seed1=65535

@@ -26,7 +26,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Werror -DHIGH_PERF=1")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DDEBUG -DHIGH_PERF=0")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DHIGH_PERF=0")
 
-set(CMAKE_INSTALL_PREFIX /home/mesasoft/sapp_run/)
+set(CMAKE_INSTALL_PREFIX /home/mesasoft/sapp_run)
 
 set(PLATFORM_MODE "MIRROR" CACHE STRING
     " set platform mode chosen by the user, using mirror as default")
@@ -169,7 +169,8 @@ add_subdirectory(./src/inner_plug)
 add_subdirectory(./src/timer)
 add_subdirectory(./src/entry)
 add_subdirectory(./test)
-add_subdirectory(./service)
+#add_subdirectory(./service)
+add_subdirectory(./tools)
 
 #by default, not include sapp_module_test dir
 #add_subdirectory(./test/sapp_module_test/src)
@@ -185,6 +186,7 @@ install(FILES bin/etc/send_raw_pkt.conf DESTINATION etc)
 install(FILES bin/etc/project_list.conf DESTINATION etc)
 install(FILES bin/etc/plugin.conf DESTINATION etc)
 install(FILES bin/etc/entrylist.conf DESTINATION etc)
+install(FILES bin/etc/gdev.conf DESTINATION etc)
 install(FILES bin/plug/conflist.inf DESTINATION plug)
 
 if(NOT ENABLE_STATIC_LINK)
@@ -221,5 +223,7 @@ endif()
 
 install(FILES bin/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app)
 install(FILES ${CMAKE_BINARY_DIR}/test/test_app_sapp.so DESTINATION plug/business/test_app)
+
+install(PROGRAMS ${CMAKE_BINARY_DIR}/tools/stream_id_decode DESTINATION ./tools/)
 
 include(Package)

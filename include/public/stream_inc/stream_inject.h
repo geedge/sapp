@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-#define STREAM_INJECT_H_VERSION		(20161010)
+#define STREAM_INJECT_H_VERSION		(20191120)
 
 
 /* 
@@ -27,6 +27,57 @@ extern "C" {
 int MESA_kill_tcp(struct streaminfo *stream, const void *raw_pkt);
 int MESA_kill_tcp_synack(struct streaminfo *stream, const void *raw_pkt);
 int MESA_kill_connection(struct streaminfo *stream, const void *ext_raw_pkt);
+
+struct rst_tcp_para{
+	unsigned char  th_flags; /* TCP头部标志位, 可选值为[TH_RST, TH_RST|TH_ACK] */
+	unsigned char  rst_pkt_num;  /* 调用一次MESA_rst_tcp()发送的rst包数量, 可选值[1,2,3], 针对单个方向, 即rst_pkt_num=2, dir=DIR_DOUBLE时,总发包数量是4个  */
+	/*  
+	    dir:
+	    发送rst包方向, 可选值为[DIR_C2S, DIR_S2C, DIR_DOUBLE], 此值参考:streaminfo->curdir,  
+		如果待发送的包与当前包同向, dir = stream->curdir, 
+		如果待发送的包与当前包反向, dir = stream->curdir ^ 3, 即反向.
+		如果是双向发送, dir = DIR_DOUBLE;
+	*/
+	unsigned char  dir; 
+	unsigned char __pad_no_use; /* padding for alignment */
+	
+	/* 
+	   rst包指纹信息, 推荐值seed1=65535, seed2为素数, 如13,17,19等; 
+	   signature_seed1=0 && signature_seed1=0, 表示本次调用不指定signature, 使用全局配置, 规则如下:
+	   if(sapp.toml->stream.tcp.inject.signature_enabled == 1){
+			signature_seed1 = sapp.toml->stream.tcp.inject.signature_seed1;
+			signature_seed2 = sapp.toml->stream.tcp.inject.signature_seed2;
+	   }else{
+		   signature_seed1 = rand();
+		   signature_seed2 = rand();
+	   }
+	*/
+	unsigned short signature_seed1; 
+	unsigned short signature_seed2; 
+};
+
+/*
+	args:
+		stream: 当前流上下文;
+		paras : 发送rst相关参数, 详见struct rst_tcp_para结构体说明;
+		para_len: sizeof(struct rst_tcp_para), 预留后续升级需求, 根据此长度判断版本.
+		
+	MESA_rst_tcp与MESA_kill_tcp区别:
+		MESA_kill_tcp实际上是几个动作的大杂烩: 发送RST包, 类似返回了APP_STATE_KILL_OTHER, 及DROP当前流后续所有包;
+		MESA_rst_tcp只专心做一件事情: 发送RST包!
+
+	note: 除上面的参数之外, kill_tcp还有一个特性是FD补救, 
+	      即可能因为丢包、序号错误、网络延时等原因, 导致单次FD不生效, 调用MESA_kill_tcp之后可以自动进行FD补救, 
+	      但对于MESA_rst_tcp来说, 所有行为只对当前包有效, 
+	      remedy功能是作用于整个stream的, 需要调用MESA_set_stream_opt(), opt=MSO_TCP_RST_REMEDY 完成.
+		
+    return value:
+		>= 0: success.
+		-1  : error.
+*/
+int MESA_rst_tcp(struct streaminfo *stream, struct rst_tcp_para *paras, int para_len);
+
+
 
 /*
 	带反馈功能的MESA_kill_xxx系列函数.

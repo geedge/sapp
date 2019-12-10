@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define STREAM_CONTROL_H_VERSION		(20190423)
+#define STREAM_CONTROL_H_VERSION		(20191202)
 
 #define TCP_CTEAT_LINK_BYSYN   			0x01  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
 #define TCP_CTEAT_LINK_BYDATA 			0x02  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
@@ -30,12 +30,15 @@ enum MESA_stream_opt{
 	MSO_STREAM_TUNNEL_TYPE,  /* opt_val must be unsigned short, refer to enum stream_carry_tunnel_t */
 	MSO_STREAM_CLOSE_REASON, /* opt_val type must be unsigned char, refer to stream_close_reason_t */
 	MSO_STREAM_VXLAN_INFO, /* opt_val type must be struct vxlan_info */
-	MSO_TCPALL_VALID_AFTER_KILL, /* opt_val type must be unsigned char, value only be [0,1] */
+	MSO_TCPALL_VALID_AFTER_KILL, /* opt_val type must be unsigned char, value only be [0,1]; Warning, this option is obsolete, use MESA_rst_tcp() instead */
+	MSO_GLOBAL_STREAM_ID, /* opt_val type must be unsigned long long, is value-result argument, IN: device_id, value range[0, 4095]; OUT:global stream id */
+	MSO_DROP_STREAM, /* opt_val type must be int, value only be [0,1]; similar to DROPPKT, but effective scope is stream. */
+	MSO_TCP_RST_REMEDY, /* opt_val type must be int, value only be [0,1]; if not set this, default is disable. */
 	__MSO_MAX,
 };
 
 /* for MSO_STREAM_CLOSE_REASON,
-   These value is not consecutive, because some value is obsoleted!
+   don't confuse, these values is not consecutive indeed, because some value(1,2) is obsoleted!
 */
 enum stream_close_reason_t{
 	STREAM_CLOSE_REASON_SYN_REUSE	= 0, /* for TCP tuple4 reuse */
@@ -43,6 +46,7 @@ enum stream_close_reason_t{
 	STREAM_CLOSE_REASON_RESET 		= 4, /* for TCP RESET */
 	STREAM_CLOSE_REASON_TIMEOUT		= 5, /* timeout */
 	STREAM_CLOSE_REASON_LRUOUT		= 6, /* stream table full, kick out */
+	STREAM_CLOSE_REASON_DEPRIVE		= 7, /* deprive by some plug who return KILL_FOLLOW or KILL_OTHER */
 };
 
 
@@ -59,6 +63,7 @@ enum sapp_platform_opt{
 	SPO_RAND_NUMBER,			/* get a rand number, opt_val type must be long long */
 	SPO_FIELD_STAT_HANDLE,	/* field stat output handle, opt_val type must be void * */
 	SPO_INDEPENDENT_THREAD_ID, /* plug independent thread which is created by pthread_create(), opt_val type must be int */
+	SPO_DEPLOYMENT_MODE_STR, /* opt_val type is char[], optional value is:["mirror", "inline", "transparent", "dumpfile"] */
 };
 
 

@@ -34,7 +34,7 @@ extern int g_raw_pkt_broken_check;
 extern int g_skip_ethernet_layer_sw;
 int g_reverse_ethernet_addr_sw;
 extern int g_discard_ack_sw;
-extern int g_kill_tcp_remedy_sw;
+//extern int g_kill_tcp_remedy_sw;
 extern int g_analyse_tcp_opt_sw;
 extern int g_encapsulate_with_ddp;
 extern int g_encapsulate_with_L2E; /* 使用DDP协议封装的x27原始IP包 */
@@ -156,7 +156,7 @@ int MESA_platform_init(int argc, char *argv[])
 	g_discard_ack_sw = 1;
 	printf("\033[33m in high-perf mode, 'discard_ack' is auto enable!\n");
 #endif
-	MESA_load_profile_int_def("conf/main.conf","Module", "kill_tcp_remedy",&g_kill_tcp_remedy_sw, 0);
+	//MESA_load_profile_int_def("conf/main.conf","Module", "kill_tcp_remedy",&g_kill_tcp_remedy_sw, 0);
 	
 	//MESA_load_profile_int_def("conf/main.conf","Module", "maxrandval", &maxrandval, 65535);
 	//set_rst_max_rnd_val(maxrandval);
@@ -172,10 +172,10 @@ int MESA_platform_init(int argc, char *argv[])
 	//MESA_load_profile_int_def("conf/main.conf","Module", "kill_tcp_rst_signature", &sapp_global_single.cfg_kill_tcp_rst_signature,1);
 
 	ipv4_frag_init(g_iThreadNum, 1024 * 512);
-	MESA_load_profile_int_def("conf/main.conf","Module", "IPv6_module_enable", &ipv6_switch, 1);
-	packet_io_set_ipv6_module_enable(ipv6_switch);
-	MESA_load_profile_int_def("conf/main.conf","Module", "IPv6_raw_socket", &ipv6_switch, 0); /* 为了便于部署, 此项默认关闭 */
-	packet_io_set_ipv6_raw_socket_enable(ipv6_switch);	
+	//MESA_load_profile_int_def("conf/main.conf","Module", "IPv6_module_enable", &ipv6_switch, 1);
+	packet_io_set_ipv6_module_enable(1);
+	//MESA_load_profile_int_def("conf/main.conf","Module", "IPv6_raw_socket", &ipv6_switch, 0); /* 为了便于部署, 此项默认关闭 */
+	packet_io_set_ipv6_raw_socket_enable(1);	
 	ipv6_frag_init(g_iThreadNum, 1024 * 256);
 
 	//tcp_set_creatlink_model(create_link_mode);
@@ -204,7 +204,7 @@ int MESA_platform_init(int argc, char *argv[])
 	
 	MESA_load_profile_int_def("conf/main.conf","Module", "use_MESAsleep", &g_use_MESA_sleep_sw, 0);	
 
-	MESA_load_profile_int_def("conf/main.conf","Module", "analyse_tcp_option", &g_analyse_tcp_opt_sw, 1);	
+	//MESA_load_profile_int_def("conf/main.conf","Module", "analyse_tcp_option", &g_analyse_tcp_opt_sw, 1);	
 
 	MESA_load_profile_int_def("conf/main.conf","Module", "encapsulate_with_ddp", &g_encapsulate_with_ddp, 0);	
 	if(g_encapsulate_with_ddp != 0){

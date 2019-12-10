@@ -223,6 +223,7 @@ void sapp_cla_override_cfg_file(void)
 	sapp_config_t *pconfig = &sapp_global_val->config;
 	
 	if(sapp_get_cla_raw("dumpfile", &cmd_args) >= 0){ /* dumpfile模式自动覆盖interface配置 */
+		strcpy(pconfig->packet_io.depolyment_mode_str, "dumpfile");
 		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
 		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
 		strcpy(pconfig->packet_io.internal.interface.type_str, "pcap");
@@ -344,6 +345,29 @@ static int config_expression_convert(void)
 		return -1;
 	}
 
+	/******************************  STREAM  *******************************/
+	struct tm ttm;
+	time_t tt;
+	if(sapp_global_val->config.stream.stream_id_base_time_str[0] == '\0'){
+		sapp_log(20, ~0, ~0, "[Warning]sapp.toml->STREAM.stream_id_base_time is not set, use '1970-01-01 00:00:00' as default!");
+		sapp_global_val->config.stream.stream_id_base_time_t = 0;
+	}else{
+		if(strptime(sapp_global_val->config.stream.stream_id_base_time_str, "%Y-%m-%d %H:%M:%S", &ttm) == NULL){
+		  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->STREAM.stream_id_base_time format error, must like '1970-01-01 01:02:03'");
+			return -1;
+		}
+		if(mktime(&ttm) > time(NULL)){
+		  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->STREAM.stream_id_base_time value error, is after current system time!");
+			return -1;
+		}
+		if(time(NULL) - mktime(&ttm) > 268435456L){
+		  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->STREAM.stream_id_base_time value error, sapp stream id support max time range is 8.5 year!");
+			return -1;
+		}
+		sapp_global_val->config.stream.stream_id_base_time_t = mktime(&ttm);
+	}
+
+	/******************************  TOOLS   *******************************/
 	if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "storage" ,strlen("storage")) == 0){
 		pconfig->tools.pkt_dump.mode_bin = PKT_DUMP_LOCAL_FILE;
 	}else if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "udp_socket" ,strlen("udp_socket")) == 0){
@@ -516,6 +540,8 @@ void sapp_gval_init(void)
 
 	/* set default value, maybe not input by user or config file */
 	snprintf(sapp_global_val->config.packet_io.pcap_dumpfile_name, NAME_MAX, "dumpfile");
+
+	ABBR_CURRENT_TIME = time(NULL);
 }
 
 
@@ -560,6 +586,8 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.polling", (char *)"enabled", &pconfig->packet_io.polling_enabled, 1);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.polling", (char *)"polling_priority", &pconfig->packet_io.polling_priority, 10);
 
+	/*******************************  STREAM ******************************/
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"STREAM", (char *)"stream_id_base_time", pconfig->stream.stream_id_base_time_str, 32, "");
 
 	/*******************************  STREAM.TCP ******************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp", (char *)"max", (int *)&pconfig->stream.tcp.max, 50000);
@@ -568,6 +596,7 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp", (char *)"reorder_pkt_max", (int *)&pconfig->stream.tcp.reorder_pkt_max, 5);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp", (char *)"analyse_option_enabled", (int *)&pconfig->stream.tcp.analyse_option_enabled, 1);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject", (char *)"link_mss", (int *)&pconfig->stream.tcp.inject.link_mss, 1460);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject.rst", (char *)"auto_remedy", (int *)&pconfig->stream.tcp.inject.auto_remedy, 0);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject.rst", (char *)"signature_enabled", (int *)&pconfig->stream.tcp.inject.rst_signature_enable, 1);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject.rst", (char *)"signature_seed1", (int *)&pconfig->stream.tcp.inject.rst_signature_seed1, 65535);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject.rst", (char *)"signature_seed2", (int *)&pconfig->stream.tcp.inject.rst_signature_seed2, 13);

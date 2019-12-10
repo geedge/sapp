@@ -12,7 +12,7 @@
 #include "stream_inc/sapp_inject.h"
 
 
-#define STREAM_H_VERSION		(20170911)
+#define STREAM_H_VERSION		(20191118)
 
 #endif
 
@@ -96,6 +96,8 @@
 
 	2017-09-11 lijia
 		1)stream_control.h增加sapp_get_platform_opt()接口, 供外部插件获取平台内部参数.
-		
+
+	2019-11-18 lijia
+		1)stream_base.h增加插件返回值, APP_STATE_KILL_FOLLOW, APP_STATE_KILL_OTHER.
 *************************************************************************************/
 
