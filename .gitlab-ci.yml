@@ -53,6 +53,7 @@ docker:
     - share
   only:
     - master
+    - sapp_v4.0_develop
   script:
      - ls -l build
      - ls -l /tmp/
