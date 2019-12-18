@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define STREAM_CONTROL_H_VERSION		(20191202)
+#define STREAM_CONTROL_H_VERSION		(20191218)
 
 #define TCP_CTEAT_LINK_BYSYN   			0x01  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
 #define TCP_CTEAT_LINK_BYDATA 			0x02  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
@@ -63,7 +63,12 @@ enum sapp_platform_opt{
 	SPO_RAND_NUMBER,			/* get a rand number, opt_val type must be long long */
 	SPO_FIELD_STAT_HANDLE,	/* field stat output handle, opt_val type must be void * */
 	SPO_INDEPENDENT_THREAD_ID, /* plug independent thread which is created by pthread_create(), opt_val type must be int */
-	SPO_DEPLOYMENT_MODE_STR, /* opt_val type is char[], optional value is:["mirror", "inline", "transparent", "dumpfile"] */
+	SPO_DEPLOYMENT_MODE_STR, /* opt_val type is char[], optional value is:["mirror", "inline", "transparent"] */
+	SPO_TOTAL_EGRESS_PKT,		/* total egress packet number, effective in inline or transparent mode, opt_val type must be unsigned long long */
+	SPO_TOTAL_EGRESS_BYTE,		/* total egress packet byte, effective in inline or transparent mode, opt_val type must be unsigned long long */
+	SPO_TCP_STREAM_NEW,			/* total created tcp streams from start, opt_val type must be unsigned long long */
+	SPO_TCP_STREAM_CLOSE,		/* total closed tcp streams from start, opt_val type must be unsigned long long */
+	SPO_TCP_STREAM_LIVE,		/* realtime established tcp streams, opt_val type must be unsigned long long */
 };
 
 

@@ -57,6 +57,12 @@ BSD_packet_filter=""
     max=10000
     timeout=60
 
+[PROTOCOL_FEATURE]
+	ipv6_decapsulation_enabled=1
+	ipv6_send_packet_enabled=1
+	tcp_drop_pure_ack_pkt=0
+	tcp_syn_option_parse_enabled=1 
+
 [PROFILING]
     [profiling.pkt_latency]
     enabled=0

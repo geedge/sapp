@@ -658,6 +658,12 @@ int sapp_parse_config(void)
 			return -1;
 		}
 #endif
+	/************************  PROTOCOL_FEATURE **********************************/
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"ipv6_decapsulation_enabled", (int *)&pconfig->protocol_feature.ipv6_decapsulation_enabled, 1);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"ipv6_send_packet_enabled", (int *)&pconfig->protocol_feature.ipv6_send_packet_enabled, 1);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"tcp_drop_pure_ack_pkt", (int *)&pconfig->protocol_feature.tcp_drop_pure_ack_pkt, 0);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"tcp_syn_option_parse_enabled", (int *)&pconfig->protocol_feature.tcp_syn_option_parse_enabled, 1);
+
 	/*******************************  TOOLS **********************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.pkt_dump", (char *)"enabled", (int *)&pconfig->tools.pkt_dump.enabled, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"tools.pkt_dump", (char *)"mode", pconfig->tools.pkt_dump.mode_str, NAME_MAX, "udp_socket");

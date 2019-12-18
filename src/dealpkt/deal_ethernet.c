@@ -25,7 +25,7 @@ static inline void set_mac_addr(struct layer_addr_mac *addr, const struct mesa_e
 int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,int thread_num, 
 			unsigned char dir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
-	int ret;
+	int ret = PASS;
 	const  unsigned char *next_layer_data = (const unsigned char *)this_layer_hdr + sizeof(struct mesa_ethernet_hdr);
 	const struct mesa_ethernet_hdr *p_eth_hdr = (const struct mesa_ethernet_hdr *)this_layer_hdr;
 	//unsigned short eth_type = ntohs(p_eth_hdr->ether_type);

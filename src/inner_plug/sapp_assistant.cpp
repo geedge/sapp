@@ -101,6 +101,28 @@ int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt
 
 	return 0;
 }
+
+/*
+	ctype:
+		'c':count;
+		'l':length;
+*/
+static unsigned long long __get_platform_opt_traffic(int ctype, sapp_sys_stat_type_t index)
+{
+	int i;
+	unsigned long long tmp_long = 0;
+	
+	for(i = 0; i < g_packet_io_thread_num; i++){
+		if('c' == ctype){
+			tmp_long += sapp_global_val->mthread_volatile[i]->sys_stat.count[index];
+		}else{
+			tmp_long += sapp_global_val->mthread_volatile[i]->sys_stat.length[index];
+		}
+	}
+
+	return tmp_long;
+}
+
 /* 2017-09-04 lijia add, for 网管需求, 插件获取平台内部参数 */
 int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_val_len)
 {
@@ -120,11 +142,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *tot_pkt = (unsigned long long *)opt_val;
-			tmp_long = 0;
-			for(i = 0; i < g_packet_io_thread_num; i++){
-				tmp_long += g_SysInputInfo[i][PKT_ETHERNET];
-			}
-			*tot_pkt = tmp_long;
+			*tot_pkt = __get_platform_opt_traffic('c', SAPP_STAT_RCV_ETHERNET);
 		}
 		break;
 
@@ -136,13 +154,69 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			tmp_long = 0;
-			for(i = 0; i < g_packet_io_thread_num; i++){
-				tmp_long += g_SysInputInfo[i][PKT_ETHERNET_LEN];
-			}
-			*tot_byte = tmp_long;
+			*tot_byte = *tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_RCV_ETHERNET);;
 		}
 		break;
+
+		case SPO_TOTAL_EGRESS_PKT:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_byte = (unsigned long long *)opt_val;
+			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_ETH_EGRESS);;
+		}
+		break;
+		
+		case SPO_TOTAL_EGRESS_BYTE:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_byte = (unsigned long long *)opt_val;
+			*tot_byte = *tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_ETH_EGRESS);;
+		}
+		break;
+
+		case SPO_TCP_STREAM_NEW:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_byte = (unsigned long long *)opt_val;
+			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_TCP_STREAM_NEW);
+		}
+		break;		
+
+		case SPO_TCP_STREAM_LIVE:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_byte = (unsigned long long *)opt_val;
+			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_TCP_STREAM_DATA);
+		}
+		break;	
+
+		case SPO_TCP_STREAM_CLOSE:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_byte = (unsigned long long *)opt_val;
+			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_TCP_STREAM_DEL);
+		}
+		break;	
 
 		case SPO_THREAD_COUNT:
 		{

@@ -1140,8 +1140,6 @@ static int judge_pure_ipv4_stack(const struct streaminfo *pstream, const void *a
 }
 #endif
 
- int g_packet_io_ipv6_switch = 0;
- extern int g_discard_ack_sw;
  int app_function_rationality_check(void)
 {
 	/* 2015-01-12 lijia add, for error message */
@@ -1150,8 +1148,8 @@ static int judge_pure_ipv4_stack(const struct streaminfo *pstream, const void *a
 		sleep(1);
 	}
 
-	if((0 == g_packet_io_ipv6_switch) && (g_Ipv6FunNum != 0)){
-		printf("\033[33m[Warning]You have registered 'IPV6' plugin, but 'IPv6_module_enable' in main.conf is disable! \033[0m\n");
+	if((0 == g_ipv6_decapsulation_enabled) && (g_Ipv6FunNum != 0)){
+		printf("\033[33m[Warning]You have registered 'IPV6' plugin, but 'sapp.toml->ipv6_decapsulation_enabled' is disable! \033[0m\n");
 		sleep(1);
 	}
 

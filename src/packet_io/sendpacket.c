@@ -59,8 +59,6 @@ static tcp_rst_finger_mark_t g_tcp_rst_finger[MAX_THREAD_NUM];
 extern void *g_packet_dl_send_handle[MAX_THREAD_NUM];
 extern dl_io_fun_list_t dl_io_fun_list;
 extern char g_send_dev_name[DEV_NAME_STR_LEN];
-extern int g_packet_io_ipv6_switch;
-extern int g_packet_io_ipv6_raw_socket;
 extern int g_app_send_rst_type ;
 extern int calc_l2tp_hdr_len(const struct l2tp_hdr_v2 *l2tp_hdr);
 extern int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_type, 
@@ -1607,8 +1605,8 @@ static int build_net_layer_ipv6(struct streaminfo_private *stream_pr, int carry_
 	UINT8 hop = (UINT8)MESA_rand_range(64, 128);
 	int threadnum = (int)stream_pr->stream_public.threadnum;
 
-	if(0 == g_packet_io_ipv6_switch){
-		printf("IPv6 module is not support! Please set 'IPv6_module_enable=1' in main.conf.\n");
+	if(0 == g_ipv6_decapsulation_enabled){
+		printf("IPv6 module is not support! Please set 'ipv6_decapsulation_enabled=1' in sapp.toml.\n");
 		return -1;
 	}
 
@@ -3121,7 +3119,7 @@ static int send_handle_init(int tot_thread_num)
 				return -1;
 			}
 		}
-		if(g_packet_io_ipv6_raw_socket){
+		if(g_ipv6_send_packet_enabled){
 			g_send_handle[i].raw_ipv6_fd = socket(PF_INET6, SOCK_RAW, IPPROTO_RAW);
 			if(g_send_handle[i].raw_ipv6_fd < 0){
 				printf("socket v6 error, %s\n", strerror(errno));

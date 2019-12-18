@@ -7,7 +7,7 @@
 	重新编译即可!
 */
 
-enum __sapp_sys_stat_type{
+typedef enum __sapp_sys_stat_type{
 	/*************  receive packet  ****************/
 	SAPP_STAT_RCV_ETHERNET,
 	SAPP_STAT_RCV_IPV4,		 /* 不包括SAPP_STAT_RCV_IPV4_FRAG */
@@ -20,7 +20,10 @@ enum __sapp_sys_stat_type{
 	SAPP_STAT_RCV_UNKNOWN,
 	
 	/*************  send packet  *******************/
-	SAPP_STAT_SND_ETHERNET,
+
+	SAPP_STAT_ETH_EGRESS, /* 串联模式下的回流流量, 理论上和SAPP_STAT_RCV_ETHERNET相等, 除非有插件返回DROPPKT */
+	
+	SAPP_STAT_SND_ETHERNET, /* 插件主动发送的流量, 不包括串联回流流量 */
 	SAPP_STAT_SND_IPV4,
 	SAPP_STAT_SND_IPV6,
 	SAPP_STAT_SND_TCP,
@@ -75,7 +78,7 @@ enum __sapp_sys_stat_type{
 
 	/************** Maximum Value Definition *******/
 	SAPP_STAT_NUM_MAX,
-};
+}sapp_sys_stat_type_t;
 
 #endif
 

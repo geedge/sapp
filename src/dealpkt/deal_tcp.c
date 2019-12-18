@@ -56,9 +56,7 @@ int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *p
 void iterate_stream_list(const struct streaminfo *stream);
 int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index);
 
-int g_discard_ack_sw = 0; /* 2016-06-15 lijia add, 是否丢弃纯TCP-ACK包 */
 //int g_kill_tcp_remedy_sw = 0; /* 2016-06-21 lijia add, 是否进行FD补救 */
-int g_analyse_tcp_opt_sw = 1;
 
 int G_TCP_FLOW_STAT_PROJECT_ID = -1; /* 2016-07-14 lijia copy from sapp */
 int G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID = -1; /* 单向流, 根据ACK序号推断出的对端理论接收的数据长度 */
@@ -513,7 +511,7 @@ static inline void tcp_parse_opts(struct streaminfo_private *pstream_pr, char di
 	int ret;
 	struct tcp_option local_tmp_opt_array[MAX_TCP_OPT_NUM];
 	
-	if(g_analyse_tcp_opt_sw){
+	if(g_tcp_syn_option_parse_enabled){
 		ret = MESA_get_tcp_pkt_opts((const struct tcphdr *)tcphdr, local_tmp_opt_array, MAX_TCP_OPT_NUM);
 		if(ret > 0){
 			tcp_store_syn_state_opts(pstream_pr, dir, local_tmp_opt_array, ret);

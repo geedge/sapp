@@ -53,8 +53,6 @@ char g_down_dev_name[DEV_NAME_STR_LEN];
 ///int g_packet_io_cap_level = CAP_LEVEL_MAC; /* 捕包起始位置,默认MAC层 */
 //int g_packet_io_thread_num = 1;
 int g_app_send_rst_type;
-extern int g_packet_io_ipv6_switch;
-int g_packet_io_ipv6_raw_socket = 0; /* 用于发送纯Ipv6 rst包 */
 //extern int g_timestamp_record_sw;
 int g_encapsulate_with_ddp = 0; /* 使用DDP协议封装的原始包 */
 int g_encapsulate_with_L2E = 0; /* 使用DDP协议封装的x27原始IP包 */
@@ -110,13 +108,13 @@ static const unsigned char phony_feedback_eth_hdr_ip6[ETHERNET_HDR_LEN] =
 
 int packet_io_set_ipv6_module_enable(int op_switch)
 {
-	g_packet_io_ipv6_switch = op_switch;
+	g_ipv6_decapsulation_enabled = op_switch;
 	return 0;
 }
 
 int packet_io_set_ipv6_raw_socket_enable(int op_switch)
 {
-	g_packet_io_ipv6_raw_socket = op_switch;
+	g_ipv6_send_packet_enabled = op_switch;
 	return 0;
 }
 
@@ -645,6 +643,11 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		ret = g_platform_action_cb_fun(sapp_global_val->config.packet_io.depolyment_mode_bin, ret);
 	}
 
+	if((PASS == ret) && (g_topology_mode & __NET_CONN_SERIAL)){
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_ETH_EGRESS]++;
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.length[SAPP_STAT_ETH_EGRESS]+= p_raw_pkt->raw_pkt_len;
+	}
+
 	return ret;
 }
 
@@ -897,9 +900,9 @@ static int packet_io_send_by_sys_routev6(MESA_send_handle *send_handle,int datal
 	int offset;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[send_handle->threadnum]->sys_stat;
 	
-	if(0 == g_packet_io_ipv6_raw_socket){
-		printf("IPv6 module is not support! Please check 'main.conf->IPv6_raw_socket'.\n");
-		sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: IPv6 module is not support! Please check 'main.conf->IPv6_raw_socket'.\n", __FILE__, __LINE__);		
+	if(0 == g_ipv6_send_packet_enabled){
+		printf("IPv6 module is not support! Please check 'sapp.toml->ipv6_send_packet_enabled'.\n");
+		sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: IPv6 module is not support! Please check 'sapp.toml->ipv6_send_packet_enabled'.\n", __FILE__, __LINE__);		
 		return -1;
 	}
 
@@ -1081,6 +1084,11 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 										low_layer_type,
 										dir,
 										thread_num);
+	}
+
+	if(ret >= 0){
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_ETH_EGRESS]++;
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.length[SAPP_STAT_ETH_EGRESS] += datalen;
 	}
 
 	return ret;

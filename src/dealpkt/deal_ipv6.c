@@ -16,7 +16,6 @@ extern "C" {
 
 static struct frag_manage *g_ipv6_frag_manage = NULL;
 static unsigned int FRAG_IP6_RANDOM;
-extern int g_packet_io_ipv6_switch;
 //extern int g_packet_io_thread_num;
 extern void raw_frags_list_free_one(int thread_seq, void *project_req_value);
 int update_global_ip_frag_list(raw_ipfrag_list_t *list_head, int thread_num, int type);
@@ -768,7 +767,7 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 	static unsigned int ipv6_frag_reassemble_num = 0;
 #endif
 
-	if(0 == g_packet_io_ipv6_switch){
+	if(0 == g_ipv6_decapsulation_enabled){
 		static int __print_flag = 1; /* 警告只打印一次, 不狂刷屏 */
 		if(__print_flag){
 			printf("\033[41m[Warning]recv a IPv6 packet, but IPv6 module is not enable!\033[0m\n");

@@ -170,12 +170,21 @@ typedef struct{
 }sapp_config_special_link_t;
 
 typedef struct{
+	int ipv6_decapsulation_enabled; /* 是否解析ipv6数据包 */
+	int ipv6_send_packet_enabled; /* 是否支持发送ipv6数据包, 此项依赖系统ipv6内核模块是否加载 */
+	int tcp_drop_pure_ack_pkt; /* 丢弃没有负载的纯ack包, 可以节约一次流表查询, 根据业务需求设置 */
+	int tcp_syn_option_parse_enabled; /* 是否解析tcp syn包头部选项 */
+}sapp_protocol_feature_t;
+
+
+typedef struct{
 	sapp_config_cpu_t cpu;
 	sapp_config_tools_t tools;
 	sapp_config_system_t system;
 	sapp_config_stream_t stream;
 	sapp_config_profiling_t profiling;
 	sapp_config_packet_io_t packet_io;
+	sapp_protocol_feature_t protocol_feature;
 	sapp_config_special_link_t special_conf_link;
 }sapp_config_t;
 
@@ -210,7 +219,7 @@ typedef struct{
 typedef struct{
 	sapp_gval_mthread_sys_stat_t sys_stat;
 	unsigned short stream_seq_per_thread;
-	char __padding[46];
+	char __padding[28];
 }sapp_gval_mthread_t; /*   for multi-thread, must 64byte alignment */
 
 
