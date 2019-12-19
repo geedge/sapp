@@ -1179,7 +1179,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type)
 			}else if (STREAM_TYPE_UDP == stream->type){
 				reserved_hdr_len = sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip4_hdr);
 			}else{
-				printf("addr type is tuple4v4, but stream type is not TCP or UDP!\n");
+				//printf("addr type is tuple4v4, but stream type is not TCP or UDP!\n");
 				sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: addr type is tuple4v4, but stream type is :%d, not TCP or UDP.\n", __FILE__, __LINE__, stream->type);		
 				return -1;
 				//assert(0);
@@ -1202,7 +1202,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type)
 			}else if (STREAM_TYPE_UDP == stream->type){
 				reserved_hdr_len = sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip6_hdr);;
 			}else{
-				printf("addr type is tuple4v6, but stream type is not TCP or UDP!\n");
+				//printf("addr type is tuple4v6, but stream type is not TCP or UDP!\n");
 				sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: addr type is tuple4v6, but stream type is :%d, not TCP or UDP.\n", __FILE__, __LINE__, stream->type);		
 				return -1;
 				//assert(0);
@@ -1227,7 +1227,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type)
 		break;
 
 		case ADDR_TYPE_ARP:
-			printf("Sendpacket use ARP!\n");
+			//printf("Sendpacket use ARP!\n");
 			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: Sendpacket use ARP.\n", __FILE__, __LINE__);		
 			return -1;
 			//assert(0);
@@ -1302,7 +1302,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type)
 		
 		default:
 			/* to do */
-			printf("calc_reserved_hdr_len(): Not support addrtype:%d\n", stream->addr.addrtype);
+			sapp_runtime_log(30, "calc_reserved_hdr_len(): Not support addrtype:%d\n", stream->addr.addrtype);
 			reserved_hdr_len = -1;
 			break;
 	}
@@ -1606,7 +1606,7 @@ static int build_net_layer_ipv6(struct streaminfo_private *stream_pr, int carry_
 	int threadnum = (int)stream_pr->stream_public.threadnum;
 
 	if(0 == g_ipv6_decapsulation_enabled){
-		printf("IPv6 module is not support! Please set 'ipv6_decapsulation_enabled=1' in sapp.toml.\n");
+		sapp_runtime_log(30, "IPv6 module is not support! Please set 'ipv6_decapsulation_enabled=1' in sapp.toml.\n");
 		return -1;
 	}
 
@@ -2226,7 +2226,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 		break;
 		
 		default:
-			printf("build_net_layer_pkt(): unsupport protocol:%d! TODO!\n", stream->addr.addrtype);
+			sapp_runtime_log(30, "build_net_layer_pkt(): unsupport addr type:%d!\n", stream->addr.addrtype);
 			goto err;
 			break;
 	}
@@ -2569,7 +2569,7 @@ int MESA_kill_connection(struct streaminfo *stream, const void *ext_raw_pkt)
 		case STREAM_TYPE_SOCKS5:
 		case STREAM_TYPE_HTTP_PROXY:
 		case STREAM_TYPE_PPPOE:
-			printf("stream type: %d, not support kill_connection!\n", stream->type);
+			sapp_runtime_log(30, "stream type: %d, not support kill_connection!\n", stream->type);
 			return -1;
 			//assert(0);
 		break;
@@ -2617,7 +2617,7 @@ int MESA_kill_connection_feedback(struct streaminfo *stream, const void *ext_raw
 		case STREAM_TYPE_SOCKS5:
 		case STREAM_TYPE_HTTP_PROXY:
 		case STREAM_TYPE_PPPOE:
-			printf("stream type: %d, not support kill_connection!\n", stream->type);
+			sapp_runtime_log(30, "stream type: %d, not support kill_connection!\n", stream->type);
 			return -1;
 			//assert(0);
 		break;
@@ -3163,7 +3163,7 @@ int MESA_sendpacket_ethlayer(int thread_num,const char *data, int data_len, unsi
 
 	if(data_len > MTU_MAX)
 	{
-		printf("data length is more than MTU, %d\n", data_len);
+		sapp_runtime_log(30, "MESA_sendpacket_ethlayer(): data length is more than MTU, %d\n", data_len);
 		return -1;
 	}
 
@@ -3224,7 +3224,7 @@ unsigned char MESA_dir_reverse(unsigned char raw_dir)
 static inline int dir_check(unsigned char raw_dir)
 {
 	if(raw_dir & DIR_BIT_UNUSE_MASK){ /* 方向只使用了最高和最低位bit, 如果出现其他值,说明插件在转换dir时出了错误 */
-		printf("dir = 0x%x,  is invalid, only the most or least significant bit can be used!", raw_dir);
+		sapp_runtime_log(30, "dir = 0x%x, is invalid, only the most or least significant bit can be used!", raw_dir);
 		//assert(0);
 		return -1;
 	}
@@ -3251,13 +3251,13 @@ static int __MESA_sendpacket_iplayer(int thread_index,const char *data,  int dat
 		break;
 
 		default:
-		    printf("MESA_sendpacket_iplayer: Invalid cap_mode:%d\n", g_packet_io_cap_level);
+		    sapp_runtime_log(30, "MESA_sendpacket_iplayer: Invalid cap_mode:%d\n", g_packet_io_cap_level);
 		    //exit(1);
 		return -1;
 	}	
 
 	if(data_len > (int)MTU_MAX-(int)sizeof(struct mesa_ethernet_hdr)){
-		printf("TODO: MESA_sendpacket_iplayer error! datalen is more than MTU, need ip fragment!\n");
+		sapp_runtime_log(30,"TODO: MESA_sendpacket_iplayer error! datalen is more than MTU, need ip fragment!\n");
 		return -1;
 	}
 
@@ -3310,13 +3310,13 @@ int MESA_fakepacket_send_ipv4(int thread_index,u_int8_t ttl,
 		break;
 
 		default:
-		    printf("MESA_fakepacket_send_ipv4: Invalid cap_mode:%d\n", g_packet_io_cap_level);
+		    sapp_runtime_log(30,"MESA_fakepacket_send_ipv4: Invalid cap_mode:%d\n", g_packet_io_cap_level);
 		    //exit(1);
 		return -1;
 	}	
 
 	if(payload_len > (int)MTU_MAX-(int)sizeof(struct mesa_ethernet_hdr)-(int)sizeof(struct mesa_ip4_hdr)){
-		printf("TODO: MESA_fakepacket_send_ipv4 error! datalen is more than MTU, need ip fragment!\n");
+		sapp_runtime_log(30,"MESA_fakepacket_send_ipv4 error! datalen is more than MTU, need ip fragment!\n");
 		return -1;
 	}
 	
@@ -3362,13 +3362,13 @@ int MESA_fakepacket_send_ipv4_detail(int thread_index,u_int8_t ttl,
 		break;
 
 		default:
-		    printf("MESA_fakepacket_send_ipv4: Invalid cap_mode:%d\n", g_packet_io_cap_level);
+		    sapp_runtime_log(30,"MESA_fakepacket_send_ipv4: Invalid cap_mode:%d\n", g_packet_io_cap_level);
 		    //exit(1);
 		return -1;
 	}	
 
 	if(payload_len > (int)MTU_MAX-(int)sizeof(struct mesa_ethernet_hdr)-(int)sizeof(struct mesa_ip4_hdr)){
-		printf("TODO: MESA_fakepacket_send_ipv4 error! datalen is more than MTU, need ip fragment!\n");
+		sapp_runtime_log(30,"MESA_fakepacket_send_ipv4 error! datalen is more than MTU, need ip fragment!\n");
 		return -1;
 	}
 	sendpacket_build_ipv4(payload_len, 0, ipid, 0 , ttl, protocol, 
@@ -3414,13 +3414,13 @@ int MESA_fakepacket_send_tcp(int thread_index,u_int sip_host_order,u_int dip_hos
 		break;
 
 		default:
-		    printf("MESA_fakepacket_send_tcp: Invalid cap_mode:%d\n", g_packet_io_cap_level);
+		   sapp_runtime_log(30,"MESA_fakepacket_send_tcp: Invalid cap_mode:%d\n", g_packet_io_cap_level);
 		    //exit(1);
 		return -1;
 	}	
 
 	if(payload_len > (int)MTU_MAX- (int)sizeof(struct mesa_ethernet_hdr)- (int)sizeof(struct mesa_ip4_hdr)- (int)sizeof(struct mesa_tcp_hdr)){
-		printf("TODO: MESA_fakepacket_send_tcp error! datalen is more than MTU, need ip fragment!\n");
+		sapp_runtime_log(30,"MESA_fakepacket_send_tcp error! datalen is more than MTU, need ip fragment!\n");
 		return -1;
 	}
 
@@ -3475,13 +3475,13 @@ int MESA_fakepacket_send_tcp_detail(int thread_index,u_int sip_host_order,u_int 
 		break;
 
 		default:
-		    printf("MESA_fakepacket_send_tcp: Invalid cap_mode:%d\n", g_packet_io_cap_level);
+		    sapp_runtime_log(30,"MESA_fakepacket_send_tcp: Invalid cap_mode:%d\n", g_packet_io_cap_level);
 		    //exit(1);
 		return -1;
 	}	
 
 	if(payload_len > (int)MTU_MAX- (int)sizeof(struct mesa_ethernet_hdr)- (int)sizeof(struct mesa_ip4_hdr)- (int)sizeof(struct mesa_tcp_hdr)){
-		printf("TODO: MESA_fakepacket_send_tcp error! datalen is more than MTU, need ip fragment!\n");
+		sapp_runtime_log(30,"MESA_fakepacket_send_tcp error! datalen is more than MTU, need ip fragment!\n");
 		return -1;
 	}
 
@@ -3530,13 +3530,13 @@ int MESA_fakepacket_send_udp(int thread_index, u_int sip_host_order, u_int dip_h
 		break;
 
 		default:
-		    printf("MESA_fakepacket_send_udp: Invalid cap_mode:%d\n", g_packet_io_cap_level);
+		    sapp_runtime_log(30,"MESA_fakepacket_send_udp: Invalid cap_mode:%d\n", g_packet_io_cap_level);
 		    //exit(1);
 		return -1;
 	}	
 
 	if(payload_len > (int)MTU_MAX- (int)sizeof(struct mesa_ethernet_hdr)- (int)sizeof(struct mesa_ip4_hdr)- (int)sizeof(struct mesa_tcp_hdr)){
-		printf("TODO: MESA_fakepacket_send_udp error! datalen is more than MTU, need ip fragment!\n");
+		sapp_runtime_log(30,"MESA_fakepacket_send_udp error! datalen is more than MTU, need ip fragment!\n");
 		return -1;
 	}
 
@@ -3588,13 +3588,13 @@ int MESA_fakepacket_send_udp_detail(int thread_index, u_int sip_host_order, u_in
 		break;
 
 		default:
-		    printf("MESA_fakepacket_send_udp: Invalid cap_mode:%d\n", g_packet_io_cap_level);
+		    sapp_runtime_log(30,"MESA_fakepacket_send_udp: Invalid cap_mode:%d\n", g_packet_io_cap_level);
 		    //exit(1);
 		return -1;
 	}	
 
 	if(payload_len > (int)MTU_MAX- (int)sizeof(struct mesa_ethernet_hdr)- (int)sizeof(struct mesa_ip4_hdr)- (int)sizeof(struct mesa_tcp_hdr)){
-		printf("TODO: MESA_fakepacket_send_udp error! datalen is more than MTU, need ip fragment!\n");
+		sapp_runtime_log(30,"MESA_fakepacket_send_udp error! datalen is more than MTU, need ip fragment!\n");
 		return -1;
 	}
 
@@ -4316,7 +4316,7 @@ int sapp_forward_current_pkt(const struct streaminfo *stream, unsigned int targe
 	//g_SysInputInfo[stream->threadnum][PKT_MARSIO_SND]++;
 	
 #else
-	printf("sapp_forward_current_pkt() not support in non-marsio mode, TODO!\n");
+	sapp_runtime_log(30, "sapp_forward_current_pkt() not support in non-marsio mode, TODO!\n");
 	return -1;/* 其他模式todo */
 #endif
 

@@ -166,7 +166,7 @@ static int udp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 			}
             else
             {
-                printf("TODO: jmp unsupport teredo hdr:0x%d!\n", *(unsigned int *)(next_layer_hdr));
+                sapp_runtime_log(20, "udp_jump_to_layer(): unsupport teredo hdr:0x%d!\n", *(unsigned int *)(next_layer_hdr));
                 return -1;
             }
 		}
@@ -316,7 +316,7 @@ static int ipv6_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 				goto done;
 
 			default:
-				printf("TODO:jmp Unknown IPv6 header type:0x%x!\n", next_hdr_type);		
+				sapp_runtime_log(20, "ipv6_jump_to_layer(): unknown IPv6 header type:0x%x!\n", next_hdr_type);		
 				skip_len = -1;
 				goto done;
 			break;
@@ -376,7 +376,7 @@ static int ppp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 		break;
 
 		default:
-			printf("TODO: jmp unsupport ppp pro:0x%x!\n", ntohs(pppoe_ses_hdr->ppp_protocol));
+			sapp_runtime_log(20, "ppp_jump_to_layer(): unsupport ppp pro:0x%x!\n", ntohs(pppoe_ses_hdr->ppp_protocol));
 		break;
 		
 	}
@@ -535,7 +535,7 @@ static int vlan8021q_jump_to_layer(const char *raw_data,  int raw_layer_type, in
 		break;
 		
 		default:
-			printf("TODO: jmp unsupport type in vlan8021q, 0x%x!\n", ntohs(vlan_hdr->type));
+			sapp_runtime_log(20, "vlan8021q_jump_to_layer(): unsupport type: 0x%x!\n", ntohs(vlan_hdr->type));
 			skip_len = -1;
 	}
 
@@ -654,7 +654,7 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 		case ADDR_TYPE_MPLS:		
 		case ADDR_TYPE_GRE:
 		default:
-			printf("TODO: jmp unsupport raw_layer_type:%d in MESA_net_jump_to_layer()!\n", raw_layer_type);
+			sapp_runtime_log(20, "MESA_net_jump_to_layer(): unsupport raw_layer_type:%d in MESA_net_jump_to_layer()!\n", raw_layer_type);
 			return NULL;
 	}
 
@@ -748,7 +748,7 @@ UINT8 net_layer_to_ipv4_protocol(int addr_type)
 		break;
 
 		default:
-			printf("unknown ip4 protocolr:%d\n", addr_type);
+			sapp_runtime_log(20, "net_layer_to_ipv4_protocol(): unknown ip4 protocolr:%d\n", addr_type);
 			proto = 0xFF;
 		break;
 	}
@@ -774,7 +774,7 @@ UINT8 net_layer_to_ipv6_protocol(int addr_type)
 		break;
 
 		default:
-			printf("unknown ip6 next-hdr:%d\n", addr_type);
+			sapp_runtime_log(20, "net_layer_to_ipv6_protocol(): unknown ip6 next-hdr:%d\n", addr_type);
 			return 0xFF;
 		break;
 	}

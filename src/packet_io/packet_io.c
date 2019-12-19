@@ -901,7 +901,7 @@ static int packet_io_send_by_sys_routev6(MESA_send_handle *send_handle,int datal
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[send_handle->threadnum]->sys_stat;
 	
 	if(0 == g_ipv6_send_packet_enabled){
-		printf("IPv6 module is not support! Please check 'sapp.toml->ipv6_send_packet_enabled'.\n");
+		//printf("IPv6 module is not support! Please check 'sapp.toml->ipv6_send_packet_enabled'.\n");
 		sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: IPv6 module is not support! Please check 'sapp.toml->ipv6_send_packet_enabled'.\n", __FILE__, __LINE__);		
 		return -1;
 	}
@@ -963,7 +963,7 @@ static int packet_io_get_sendroute_mac(char dev_id, char link_id, unsigned char 
     	return -1;
     }else{
 		if(MESA_mac_pton(p_mac_addr, ':', (char *)out_mac_addr) < 0){
-			printf("error, src mac:%s is not correct, for example:00:11:22:33:44:55\n", p_mac_addr);
+			sapp_runtime_log(20, "error, src mac:%s is not correct, for example:00:11:22:33:44:55\n", p_mac_addr);
 			return -1;
 		}
     }

@@ -768,11 +768,12 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 #endif
 
 	if(0 == g_ipv6_decapsulation_enabled){
-		static int __print_flag = 1; /* 警告只打印一次, 不狂刷屏 */
+		static int __print_flag = 1; /* 前端警告只打印一次, 不狂刷屏 */
 		if(__print_flag){
-			printf("\033[41m[Warning]recv a IPv6 packet, but IPv6 module is not enable!\033[0m\n");
+			printf("\033[41m[Warning]recv a IPv6 packet, but IPv6 decapsulation is not enable!\033[0m\n");
 			__print_flag = 0;
 		}
+		sapp_runtime_log(20, "recv a IPv6 packet, but IPv6 decapsulation is not enable!\n");
 		return PASS;
 	}
 	
@@ -844,9 +845,6 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 										thread_num, routedir, raw_pkt);
 				new_ip6h = ipv6_defrag(&(tmp_index.stream), thread_num, a_packet, 
 						  (struct ipv6_frag_hdr *)next_hdr_ptr, last_hdr-(uchar *)a_packet, raw_pkt); 
-#if IPV6_DEBUG
-				//printf("ipv6_frag_num: %u\n", ipv6_frag_num++);
-#endif
 				if(new_ip6h)
 				{
 					assert(new_ip6h->ip6_nxt_hdr != NEXTHDR_FRAGMENT); /* 强制校验, 分片重组的包不可能再是分片, 就死循环了!! */

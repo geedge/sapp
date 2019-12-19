@@ -539,14 +539,14 @@ static int __addr_mac_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 	for(i = 0; i < MAC_ADDR_LEN; i++){
 		tmp_bin_val = 0; /* 先清零, 后续赋值语句都是或操作 */
 		if(isxdigit(*str_val)==0){
-			printf("MAC string type error!\n");
+			sapp_runtime_log(20, "MAC string type error!\n");
 			return -1;
 		}
 		tmp_bin_val |= MESA_ascii_to_hex(*str_val) << 4;
 		str_val++;
 		
 		if(isxdigit(*str_val)==0)	{
-			printf("MAC string type error!\n");
+			sapp_runtime_log(20, "MAC string type error!\n");
 			return -1;
 		}
 		tmp_bin_val |= MESA_ascii_to_hex(*str_val);
@@ -555,7 +555,7 @@ static int __addr_mac_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 	}
 
 	if(*str_val != '-'){
-		printf("MAC string type error!\n");
+		sapp_runtime_log(20, "MAC string type error!\n");
 		return -1;		
 	}
 	str_val++;
@@ -563,14 +563,14 @@ static int __addr_mac_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 	for(i = 0; i < MAC_ADDR_LEN; i++){
 		tmp_bin_val = 0; /* 先清零, 后续赋值语句都是或操作 */
 		if(isxdigit(*str_val)==0){
-			printf("MAC string type error!\n");
+			sapp_runtime_log(20, "MAC string type error!\n");
 			return -1;
 		}
 		tmp_bin_val |= MESA_ascii_to_hex(*str_val) << 4;
 		str_val++;
 		
 		if(isxdigit(*str_val)==0)	{
-			printf("MAC string type error!\n");
+			sapp_runtime_log(20, "MAC string type error!\n");
 			return -1;
 		}
 		tmp_bin_val |= MESA_ascii_to_hex(*str_val);

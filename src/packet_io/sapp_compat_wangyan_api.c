@@ -46,7 +46,7 @@ int Gserial_sendpacket_iplayer(int plug_id, struct streaminfo *stream,const char
 	
 	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
 	{
-		printf("Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
+		sapp_runtime_log(30, "Gserial_sendpacket_iplayer(): Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
 		return -1;
 	}
 	

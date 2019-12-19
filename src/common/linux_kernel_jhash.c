@@ -236,7 +236,7 @@ int stream_make_hash(struct streaminfo_private *stream_pr, unsigned int maxsize)
 			d = tuple4_v6->source;				
 		}
 	}else{
-		printf("stream_make_hash() error, addr type is not IPv4 or IPv6!\n");
+		//printf("stream_make_hash() error, addr type is not IPv4 or IPv6!\n");
 		sapp_runtime_log(RLOG_LV_FATAL, "stream_make_hash() error, addr type is not IPv4 or IPv6!\n");
 		abort();
 	}

@@ -73,7 +73,8 @@ int stream_register_funtoArray(int funtype,char (*x)(void),stFunArray *pArrary,i
 {
 	if(*pNum>=MAX_FUN_NUM)
 	{
-		printf("too many  funcitons ,max ip fun is %d\n",MAX_FUN_NUM);
+		sapp_runtime_log(30, "too many funcitons of type:%d, max number is %d\n", funtype, MAX_FUN_NUM);
+
 		return -1;
 	}	
 	
@@ -228,7 +229,7 @@ int stream_register_tcp_takeover (STREAM_CB_FUN_T x)
 {
 	if(g_StreamTcpTakeover!=NULL)
 	{
-		printf("only support one take over fun \n");
+		sapp_runtime_log(30, "only support one take over function!\n");
 		return -1;
 	}
 	g_StreamTcpTakeover=x;

@@ -637,7 +637,7 @@ int pcap_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 
 	/* 2018-07-26 lijia add, 增加了插件自己创建的线程发包功能, 但是必须发送完整的ethernet包, 底层mac驱动层无法填充 */
 	if(thread_num >= g_pcap_work_thread_num){
-		printf("\033[1;31;40m send thread_seq is:%d, bigger than main.conf->thread_num(%d) !\033[0m\n", thread_num, g_pcap_work_thread_num);
+		sapp_runtime_log(30, "\033[1;31;40m send thread_seq is:%d, bigger than total thread num(%d) !\033[0m\n", thread_num, g_pcap_work_thread_num);
 		return -1;
 	}
 	

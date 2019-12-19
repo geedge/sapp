@@ -913,7 +913,7 @@ int mkstreamhash_new(struct streaminfo_private *pstream_pr, int maxsize)
 		break;
 		
 		default:
-			printf("Unknown addr type:%d!", this_stream->addr.addrtype);
+			//printf("Unknown addr type:%d!", this_stream->addr.addrtype);
 			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: mkstreamhash_new() Unknown addr type:%d.\n", __FILE__, __LINE__, this_stream->addr.addrtype);	
 			//assert(0);
 			return -1;

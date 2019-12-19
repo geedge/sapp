@@ -3036,7 +3036,7 @@ int set_stream_addr_transport(struct streaminfo_private *this_stream_pr, UINT16 
 		this_addr->addrtype = ADDR_TYPE_IPV6;/* 兼容papp平台, TCP-v6层的四元组使用'ADDR_TYPE_IPV6表示' */
 		this_stream->addr.addrlen = sizeof(struct stream_tuple4_v6);
 	}else{
-		printf("set_stream_addr_transport() error, addr type is not IPv4 or IPv6!\n");
+		//printf("set_stream_addr_transport() error, addr type is not IPv4 or IPv6!\n");
 		sapp_runtime_log(RLOG_LV_FATAL, "set_stream_addr_transport() error, addr type is not IPv4 or IPv6!\n");
 		abort();
 	}

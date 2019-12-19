@@ -690,13 +690,6 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	    	need_free = 1;
 	    	pstream->addr.pktipfragtype = PKT_TYPE_IPREBUILD | PKT_TYPE_IP_FRAG_LAST;
 	    	
-#if IPV4_DEBUG		
-		/* 使用分片icmp测试IP分片重组模块 */
-		if(IPPROTO_ICMP == a_packet->ip_p)
-		{
-			test_print_icmp(a_packet);		
-		}
-#endif
   	}
 
 	/* 2017-05-11 lijia add, 
@@ -838,6 +831,7 @@ int ipv4_frag_init(int thread_count, uint32 hash_size)
 		g_ipv4_frag_manage[i].frag_hash_table = ipv4_frag_htable_create();
 		if(NULL == g_ipv4_frag_manage[i].frag_hash_table){
 			printf("ipv4_frag_init(): MESA_htable_create fail!\n");
+			sapp_runtime_log(30, "ipv4_frag_init(): MESA_htable_create fail!\n");
 			goto err;
 		}
 #else

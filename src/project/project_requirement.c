@@ -107,7 +107,7 @@ int project_producer_register(const char *project_req_name, const char *project_
 	if(pro_req_id != -1){
 		if((NULL == free_cb )
 		&& (PROGECT_REQ_VALUE_TYPE_STRUCT == G_PROJECT_REQ_MANAGE[pro_req_id].project_req_type)){
-			printf("project_producer_register() must implement 'free_cb' with 'struct' type!\n");
+			sapp_runtime_log(30, "project_producer_register() must implement 'free_cb' with 'struct' type!\n");
 			return -1;
 		}
 		G_PROJECT_REQ_MANAGE[pro_req_id].free_cb = free_cb;

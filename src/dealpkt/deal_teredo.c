@@ -101,7 +101,7 @@ int teredo_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,in
 		}
 		else
 		{
-			printf("TODO: jmp unsupport teredo hdr:0x%u!\n", *(unsigned int *)(next_layer_hdr));
+			sapp_runtime_log(20, "unsupport teredo hdr:0x%u!\n", *(unsigned int *)(next_layer_hdr));
 			return -1;
 		}
 	}

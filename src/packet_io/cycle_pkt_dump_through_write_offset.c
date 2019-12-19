@@ -160,7 +160,7 @@ retry:
 				break;
 
 				default:
-					printf("pkt dump, read error:%s, ptr=%p, expect_count=%lu, left_count=%lu\n", 
+					sapp_runtime_log(20, "pkt dump, read error:%s, ptr=%p, expect_count=%lu, left_count=%lu\n", 
 						  strerror(errno), save_ptr, expect_count, left_count);
 				break;
 			}
@@ -192,7 +192,7 @@ retry:
 				break;
 
 				default:
-					printf("pkt dump, write error:%s\n", strerror(errno));
+					sapp_runtime_log(20, "pkt dump, write error:%s\n", strerror(errno));
 					/* 写端如果因空间不足, 不能重试, 否则会影响正常包处理流程 */
 				break;
 			}		
