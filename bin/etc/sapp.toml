@@ -14,6 +14,12 @@ worker_threads=1
 bind_mask=[1]
 
 [PACKET_IO]
+### note, used to represent inbound or outbound direction value,
+### because it comes from other device, so it needs to be specified manually,
+### if inbound_route_dir=1, then outbound_route_dir=0, vice versa,
+### in other words, outbound_route_dir = 1 ^ inbound_route_dir;
+inbound_route_dir=1
+
 ### note, BSD_packet_filter, if you do not want to set any filter rule, keep it empty as ""
 BSD_packet_filter=""
    

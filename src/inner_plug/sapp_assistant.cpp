@@ -194,7 +194,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		}
 		break;		
 
-		case SPO_TCP_STREAM_LIVE:
+		case SPO_TCP_STREAM_ESTAB:
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
