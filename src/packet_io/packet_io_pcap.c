@@ -1070,6 +1070,7 @@ retry:
 	pkt_queue_node.route_dir = *((unsigned char *)user);
 	pkt_queue_node.raw_pkt.hd_hash = 0; /* 2016-05-05 lijia add, pcap模式不支持硬件HASH */
 	pkt_queue_node.raw_pkt.io_lib_pkt_reference = pkt_queue_node.raw_pkt.__lib_raw_pkt_data; /* 兼容dpdk模式, 将此变量赋值 */
+	pkt_queue_node.raw_pkt.route_dir = *((unsigned char *)user);
 
 	pkt_queue_node.op_flag = PCAP_OP_FLAG_PKT;
 #if DEBUG

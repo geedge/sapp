@@ -643,10 +643,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		ret = g_platform_action_cb_fun(sapp_global_val->config.packet_io.depolyment_mode_bin, ret);
 	}
 
-	if((PASS == ret) && (g_topology_mode & __NET_CONN_SERIAL)){
-		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_ETH_EGRESS]++;
-		sapp_global_val->mthread_volatile[thread_num]->sys_stat.length[SAPP_STAT_ETH_EGRESS]+= p_raw_pkt->raw_pkt_len;
-	}
+
 
 	return ret;
 }
@@ -1086,10 +1083,7 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 										thread_num);
 	}
 
-	if(ret >= 0){
-		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_ETH_EGRESS]++;
-		sapp_global_val->mthread_volatile[thread_num]->sys_stat.length[SAPP_STAT_ETH_EGRESS] += datalen;
-	}
+
 
 	return ret;
 }

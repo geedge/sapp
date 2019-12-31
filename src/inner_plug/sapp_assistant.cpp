@@ -107,7 +107,7 @@ int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt
 		'c':count;
 		'l':length;
 */
-static unsigned long long __get_platform_opt_traffic(int ctype, sapp_sys_stat_type_t index)
+static inline unsigned long long __get_platform_opt_traffic(int ctype, sapp_sys_stat_type_t index)
 {
 	int i;
 	unsigned long long tmp_long = 0;
@@ -158,27 +158,53 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		}
 		break;
 
-		case SPO_TOTAL_EGRESS_PKT:
+		case SPO_TOTAL_INBOUND_PKT:
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
 				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
-			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_ETH_EGRESS);;
+			unsigned long long *inbound_pkt = (unsigned long long *)opt_val;
+			*inbound_pkt = __get_platform_opt_traffic('c', SAPP_STAT_ETH_INBOUND);
 		}
 		break;
 		
-		case SPO_TOTAL_EGRESS_BYTE:
+		case SPO_TOTAL_INBOUND_BYTE:
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
 				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
-			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_ETH_EGRESS);;
+			unsigned long long *inbound_byte = (unsigned long long *)opt_val;
+			*inbound_byte = __get_platform_opt_traffic('c', SAPP_STAT_ETH_INBOUND);
+
+		}
+		break;
+
+		case SPO_TOTAL_OUTBOUND_PKT:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *outbound_pkt = (unsigned long long *)opt_val;
+			*outbound_pkt = __get_platform_opt_traffic('c', SAPP_STAT_ETH_OUTBOUND);
+		}
+		break;
+		
+		case SPO_TOTAL_OUTBOUND_BYTE:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *outbound_byte = (unsigned long long *)opt_val;
+			*outbound_byte = __get_platform_opt_traffic('c', SAPP_STAT_ETH_OUTBOUND);
+
 		}
 		break;
 
@@ -635,6 +661,14 @@ static int sapp_fs2_init(void)
 	
 	pfs_para->fs_id_count_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Eth_Pkt");
 	pfs_para->fs_id_length_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Eth_Bit");
+
+	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	 || (DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin)){
+		pfs_para->fs_id_count_array[SAPP_STAT_ETH_INBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Pkt_Inbound");
+		pfs_para->fs_id_length_array[SAPP_STAT_ETH_INBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Bit_Inbound");	 
+		pfs_para->fs_id_count_array[SAPP_STAT_ETH_OUTBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Pkt_Outbound");
+		pfs_para->fs_id_length_array[SAPP_STAT_ETH_OUTBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Bit_Outbound");			
+	}
 
 	pfs_para->fs_id_count_array[SAPP_STAT_RCV_IPV4] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ipv4_Pkt");
 	pfs_para->fs_id_length_array[SAPP_STAT_RCV_IPV4] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ipv4_Bit");

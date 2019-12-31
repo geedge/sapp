@@ -475,6 +475,7 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->__lib_raw_pkt_len = marsio_buff_datalen(rx_buff);
 	raw_pkt->raw_pkt_len = raw_pkt->__lib_raw_pkt_len;
 	raw_pkt->io_lib_pkt_reference = rx_buff;
+	raw_pkt->route_dir = mr_ctrlzone->route_dir;
 
 	ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, mr_ctrlzone->route_dir, tid);
 	

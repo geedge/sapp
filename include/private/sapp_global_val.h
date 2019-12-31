@@ -159,6 +159,7 @@ typedef struct{
 	char pcap_dumpfile_name[NAME_MAX];
 	int polling_enabled;
 	int polling_priority; /* call sapp_recv_pkt every call polling_entry times, 调用多少次polling后调用一次recv pkt, 1表示两者优先级相同 */
+	int inbound_route_dir; /* 表示入境, I2C方向的值是0还是1 */
 }sapp_config_packet_io_t;
 
 typedef struct{
@@ -219,7 +220,7 @@ typedef struct{
 typedef struct{
 	sapp_gval_mthread_sys_stat_t sys_stat;
 	unsigned short stream_seq_per_thread;
-	char __padding[28];
+	char __padding[12];
 }sapp_gval_mthread_t; /*   for multi-thread, must 64byte alignment */
 
 

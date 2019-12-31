@@ -82,7 +82,14 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 		//g_SysInputInfo[thread_num][PKT_ETHERNET]++;
 		//g_SysInputInfo[thread_num][PKT_ETHERNET_LEN] += (unsigned long long)raw_pkt->raw_pkt_len;	
 		local_sys_stat->count[SAPP_STAT_RCV_ETHERNET]++;
-		local_sys_stat->length[SAPP_STAT_RCV_ETHERNET] += (unsigned long long)raw_pkt->raw_pkt_len;;
+		local_sys_stat->length[SAPP_STAT_RCV_ETHERNET] += (unsigned long long)raw_pkt->raw_pkt_len;
+		if(dir == sapp_global_val->config.packet_io.inbound_route_dir){
+			local_sys_stat->count[SAPP_STAT_ETH_INBOUND]++;
+			local_sys_stat->length[SAPP_STAT_ETH_INBOUND] += (unsigned long long)raw_pkt->raw_pkt_len;
+		}else{
+			local_sys_stat->count[SAPP_STAT_ETH_OUTBOUND]++;
+			local_sys_stat->length[SAPP_STAT_ETH_OUTBOUND] += (unsigned long long)raw_pkt->raw_pkt_len;
+		}
 	}else{
 		pstream_pr = NULL; /* 使上层承载协议的pfather为NULL */
 		next_layer_offset = 0;

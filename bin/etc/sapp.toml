@@ -9,9 +9,9 @@
 instance_name = "sapp_v4.0"
 
 [CPU]
-worker_threads=1
+worker_threads=2
 ### note, bind_mask, if you do not want to bind thread to special CPU core, keep it empty as []
-bind_mask=[1]
+bind_mask=[]
 
 [PACKET_IO]
 ### note, used to represent inbound or outbound direction value,
@@ -21,11 +21,11 @@ bind_mask=[1]
 inbound_route_dir=1
 
 ### note, BSD_packet_filter, if you do not want to set any filter rule, keep it empty as ""
-BSD_packet_filter=""
+BSD_packet_filter="tcp port 88"
    
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]
-    mode=mirror
+    mode=transparent
 
 ### note, interface.type options: [pag,pcap,marsio]
     [packet_io.internal.interface]
