@@ -354,6 +354,40 @@ char test_sapp_get_platform_opt(struct streaminfo *pstream,  void **pme, int thr
 	return APP_STATE_GIVEME;
 }
 
+
+char test_get_stream_in_out_bound(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
+{
+	int ret;
+	unsigned long long inound_stat[2];
+	unsigned long long outound_stat[2];
+	int opt_len;
+
+	
+	
+	if(pstream->opstate== OP_STATE_CLOSE){
+		opt_len = sizeof(long long);
+		ret = MESA_get_stream_opt(pstream, MSO_TOTAL_INBOUND_PKT, &inound_stat[0], &opt_len);
+		assert(ret >= 0);
+
+		opt_len = sizeof(long long);
+		ret = MESA_get_stream_opt(pstream, MSO_TOTAL_INBOUND_BYTE, &inound_stat[1], &opt_len);
+		assert(ret >= 0);
+
+		opt_len = sizeof(long long);
+		ret = MESA_get_stream_opt(pstream, MSO_TOTAL_OUTBOUND_PKT, &outound_stat[0], &opt_len);
+		assert(ret >= 0);
+
+		opt_len = sizeof(long long);
+		ret = MESA_get_stream_opt(pstream, MSO_TOTAL_OUTBOUND_BYTE, &outound_stat[1], &opt_len);
+		assert(ret >= 0);		
+
+		printf("stream: %s, inbound: %llu, %llu, outbound: %llu, %llu\n", printaddr(&pstream->addr, thread_seq), 
+				inound_stat[0], inound_stat[1], outound_stat[0], outound_stat[1]);
+	}
+	
+	return APP_STATE_GIVEME;	
+}
+
 int test_sapp_get_device_opt(const char *device)
 {
 	int ret;

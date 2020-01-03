@@ -11,7 +11,7 @@ BIN_PATH = ../bin/
 TARGET	= test_app_sapp.so
 #TARGET += wangyan_gdev_measurement.so
 #TARGET  += test_anti_flood_hijack
-TARGET  += sapp_so_run
+#TARGET  += sapp_so_run
 
 INCS = 
 

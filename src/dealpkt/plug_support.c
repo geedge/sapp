@@ -593,54 +593,6 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		}
 		break;
 		
-		case MSO_TOTAL_INBOUND_PKT:
-		{
-			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() MSO_TOTAL_INBOUND_PKT error: stream type is not tcp or udp!\n");
-				ret = -1;
-				break;
-			}
-			unsigned long long *inbound_pkt = (unsigned long long *)opt_val;
-			*inbound_pkt = __get_stream_opt_traffic('c', 'i', (struct streaminfo_private *)pstream);
-		}	
-		break;
-
-		case MSO_TOTAL_OUTBOUND_PKT:
-		{
-			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() MSO_TOTAL_OUTBOUND_PKT error: stream type is not tcp or udp!\n");
-				ret = -1;
-				break;
-			}
-			unsigned long long *outbound_pkt = (unsigned long long *)opt_val;
-			*outbound_pkt = __get_stream_opt_traffic('c', 'o', (struct streaminfo_private *)pstream);
-		}	
-		break;
-
-		case MSO_TOTAL_INBOUND_BYTE:
-		{
-			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() MSO_TOTAL_INBOUND_BYTE error: stream type is not tcp or udp!\n");
-				ret = -1;
-				break;
-			}
-			unsigned long long *inbound_byte = (unsigned long long *)opt_val;
-			*inbound_byte = __get_stream_opt_traffic('l', 'i', (struct streaminfo_private *)pstream);
-		}	
-		break;
-
-		case MSO_TOTAL_OUTBOUND_BYTE:
-		{
-			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() MSO_TOTAL_OUTBOUND_BYTE error: stream type is not tcp or udp!\n");
-				ret = -1;
-				break;
-			}
-			unsigned long long *outbound_byte = (unsigned long long *)opt_val;
-			*outbound_byte = __get_stream_opt_traffic('l', 'o', (struct streaminfo_private *)pstream);
-		}	
-		break;
-		
 		default:
 			sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error: unsupport MESA_stream_opt type!\n");
 			ret = -1;
@@ -1012,7 +964,54 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			ret = 0;
 		}
 		break;
-		
+
+		case MSO_TOTAL_INBOUND_PKT:
+		{
+			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_INBOUND_PKT error: stream type is not tcp or udp!\n");
+				ret = -1;
+				break;
+			}
+			unsigned long long *inbound_pkt = (unsigned long long *)opt_val;
+			*inbound_pkt = __get_stream_opt_traffic('c', 'i', (struct streaminfo_private *)pstream);
+		}	
+		break;
+
+		case MSO_TOTAL_OUTBOUND_PKT:
+		{
+			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_OUTBOUND_PKT error: stream type is not tcp or udp!\n");
+				ret = -1;
+				break;
+			}
+			unsigned long long *outbound_pkt = (unsigned long long *)opt_val;
+			*outbound_pkt = __get_stream_opt_traffic('c', 'o', (struct streaminfo_private *)pstream);
+		}	
+		break;
+
+		case MSO_TOTAL_INBOUND_BYTE:
+		{
+			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE error: stream type is not tcp or udp!\n");
+				ret = -1;
+				break;
+			}
+			unsigned long long *inbound_byte = (unsigned long long *)opt_val;
+			*inbound_byte = __get_stream_opt_traffic('l', 'i', (struct streaminfo_private *)pstream);
+		}	
+		break;
+
+		case MSO_TOTAL_OUTBOUND_BYTE:
+		{
+			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_OUTBOUND_BYTE error: stream type is not tcp or udp!\n");
+				ret = -1;
+				break;
+			}
+			unsigned long long *outbound_byte = (unsigned long long *)opt_val;
+			*outbound_byte = __get_stream_opt_traffic('l', 'o', (struct streaminfo_private *)pstream);
+		}	
+		break;		
 		default:
 			sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n", opt);
 			ret = -1;

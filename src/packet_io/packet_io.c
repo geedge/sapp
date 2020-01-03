@@ -100,6 +100,7 @@ extern void pptp_per_thread_exit(int thread_seq);
 extern void __timestamp_print_max_tuple4(const raw_pkt_t *raw_pkt, long timedelay, int tid);
 extern int packet_io_device_alias_init(void);
 extern void sapp_fs2_set_latency(int thead_seq, long long time_cost);
+extern void plugctrl_destroy_all_plug(void);
 
 static const unsigned char phony_feedback_eth_hdr_ip4[ETHERNET_HDR_LEN] = 
 			{0x50, 0x48, 0x4F, 0x4E, 0x59, 0x5F, 0x4D, 0x41, 0x43, 0x41, 0x44, 0x44, 0x08, 0x00}; /* PHONY_MACADD + ipv4 */
@@ -657,6 +658,8 @@ void packet_io_exit(void)
 	sleep(1);
 	sched_yield();
 	sleep(1);
+
+	plugctrl_destroy_all_plug();
 	
 	exit(1);
 	

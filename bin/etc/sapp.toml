@@ -21,13 +21,15 @@ bind_mask=[]
 inbound_route_dir=1
 
 ### note, BSD_packet_filter, if you do not want to set any filter rule, keep it empty as ""
-BSD_packet_filter="tcp port 88"
+BSD_packet_filter=""
    
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]
-    mode=transparent
+    mode=mirror
 
-### note, interface.type options: [pag,pcap,marsio]
+### note, interface.type options: [pag, pcap, marsio]
+### receive from internal interface, route dir is 0,
+### receive from external interface, route dir is 1.
     [packet_io.internal.interface]
     type=pcap
     name="lo"
