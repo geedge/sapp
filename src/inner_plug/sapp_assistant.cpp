@@ -178,7 +178,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *inbound_byte = (unsigned long long *)opt_val;
-			*inbound_byte = __get_platform_opt_traffic('c', SAPP_STAT_ETH_INBOUND);
+			*inbound_byte = __get_platform_opt_traffic('l', SAPP_STAT_ETH_INBOUND);
 
 		}
 		break;
@@ -203,7 +203,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *outbound_byte = (unsigned long long *)opt_val;
-			*outbound_byte = __get_platform_opt_traffic('c', SAPP_STAT_ETH_OUTBOUND);
+			*outbound_byte = __get_platform_opt_traffic('l', SAPP_STAT_ETH_OUTBOUND);
 
 		}
 		break;
