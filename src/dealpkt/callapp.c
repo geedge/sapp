@@ -46,6 +46,10 @@ static stFunArray g_PhonyFun[MAX_FUN_NUM];
 int g_PollingFunNum=0;
 static stFunArray g_PollingFun[MAX_FUN_NUM];
 
+static int g_ArpFunNum=0;
+static stFunArray g_ArpFun[MAX_FUN_NUM];
+
+
 typedef struct _stStreamFunInfo
 {
 	char appState;
@@ -235,6 +239,12 @@ int stream_register_tcp_takeover (STREAM_CB_FUN_T x)
 	g_StreamTcpTakeover=x;
 	return 0;
 }
+
+int stream_register_arp(SAPP_PKT_CB_FUN_T x)
+{
+	return stream_register_funtoArray(FUN_TYPE_ARP,(char (*)())x, g_ArpFun, &g_ArpFunNum);
+}
+
 
 /*
 	lijia 2015-01-12 add this_iphdr, 
@@ -1012,6 +1022,20 @@ int stream_process_polling(int thread_seq)
 
 	return fun_ret;
 }
+
+int stream_process_arp(struct streaminfo *pfstream, const struct mesa_arp_hdr * this_layer_hdr,
+				int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt)
+{
+	int i;
+	
+	for(i=0;i<g_ArpFunNum;i++)
+	{
+		plugin_call_ipentry(CALL_FUN_TYPE_RAW,g_ArpFun[i].stream_ipv4_fun,NULL,pfstream,this_layer_hdr,thread_num,routedir, raw_pkt);
+	}
+	
+	return PASS;
+}
+
 
 extern int g_use_MESA_sleep_sw;
 extern void MESA_sleep(void);

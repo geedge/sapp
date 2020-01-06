@@ -138,6 +138,8 @@ int stream_process_ipv6(struct streaminfo *pfstream,const struct ip6_hdr *a_pack
 int stream_process_ipv4_frag(struct streaminfo *pfstream,const struct ip * a_packet,int thread_num,unsigned char routedir,const raw_pkt_t *raw_pkt);
 int stream_process_ipv6_frag(struct streaminfo *pfstream,const struct ip6_hdr *a_packet,int thread_num,unsigned char routedir,const raw_pkt_t *raw_pkt);
 int stream_process_polling(int thread_seq);
+int stream_process_arp(struct streaminfo *pfstream, const struct mesa_arp_hdr * this_layer_hdr, int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt);
+
 void freeall_stream(int threadcount);
 void free_thread_stream(int thread_seq);
 int dealipv4tcppkt(struct streamindex *pfstream,const struct mesa_ip4_hdr * a_packet,int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt,int);

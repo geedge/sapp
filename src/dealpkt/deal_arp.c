@@ -8,7 +8,11 @@ extern "C" {
  int arp_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hdr, 
  		int thread_num, unsigned char dir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
-	
+	const struct mesa_arp_hdr *aph = (struct mesa_arp_hdr *)this_layer_hdr;
+
+	if((ntohs(aph->ar_op) == ARPOP_REPLY) && (ETH_P_IP == ntohs(aph->ar_pro))){
+		stream_process_arp(NULL, this_layer_hdr, thread_num, dir, raw_pkt);
+	}
 
 	/* 双网卡串联模式无条件转发ARP, 否则网络通讯无法正常获取对方MAC */
 	if(NET_CONN_SERIAL_2CARD == g_topology_mode){

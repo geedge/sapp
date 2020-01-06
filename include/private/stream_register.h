@@ -24,6 +24,7 @@ enum fun_type_t{
  	FUN_TYPE_IPV6_FRAG_RAW,
  	FUN_TYPE_PHONY, /* 2016-09-01 lijia add, phony plug entry, will not be called in fact. */
  	FUN_TYPE_POLLING, /* 2016-09-26 lijia add, polling plug entry, will be called wherether has received packet or not. */
+ 	FUN_TYPE_ARP,
  	__FUN_TYPE_MAX,
 };
 

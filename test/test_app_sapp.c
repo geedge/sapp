@@ -2581,6 +2581,18 @@ char IPv6_RAW_ENTRY(const struct streaminfo *pstream, const void *this_hdr, cons
 
 #endif
 
+char arp_plug_entry(const struct streaminfo *pstream,unsigned char routedir,int thread_seq,  const void *arp_hdr)
+{
+	const struct mesa_arp_hdr *aph = (struct mesa_arp_hdr *)arp_hdr;
+	char ip4_str[32];
+
+	inet_ntop(AF_INET, aph->ar_spa, ip4_str, 32);
+
+	printf("rev arp response: ip:%s--->mac:%02x-%02x-%02x-%02x-%02x-%02x \n", ip4_str, 
+				aph->ar_sha[0],aph->ar_sha[1],aph->ar_sha[2],aph->ar_sha[3],aph->ar_sha[4],aph->ar_sha[5]);
+}
+
+
 char POLLING_ENTRY(struct streaminfo *stream,  void **pme, int thread_seq,void *a_packet)
 {
 	printf("polling entry, tid:%d\n", thread_seq);
@@ -2591,12 +2603,14 @@ char POLLING_ENTRY(struct streaminfo *stream,  void **pme, int thread_seq,void *
 
 int CHAR_INIT()
 {
-	test_sapp_get_device_opt("em1");
+	test_sapp_get_device_opt("ens33");
 	
 	int demo_plugid = 51;
 
 //  函数实现自定义
 //  只要求函数返回值为插件ID；
+
+	stream_register_arp((SAPP_PKT_CB_FUN_T)arp_plug_entry);
 	
 	return demo_plugid;
 }
@@ -2621,11 +2635,6 @@ void test_get_plugid(unsigned short plugid)
 	return;
 }
 
-
-int TEST_APP_INIT()
-{
-	return 51;
-}
 
 void test_destroy(void)
 {
