@@ -69,6 +69,7 @@ typedef struct {
 	const void *raw_pkt_data;	/* 给上层应用看的原始包头指针, 有可能跳过了Ethernet层, 根据low_layer_type判断协议类型 */
 	struct timeval raw_pkt_ts;	/* 原始包捕获时间戳, 如果全为0则不支持此功能(如pag模式) */
 	const void *io_lib_pkt_reference; /* 引用底层I/O库的原始包管理结构, 例如:对于marsio来说, 即底层的mbuf结构 */
+	int route_dir;
 }raw_pkt_t;
 
 
@@ -132,7 +133,8 @@ struct streaminfo_private
 
 	/* ---8 bytes-- */
 	UCHAR  layer_dir:2;   /* 单包有效, 当前层的地址是否和默认规则"大端口是客户端"相同 */	
-	UCHAR  stream_dir:2; /* 流的生存期内有效, 流的存储的地址是否和默认规则"大端口是客户端"相同  */		
+	UCHAR  stream_dir:1; /* 流的生存期内有效, 流的存储的地址是否和默认规则"大端口是客户端"相同  */		
+	UCHAR  stream_c2s_route_dir:1; /* c2s方向的包, 对应的链路route dir方向, 用于获取inbound, outbound流量 */
 	UCHAR  addr_use_as_hash:1; /* 本层的addr是否做为HASH计算和比较的参数, 如:MAC地址不参与计算 */
 	UCHAR  addr_skip_for_layer_cmp:1;/*本层的addr是否作为地址比较的层级，如：MPLS地址不作为层数计算，直接跳过，该值默认为0，即需要比较*/
 	UCHAR  need_update_opposite_addr:1;/*本层的addr是否在对侧来包时更新，如：MPLS标签非对称时需要在S2C侧第一个包记录本侧标签,该值默认为0，即不需要更新*/

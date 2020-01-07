@@ -397,6 +397,80 @@ int get_thread_count(void)
 }
 
 
+/*
+	ctype:
+		'c':count;
+		'l':length;
+*/
+static inline unsigned long long __get_stream_opt_traffic(int cltype, int iotype, struct streaminfo_private *pstream_pr)
+{
+	unsigned long long tval;
+	struct streaminfo *pstream = &pstream_pr->stream_public;
+
+	if('c' == cltype){ /* count */
+		if('i' == iotype){ /* inbound */
+			if(sapp_global_val->config.packet_io.inbound_route_dir == pstream_pr->stream_c2s_route_dir){
+				if(STREAM_TYPE_TCP != pstream_pr->stream_public.type){
+					tval = pstream->ptcpdetail->serverpktnum;
+				}else{
+					tval = pstream->pudpdetail->serverpktnum;
+				}
+			}else{
+				if(STREAM_TYPE_TCP != pstream_pr->stream_public.type){
+					tval = pstream->ptcpdetail->clientpktnum;
+				}else{
+					tval = pstream->pudpdetail->clientpktnum;
+				}
+			}
+		}else{ /* outbound */
+			if(sapp_global_val->config.packet_io.inbound_route_dir == pstream_pr->stream_c2s_route_dir){
+				if(STREAM_TYPE_TCP != pstream_pr->stream_public.type){
+					tval = pstream->ptcpdetail->clientpktnum;
+				}else{
+					tval = pstream->pudpdetail->clientpktnum;
+				}
+			}else{
+				if(STREAM_TYPE_TCP != pstream_pr->stream_public.type){
+					tval = pstream->ptcpdetail->serverpktnum;
+				}else{
+					tval = pstream->pudpdetail->serverpktnum;
+				}
+			}			
+		}
+	}else{/* length */
+		if('i' == iotype){ /* inbound */
+			if(sapp_global_val->config.packet_io.inbound_route_dir == pstream_pr->stream_c2s_route_dir){
+				if(STREAM_TYPE_TCP != pstream_pr->stream_public.type){
+					tval = pstream->ptcpdetail->serverbytes;
+				}else{
+					tval = pstream->pudpdetail->serverbytes;
+				}
+			}else{
+				if(STREAM_TYPE_TCP != pstream_pr->stream_public.type){
+					tval = pstream->ptcpdetail->clientbytes;
+				}else{
+					tval = pstream->pudpdetail->clientbytes;
+				}
+			}
+		}else{ /* outbound */
+			if(sapp_global_val->config.packet_io.inbound_route_dir == pstream_pr->stream_c2s_route_dir){
+				if(STREAM_TYPE_TCP != pstream_pr->stream_public.type){
+					tval = pstream->ptcpdetail->clientbytes;
+				}else{
+					tval = pstream->pudpdetail->clientbytes;
+				}
+			}else{
+				if(STREAM_TYPE_TCP != pstream_pr->stream_public.type){
+					tval = pstream->ptcpdetail->serverbytes;
+				}else{
+					tval = pstream->pudpdetail->serverbytes;
+				}
+			}			
+		}		
+	}
+
+	return tval;
+}
 int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt opt, void *opt_val, int opt_val_len)
 {
 	int ret = -1;
@@ -517,6 +591,7 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			pdetail_pr->auto_remedy_flag = (remedy_flag != 0 ? 1:0);
 			ret = 0;
 		}
+		break;
 		
 		default:
 			sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error: unsupport MESA_stream_opt type!\n");
@@ -889,7 +964,54 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			ret = 0;
 		}
 		break;
-		
+
+		case MSO_TOTAL_INBOUND_PKT:
+		{
+			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_INBOUND_PKT error: stream type is not tcp or udp!\n");
+				ret = -1;
+				break;
+			}
+			unsigned long long *inbound_pkt = (unsigned long long *)opt_val;
+			*inbound_pkt = __get_stream_opt_traffic('c', 'i', (struct streaminfo_private *)pstream);
+		}	
+		break;
+
+		case MSO_TOTAL_OUTBOUND_PKT:
+		{
+			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_OUTBOUND_PKT error: stream type is not tcp or udp!\n");
+				ret = -1;
+				break;
+			}
+			unsigned long long *outbound_pkt = (unsigned long long *)opt_val;
+			*outbound_pkt = __get_stream_opt_traffic('c', 'o', (struct streaminfo_private *)pstream);
+		}	
+		break;
+
+		case MSO_TOTAL_INBOUND_BYTE:
+		{
+			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE error: stream type is not tcp or udp!\n");
+				ret = -1;
+				break;
+			}
+			unsigned long long *inbound_byte = (unsigned long long *)opt_val;
+			*inbound_byte = __get_stream_opt_traffic('l', 'i', (struct streaminfo_private *)pstream);
+		}	
+		break;
+
+		case MSO_TOTAL_OUTBOUND_BYTE:
+		{
+			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_OUTBOUND_BYTE error: stream type is not tcp or udp!\n");
+				ret = -1;
+				break;
+			}
+			unsigned long long *outbound_byte = (unsigned long long *)opt_val;
+			*outbound_byte = __get_stream_opt_traffic('l', 'o', (struct streaminfo_private *)pstream);
+		}	
+		break;		
 		default:
 			sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n", opt);
 			ret = -1;

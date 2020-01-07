@@ -29,7 +29,7 @@ _MODE_DPDK_VXLAN=dpdk_vxlan
 _MODE_PAG_MARSIO=pag_marsio
 _MODE_IPFILE=ipfile
 _MODE_CHK=0
-iomode=pcap
+iomode=marsio
 
 _OPT0=0
 _OPT1=1

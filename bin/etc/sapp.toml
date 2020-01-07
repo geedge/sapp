@@ -9,11 +9,17 @@
 instance_name = "sapp_v4.0"
 
 [CPU]
-worker_threads=1
+worker_threads=2
 ### note, bind_mask, if you do not want to bind thread to special CPU core, keep it empty as []
-bind_mask=[1]
+bind_mask=[]
 
 [PACKET_IO]
+### note, used to represent inbound or outbound direction value,
+### because it comes from other device, so it needs to be specified manually,
+### if inbound_route_dir=1, then outbound_route_dir=0, vice versa,
+### in other words, outbound_route_dir = 1 ^ inbound_route_dir;
+inbound_route_dir=1
+
 ### note, BSD_packet_filter, if you do not want to set any filter rule, keep it empty as ""
 BSD_packet_filter=""
    
@@ -21,7 +27,9 @@ BSD_packet_filter=""
     [packet_io.depolyment]
     mode=mirror
 
-### note, interface.type options: [pag,pcap,marsio]
+### note, interface.type options: [pag, pcap, marsio]
+### receive from internal interface, route dir is 0,
+### receive from external interface, route dir is 1.
     [packet_io.internal.interface]
     type=pcap
     name="lo"

@@ -208,6 +208,11 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	}
 
 	save_polling_inject_context(pstream_udp_pr, raw_pkt);
+	if(createdir==DIR_C2S){
+		pstream_udp_pr->stream_c2s_route_dir = raw_pkt->route_dir;
+	}else{
+		pstream_udp_pr->stream_c2s_route_dir = raw_pkt->route_dir ^ 1;
+	}
 	
 	return pindex_udp;
 }

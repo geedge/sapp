@@ -11,5 +11,5 @@ bin/log/
 bin/sapp
 cmake-build-debug
 .vscode
-build/
+./build/
 

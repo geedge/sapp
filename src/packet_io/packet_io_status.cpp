@@ -120,6 +120,15 @@ static void field_stat2_update_metrics(void)
 	
 	sapp_fs2_update_count(SAPP_STAT_RCV_ETHERNET, cur_count[SAPP_STAT_RCV_ETHERNET]);
 	sapp_fs2_update_length(SAPP_STAT_RCV_ETHERNET, 8 *( cur_length[SAPP_STAT_RCV_ETHERNET])); /* to bps, bit per second */
+
+	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	 || (DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin)){
+		sapp_fs2_update_count(SAPP_STAT_ETH_INBOUND, cur_count[SAPP_STAT_ETH_INBOUND]);
+		sapp_fs2_update_length(SAPP_STAT_ETH_INBOUND, 8 *( cur_length[SAPP_STAT_ETH_INBOUND])); /* to bps, bit per second */
+
+		sapp_fs2_update_count(SAPP_STAT_ETH_OUTBOUND, cur_count[SAPP_STAT_ETH_OUTBOUND]);
+		sapp_fs2_update_length(SAPP_STAT_ETH_OUTBOUND, 8 *( cur_length[SAPP_STAT_ETH_OUTBOUND])); /* to bps, bit per second */
+	}
 	
 	sapp_fs2_update_count(SAPP_STAT_RCV_IPV4, cur_count[SAPP_STAT_RCV_IPV4]);
 	sapp_fs2_update_length(SAPP_STAT_RCV_IPV4, 8 *(cur_length[SAPP_STAT_RCV_IPV4]));

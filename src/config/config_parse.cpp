@@ -578,6 +578,8 @@ int sapp_parse_config(void)
 	if(str_tmp[0] != '\0'){
 		pconfig->packet_io.input_bpf_filter = strdup(str_tmp);
 	}
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"PACKET_IO", (char *)"inbound_route_dir", &pconfig->packet_io.inbound_route_dir, 0);
+	
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.depolyment", (char *)"mode", pconfig->packet_io.depolyment_mode_str, NAME_MAX, "mirror");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.internal.interface", (char *)"type", pconfig->packet_io.internal.interface.type_str, NAME_MAX, "pcap");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.internal.interface", (char *)"name", pconfig->packet_io.internal.interface.name, NAME_MAX, "lo");

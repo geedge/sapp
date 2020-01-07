@@ -718,6 +718,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pdetail_pr->iserverseq=ntohl (this_tcphdr->th_ack);
 		//pdetail->clientpkt++; //adjust by lqy 20140515 只有新建时计数
 		pdetail_pr->S2C_first_ack_seq = pdetail_pr->iserverseq;
+		pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir ^ 1;
 	}
 	else if(createdir==DIR_C2S)
 	{
@@ -725,6 +726,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pdetail_pr->iserverseq=ntohl (this_tcphdr->th_seq)+1;
 		//pdetail->serverpkt++; //adjust by lqy 20140515 只有新建时计数
 		pdetail_pr->C2S_first_ack_seq = ntohl (this_tcphdr->th_ack);
+		pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir;
 	}
 	pdetail->lastmtime=g_CurrentTime;	
 	pdetail_pr->link_state=STREAM_LINK_JUST_EST;	
@@ -1006,6 +1008,11 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 
 	pdetail_pr->auto_remedy_flag = sapp_global_val->config.stream.tcp.inject.auto_remedy;
 
+	if(createdir==DIR_C2S){
+		pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir;
+	}else{
+		pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir ^ 1;
+	}
 	return pindex_tcp;
 }
 

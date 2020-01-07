@@ -21,7 +21,9 @@ typedef enum __sapp_sys_stat_type{
 	
 	/*************  send packet  *******************/
 
-	SAPP_STAT_ETH_EGRESS, /* 串联模式下的回流流量, 理论上和SAPP_STAT_RCV_ETHERNET相等, 除非有插件返回DROPPKT */
+
+	SAPP_STAT_ETH_INBOUND,  /* 串联模式下, 非当前网卡的I/O流量, 而是相对于当前设备所在物理位置, 出入境方向流量 */
+	SAPP_STAT_ETH_OUTBOUND, /* 串联模式下, 非当前网卡的I/O流量, 而是相对于当前设备所在物理位置, 出入境方向流量 */
 	
 	SAPP_STAT_SND_ETHERNET, /* 插件主动发送的流量, 不包括串联回流流量 */
 	SAPP_STAT_SND_IPV4,
