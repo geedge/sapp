@@ -11,7 +11,7 @@ extern "C" {
 	const struct mesa_arp_hdr *aph = (struct mesa_arp_hdr *)this_layer_hdr;
 
 	if((ntohs(aph->ar_op) == ARPOP_REPLY) && (ETH_P_IP == ntohs(aph->ar_pro))){
-		stream_process_arp(NULL, this_layer_hdr, thread_num, dir, raw_pkt);
+		stream_process_arp(NULL, (struct mesa_arp_hdr *)this_layer_hdr, thread_num, dir, raw_pkt);
 	}
 
 	/* 双网卡串联模式无条件转发ARP, 否则网络通讯无法正常获取对方MAC */
