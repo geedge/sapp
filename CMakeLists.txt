@@ -169,7 +169,7 @@ add_subdirectory(./src/inner_plug)
 add_subdirectory(./src/timer)
 add_subdirectory(./src/entry)
 add_subdirectory(./test)
-#add_subdirectory(./service)
+add_subdirectory(./service)
 add_subdirectory(./tools)
 
 #by default, not include sapp_module_test dir

@@ -1,11 +1,10 @@
 [Unit]
 Description=sapp service
-Requires=sapp-env.service
-After=sapp-env.service
+After=network.target
 
 [Service]
-WorkingDirectory=/opt/sapp/bin/
-ExecStart=/opt/sapp/bin/fake_sapp
+WorkingDirectory=${CMAKE_INSTALL_PREFIX}
+ExecStart=${CMAKE_INSTALL_PREFIX}/sapp
 Restart=always
 RestartSec=5s
 
