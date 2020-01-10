@@ -175,6 +175,14 @@ add_subdirectory(./tools)
 #by default, not include sapp_module_test dir
 #add_subdirectory(./test/sapp_module_test/src)
 
+
+set(CMAKE_INSTALL_FULL_LIBEXECDIR ${CMAKE_INSTALL_PREFIX})
+set(CMAKE_INSTALL_FULL_SHAREDSTATEDIR ${CMAKE_INSTALL_PREFIX}/etc)
+#set(CMAKE_INSTALL_FULL_LIBDIR ${CMAKE_INSTALL_PREFIX}/plug)
+set(CMAKE_INSTALL_FULL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX}/plug)
+set(CMAKE_INSTALL_FULL_SYSCONFDIR /usr/lib/systemd/system)
+
+#install(PROGRAMS ${CMAKE_BINARY_DIR}/src/entry/sapp DESTINATION .)
 install(PROGRAMS ${CMAKE_BINARY_DIR}/src/entry/sapp DESTINATION .)
 
 install(PROGRAMS bin/r2 DESTINATION .)
