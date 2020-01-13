@@ -14,3 +14,4 @@ cmake-build-debug
 ./build/
 version.txt
 
+/version.txt
