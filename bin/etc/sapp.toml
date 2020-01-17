@@ -9,7 +9,7 @@
 instance_name = "sapp_v4.0"
 
 [CPU]
-worker_threads=2
+worker_threads=1
 ### note, bind_mask, if you do not want to bind thread to special CPU core, keep it empty as []
 bind_mask=[]
 

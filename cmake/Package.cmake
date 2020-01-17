@@ -25,30 +25,23 @@ set(CPACK_RPM_DEBUGINFO_PACKAGE off)
 
 set(CPACK_BUILD_SOURCE_DIRS "${CMAKE_SOURCE_DIR}")
 
-# Must uninstall the debug package before install release package
+#Must uninstall the debug package before install release package
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CPACK_RPM_PACKAGE_CONFLICTS "${project_name}-debug")
 else()
     set(CPACK_RPM_PACKAGE_CONFLICTS ${project_name})
-    #    set(CPACK_STRIP_FILES TRUE)
+    set(CPACK_STRIP_FILES TRUE)
 endif()
 
-#set(CPACK_RPM_PRE_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/cmake/preinstall.in)
+set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/cmake/PostInstall.in)
 
-if(CAPTURE_MODE MATCHES "MARSIO")
-    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE  ${CMAKE_SOURCE_DIR}/cmake/postinstall_mrzcpd.in)
-else()
-    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE  ${CMAKE_SOURCE_DIR}/cmake/postinstall_pcap.in)
-endif()	
-
-# setup %config(noreplace)
+#setup %config(noreplace)
 set(CPACK_RPM_USER_FILELIST "%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/gdev.conf"
-                            "%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/sapp.toml"
-							"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/send_raw_pkt.conf"
-							"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/project_list.conf"
-							"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/plugin.conf"
-							"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/entrylist.conf"
-							"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/plug/conflist.inf")
-
+                           "%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/sapp.toml"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/send_raw_pkt.conf"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/project_list.conf"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/plugin.conf"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/entrylist.conf"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/plug/conflist.inf")
 
 include(CPack)

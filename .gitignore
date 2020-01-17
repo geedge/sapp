@@ -12,4 +12,7 @@ bin/sapp
 cmake-build-debug
 .vscode
 ./build/
+version.txt
 
+/version.txt
+/version.txt
