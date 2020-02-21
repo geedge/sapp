@@ -27,8 +27,9 @@ _MODE_SMITH=smith
 _MODE_DPDK_VXLAN=dpdk_vxlan
 _MODE_PAG_MARSIO=pag_marsio
 _MODE_IPFILE=ipfile
+_MODE_TUN=tun
 _MODE_CHK=0
-iomode=pcap
+iomode=tun
 
 _OPT0=0
 _OPT1=1
@@ -135,6 +136,11 @@ endif
 ifeq ($(iomode), $(_MODE_IPFILE))
 _MODE_CHK=1
 endif
+
+ifeq ($(iomode), $(_MODE_TUN))
+_MODE_CHK=1
+endif
+
 
 ifneq ($(_MODE_CHK), 0)
 else

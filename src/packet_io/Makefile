@@ -107,6 +107,11 @@ CFLAGS += -DIOMODE_PAG_MARSIO=1
 DLL_LIB += packet_io_pag_marsio.so 
 endif
 
+ifeq ($(iomode), $(_MODE_TUN))
+CFLAGS += -DIOMODE_TUN=1
+DLL_LIB += packet_io_tun.so 
+endif
+
 
 TARGET = libpacket_io.a 
 
@@ -174,6 +179,10 @@ packet_io_dpdk_vxlan.so:packet_io_dpdk_vxlan.o
 	
 packet_io_pag_marsio.so:packet_io_pag_marsio.o
 	gcc -o $@ -fPIC -shared -g -Wall $^ $(LIBPATH) $(LIBS) -L$(LIBPATH) -lmarsio;
+	cp $@ $(RELEASE_PATH) 
+
+packet_io_tun.so:packet_io_tun.o
+	gcc -o $@ -fPIC -shared -g -Wall $^ $(LIBPATH) $(LIBS) -L$(LIBPATH);
 	cp $@ $(RELEASE_PATH) 
 
 clean:

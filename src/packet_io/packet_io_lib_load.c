@@ -30,6 +30,7 @@ const struct dl_io_lib_name g_dl_io_lib_info[__CAP_MODEL_MAX] =
 	{CAP_MODEL_DPDK_VXLAN		,	"dpdkvxlan",	(char *)"packet_io_dpdk_vxlan.so"},
 	{CAP_MODEL_MARSIOV4_VXLAN	,	"marsio_vxlan",	(char *)"packet_io_marsio_vxlan.so"},
 	{CAP_MODEL_PAG_MARSIO		,	"marsio_pag",	(char *)"packet_io_pag_marsio.so"},
+	{CAP_MODEL_TUN				,	"tun",			(char *)"packet_io_tun.so"},
 };
 
 static inline void __print_err_msg(void *fun_ptr, const char *libname, const char *fun_name)
@@ -100,57 +101,61 @@ static dl_io_fun_list_t dl_io_fun_list_static_link[__CAP_MODEL_MAX];
 static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 {
 #ifdef IOMODE_PCAP
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_cap_level = (int (*)(int cap_level))pcap_dl_io_set_cap_level;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_cap_mode = (int (*)(int cap_mode))pcap_dl_io_set_cap_mode;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_topology_mode = (int (*)(int topology_mode))pcap_dl_io_set_topology_mode;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_capdev_parallel = (int (*)(const char *cap_dev))pcap_dl_io_set_capdev_parallel;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_capdev_serial = (int (*)(const char *up_dev, const char *down_dev))pcap_dl_io_set_capdev_serial;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_capture_filter = (int (*)(const char *filter_rule))pcap_dl_io_set_capture_filter;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_cap_buf_queue = (int (*)(int queue_num_max))pcap_dl_io_set_cap_buf_queue;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_work_thread_num = (int (*)(int thread_num_max))pcap_dl_io_set_work_thread_num;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_app_drop_num = (long (*)(int thread_num))pcap_dl_io_get_app_drop_num;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_lib_drop_num = (long (*)(void))pcap_dl_io_get_lib_drop_num;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_sendbuf = (unsigned char *  (*)(void *, int thread_num))pcap_dl_io_get_sendbuf;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_free_sendbuf = (void (*)(void *, int thread_num))pcap_dl_io_free_sendbuf;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_send_handle = (void * (*)(int thread_num))pcap_dl_io_get_send_handle;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_low_level_send = (int (*)(void *, unsigned char *,int ,int , int ,int ))pcap_dl_io_low_level_send;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_raw_pkt_send = (int (*)(void *, unsigned char *,int , void *,int ))pcap_dl_io_raw_pkt_send;	
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_init = (int (*)(int argc, char *argv[]))pcap_dl_io_init;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_run = (void (*)(void))pcap_dl_io_run;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_register_cb = (int (*)(PACKET_IO_CB_T fun))pcap_dl_io_register_cb;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_register_exit_cb = (int (*)(PACKET_IO_EXIT_CB_T exit_fun))pcap_dl_io_register_exit_cb;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_version = (int (*)(void))pcap_dl_io_get_version;
-	dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_device_alias = (void * (*)(unsigned int , char *))pcap_dl_io_device_alias;
+	if((CAP_MODEL_PCAP_ONLINE == cap_mode) || (CAP_MODEL_PCAP_DUMPFILE == cap_mode)){
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_cap_level = (int (*)(int cap_level))pcap_dl_io_set_cap_level;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_cap_mode = (int (*)(int cap_mode))pcap_dl_io_set_cap_mode;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_topology_mode = (int (*)(int topology_mode))pcap_dl_io_set_topology_mode;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_capdev_parallel = (int (*)(const char *cap_dev))pcap_dl_io_set_capdev_parallel;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_capdev_serial = (int (*)(const char *up_dev, const char *down_dev))pcap_dl_io_set_capdev_serial;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_capture_filter = (int (*)(const char *filter_rule))pcap_dl_io_set_capture_filter;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_cap_buf_queue = (int (*)(int queue_num_max))pcap_dl_io_set_cap_buf_queue;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_set_work_thread_num = (int (*)(int thread_num_max))pcap_dl_io_set_work_thread_num;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_app_drop_num = (long (*)(int thread_num))pcap_dl_io_get_app_drop_num;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_lib_drop_num = (long (*)(void))pcap_dl_io_get_lib_drop_num;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_sendbuf = (unsigned char *  (*)(void *, int thread_num))pcap_dl_io_get_sendbuf;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_free_sendbuf = (void (*)(void *, int thread_num))pcap_dl_io_free_sendbuf;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_send_handle = (void * (*)(int thread_num))pcap_dl_io_get_send_handle;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_low_level_send = (int (*)(void *, unsigned char *,int ,int , int ,int ))pcap_dl_io_low_level_send;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_raw_pkt_send = (int (*)(void *, unsigned char *,int , void *,int ))pcap_dl_io_raw_pkt_send;	
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_init = (int (*)(int argc, char *argv[]))pcap_dl_io_init;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_run = (void (*)(void))pcap_dl_io_run;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_register_cb = (int (*)(PACKET_IO_CB_T fun))pcap_dl_io_register_cb;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_register_exit_cb = (int (*)(PACKET_IO_EXIT_CB_T exit_fun))pcap_dl_io_register_exit_cb;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_version = (int (*)(void))pcap_dl_io_get_version;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_device_alias = (void * (*)(unsigned int , char *))pcap_dl_io_device_alias;
 
-	memcpy(&dl_io_fun_list_static_link[CAP_MODEL_PCAP_DUMPFILE], &dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE], sizeof(dl_io_fun_list_t));
+		memcpy(&dl_io_fun_list_static_link[CAP_MODEL_PCAP_DUMPFILE], &dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE], sizeof(dl_io_fun_list_t));
+	}
 #endif
 
 #ifdef IOMODE_MARSIO
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_cap_level = (int (*)(int cap_level))marsio_dl_io_set_cap_level;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_cap_mode = (int (*)(int cap_mode))marsio_dl_io_set_cap_mode;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_topology_mode = (int (*)(int topology_mode))marsio_dl_io_set_topology_mode;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_capdev_parallel = (int (*)(const char *cap_dev))marsio_dl_io_set_capdev_parallel;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_capdev_serial = (int (*)(const char *up_dev, const char *down_dev))marsio_dl_io_set_capdev_serial;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_capture_filter = (int (*)(const char *filter_rule))marsio_dl_io_set_capture_filter;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_cap_buf_queue = (int (*)(int queue_num_max))marsio_dl_io_set_cap_buf_queue;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_work_thread_num = (int (*)(int thread_num_max))marsio_dl_io_set_work_thread_num;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_app_drop_num = (long (*)(int thread_num))marsio_dl_io_get_app_drop_num;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_lib_drop_num = (long (*)(void))marsio_dl_io_get_lib_drop_num;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_sendbuf = (unsigned char *	(*)(void *, int thread_num))marsio_dl_io_get_sendbuf;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_free_sendbuf = (void (*)(void *, int thread_num))marsio_dl_io_free_sendbuf;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_send_handle = (void * (*)(int thread_num))marsio_dl_io_get_send_handle;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_low_level_send = (int (*)(void *, unsigned char *,int ,int , int ,int ))marsio_dl_io_low_level_send;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_raw_pkt_send = (int (*)(void *, unsigned char *,int , void *,int ))marsio_dl_io_raw_pkt_send; 
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_init = (int (*)(int argc, char *argv[]))marsio_dl_io_init;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_run = (void (*)(void))marsio_dl_io_run;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_register_cb = (int (*)(PACKET_IO_CB_T fun))marsio_dl_io_register_cb;
-	//dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_register_exit_cb = (int (*)(PACKET_IO_EXIT_CB_T exit_fun))marsio_dl_io_register_exit_cb;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_version = (int (*)(void))marsio_dl_io_get_version;
-	dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_device_alias = (void * (*)(unsigned int , char *))marsio_dl_io_device_alias;
-
+	if(CAP_MODEL_MARSIOV4 == cap_mode){
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_cap_level = (int (*)(int cap_level))marsio_dl_io_set_cap_level;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_cap_mode = (int (*)(int cap_mode))marsio_dl_io_set_cap_mode;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_topology_mode = (int (*)(int topology_mode))marsio_dl_io_set_topology_mode;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_capdev_parallel = (int (*)(const char *cap_dev))marsio_dl_io_set_capdev_parallel;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_capdev_serial = (int (*)(const char *up_dev, const char *down_dev))marsio_dl_io_set_capdev_serial;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_capture_filter = (int (*)(const char *filter_rule))marsio_dl_io_set_capture_filter;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_cap_buf_queue = (int (*)(int queue_num_max))marsio_dl_io_set_cap_buf_queue;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_set_work_thread_num = (int (*)(int thread_num_max))marsio_dl_io_set_work_thread_num;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_app_drop_num = (long (*)(int thread_num))marsio_dl_io_get_app_drop_num;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_lib_drop_num = (long (*)(void))marsio_dl_io_get_lib_drop_num;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_sendbuf = (unsigned char *	(*)(void *, int thread_num))marsio_dl_io_get_sendbuf;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_free_sendbuf = (void (*)(void *, int thread_num))marsio_dl_io_free_sendbuf;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_send_handle = (void * (*)(int thread_num))marsio_dl_io_get_send_handle;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_low_level_send = (int (*)(void *, unsigned char *,int ,int , int ,int ))marsio_dl_io_low_level_send;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_raw_pkt_send = (int (*)(void *, unsigned char *,int , void *,int ))marsio_dl_io_raw_pkt_send; 
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_init = (int (*)(int argc, char *argv[]))marsio_dl_io_init;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_run = (void (*)(void))marsio_dl_io_run;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_register_cb = (int (*)(PACKET_IO_CB_T fun))marsio_dl_io_register_cb;
+		//dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_register_exit_cb = (int (*)(PACKET_IO_EXIT_CB_T exit_fun))marsio_dl_io_register_exit_cb;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_version = (int (*)(void))marsio_dl_io_get_version;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_device_alias = (void * (*)(unsigned int , char *))marsio_dl_io_device_alias;
+	}
 #endif 
 
 #ifdef IOMODE_PAG
+	if(CAP_MODEL_PAG == cap_mode){
 		dl_io_fun_list_static_link[CAP_MODEL_PAG].dl_io_set_cap_level = (int (*)(int cap_level))pag_dl_io_set_cap_level;
 		dl_io_fun_list_static_link[CAP_MODEL_PAG].dl_io_set_cap_mode = (int (*)(int cap_mode))pag_dl_io_set_cap_mode;
 		dl_io_fun_list_static_link[CAP_MODEL_PAG].dl_io_set_topology_mode = (int (*)(int topology_mode))pag_dl_io_set_topology_mode;
@@ -172,12 +177,40 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		//dl_io_fun_list_static_link[CAP_MODEL_PAG].dl_io_register_exit_cb = (int (*)(PACKET_IO_EXIT_CB_T exit_fun))pag_dl_io_register_exit_cb;
 		dl_io_fun_list_static_link[CAP_MODEL_PAG].dl_io_get_version = (int (*)(void))pag_dl_io_get_version;
 		//dl_io_fun_list_static_link[CAP_MODEL_PAG].dl_io_device_alias = (void * (*)(unsigned int , char *))pag_dl_io_device_alias;
+	}
 #endif 
+
+#ifdef IOMODE_TUN
+
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_set_cap_level = (int (*)(int cap_level))tun_dl_io_set_cap_level;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_set_cap_mode = (int (*)(int cap_mode))tun_dl_io_set_cap_mode;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_set_topology_mode = (int (*)(int topology_mode))tun_dl_io_set_topology_mode;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_set_capdev_parallel = (int (*)(const char *cap_dev))tun_dl_io_set_capdev_parallel;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_set_capdev_serial = (int (*)(const char *up_dev, const char *down_dev))tun_dl_io_set_capdev_serial;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_set_capture_filter = (int (*)(const char *filter_rule))tun_dl_io_set_capture_filter;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_set_cap_buf_queue = (int (*)(int queue_num_max))tun_dl_io_set_cap_buf_queue;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_set_work_thread_num = (int (*)(int thread_num_max))tun_dl_io_set_work_thread_num;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_get_app_drop_num = (long (*)(int thread_num))tun_dl_io_get_app_drop_num;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_get_lib_drop_num = (long (*)(void))tun_dl_io_get_lib_drop_num;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_get_sendbuf = (unsigned char * (*)(void *, int thread_num))tun_dl_io_get_sendbuf;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_free_sendbuf = (void (*)(void *, int thread_num))tun_dl_io_free_sendbuf;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_get_send_handle = (void * (*)(int thread_num))tun_dl_io_get_send_handle;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_low_level_send = (int (*)(void *, unsigned char *,int ,int , int ,int ))tun_dl_io_low_level_send;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_raw_pkt_send = (int (*)(void *, unsigned char *,int , void *,int ))0; 
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_init = (int (*)(int argc, char *argv[]))tun_dl_io_init;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_run = (void (*)(void))tun_dl_io_run;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_register_cb = (int (*)(PACKET_IO_CB_T fun))tun_dl_io_register_cb;
+		//dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_register_exit_cb = (int (*)(PACKET_IO_EXIT_CB_T exit_fun))pag_dl_io_register_exit_cb;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_get_version = (int (*)(void))tun_dl_io_get_version;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_device_alias = (void * (*)(unsigned int , char *))tun_dl_io_device_alias;
+#endif 
+
 
 	if((cap_mode != CAP_MODEL_PCAP_ONLINE)
 	  && (cap_mode != CAP_MODEL_PCAP_DUMPFILE)
 	  && (cap_mode != CAP_MODEL_MARSIOV4)
-	  && (cap_mode != CAP_MODEL_PAG)){
+	  && (cap_mode != CAP_MODEL_PAG)
+	  && (cap_mode != CAP_MODEL_TUN)){
 		abort(); /* only support these mode static link yet! */
 	}
 

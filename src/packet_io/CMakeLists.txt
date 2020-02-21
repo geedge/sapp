@@ -56,6 +56,15 @@ if(CAPTURE_MODE MATCHES "MARSIO")
 	set_target_properties(packet_io_marsio  PROPERTIES PREFIX "")
 endif()
 
+if(CAPTURE_MODE MATCHES "TUN")
+	set(PACKET_IO_SOURCE ${PACKET_IO_SOURCE} packet_io_tun.c)
+    if(ENABLE_STATIC_LINK)
+        add_library(packet_io_tun STATIC ${PACKET_IO_SOURCE})
+    else()
+        add_library(packet_io_tun SHARED ${PACKET_IO_SOURCE})
+    endif()
+endif()
+
 set(PACKET_IO_STATIC_SOURCE cycle_pkt_dump_through_write_offset.c  packet_io_lib_load.c pkt_dispatch_new.c
 iknow_info.c                           packet_io_log.c         sendpacket.c
 packet_io.c

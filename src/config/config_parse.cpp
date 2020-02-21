@@ -312,6 +312,8 @@ static int config_expression_convert(void)
 		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_PAG;
 	}else if(strncasecmp(tmp_str, "marsio", strlen("marsio")) == 0){
 		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_MARSIOV4;
+	}else if(strncasecmp(tmp_str, "tun", strlen("tun")) == 0){
+		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_TUN;
 	}
 
 	tmp_str = pconfig->packet_io.external.interface.type_str;
@@ -321,6 +323,8 @@ static int config_expression_convert(void)
 		pconfig->packet_io.external.interface.type_bin = CAP_MODEL_PAG;
 	}else if(strncasecmp(tmp_str, "marsio", strlen("marsio")) == 0){
 		pconfig->packet_io.external.interface.type_bin = CAP_MODEL_MARSIOV4;
+	}else if(strncasecmp(tmp_str, "tun", strlen("tun")) == 0){
+		pconfig->packet_io.external.interface.type_bin = CAP_MODEL_TUN;
 	}
 
 /*

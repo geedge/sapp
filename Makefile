@@ -28,8 +28,9 @@ _MODE_SMITH=smith
 _MODE_DPDK_VXLAN=dpdk_vxlan
 _MODE_PAG_MARSIO=pag_marsio
 _MODE_IPFILE=ipfile
+_MODE_TUN=tun
 _MODE_CHK=0
-iomode=marsio
+iomode=tun
 
 _OPT0=0
 _OPT1=1
@@ -137,6 +138,10 @@ ifeq ($(iomode), $(_MODE_IPFILE))
 _MODE_CHK=1
 endif
 
+ifeq ($(iomode), $(_MODE_TUN))
+_MODE_CHK=1
+endif
+
 ifneq ($(_MODE_CHK), 0)
 else
     ifeq ($(iomode), "pcap")
@@ -220,6 +225,8 @@ export _MODE_SMITH
 export _MODE_DPDK_VXLAN
 export _MODE_IPFILE
 export _MODE_PAG_MARSIO
+export _MODE_TUN
+
 export target_mode
 export __TARGET_MODE_ELF
 export __TARGET_MODE_SO
@@ -238,7 +245,7 @@ help:
 	@echo -e "\treserved args:"
 	@echo -e "\t\t\033[31;49;1m debug={0,1,2},0:release version; 1:-g; 2:-g -DDEBUG, default is 2.\033[0m"
 	@echo -e "\t\t\033[31;49;1m opt={0,1,2,3,high_perf}, optimize level, default is 0.\033[0m"
-	@echo -e "\t\t\033[31;49;1m iomode={pcap,ppf,pag,prfing,dpdk,tilera,topsec,ipfile,marsio,smith,dpdk_vxlan,pag_marsio}, default is pcap.\033[0m"
+	@echo -e "\t\t\033[31;49;1m iomode={pcap,ppf,pag,prfing,dpdk,tilera,topsec,ipfile,marsio,smith,dpdk_vxlan,pag_marsio,tun}, default is pcap.\033[0m"
 	@echo -e "\t\t\033[31;49;1m target_mode={elf, so}, default is elf.\033[0m"
 	@echo -e "\t\t\033[31;49;1m link_mode={dynamic, static}, default is static.\033[0m"
 

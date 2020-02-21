@@ -53,6 +53,10 @@ if(ENABLE_STATIC_LINK)
 	if(CAPTURE_MODE MATCHES "MARSIO")
 		target_link_libraries(sapp packet_io_marsio)
 	endif()
+	
+	if(CAPTURE_MODE MATCHES "TUN")
+		target_link_libraries(sapp packet_io_tun)
+	endif()	
 endif()
 # Target Install
 #install(TARGETS sapp DESTINATION ${CMAKE_SOURCE_DIR}/bin/)

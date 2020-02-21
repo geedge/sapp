@@ -298,6 +298,31 @@ extern void * marsio_dl_io_device_alias(unsigned int target_id, char *device_arg
 
 /********************** marsio funcitons for dynamic link *********************/
 
+/********************** tun funcitons for dynamic link ***********************/
+extern int tun_dl_io_set_cap_level(int cap_level);
+extern int tun_dl_io_set_cap_mode(int cap_mode);
+extern int tun_dl_io_set_topology_mode(int topology_mode);
+extern int tun_dl_io_set_capdev_parallel(const char *cap_dev);
+extern int tun_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev);
+extern int tun_dl_io_set_capture_filter(const char *filter_rule);
+extern int tun_dl_io_set_cap_buf_queue(int queue_num_max);
+extern int tun_dl_io_set_work_thread_num(int thread_num_max);
+extern long tun_dl_io_get_app_drop_num(int thread_num);
+extern long tun_dl_io_get_lib_drop_num(void);
+extern unsigned char * tun_dl_io_get_sendbuf(void *, int );
+extern void tun_dl_io_free_sendbuf(void *, int thread_num);
+extern void * tun_dl_io_get_send_handle(int  thread_num);
+extern int tun_dl_io_low_level_send(void *phandle, unsigned char *data,int datalen,
+						int eth_carry_layer_addr_type, int dir,int thread_num); /* 不含ethernet层 */
+extern int tun_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num); /* 全部原始包 */
+extern int tun_dl_io_init(int argc, char *argv[]);
+extern void tun_dl_io_run(void);
+extern int tun_dl_io_register_cb(PACKET_IO_CB_T fun);
+extern int tun_dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun); 
+extern int tun_dl_io_get_version(void);
+extern void * tun_dl_io_device_alias(unsigned int target_id, char *device_args);
+
+/********************** tun funcitons for dynamic link ***********************/
 
 
 #ifdef __cplusplus

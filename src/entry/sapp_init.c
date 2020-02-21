@@ -245,6 +245,7 @@ int MESA_platform_init(int argc, char *argv[])
 		case CAP_MODEL_PPF:
 		case CAP_MODEL_TOPSEC:
 		case CAP_MODEL_IPFILE:
+		case CAP_MODEL_TUN:
 			packet_io_set_cap_level(CAP_LEVEL_IPV4);
 			break;
 			

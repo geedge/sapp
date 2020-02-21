@@ -1402,32 +1402,24 @@ char test_sendfake_udp_pkt(struct streaminfo *stream,void **pme, int thread_seq,
 
 char test_inject_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
-	char fake_http_data[] = "HTTP/1.1 200 OK\r\nServer: Apache-Coyote/1.1\r\nContent-Type: text/html;charset=UTF-8\r\nContent-Language: zh-CN\r\nContent-Length: 32\r\nDate: Tue, 09 Sep 2014 08:21:07 GMT\r\n\r\n<html><head>hahaha</head></html>";
-	//struct layer_addr *tuple;
-	char ip1[16], ip2[16];
-	struct stream_tuple4_v4 *tuple_v4;
-
+	char fake_http_data[] = "HTTP/1.1 200 OK\r\nServer: Apache-Coyote/1.1\r\nContent-Type: text/html;charset=UTF-8\r\nContent-Language: zh-CN\r\nContent-Length: 32\r\nDate: Tue, 09 Sep 2014 08:21:07 GMT\r\n\r\n<html><head>HaHaHa</head></html>";
+	char plug_ret = APP_STATE_DROPME;
+	
 	if(OP_STATE_CLOSE == stream->opstate){
-		return APP_STATE_DROPME;
+		return plug_ret;
 	}
 
-	tuple_v4 = (struct stream_tuple4_v4 *)(stream->addr.paddr);
-	
-	// for test MESA_kill_tcp
-	//if(((0xC0A80A9F) == ntohl(tuple_v4->daddr) || (0xC0A80A9F) == ntohl(tuple_v4->saddr))
-	 //&& ((80 == ntohs(tuple_v4->source)) ||(80 == ntohs(tuple_v4->dest))))
-	 {
-		//if(DIR_C2S == stream->curdir)
-		{
-			inet_ntop(AF_INET, &tuple_v4->saddr, ip1, 16);
-			inet_ntop(AF_INET, &tuple_v4->daddr, ip2, 16);
-			MESA_inject_pkt(stream, fake_http_data, strlen(fake_http_data), raw_pkt, stream->routedir^1);
-			printf("MESA inject : ,%s:%u -- %s:%u\n", ip1, ntohs(tuple_v4->source),
-				 ip2, ntohs(tuple_v4->dest));
+	if(OP_STATE_PENDING == stream->opstate){
+		if((DIR_C2S == stream->curdir)
+		  && (memmem(stream->ptcpdetail->pdata, stream->ptcpdetail->datalen, "hijack", 6) != NULL)){
+		  	printf("found key 'hijack', send fake http response ' hahaha'!\n");
+			MESA_inject_pkt(stream, fake_http_data, sizeof(fake_http_data), raw_pkt, stream->routedir ^ 1);
+			plug_ret |= APP_STATE_DROPPKT;
 		}
 	}
+
 	
-	return APP_STATE_DROPME;
+	return plug_ret;
 }
 
 /* 使用新的发包接口  sapp_inject_pkt()发送伪造包 */

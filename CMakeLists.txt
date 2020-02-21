@@ -82,7 +82,7 @@ set(MESA_SDK_PREFIX "/opt/MESA/" CACHE STRING "MESA Framework Prefix")
 set(CAPTURE_MODE "PCAP" CACHE STRING
     "CAPTURE_MODE set Capture network traffic chosen by the user, using PCAP as default")
 
-set_property(CACHE CAPTURE_MODE PROPERTY STRINGS PCAP MARSIO PAG)
+set_property(CACHE CAPTURE_MODE PROPERTY STRINGS PCAP MARSIO PAG TUN)
 
 message(STATUS "CAPTURE_MODE='${CAPTURE_MODE}'")
 
@@ -102,6 +102,10 @@ if(CAPTURE_MODE MATCHES "MARSIO")
 	add_definitions(-DIOMODE_MARSIO=1)
 endif()
 
+if(CAPTURE_MODE MATCHES "TUN")
+	set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_TUN)
+	add_definitions(-DIOMODE_TUN=1)
+endif()
 
 # Memory Allocator
 set(MEM_POOL "OFF" CACHE STRING
@@ -205,6 +209,10 @@ endif()
 
 if(CAPTURE_MODE MATCHES "PCAP")
 	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_pcap.so DESTINATION platform_lib)
+endif()
+
+if(CAPTURE_MODE MATCHES "TUN")
+	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_tun.so DESTINATION platform_lib)
 endif()
 
 endif()

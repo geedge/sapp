@@ -63,7 +63,8 @@ enum cap_mode_t{
 	CAP_MODEL_DPDK_VXLAN	= 14, /* 2016-11-01 lijia add, for DPDK-3.0, vxlan三层回流 */
 	CAP_MODEL_MARSIOV4_VXLAN= 15,  /* 2016-11-01 lijia add, for MARSIO-4.0, vxlan三层回流 */
 	CAP_MODEL_PAG_MARSIO	= 16, /* 2017-04-07 lijia add, for marsio compat pag */
-	__CAP_MODEL_MAX			= 17,
+	CAP_MODEL_TUN			= 17, /* 2020-02-20 lijia add, for tun mode */
+	__CAP_MODEL_MAX			= 18,
 };
 
 enum send_packet_way{
