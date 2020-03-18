@@ -1,0 +1,38 @@
+CC	= gcc
+CCC	= g++
+CFLAGS	= -g -fPIC 
+CFLAGS	+= -D__USE_BSD=1 -D__FAVOR_BSD=1 -D__USE_MISC=1 -D_GNU_SOURCE=1
+CFLAGS  += $(OPTFLAGS)
+OBJECTS = test_app_sapp.o  trace_delay.o terminal_tag.o g_device_plug.o
+MODULES	=  
+
+BIN_PATH = ../bin/
+
+TARGET	= sapp_tun_bridge_user
+
+INCS = 
+INCS	+= -I ../include 
+INCS	+= -I../include/private
+INCS	+= -I../include/public
+INCS	+= -I../include/public/stream_inc/
+INCS	+= -I../include/support/
+INCS	+= -I/opt/MESA/include
+INCS	+= -I/opt/MESA/include/MESA
+
+
+.PHONY: all 
+all: $(TARGET)
+	
+
+sapp_tun_bridge_user:sapp_tun_bridge_user.c
+	gcc -o $@ $^  -g -O0 $(CFLAGS) -lpthread -lpcap -lnetfilter_queue -lnfnetlink
+
+.c.o:  
+	$(CC) -c -o $@ $(CFLAGS) -I. $(INCS) $<
+
+.cpp.o:  
+	$(CCC) -c -o  $@ $(CFLAGS) -I. $(INCS) $<
+
+clean:
+	rm -f $(TARGET)	$(OBJECTS) 
+

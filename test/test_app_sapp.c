@@ -1400,10 +1400,68 @@ char test_sendfake_udp_pkt(struct streaminfo *stream,void **pme, int thread_seq,
 }
 
 
+static void test_inject_tcp_pkt_with_this_hdr(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+{
+	char fake_http_data[] = "HTTP/1.1 200 OK\r\nServer: Apache-Coyote/1.1\r\nContent-Type: text/html;charset=UTF-8\r\nContent-Language: zh-CN\r\nContent-Length: 32\r\nConnection: Close\r\n\r\n<html><head>HaHaHa</head></html>";
+
+	char pkt_header_payload[2048];
+	struct mesa_ip4_hdr *send_ihdr;
+	struct mesa_tcp_hdr *send_thdr;
+	
+	const struct mesa_ip4_hdr *raw_ihdr;
+	const struct mesa_tcp_hdr *raw_thdr;	
+	int raw_tcp_payload_len;
+	int send_pkt_len;
+
+	raw_ihdr = (struct mesa_ip4_hdr *)raw_pkt;
+	raw_thdr = (struct mesa_tcp_hdr *)((char *)raw_ihdr + raw_ihdr->ip_hl*4);
+	raw_tcp_payload_len = ntohs(raw_ihdr->ip_len) - raw_ihdr->ip_hl*4 - raw_thdr->th_off * 4;
+
+	/* 当前包是C2S方向的GET, 需要回复一个虚假的S2C方向的RESPONSE */
+	send_ihdr = pkt_header_payload;
+	send_thdr = (struct mesa_tcp_hdr *)((char *)send_ihdr + sizeof(struct mesa_ip4_hdr));
+
+	sendpacket_build_tcp(ntohs(raw_thdr->th_dport),
+						ntohs(raw_thdr->th_sport),
+						ntohl(raw_thdr->th_ack),
+						ntohl(raw_thdr->th_seq)+raw_tcp_payload_len,
+						0x18,
+						100,
+						0,
+						NULL,
+						0,
+						(unsigned char *)send_thdr);	
+
+	sendpacket_build_ipv4(sizeof(struct mesa_tcp_hdr) + sizeof(fake_http_data), 
+						0, 
+						0x1111, 
+						IP_DF, 
+						100, 
+						IPPROTO_TCP, 
+						raw_ihdr->ip_dst.s_addr,
+						raw_ihdr->ip_src.s_addr,
+						NULL,
+						0, 
+						(unsigned char *)send_ihdr);
+	memcpy(pkt_header_payload + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr),
+			fake_http_data,
+			sizeof(fake_http_data));
+						
+	sendpacket_do_checksum(send_ihdr, IPPROTO_IP, sizeof(struct mesa_ip4_hdr));
+	sendpacket_do_checksum(send_ihdr, IPPROTO_TCP, sizeof(struct mesa_tcp_hdr) + sizeof(fake_http_data));
+
+	send_pkt_len = sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr) + sizeof(fake_http_data);
+	
+	sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, pkt_header_payload, send_pkt_len, stream->routedir ^ 1);
+
+	return;
+}
+
 char test_inject_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
-	char fake_http_data[] = "HTTP/1.1 200 OK\r\nServer: Apache-Coyote/1.1\r\nContent-Type: text/html;charset=UTF-8\r\nContent-Language: zh-CN\r\nContent-Length: 32\r\nDate: Tue, 09 Sep 2014 08:21:07 GMT\r\n\r\n<html><head>HaHaHa</head></html>";
+	char fake_http_data[] = "HTTP/1.1 200 OK\r\nServer: Apache-Coyote/1.1\r\nContent-Type: text/html;charset=UTF-8\r\nContent-Language: zh-CN\r\nContent-Length: 32\r\nConnection: Close\r\n\r\n<html><head>HaHaHa</head></html>";
 	char plug_ret = APP_STATE_DROPME;
+	int optval;
 	
 	if(OP_STATE_CLOSE == stream->opstate){
 		return plug_ret;
@@ -1413,8 +1471,13 @@ char test_inject_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,co
 		if((DIR_C2S == stream->curdir)
 		  && (memmem(stream->ptcpdetail->pdata, stream->ptcpdetail->datalen, "hijack", 6) != NULL)){
 		  	printf("found key 'hijack', send fake http response ' hahaha'!\n");
-			MESA_inject_pkt(stream, fake_http_data, sizeof(fake_http_data), raw_pkt, stream->routedir ^ 1);
+			//MESA_inject_pkt(stream, fake_http_data, sizeof(fake_http_data), raw_pkt, stream->routedir ^ 1);
+			//sapp_inject_pkt(stream, SIO_DEFAULT, fake_http_data, sizeof(fake_http_data), stream->routedir ^ 1);
+			test_inject_tcp_pkt_with_this_hdr(stream, pme, thread_seq, raw_pkt);
 			plug_ret |= APP_STATE_DROPPKT;
+
+			optval = 1;
+			MESA_set_stream_opt(stream, MSO_DROP_STREAM, &optval, sizeof(int));
 		}
 	}
 

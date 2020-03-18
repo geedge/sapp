@@ -53,6 +53,7 @@ wangyan_gdev_measurement.so:wangyan_gdev_measurement.c
 	$(CC) -o $@ -shared -fPIC $(INCS) $(CFLAGS) -DIOMODE_MARSIO=1 $^ $(MODULES)
 	cp $@ ../bin/plug/business/wangyan_gdev_measurement/$@
 
+
 sapp_so_run:test_sapp_so.o
 	$(CC) -o $@ -g $(INCS) $(CFLAGS) $^ -lpcap -ldl
 	cp $@ ../bin;

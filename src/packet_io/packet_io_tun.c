@@ -21,12 +21,14 @@ extern "C" {
 #include <pcap.h>
 
 
+#define TUN_MODE_NAT_XOR_IP  (0xFFFFFFFF)
+
 static char *tun_up_dev_name;
 static char *tun_down_dev_name;
 static int g_tun_fd[2]; /* DIR_ROUTE_UP */
 static PACKET_IO_CB_T g_tun_work_fun;
 static int g_tun_topology_mode = NET_CONN_SERIAL_2CARD;
-static int g_tun_version = 20200220;
+static int g_tun_version = 20200317;
 
 static MESA_lqueue_head g_tun_work_queue;
 
@@ -36,11 +38,35 @@ typedef struct{
 }tun_send_handle;
 
 
-/* 为了一次性把数据全部copy到queue里, 使用连续内存结构 */
+/* 为了一次性把数据全部copy到queue�? 使用连续内存结构 */
 typedef struct{
 	raw_pkt_t  raw_pkt;
 	char pkt_buf[SENDPACKET_BUF_LEN];
 }tun_raw_pkt_t;
+
+static void tun_xor_static_nat(struct mesa_ip4_hdr *ihdr)
+{
+	struct mesa_udp_hdr *udp_header;
+	struct mesa_tcp_hdr *tcp_header;
+	int payload_len;
+	
+	ihdr->ip_src.s_addr ^= TUN_MODE_NAT_XOR_IP;
+	ihdr->ip_dst.s_addr ^= TUN_MODE_NAT_XOR_IP;
+
+	payload_len = ntohs(ihdr->ip_len) - ihdr->ip_hl * 4;
+
+	sendpacket_do_checksum((unsigned char *)ihdr, IPPROTO_IP, sizeof(struct ip));
+	if(IPPROTO_TCP == ihdr->ip_p){
+		tcp_header = (struct mesa_tcp_hdr *)((char *)ihdr + ihdr->ip_hl * 4);
+		tcp_header->th_sum = 0;
+		sendpacket_do_checksum((unsigned char *)ihdr, IPPROTO_TCP, payload_len);	
+	}else if(IPPROTO_UDP == ihdr->ip_p){
+		udp_header = (struct mesa_udp_hdr *)((char *)ihdr + ihdr->ip_hl * 4);
+		udp_header->uh_sum = 0;
+		sendpacket_do_checksum((unsigned char *)ihdr, IPPROTO_UDP, payload_len);
+	}
+}
+
 
 int tun_dl_io_set_topology_mode(int topology_mode)
 {
@@ -142,7 +168,11 @@ int tun_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 	int dir_reverse, ret;
 
 send_again:
-	/* 发包时, dir要取反一次, 因为从tun0收的包,rcv_dir=0, 如果send_dir=0, 即同向发送,实际是从tun1发走 */
+	/* 发包时, dir要取反一次, 因为从tun0收的包,rcv_dir=0, 如果send_dir=0, 即业务插件要同向发送,实际是从tun1发走 */
+
+	/* 发包之前恢复原始ip地址, kni, tfe看到的都是假象 */
+	tun_xor_static_nat((struct mesa_ip4_hdr *)data);
+	
 	ret = write(g_tun_fd[(dir & 0x1) ^ 1], data, datalen);
 	if(ret < 0){
 		if((EAGAIN == errno) || (EINTR == errno) ){
@@ -183,7 +213,7 @@ static int ifconfig_device_up(const char *interface_name)
 	}
 	//指定网卡名称且up
 	sprintf(ifr.ifr_name, "%s", interface_name);
-	/* 获得接口的标志 */
+	/* 获得接口的标�?*/
 	if ((err = ioctl(socket_fd, SIOCGIFFLAGS, (void *)&ifr)) < 0) {
 		perror("ioctl SIOCGIFADDR");
 		close(socket_fd);
@@ -241,8 +271,7 @@ int tun_alloc(char *dev, int flags)
         return err;
     }
 
-    // 一旦设备开启成功，系统会给设备分配一个名称，对于tun设备，一般为tunX，X为从0开始的编号；
-    // 对于tap设备，一般为tapX
+    // 一旦设备开启成功，系统会给设备分配一个名称，对于tun设备，一般为tunX，X为从0开始的编号�?    // 对于tap设备，一般为tapX
     strcpy(dev, ifr.ifr_name);
 
     return fd;
@@ -289,17 +318,40 @@ void *tun_work_thread(void *arg)
 	int sapp_ret, queue_ret;
 	tun_raw_pkt_t tun_raw_pkt;
 	long buf_len;
+	struct mesa_ip4_hdr *ihdr;
+	struct mesa_ethernet_hdr *ehdr;
+	int total_call_times = 0;
+	int polling_work_times = 0;
 	
 	while(1){
 		buf_len = sizeof(tun_raw_pkt);
-		queue_ret = MESA_lqueue_get_head(g_tun_work_queue, &tun_raw_pkt, &buf_len);
+		queue_ret = MESA_lqueue_try_get_head(g_tun_work_queue, &tun_raw_pkt, &buf_len);
 		if(queue_ret >= 0){
 			tun_raw_pkt.raw_pkt.__lib_raw_pkt_data = tun_raw_pkt.pkt_buf;
-			tun_raw_pkt.raw_pkt.raw_pkt_data = tun_raw_pkt.pkt_buf;
+			tun_raw_pkt.raw_pkt.raw_pkt_data = tun_raw_pkt.pkt_buf + 14;
+
+			ehdr = (struct mesa_ethernet_hdr *)tun_raw_pkt.pkt_buf;
+			ehdr->ether_type = htons(ETH_P_IP);
+
+			ihdr = (struct mesa_ip4_hdr *)tun_raw_pkt.raw_pkt.raw_pkt_data;
+			/* 调用插件之前先伪造ip地址, 欺骗kni, tfe和tfe-kmod模块 */
+			tun_xor_static_nat(ihdr);
 			
 			sapp_ret = g_tun_work_fun(&tun_raw_pkt.raw_pkt, tun_raw_pkt.raw_pkt.route_dir, 0); 
 			if((g_tun_topology_mode & __NET_CONN_SERIAL) && (PASS == sapp_ret)){
-				tun_forward_pkt(0, tun_raw_pkt.pkt_buf, tun_raw_pkt.raw_pkt.raw_pkt_len, tun_raw_pkt.raw_pkt.route_dir);
+				/* 转发之前恢复原始ip地址 */
+				tun_xor_static_nat(ihdr);
+				tun_forward_pkt(0, tun_raw_pkt.raw_pkt.raw_pkt_data, tun_raw_pkt.raw_pkt.raw_pkt_len, tun_raw_pkt.raw_pkt.route_dir);
+			}
+		}else{
+			if(stream_process_polling(0) != 0){
+				polling_work_times++;
+			}
+			total_call_times++;
+			
+			if(total_call_times >= 100){
+				total_call_times = 0;
+				usleep(1);
 			}
 		}
 	}
@@ -310,7 +362,7 @@ void *tun_work_thread(void *arg)
 
 void *tun_rcv_thread(void *arg)
 {
-	int rn0, queue_ret;
+	int rcv_byte, queue_ret;
 	tun_raw_pkt_t tun_raw_pkt;
 	long route_dir_arg = (long)arg; 
 	unsigned char route_dir = (unsigned char)route_dir_arg;
@@ -327,12 +379,18 @@ void *tun_rcv_thread(void *arg)
 	tun_raw_pkt.raw_pkt.route_dir = route_dir;
 	
 	while(1){
-		rn0 = read(g_tun_fd[route_dir], tun_raw_pkt.pkt_buf, sizeof(tun_raw_pkt.pkt_buf));
-		if(rn0 > 0){
+		/* 预留mac头部, 方便tcpdump_mesa捕包分析 */
+		rcv_byte = read(g_tun_fd[route_dir], tun_raw_pkt.pkt_buf+14, sizeof(tun_raw_pkt.pkt_buf)-14);
+		if(rcv_byte > 0){
+			if(0x60 == (tun_raw_pkt.pkt_buf[14] & 0xF0)){
+				/* TODO: tun模式先不支持ipv6 */
+				continue;
+			}
+			
 			//tun_raw_pkt.raw_pkt.__lib_raw_pkt_data = pkt;
 			//tun_raw_pkt.raw_pkt.raw_pkt_data = pkt;
-			tun_raw_pkt.raw_pkt.__lib_raw_pkt_len = rn0;
-			tun_raw_pkt.raw_pkt.raw_pkt_len = rn0;
+			tun_raw_pkt.raw_pkt.__lib_raw_pkt_len = rcv_byte;
+			tun_raw_pkt.raw_pkt.raw_pkt_len = rcv_byte;
 			tun_raw_pkt.raw_pkt.route_dir = route_dir;
 			queue_ret = MESA_lqueue_join_tail(g_tun_work_queue, &tun_raw_pkt, sizeof(tun_raw_pkt));
 			if(queue_ret < 0){
@@ -372,7 +430,7 @@ void tun_dl_io_run(void)
 
 	pthread_create(&pid, NULL, tun_work_thread, NULL);
 
-	/* tun模式暂时只支持1个线程, 非阻塞模式分别处理两个tun虚拟网卡 */
+	/* tun模式暂时只支�?个线�? 非阻塞模式分别处理两个tun虚拟网卡 */
 	pthread_create(&pid, NULL, tun_rcv_thread, (void *)DIR_ROUTE_UP);
 	pthread_create(&pid, NULL, tun_rcv_thread, (void *)DIR_ROUTE_DOWN);
 

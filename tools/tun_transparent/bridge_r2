@@ -1,0 +1,5 @@
+#!/bin/sh
+
+killall -9 bridge_r3 sapp_tun_bridge_user
+./bridge_r3 $@  &> /dev/null &
+

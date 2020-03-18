@@ -489,16 +489,16 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 	
 	/* bingo, match filter, sendto */
 	ret = sendto(pkt_dump_udp_pkt_sd[thread_seq], 
-			(char *)p_raw_pkt->raw_pkt_data, /* 过滤时使用内层数据包头, 但要发送整个原始包 */
-			p_raw_pkt->raw_pkt_len, 		 /* 过滤时使用内层数据包头, 但要发送整个原始包 */
+			pktdata,//(char *)p_raw_pkt->raw_pkt_data, /* 过滤时使用内层数据包头, 但要发送整个原始包 */
+			pktlen,//p_raw_pkt->raw_pkt_len, 		 /* 过滤时使用内层数据包头, 但要发送整个原始包 */
 		  	MSG_DONTWAIT,
 		  	(const struct sockaddr *)&udp_recv_addr,
 		  	sizeof(udp_recv_addr));
 	if((ret < 0) && (EINTR == errno)){
 		/* 优先保证sapp处理流程, 因中断造成的发包失败只重试一次, 其他错误不重试 */
 		ret = sendto(pkt_dump_udp_pkt_sd[thread_seq], 
-				(char *)p_raw_pkt->raw_pkt_data, 
-				p_raw_pkt->raw_pkt_len, 
+				pktdata,///(char *)p_raw_pkt->raw_pkt_data, 
+				pktlen,///p_raw_pkt->raw_pkt_len, 
 			  	MSG_DONTWAIT,
 			  	(const struct sockaddr *)&udp_recv_addr,
 			  	sizeof(udp_recv_addr));

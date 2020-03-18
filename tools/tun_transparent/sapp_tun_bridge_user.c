@@ -13,12 +13,26 @@
 #include <linux/if_tun.h>
 #include <assert.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
+
+#include <netinet/tcp.h>
+#include <netinet/udp.h>
+
 #include <ctype.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-//#include <net/if.h>
-//#include <netpacket/packet.h>
+#include <linux/netfilter.h>        /* for NF_ACCEPT */
+#include <libnetfilter_queue/libnetfilter_queue.h>
 
+
+#if 1
+   #define dprint(fmt, args...) printf(fmt, ## args)
+#else
+   #define dprint(fmt, args...)
+#endif
+
+#define SAPP_BRIDGE_SNAT_ENABLE (0)
+#define SAPP_BRIDGE_SNAT_SIP (0xFEFEFEA9) //169.254.254.254
 
 /*
 	此程序可以跑通单机单网卡模式下的串联功能,
@@ -26,6 +40,13 @@
 */
 
 #define USE_TUN_MODE	(1) /* 虚拟设备用tun还是TAP,  1:tun;         0:tap */
+
+/*
+ *  Checksum stuff
+ */
+#define BRIDGE_CKSUM_CARRY(x) \
+    (x = (x >> 16) + (x & 0xffff), (~(x + (x >> 16)) & 0xffff))
+    
 
 static pcap_t * tun_pcap_handle;
 static pcap_t * phy_pcap_handle;
@@ -35,6 +56,9 @@ static char *tun_dev_name;
 
 static struct sockaddr tun_sock_addr;
 static struct sockaddr phy_sock_addr;
+
+static struct nfq_handle *g_nfq_handle;
+static int g_nfq_fd;
 
 static int phy_dev_fd, tun_dev_fd;
 
@@ -238,46 +262,295 @@ static inline int is_private_addr_v4(unsigned int  ip_add_host)
     return 0;
 }
 
-
-void phy_pkt_cb(u_char * arg, const struct pcap_pkthdr * pkthdr, const u_char * packet)
+static int bridge_in_cksum(u_int16_t *addr, int len)
 {
-	int sn;
-	const struct ip *ihdr = (struct ip *)(packet + 14);
-	//char ip_str[64];
+    int sum;
+    int nleft;
+    u_int16_t ans;
+    u_int16_t *w;
 
-	if((packet[12] != 0x08) || (packet[13] != 0x00)){ /* drop ipv6, arp, etc.. */
-		return;
+    sum = 0;
+    ans = 0;
+    nleft = len;
+    w = addr;
+
+    while (nleft > 1)
+    {
+        sum += *w++;
+        nleft -= 2;
+    }
+    if (nleft == 1)
+    {
+        *(char *)(&ans) = *(char *)w;
+        sum += ans;
+    }
+    return (sum);
+}
+
+
+static int bridge_do_checksum(unsigned char *buf, int protocol, int len)
+{
+    struct ip *iph_p;
+    struct ip6_hdr *ip6h_p;
+    int ip_hl;
+    int sum;
+    int is_ipv6 = 0;
+
+    sum = 0;
+    iph_p = (struct ip *)buf;
+
+    if(4 == iph_p->ip_v)  /* IP版本号字段，IPv4和IPv6格式是相同的 */
+    {
+        ip_hl = iph_p->ip_hl << 2;
+        ip6h_p = NULL;
+    }
+    else if(6 == iph_p->ip_v)
+    {
+        ip6h_p = (struct ip6_hdr *)buf;
+        iph_p = NULL;
+        ip_hl = sizeof(struct ip6_hdr);
+        is_ipv6 = 1;
+    }
+    else
+    {
+        return (-1);
+    }
+
+    /*
+     *  Dug Song came up with this very cool checksuming implementation
+     *  eliminating the need for explicit psuedoheader use.  Check it out.
+     */
+    switch (protocol)
+    {
+        /*
+         *  Style note: normally I don't advocate declaring variables inside
+         *  blocks of control, but it makes good sense here. -- MDS
+         */
+        case IPPROTO_TCP:
+        {
+            struct tcphdr *tcph_p =
+                (struct tcphdr *)(buf + ip_hl);
+
+#if (STUPID_SOLARIS_CHECKSUM_BUG)
+            tcph_p->th_sum = tcph_p->th_off << 2;
+            return (1);
+#endif /* STUPID_SOLARIS_CHECKSUM_BUG */
+
+            tcph_p->check = 0;
+            /* 2012-03-19 LiJia add, for IPv6 */
+            if(is_ipv6)
+            {
+                sum = bridge_in_cksum((u_int16_t *)&ip6h_p->ip6_src, 32);
+            }
+            else
+            {
+                sum = bridge_in_cksum((u_int16_t *)&iph_p->ip_src, 8);
+            }    
+            sum += ntohs(IPPROTO_TCP + len);
+            sum += bridge_in_cksum((u_int16_t *)tcph_p, len);
+            tcph_p->check = BRIDGE_CKSUM_CARRY(sum);
+            break;
+        }
+        
+        case IPPROTO_UDP:
+        {
+            struct udphdr *udph_p =
+                (struct udphdr *)(buf + ip_hl);
+
+            udph_p->check = 0;
+            /* 2012-03-19 LiJia add, for IPv6 */
+            if(is_ipv6)
+            {
+                sum = bridge_in_cksum((u_int16_t *)&ip6h_p->ip6_src, 32);
+            }
+            else
+            {
+                sum = bridge_in_cksum((u_int16_t *)&iph_p->ip_src, 8);
+            }   
+            sum += ntohs(IPPROTO_UDP + len);
+            sum += bridge_in_cksum((u_int16_t *)udph_p, len);
+            udph_p->check = BRIDGE_CKSUM_CARRY(sum);
+            break;
+        }
+   
+        case IPPROTO_IP: /* Dummy protocol for TCP.  */
+        {
+            iph_p->ip_sum = 0;
+            sum = bridge_in_cksum((u_int16_t *)iph_p, len);
+            iph_p->ip_sum = BRIDGE_CKSUM_CARRY(sum);
+            break;
+        }
+#if 0
+
+        case IPPROTO_ICMP:
+        {
+            struct mesa_icmp_hdr *icmph_p =
+                (struct mesa_icmp_hdr *)(buf + ip_hl);
+
+            icmph_p->icmp_sum = 0;
+            sum = bridge_in_cksum((u_short *)icmph_p, len);
+            icmph_p->icmp_sum = BRIDGE_CKSUM_CARRY(sum);
+            break;
+        }
+#endif        
+        default:
+        {
+            return (-1);
+        }
+    }
+    return (1);
+}
+
+
+/* pptp的控制包和数据包要返回给内核协议栈处理, 否则client拨号会失败;
+*/
+static int is_need_to_kernel_pkt(const struct ip *ihdr)
+{
+	const struct tcphdr *thdr;
+	
+	if(IPPROTO_GRE == ihdr->ip_p){
+		return 1;
 	}
 
-	if(local_phy_dev_ip_net != ihdr->ip_dst.s_addr){
-		//inet_ntop(AF_INET, &ihdr->ip_dst.s_addr, ip_str, sizeof(ip_str));
-		//printf("packet from %s dst ip '%s' is not local device, ignore it!\n", phy_dev_name, ip_str);
-		return;
-	}
-
-	if(is_private_addr_v4(ntohl(ihdr->ip_src.s_addr)) != 0){
-		//inet_ntop(AF_INET, &ihdr->ip_src.s_addr, ip_str, sizeof(ip_str));
-		//printf("packet from %s src ip '%s' is same submask, ignore it!\n", phy_dev_name, ip_str);
-		return;
+	/* icmp优先给tun1,保证pptp vpn client的正确性, 此时物理主机的ping失效  */
+	if(IPPROTO_ICMP == ihdr->ip_p){
+		return 0;
 	}
 	
-	/* 从phy捕到的包, 发给tun设备之前要剥去mac头部 */
-	sn = sendto(tun_dev_fd, packet+14, pkthdr->caplen-14, 0, (struct sockaddr *)&tun_sock_addr, sizeof(struct sockaddr));
-	if(sn < 0){
-		printf("sendto tun error, len=%d, %s\n", pkthdr->caplen-14, strerror(errno));
+	thdr = (const struct tcphdr *)((char *)ihdr + ihdr->ip_hl * 4);
+	if((22 == ntohs(thdr->dest)) 
+	 || (1723 == ntohs(thdr->dest))){
+		return 1;
 	}
+	
+	return 0;
+}
+
+/*
+	iptabels nat跟路由有冲突, 各种没调通, 先人工做一次简易应用层SNAT.
+*/
+static void bridge_preout_snat(struct ip *ihdr)
+{
+	struct udphdr *udp_header;
+	struct tcphdr *tcp_header;
+	int payload_len;
+	
+	ihdr->ip_src.s_addr = local_phy_dev_ip_net;  //sip改成本机物理网卡ip
+	payload_len = ntohs(ihdr->ip_len) - ihdr->ip_hl * 4;
+
+	bridge_do_checksum((unsigned char *)ihdr, IPPROTO_IP, sizeof(struct ip));
+	if(IPPROTO_TCP == ihdr->ip_p){
+		tcp_header = (struct tcphdr *)((char *)ihdr + ihdr->ip_hl * 4);
+		tcp_header->check = 0;
+		bridge_do_checksum((unsigned char *)ihdr, IPPROTO_TCP, payload_len);	
+	}else if(IPPROTO_UDP == ihdr->ip_p){
+		udp_header = (struct udphdr *)((char *)ihdr + ihdr->ip_hl * 4);
+		udp_header->check = 0;
+		bridge_do_checksum((unsigned char *)ihdr, IPPROTO_UDP, payload_len);
+	}
+}
+
+#if SAPP_BRIDGE_SNAT_ENABLE
+/* 从物理网卡收到的包, 恢复SNAT之前的ip, 169.254.254.254 */
+static void bridge_prein_snat_recover(struct ip *ihdr)
+{
+	struct udphdr *udp_header;
+	struct tcphdr *tcp_header;
+	int payload_len;
+	
+	ihdr->ip_dst.s_addr = SAPP_BRIDGE_SNAT_SIP; 
+	payload_len = ntohs(ihdr->ip_len) - ihdr->ip_hl * 4;
+
+	bridge_do_checksum((unsigned char *)ihdr, IPPROTO_IP, sizeof(struct ip));
+	if(IPPROTO_TCP == ihdr->ip_p){
+		tcp_header = (struct tcphdr *)((char *)ihdr + ihdr->ip_hl * 4);
+		tcp_header->check = 0;
+		bridge_do_checksum((unsigned char *)ihdr, IPPROTO_TCP, payload_len);	
+	}else if(IPPROTO_UDP == ihdr->ip_p){
+		udp_header = (struct udphdr *)((char *)ihdr + ihdr->ip_hl * 4);
+		udp_header->check = 0;
+		bridge_do_checksum((unsigned char *)ihdr, IPPROTO_UDP, payload_len);
+	}
+}
+#endif
+
+static void phy_pkt_cb(u_char * arg, const struct pcap_pkthdr * pkthdr, const u_char * packet)
+{
+	int sn;
+	struct ethhdr *ehdr = (struct ethhdr *)packet;
+	struct ip *ihdr = (struct ip *)(packet);
+	struct tcphdr *thdr;
+	//char ip_str[64];
+
+	if(ntohs(ehdr->h_proto) != ETH_P_IP){
+		return;
+	}
+	ihdr = (struct ip *)(packet + 14);
+	if(local_phy_dev_ip_net != ihdr->ip_dst.s_addr){
+		//inet_ntop(AF_INET, &ihdr->ip_dst.s_addr, ip_str, sizeof(ip_str));
+		//dprint("packet from %s dst ip '%s' is not local device, ignore it!\n", phy_dev_name, ip_str);
+		return;
+	}
+	switch(ihdr->ip_p){
+	    /* UDP, ICMP等包不太好区分哪个包是本机所发出的, 默认给sapp,  */
+		case IPPROTO_UDP:	
+		case IPPROTO_ICMP:
+		case IPPROTO_ESP:
+		break;
+	
+		case IPPROTO_TCP:
+		{
+			/* 只保证物理机的ssh, pptp vpn的连通性, 其他都给sapp */
+			thdr = (struct tcphdr *)( (char *)ihdr + ihdr->ip_hl * 4);
+			  if((ntohs(thdr->dest) == 22)
+			   ||(ntohs(thdr->dest) == 1723)){
+				return;
+			  }
+		}
+		break;
+		
+		case IPPROTO_GRE: /* pptp vpn流量给sapp */
+			return; /* 协议栈处理 */
+		break;
+	
+		default:
+			return;  /* 协议栈处理 */
+		break;
+	  }	
+
+#if SAPP_BRIDGE_SNAT_ENABLE
+	bridge_prein_snat_recover(ihdr);
+#endif
+
+	/* 发给tun设备 */
+	sn = sendto(tun_dev_fd, ihdr, pkthdr->caplen-14, 0, (struct sockaddr *)&tun_sock_addr, sizeof(struct sockaddr));
+	if(sn < 0){
+		dprint("sendto tun error, len=%d, %s\n", pkthdr->caplen, strerror(errno));
+	}else{
+		dprint("from phy '%s' to '%s' succ, len=%d\n", phy_dev_name, tun_dev_name, pkthdr->caplen);
+	}
+
 	return;
 }
 
 
-void tun_pkt_cb(u_char * arg, const struct pcap_pkthdr * pkthdr, const u_char * packet)
+
+
+/*
+	tun模式下, 收到的包没有MAC, 直接是ip头部.
+*/
+static void tun_pkt_cb(u_char * arg, const struct pcap_pkthdr * pkthdr, const u_char * packet)
 {
 	int sn;
-
 	unsigned char buf[2048];
+
+	if(0x40 != (packet[0] & 0xF0)){
+		dprint("recv not ipv4 pkt from tun\n");
+		return;
+	}
 	
 #if USE_TUN_MODE	
-	memcpy(buf+14, packet, pkthdr->caplen); /* tun模式预留mac头部空间 */
+	memcpy(buf+14, packet, pkthdr->caplen); /* tun模式要预留mac头部空间 */
 	memcpy(buf, default_gw_mac_addr, 6);
 	memcpy(buf+6, local_phy_mac_addr, 6);
 	buf[12] = 0x08;
@@ -290,14 +563,22 @@ void tun_pkt_cb(u_char * arg, const struct pcap_pkthdr * pkthdr, const u_char * 
 	buf[13] = 0x0;	
 #endif
 
+#if SAPP_BRIDGE_SNAT_ENABLE
+	bridge_preout_snat((struct ip *)(buf + 14));
+#endif
+
+	/* 通过raw_socket从物理网卡发出时, 必须要带mac头 */
+
 #if USE_TUN_MODE	
 	sn = sendto(phy_dev_fd, buf, pkthdr->caplen+14, 0, (struct sockaddr *)&phy_sock_addr, sizeof(struct sockaddr));
 #else
 	sn = sendto(phy_dev_fd, buf, pkthdr->caplen, 0, (struct sockaddr *)&phy_sock_addr, sizeof(struct sockaddr));
 #endif
 	if(sn < 0){
-		printf("sendto phy error, len=%d, %s\n", pkthdr->caplen+14, strerror(errno));
-	}	
+		dprint("sendto phy error, len=%d, %s\n", pkthdr->caplen+14, strerror(errno));
+	}else{
+		dprint("from tun '%s' to phy '%s' succ, len=%d\n", tun_dev_name, phy_dev_name, pkthdr->caplen+14);
+	}
 }
 
 static int pcap_set_filter(pcap_t *handle, const char *filter_str)
@@ -322,7 +603,7 @@ static int pcap_set_filter(pcap_t *handle, const char *filter_str)
 	return 0;
 }
 
-int pcap_init(void)
+static int pcap_init(void)
 {
 	char errBuf[65535];
 	char local_ip_str[64];
@@ -352,7 +633,6 @@ int pcap_init(void)
 
 	pcap_setdirection(tun_pcap_handle, PCAP_D_IN);
 	
-
 	return 0;
 }
 
@@ -365,6 +645,7 @@ void *phy_pcap_rcv_thread(void *arg)
 	}
 
 	return NULL;
+
 }
 
 void *tun_pcap_rcv_thread(void *arg)
@@ -376,7 +657,7 @@ void *tun_pcap_rcv_thread(void *arg)
 	return NULL;
 }
 
-int sock_init(void)
+static int sock_init(void)
 {
 	phy_dev_fd = socket(PF_INET, SOCK_PACKET, htons(ETH_P_ALL));    
     if(phy_dev_fd < 0)
@@ -415,7 +696,7 @@ int sock_init(void)
 static void usage(void)
 {
 	printf("usage: ./eth_tun_bridge <phy_device> <tun_device> <gw_mac>\n");
-	printf("\t for example: ./eth_tun_bridge eth0 tun1 50:d2:f5:f3:8e:93.\n");
+	printf("\t for example: ./eth_tun_bridge eth0 tun1 50:d2:f5:f3:8e:93\n");
 	exit(1);
 }
 
@@ -424,15 +705,21 @@ int main(int argc, char *argv[])
 {
 	//int rphy, rtun;
 	pthread_t pid;
-
+	int i;
+	
 	if(argc != 4){
+		printf("args number is not 4!\n");
+		for(i = 0; i < argc; i++){
+			printf("%s ", argv[i]);
+		}
+		printf("\n\n");
 		usage();
 	}
 	
 	phy_dev_name = strdup(argv[1]);
 	tun_dev_name = strdup(argv[2]);
 	if(MESA_mac_pton(argv[3], ':', default_gw_mac_addr) < 0){
-		printf("gw_mac is invalid!\n");
+		printf("args gw_mac is invalid!\n");
 		usage();
 	}
 

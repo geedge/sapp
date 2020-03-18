@@ -2993,6 +2993,11 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 		/* Ìø¹ýµ±Ç°²ã */
 		inject_stream = raw_stream->pfather;
 		inject_stream_pr = (struct streaminfo_private *)inject_stream;
+	}else{
+		if((ADDR_TYPE_IPV4 == inject_stream->addr.addrtype)
+		 || (ADDR_TYPE_TCP == inject_stream->addr.addrtype)){
+			set_build_layer_tcp_args(thread_num, TH_PUSH|TH_ACK, MESA_rand_range(1000, 1460), 0);
+		}
 	}
 	
 	raw_stream_pr = (struct streaminfo_private *)raw_stream;

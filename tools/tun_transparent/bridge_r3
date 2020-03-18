@@ -1,0 +1,17 @@
+#!/bin/sh
+
+while [ 1 ]; do
+	count=`ls -l core.* |wc -l`
+        echo $count
+        if [ $count -lt 5 ]
+        then
+                echo "set unlimited"
+                ulimit -c unlimited
+        else
+                ulimit -c 0
+        fi
+
+        ./sapp_tun_bridge_user $@ > /dev/null
+	echo sapp_tun_bridge_user crashed, restart at `date +"%w %Y/%m/%d, %H:%M:%S"` >> RESTART.log
+    sleep 1
+done
