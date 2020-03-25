@@ -14,20 +14,24 @@ worker_threads=1
 bind_mask=[]
 
 [PACKET_IO]
+    [packet_io.feature]
 ### note, used to represent inbound or outbound direction value,
 ### because it comes from other device, so it needs to be specified manually,
 ### if inbound_route_dir=1, then outbound_route_dir=0, vice versa,
 ### in other words, outbound_route_dir = 1 ^ inbound_route_dir;
-inbound_route_dir=1
+    inbound_route_dir=1
 
 ### note, BSD_packet_filter, if you do not want to set any filter rule, keep it empty as ""
-BSD_packet_filter=""
+    BSD_packet_filter=""
+
+### note, same as tcpdump -Q/-P arg, possible values are `in', `out' and `inout', default is "in"
+    pcap_capture_direction="inout"
    
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]
     mode=mirror
 
-### note, interface.type options: [pag, pcap, marsio]
+### note, interface.type options: [pag, pcap, marsio, tun]
 ### receive from internal interface, route dir is 0,
 ### receive from external interface, route dir is 1.
     [packet_io.internal.interface]
@@ -70,6 +74,7 @@ BSD_packet_filter=""
 	ipv6_send_packet_enabled=1
 	tcp_drop_pure_ack_pkt=0
 	tcp_syn_option_parse_enabled=1 
+        skip_not_ip_layer_over_eth=1
 
 [PROFILING]
     [profiling.pkt_latency]

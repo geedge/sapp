@@ -48,6 +48,7 @@ static unsigned long long tot_up_rcv_pkt_num, tot_down_rcv_pkt_num;
 static int pcap_device_up_mtu = 1500;
 static int pcap_device_down_mtu = 1500;
 
+extern sapp_global_t *sapp_global_val;
 extern int g_PollingFunNum;
 extern int g_use_MESA_sleep_sw;
 extern void MESA_sleep(void);
@@ -1259,6 +1260,11 @@ int pcap_dl_io_init(int argc, char *argv[])
 	}
 	else /* 网络抓包模式 */
 	{
+		if((strncasecmp(sapp_global_val->config.packet_io.depolyment_mode_str, "transparent", strlen("transparent")) == 0)
+		  && (strstr(sapp_global_val->config.packet_io.pcap_capture_direction, "out") != NULL)){
+			printf("\033[1;31;40m[Error]in transparent mode, pcap_capture_direction must set 'in'![0m\n", g_pcap_up_dev_name, pcap_errbuf);
+			return -1;
+		}
 		pcap_up_handle = pcap_open_live(g_pcap_up_dev_name, PCAP_SNAPLEN_MAX,1,1,pcap_errbuf);
 		if(NULL == pcap_up_handle)
 		{
@@ -1267,8 +1273,14 @@ int pcap_dl_io_init(int argc, char *argv[])
 		}
 
 		pcap_set_filter(pcap_up_handle, g_pcap_cap_filter);
-		pcap_setdirection(pcap_up_handle, PCAP_D_IN);
-
+		if(strncasecmp(sapp_global_val->config.packet_io.pcap_capture_direction, "inout", 5) == 0){
+			pcap_setdirection(pcap_up_handle, PCAP_D_INOUT);
+		}else if(strncasecmp(sapp_global_val->config.packet_io.pcap_capture_direction, "out", 3) == 0){
+			pcap_setdirection(pcap_up_handle, PCAP_D_OUT);
+		}else{
+			pcap_setdirection(pcap_up_handle, PCAP_D_IN);
+		}
+		
 		opt_len = sizeof(int);
 		sapp_get_device_opt(g_pcap_up_dev_name, SDO_MTU, &pcap_device_up_mtu, &opt_len);	
 		if(pcap_device_up_mtu < 1500){

@@ -25,7 +25,8 @@ all: $(TARGET)
 	
 
 sapp_tun_bridge_user:sapp_tun_bridge_user.c
-	gcc -o $@ $^  -g -O0 $(CFLAGS) -lpthread -lpcap -lnetfilter_queue -lnfnetlink
+	#gcc -o $@ $^  -g -O0 $(CFLAGS) -lpthread -lpcap -lnetfilter_queue -lnfnetlink
+	gcc -o $@ $^  -g -O0 $(CFLAGS) -lpthread -lpcap
 
 .c.o:  
 	$(CC) -c -o $@ $(CFLAGS) -I. $(INCS) $<

@@ -58,7 +58,7 @@ extern sapp_global_t *sapp_global_val;
 #define g_tcp_syn_option_parse_enabled	sapp_global_val->config.protocol_feature.tcp_syn_option_parse_enabled
 #define g_ipv6_decapsulation_enabled  sapp_global_val->config.protocol_feature.ipv6_decapsulation_enabled
 #define g_ipv6_send_packet_enabled    sapp_global_val->config.protocol_feature.ipv6_send_packet_enabled
-
+#define G_SKIP_NOT_IP_LAYER 	sapp_global_val->config.protocol_feature.skip_not_ip_layer_over_eth
 
 #define sapp_runtime_log(log_level, format, args...)  do{if(log_level>=ABBR_SAPP_LOG_LEVEL){MESA_handle_runtime_log(ABBR_SAPP_LOG_HANDLE, log_level, "sapp", format, ##args);}}while(0)
 

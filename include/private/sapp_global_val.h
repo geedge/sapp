@@ -160,6 +160,7 @@ typedef struct{
 	int polling_enabled;
 	int polling_priority; /* call sapp_recv_pkt every call polling_entry times, 调用多少次polling后调用一次recv pkt, 1表示两者优先级相同 */
 	int inbound_route_dir; /* 表示入境, I2C方向的值是0还是1 */
+	char pcap_capture_direction[NAME_MAX]; /* in, out, inout */
 }sapp_config_packet_io_t;
 
 typedef struct{
@@ -175,6 +176,7 @@ typedef struct{
 	int ipv6_send_packet_enabled; /* 是否支持发送ipv6数据包, 此项依赖系统ipv6内核模块是否加载 */
 	int tcp_drop_pure_ack_pkt; /* 丢弃没有负载的纯ack包, 可以节约一次流表查询, 根据业务需求设置 */
 	int tcp_syn_option_parse_enabled; /* 是否解析tcp syn包头部选项 */
+	int skip_not_ip_layer_over_eth; /* 跳过非ip层, 保证在并联模式下, 可以通过系统路由发送rst包 */
 }sapp_protocol_feature_t;
 
 

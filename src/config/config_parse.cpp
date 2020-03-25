@@ -578,12 +578,14 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_long_array(default_config_file, (char *)"CPU", (char *)"bind_mask", pconfig->cpu.bind_mask_array, &pconfig->cpu.bind_mask_array_num);
 
 	/*******************************  PACKET_IO ******************************/
-	tomlc99_wrap_load_string_def(default_config_file, (char *)"PACKET_IO", (char *)"BSD_packet_filter", str_tmp, NAME_MAX, "");
+	/*******************************  packet_io.feature ******************************/
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"BSD_packet_filter", str_tmp, NAME_MAX, "");
 	if(str_tmp[0] != '\0'){
 		pconfig->packet_io.input_bpf_filter = strdup(str_tmp);
 	}
-	tomlc99_wrap_load_int_def(default_config_file, (char *)"PACKET_IO", (char *)"inbound_route_dir", &pconfig->packet_io.inbound_route_dir, 0);
-	
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.feature", (char *)"inbound_route_dir", &pconfig->packet_io.inbound_route_dir, 0);
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"pcap_capture_direction", pconfig->packet_io.pcap_capture_direction, NAME_MAX, "in");
+		
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.depolyment", (char *)"mode", pconfig->packet_io.depolyment_mode_str, NAME_MAX, "mirror");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.internal.interface", (char *)"type", pconfig->packet_io.internal.interface.type_str, NAME_MAX, "pcap");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.internal.interface", (char *)"name", pconfig->packet_io.internal.interface.name, NAME_MAX, "lo");
@@ -669,6 +671,7 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"ipv6_send_packet_enabled", (int *)&pconfig->protocol_feature.ipv6_send_packet_enabled, 1);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"tcp_drop_pure_ack_pkt", (int *)&pconfig->protocol_feature.tcp_drop_pure_ack_pkt, 0);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"tcp_syn_option_parse_enabled", (int *)&pconfig->protocol_feature.tcp_syn_option_parse_enabled, 1);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"skip_not_ip_layer_over_eth", (int *)&pconfig->protocol_feature.skip_not_ip_layer_over_eth, 0);
 
 	/*******************************  TOOLS **********************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.pkt_dump", (char *)"enabled", (int *)&pconfig->tools.pkt_dump.enabled, 0);

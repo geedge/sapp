@@ -31,7 +31,7 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 	int next_layer_offset = offset_to_raw_pkt_hdr + VLAN_TAG_LEN;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
-	if(unlikely(0 == G_SKIP_NOT_IP_LAYER)){
+	if(likely(0 == G_SKIP_NOT_IP_LAYER)){
 		memset(ptmp,0,sizeof(struct streamindex));
 		set_vlanid(&addr, (unsigned short *)this_layer_data);
 #if IKNOW_ENABLE

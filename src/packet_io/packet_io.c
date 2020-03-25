@@ -63,7 +63,7 @@ int g_encapsulate_with_L2E = 0; /* 使用DDP协议封装的x27原始IP包 */
 int g_skip_ethernet_layer_sw = 0;
 void *g_packet_dl_send_handle[MAX_THREAD_NUM];/* 动态IO库的发包句柄 */
 //static int g_packet_io_dir; /* 用于记录当前来包方向, 构造包时使用 */
-int G_SKIP_NOT_IP_LAYER = 0; /* 跳过非IP协议的层, 用于双栈并联特殊环境下, RST包发送 */
+//int G_SKIP_NOT_IP_LAYER = 0; /* 跳过非IP协议的层, 用于双栈并联特殊环境下, RST包发送 */
 static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, int thread_num);
 PACKET_IO_CB_T G_DEFAULT_PKT_CB = mesa_default_pkt_cb;
 

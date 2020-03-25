@@ -25,7 +25,6 @@ extern void sesame_open_door(const char *lock_path, const char *lock_name);
 //int top_mode = 0;
 extern int G_DICTATOR_SW;
 extern struct global_stream **G_MESA_GLOBAL_STREAM;
-extern int G_SKIP_NOT_IP_LAYER; /* 跳过非IP协议的层, 用于双栈并联特殊环境下, RST包发送 */
 //static int __times = 0;
 //int g_timestamp_record_sw = 0;
 extern long long g_timedelay_threshold;
@@ -189,12 +188,13 @@ int MESA_platform_init(int argc, char *argv[])
 	//udp_set_stream_timeout(udp_stream_timeout);
 	
 	udp_set_stream_num(max_udp_stream_num*3,max_udp_stream_num,max_udp_stream_num*2);
-
+#if 0
 	MESA_load_profile_int_def("conf/main.conf","Module", "skip_not_ip_layer", &G_SKIP_NOT_IP_LAYER, 0);
 	if(G_SKIP_NOT_IP_LAYER != 0){
 		printf("\033[41mWarning!  '%s' is enable!\033[0m\n", "skip_not_ip_layer");
 		sleep(1);		
 	}
+#endif
 
 	//MESA_load_profile_int_def("conf/main.conf","Module", "timestamp_record", &g_timestamp_record_sw, 0);	
 	MESA_load_profile_int_def("conf/main.conf","Module", "timedelay_threshold", &int_tmp, 10000000);
