@@ -186,60 +186,71 @@ set(CMAKE_INSTALL_FULL_SHAREDSTATEDIR ${CMAKE_INSTALL_PREFIX}/etc)
 set(CMAKE_INSTALL_FULL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX}/plug)
 set(CMAKE_INSTALL_FULL_SYSCONFDIR /usr/lib/systemd/system)
 
-#install(PROGRAMS ${CMAKE_BINARY_DIR}/src/entry/sapp DESTINATION .)
-install(PROGRAMS ${CMAKE_BINARY_DIR}/src/entry/sapp DESTINATION .)
+#install(PROGRAMS ${CMAKE_BINARY_DIR}/src/entry/sapp DESTINATION . COMPONENT EXECUTABLE)
+install(PROGRAMS ${CMAKE_BINARY_DIR}/src/entry/sapp DESTINATION . COMPONENT EXECUTABLE)
 
-install(PROGRAMS bin/r2 DESTINATION .)
-install(PROGRAMS bin/r3 DESTINATION .)
+install(PROGRAMS bin/r2 DESTINATION . COMPONENT EXECUTABLE)
+install(PROGRAMS bin/r3 DESTINATION . COMPONENT EXECUTABLE)
 
 
-install(FILES bin/etc/sapp.toml DESTINATION etc)
-install(FILES bin/etc/send_raw_pkt.conf DESTINATION etc)
-install(FILES bin/etc/project_list.conf DESTINATION etc)
-install(FILES bin/etc/plugin.conf DESTINATION etc)
-install(FILES bin/etc/entrylist.conf DESTINATION etc)
-install(FILES bin/etc/gdev.conf DESTINATION etc)
-install(FILES bin/plug/conflist.inf DESTINATION plug)
+install(FILES bin/etc/sapp.toml DESTINATION etc COMPONENT PROFILE)
+install(FILES bin/etc/send_raw_pkt.conf DESTINATION etc COMPONENT PROFILE)
+install(FILES bin/etc/project_list.conf DESTINATION etc COMPONENT PROFILE)
+install(FILES bin/etc/plugin.conf DESTINATION etc COMPONENT PROFILE)
+install(FILES bin/etc/entrylist.conf DESTINATION etc COMPONENT PROFILE)
+install(FILES bin/etc/gdev.conf DESTINATION etc COMPONENT PROFILE)
+install(FILES bin/plug/conflist.inf DESTINATION plug COMPONENT PROFILE)
 
 if(NOT ENABLE_STATIC_LINK)
 
 if(CAPTURE_MODE MATCHES "MARSIO")
-	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_marsio.so DESTINATION platform_lib)
+	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_marsio.so DESTINATION platform_lib COMPONENT LIBRARY)
 endif()
 
 if(CAPTURE_MODE MATCHES "PCAP")
-	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_pcap.so DESTINATION platform_lib)
+	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_pcap.so DESTINATION platform_lib COMPONENT LIBRARY)
 endif()
 
 if(CAPTURE_MODE MATCHES "TUN")
-	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_tun.so DESTINATION platform_lib)
+	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_tun.so DESTINATION platform_lib COMPONENT LIBRARY)
 endif()
 
 endif()
 
-#install(FILES bin/plug/protocol/conflist_protocol.inf DESTINATION plug/protocol)
+#install(FILES bin/plug/protocol/conflist_protocol.inf DESTINATION plug/protocol COMPONENT PROFILE)
 
-install(FILES bin/plug/protocol/isakmp_protocol_plug/isakmp_protocol_plug.inf DESTINATION plug/protocol/isakmp_protocol_plug)
-install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/isakmp_protocol_plug.so DESTINATION plug/protocol/isakmp_protocol_plug)
+install(FILES bin/plug/protocol/isakmp_protocol_plug/isakmp_protocol_plug.inf DESTINATION plug/protocol/isakmp_protocol_plug COMPONENT PROFILE)
+install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/isakmp_protocol_plug.so DESTINATION plug/protocol/isakmp_protocol_plug COMPONENT LIBRARY)
 
-install(FILES bin/plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.inf DESTINATION plug/protocol/l2tp_protocol_plug)
-install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/l2tp_protocol_plug.so DESTINATION plug/protocol/l2tp_protocol_plug)
+install(FILES bin/plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.inf DESTINATION plug/protocol/l2tp_protocol_plug COMPONENT PROFILE)
+install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/l2tp_protocol_plug.so DESTINATION plug/protocol/l2tp_protocol_plug COMPONENT LIBRARY)
 
-install(FILES bin/plug/protocol/pptp_protocol_plug/pptp_protocol_plug.inf DESTINATION plug/protocol/pptp_protocol_plug)
-install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/pptp_protocol_plug.so DESTINATION plug/protocol/pptp_protocol_plug)
+install(FILES bin/plug/protocol/pptp_protocol_plug/pptp_protocol_plug.inf DESTINATION plug/protocol/pptp_protocol_plug COMPONENT PROFILE)
+install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/pptp_protocol_plug.so DESTINATION plug/protocol/pptp_protocol_plug COMPONENT LIBRARY)
 
 
-#install(FILES bin/plug/platform/conflist_platform.inf DESTINATION plug/platform)
+#install(FILES bin/plug/platform/conflist_platform.inf DESTINATION plug/platform COMPONENT PROFILE)
 
 if(PLATFORM_MODE MATCHES "INLINE")
-    install(FILES bin/plug/platform/g_device_plug/g_device_plug.inf DESTINATION plug/platform/g_device_plug)
-    install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/g_device_plug.so DESTINATION plug/platform/g_device_plug)
+    install(FILES bin/plug/platform/g_device_plug/g_device_plug.inf DESTINATION plug/platform/g_device_plug COMPONENT PROFILE)
+    install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/g_device_plug.so DESTINATION plug/platform/g_device_plug COMPONENT LIBRARY)
 endif()
 
 
-install(FILES bin/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app)
-install(FILES ${CMAKE_BINARY_DIR}/test/test_app_sapp.so DESTINATION plug/business/test_app)
+install(FILES bin/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app COMPONENT PROFILE)
+install(FILES ${CMAKE_BINARY_DIR}/test/test_app_sapp.so DESTINATION plug/business/test_app COMPONENT LIBRARY)
 
-install(PROGRAMS ${CMAKE_BINARY_DIR}/tools/stream_id_decode DESTINATION ./tools/)
+install(PROGRAMS ${CMAKE_BINARY_DIR}/tools/stream_id_decode DESTINATION ./tools/ COMPONENT EXECUTABLE)
+
+install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream.h DESTINATION /opt/MESA/inlcude/MESA/ COMPONENT HEADER)
+install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_base.h DESTINATION /opt/MESA/inlcude/MESA/stream_inc COMPONENT HEADER)
+install(FILES  ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_control.h DESTINATION  /opt/MESA/inlcude/MESA/stream_inc COMPONENT HEADER)
+install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_entry.h DESTINATION  /opt/MESA/inlcude/MESA/stream_inc COMPONENT HEADER)
+install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_inject.h DESTINATION  /opt/MESA/inlcude/MESA/stream_inc COMPONENT HEADER)
+install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_project.h DESTINATION  /opt/MESA/inlcude/MESA/stream_inc COMPONENT HEADER)
+install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_proxy.h DESTINATION  /opt/MESA/inlcude/MESA/stream_inc COMPONENT HEADER)
+install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_rawpkt.h DESTINATION  /opt/MESA/inlcude/MESA/stream_inc COMPONENT HEADER)
+install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_tunnel.h DESTINATION  /opt/MESA/inlcude/MESA/stream_inc COMPONENT HEADER)
+install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/sapp_inject.h DESTINATION  /opt/MESA/inlcude/MESA/stream_inc COMPONENT HEADER)
 
 include(Package)

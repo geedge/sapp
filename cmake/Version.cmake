@@ -21,7 +21,7 @@ string(REGEX REPLACE "^v[0-9]+\\.([0-9]+).*" "\\1" VERSION_MINOR "${VCS_TAG}")
 string(REGEX REPLACE "^v[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" VERSION_PATCH "${VCS_TAG}")
 
 if(NOT VERSION_MAJOR)
-    set(VERSION_MAJOR 4)
+    set(VERSION_MAJOR 1)
 endif()
 
 if(NOT VERSION_MINOR)
@@ -32,16 +32,22 @@ if(NOT VERSION_PATCH)
     set(VERSION_PATCH 0)
 endif()
 
-set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+set(VERSION "${VERSION_MAJOR}_${VERSION_MINOR}_${VERSION_PATCH}")
 set(VERSION_BUILD "${VCS_SHORT_HASH}")
+
+# print information
+message(STATUS "Version: ${VERSION}-${VERSION_BUILD}")
+
+if(NOT DEFINE_GIT_VERSION)
+    option(DEFINE_GIT_VERSION "Set DEFINE_GIT_VERSION to OFF" OFF)
 
 set(GIT_VERSION
     "${VERSION}-${CMAKE_BUILD_TYPE}-${VERSION_BUILD}-${VCS_BRANCH}-${VCS_TAG}-${VCS_DATE}")
-
 string(REGEX REPLACE "[-:+/\\.]" "_" GIT_VERSION ${GIT_VERSION})
 
-add_definitions(-DGIT_VERSION=\"${GIT_VERSION}\")
+if(DEFINE_GIT_VERSION)
+    add_definitions(-DGIT_VERSION=${GIT_VERSION})
+    option(DEFINE_GIT_VERSION "Set DEFINE_GIT_VERSION to OFF" ON)
+endif()
 
-
-# print information
-message(STATUS "Sapp Version: ${GIT_VERSION}")
+endif()
