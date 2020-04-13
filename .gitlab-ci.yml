@@ -12,6 +12,7 @@ stages:
   - mkdir -p $BUILD_PADDING_PREFIX/$CI_PROJECT_NAMESPACE/
   - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
   - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+  - source /etc/profile.d/framework.sh
   - chmod +x ./ci/travis.sh
   script:
   - yum makecache
