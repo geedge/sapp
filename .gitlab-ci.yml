@@ -2,7 +2,7 @@ image: "git.mesalab.cn:7443/mesa_platform/build-env:master"
 variables:
   GIT_STRATEGY: "clone"
   BUILD_PADDING_PREFIX: /tmp/padding_for_CPACK_RPM_BUILD_SOURCE_DIRS_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX/
-  INSTALL_PREFIX: "/opt/MESA/"
+  INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
 
 stages:
 - build
@@ -75,8 +75,8 @@ release_build_release:
     BUILD_TYPE: RelWithDebInfo
     PACKAGE: 1
     UPLOAD: 1
-    PULP3_REPO_NAME: framework-stable-x86_64.el7
-    PULP3_DIST_NAME: framework-stable-x86_64.el7
+    PULP3_REPO_NAME: platform-stable-x86_64.el7
+    PULP3_DIST_NAME: platform-stable-x86_64.el7
   extends: .build_by_travis
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-release"
