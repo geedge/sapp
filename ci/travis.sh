@@ -33,7 +33,7 @@ env | sort
 : "${COMPILER_IS_GNUCXX:=OFF}"
 
 # Install dependency from YUM
-yum install libcurl-devel -y
+yum install libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel -y
 
 mkdir build || true
 cd build
