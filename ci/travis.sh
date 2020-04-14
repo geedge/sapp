@@ -34,6 +34,7 @@ env | sort
 
 # Install dependency from YUM
 yum install libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env -y
+source /etc/profile.d/framework.sh
 
 mkdir build || true
 cd build
