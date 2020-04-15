@@ -33,7 +33,7 @@ env | sort
 : "${COMPILER_IS_GNUCXX:=OFF}"
 
 # Install dependency from YUM
-yum install libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env -y
+yum install libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel -y
 source /etc/profile.d/framework.sh
 
 mkdir build || true
