@@ -30,7 +30,7 @@ _MODE_PAG_MARSIO=pag_marsio
 _MODE_IPFILE=ipfile
 _MODE_TUN=tun
 _MODE_CHK=0
-iomode=tun
+iomode=pcap
 
 _OPT0=0
 _OPT1=1

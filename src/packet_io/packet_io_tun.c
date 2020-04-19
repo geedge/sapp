@@ -341,7 +341,7 @@ void *tun_work_thread(void *arg)
 			if((g_tun_topology_mode & __NET_CONN_SERIAL) && (PASS == sapp_ret)){
 				/* 转发之前恢复原始ip地址 */
 				tun_xor_static_nat(ihdr);
-				tun_forward_pkt(0, tun_raw_pkt.raw_pkt.raw_pkt_data, tun_raw_pkt.raw_pkt.raw_pkt_len, tun_raw_pkt.raw_pkt.route_dir);
+				tun_forward_pkt(0, (unsigned char *)tun_raw_pkt.raw_pkt.raw_pkt_data, tun_raw_pkt.raw_pkt.raw_pkt_len, tun_raw_pkt.raw_pkt.route_dir);
 			}
 		}else{
 			if(stream_process_polling(0) != 0){

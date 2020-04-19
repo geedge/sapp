@@ -110,6 +110,9 @@ endif
 ifeq ($(iomode), $(_MODE_TUN))
 CFLAGS += -DIOMODE_TUN=1
 DLL_LIB += packet_io_tun.so 
+ifeq ($(link_mode), $(__LINK_MODE_STATIC))
+  OBJS += packet_io_tun.o
+endif
 endif
 
 

@@ -135,14 +135,14 @@ int process_confelem_business(char* confelem_filename)
 *****************************************************************************/
 int plugin_load_business(char* conflist_filename)
 {
-	int rec;
+	//int rec;
 
-	rec = process_conflist(conflist_filename,PLUGTYPE_BUSENISS);
-	if(rec < 0)
-	{
-		return -1;
-	}
+	process_conflist(conflist_filename,PLUGTYPE_BUSENISS);
 
+	/* 2020-04-18 lijia modify, 
+	   此处不用判断process_conflist()的返回值, 
+	   plugin_call_flagstate()是必须要调用的.
+	*/
 	plugin_call_flagstate();
 
 	return 0;
