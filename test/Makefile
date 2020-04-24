@@ -9,7 +9,7 @@ MODULES	=
 BIN_PATH = ../bin/
 
 TARGET	= test_app_sapp.so
-#TARGET += wangyan_gdev_measurement.so
+TARGET += wangyan_gdev_measurement.so
 #TARGET  += test_anti_flood_hijack
 #TARGET  += sapp_so_run
 
@@ -51,7 +51,7 @@ test_anti_flood_hijack:test_anti_flood_hijack.c ../lib/libavltree.a
 
 wangyan_gdev_measurement.so:wangyan_gdev_measurement.c
 	$(CC) -o $@ -shared -fPIC $(INCS) $(CFLAGS) -DIOMODE_MARSIO=1 $^ $(MODULES)
-	cp $@ ../bin/plug/business/wangyan_gdev_measurement/$@
+	#cp $@ ../bin/plug/business/wangyan_gdev_measurement/$@
 
 
 sapp_so_run:test_sapp_so.o

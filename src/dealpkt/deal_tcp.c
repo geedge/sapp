@@ -2081,6 +2081,7 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 	struct half_tcpstream *snd=NULL,*rcv=NULL;
 	u_int this_seq = ntohl (this_tcphdr->th_seq);
 	int ret=PASS;
+	int ret_unorder = PASS;
 	
 	if(pstream->curdir==DIR_S2C)
 	{
@@ -2114,8 +2115,12 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 				
 			}
 #else
-			ret = tcp_deal_unorder(pindex,pstream,rcv,snd,CHECK_ORDER_DATA);
+		/* 2020-04-24 lijia modify, 如果ret=stream_process_tcp返回值是DROP,   tcp_deal_unorder()返回值是PASS, 当前包就是PASS, 结果就CT了! */
+			ret_unorder = tcp_deal_unorder(pindex,pstream,rcv,snd,CHECK_ORDER_DATA);
 #endif			
+			if((DROP == ret_unorder) || (DROP == ret)){
+				ret = DROP;
+			}
 			return ret;			
 		}
 		//处理原来缓冲的数据包是否已经正序，进行处理
