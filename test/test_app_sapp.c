@@ -1418,7 +1418,7 @@ static void test_inject_tcp_pkt_with_this_hdr(struct streaminfo *stream,void **p
 	raw_tcp_payload_len = ntohs(raw_ihdr->ip_len) - raw_ihdr->ip_hl*4 - raw_thdr->th_off * 4;
 
 	/* 当前包是C2S方向的GET, 需要回复一个虚假的S2C方向的RESPONSE */
-	send_ihdr = pkt_header_payload;
+	send_ihdr = (struct mesa_ip4_hdr *)pkt_header_payload;
 	send_thdr = (struct mesa_tcp_hdr *)((char *)send_ihdr + sizeof(struct mesa_ip4_hdr));
 
 	sendpacket_build_tcp(ntohs(raw_thdr->th_dport),
@@ -1447,8 +1447,8 @@ static void test_inject_tcp_pkt_with_this_hdr(struct streaminfo *stream,void **p
 			fake_http_data,
 			sizeof(fake_http_data));
 						
-	sendpacket_do_checksum(send_ihdr, IPPROTO_IP, sizeof(struct mesa_ip4_hdr));
-	sendpacket_do_checksum(send_ihdr, IPPROTO_TCP, sizeof(struct mesa_tcp_hdr) + sizeof(fake_http_data));
+	sendpacket_do_checksum((unsigned char *)send_ihdr, IPPROTO_IP, sizeof(struct mesa_ip4_hdr));
+	sendpacket_do_checksum((unsigned char *)send_ihdr, IPPROTO_TCP, sizeof(struct mesa_tcp_hdr) + sizeof(fake_http_data));
 
 	send_pkt_len = sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr) + sizeof(fake_http_data);
 	
