@@ -465,6 +465,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 					/* 当前插件返回了DROPME, 且KILL_OTHER, 说明所有插件都结束 */
 					plug_entry_kick_out_tot_list(pFunList, a_stream);
 					pFunList = NULL;
+					*apme = NULL; /* 2020-05-08 lijia modify */
 					break;
 				}
 			}
@@ -560,10 +561,16 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 				if(local_app_ret & APP_STATE_KILL_FOLLOW){
 					plug_entry_kick_out_tot_list(pNext, a_stream);
 					pPrev->next = NULL;
+					if(NULL == pPrev){
+						/* 当前插件在第一个, KILL_FOLLOW &    APP_STATE_DROPME相当于全部插件DROPME*/
+						pFunList = NULL; /* 全部插件CLOSE */
+						*apme = NULL; /* 2020-05-08 lijia modify */
+					}
 				/* 2019-11-15 lijia add for plug kill other */
 				}else if(local_app_ret & APP_STATE_KILL_OTHER){
 					plug_entry_kick_out_tot_list(pFunList, a_stream);
 					pFunList = NULL; /* 全部插件CLOSE */
+					*apme = NULL; /* 2020-05-08 lijia modify */
 				}
 			}
 			else
