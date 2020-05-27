@@ -10,8 +10,14 @@ extern "C" {
 #define GDEV_KEEPALIVE_TYPE_ARP   (2)
 #define GDEV_KEEPALIVE_TYPE_BFD   (3)
 
+
 /* 特殊设备使用的保活协议 */
 #define BFD_DEFAULT_PORT	(3784) /* 默认端口 */
+
+#define BFD_MSG_FLAGS_INIT 0x80
+#define BFD_MSG_FLAGS_DOWN 0x40
+#define BFD_MSG_FLAGS_UP 0xc0
+
 typedef struct{
     unsigned char version_diag;
     unsigned char flags;

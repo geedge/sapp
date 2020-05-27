@@ -157,9 +157,18 @@ static int gdev_keepalive_bfd_plug(const raw_pkt_t *raw_pkt, int thread_id, unsi
 		return -1;
 	}	
 	/* 获取不到service_id, 或者应该回复保活应答, go on !! */
-	
+
 	memcpy(payload_buf, bfd_net_hdr, payload_len);
 
+	// passive bfdd, DOWN->INIT, UP->UP
+	if (bfd_send_hdr->flags == BFD_MSG_FLAGS_DOWN)
+	{
+		//DOWN->INIT
+		bfd_send_hdr->flags = BFD_MSG_FLAGS_INIT;
+		// set keep_alive ip as discriminator
+		memcpy(bfd_send_hdr->your_discriminator, &ip_hdr->ip_dst.s_addr, 4);
+	}
+	// swap discriminator
 	memcpy(bfd_buf, bfd_send_hdr->my_discriminator, 4);
 	memcpy(bfd_send_hdr->my_discriminator, bfd_send_hdr->your_discriminator, 4);
 	memcpy(bfd_send_hdr->your_discriminator, bfd_buf, 4);
