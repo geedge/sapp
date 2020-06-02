@@ -7,9 +7,9 @@ extern "C" {
 
 #include "libping.h"
 
-int wangyan_keepalive_plug_version_VERSION_20180428;
+int wy_keepalive_plug_version_VERSION_20180428;
 
-#define WANGYAN_PLUG_NUM_MAX			(64)
+#define WY_PLUG_NUM_MAX			(64)
 
 #define SELF_DEBUG 						(0) /* ÎŞ×Ü¿ØµÄÌõ¼şÏÂ×Ô²âÊÔ */
 
@@ -19,7 +19,7 @@ int wy_steward_plugin_id_get(void)
 {
 	return 0;
 }
-stPlugBaseInfo wkp_g_plug_base_info[WANGYAN_PLUG_NUM_MAX];
+stPlugBaseInfo wkp_g_plug_base_info[WY_PLUG_NUM_MAX];
 #else
 /* ÒÀÀµÓÚÆäËû²å¼şµÄ±äÁ¿, ÔÚmasterÖĞÊ¹ÓÃ, slave²»ÓÃ, µ«slaveÖĞÎŞ·¨ÕÒµ½Ïà¹Ø·ûºÅÃû, Ò²²»Ïë±àÒëÁ½¸ö°æ±¾, ¶¯Ì¬»ñÈ¡ */
 extern stPlugRuntimeInfo plugctrl_runtime_info; /* Æ½Ì¨·ûºÅ, ÓÃÓÚ¼ì²âËÀËøºÍµ¥°ü´¦ÀíÑÓÊ±, Ö±½ÓÒıÓÃ */
@@ -44,10 +44,10 @@ begin_listen_port=60000       //ÆğÊ¼¶Ë¿ÚÎª60000, ±¾µØ°ó¶¨Ô´¶Ë¿ÚÎª60000, Èç¹û2ºÅ²
 slave_plug_id_list=1,2,23,34,45
 */
 
-#define WANGYAN_KEEPALIVE_MODE_MASTER 		1
-#define WANGYAN_KEEPALIVE_MODE_SLAVE 			2
+#define WY_KEEPALIVE_MODE_MASTER 		1
+#define WY_KEEPALIVE_MODE_SLAVE 			2
 
-#define WANGYAN_KEEPALIVE_MAGIC				(0x474E4157) /* "WANG"×Ö·û´®µÄ16½øÖÆ */
+#define WY_KEEPALIVE_MAGIC				(0x474E4157) /* "WANG"×Ö·û´®µÄ16½øÖÆ */
 
 
 #ifndef WKP_MAX
@@ -62,11 +62,11 @@ enum plug_abnormal_t{
 
 typedef struct{
 	unsigned int magic;
-	unsigned char local_id; /* ÓÃÓÚ±êÊ¶±¾¶ËµÄid, ¶ÔÓÚWANGYANÏîÄ¿À´Ëµ, ¼´²å¼şid */
+	unsigned char local_id; /* ÓÃÓÚ±êÊ¶±¾¶ËµÄid, ¶ÔÓÚWYÏîÄ¿À´Ëµ, ¼´²å¼şid */
 	unsigned char msg_type; /* 0:reply; 8:echo, ¸´ÓÃICMPĞ­Òé×Ö¶ÎºÅ */
 	unsigned char version; /* Ä¿Ç°Îª1 */
 	unsigned char seq_num; /* ´Ó0¿ªÊ¼, ÀÛ¼Æ */
-}wangyan_keepalive_comm_t; /* ±£»îÍ¨ĞÅ½Ó¿Ú */
+}wy_keepalive_comm_t; /* ±£»îÍ¨ĞÅ½Ó¿Ú */
 
 typedef struct{
 	int plug_id;
@@ -80,16 +80,16 @@ typedef struct{
 	volatile int plug_exclusivity; /* ²å¼ş¶ÀÕ¼ĞÔ¿ªÆô, Èç¹û´Ë²å¼ş²»±£»î, Õû»ú²»ÔÙºÍgdev±£»î, »á¶¯Ì¬¸üĞÂ */
 	//unsigned char seq_num;
 	//char __pad[59];
-}wangyan_keepalive_state_t; /* ±£»î×´Ì¬¼ÇÂ¼ */
+}wy_keepalive_state_t; /* ±£»î×´Ì¬¼ÇÂ¼ */
 
 static unsigned short g_begin_listen_port = 60000; /* Ö÷»úĞò, host order, ±ãÓÚ¸ù¾İ²å¼şIDÔö¼õ·¶Î§ */
 
-static int g_wangyan_keepalive_mode = WANGYAN_KEEPALIVE_MODE_SLAVE; /* Ä¬ÈÏ´ÓÄ£Ê½, ·ÀÖ¹Ã»ÓĞÅäÖÃÎÄ¼şµ¼ÖÂÒÔÖ÷Ä£Ê½ÔËĞĞ, ¶¼·¢ËÍÖ÷¶¯Ì½²â°ü */
+static int g_wy_keepalive_mode = WY_KEEPALIVE_MODE_SLAVE; /* Ä¬ÈÏ´ÓÄ£Ê½, ·ÀÖ¹Ã»ÓĞÅäÖÃÎÄ¼şµ¼ÖÂÒÔÖ÷Ä£Ê½ÔËĞĞ, ¶¼·¢ËÍÖ÷¶¯Ì½²â°ü */
 
 static unsigned long long g_wkp_time_increase  = 1; /* Á¬ĞøµİÔöµÄÊ±¼ä´Á, ÓÃÓÚÌ½²â±£»î³¬Ê±, ´Ó1¿ªÊ¼´ó¸ÅÃ¿¸ô50msµİÔö1 */
 static time_t g_wkp_cur_time; /* µ±Ç°¾ø¶ÔÊ±¼äµÄÃëÊı, masterºÍslaveÔÚ²»Í¬Á÷³Ì¸÷×Ô¸üĞÂ */
 
-static wangyan_keepalive_state_t g_wangyan_keepalive_state[WANGYAN_PLUG_NUM_MAX]; /* ´ÓÓ¦ÓÃ²å¼şµØÖ·±í */
+static wy_keepalive_state_t g_wy_keepalive_state[WY_PLUG_NUM_MAX]; /* ´ÓÓ¦ÓÃ²å¼şµØÖ·±í */
 
 static volatile int g_wkp_slave_abnormal_flag = 0; /* ´ÓÓ¦ÓÃÒì³£±ê¼Ç, ±ÈÈçËÀËø, µ¥°ü´¦ÀíÑÓÊ±¹ı³¤µÈ */
 
@@ -231,14 +231,14 @@ do_log:
 		if(res != 0){
 			g_wkp_slave_abnormal_flag = 1;
 			if(log_last_slave_state != g_wkp_slave_abnormal_flag){/* ÓĞ×´Ì¬ÇĞ»»Ê±²ÅĞ´ÈÕÖ¾, ·ñÔò»áĞ´ÎŞÊıÌõ´íÎóÈÕÖ¾ */
-				MESA_handle_runtime_log(g_wkp_log_handle, 30, "wangyan_keepalive", "plug_id %d, because %s into abnormal status!",
+				MESA_handle_runtime_log(g_wkp_log_handle, 30, "wy_keepalive", "plug_id %d, because %s into abnormal status!",
 										g_wkp_slave_local_plug_id, 
 										wkp_abnormal_state_to_string(res_type)); 
 			}
 		}else{
 			g_wkp_slave_abnormal_flag = 0;
 			if(log_last_slave_state != g_wkp_slave_abnormal_flag){/* ÓĞ×´Ì¬ÇĞ»»Ê±²ÅĞ´ÈÕÖ¾, ·ñÔò»áĞ´ÎŞÊıÌõ´íÎóÈÕÖ¾ */
-				MESA_handle_runtime_log(g_wkp_log_handle, 30, "wangyan_keepalive", "plug_id %d, into normal status!",
+				MESA_handle_runtime_log(g_wkp_log_handle, 30, "wy_keepalive", "plug_id %d, into normal status!",
 										g_wkp_slave_local_plug_id);
 			}
 		}
@@ -259,8 +259,8 @@ static void wkp_master_get_plug_exclusivity_stat(void)
 {
 	int i;
 
-	for(i = 0; i < WANGYAN_PLUG_NUM_MAX; i++){
-		g_wangyan_keepalive_state[i].plug_exclusivity = wkp_g_plug_base_info[g_wangyan_keepalive_state[i].plug_id].keepalive_flag;
+	for(i = 0; i < WY_PLUG_NUM_MAX; i++){
+		g_wy_keepalive_state[i].plug_exclusivity = wkp_g_plug_base_info[g_wy_keepalive_state[i].plug_id].keepalive_flag;
 	}
 }
 
@@ -270,9 +270,9 @@ static int wkp_master_update_plug_state(int plug_id, int keepalive_state)
 	assert(plug_id < WY_MAX_PLUG_NUM);
 
 	wkp_g_plug_base_info[plug_id].keepalive_state =  keepalive_state; /* ¸üĞÂ×Ü¿Ø²å¼şµÄ×´Ì¬ */
-	g_wangyan_keepalive_state[plug_id].plug_keepalive_state = keepalive_state; /* ¸üĞÂ±¾Ä£¿éÄÚ²å¼ş×´Ì¬ */
+	g_wy_keepalive_state[plug_id].plug_keepalive_state = keepalive_state; /* ¸üĞÂ±¾Ä£¿éÄÚ²å¼ş×´Ì¬ */
 
-	return g_wangyan_keepalive_state[plug_id].plug_keepalive_state;
+	return g_wy_keepalive_state[plug_id].plug_keepalive_state;
 }
 
 
@@ -286,19 +286,19 @@ static void wkp_master_keepalive_status_log(void)
 	int node_stat_len = sizeof(node_stat);
 	
 	if(last_log_time < g_wkp_cur_time){
-		fp = fopen("./log/wangyan_keepalive_status.log", "w+");
+		fp = fopen("./log/wy_keepalive_status.log", "w+");
 		if(NULL == fp){
 			return;
 		}
 
 		fprintf(fp, "%8s %12s %10s %10s %6s %24s\n", "plug-id", "exclusivity", "tot-snd", "tot-rcv", "alive", "last_pkt_time");
-		for(i = 0; i < WANGYAN_PLUG_NUM_MAX; i++){
-			if(0 == g_wangyan_keepalive_state[i].plug_id){ /* 0 is master */
+		for(i = 0; i < WY_PLUG_NUM_MAX; i++){
+			if(0 == g_wy_keepalive_state[i].plug_id){ /* 0 is master */
 				continue;
 			}
 			wkp_timet_to_str(time(NULL), tmp_time_str, 64);
 
-			node_stat.slave_id = g_wangyan_keepalive_state[i].plug_id;
+			node_stat.slave_id = g_wy_keepalive_state[i].plug_id;
 			ret = libping_get_opt(g_wkp_ping_handle, PO_NODE_STATUS, &node_stat, &node_stat_len);
 			if((ret < 0) || (LIBPING_STATE_KEEPALIVE_SUCC != node_stat.state)){
 				continue;
@@ -306,11 +306,11 @@ static void wkp_master_keepalive_status_log(void)
 			
 			fprintf(fp, 
 					"%8d %12d %10u %10u %6d %24s\n",
-					g_wangyan_keepalive_state[i].plug_id,
-					g_wangyan_keepalive_state[i].plug_exclusivity,
+					g_wy_keepalive_state[i].plug_id,
+					g_wy_keepalive_state[i].plug_exclusivity,
 					node_stat.send_req_pkt,
 					node_stat.send_req_pkt,
-					g_wangyan_keepalive_state[i].plug_keepalive_state,
+					g_wy_keepalive_state[i].plug_keepalive_state,
 					tmp_time_str);
 			tot_alive_slave_num++;
 		}
@@ -332,17 +332,17 @@ static void wkp_master_update_gdev_keepalive_flag(void)
 	int alive_plug_num = 0;
 	static time_t last_log_time = 0;
 
-	for(plug_id = 1; plug_id < WANGYAN_PLUG_NUM_MAX; plug_id++){
-		if((1 == g_wangyan_keepalive_state[plug_id].plug_exclusivity) 
-		  && (0 == g_wangyan_keepalive_state[plug_id].plug_keepalive_state)){
+	for(plug_id = 1; plug_id < WY_PLUG_NUM_MAX; plug_id++){
+		if((1 == g_wy_keepalive_state[plug_id].plug_exclusivity) 
+		  && (0 == g_wy_keepalive_state[plug_id].plug_keepalive_state)){
 			gdev_global_switch = 0; /* Ò»Æ±·ñ¾ö */
-			if(g_wangyan_keepalive_state[plug_id].last_log_time < g_CurrentTime){
-				MESA_handle_runtime_log(g_wkp_log_handle, 30, "wangyan_keepalive", "plug id=%d is not alive, is exclusive, so disable gdev global keepalive!", plug_id);
-				g_wangyan_keepalive_state[plug_id].last_log_time = g_CurrentTime;
+			if(g_wy_keepalive_state[plug_id].last_log_time < g_CurrentTime){
+				MESA_handle_runtime_log(g_wkp_log_handle, 30, "wy_keepalive", "plug id=%d is not alive, is exclusive, so disable gdev global keepalive!", plug_id);
+				g_wy_keepalive_state[plug_id].last_log_time = g_CurrentTime;
 			}
 			break;
 		}
-		if(1 == g_wangyan_keepalive_state[plug_id].plug_keepalive_state){
+		if(1 == g_wy_keepalive_state[plug_id].plug_keepalive_state){
 			alive_plug_num++;
 		}
 	}
@@ -350,7 +350,7 @@ static void wkp_master_update_gdev_keepalive_flag(void)
 	if(0 == alive_plug_num){
 		gdev_global_switch = 0;
 		if(last_log_time + 5 < g_CurrentTime){
-			MESA_handle_runtime_log(g_wkp_log_handle, 30, "wangyan_keepalive", "All plug is not alive, disable gdev global keepalive!");
+			MESA_handle_runtime_log(g_wkp_log_handle, 30, "wy_keepalive", "All plug is not alive, disable gdev global keepalive!");
 			last_log_time = g_CurrentTime;
 		}
 	}
@@ -375,21 +375,21 @@ static void *wkp_master_check_keepalive_state_thread(void *arg)
 	
 	while(1){
 		plug_state_sum = 0;
-		for(i = 0; i < WANGYAN_PLUG_NUM_MAX; i++){
-			if(g_wangyan_keepalive_state[i].plug_id == 0){
+		for(i = 0; i < WY_PLUG_NUM_MAX; i++){
+			if(g_wy_keepalive_state[i].plug_id == 0){
 				continue;
 			}
 
-			node_stat.slave_id = g_wangyan_keepalive_state[i].plug_id;
+			node_stat.slave_id = g_wy_keepalive_state[i].plug_id;
 			ret = libping_get_opt(g_wkp_ping_handle, PO_NODE_STATUS, &node_stat, &node_stat_len);
 			if((ret >= 0) && (LIBPING_STATE_KEEPALIVE_SUCC == node_stat.state)){
-				g_wangyan_keepalive_state[i].plug_keepalive_state = 1;
+				g_wy_keepalive_state[i].plug_keepalive_state = 1;
 			}else{
-				g_wangyan_keepalive_state[i].plug_keepalive_state = 0;
+				g_wy_keepalive_state[i].plug_keepalive_state = 0;
 			}
 			
 			/* ¸ù¾İ±¾µØ±£»î×´Ì¬, ¸üĞÂ×Ü¿Ø²å¼şÄÚ²¿µÄ×´Ì¬ */
-			plug_state_sum += wkp_master_update_plug_state(g_wangyan_keepalive_state[i].plug_id, g_wangyan_keepalive_state[i].plug_keepalive_state);
+			plug_state_sum += wkp_master_update_plug_state(g_wy_keepalive_state[i].plug_id, g_wy_keepalive_state[i].plug_keepalive_state);
 		}	
 
 		wkp_master_update_gdev_keepalive_flag();
@@ -449,14 +449,14 @@ static int wkp_plug_master_check_depend_plug(void)
 {
 #if (0 == SELF_DEBUG)
 	if(wkp_search_dl("g_device_plug.so") <= 0){
-		printf("\033[41m[wangyan_keepalive] error, in master mode, but no '%s' plug load!\033[0m\n", "g_device_plug.so");
-		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wangyan_keepalive", "error, in master mode, but no '%s' plug load!", "g_device_plug.so");		
+		printf("\033[41m[wy_keepalive] error, in master mode, but no '%s' plug load!\033[0m\n", "g_device_plug.so");
+		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wy_keepalive", "error, in master mode, but no '%s' plug load!", "g_device_plug.so");		
 		return -1;
 	}
 
 	if(wkp_search_dl("steward_wy.so") <= 0){
-		printf("\033[41m[wangyan_keepalive] error, in master mode, but no '%s' plug load!\033[0m\n", "steward_wy.so");
-		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wangyan_keepalive", "error, in master mode, but no '%s' plug load!", "steward_wy.so");	
+		printf("\033[41m[wy_keepalive] error, in master mode, but no '%s' plug load!\033[0m\n", "steward_wy.so");
+		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wy_keepalive", "error, in master mode, but no '%s' plug load!", "steward_wy.so");	
 		return -1;
 	}
 #endif
@@ -475,29 +475,29 @@ static int wkp_plug_master_get_depend_plug_symbol(void)
 
 	dl_handle_gdev = dlopen("./plug/platform/g_device_plug/g_device_plug.so", RTLD_NOW);
 	if(NULL == dl_handle_gdev){
-		printf("\033[41m[wangyan_keepalive] dlopen '%s' error!\033[0m\n", "./plug/platform/g_device_plug/g_device_plug.so");
-		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wangyan_keepalive", "dlopen '%s' error!", "./plug/platform/g_device_plug/g_device_plug.so");	
+		printf("\033[41m[wy_keepalive] dlopen '%s' error!\033[0m\n", "./plug/platform/g_device_plug/g_device_plug.so");
+		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wy_keepalive", "dlopen '%s' error!", "./plug/platform/g_device_plug/g_device_plug.so");	
 		return -1;
 	}
 
 	wkp_gdev_keepalive_set_opt = (int (* )(const SAPP_TLV_T *))dlsym(dl_handle_gdev, "gdev_keepalive_set_opt");
 	if(NULL == wkp_gdev_keepalive_set_opt){
-		printf("\033[41m[wangyan_keepalive] dlsym '%s' error!\033[0m\n", "gdev_keepalive_set_opt");
-		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wangyan_keepalive", "dlsym '%s' error!", "gdev_keepalive_set_opt");	
+		printf("\033[41m[wy_keepalive] dlsym '%s' error!\033[0m\n", "gdev_keepalive_set_opt");
+		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wy_keepalive", "dlsym '%s' error!", "gdev_keepalive_set_opt");	
 		return -1;
 	}	
 
 	dl_handle_wy_master = dlopen("./plug/platform/steward_wy/steward_wy.so", RTLD_NOW);
 	if(NULL == dl_handle_wy_master){
-		printf("\033[41m[wangyan_keepalive] dlopen '%s' error!\033[0m\n", "./plug/platform/steward_wy/steward_wy.so");
-		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wangyan_keepalive", "dlopen '%s' error!", "./plug/platform/steward_wy/steward_wy.so");	
+		printf("\033[41m[wy_keepalive] dlopen '%s' error!\033[0m\n", "./plug/platform/steward_wy/steward_wy.so");
+		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wy_keepalive", "dlopen '%s' error!", "./plug/platform/steward_wy/steward_wy.so");	
 		return -1;
 	}
 
 	wkp_g_plug_base_info = (stPlugBaseInfo *)dlsym(dl_handle_wy_master, "g_plug_base_info");
 	if(NULL == wkp_g_plug_base_info){
-		printf("\033[41m[wangyan_keepalive] dlsym '%s' error!\033[0m\n", "g_plug_base_info");
-		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wangyan_keepalive", "dlsym '%s' error!", "g_plug_base_info");	
+		printf("\033[41m[wy_keepalive] dlsym '%s' error!\033[0m\n", "g_plug_base_info");
+		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wy_keepalive", "dlsym '%s' error!", "g_plug_base_info");	
 		return -1;
 	}		
 #endif
@@ -505,7 +505,7 @@ static int wkp_plug_master_get_depend_plug_symbol(void)
 	return 0;
 }
 
-static int wangyan_keepalive_plug_master_init(void)
+static int wy_keepalive_plug_master_init(void)
 {
 	int tmp_plug_id;
 	short opt_short;
@@ -518,10 +518,10 @@ static int wangyan_keepalive_plug_master_init(void)
 	if(wkp_plug_master_get_depend_plug_symbol() < 0){
 		return -1;
 	}
-	for(tmp_plug_id = 0; tmp_plug_id < WANGYAN_PLUG_NUM_MAX; tmp_plug_id++){
-		g_wangyan_keepalive_state[tmp_plug_id].plug_id = tmp_plug_id;
-		g_wangyan_keepalive_state[tmp_plug_id].plug_keepalive_state = 0; /* ³õÊ¼×´Ì¬²»±£»î */
-		g_wangyan_keepalive_state[tmp_plug_id].plug_exclusivity = 0;
+	for(tmp_plug_id = 0; tmp_plug_id < WY_PLUG_NUM_MAX; tmp_plug_id++){
+		g_wy_keepalive_state[tmp_plug_id].plug_id = tmp_plug_id;
+		g_wy_keepalive_state[tmp_plug_id].plug_keepalive_state = 0; /* ³õÊ¼×´Ì¬²»±£»î */
+		g_wy_keepalive_state[tmp_plug_id].plug_exclusivity = 0;
 	}
 
 	g_wkp_ping_handle = libping_create();
@@ -537,12 +537,12 @@ static int wangyan_keepalive_plug_master_init(void)
 	
 	libping_run(g_wkp_ping_handle);
 	
-	MESA_handle_runtime_log(g_wkp_log_handle, 10, "wangyan_keepalive", "master init SUCC");
+	MESA_handle_runtime_log(g_wkp_log_handle, 10, "wy_keepalive", "master init SUCC");
 
 	return 0;
 }
 
-static int wangyan_keepalive_slave_replay_cb_fun(ping_handle ph, unsigned int pair_tag, unsigned int slave_id)
+static int wy_keepalive_slave_replay_cb_fun(ping_handle ph, unsigned int pair_tag, unsigned int slave_id)
 {
 	if(0 == g_wkp_slave_abnormal_flag){
 		return 1;
@@ -551,7 +551,7 @@ static int wangyan_keepalive_slave_replay_cb_fun(ping_handle ph, unsigned int pa
 	return 0;
 }
 
-static int wangyan_keepalive_plug_slave_init(void)
+static int wy_keepalive_plug_slave_init(void)
 {
 	int master_ip_net = 0x0100007f;
 	short opt_short;
@@ -567,7 +567,7 @@ static int wangyan_keepalive_plug_slave_init(void)
 	libping_set_opt(g_wkp_ping_handle, PO_WORK_MODE, (void *)&opt_short, sizeof(short));
 	libping_set_opt(g_wkp_ping_handle, PO_SLAVE_ID, (void *)&g_wkp_slave_local_plug_id, sizeof(int));
 
-	libping_set_opt(g_wkp_ping_handle, PO_SLAVE_PRE_REPLAY_CB, (void *)&wangyan_keepalive_slave_replay_cb_fun, sizeof(void *));
+	libping_set_opt(g_wkp_ping_handle, PO_SLAVE_PRE_REPLAY_CB, (void *)&wy_keepalive_slave_replay_cb_fun, sizeof(void *));
 
 	libping_set_opt(g_wkp_ping_handle, PO_MASTER_IP_NET_ORDER, (void *)&master_ip_net, sizeof(int));
 	g_begin_listen_port = htons(g_begin_listen_port);
@@ -575,14 +575,14 @@ static int wangyan_keepalive_plug_slave_init(void)
 	
 	libping_run(g_wkp_ping_handle);
 	
-	MESA_handle_runtime_log(g_wkp_log_handle, 10, "wangyan_keepalive", "slave init SUCC");
+	MESA_handle_runtime_log(g_wkp_log_handle, 10, "wy_keepalive", "slave init SUCC");
 	
 	return 0;
 }
 
 
 #if (0 == SELF_DEBUG)
-static void wangyan_gdev_keepalive_depend_service_set(int service_num)
+static void wy_gdev_keepalive_depend_service_set(int service_num)
 {
 	SAPP_TLV_T keepalive_opt;
 	
@@ -599,7 +599,7 @@ static void wangyan_gdev_keepalive_depend_service_set(int service_num)
 	keepalive_opt.ptr_value =  &service_opt;
 	wkp_gdev_keepalive_set_opt(&keepalive_opt);	
 
-	MESA_handle_runtime_log(g_wkp_log_handle, 10, "wangyan_keepalive", "set gdev keepalive service num: %d", service_num);
+	MESA_handle_runtime_log(g_wkp_log_handle, 10, "wy_keepalive", "set gdev keepalive service num: %d", service_num);
 
 	return;
 }
@@ -609,7 +609,7 @@ static void wangyan_gdev_keepalive_depend_service_set(int service_num)
 	Í¬Ê±Ö§³Ö¶ººÅ·Ö¸ôµÄ¶à¸öÒµÎñºÅ.
 */
 #if (0 == SELF_DEBUG)
-static int wangyan_gdev_keepalive_init(char *servie_num_list)
+static int wy_gdev_keepalive_init(char *servie_num_list)
 {
 	const char *delim = "\t ,";
 	char *saveptr = NULL;
@@ -620,7 +620,7 @@ static int wangyan_gdev_keepalive_init(char *servie_num_list)
 	while((section = strtok_r(parse_config_str, delim, &saveptr))){
 		tmp_int_num = atoi(section);
 		if((tmp_int_num > 0) && (tmp_int_num < 255)){
-			wangyan_gdev_keepalive_depend_service_set(tmp_int_num);
+			wy_gdev_keepalive_depend_service_set(tmp_int_num);
 		}
 		parse_config_str = NULL;
 	}
@@ -634,7 +634,7 @@ static int wangyan_gdev_keepalive_init(char *servie_num_list)
    packet_io_marsio.soÄ¬ÈÏ´Ómain.conf->sapp_instance_name»ñÈ¡,
    ±¾Ä£¿éÖ±½ÓĞŞ¸Ämain.conf->sapp_instance_name.
 */
-static void wangyan_set_sapp_instance_name(void)
+static void wy_set_sapp_instance_name(void)
 {
 	char tmp_cmd_buf[256];
 
@@ -659,14 +659,14 @@ static void wangyan_set_sapp_instance_name(void)
 
 }
 
-int wangyan_keepalive_plug_init(void)
+int wy_keepalive_plug_init(void)
 {
 	int tmp_int, ret;
 	pthread_t t_pid;
 	char tmp_str[128];
 
 #if SELF_DEBUG
-	printf("\033[1;31;40m[wangyan_keepalive_plug] This is a debug version!\033[0m\n");
+	printf("\033[1;31;40m[wy_keepalive_plug] This is a debug version!\033[0m\n");
 	sleep(3);
 #endif
 
@@ -674,31 +674,31 @@ int wangyan_keepalive_plug_init(void)
 
 	g_wkp_cur_time = time(NULL);
 
-	g_wkp_log_handle = MESA_create_runtime_log_handle("./log/wangyan_keepalive.log", 0);
+	g_wkp_log_handle = MESA_create_runtime_log_handle("./log/y_keepalive.log", 0);
 
 	g_wkp_slave_local_plug_id = wy_steward_plugin_id_get();
 	if(0 == g_wkp_slave_local_plug_id){ /* Ô¼¶¨: id=0±íÊ¾master, ÆäËûslave´Ó1¿ªÊ¼±àºÅ */
-		g_wangyan_keepalive_mode = WANGYAN_KEEPALIVE_MODE_MASTER;
+		g_wy_keepalive_mode = WY_KEEPALIVE_MODE_MASTER;
 	}else{
-		g_wangyan_keepalive_mode = WANGYAN_KEEPALIVE_MODE_SLAVE;
+		g_wy_keepalive_mode = WY_KEEPALIVE_MODE_SLAVE;
 	}
 
 	MESA_load_profile_int_def((char *)"./conf/wangyan_keepalive.conf", (char *)"main", (char *)"begin_listen_port", &tmp_int, 0);
 	if((0 >= tmp_int) || (tmp_int > 65535)){
-		printf("\033[41m[[wangyan_keepalive] error, read conf 'begin_listen_port' error!\033[0m[\n");
-		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wangyan_keepalive", "read conf 'begin_listen_port' error!");
+		printf("\033[41m[[wy_keepalive] error, read conf 'begin_listen_port' error!\033[0m[\n");
+		MESA_handle_runtime_log(g_wkp_log_handle, 30, "wy_keepalive", "read conf 'begin_listen_port' error!");
 		return -1;
 	}
 	g_begin_listen_port = (unsigned short)tmp_int;
 
-	if(WANGYAN_KEEPALIVE_MODE_MASTER == g_wangyan_keepalive_mode){
-		ret = wangyan_keepalive_plug_master_init();
+	if(WY_KEEPALIVE_MODE_MASTER == g_wy_keepalive_mode){
+		ret = wy_keepalive_plug_master_init();
 		if(ret < 0){
 			return -1;
 		}
 		pthread_create(&t_pid, NULL, wkp_master_check_keepalive_state_thread, NULL);
 	}else{
-		ret = wangyan_keepalive_plug_slave_init();
+		ret = wy_keepalive_plug_slave_init();
 		if(ret < 0){
 			return -1;
 		}	
@@ -706,17 +706,17 @@ int wangyan_keepalive_plug_init(void)
 	}
 
 	/* Ö»ÓĞÖ÷Ó¦ÓÃ²ÅÉèÖÃG±£»îÏà¹Ø²ÎÊı, ´ÓÓ¦ÓÃÎŞĞè¹ØĞÄ */
-	if(WANGYAN_KEEPALIVE_MODE_MASTER == g_wangyan_keepalive_mode){
+	if(WY_KEEPALIVE_MODE_MASTER == g_wy_keepalive_mode){
 		/* wangyanÄ¬ÈÏÒµÎñºÅ: 12, Ö§³Ö¶à¸öÒµÎñ¶ººÅ·Ö¸ôÄ£Ê½ */
 		MESA_load_profile_string_def((char *)"./conf/wangyan_keepalive.conf", (char *)"gdev_service", (char *)"keepalive_service", tmp_str, 128, "12");
 
-		/* NOTE: ´Ëº¯Êı±ØĞëÔÚwangyan_keepalive_plug_master_initÖ®ºó, ÒòÎªÉæ¼°µ½¶ÁÈ¡g_keepalive_plug.soÖĞµÄ·ûºÅÃû */
+		/* NOTE: ´Ëº¯Êı±ØĞëÔÚkeepalive_plug_master_initÖ®ºó, ÒòÎªÉæ¼°µ½¶ÁÈ¡g_keepalive_plug.soÖĞµÄ·ûºÅÃû */
 #if (0 == SELF_DEBUG)		
-		wangyan_gdev_keepalive_init(tmp_str);	
+		wy_gdev_keepalive_init(tmp_str);	
 #endif		
 	}
 
-	wangyan_set_sapp_instance_name();
+	wy_set_sapp_instance_name();
 
 	return ret;
 }

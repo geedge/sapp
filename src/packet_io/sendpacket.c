@@ -102,7 +102,9 @@ void random_seed(int pkt_len, UINT64 *pkt_rand)
 
 UINT64 MESA_rand(void)
 {
-	return g_rand_seed ^ (UINT64)random();
+	struct timespec curtime;
+	clock_gettime (CLOCK_THREAD_CPUTIME_ID, &curtime);
+	return g_rand_seed ^ (UINT64)curtime.tv_nsec;
 }
 
 /* return value: [start, end] */
@@ -367,10 +369,7 @@ int MESA_mac_pton(const char *str, int delim, char *mac)
 }
 
 
-
-
-int
-sendpacket_in_cksum(u_int16_t *addr, int len)
+int sendpacket_in_cksum(u_int16_t *addr, int len)
 {
     int sum;
     int nleft;
@@ -514,9 +513,13 @@ int sendpacket_build_ipv4(u_int16_t carry_layer_len, u_int8_t tos, u_int16_t id,
 {
 	struct mesa_ip4_hdr *ip_hdr;
 
+#if 0
 	if (!buf){
 	    return (-1);
 	}
+#else
+	assert(buf);
+#endif
 
 	ip_hdr = (struct mesa_ip4_hdr *)buf;
 
@@ -616,10 +619,13 @@ int sendpacket_build_tcp(u_int16_t sp, u_int16_t dp, u_int32_t seq, u_int32_t ac
 {
 	struct mesa_tcp_hdr *tcp_hdr;
 
+#if 0
 	if (!buf){
 	    return (-1);
 	}
-
+#else
+	assert(buf);
+#endif
 	tcp_hdr = (struct mesa_tcp_hdr *)buf;
 
 	tcp_hdr->th_sport   = htons(sp);    /* source port */
@@ -650,25 +656,27 @@ int sendpacket_build_tcp_with_option(u_int16_t sp, u_int16_t dp, u_int32_t seq,
 					const char *option, int option_len, const char *payload, int payload_s,
             				unsigned char *buf)
 {
-	struct mesa_tcp_hdr tcp_hdr;
+	struct mesa_tcp_hdr *tcp_hdr;
 
 	if (!buf){
 	    return (-1);
 	}
+	
 	if((option_len % 4) != 0){
 		return (-2);
 	}
+	tcp_hdr = (struct mesa_tcp_hdr *)buf;
 
-	tcp_hdr.th_sport   = htons(sp);    /* source port */
-	tcp_hdr.th_dport   = htons(dp);    /* destination port */
-	tcp_hdr.th_seq     = htonl(seq);   /* sequence number */
-	tcp_hdr.th_ack     = htonl(ack);   /* acknowledgement number */
-	tcp_hdr.th_flags   = control;      /* control flags */
-	tcp_hdr.th_x2      = 0;            /* UNUSED */
-	tcp_hdr.th_off     = 5 + option_len/4;            /* 20 byte header + option_len */
-	tcp_hdr.th_win     = htons(win);   /* window size */
-	tcp_hdr.th_sum     = 0;            /* checksum done in userland */ 
-	tcp_hdr.th_urp     = urg;          /* urgent pointer */
+	tcp_hdr->th_sport   = htons(sp);    /* source port */
+	tcp_hdr->th_dport   = htons(dp);    /* destination port */
+	tcp_hdr->th_seq     = htonl(seq);   /* sequence number */
+	tcp_hdr->th_ack     = htonl(ack);   /* acknowledgement number */
+	tcp_hdr->th_flags   = control;      /* control flags */
+	tcp_hdr->th_x2      = 0;            /* UNUSED */
+	tcp_hdr->th_off     = 5 + option_len/4;            /* 20 byte header + option_len */
+	tcp_hdr->th_win     = htons(win);   /* window size */
+	tcp_hdr->th_sum     = 0;            /* checksum done in userland */ 
+	tcp_hdr->th_urp     = urg;          /* urgent pointer */
 
 	if(option && option_len){
 		memcpy(buf + SENDPACKET_TCP_H, option, option_len);
@@ -681,24 +689,29 @@ int sendpacket_build_tcp_with_option(u_int16_t sp, u_int16_t dp, u_int32_t seq,
 	     */
 	    memcpy(buf + SENDPACKET_TCP_H + option_len, payload, payload_s);
 	}
-	memcpy((char *)buf, (char *)&tcp_hdr, sizeof(struct mesa_tcp_hdr));
+	//memcpy((char *)buf, (char *)&tcp_hdr, sizeof(struct mesa_tcp_hdr));
 	return (0);
 }
 
 int sendpacket_build_udp(u_int16_t sp, u_int16_t dp, const char *payload, int payload_s,
             unsigned char *buf)
 {
-    struct mesa_udp_hdr udp_hdr;
+    struct mesa_udp_hdr *udp_hdr;
 
+#if 0
     if (!buf)
     {
         return (-1);
     }
+#else
+	assert(buf);
+#endif
+    udp_hdr = (struct mesa_udp_hdr *)buf;
 
-    udp_hdr.uh_sport   = htons(sp);                /* source port */
-    udp_hdr.uh_dport   = htons(dp);                /* destination port */
-    udp_hdr.uh_ulen    = htons(SENDPACKET_UDP_H + payload_s);   /* total length */
-    udp_hdr.uh_sum     = 0;                        /* checksum */
+    udp_hdr->uh_sport   = htons(sp);                /* source port */
+    udp_hdr->uh_dport   = htons(dp);                /* destination port */
+    udp_hdr->uh_ulen    = htons(SENDPACKET_UDP_H + payload_s);   /* total length */
+    udp_hdr->uh_sum     = 0;                        /* checksum */
 
     if (payload && payload_s)
     {
@@ -708,7 +721,7 @@ int sendpacket_build_udp(u_int16_t sp, u_int16_t dp, const char *payload, int pa
          */
         memcpy(buf + SENDPACKET_UDP_H, payload, payload_s);
     } 
-    memcpy(buf, &udp_hdr, sizeof(udp_hdr));
+
     return (1);
 }
 
@@ -3226,6 +3239,47 @@ unsigned char MESA_dir_reverse(unsigned char raw_dir)
 	return raw_dir;
 }
 
+
+/*************************************************************************************** 	
+	NOTE:
+		在被动模式下, 插件无需关心route_dir的绝对值, 只需要理解同向和反向即可,
+		但主动发包必须要精确理解route_dir是0还是1, 因外界网络拓扑模式不同, 可能随时会变化,
+		所以设置此接口, 插件只需传入人易理解的方向, 返回当前链路的link route dir,
+		注意etc/sapp.toml inbound_route_dir要设置正确.
+
+	args: 表示发包目标相对于当前设备所在的地理位置,
+		'E' or 'e': 表示发包方向是从Internal to External.
+		'I' or 'i': 表示发包方向是从External to Internal.
+
+	return value:
+		0 or 1: success.
+		-1 : error.
+****************************************************************************************/
+int MESA_dir_human_to_link(int human_dir)
+{
+	int link_route_dir;
+	
+	switch(human_dir){
+		case 'E':
+		case 'e':
+			link_route_dir = sapp_global_val->config.packet_io.inbound_route_dir ^ 1;
+		break;
+
+		case 'I':
+		case 'i':
+			link_route_dir = sapp_global_val->config.packet_io.inbound_route_dir;
+		break;	
+
+		default:
+			link_route_dir = -1;
+			break;
+	}
+
+	return link_route_dir;
+}
+
+
+
 static inline int dir_check(unsigned char raw_dir)
 {
 	if(raw_dir & DIR_BIT_UNUSE_MASK){ /* 方向只使用了最高和最低位bit, 如果出现其他值,说明插件在转换dir时出了错误 */
@@ -3758,6 +3812,7 @@ static int __MESA_sendpacket_iplayer_options(int thread_index,const char *data, 
 	
 	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
+		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
 		return -1;
 	}	
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
@@ -3849,6 +3904,7 @@ int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t p
 	
 	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
+		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
 		return -1;
 	}	
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
@@ -3993,6 +4049,7 @@ int MESA_fakepacket_send_tcp_options(const struct streaminfo *stream,
 	
 	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
+		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
 		return -1;
 	}	
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
@@ -4074,6 +4131,7 @@ int MESA_fakepacket_send_ipv6_tcp_options(const struct streaminfo *stream,
 	
 	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
+		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
 		return -1;
 	}	
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
@@ -4147,6 +4205,7 @@ int MESA_fakepacket_send_udp_options(const struct streaminfo *stream,
 	
 	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
+		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
 		return -1;
 	}	
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
@@ -4223,6 +4282,7 @@ int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream,
 	
 	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
+		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
 		return -1;
 	}	
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;

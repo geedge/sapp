@@ -101,6 +101,23 @@ int MESA_kill_connection_feedback(struct streaminfo *stream, const void *raw_pkt
  */
 unsigned char MESA_dir_reverse(unsigned char raw_route_dir);
 
+/*************************************************************************************** 	
+	NOTE:
+		在被动模式下, 插件无需关心route_dir的绝对值, 只需要理解同向和反向即可,
+		但主动发包必须要精确理解route_dir是0还是1, 因外界网络拓扑模式不同, 可能随时会变化,
+		所以设置此接口, 插件只需传入人易理解的方向, 返回当前链路的link route dir,
+		注意etc/sapp.toml inbound_route_dir要设置正确.
+
+	args: 表示发包目标相对于当前设备所在的地理位置,
+		'E' or 'e': 表示发包方向是从Internal to External.
+		'I' or 'i': 表示发包方向是从External to Internal.
+
+	return value:
+		0 or 1: success.
+		-1 : error.
+****************************************************************************************/
+int MESA_dir_human_to_link(int human_dir);
+
 /*
 	ARG:
 		stream: 流结构体指针;

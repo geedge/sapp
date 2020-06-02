@@ -5,9 +5,9 @@
 extern "C" {
 #endif 
 
-int wangyan_gdev_measure_version_20190527;
+int version_20190527;
 
-#define GDEV_MEASURE_CONF_DIR "conf/wangyan_gdev_measure/"
+#define GDEV_MEASURE_CONF_DIR "conf/inline_device_measure"
 #define GDEV_MEASURE_MAX_NUM	 (32) /* 最多同时支持多少个发送实例 */
 #define GDEV_MEASURE_SEND_MSS	(1400)
 
@@ -45,11 +45,11 @@ typedef struct{
 	send_pkt_para_t send_pkt_para;
 	int send_pkt_num;
 	time_t last_send_time;
-}wangyan_gdev_measure_instance_t;
+}inline_device_measure_instance_t;
 
 
-static wangyan_gdev_measure_instance_t wangyan_gdev_measure_instance_set[GDEV_MEASURE_MAX_NUM];
-static int wangyan_gdev_measure_instance_num = 0;
+static inline_device_measure_instance_t inline_device_measure_instance_set[GDEV_MEASURE_MAX_NUM];
+static int inline_device_measure_instance_num = 0;
 
 typedef struct{
 	int last_record_time;
@@ -57,60 +57,11 @@ typedef struct{
 	char __pad[58];
 }send_pkt_realtime_t;
 
-static send_pkt_realtime_t g_wangyan_send_fake_pkt_rt_stat[MAX_THREAD_NUM];
+static send_pkt_realtime_t g_send_fake_pkt_rt_stat[MAX_THREAD_NUM];
 
 static void *gdev_measure_logh;
 
 extern int get_thread_count(void);
-#if 0
-
-typedef struct {
-	int use_which_config;  /*  'M',  'N' */
-	char para_name[32];
-	char para_delime; /* 配置文件分隔符 */
-	char MESA_para_name[32];
-	char ONLINE_para_name[32];
-	char user_arg[32];
-	int (*config_convert)(const char *conf_str, send_pkt_para_t *send_para_bin);
-}send_pkt_conf_parse_t;
-
-
-static send_pkt_conf_parse_t g_send_pkt_conf_engine[] =
-{
-	{'M',"conf_file_name",		'=',		"./conf/wangyan_send_fake_pkt.conf",	"/home/ningsi/new_machine.conf",  	""},	
-	{'N',	"vxlan_smac	",		':',		"vxlan_smac",					"SRC_OUT_MAC",					"-"},
-	{'N',	"vxlan_dmac	",		':',		"vxlan_dmac",					"DST_OUT_MAC",					":"},
-	{'N',	"vxlan_sip		",		':',		"vxlan_sip",					"115_IP",							""},
-	{'N',	"vxlan_dip		",		':',		"vxlan_dip",					"GIP",							""},
-	{'M',"vxlan_sport	",		'=',		"vxlan_sport",					"",								""},
-	{'M',"vxlan_dport	",		'=',		"vxlan_dport",					"",								""},
-	{'N',	"vxlan_link_id	",		':',		"vxlan_link_id",					"LINK_ID_VALUE",				""},
-	{'N',	"vxlan_vlxn_num",		':',		"vxlan_vlxn_num",				"no",								""},
-	{'N',	"vxlan_inner_layer2_type" ,':',		"vxlan_inner_layer2_type",		"LINK_TYPE",					""},
-	{'M',"vxlan_trans_dir",		'=',		"vxlan_trans_dir",				"C_DIR",							"CorI"},
-	{'N',	"vxlan_inner_smac",		':',		"vxlan_inner_smac",				"SRC_IN_MAC",					":"},
-	{'N',	"vxlan_inner_dmac",		':',		"vxlan_inner_dmac",				"DST_IN_MAC",					":"}
-}
-
-/*
-	#use_which 		PARA_NAME				DELIM	MESA_NAME						ONLINE_NAME					USER_ARG
-	#使用来源			
-	M				conf_file_name		=		./conf/wangyan_send_pkt.conf	/home/ningsi/new_machine.conf	
-	N				vxlan_smac			:		vxlan_smac					SRC_OUT_MAC					-
-	N				vxlan_dmac			:		vxlan_dmac					DST_OUT_MAC					:
-	N				vxlan_sip				:		vxlan_sip						115_IP
-	N				vxlan_dip				:		vxlan_dip						GIP
-	M				vxlan_sport			=		vxlan_sport					--no
-	M				vxlan_dport			=		vxlan_dport					--no
-	N				vxlan_link_id			:		vxlan_link_id					LINK_ID_VALUE
-	N				vxlan_vlxn_num		:		vxlan_vlxn_num				no
-	N				vxlan_inner_layer2_type :		vxlan_inner_layer2_type		LINK_TYPE
-	M				vxlan_trans_dir		=		vxlan_trans_dir				C_DIR						CorI
-	N				vxlan_inner_smac		:		vxlan_inner_smac				SRC_IN_MAC					:
-	N				vxlan_inner_dmac		:		vxlan_inner_dmac				DST_IN_MAC					:
-	
-*/
-#endif
 
 static inline time_t get_tmie_from_sapp(void)
 {
@@ -173,7 +124,7 @@ static int __load_profile_string_no_section(const char *filename, const char *ke
 	return -1;
 }
 
-static int wangyan_gdev_measure_parse_config(const char *config_file, wangyan_gdev_measure_instance_t *tmp_ins)
+static int idev_measure_parse_config(const char *config_file, inline_device_measure_instance_t *tmp_ins)
 {
 	char tmp_str[256];
 	int tmp_int;
@@ -462,7 +413,7 @@ static int wangyan_gdev_measure_parse_config(const char *config_file, wangyan_gd
     if ningsi.conf->CorI is I, means sample packet from outside to inside, vxlan dir flag is 1;
 */
 
-char wangyan_polling_cb_send_fake_pkt_udp(int thread_seq, wangyan_gdev_measure_instance_t *instance)
+char polling_cb_send_fake_pkt_udp(int thread_seq, inline_device_measure_instance_t *instance)
 {
 
 	struct streaminfo phony_stream;
@@ -557,12 +508,12 @@ char wangyan_polling_cb_send_fake_pkt_udp(int thread_seq, wangyan_gdev_measure_i
 					  option,
 					  option_num);
 
-	g_wangyan_send_fake_pkt_rt_stat[thread_seq].realtime_pkt_num++;
+	g_send_fake_pkt_rt_stat[thread_seq].realtime_pkt_num++;
 	
 	return APP_STATE_GIVEME;	
 }
 
-char wangyan_polling_cb_send_fake_pkt_tcp(int thread_seq, wangyan_gdev_measure_instance_t *instance)
+char polling_cb_send_fake_pkt_tcp(int thread_seq, inline_device_measure_instance_t *instance)
 {	
 	struct streaminfo phony_stream;
 	SAPP_TLV_T option[32];
@@ -662,13 +613,13 @@ char wangyan_polling_cb_send_fake_pkt_tcp(int thread_seq, wangyan_gdev_measure_i
 					  option,
 					  option_num);
 
-	g_wangyan_send_fake_pkt_rt_stat[thread_seq].realtime_pkt_num++;
+	g_send_fake_pkt_rt_stat[thread_seq].realtime_pkt_num++;
 	
 	return APP_STATE_GIVEME;	
 }
 
 #if 0
-char wangyan_polling_cb_send_fake_pkt_iplayer(struct streaminfo *__stream, void **__pme, int thread_seq,const void *__raw_pkt)
+char polling_cb_send_fake_pkt_iplayer(struct streaminfo *__stream, void **__pme, int thread_seq,const void *__raw_pkt)
 {
 	char snd_pkt_payload[] = 
 	{
@@ -773,7 +724,7 @@ char wangyan_polling_cb_send_fake_pkt_iplayer(struct streaminfo *__stream, void 
 					  option,
 					  option_num);
 
-	g_wangyan_send_fake_pkt_rt_stat[thread_seq].realtime_pkt_num++;
+	g_send_fake_pkt_rt_stat[thread_seq].realtime_pkt_num++;
 	
 	return APP_STATE_GIVEME;	
 }
@@ -803,7 +754,7 @@ static void *test_gdev_get_opt(void *arg)
 #endif
 
 
-static void wangyan_gdev_measure_send_pkt(int thread_seq, wangyan_gdev_measure_instance_t *instance)
+static void idev_measure_send_pkt(int thread_seq, inline_device_measure_instance_t *instance)
 {
 	if(instance->last_send_time == get_tmie_from_sapp()){
 		if(instance->send_pkt_num >= instance->send_pkt_para.send_pps){
@@ -815,16 +766,16 @@ static void wangyan_gdev_measure_send_pkt(int thread_seq, wangyan_gdev_measure_i
 	}
 
 	if(IPPROTO_TCP == instance->send_pkt_para.transport_layer_type){
-		wangyan_polling_cb_send_fake_pkt_tcp(thread_seq, instance);
+		polling_cb_send_fake_pkt_tcp(thread_seq, instance);
 	}else{
-		wangyan_polling_cb_send_fake_pkt_udp(thread_seq, instance);
+		polling_cb_send_fake_pkt_udp(thread_seq, instance);
 	}
 
 	instance->send_pkt_num++;
 }
 
 
-char wangyan_gdev_measure_polling_cb(struct streaminfo *__stream, void **__pme, int thread_seq, const void *__raw_pkt)
+char idev_measure_polling_cb(struct streaminfo *__stream, void **__pme, int thread_seq, const void *__raw_pkt)
 {
 	int i;
 
@@ -833,24 +784,24 @@ char wangyan_gdev_measure_polling_cb(struct streaminfo *__stream, void **__pme, 
 		return APP_STATE_GIVEME;
 	}
 
-	for(i = 0; i < wangyan_gdev_measure_instance_num; i++){
-		wangyan_gdev_measure_send_pkt(thread_seq, &wangyan_gdev_measure_instance_set[i]);
+	for(i = 0; i < inline_device_measure_instance_num; i++){
+		idev_measure_send_pkt(thread_seq, &inline_device_measure_instance_set[i]);
 	}
 	
 	return APP_STATE_GIVEME;
 }
 
 
-static int wangyan_gdev_measure_add_new_instance(wangyan_gdev_measure_instance_t *tmp_ins)
+static int idev_measure_add_new_instance(inline_device_measure_instance_t *tmp_ins)
 {
-	if(wangyan_gdev_measure_instance_num >= GDEV_MEASURE_MAX_NUM){
+	if(inline_device_measure_instance_num >= GDEV_MEASURE_MAX_NUM){
 		printf("\033[1;31;40m[Error]instance number is over limit %d![0m\n", GDEV_MEASURE_MAX_NUM);
 		MESA_handle_runtime_log(gdev_measure_logh, 30, "gdev", "instance number is over limit %d!", GDEV_MEASURE_MAX_NUM); 
 		return -1;
 	}
 
-	memcpy(&wangyan_gdev_measure_instance_set[wangyan_gdev_measure_instance_num], tmp_ins, sizeof(wangyan_gdev_measure_instance_t));
-	wangyan_gdev_measure_instance_num++;
+	memcpy(&inline_device_measure_instance_set[inline_device_measure_instance_num], tmp_ins, sizeof(inline_device_measure_instance_t));
+	inline_device_measure_instance_num++;
 
 	return 0;
 }
@@ -863,7 +814,7 @@ static int iterate_readdir(const char *conf_dir)
     DIR *dir_h;
     struct dirent *file_h;
     int ret;
-    wangyan_gdev_measure_instance_t tmp_ins;
+    inline_device_measure_instance_t tmp_ins;
 
 	stat(conf_dir, &fstat);
 	
@@ -896,35 +847,35 @@ static int iterate_readdir(const char *conf_dir)
             continue; /* 非普通文件 */
         }else{
         	memset(&tmp_ins, 0, sizeof(tmp_ins));
-        	ret = wangyan_gdev_measure_parse_config(tmp_file_name, &tmp_ins);
+        	ret = idev_measure_parse_config(tmp_file_name, &tmp_ins);
         	if(ret >= 0){
-				wangyan_gdev_measure_add_new_instance(&tmp_ins);
+				idev_measure_add_new_instance(&tmp_ins);
         	}
         }
     }
 
 	closedir(dir_h);
 
-	MESA_handle_runtime_log(gdev_measure_logh, 10, "gdev", "parse conf succ, total valid config num:%d\n", wangyan_gdev_measure_instance_num);
+	MESA_handle_runtime_log(gdev_measure_logh, 10, "gdev", "parse conf succ, total valid config num:%d\n", inline_device_measure_instance_num);
 	
 	return 0;
 }
 
 
 
-int wangyan_gdev_measure_init(void)
+int inline_device_measure_init(void)
 {
 	int ret;
 
-	gdev_measure_logh = MESA_create_runtime_log_handle("./log/gdev_measure.log", 10);
+	gdev_measure_logh = MESA_create_runtime_log_handle("./log/inline_device_measure.log", 10);
 
 	if(get_thread_count() != 1){
-		printf("\033[1;31;40m[Error]wangyan_gdev_measure plug not support multithread!\033[0m\n");
+		printf("\033[1;31;40m[Error]inline_device_measure plug not support multithread!\033[0m\n");
 	}
 
 	iterate_readdir(GDEV_MEASURE_CONF_DIR);
 
-	if(wangyan_gdev_measure_instance_num <= 0){
+	if(inline_device_measure_instance_num <= 0){
 		printf("\033[1;31;40m[Error]No valid config in %s!\033[0m\n", GDEV_MEASURE_CONF_DIR);
 		MESA_handle_runtime_log(gdev_measure_logh, 30, "gdev", "No valid config in %s!", GDEV_MEASURE_CONF_DIR);
 		return -1;

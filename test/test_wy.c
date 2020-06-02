@@ -98,14 +98,14 @@ char send_ipv4_pkt_options_demo(struct streaminfo *stream,void **pme, int thread
 
 
 
-char test_wangyan_send_tcp_pkt_detail(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+char test_wy_send_tcp_pkt_detail(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
 	Gserial_sendpacket_tcp_detail(TEST_PLUG_ID, stream, 0x0A0A066C, 0x0A00063B, 0x1234, 55, 0x1111,0x2222,
 							0x12345678, 0x87654321, 0x10, 9999, "TCP payload test", strlen("TCP payload test"), 0);	
 	return APP_STATE_GIVEME;
 }
 
-char test_wangyan_send_tcp_pkt_options(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+char test_wy_send_tcp_pkt_options(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
 	if(NULL == raw_pkt){
 		return APP_STATE_GIVEME;
@@ -156,21 +156,21 @@ char test_wangyan_send_tcp_pkt_options(struct streaminfo *stream,void **pme, int
 #endif
 	return APP_STATE_GIVEME;
 }
-char test_wangyan_send_udp_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+char test_wy_send_udp_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
 	Gserial_sendpacket_udp(TEST_PLUG_ID, stream, 0x0A0A066C, 0x0A00063B, 0x1111,0x2222,
 							"UDP payload test", strlen("UDP payload test"), 0);	
 	return APP_STATE_GIVEME;
 }
 
-char test_wangyan_send_udp_pkt_detail(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+char test_wy_send_udp_pkt_detail(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
 	Gserial_sendpacket_udp_detail(TEST_PLUG_ID, stream, 0x0A0A066C, 0x0A00063B, 0x1234, 55, 0x1111,0x2222,
 							"UDP payload test", strlen("UDP payload test"), 0);	
 	return APP_STATE_GIVEME;
 }
 
-char test_wangyan_send_udp_pkt_options(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+char test_wy_send_udp_pkt_options(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
 	if(NULL == raw_pkt){
 		return APP_STATE_DROPME;
@@ -217,7 +217,7 @@ char test_wangyan_send_udp_pkt_options(struct streaminfo *stream,void **pme, int
 	return APP_STATE_GIVEME;
 }
 
-char test_wangyan_forward_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+char test_wy_forward_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
 	sapp_forward_current_pkt(stream, 1);	
 	sapp_forward_current_pkt(stream, 2);	
@@ -247,7 +247,7 @@ char test_gdev_keepalive_ctrl(struct streaminfo *stream,void **pme, int thread_s
 	return APP_STATE_GIVEME;	
 }
 
-char test_wangyan_send_ipv4_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+char test_wy_send_ipv4_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
 	int test_ip;
 
@@ -268,7 +268,7 @@ char test_wangyan_send_ipv4_pkt(struct streaminfo *stream,void **pme, int thread
 	return APP_STATE_GIVEME;		
 }
 
-char test_wangyan_send_ipv6_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+char test_wy_send_ipv6_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
 	struct in6_addr sip, dip;
 	char payload[] = {
@@ -290,7 +290,7 @@ char test_wangyan_send_ipv6_pkt(struct streaminfo *stream,void **pme, int thread
 }
 
 
-char test_wangyan_send_ipv6_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+char test_wy_send_ipv6_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
 	struct in6_addr sip, dip;
 	char payload[] = {
@@ -310,7 +310,7 @@ char test_wangyan_send_ipv6_tcp_pkt(struct streaminfo *stream,void **pme, int th
 	return APP_STATE_GIVEME;	
 }
 
-char test_wangyan_send_ipv6_udp_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+char test_wy_send_ipv6_udp_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
 	struct in6_addr sip, dip;
 	char payload[] = {
@@ -371,14 +371,10 @@ static void *plug_thread_send(void *arg)
 	sleep(5); /* 等待packet_io初始化成功 */
 	
 	while(1){
-#if 0	
-		wangyan_polling_cb_send_fake_pkt_tcp(NULL, NULL, send_tid, NULL);
-#else
 		struct streaminfo phony_stream;
 		phony_stream.threadnum = send_tid;
 //		Gserial_sendpacket_ipv4(1, &phony_stream, 32, 17, 0x01010101, 0x02020202, snd_ip_pkt_payload, sizeof(snd_ip_pkt_payload), 0);
-		MESA_sendpacket_ethlayer(send_tid, snd_eth_pkt_data, sizeof(snd_eth_pkt_data), 0);
-#endif		
+		MESA_sendpacket_ethlayer(send_tid, snd_eth_pkt_data, sizeof(snd_eth_pkt_data), 0);	
 		sleep(1);
 	}
 
@@ -399,7 +395,7 @@ char test_pkt_action(int net_conn_mode, char plug_action)
 }
 
 
-int test_wangyan_init(void)
+int test_wy_init(void)
 {
 	pthread_t tid;
 

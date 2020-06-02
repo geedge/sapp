@@ -10,8 +10,12 @@ instance_name = "sapp_v4.0"
 
 [CPU]
 worker_threads=1
+send_only_threads_max=16
 ### note, bind_mask, if you do not want to bind thread to special CPU core, keep it empty as []
 bind_mask=[]
+
+[MEM]
+dictator_enable=1
 
 [PACKET_IO]
     [packet_io.feature]

@@ -21,7 +21,7 @@ extern char g_app_instance_name[64];
 //extern int g_timestamp_record_sw;
 
 static pthread_mutex_t g_plug_Independent_thread_mutex;
-static pthread_t g_plug_Independent_thread_pid[NON_PKT_THREAD_SEND_QUEUE];
+static pthread_t *g_plug_Independent_thread_pid;
 
 
 static const unsigned char G_BROADCAST_ADDR[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -353,7 +353,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			pthread_mutex_lock(&g_plug_Independent_thread_mutex);
 
 			/* 为避免一个线程多次调用此接口, 先查找之前是否保存过 */
-			for(i = 0; i < NON_PKT_THREAD_SEND_QUEUE; i++){
+			for(i = 0; i < sapp_global_val->config.cpu.send_only_threads_max_num; i++){
 				if(g_plug_Independent_thread_pid[i] == this_pid){
 					id_index = i;
 					break;
@@ -361,15 +361,15 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			}
 
 			if(-1 == id_index){ /* 当前线程第一次创建, 没找到 */
-				for(i = 0; i < NON_PKT_THREAD_SEND_QUEUE; i++){
+				for(i = 0; i < sapp_global_val->config.cpu.send_only_threads_max_num; i++){
 					if(0 == g_plug_Independent_thread_pid[i]){
 						g_plug_Independent_thread_pid[i] = this_pid;
 						break;
 					}
 				}
-				if((i+ g_packet_io_thread_num >= NON_PKT_THREAD_SEND_QUEUE )  /* 发包线程最大64个 */
-				|| (i >= NON_PKT_THREAD_SEND_QUEUE)){
-					sapp_runtime_log(RLOG_LV_FATAL, "Independent_thread num over limit, only support max %d!\n", NON_PKT_THREAD_SEND_QUEUE);
+				if(i >= sapp_global_val->config.cpu.send_only_threads_max_num ){  /* 超过发包线程最大数量 */
+					sapp_runtime_log(RLOG_LV_FATAL, "Independent_thread num more than CPU->send_only_threads_max:%d!\n", 
+									sapp_global_val->config.cpu.send_only_threads_max_num);
 					*opt_int = -1;
 					ret = -1;
 				}else{
@@ -582,6 +582,11 @@ int sapp_assistant_init(void)
 	//sapp_line_protocol_init();
 	sapp_identify_broad_multicast_init();
 	pthread_mutex_init(&g_plug_Independent_thread_mutex, NULL);
+
+	if(sapp_global_val->config.cpu.send_only_threads_max_num > 0){
+		g_plug_Independent_thread_pid = (pthread_t *)calloc(1, sizeof(pthread_t));
+	}
+	
 	return 1;
 }
 

@@ -123,6 +123,7 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_register_exit_cb = (int (*)(PACKET_IO_EXIT_CB_T exit_fun))pcap_dl_io_register_exit_cb;
 		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_version = (int (*)(void))pcap_dl_io_get_version;
 		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_device_alias = (void * (*)(unsigned int , char *))pcap_dl_io_device_alias;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_send_only_thread_init = NULL;
 
 		memcpy(&dl_io_fun_list_static_link[CAP_MODEL_PCAP_DUMPFILE], &dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE], sizeof(dl_io_fun_list_t));
 	}
@@ -151,6 +152,7 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		//dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_register_exit_cb = (int (*)(PACKET_IO_EXIT_CB_T exit_fun))marsio_dl_io_register_exit_cb;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_version = (int (*)(void))marsio_dl_io_get_version;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_device_alias = (void * (*)(unsigned int , char *))marsio_dl_io_device_alias;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_send_only_thread_init = (int (*)(void))marsio_dl_io_send_only_thread_init;
 	}
 #endif 
 
@@ -181,7 +183,6 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 #endif 
 
 #ifdef IOMODE_TUN
-
 		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_set_cap_level = (int (*)(int cap_level))tun_dl_io_set_cap_level;
 		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_set_cap_mode = (int (*)(int cap_mode))tun_dl_io_set_cap_mode;
 		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_set_topology_mode = (int (*)(int topology_mode))tun_dl_io_set_topology_mode;

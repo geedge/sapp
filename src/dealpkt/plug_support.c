@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-int G_DICTATOR_SW = 1;
+//int G_DICTATOR_SW = 1;
 //extern int g_packet_io_thread_num;
 
 extern const raw_ipfrag_list_t *get_raw_frag_list(const struct streaminfo *stream);
@@ -630,9 +630,18 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case MSO_DROP_STREAM:
 		{
 			int drop_flag = *((int *)opt_val);
-			struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private*)(pstream->pdetail);
-			pdetail_pr->drop_stream_flag = (drop_flag != 0 ? 1:0);
-			ret = 0;
+			if(STREAM_TYPE_TCP == pstream->type){
+				struct tcpdetail_private *tcp_pdetail_pr=(struct tcpdetail_private*)(pstream->pdetail);
+				tcp_pdetail_pr->drop_stream_flag = (drop_flag != 0 ? 1:0);
+				ret = 0;
+			}else if(STREAM_TYPE_UDP == pstream->type){
+				struct udpdetail_private *udp_pdetail_pr=(struct udpdetail_private*)(pstream->pdetail);
+				udp_pdetail_pr->drop_stream_flag = (drop_flag != 0 ? 1:0);
+				ret = 0;
+			}else{
+				sapp_runtime_log(RLOG_LV_FATAL, "MESA_set_stream_opt() MSO_DROP_STREAM error: stream type is not tcp or udp!\n");
+				ret = -1;
+			}
 		}
 		break;
 
@@ -1182,6 +1191,9 @@ void dictator_free(int thread_seq,void *pbuf)
 	{
 		free(pbuf);
 	}
+#if SAPP_INSECTICIDE	
+	*((char *)pbuf) = 0xFE;
+#endif
 }
 
 void *dictator_realloc(int thread_seq, void *ptr, size_t size)

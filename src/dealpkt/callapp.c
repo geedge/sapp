@@ -266,10 +266,12 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 	}
 #endif
 
+#if 0
 	if(g_business_plug_info!=NULL)
 	{
 		plug_record_start_time(g_business_plug_info->plugid, thread_seq);
 	}
+#endif
 	if(type==CALL_FUN_TYPE_RAW)
 	{
 		rec=((SAPP_STREAM_FUN_T)pFunInfo->pfun)(a_stream,transport_hdr,a_packet,&(pFunInfo->pAppInfo));
@@ -278,11 +280,13 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 	{
 		rec=((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),thread_seq, a_packet);
 	}
-	
+
+#if 0	
 	if(g_business_plug_info!=NULL)
 	{
 		plug_record_end_time(g_business_plug_info->plugid, thread_seq);
 	}
+#endif	
 
 #if SAPP_INSECTICIDE
 	if(a_packet != NULL){
@@ -304,11 +308,13 @@ char plugin_call_ipentry(int type,IPv4_CB_FUN_T stream_fun,SAPP_PKT_CB_FUN_T sap
 				int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt)
 {
 	char rec;
-	
+
+#if 0	
 	if(g_business_plug_info!=NULL)
 	{
 		plug_record_start_time(g_business_plug_info->plugid, thread_num);
 	}
+#endif	
 	if(type==CALL_FUN_TYPE_RAW)
 	{
 		rec=stream_fun(pfstream,routedir,thread_num,this_layer_hdr);
@@ -317,12 +323,13 @@ char plugin_call_ipentry(int type,IPv4_CB_FUN_T stream_fun,SAPP_PKT_CB_FUN_T sap
 	{
 		rec=sapp_fun(pfstream,this_layer_hdr,raw_pkt);
 	}
-
+#if 0
 	if(g_business_plug_info!=NULL)
 	{
 		plug_record_end_time(g_business_plug_info->plugid, thread_num);
 
 	}
+#endif	
 /*	if(g_business_plug_type==PLUGTYPE_JC)
 	{
 		rec=rec|APP_STATE_DROPPKT;

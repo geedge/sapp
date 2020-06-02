@@ -46,7 +46,7 @@ static marsio4_io_handle *g_mario4_io_handle;
 #define MARSIO_BURST_PKT_MAX		(256)
 static int marsio4_burst_process_pkt_num = 32; /* 批处理包数量, 从pag.conf中获取 */
 //static long marsio4_thread_bind_mask = 0;
-#define TIME_DELAY_MONITOR	(1) /* 单包处理延时监测 */
+#define TIME_DELAY_MONITOR	(0) /* 单包处理延时监测 */
 
 extern void timestamp_region_update_driver(int tid, long long cpu_cycle);
 extern int stream_process_polling(int thread_seq);
@@ -308,6 +308,14 @@ int marsio_dl_io_register_cb(PACKET_IO_CB_T fun)
 	return 0;
 }
 
+int marsio_dl_io_send_only_thread_init(void)
+{
+	if(sapp_global_val->config.cpu.bind_mask_array_num > 0){
+		marsio_thread_init(sapp_marsio4_instance);
+	}
+
+	return 0;
+}
 
 #ifndef MAX
 #define MAX(a, b)  	(((a) > (b)) ? (a) : (b))

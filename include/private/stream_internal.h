@@ -20,14 +20,14 @@
 #define USE_RBTREE_INSTEAD_LIST		(0) /* 当HASH冲突时, 使用红黑树代替链表, 避免特殊情况下遍历 */
 #define USE_LINUX_KERNEL_HASH_ALGO	(1) /* 使用LINUX内核HASH算法 */
 
-#define SAPP_INSECTICIDE				(0) /* 杀虫(DEBUG)临时开关, 在遇到莫名其妙的BUG时临时启用, 尽早发现问题, 早死早超生 */
+#define SAPP_INSECTICIDE				(1) /* 杀虫(DEBUG)临时开关, 在遇到莫名其妙的BUG时临时启用, 尽早发现问题, 早死早超生 */
 
 //#define CYCLE_PKT_DUMP				(1 && DEBUG) /* 2015-04-16 lijia add, 解决在线流量无故coredump, 但找不到原因 */
 #define CYCLE_PKT_DUMP				(1) /* 2015-04-16 lijia add, 解决在线流量无故coredump, 但找不到原因 */
 
 #define PCAP_CAP_FROM_IP				(0) /* 为了模拟pag等在线环境, 让pcap也模拟从IPv4头部开始获取 */
 
-#define NON_PKT_THREAD_SEND_QUEUE		(64) /* 非包处理线程最大发送队列数量 */
+//#define NON_PKT_THREAD_SEND_QUEUE		(64) /* 纯发包处理线程最大发送队列数量 */
 
 #define IKNOW_ENABLE					(0)
 
@@ -226,6 +226,7 @@ struct udpdetail_private
 	struct udpdetail udpdetail_public;
 	void   *apme;		  //应用层上下文
 	struct udp_flow_stat *flow_stat; /* 2015-12-28 lijia add, udpdetail中的详细计数(64bit), 实际内存分配和释放由project模块完成, 可能为NULL */
+	UCHAR  drop_stream_flag; //2020-06-02 lijia add, 语义同DROPPKT, 只不过作用域是整个stream
 };	
 
 /* 2015-02-26 lijia add, for stream-addr-list ntop, pton */

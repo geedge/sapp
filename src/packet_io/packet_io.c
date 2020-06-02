@@ -352,6 +352,16 @@ int packet_io_set_cap_buf_queue(int queue_num_max)
 	return ret;
 }
 
+int packet_io_send_only_thread_init(void)
+{
+	int ret = 0;
+	if(dl_io_fun_list.dl_io_send_only_thread_init != NULL){
+		ret = dl_io_fun_list.dl_io_send_only_thread_init();
+	}
+
+	return ret;
+}
+
 static int packet_io_process_ddp_pkt(const MESA_feedback_raw_pkt_t *ddp_fix_hdr,
 			int ddp_payload_len, raw_pkt_t *p_raw_pkt, unsigned char dir, int thread_num)
 {

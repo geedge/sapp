@@ -27,7 +27,7 @@ LIB=-L/opt/MESA/lib -L/opt/mrzcpd/lib
 TARGET = isakmp_protocol_plug.so ipsec_biz_sample.so l2tp_protocol_plug.so l2tp_biz_sample.so 
 TARGET += pptp_protocol_plug.so pptp_biz_sample.so
 TARGET += g_device_plug.so
-TARGET += wangyan_keepalive_plug.so
+TARGET += wy_keepalive_plug.so
 
 OBJS=
 
@@ -126,17 +126,16 @@ g_device_plug.so: g_device_plug.o
 	mkdir -p $(RELEASE_PLT_PATH)/g_device_plug;
 	cp $@ $(RELEASE_PLT_PATH)/g_device_plug/
 
-wangyan_keepalive_plug.so:wangyan_keepalive_plug.c
+wy_keepalive_plug.so:wy_keepalive_plug.c
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES) $(H_DIR)  $(LIB);
-	mkdir -p $(RELEASE_PLT_PATH)/wangyan_keepalive_plug;
-	cp $@ $(RELEASE_PLT_PATH)/wangyan_keepalive_plug/;
+	mkdir -p $(RELEASE_PLT_PATH)/wy_keepalive_plug;
 	
 libsapp_assistant.so: sapp_assistant.o  gdev_assistant.o
 	mkdir -p /opt/MESA/lib; 
 	cp ../lib/libc3client.so /opt/MESA/lib/;
 	ldconfig;
 	$(CC) -o $@ -shared -fPIC $(H_DIR) $(CFLAGS) $^ $(MODULES) -L/opt/MESA/lib -lMESA_field_stat2;
-	cp $@ /opt/MESA/lib/;
+
 
 libanti_flood_hijack.so:anti_flood_plug.o anti_flood_hijack.o
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES);
