@@ -221,7 +221,7 @@ char sendpacket_udp_detail_demo(struct streaminfo *stream,void **pme, int thread
 
 
 
-int test_wangyan_init(void)
+int test_wy_init(void)
 {	
 	return PLUG_DEMO_ID;
 }

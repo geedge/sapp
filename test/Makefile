@@ -9,7 +9,8 @@ MODULES	=
 BIN_PATH = ../bin/
 
 TARGET	= test_app_sapp.so
-TARGET += wangyan_gdev_measurement.so
+TARGET += inline_device_measurement.so
+TARGET += test_sendpacket_performance.so
 #TARGET  += test_anti_flood_hijack
 #TARGET  += sapp_so_run
 
@@ -29,34 +30,31 @@ all: $(TARGET)
 	
 test_app_sapp.so: test_app_sapp.o
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
-	cp $@ $(BIN_PATH)/plug/business/test_app/
 	
+test_sendpacket_performance.so: test_sendpacket_performance.o
+	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
+
 trace_delay.so: trace_delay.o
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
-	cp $@ $(BIN_PATH)/plug/business/test_app/
 
 terminal_tag.so: terminal_tag.o
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
 
 g_device_plug.so: g_device_plug.o
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
-	cp $@ $(BIN_PATH)/plug/business/g_device_plug/
 
 test_http.so:test_http.o
 	$(CC) -o $@ -shared -fPIC $(CFLAGS) $^ $(MODULES)
-	cp $@ $(BIN_PATH)/plug/business/test_http/
 
 test_anti_flood_hijack:test_anti_flood_hijack.c ../lib/libavltree.a
 	g++ -o $@ $(CFLAGS) $^ -I../inner_plug -I../support/avl_tree -lpcap -lpthread -lanti_flood_hijack -lMESA_htable -lMESA_handle_logger
 
-wangyan_gdev_measurement.so:wangyan_gdev_measurement.c
+inline_device_measurement.so:inline_device_measurement.c
 	$(CC) -o $@ -shared -fPIC $(INCS) $(CFLAGS) -DIOMODE_MARSIO=1 $^ $(MODULES)
-	#cp $@ ../bin/plug/business/wangyan_gdev_measurement/$@
 
 
 sapp_so_run:test_sapp_so.o
 	$(CC) -o $@ -g $(INCS) $(CFLAGS) $^ -lpcap -ldl
-	cp $@ ../bin;
 	
 .c.o:  
 	$(CC) -c -o $@ $(CFLAGS) -I. $(INCS) $<

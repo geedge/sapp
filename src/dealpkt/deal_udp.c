@@ -538,6 +538,11 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);		
 		//pstream->addr.pktipfragtype = pstream->stream_public.addr.pktipfragtype; /* 2015-11-04 lijia add, IP分片类型更新 */
+		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
+		
+		if(unlikely(pdetail_pr->drop_stream_flag != 0)){ /* 2020-06-02 lijia add */
+			return DROP;
+		}
 
 		update_polling_inject_context(pstream_pr, raw_pkt);
 		
@@ -550,7 +555,7 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 #endif
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
-		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
+		
 		ret=stream_process_udp(pstream,(const void *)this_iphdr, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));  
 		udp_cleardata(pstream);
      }

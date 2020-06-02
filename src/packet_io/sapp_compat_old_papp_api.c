@@ -1,3 +1,9 @@
+/**************************************************************
+	papp平台用于WY项目串联环境, 有如下接口, 
+	sapp新平台为了保持向后兼容, 保留如下接口.
+***************************************************************/
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -35,10 +41,7 @@ extern int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream
 extern int MESA_sendpacket_iplayer_options(int thread_index,const char *data,  int data_len, u_int8_t dir, SAPP_TLV_T *options, int opt_num);		
 #endif
 
-/*
-	papp平台用于wangyan串联环境, 有如下接口, 
-	sapp新平台为了保持向后兼容, 保留如下接口.
-*/
+
 
 int Gserial_sendpacket_iplayer(int plug_id, struct streaminfo *stream,const char *buf, int buf_len, u_char dir)
 {
@@ -412,6 +415,7 @@ int Gserial_sendpacket_ipv6_udp_detail(int plug_id,struct streaminfo *stream, st
 	回注的包无需tcpdump_mesa捕获, 直接在驱动底层捕获即可.
 */
 extern void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt);
+extern int G_PKT_DUMP_SW;
 int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath, queue_id_t sid, marsio_buff_t * mbufs[],
     int nr_mbufs, uint16_t options)
 {
@@ -419,17 +423,19 @@ int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath
 	char *rawpkt_data;
 	uint32_t rawpkt_len;
 
-	rawpkt_data = marsio_buff_mtod(mbufs[0]);
-	rawpkt_len = marsio_buff_buflen(mbufs[0]);
+	if(G_PKT_DUMP_SW != 0){
+		rawpkt_data = marsio_buff_mtod(mbufs[0]);
+		rawpkt_len = marsio_buff_buflen(mbufs[0]);
 
-	rawpkt.magic_num = RAW_PKT_MAGIC_NUM;
-	rawpkt.low_layer_type = ADDR_TYPE_MAC;
-	rawpkt.raw_pkt_data = rawpkt_data;
-	rawpkt.raw_pkt_len = rawpkt_len;
-	rawpkt.__lib_raw_pkt_data = rawpkt_data;
-	rawpkt.__lib_raw_pkt_len = rawpkt_len;
+		rawpkt.magic_num = RAW_PKT_MAGIC_NUM;
+		rawpkt.low_layer_type = ADDR_TYPE_MAC;
+		rawpkt.raw_pkt_data = rawpkt_data;
+		rawpkt.raw_pkt_len = rawpkt_len;
+		rawpkt.__lib_raw_pkt_data = rawpkt_data;
+		rawpkt.__lib_raw_pkt_len = rawpkt_len;
 
-	cycle_pkt_dump(sid, &rawpkt);
+		cycle_pkt_dump(sid, &rawpkt);
+	}
 
 	return marsio_send_burst_with_options(sendpath, sid, mbufs, nr_mbufs, options);	
 }

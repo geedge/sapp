@@ -453,9 +453,10 @@ static int config_sanity_check(void)
 		sleep(1);
 	}
 
-	if((pconfig->cpu.bind_mask_array_num > 0) &&(pconfig->cpu.worker_threads != pconfig->cpu.bind_mask_array_num)){
-		printf("\033[41m[Error]etc/sapp.toml->CPU->bind_mask value is not match etc/sapp.toml->CPU->worker_threads!\033[0m\n");
-		printf("\033[41m for example, worker_threads=8, bind_mask shoule be [1,2,3,4,5,6,7,8] etc.\033[0m\n");
+	if((pconfig->cpu.bind_mask_array_num > 0) 
+	 &&(pconfig->cpu.worker_threads + pconfig->cpu.send_only_threads_max_num != pconfig->cpu.bind_mask_array_num)){
+		printf("\033[41m[Error]etc/sapp.toml->CPU->bind_mask value is not match etc/sapp.toml->CPU->worker_threads + CPU->send_only_threads_max!\033[0m\n");
+		printf("\033[41m for example, worker_threads=4, send_only_threads_max=4, bind_mask should be [1,2,3,4,5,6,7,8].\033[0m\n");
 		return -1;
 	}
 
@@ -574,9 +575,14 @@ int sapp_parse_config(void)
 
 	/*******************************  CPU *********************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"CPU", (char *)"worker_threads", (int *)&pconfig->cpu.worker_threads, 1);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"CPU", (char *)"send_only_threads_max", (int *)&pconfig->cpu.send_only_threads_max_num, 0);
+
 	pconfig->cpu.bind_mask_array_num = SAPP_MAX_THREADS;
 	tomlc99_wrap_load_long_array(default_config_file, (char *)"CPU", (char *)"bind_mask", pconfig->cpu.bind_mask_array, &pconfig->cpu.bind_mask_array_num);
 
+	/*******************************  MEM *********************************/
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"MEM", (char *)"dictator_enable", (int *)&pconfig->mem.dictator_enable, 1);
+	
 	/*******************************  PACKET_IO ******************************/
 	/*******************************  packet_io.feature ******************************/
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"BSD_packet_filter", str_tmp, NAME_MAX, "");

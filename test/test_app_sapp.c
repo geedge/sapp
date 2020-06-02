@@ -747,6 +747,112 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
         return APP_STATE_GIVEME;
 }
 
+
+/* 关于网络相关字段, 均为网络序, network order */
+struct __inline_vxlan_hdr{
+	unsigned char flags;
+
+	/*------------byte delim -------*/
+#if 0	
+	unsigned char reserved[3];
+#else
+	unsigned char nat_type; /* 复用一个保留字段, 表示NAT类型 */
+	unsigned char reserved[2];
+#endif
+	/*--------int delim -------*/
+	unsigned char vlan_id_half_high;
+	unsigned char link_layer_type : 4; /* 二层报文封装格式 */
+	unsigned char vlan_id_half_low : 4;
+	unsigned int dir : 1;
+	unsigned int link_id : 6;
+	unsigned int online_test : 1;
+
+	unsigned int r7 : 1;
+	unsigned int r6 : 1;
+	unsigned int r5 : 1;
+	unsigned int r4 : 1;
+	unsigned int vni_flag : 1;
+	unsigned int r2 : 1;
+	unsigned int r1 : 1;
+	unsigned int r0 : 1;
+}__attribute__((packed));
+typedef struct __inline_vxlan_hdr test_inline_vxlan_hdr_t;
+
+
+char tcpentry_vlink_info(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
+{
+#if IOMODE_MARSIO
+	int ret;
+	char link_dir;
+	long long vlink_id;
+	const struct ip *ihdr;
+	char srcstr[INET6_ADDRSTRLEN], dststr[INET6_ADDRSTRLEN];
+	const struct mesa_ethernet_hdr *ehdr;
+	unsigned char inline_dev_mac[6], local_dev_mac[6];
+	unsigned int inline_dev_ip, local_dev_ip;
+	
+	if(pstream->opstate== OP_STATE_PENDING)
+	{
+		if(ADDR_TYPE_IPV4 != pstream->addr.addrtype){
+			return APP_STATE_DROPME;
+		}
+		ret = get_rawpkt_opt_from_streaminfo(pstream, RAW_PKT_GET_VXLAN_LINK_DIR, &link_dir);
+		if(ret < 0){
+			printf("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VXLAN_LINK_DIR error!\n");
+			return APP_STATE_DROPME;
+		}
+		ret = get_rawpkt_opt_from_streaminfo(pstream, RAW_PKT_GET_VIRTUAL_LINK_ID, &vlink_id);
+		if(ret < 0){
+			printf("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VIRTUAL_LINK_ID error!\n");
+			return APP_STATE_DROPME;
+		}	
+
+		ret = get_rawpkt_opt_from_streaminfo(pstream, RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC, inline_dev_mac);
+		if(ret < 0){
+			printf("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC error!\n");
+			return APP_STATE_DROPME;
+		}	
+
+		ret = get_rawpkt_opt_from_streaminfo(pstream, RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC, local_dev_mac);
+		if(ret < 0){
+			printf("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC error!\n");
+			return APP_STATE_DROPME;
+		}	
+
+		ret = get_rawpkt_opt_from_streaminfo(pstream, RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC, local_dev_mac);
+		if(ret < 0){
+			printf("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC error!\n");
+			return APP_STATE_DROPME;
+		}	
+		
+
+		ihdr = (struct ip *)a_packet;
+		inet_ntop(AF_INET, &ihdr->ip_src.s_addr, srcstr, sizeof(srcstr));
+		inet_ntop(AF_INET, &ihdr->ip_dst.s_addr, dststr, sizeof(dststr));
+
+		ehdr = (struct mesa_ethernet_hdr *)((char *)a_packet - 14);
+
+		printf("--------------------------------------------link info-----------------------------------------\n");
+		printf("outer mac:%02x-%02x-%02x-%02x-%02x-%02x -> %02x-%02x-%02x-%02x-%02x-%02x\n",
+				inline_dev_mac[0], inline_dev_mac[1],inline_dev_mac[2],inline_dev_mac[3],inline_dev_mac[4],inline_dev_mac[5],
+				local_dev_mac[0],local_dev_mac[1],local_dev_mac[2],local_dev_mac[3],local_dev_mac[4],local_dev_mac[5]);
+		
+		printf("inner mac:%02x-%02x-%02x-%02x-%02x-%02x -> %02x-%02x-%02x-%02x-%02x-%02x\n",
+				ehdr->ether_shost[0], ehdr->ether_shost[1], ehdr->ether_shost[2], ehdr->ether_shost[3], ehdr->ether_shost[4], ehdr->ether_shost[5], 
+				ehdr->ether_dhost[0],ehdr->ether_dhost[1],ehdr->ether_dhost[2],ehdr->ether_dhost[3],ehdr->ether_dhost[4],ehdr->ether_dhost[5]);
+		printf("inner ip: %s->%s\n", srcstr, dststr);
+		printf("link_dir:%d, mrzcpd_vlink_id:%lld\n", link_dir, vlink_id);
+
+		printf("--------------------------------------------------------------------------------------------\n");
+
+	}
+#else
+	printf("tcpentry_vlink_info(): not compile in marsio mode, do nothing!\n");
+#endif	
+    return APP_STATE_DROPME;
+}
+
+
 static int test_tcpall_flow_id = -1;
 
 char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)

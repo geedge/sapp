@@ -1170,7 +1170,7 @@ static void tcp_change_stream_tonouse(struct streamindex *pindex)
 
 //void tcp_free_stream(struct streamindex *pindex)
 //add raw_pkt by lqy 2015-01-07
-/* 2017-07-14 lijia add return value, for wangyan master and slave mode, last packet also need assign forward action */
+/* 2017-07-14 lijia add return value, for WY master and slave mode, last packet also need assign forward action */
 int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const void *transport_hdr,  const raw_pkt_t *raw_pkt)
 {
 	struct stream_list *plist=NULL;

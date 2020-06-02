@@ -1461,11 +1461,11 @@ char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* sessi
 		return rec;
 	}
 
-	plug_record_start_time(g_business_plug_info->plugid, thread_seq);
+	//plug_record_start_time(g_business_plug_info->plugid, thread_seq);
 
 	rec=funelem_session->appentry(session_info,&(funelem_session->pme),thread_seq,a_stream,a_packet);
 
-	plug_record_end_time(g_business_plug_info->plugid, thread_seq);
+	//plug_record_end_time(g_business_plug_info->plugid, thread_seq);
 
 /*
 	if(g_business_plug_type==PLUGTYPE_JC)

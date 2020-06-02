@@ -17,11 +17,13 @@ add_definitions(-D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_
 
 add_definitions(-fPIC)
 add_library(test_app_sapp SHARED test_app_sapp.c)
+add_library(test_sendpacket_performance SHARED test_sendpacket_performance.c)
 set_target_properties(test_app_sapp  PROPERTIES PREFIX "")
+set_target_properties(test_sendpacket_performance PROPERTIES PREFIX "")
 
-#add_library(wangyan_demo SHARED wangyan_demo.c)
-#set_target_properties(wangyan_demo  PROPERTIES PREFIX "")
+#add_library(wy_demo SHARED wy_demo.c)
+#set_target_properties(wy_demo  PROPERTIES PREFIX "")
 
-#add_library(test_wangyan SHARED test_wangyan.c)
-#set_target_properties(test_wangyan  PROPERTIES PREFIX "")
+#add_library(test_wy SHARED test_wy.c)
+#set_target_properties(test_wy  PROPERTIES PREFIX "")
 

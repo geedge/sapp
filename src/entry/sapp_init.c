@@ -23,7 +23,7 @@ extern void sesame_open_door(const char *lock_path, const char *lock_name);
 /* (0:pag,1:pcap,2:dumpfile,3:pfring,4:DPDK,5:ppf,6:NPacket,7:qnf,8:N95,9:pcap-dumpfile-list, 10:topsec) */
 //int cap_mode = 2;
 //int top_mode = 0;
-extern int G_DICTATOR_SW;
+//extern int G_DICTATOR_SW;
 extern struct global_stream **G_MESA_GLOBAL_STREAM;
 //static int __times = 0;
 //int g_timestamp_record_sw = 0;
@@ -35,7 +35,7 @@ int g_reverse_ethernet_addr_sw;
 //extern int g_kill_tcp_remedy_sw;
 extern int g_encapsulate_with_ddp;
 extern int g_encapsulate_with_L2E; /* 使用DDP协议封装的x27原始IP包 */
-extern int G_DICTATOR_SW;
+
 extern int g_PollingFunNum;
 extern int packet_io_set_ipv6_raw_socket_enable(int op_switch);
 extern const char *stream_addr_list_ntop_outward(const struct streaminfo *pstream);
@@ -104,7 +104,7 @@ int MESA_platform_init(int argc, char *argv[])
 	ABBR_SAPP_START_TIME = time(NULL);
 
 	/* 2016-09-22 lijia add, dictator在第一次被调用时有初始化代码, 防止多线程重入冲突, 平台先调用一次, 先要读取配置文件开关 */
-	MESA_load_profile_int_def("conf/main.conf","Module", "dictator_switch", &G_DICTATOR_SW, 1);	
+	//MESA_load_profile_int_def("conf/main.conf","Module", "dictator_switch", &G_DICTATOR_SW, 1);	
 	sapp_dictator_init();
 
 	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"ShowStatInfo", (char *)"platform_log_level", &g_sapp_log_level, 10);
