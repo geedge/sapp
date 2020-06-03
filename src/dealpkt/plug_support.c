@@ -1189,11 +1189,11 @@ void dictator_free(int thread_seq,void *pbuf)
 	else
 #endif
 	{
+#if SAPP_INSECTICIDE	
+		*((char *)pbuf) = 0xFE;
+#endif
 		free(pbuf);
 	}
-#if SAPP_INSECTICIDE	
-	*((char *)pbuf) = 0xFE;
-#endif
 }
 
 void *dictator_realloc(int thread_seq, void *ptr, size_t size)

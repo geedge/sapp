@@ -20,7 +20,7 @@
 #define USE_RBTREE_INSTEAD_LIST		(0) /* 当HASH冲突时, 使用红黑树代替链表, 避免特殊情况下遍历 */
 #define USE_LINUX_KERNEL_HASH_ALGO	(1) /* 使用LINUX内核HASH算法 */
 
-#define SAPP_INSECTICIDE				(1) /* 杀虫(DEBUG)临时开关, 在遇到莫名其妙的BUG时临时启用, 尽早发现问题, 早死早超生 */
+#define SAPP_INSECTICIDE				(0) /* 杀虫(DEBUG)临时开关, 在遇到莫名其妙的BUG时临时启用, 尽早发现问题, 早死早超生 */
 
 //#define CYCLE_PKT_DUMP				(1 && DEBUG) /* 2015-04-16 lijia add, 解决在线流量无故coredump, 但找不到原因 */
 #define CYCLE_PKT_DUMP				(1) /* 2015-04-16 lijia add, 解决在线流量无故coredump, 但找不到原因 */
