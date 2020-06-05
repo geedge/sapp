@@ -460,6 +460,41 @@ char testIPFragApp_1(struct streaminfo *pstream,unsigned char routedir, int thre
 	return APP_STATE_GIVEME;
 }
 
+char ipv4_pkt_detail_entry(struct streaminfo *pstream,unsigned char routedir, int thread_seq,void *a_packet)
+{
+	char ip_src_str[INET6_ADDRSTRLEN];
+	char ip_dst_str[INET6_ADDRSTRLEN];
+	struct mesa_ip4_hdr *ihdr4 = (struct mesa_ip4_hdr *)a_packet;
+	struct mesa_tcp_hdr *thdr;
+	struct mesa_udp_hdr *uhdr;
+	if(NULL == a_packet){
+		return APP_STATE_GIVEME;
+	}
+
+	inet_ntop(AF_INET, &ihdr4->ip_src.s_addr, ip_src_str, sizeof(ip_src_str));
+	inet_ntop(AF_INET, &ihdr4->ip_dst.s_addr, ip_dst_str, sizeof(ip_dst_str));
+
+	if(IPPROTO_TCP == ihdr4->ip_p){
+		thdr = (struct mesa_tcp_hdr *)((char *)ihdr4 + ihdr4->ip_hl * 4);
+		printf("IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d\n", 
+				ip_src_str, ntohs(thdr->th_sport),
+				ip_dst_str, ntohs(thdr->th_dport),
+				ntohs(ihdr4->ip_id), ihdr4->ip_p);
+	}else if(IPPROTO_UDP == ihdr4->ip_p){
+		uhdr = (struct mesa_udp_hdr *)((char *)ihdr4 + ihdr4->ip_hl * 4);
+		printf("IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d\n", 
+				ip_src_str, ntohs(uhdr->uh_sport),
+				ip_dst_str, ntohs(uhdr->uh_dport),
+				ntohs(ihdr4->ip_id), ihdr4->ip_p);		
+	}else{
+		printf("IP pkt: %s --> %s, ipid:%u, proto:%d\n", ip_src_str, ip_dst_str, ntohs(ihdr4->ip_id), ihdr4->ip_p);
+	}
+	
+	return APP_STATE_GIVEME;
+}
+
+
+
 char testIPApp_1(struct streaminfo *pstream,unsigned char routedir, int thread_seq,void *a_packet)
 {
 	static int testcount;

@@ -7,10 +7,24 @@
 extern "C" {
 #endif
 
+static int MRTUNNAT_THREAD_NUM = 1;
 static int  MAX_SEND_THREAD = 1;
 static int send_payload_len = 22;
 
+typedef struct{
+	long long value1;
+	long long value2;
+	long long value3;
+	long long value4;
+	long long value5;
+	long long value6;
+	long long value7;
+	long long value8;
+}cache_align_t;
+
 #if IOMODE_MARSIO
+
+static cache_align_t fake_rand_num[256];
 
 static void test_send_udp_by_vlink(int thread_seq)
 {
@@ -24,15 +38,22 @@ static void test_send_udp_by_vlink(int thread_seq)
 
 	option[0].type = SAPP_SEND_OPT_VIRTUAL_LINK_ID;
 	option[0].length = sizeof(long long);
-	option[0].long_value = 1;
+	option[0].long_value = 0;
 	opt_num++;
+
+	option[1].type = SAPP_SEND_OPT_REHASH_INDEX;
+	option[1].length = sizeof(long long);
+	option[1].long_value = fake_rand_num[thread_seq].value1 % MRTUNNAT_THREAD_NUM;
+	fake_rand_num[thread_seq].value1++;
+	opt_num++;
+	
 
 #if 0
 	ret = MESA_fakepacket_send_udp_options(&tmp_streaminfo, 0xC0A83294, 0xC0A86405, 0x1111, 0x5555, 
 											udp_payload, strlen(udp_payload), 0,
 											option, opt_num);
 #else
-ret = MESA_fakepacket_send_udp_options(&tmp_streaminfo, 0xC0A83294, 0xC0A86405, 0x1111, 0x5555, 
+ret = MESA_fakepacket_send_udp_options(&tmp_streaminfo, 0xC0A83295, 0xC0A86405, 0x1111, 0x5555, 
 										udp_paylaod_long, send_payload_len, 0,
 										option, opt_num);
 
@@ -79,6 +100,11 @@ int CHAR_INIT()
 		printf("can't get thread_num from: %s\n", "etc/test_sendpacket_perf.conf");
 		return -1;
 	}
+	ret = MESA_load_profile_int_def((char *)"etc/test_sendpacket_perf.conf", (char *)"main", (char *)"mrtunnat_thread_num",  &MRTUNNAT_THREAD_NUM, 1);
+	if(ret < 0){
+		printf("can't get mrtunnat_thread_num from: %s\n", "etc/test_sendpacket_perf.conf");
+		return -1;
+	}	
 	ret = MESA_load_profile_int_def((char *)"etc/test_sendpacket_perf.conf", (char *)"main", (char *)"send_payload_len",  &send_payload_len, 22);
 	if(ret < 0){
 		printf("can't get send_payload_len from: %s\n", "etc/test_sendpacket_perf.conf");

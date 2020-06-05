@@ -203,6 +203,16 @@ int marsio_buff_is_ctrlbuf(marsio_buff_t * m);
 void marsio_buff_set_ctrlbuf(marsio_buff_t *m);
 
 
+uint64_t marsio_buff_get_timestamp(marsio_buff_t *m);
+void marsio_buff_set_timestamp(marsio_buff_t *m, uint64_t timestamp);
+int marsio_buff_get_timestamp_ex(marsio_buff_t * m, enum mr_timestamp_type ts_type, struct timespec * ts);
+
+void marsio_buff_set_rehash_index(marsio_buff_t *m, uint32_t hash);
+uint32_t marsio_buff_get_rehash_index(marsio_buff_t * m);
+
+void * marsio_shared_mem_alloc(struct mr_instance * instance, size_t len);
+void marsio_shared_mem_free(struct mr_instance * instance, void * mem);
+
 #ifdef __cplusplus
 }
 #endif

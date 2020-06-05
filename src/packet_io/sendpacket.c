@@ -3775,8 +3775,10 @@ static void sapp_fakepacket_set_vxlan_options(struct mr_tunnat_ctrlzone *mr_ctrl
 		break;
 
 		case SAPP_SEND_OPT_REHASH_INDEX:
-			mr_ctrlzone->rehash_index = option->long_value;
-			mr_ctrlzone->action |= TUNNAT_CZ_ACTION_ENCAP_VIRTUAL_LINK_ID;
+			/* rehash_index不能在ctrlzone里设置, 要通过接口marsio_buff_set_rehash_index() */
+			//mr_ctrlzone->rehash_index = option->long_value;
+			//mr_ctrlzone->action |= TUNNAT_CZ_ACTION_ENCAP_VIRTUAL_LINK_ID;
+			sapp_runtime_log(30, "sendpacket set vxlan options error, cat't set REHASH_INDEX in ctrlzone\n");
 		break;
 
 		case SAPP_SEND_OPT_VXLAN_FLAGS:
@@ -3828,6 +3830,8 @@ static int __MESA_sendpacket_iplayer_options(int thread_index,const char *data, 
 			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
+		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
+			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -3925,6 +3929,8 @@ int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t p
 			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
+		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
+			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -3998,6 +4004,8 @@ int MESA_fakepacket_send_ipv6_options(const struct streaminfo *stream, uint8_t p
 			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
+		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
+			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -4071,6 +4079,8 @@ int MESA_fakepacket_send_tcp_options(const struct streaminfo *stream,
 			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
+		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
+			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -4151,6 +4161,8 @@ int MESA_fakepacket_send_ipv6_tcp_options(const struct streaminfo *stream,
 			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
+		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
+			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -4225,6 +4237,8 @@ int MESA_fakepacket_send_udp_options(const struct streaminfo *stream,
 			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
+		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
+			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -4245,9 +4259,13 @@ int MESA_fakepacket_send_udp_options(const struct streaminfo *stream,
 	}
 	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
 	marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
+#if 0
 	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
 								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
-
+#else
+	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
+									send_mbuf, 1, 0);	
+#endif
 	if(inner_ret < 0){
 		return -1;
 	}
@@ -4300,6 +4318,8 @@ int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream,
 			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
+		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
+			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
