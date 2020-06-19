@@ -2795,6 +2795,7 @@ void free_polling_inject_context(struct streaminfo_private *pstream_pr)
 	}	
 
 	dictator_free(thread_index, pstream_pr->polling_inject_context);
+	pstream_pr->polling_inject_context = NULL;
 }
 
 /* 全局流id, stream_index历史上已经表示单机内唯一id, 此处要保证集群所有机器不重复, 所以新建变�?  

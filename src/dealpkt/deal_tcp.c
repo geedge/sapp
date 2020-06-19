@@ -1408,6 +1408,8 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 		dictator_free(threadnum, pstream_pr->synack_opt_array);
 		pstream_pr->synack_opt_array = NULL;
 	}
+
+	free_polling_inject_context(pstream_pr); //2020-06-08 lijia add, for memory leak
 	
 	if(this_tcphdr->th_flags & TH_SYN){
 		tcp_add_new_stream_bysyn(pindex,this_iphdr,this_tcphdr,datalen,REUSE_OLD_LINK,raw_pkt);

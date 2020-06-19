@@ -584,7 +584,7 @@ int sapp_assistant_init(void)
 	pthread_mutex_init(&g_plug_Independent_thread_mutex, NULL);
 
 	if(sapp_global_val->config.cpu.send_only_threads_max_num > 0){
-		g_plug_Independent_thread_pid = (pthread_t *)calloc(1, sizeof(pthread_t));
+		g_plug_Independent_thread_pid = (pthread_t *)calloc(g_packet_io_thread_num + sapp_global_val->config.cpu.send_only_threads_max_num, sizeof(pthread_t));
 	}
 	
 	return 1;
