@@ -252,4 +252,6 @@ install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_rawpkt.h DE
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_tunnel.h DESTINATION  /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/sapp_inject.h DESTINATION  /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
 
+install(FILES ${CMAKE_BINARY_DIR}/service/sapp.service DESTINATION /usr/lib/systemd/system/ COMPONENT PROFILE)
+
 include(Package)
