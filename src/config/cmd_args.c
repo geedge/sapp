@@ -5,6 +5,10 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
+#ifdef GIT_VERSION
+ __attribute__((__used__)) const char *sapp_git_ver = GIT_VERSION;
+#endif
+
 
 static inline int dumpfile_speed_check(const char *opt_name, const char *opt_arg)
 {
@@ -221,10 +225,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 
 			case 'v':
 #ifdef GIT_VERSION
-				printf("Version: %s\n", GIT_VERSION);
-#endif	
-#ifdef GITVER
-				printf("Version: %s\n", GITVER);
+				printf("Version: %s\n", sapp_git_ver);
 #endif	
 
 				exit(1);
