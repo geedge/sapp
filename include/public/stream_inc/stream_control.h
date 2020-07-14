@@ -34,10 +34,10 @@ enum MESA_stream_opt{
 	MSO_GLOBAL_STREAM_ID, /* opt_val type must be unsigned long long, is value-result argument, IN: device_id, value range[0, 4095]; OUT:global stream id */
 	MSO_DROP_STREAM, /* opt_val type must be int, value only be [0,1]; similar to DROPPKT, but effective scope is stream. */
 	MSO_TCP_RST_REMEDY, /* opt_val type must be int, value only be [0,1]; if not set this, default is disable. */
-	MSO_TOTAL_INBOUND_PKT,  /* opt_val type must be unsigned long long  */
-	MSO_TOTAL_INBOUND_BYTE, /* opt_val type must be unsigned long long  */
-	MSO_TOTAL_OUTBOUND_PKT, /* opt_val type must be unsigned long long  */
-	MSO_TOTAL_OUTBOUND_BYTE,/* opt_val type must be unsigned long long  */
+	MSO_TOTAL_INBOUND_PKT,  /* inbound packet number of this stream, opt_val type must be unsigned long long  */
+	MSO_TOTAL_INBOUND_BYTE, /* inbound packet byte of this stream, opt_val type must be unsigned long long  */
+	MSO_TOTAL_OUTBOUND_PKT, /* outbound packet pkt of this stream, opt_val type must be unsigned long long  */
+	MSO_TOTAL_OUTBOUND_BYTE,/* outbound packet byte of this stream, opt_val type must be unsigned long long  */
 	__MSO_MAX,
 };
 
@@ -68,8 +68,6 @@ enum sapp_platform_opt{
 	SPO_FIELD_STAT_HANDLE,	/* field stat output handle, opt_val type must be void * */
 	SPO_INDEPENDENT_THREAD_ID, /* plug independent thread which is created by pthread_create(), opt_val type must be int */
 	SPO_DEPLOYMENT_MODE_STR, /* opt_val type is char[], optional value is:["mirror", "inline", "transparent"] */
-	//SPO_TOTAL_EGRESS_PKT,		/* total egress packet number, effective in inline or transparent mode, opt_val type must be unsigned long long */
-	//SPO_TOTAL_EGRESS_BYTE,		/* total egress packet byte, effective in inline or transparent mode, opt_val type must be unsigned long long */
 	SPO_TCP_STREAM_NEW,			/* total created tcp streams from start, opt_val type must be unsigned long long */
 	SPO_TCP_STREAM_CLOSE,		/* total closed tcp streams from start, opt_val type must be unsigned long long */
 	SPO_TCP_STREAM_ESTAB,		/* realtime established tcp streams, opt_val type must be unsigned long long */
@@ -77,6 +75,10 @@ enum sapp_platform_opt{
 	SPO_TOTAL_INBOUND_BYTE,		/* total inbound packet bytes, opt_val type must be unsigned long long */
 	SPO_TOTAL_OUTBOUND_PKT,		/* total outbound packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_OUTBOUND_BYTE,	/* total outbound packet bytes, opt_val type must be unsigned long long */
+
+	SPO_UDP_STREAM_NEW,			/* total created udp streams from start, opt_val type must be unsigned long long */
+	SPO_UDP_STREAM_CLOSE,		/* total closed udp streams from start, opt_val type must be unsigned long long */
+	SPO_UDP_STREAM_CONCURRENT,	/* realtime Concurrent udp streams, opt_val type must be unsigned long long */	
 };
 
 

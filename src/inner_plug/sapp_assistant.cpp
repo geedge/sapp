@@ -215,8 +215,8 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
-			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_TCP_STREAM_NEW);
+			unsigned long long *tot_num = (unsigned long long *)opt_val;
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_TCP_STREAM_NEW);
 		}
 		break;		
 
@@ -227,8 +227,8 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
-			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_TCP_STREAM_DATA);
+			unsigned long long *tot_num = (unsigned long long *)opt_val;
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_TCP_STREAM_DATA);
 		}
 		break;	
 
@@ -239,10 +239,47 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
-			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_TCP_STREAM_DEL);
+			unsigned long long *tot_num = (unsigned long long *)opt_val;
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_TCP_STREAM_DEL);
 		}
 		break;	
+
+		case SPO_UDP_STREAM_NEW:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_num = (unsigned long long *)opt_val;
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_UDP_STREAM_NEW);
+		}
+		break;		
+
+		case SPO_UDP_STREAM_CONCURRENT:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_num = (unsigned long long *)opt_val;
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_UDP_STREAM_TWO);
+		}
+		break;	
+		
+
+		case SPO_UDP_STREAM_CLOSE:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_num = (unsigned long long *)opt_val;
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_UDP_STREAM_DEL);
+		}
+		break;		
 
 		case SPO_THREAD_COUNT:
 		{

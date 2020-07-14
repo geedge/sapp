@@ -50,6 +50,7 @@ static int marsio4_burst_process_pkt_num = 32; /* 批处理包数量, 从pag.conf中获取
 
 extern void timestamp_region_update_driver(int tid, long long cpu_cycle);
 extern int stream_process_polling(int thread_seq);
+extern void marsio_send_burst_flush(struct mr_sendpath * sendpath, queue_id_t sid);
 
 /************************  funcitons for dynamic link *************************/
 
@@ -641,6 +642,20 @@ static inline void marsio4_sleep(int tot_call_times, int rcv_pkt_times)
 */	
 }
 
+/* 高性能模式下, marsio队列有缓存, 无新包到来时需要定期刷新队列中的数据 */
+static inline void flush_buf(int tid)
+{
+	int i;
+
+	for(i = 0; i < g_mr4_device_num; i++){
+		marsio_send_burst_flush(g_mr4_sendpath_up_set[i], tid);
+		
+		if(NET_CONN_SERIAL_2CARD == g_marsio4_topology_mode){		
+			marsio_send_burst_flush(g_mr4_sendpath_down_set[i], tid);
+		}
+	}
+}
+
 static void *marsio4_worker(void *arg)
 {
 	int tid = *((int *)arg);
@@ -669,6 +684,7 @@ static void *marsio4_worker(void *arg)
 		if(marsio4_process_packet(tid, &raw_pkt) > 0){
 			rcv_pkt_tims++;
 		}else{
+			flush_buf(tid);
 			/* 无包时要调用polling接口 */
 			if(stream_process_polling(tid) > 0){
 				polling_work_times++;
