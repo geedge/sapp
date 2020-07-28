@@ -49,6 +49,9 @@ set(CPACK_COMPONENTS_ALL LIBRARY HEADER EXECUTABLE PROFILE)
 
 set(CPACK_BUILD_SOURCE_DIRS "${CMAKE_SOURCE_DIR}")
 
+set(CPACK_RPM_PACKAGE_AUTOREQPROV "no")
+set(CPACK_RPM_PACKAGE_AUTOREQ "no")
+
 # setup %config(noreplace)
 set(CPACK_RPM_EXECUTABLE_USER_FILELIST "%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/gdev.conf"
                             "%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/sapp.toml"
