@@ -9,8 +9,8 @@
 instance_name = "sapp_v4.0"
 
 [CPU]
-worker_threads=1
-send_only_threads_max=16
+worker_threads=4
+send_only_threads_max=4
 ### note, bind_mask, if you do not want to bind thread to special CPU core, keep it empty as []
 bind_mask=[]
 
@@ -29,7 +29,7 @@ dictator_enable=1
     BSD_packet_filter=""
 
 ### note, same as tcpdump -Q/-P arg, possible values are `in', `out' and `inout', default is "in"
-    pcap_capture_direction="inout"
+    pcap_capture_direction="in"
    
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]
