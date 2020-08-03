@@ -30,6 +30,7 @@ static const sapp_cmd_args_usage_t cmd_args_usage[] =
 {
 	{"-h", "help", 	NULL,	"show help message"},
 	{"-v", "version", NULL,	"show platform version"},
+	{"-g", "coredump", NULL,	"generate coredump for test"},
 	{"-c", "sample-config", NULL, "generate sample config file->sapp.toml"},
 	{"-d", "dumpfile", NULL,	"running as pcap dumpfile mode"},
 	{"-r", "dumpfile-file", NULL,	"read packets from which pcap file"},
@@ -38,7 +39,7 @@ static const sapp_cmd_args_usage_t cmd_args_usage[] =
 };
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
-static const char *sapp_cla_short_options = "cdhr:v";
+static const char *sapp_cla_short_options = "cdhr:vg";
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const struct option sapp_cla_long_options[] = 
@@ -49,6 +50,7 @@ static const struct option sapp_cla_long_options[] =
 	{"dumpfile-file",	required_argument,  NULL,      'r'},
 	{"dumpfile-speed",	required_argument,  NULL,      0},
 	{"sample-config", 	no_argument,      	NULL,      'c'},
+	{"coredump", 	no_argument,      	NULL,      'g'},
 	{NULL,          	0,      			NULL,      0}
 };
 
@@ -239,7 +241,13 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 			case 'd':
 				store_cmd_args("dumpfile", NULL);
 				continue;
-			break;		
+			break;
+
+			case 'g':
+				sapp_init_breakpad_mini();
+				sapp_segv_generate();
+				continue;
+			break;
 
 			case 'r':
 				store_cmd_args("dumpfile-file", optarg);

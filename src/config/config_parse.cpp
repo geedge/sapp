@@ -1,3 +1,5 @@
+#include "breakpad.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -6,7 +8,6 @@ extern "C" {
 #include "sapp_private_api.h"
 #include "support/tomlc99_wrap.h"
 #include "field_stat2.h"
-
 
 /* 静态只读全局变量可以放在代码段, 无需在sapp_global_val里 */
 static const char *default_config_file = "./etc/sapp.toml";
@@ -221,8 +222,13 @@ void sapp_cla_override_cfg_file(void)
 {
 	char *cmd_args;
 	sapp_config_t *pconfig = &sapp_global_val->config;
+
+	if (sapp_get_cla_raw("coredump", &cmd_args) >= 0){ 
+		breakpad_segv_generate();
+	}
 	
-	if(sapp_get_cla_raw("dumpfile", &cmd_args) >= 0){ /* dumpfile模式自动覆盖interface配置 */
+	if (sapp_get_cla_raw("dumpfile", &cmd_args) >= 0)
+	{ /* dumpfile模式自动覆盖interface配置 */
 		strcpy(pconfig->packet_io.depolyment_mode_str, "dumpfile");
 		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
 		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
@@ -230,13 +236,13 @@ void sapp_cla_override_cfg_file(void)
 		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_PCAP_DUMPFILE;
 	}
 
-	if(sapp_get_cla_raw("dumpfile-file", &cmd_args) >= 0){
+	if (sapp_get_cla_raw("dumpfile-file", &cmd_args) >= 0)
+	{
 		strncpy(sapp_global_val->config.packet_io.pcap_dumpfile_name, cmd_args, NAME_MAX);
 	}
-	
-	return;
-}
 
+		return;
+	}
 
 void sapp_generate_sample_config(void)
 {
@@ -701,6 +707,8 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"treat_vlan_as_mac_in_mac", (int *)&pconfig->protocol_feature.treat_vlan_as_mac_in_mac_enabled, 0);
 
 	/*******************************  TOOLS **********************************/
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.signal_handler", (char *)"signal", (int *)&pconfig->tools.signal_handler.signal, 0);
+
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.pkt_dump", (char *)"enabled", (int *)&pconfig->tools.pkt_dump.enabled, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"tools.pkt_dump", (char *)"mode", pconfig->tools.pkt_dump.mode_str, NAME_MAX, "udp_socket");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"tools.pkt_dump", (char *)"BSD_packet_filter", str_tmp, ARG_MAX, "");
@@ -756,6 +764,21 @@ int sapp_parse_config(void)
 	sapp_log(10, 10, 10, "config parse success!");
 	
 	return 0;
+}
+
+/* init breakpad_mini */
+void sapp_init_breakpad_mini(void)
+
+{
+	struct breakpad_instance * g_breakpad = breakpad_init(default_config_file, "breakpad", sapp_global_val->individual_fixed.log_handle);
+	if(g_breakpad == NULL){exit(-1);}
+	sapp_global_val->individual_fixed.breakpad = g_breakpad;
+	return;
+}
+
+void sapp_segv_generate()
+{
+	breakpad_segv_generate();
 }
 
 #ifdef __cplusplus

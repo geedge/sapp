@@ -25,6 +25,8 @@ branch_build_debug:
   extends: .build_by_travis
   variables:
     BUILD_TYPE: Debug
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
   except:
     - /^develop.*$/i
     - /^master.*$/i
@@ -34,6 +36,8 @@ branch_build_release:
   stage: build
   variables:
     BUILD_TYPE: RelWithDebInfo
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
   extends: .build_by_travis
   except:
     - /^develop.*$/i
@@ -45,6 +49,8 @@ develop_build_debug:
   extends: .build_by_travis
   variables:
     BUILD_TYPE: Debug
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
     PACKAGE: 1
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-debug"
@@ -59,6 +65,8 @@ develop_build_release:
   extends: .build_by_travis
   variables:
     BUILD_TYPE: RelWithDebInfo
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
     PACKAGE: 1
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-release"
@@ -73,8 +81,11 @@ release_build_release:
   stage: build
   variables:
     BUILD_TYPE: RelWithDebInfo
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
     PACKAGE: 1
     UPLOAD: 1
+    SYMBOL_TARGET: sapp
     PULP3_REPO_NAME: platform-stable-x86_64.el7
     PULP3_DIST_NAME: platform-stable-x86_64.el7
   extends: .build_by_travis

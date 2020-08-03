@@ -1,0 +1,1083 @@
+* Mon Jul 27  2020 lijia lijia01@iie.ac.cn 
+  - hash: 292fdb61654b6e2e30b26ec6ed7999d890c06d62
+  - commit:
+  - 修复关闭polling功能时, CPU占用率100%问题.
+
+* Wed Jul 1  2020 lijia lijia01@iie.ac.cn 
+  - hash: d22950558954272a566c739a1c98da6772caddd6
+  - commit:
+  - 无核心功能升级与修改, 修复rpm包安装会覆盖已有user file的BUG, 修复sapp   -v无法显示版本信息的BUG.
+
+* Wed Jun 24  2020 liuxueli liuxueli@iie.ac.cn 
+  - hash: 49ef917028f9b2518ce9c06050a320c59db07e3b
+  - commit:
+  - 修复update rpm时配置文件被覆盖的问题
+
+* Fri Jun 19  2020 lijia lijia01@iie.ac.cn 
+  - hash: df7b27baf8a84e51815cfe941d79ecfca1491cc4
+  - commit:
+  - 增加debuginfo, devel RPM包后, user configfile noreplace功能失效, 导致升级sapp会覆盖运行环境的配置文件, 暂时关闭debuginfo,devel打包功能.
+
+* Fri Jun 19  2020 lijia lijia01@iie.ac.cn 
+  - hash: 334092cf827c42892fc873e0b03f63bb074436b3
+  - commit:
+  - 按虚链路ID发包功能, 改为使用接口marsio_buff_set_rehash_index()设置rehash, 而不是设置ctrlzone的变量.
+
+* Fri Jun 5  2020 lijia lijia01@iie.ac.cn 
+  - hash: e30e056c54f59b1bfaf600ff76165d7d7680d4e0
+  - commit:
+  - 按虚链路ID发包功能, 改为使用接口marsio_buff_set_rehash_index()设置rehash, 而不是设置ctrlzone的变量;
+
+* Wed Jun 3  2020 lijia lijia01@iie.ac.cn 
+  - hash: 91cbc1bcfca41c99043ce73de4aa2add81dfcb26
+  - commit:
+  - 修复INSECTICIDE DEBUG模式下, free内存错误.
+
+* Tue Jun 2  2020 lijia lijia01@iie.ac.cn 
+  - hash: 382f6f5569834c3d1115722c160e126afd071841
+  - commit:
+  - 1.修复DROP UDP流BUG;
+  - 2.增加MESA_dir_human_to_link(), 用于将逻辑发包方向转换成物理route_dir;
+  - 3.增加独立发包线程CPU绑定功能, 用于marsio模式下的高性能发包.
+
+* Wed May 27  2020 杨威 yangwei@iie.ac.cn 
+  - hash: 8909c32e3697411a32778fc8384ca082de4b94e4
+  - commit:
+  - g_device_plug更新，按RFC5880，收到DOWN消息时，回复INIT消息，并设置mydiscriminator为自身保活IP
+
+* Fri May 8  2020 lijia lijia01@iie.ac.cn 
+  - hash: f8435d81830d2aead9736f96a84b4586b7cef2df
+  - commit:
+  - 1.修复插件同时返回KILL_OTHER和DROPME, pme没有清空的BUG;
+  - 2.修复marsio模式下, 调用VXLAN相关选项没报错的BUG.
+
+* Tue Apr 28  2020 lijia lijia01@iie.ac.cn 
+  - hash: 916572de28235e5abc53bbd7fbe44b781182ff4f
+  - commit:
+  - 禁用rpm安装时对各种依赖库的检查, 避免: "error: Failed dependencies" 错误.
+
+* Mon Apr 27  2020 lijia lijia01@iie.ac.cn 
+  - hash: f4d006b3971cb7d680367e1b70ae0489e7e4e499
+  - commit:
+  - 恢复%config(noreplace), 避免配置文件被覆盖.
+
+* Fri Apr 24  2020 lijia lijia01@iie.ac.cn 
+  - hash: 347f7b7a2c547908c6d1b7a7c6abb32738ee1abf
+  - commit:
+  - 修改deal_tcp.c:2118, 如果ret=stream_process_tcp返回值是DROP, tcp_deal_unorder()返回值是PASS, 当前包就是PASS, 结果就CT了
+
+* Sun Apr 19  2020 lijia lijia01@iie.ac.cn 
+  - hash: 991aadc7b3f71bc785bf6a809a9718f71b7f3283
+  - commit:
+  - 修复插件挂载失败后, 没有调用plugin_call_flagstate()函数BUG, 导致所有插件注册的flag没生效.
+
+* Wed Apr 15  2020 liuxueli liuxueli@iie.ac.cn 
+  - hash: bd5ad8405c491da47fc45af0fef3720b45714aba
+  - commit:
+  - 修复头文件安装路径笔误
+
+* Wed Apr 15  2020 liuxueli liuxueli@iie.ac.cn 
+  - hash: 77636fd4b9f30342202d15e7bf10243fbd23a92f
+  - commit:
+  - 安装sapp依赖库
+
+* Tue Apr 14  2020 liuxueli liuxueli@iie.ac.cn 
+  - hash: 15c65609d02662d9a728f450d5decfbeedfaf24f
+  - commit:
+  - 调整修改环境变量的位置
+
+* Mon Apr 13  2020 liuxueli liuxueli@iie.ac.cn 
+  - hash: 023dbf9cf372f83badc5b70c021f432abc64cddd
+  - commit:
+  - source /etc/profile.d/framework.sh；修改环境变量
+
+* Mon Apr 13  2020 liuxueli liuxueli@iie.ac.cn 
+  - hash: c528418d596b05895c2407c04bf9519730545150
+  - commit:
+  - 安装framework  -env.rpm;
+
+* Mon Apr 13  2020 liuxueli liuxueli@iie.ac.cn 
+  - hash: add249b530b8bc447749f5775fa5027a2b21d251
+  - commit:
+  - 安装依赖的公共库；修改默认安装路径
+
+* Fri Apr 10  2020 liuxueli liuxueli@iie.ac.cn 
+  - hash: 3c53e30eb92d4716c439c08c862d83eca4938968
+  - commit:
+  - 修正默认安装目录
+
+* Fri Apr 10  2020 liuxueli liuxueli@iie.ac.cn 
+  - hash: 1ecfc564d8388fdd0cc1c6ec85f03423c90710c1
+  - commit:
+  - 支持上传rpm到yum源
+
+* Wed Mar 25  2020 lijia lijia01@iie.ac.cn 
+  - hash: c43dbc185d7ef13b98fabc4c368fb33edafc3bb5
+  - commit:
+  - 支持pcap模式下, 指定捕包方向[in, out, inout];
+  - 支持ethernet跳过非ip层的协议,便于使用系统路由测试注入数据包功能.
+
+* Wed Mar 18  2020 lijia lijia01@iie.ac.cn 
+  - hash: 2e6da7600c366f3ff36d4d4db3cabcd245b5c3ec
+  - commit:
+  - 1.packet_io_tun模式增加static NAT, 修改ip使kni, tfe收到的数据包与外部原始包不同,避免协议栈冲突;
+  - 2.更新tun_transparent初始化脚本;
+  - 3.修复packet_io_tun模式的tcpdump_mesa捕包流程.
+
+* Mon Mar 9  2020 lijia lijia01@iie.ac.cn 
+  - hash: 1d23241d7bb60cb443a521c2ed5281190d3f096e
+  - commit:
+  - 更新tun串联模式启动脚本, 自动判断当前登录用户IP, 添加路由.
+
+* Thu Feb 27  2020 lijia lijia01@iie.ac.cn 
+  - hash: cd127251503a63af25edf70d673b92103f66133e
+  - commit:
+  - 增加tun透明串联模式启动环境脚本.
+
+* Fri Feb 21  2020 lijia lijia01@iie.ac.cn 
+  - hash: d4d89b42c3210eb98c1d016544114bc8c9b33188
+  - commit:
+  - 增加基于tun虚设备的双卡串联模式, 用于在虚拟机单网卡环境下, 使用sapp串联模式.
+
+* Fri Jan 17  2020 lijia lijia01@iie.ac.cn 
+  - hash: 7010e12cdb69f399c94b30d4e46b4b61ee1956bc
+  - commit:
+  - 修复service/CMAKElist.txt
+
+* Fri Jan 17  2020 lijia lijia01@iie.ac.cn 
+  - hash: c34b4f0b8614f4d411bc57a4c73d7912b0f0d946
+  - commit:
+  - 同步修复读包模式下, 插件destroy问题
+
+* Fri Jan 17  2020 lijia lijia01@iie.ac.cn 
+  - hash: 403d998ca3798ab437f880602b30d76c2ea02505
+  - commit:
+  - merge from develop
+
+* Fri Jan 17  2020 lijia lijia01@iie.ac.cn 
+  - hash: 3aa7a71814709801390ac1b2e6e71bcff5fce1f4
+  - commit:
+  - 修复dumpfile读包模式下, 插件没有destroy函数会崩溃的bug.
+
+* Mon Jan 13  2020 lijia lijia01@iie.ac.cn 
+  - hash: 033c0f1215363f735a1c28a23ab4a3ae8704fbff
+  - commit:
+  - delete version.txt.
+
+* Fri Jan 10  2020 lijia lijia01@iie.ac.cn 
+  - hash: 381fadccd542a6c02eb42f8245975975b8183c23
+  - commit:
+  - 修改CMakeList.txt, 解决RPM安装冲突问题.
+
+* Thu Jan 9  2020 lijia lijia01@iie.ac.cn 
+  - hash: 6f793d36e120114bebc50d6aaeb3c235380bcd17
+  - commit:
+  - rpm安装时自动注册系统服务.
+
+* Wed Jan 8  2020 lijia lijia01@iie.ac.cn 
+  - hash: 864487444ee5dcf526d324c0befa0d1cf041df40
+  - commit:
+  - arp entry只处理应答及ip类型.
+
+* Tue Jan 7  2020 李佳 lijia01@iie.ac.cn 
+  - hash: fb5bce945c2218ebaef25946f7d7db1b025fa990
+  - commit:
+  - Feature inbound outbound
+
+* Mon Jan 6  2020 lijia lijia01@iie.ac.cn 
+  - hash: 2ae16e36bb4cf69dcefb45efb19779e310f9d6d2
+  - commit:
+  - 修改包数、字节数变量名混淆手误.
+
+* Mon Jan 6  2020 lijia lijia01@iie.ac.cn 
+  - hash: 84f22a178af223377fc084c127cdc94ac925d74d
+  - commit:
+  - support plug arp layer entry.
+
+* Fri Jan 3  2020 lijia lijia01@iie.ac.cn 
+  - hash: b1be93eab82732af57ab8c9bd7fea6554085985b
+  - commit:
+  - 读包模式下, 退出先调用插件destroy()函数.
+
+* Tue Dec 31  2019 lijia lijia01@iie.ac.cn 
+  - hash: 06731c3bb2818b398884990af62ab05a401d1f78
+  - commit:
+  - 实现ethernet层inbound, outbound两个方向流量统计;  实现每个stream两个方向统计.
+
+* Thu Dec 26  2019 lijia lijia01@iie.ac.cn 
+  - hash: 98228e4e577f0df244beb0e2702776fa39877670
+  - commit:
+  - 增加串联模式下,inbound,outbound两个方向的统计计数.
+
+* Thu Dec 19  2019 lijia lijia01@iie.ac.cn 
+  - hash: 86c5a186658644901d8ba049716f80ef890466a4
+  - commit:
+  - 无功能性更新, 删除一些运行时printf刷屏告警, 改为写runtime_log.
+
+* Wed Dec 18  2019 lijia lijia01@iie.ac.cn 
+  - hash: 422766471efa716d82f8d50f6041bb5944cd1d1a
+  - commit:
+  - 配置文件增加PROTOCOL_FEATURE, 用于指定某些协议解析细节选项;
+  - 增加sapp_platform_opt选项, 用于支持插件获取平台内部计数.
+
+* Wed Dec 11  2019 杨威 yangwei@iie.ac.cn 
+  - hash: c3d16eed7e4ea689225cae69f3288b3918987570
+  - commit:
+  - Add Dockerfile
+* Wed Dec 11  2019 杨威 yangwei@iie.ac.cn 
+  - hash: 8f6e570bc8c63ba520be09b9f543084c5c55e9de
+  - commit:
+  - Update .gitlab  -ci.yml
+* Tue Dec 10  2019 李佳 lijia01@iie.ac.cn 
+  - hash: 01e0c7407938da5a9420a208d500fc82a85f9940
+  - commit:
+  - 修复插件管理增加kill_other BUG. 增加全局流id.
+  - https://git.mesalab.cn/MESA_Platform/sapp/issues/29#note_5105
+
+* Tue Dec 3  2019 lijia lijia01@iie.ac.cn 
+  - hash: 74c83231a63405edb7b571a5ff9b34c67275896b
+  - commit:
+  - 增加sapp_platform_opt  -  ->SPO_DEPLOYMENT_MODE_STR,用于插件获取平台网络拓扑模式.
+
+* Wed Nov 27  2019 lijia lijia01@iie.ac.cn 
+  - hash: 41b7f3445ed48e8654cdc365d88d51fe2b2def3f
+  - commit:
+  - 修复CI编译错误.
+  - MESA_rst_tcp()增加para_len参数.
+
+* Tue Nov 26  2019 lijia lijia01@iie.ac.cn 
+  - hash: 14b09f2e53946547bea751af2e3472e2d8b2029e
+  - commit:
+  - 修改MESA_rst_tcp()定义, 恢复标准C接口, 使用结构体传输相关参数;
+  - 增加RPM安装包noreplace定义, 避免升级时覆盖已有用户配置.
+
+* Fri Nov 22  2019 lijia lijia01@iie.ac.cn 
+  - hash: 3385992b9b872c736f0b502dd3258660c46f423b
+  - commit:
+  - 增加MESA_rst_tcp(), c++接口，便于调用者传入不同参数.
+
+* Wed Nov 20  2019 lijia lijia01@iie.ac.cn 
+  - hash: 2c439fac7c4497481dcab6a4637f71b874396bb9
+  - commit:
+  - 增加stream_inject_plus.h, 增加新接口: MESA_rst_tcp().
+  - MESA_rst_tcp与MESA_kill_tcp区别:
+  - MESA_kill_tcp实际上是几个动作的集合: 发送RST包, 类似返回了(DROPME | KILL_OTHER), 及DROP当前流后续所有包;
+  - MESA_rst_tcp只专心做一件事情: 发送RST包!
+
+* Tue Nov 19  2019 lijia lijia01@iie.ac.cn 
+  - hash: f3f8e06d8058a1d0ac6b7b7fb00bbc325d795bce
+  - commit:
+  - 修复kill_other后内存泄漏bug;
+  - 增加stream_id_decode tool.
+
+* Mon Nov 18  2019 lijia lijia01@iie.ac.cn 
+  - hash: 128a25d1f8ff7e5d796abc68bebed63b9c03da22
+  - commit:
+  - 修复插件管理增加kill_other BUG. 增加全局流id.
+  - https://git.mesalab.cn/MESA_Platform/sapp/issues/29#note_5105
+
+* Fri Nov 15  2019 lijia lijia01@iie.ac.cn 
+  - hash: fc00dc6bb95ad422e8e06ff46430ffa594583a06
+  - commit:
+  - 增加插件返回值, KILL_FOLLOW, KILL_OTHER
+
+* Fri Oct 18  2019 lijia lijia01@iie.ac.cn 
+  - hash: b4420ccbf6ffa1afcbb65db98327053f72e08215
+  - commit:
+  - 修复tcp流被reset后,插件的调用顺序问题,先调tcpall后调用tcp.
+
+* Fri Oct 18  2019 李佳 lijia01@iie.ac.cn 
+  - hash: bea9d3d03804c0e4b12d8dab4d6933e4a5804be4
+  - commit:
+  - 1.修改tcp流reset之后逻辑,仍然先调用tcpall再调用tcp插件; 2.修复plugctrl模块在退出之前,调用插件destroy的错误
+
+* Thu Sep 26  2019 lijia lijia01@iie.ac.cn 
+  - hash: d31932a98211f2213913684af3a19d87a7a268ac
+  - commit:
+  - pcap_io_thread创建时, dir 方向传输是栈里的变量, 有概率不是传入的真实值, 已修复.
+
+* Fri Sep 20  2019 lijia lijia01@iie.ac.cn 
+  - hash: be1157ca907b8a5c463856f396b1d24a5b6bf8b3
+  - commit:
+  - 增加RPM包安装时, 自动安装sapp.service服务功能.
+
+* Wed Sep 18  2019 lijia lijia01@iie.ac.cn 
+  - hash: c911f227fad1a9ab7b7dee7cf105a45a47c061df
+  - commit:
+  - 修复增加polling_entry发包功能时,误修改当前流的raw_pkt指针bug.
+
+* Wed Sep 18  2019 lijia lijia01@iie.ac.cn 
+  - hash: 482d2234ae5e139f8d86ed3b1bbdfb4e44143f5d
+  - commit:
+  - add g_device_plug.inf
+
+* Thu Sep 12  2019 杨威 yangwei@iie.ac.cn 
+  - hash: 1e7f21b77b60a019b79858c21edd10607aa4aa54
+  - commit:
+  - 修复__do_inject_pkt调用packet_io_send时，没有使用调用者传入的route_dir
+
+* Wed Sep 11  2019 lijia lijia01@iie.ac.cn 
+  - hash: c3224c5a7661a1affe54da0e286da9ac7e63e552
+  - commit:
+  - 更新marsio模式CPU绑核代码, 增加配置文件错误校验.
+
+* Wed Sep 11  2019 杨威 yangwei@iie.ac.cn 
+  - hash: 08cfa9e532efb3c13e8527342899f706d70be231
+  - commit:
+  - Feature v4 update cmakelist
+
+* Wed Sep 11  2019 杨威 yangwei@iie.ac.cn 
+  - hash: cacc811248bf4636fe0056221cc615cd31044f16
+  - commit:
+  - 1、cmake文件更新，编译条件改为单一变量多选，如捕包模式
+
+  - 2、gitignore文件更新，增加vscode和version.txt
+
+* Sat Sep 7  2019 lijia lijia01@iie.ac.cn 
+  - hash: 119b3a7677cab82c8c6cefe73284c947abd11ec9
+  - commit:
+  - 修复sapp_inject_pkt在polling模式下, 没有当前streaminfo对应原始包的BUG;
+  - 修复sapp_inject_pkt在双臂模式下的BUG;
+
+* Fri Sep 6  2019 lijia lijia01@iie.ac.cn 
+  - hash: d53dcc9a8c130565bec16eca3bc2b85110ef931e
+  - commit:
+  - 增加sapp_inject_pkt, 支持插件发送已构造好的ip报文, 自动填充底层隧道信息.
+
+* Thu Sep 5  2019 杨威 yangwei@iie.ac.cn 
+  - hash: 5556e2f099e18bff4824aa48e73076149906bc57
+  - commit:
+  - Update .gitlab  -ci.yml
+
+* Thu Sep 5  2019 杨威 yangwei@iie.ac.cn 
+  - hash: 7d6253191060b08892016831d982e1fbf18985cd
+  - commit:
+  - Update .gitlab  -ci.yml
+
+* Tue Sep 3  2019 yangwei yangwei@iie.ac.cn 
+  - hash: 834e7ef0790d7f51ff96fc893280ca71969ed78f
+  - commit:
+  - 设置默认捕包模式为pcap，保证CI成功
+
+* Tue Sep 3  2019 yangwei yangwei@iie.ac.cn 
+  - hash: ea2b8f427e67f5553be8c72badbb9c096957803f
+  - commit:
+  - 更新默认main.conf
+
+* Fri Aug 23  2019 lijia lijia01@iie.ac.cn 
+  - hash: c85feeb44eef858cf53b8bc97082db25c0dcb3f7
+  - commit:
+  - 增加新发包接口sapp_inject_pkt; 改polling_entry优先级; tcpdump_mesa配置文件修改
+
+* Fri Aug 23  2019 yangwei yangwei@iie.ac.cn 
+  - hash: 72794fc3c9b4d5f408db8cf6223974f356d9561b
+  - commit:
+  - 1、更新默认模式为marsio
+
+  - 2、marsio模式支持设置cpu_set
+
+* Mon Aug 12  2019 杨威 yangwei@iie.ac.cn 
+  - hash: ace638519716da065ae7ec3a1cb0e6fc884019ab
+  - commit:
+  - Pangu develop parallel
+
+* Mon Aug 5  2019 yangwei yangwei@iie.ac.cn 
+  - hash: e414a07d077b7cd000e740565534e3ce9e1497a8
+  - commit:
+  - 1、sysinfo link统计位置新增disposable计数，即pengding被调用后即被drop的流
+  - 2、sysinfo pkt统计位置新增avg_len计数，包括累计平均包长和单位时间内平均包长
+
+* Fri Aug 2  2019 李佳 lijia01@iie.ac.cn 
+  - hash: 42245982d8a4cc3465d932a4f473ebe4dcec8dbc
+  - commit:
+  - 增加pcap dumpfile模式下, sapp退出之前调用插件的destroy函数.
+
+* Wed Jul 31  2019 yangwei yangwei@iie.ac.cn 
+  - hash: 3f89bc26cd7efc3e30699fac0c0595fab483fd9d
+  - commit:
+  - 1、更新iknow默认参数，修正为从[ShowStatInfo]读取，默认关闭，移除多处注册时的assert
+  - 2、调整sapp_init.c中初始化顺序，将sapp_assist_init函数提前至plug_ctrl函数前
+  - 3、增加threadnum读取出来小于0时的判断
+  - 4、fs2输出增加plug初始化时间的统计，以status形式输出，不发往SERVER
+  - 5、更新g_plugin_plugid为g_plugin_proto_plugid,用于记录全局protocol插件id
+  - 6、新增g_plugin_other_plugid，用于记录全局非protocol插件编号
+  -    a.对于protocol插件，pluginfo中的plugid即对应的g_plugin_proto_plugid
+  -    b.对于其他插件，pluginfo中的plugid=g_plugin_other_plugid+MAX_FUN_NUM(sapp定义的最大protocol插件个数)
+
+* Fri Jul 26  2019 lijia lijia01@iie.ac.cn 
+  - hash: e3403925b9823bd4603825f7cc26701823d3d3c0
+  - commit:
+  - 修改tcp stream统计信息入InfluxDB的错误.
+
+* Wed Jul 24  2019 yangwei yangwei@iie.ac.cn 
+  - hash: 0972a436cadf55c89eef9f6924b7216e9f9c1492
+  - commit:
+  - 1、更新CMakelist，使用下拉菜单选择相同类型的编译选项
+  - 2、修复注册fs2中latency时，对NOT_SEND_METRIC_TO_SERVER错误的设置
+  - 3、更新gitignore，增加vscode工程文件目录
+
+* Fri Jul 12  2019 lijia lijia01@iie.ac.cn 
+  - hash: a16840c9e611758d506488cef7b64817c38df0e2
+  - commit:
+  - 修改cmake依赖关系, 导致make   -j 并行编译错误问题.
+
+* Fri Jul 12  2019 lijia lijia01@iie.ac.cn 
+  - hash: 6a19de45c60fb804f47af586c893d42ee61aa4bf
+  - commit:
+  - 删除libevent对openssl的依赖,目前仅用libevent的超时机制,禁用ssl部分功能;添加gtest_sapp.inf
+
+* Thu Jul 11  2019 lijia lijia01@iie.ac.cn 
+  - hash: 1664ee6fbca0e142ea8ea89d7af0224a02645bab
+  - commit:
+  - 使用cmake的ExternalProject功能添加第三方依赖库:libevent,gtest.
+
+* Thu Jul 11  2019 lijia lijia01@iie.ac.cn 
+  - hash: dec8ec060968b07f41cfff1f4d796e6289c124f5
+  - commit:
+  - 增加submodule/benchmark_pcap, submodule/sapp_module_test.
+
+* Fri Jul 5  2019 lijia lijia01@iie.ac.cn 
+  - hash: 44602c687abf4bdf84644f9438e2ea792c04818c
+  - commit:
+  - 增加line_protocol协议输出统计信息到telegraf.
+
+* Wed Jul 3  2019 yangwei yangwei@iie.ac.cn 
+  - hash: f7ded172d2adf8178aacb0d08609934d9f3389b3
+  - commit:
+  - 更新gitignore
+
+* Fri Jun 28  2019 杨威 yangwei@iie.ac.cn 
+  - hash: 28010f0261e74732d143e182393dfce9d6bc0530
+  - commit:
+  - Update .gitlab  -ci.yml
+* Thu Jun 27  2019 杨威 yangwei@iie.ac.cn 
+  - hash: fc75422f3d4327ed429b1e72d049e34b8f323a2c
+  - commit:
+  - Update Dockerfile
+* Thu Jun 27  2019 杨威 yangwei@iie.ac.cn 
+  - hash: ce013b47ee2381d6451bb612eeb8406afaa1d0b3
+  - commit:
+  - Update Dockerfile
+* Thu Jun 27  2019 杨威 yangwei@iie.ac.cn 
+  - hash: 561c8e5e65887df450cf39865eec82c4e0e49101
+  - commit:
+  - Update .gitlab  -ci.yml
+* Thu Jun 27  2019 杨威 yangwei@iie.ac.cn 
+  - hash: 886313510613996b260d13877ea46b6e53cae918
+  - commit:
+  - Update autorelease.sh
+* Thu Jun 27  2019 杨威 yangwei@iie.ac.cn 
+  - hash: a3c2786b020b931c5a96e45169bff3887dd7a3b5
+  - commit:
+  - Update .gitlab  -ci.yml
+* Thu Jun 27  2019 杨威 yangwei@iie.ac.cn 
+  - hash: a1e91fdc3eb1c7bc2256127d56169752168539fa
+  - commit:
+  - Master
+
+* Thu Jun 27  2019 杨威 yangwei@iie.ac.cn 
+  - hash: 3b0f2122e5afee7f500857c78dc90aa57e022383
+  - commit:
+  - Add autorelease.sh
+* Thu Jun 27  2019 杨威 yangwei@iie.ac.cn 
+  - hash: a5909823016d0a326300273773f2713080c6f8f8
+  - commit:
+  - Add Dockerfile
+* Thu Jun 27  2019 杨威 yangwei@iie.ac.cn 
+  - hash: cacded43c78b70dbc62c10434259723dacc0d15f
+  - commit:
+  - Add .gitlab  -ci.yml
+* Sun Jun 16  2019 lijia lijia01@iie.ac.cn 
+  - hash: d14f20c62ff3838dfde60da07ae0019df0e9c5ad
+  - commit:
+  - 支持用配置文件指定fs2输出格式, default和json两种模式.
+
+* Thu Jun 6  2019 lijia lijia01@iie.ac.cn 
+  - hash: e0fc7d67d95a9d6f2a59bbf648b4a7ba38a85ad7
+  - commit:
+  - 1.增加废弃conflist_business.inf等文件的自动检测及错误提示;2.增加conflist.inf自动生成脚本.
+
+* Wed Jun 5  2019 lijia lijia01@iie.ac.cn 
+  - hash: cb2152f52cdeb84c99d5ec53e018e5ac4a6fc301
+  - commit:
+  - 1  -增加定时器, 基于Libevent实现, 依赖库静态链接到sapp;
+  - 2  -增加平台运行状态;
+  - 3  -插件配置文件合并, 避免经常打开多个.inf的情况,
+  -   将原来的三个:conflist_platform.inf, conflist_protocol.inf, conflist_business.inf改为一个conflist.inf，
+
+* Fri May 31  2019 李佳 lijia01@iie.ac.cn 
+  - hash: abb4b9f9cf08b728a836234eb8d567bcdbe8def0
+  - commit:
+  - 1.修复conflist, inf文件中有空格而导致的读取错误.
+
+* Fri May 31  2019 lijia lijia01@iie.ac.cn 
+  - hash: 118a875c4cf320b1f1b2b223f5d0f60412500838
+  - commit:
+  - 1.修复conflist, inf文件中有空格而导致的读取错误.
+
+* Wed May 29  2019 lijia lijia01@iie.ac.cn 
+  - hash: 49996782de45cb78fcdc824c506a99f4d3b7126a
+  - commit:
+  - 1  -修复cmake 静态链接编译错误; 2  -修复ipv6串联发包bug;
+
+* Tue May 28  2019 lijia lijia01@iie.ac.cn 
+  - hash: c4158eeee6b4a9f9198ee79369e3f24173c4fbb7
+  - commit:
+  - 1  -静态链接模式下, pcap, marsio可以共存;
+  - 2  -修复mariso驱动串联模式, 主动发送数据包bug;
+  - 3  -增加命令行参数  -  -dumpfile  -file.
+
+* Mon May 27  2019 lijia lijia01@iie.ac.cn 
+  - hash: ab2ca4f32203cf5d00d6810a220316fd74ce1007
+  - commit:
+  - 测试串联模式收发包、回注功能, 修复一些问题.
+
+* Fri May 24  2019 lijia lijia01@iie.ac.cn 
+  - hash: c708b41686b6026ec0cc4096bd5ef5f3eb5cff3e
+  - commit:
+  - google test与3.0对比测试, 修复错误.
+
+* Fri May 24  2019 yangwei yangwei@iie.ac.cn 
+  - hash: 6987955ba3566f3856af043132444bfeb04846ca
+  - commit:
+  - 1、更新version.cmake文件，命名规范化，配套更新sapp_main.c中使用的版本宏定义至GIT_VERSION
+  - 2、新增package.cmake用于打包RPM
+  - 3、注释掉CMakeLists中无关的捕包模式，目前仅保留pcap，pag和marsio，其中pcap对应的packet_io一定会编译
+
+* Fri May 24  2019 yangwei yangwei@iie.ac.cn 
+  - hash: 35b6a9ca854efd2d1ee21c7e14080b53a513729d
+  - commit:
+  - 1、增加package.cmake，支持make package打包RPM
+  - 2、修改cmakelist，static_link开关打开的情况下完全静态链接sapp
+
+* Thu May 23  2019 lijia lijia01@iie.ac.cn 
+  - hash: 13882d1563fd7a2dbef8abeca9e04fbd503bc36b
+  - commit:
+  - 1  -修改test插件, 禁止直接引用sapp中的全局变量;
+  - 2  -针对配置文件做错误提示, 防止v3.0和v4.0混用,导致不可预料的结果.
+
+* Thu May 23  2019 yangwei yangwei@iie.ac.cn 
+  - hash: 42369563aaf1331c64651da326bccf066d3ed7b0
+  - commit:
+  - 更新cmakelist，按4.0分支的目录结构修改install
+
+* Thu May 23  2019 lijia lijia01@iie.ac.cn 
+  - hash: 832ff5b34c4e22236919654f9d6183d25f6ba053
+  - commit:
+  - 更新统计计数,配置文件路径,增加错误提示.
+
+* Wed May 22  2019 lijia lijia01@iie.ac.cn 
+  - hash: c1c1a1fe0784a9f3192f679f75575fc1fbb1f065
+  - commit:
+  - 1  -隐藏全局变量;
+  - 2  -重新定义sysinfo.h中各种协议状态值.
+
+* Mon May 20  2019 lijia lijia01@iie.ac.cn 
+  - hash: 7a9cfc9b234c5d7d6c697e6917104e77f1009736
+  - commit:
+  - 1.增加toml解析库到support目录;
+  - 2.增加读取sapp.toml配置文件模块;
+  - 3.修改CMakelists文件, 解决编译问题.
+
+* Fri May 17  2019 lijia lijia01@iie.ac.cn 
+  - hash: a24c12255ef2925beb22d5fb5f29b237a5842946
+  - commit:
+  - sapp update to version 4.0.
+
+* Tue May 7  2019 lijia lijia01@iie.ac.cn 
+  - hash: cbfa143e269631fb95815d8adb6b350efcc310af
+  - commit:
+  - 1.dumpfile模式增加按pcap包时间戳原速读取功能;
+  - 2.修复tcp流超时淘汰后, 配置文件指定按SYN建连接, 后续又来新包而不建流的BUG.
+
+* Tue Apr 23  2019 lijia lijia01@iie.ac.cn 
+  - hash: 26f460ece0573418f0e2742ed34f93b18913e869
+  - commit:
+  - 升级, kill_tcp之后, tcpall插件仍可获取后续流量.
+
+* Fri Mar 15  2019 lijia lijia01@iie.ac.cn 
+  - hash: 5650705a2e58a64d0b83510e988cc2266ae8aa0a
+  - commit:
+  - 1  -修复无法获取SYN_ACK包选项;
+  - 2  -细化对tcp选项结构体的变量描述;
+
+* Thu Mar 14  2019 lijia lijia01@iie.ac.cn 
+  - hash: 81a8d80b8cc08226980a1ca3a065a58a9eac1b5c
+  - commit:
+  - 修复: main.conf中CreatLinkMode设为按SYN建连接, 当有流超时后, 且当前包不是SYN包,仍旧建立连接的BUG.
+
+* Thu Mar 14  2019 lijia lijia01@iie.ac.cn 
+  - hash: 3ec415252b7a540db17f9b570520905b3a2eeac1
+  - commit:
+  - 修改tcpdump_mesa屏幕提示颜色.
+
+* Thu Mar 14  2019 lijia lijia01@iie.ac.cn 
+  - hash: 5c1ad805c04194858761464b6a30d0e6ce6fd7e6
+  - commit:
+  - 修改TCP最大乱序数错误返回值.
+
+* Thu Feb 14  2019 lijia lijia01@iie.ac.cn 
+  - hash: a0352955e6f4f72740dc990de4c06445777442fc
+  - commit:
+  - UDP流可通过MESA_get_stream_opt()  ->MSO_STREAM_CLOSE_REASON选项,获取流结束原因, 超时淘汰or超过最大流表数淘汰.
+
+* Thu Feb 14  2019 lijia lijia01@iie.ac.cn 
+  - hash: 4dec5e34a55df42b624140c8c04a0cebfadf1a75
+  - commit:
+  - UDP流可通过MESA_get_stream_opt()  ->MSO_STREAM_CLOSE_REASON选项,获取流结束原因, 超时淘汰or超过最大流表数淘汰.
+
+* Mon Jan 28  2019 dump2file dump2file@gmail.com 
+  - hash: 3eedc1dd97091da48feabaf67831ed77de263219
+  - commit:
+  - 1、修复包处理延迟日志拼写错误，以及更新时间单位
+
+* Mon Jan 28  2019 dump2file dump2file@gmail.com 
+  - hash: 3724cd48d701f1c056005d406c283a9ab7bf2c6d
+  - commit:
+  - 1、main.conf增加默认配置
+
+* Mon Jan 28  2019 dump2file dump2file@gmail.com 
+  - hash: 36522fc62e72e29ae469c72f7b682fa35342324e
+  - commit:
+  - 1、sysinfo增加对单独设置timeout的流计数
+  - 2、取消初始化时将最大timeout流限制计数赋值的操作
+
+* Mon Jan 28  2019 dump2file dump2file@gmail.com 
+  - hash: a67c349306be4ba5c87d19cbcb3068b5c7fc029c
+  - commit:
+  - 1、main.conf中FS输出增加FS_app_name和FS_send_histogram选项控制是否输出histogram和设置输出的APP_NAME,默认分别为关闭和sapp
+
+* Sun Jan 27  2019 yangwei yangwei@iie.ac.cn 
+  - hash: 83bc243317e3442d5f9b918ae1359b1270fdf9bc
+  - commit:
+  - 1、更新自动版本脚本输出内容
+
+* Sun Jan 27  2019 dump2file dump2file@gmail.com 
+  - hash: 17e535f258382e16cf37e44dfaac0590d721a259
+  - commit:
+  - 1、sysinfo增加对单独设置timeout的流计数
+  - 2、取消初始化时将最大timeout流限制计数赋值的操作
+
+* Sun Jan 27  2019 dump2file dump2file@gmail.com 
+  - hash: f66e91e5fdf65f35fe2470c83985b76304fdc754
+  - commit:
+  - 1、调整cmake编译版本参数
+
+* Sun Jan 27  2019 yangwei yangwei@iie.ac.cn 
+  - hash: 61a179fb86ddd849c6843ac5af43e444c2dd65f2
+  - commit:
+  - 1、调整cmake编译版本参数
+
+* Fri Jan 25  2019 dump2file dump2file@gmail.com 
+  - hash: 164ab05fcac87f9499bdd5be36f75ad38ec7e8c7
+  - commit:
+  - 1、使用g_timestamp_record_sw控制是否输出包处理延迟至fs2
+
+* Thu Jan 24  2019 dump2file dump2file@gmail.com 
+  - hash: 730eea98d54e88b55a0346876ab7631598b59054
+  - commit:
+  - 1、makefile增加自动生成版本号和stream系列头文件md5值
+
+* Thu Jan 24  2019 dump2file dump2file@gmail.com 
+  - hash: 899f7b665d71e6d695f1fd9fe1c6a49b49b0e3ae
+  - commit:
+  - 1、cmake增加对编译头文件md5值的计算并自动生成宏定义
+  - 2、更改cmake  -makefile命名
+
+* Thu Jan 24  2019 dump2file dump2file@gmail.com 
+  - hash: 6a98a954765cf68feb989109753b489760a4745b
+  - commit:
+  - 关闭pkt_runtime_output输出
+  - 包延迟histogram命名增加时间单位
+
+* Thu Jan 24  2019 dump2file dump2file@gmail.com 
+  - hash: 0a18167a712a70a1eb216db318cd20c728778f5b
+  - commit:
+  - 修正：使用clock_gettime计算包延迟，输出单位为ns
+
+* Thu Jan 24  2019 dump2file dump2file@gmail.com 
+  - hash: fd84494d72a8e860a3874c602b27912cd041f3af
+  - commit:
+  - 使用clock_gettime计算包延迟，输出单位为ns
+
+* Thu Jan 24  2019 dump2file dump2file@gmail.com 
+  - hash: 06697315fdb7bfa26b040dab431bc50f00ed73d3
+  - commit:
+  - 1、调整CMAKE文件，在CMAKE_BUILD_TYPE为Debug时，CFLAGS增加DEBUG宏定义
+
+* Wed Jan 23  2019 dump2file dump2file@gmail.com 
+  - hash: 0bd0a96b752103c3b6588cb5730e7c13d613f6d6
+  - commit:
+  - 1、调整g_app_instance_name为全局变量，用于在marsio模式设置instance_name和设置fs2的app_name
+  - 2、调整fs2中histogram的类型为SPEED
+
+* Wed Jan 23  2019 dump2file dump2file@gmail.com 
+  - hash: b06c4c8b1f9ef7d81014fee17e41a30ba9424210
+  - commit:
+  - 1、fs2输出增加每个线程的包处理延迟统计，使用histogram输出
+
+* Tue Jan 22  2019 dump2file dump2file@gmail.com 
+  - hash: 1f0d43e7830059ebd724a4a579efad48bd2f32e9
+  - commit:
+  - 1、调整静态链接inner_plug插件的编译逻辑
+
+* Tue Jan 22  2019 dump2file dump2file@gmail.com 
+  - hash: 73ecdcc9f22c8edda0badfccddf4346abffdf322
+  - commit:
+  - 1、修复USE_DICTATOR开关开启后，CMake文件链接的问题
+
+* Mon Jan 21  2019 yangwei yangwei@iie.ac.cn 
+  - hash: de3200da6972fb0f5918ddce374bcd035a070599
+  - commit:
+  - 1、
+
+* Sat Jan 19  2019 dump2file dump2file@gmail.com 
+  - hash: 47a9ec9a14a0d9bc620df6a55cee13203e159419
+  - commit:
+  - 1、对应多层MAC地址情况，读取vxlan_info时，跳转到最外层进行读取
+
+* Thu Jan 17  2019 dump2file dump2file@gmail.com 
+  - hash: b54a04f5f92b1daa9e448e910adb1977382db6c9
+  - commit:
+  - 1、更新本地捕包文件最大限制为1TB
+  - 2、CMakelist增加tcmalloc和jemalloc的编译开关
+
+* Sun Jan 13  2019 dump2file dump2file@gmail.com 
+  - hash: fd10070960627ec74825e74392a1d7ea61684dfd
+  - commit:
+  - 1、sysinfo新增TCP链接方向记录，记录时机为链接淘汰时，过滤条件为单链接包数>3且字节数>5
+
+* Tue Jan 8  2019 dump2file dump2file@gmail.com 
+  - hash: e61471d9cec87d0c73b2cc144fd2f80044612f66
+  - commit:
+  - 1、自动版本号格式更新，包含sha1值  -分支名  -TAG  -日期
+
+* Tue Jan 8  2019 dump2file dump2file@gmail.com 
+  - hash: a1642833ac064bf679d2ce991042c3d6364b04bf
+  - commit:
+  - 1、增加自动版本号脚本
+  - 2、默认改成静态链接inner_plug中模块
+
+* Tue Jan 8  2019 dump2file dump2file@gmail.com 
+  - hash: 59c1bca36544ea265234bb19339287efbe5a7283
+  - commit:
+  - 适配fs2新特性，Ethernet输出改为FS_STYLE_FIELD，与其他字段统一
+
+* Tue Jan 8  2019 dump2file dump2file@gmail.com 
+  - hash: 226432c31e4b4d980640f63d01bebdb12bcbc1df
+  - commit:
+  - 1、合并串联Cmakelist，针对sapp内置的插件进行管理
+
+* Tue Jan 8  2019 dump2file dump2file@gmail.com 
+  - hash: c716f4f357a581b7fe892739c1a4e99cf900890b
+  - commit:
+  - 1、GTP处理逻辑追加更新，由于出现GTP网关UDP层源目的IP和端口同时发生变化的情况，增加将源目的IP+源目的端口同时重置为0的操作，保证内层流能够汇聚识别
+
+* Tue Jan 8  2019 dump2file dump2file@gmail.com 
+  - hash: 4d6cc9f5a2eae5ceeaac20a92e197c7ac640c106
+  - commit:
+  - 1、GTP处理逻辑追加更新，由于出现GTP网关UDP层源目的IP同时发生变化的情况，增加将源目的IP+源端口同时重置为0的操作，保证内层流能够汇聚识别
+
+* Mon Jan 7  2019 dump2file dump2file@gmail.com 
+  - hash: e87a55c374089e88aad2bd6c0c81a2a30b7e8e10
+  - commit:
+  - 1、GTP处理逻辑更新，由于存在客户端切换导致同一个内层TCP流，GTP外层一侧的IP和Port变化的情况，导致sapp无法讲内侧的流识别为同一个，因此增加在gtp_entry中根据方向重置客户端IP和Port为0的操作，以保证上述情况能够识别为同一个流
+  - 2、代码调整，适配gcc7
+  - 3、cmakelist更新，增加pcap_packet_io.so命名的问题
+
+* Sat Jan 5  2019 yangwei yangwei@iie.ac.cn 
+  - hash: 1949772afa05a89a7d8cde6d7297416137f63cb1
+  - commit:
+  - 修复layer_addr_ntop_r函数中将tmp_buf定义为static类型，导致多线程调用时地址转换错误的bug
+
+* Fri Jan 4  2019 dump2file dump2file@gmail.com 
+  - hash: 29a017f1ba6fc428d7dc13cc70b79212a06dccf3
+  - commit:
+  - deal_gprs_tunnel.c中增加对声明包长和剩余包长的校验，不一致的将视作错包，计算在unknown中
+
+* Fri Jan 4  2019 dump2file dump2file@gmail.com 
+  - hash: 75a4261494fd8dd4e5df9bb31801e05de8e64aa9
+  - commit:
+  - 修复deal_mpls.c中对ipv4头部长度和剩余包长度比对逻辑错误的bug
+
+* Mon Dec 24  2018 dump2file dump2file@gmail.com 
+  - hash: 7eb89751b484831704d747c01975befa2376a1d1
+  - commit:
+  - 1.增强teredo判断逻辑，避免误识别
+
+* Fri Dec 21  2018 dump2file dump2file@gmail.com 
+  - hash: ac91e36f27860ad8995e2eda6c2e96d0ac56e153
+  - commit:
+  - 1.增加静态连接inner_plug目录中模块的选项
+
+* Fri Dec 21  2018 dump2file dump2file@gmail.com 
+  - hash: 404c235d9c31a21434e0900cb170bc0f04c4a0b5
+  - commit:
+  - 1.cmakelist 增加debug选项
+
+* Fri Dec 21  2018 dump2file dump2file@gmail.com 
+  - hash: 8ec0ad1bf0375234414ebeb91fd43780639c6086
+  - commit:
+  - 1.MPLS增加内层内容解析逻辑，识别PW Ethernet Control标识，对于无法识别的下层内容，强行注入eth_entry进行处理，由eth层判断后续内容是否可识别
+  - 2.IPv4内层将ESP和SCTP协议从unknown计数移除
+  - 3.
+
+* Fri Dec 21  2018 dump2file dump2file@gmail.com 
+  - hash: 79c05df8d6a22075fe45eacd6f99b6f627d2dd51
+  - commit:
+  - 1.修复pptp_entry未按实际长度设置addrlen的bug，将造成addr拷贝时读写越界
+  - 2.地址翻转函数addr_reverse_memcpy中增加pptp地址翻转的逻辑
+  - 3.tcp_free_stream函数释放内存后将地址设置为NULL
+  - 4.修复乱序包列表中包含RST重置流时，未设置返回值为DROP导致的read_after_free内存错误，调用堆栈为tcp_deal_data  ->tcp_deal_unorder  ->tcp_change_stream_tonouse
+  - 5.cmakelist支持ASAN编译选项
+
+* Sun Dec 16  2018 dump2file dump2file@gmail.com 
+  - hash: 7217e44d66a0e39e2205c0f321c74e8aa14bde0c
+  - commit:
+  - 1.临时解决手动发送SYN ACK时内存写错的现象，未定位原因
+
+* Mon Dec 10  2018 dump2file dump2file@gmail.com 
+  - hash: 58253f857d9e21db4ce1d2ddf24e2d5d41a1b414
+  - commit:
+  - 修复inject_pkt和kill_tcp_synack时未设置streaminfo至send_handle的user_arg的问题
+
+* Sun Dec 9  2018 dump2file dump2file@gmail.com 
+  - hash: 8443f8b38b380ac4f48c877799c10d3a791a9151
+  - commit:
+  - packet_io,run目录增加gitignore, 忽略.so文件
+
+* Sat Dec 8  2018 dump2file dump2file@gmail.com 
+  - hash: a6439e2d7afcab67c593e4880d5b33396550a6bf
+  - commit:
+  - 1.修复sapp设置reverse_ethernet_addr开关后s2c建流时未同步更新MAC地址的bug
+  - 2.更新test_app_sapp.c，在print_vxlan_info函数增加链接close时的vxinfo输出，用于测试syn包丢失时TCP流单向变双向时mac地址方向的正确性
+
+* Fri Dec 7  2018 yangwei yangwei@iie.ac.cn 
+  - hash: 507b105a1edd4912cbad0d1018cd3530b30b37cd
+  - commit:
+  - UPDATE：
+  - 1.main.conf新增reverse_ethernet_addr开关，默认不跟随流方向翻转MAC地址
+
+* Thu Dec 6  2018 yangwei yangwei@iie.ac.cn 
+  - hash: fb6258ce9626cb660b90b467e6fa39011e32a974
+  - commit:
+  - UPDATE：
+  - 1.sapp更新teredo识别和跳层逻辑
+  - 2.cmakelist更新，规范化install操作
+  - 3.marsio模式下捕包线程命名为sapp_marsio_[id]的形式
+  - 4.plugctl修复插件名称比对时内存读越界的问题
+
+* Wed Dec 5  2018 yangwei yangwei@iie.ac.cn 
+  - hash: 1e3f5b4561f7ead712dfad0cc93d1cf3d56fd947
+  - commit:
+  - UPDATE：
+  - 1.sapp配合tcpdump_mesa支持带auth和indication头部的teredo隧道
+
+* Tue Dec 4  2018 yangwei yangwei@iie.ac.cn 
+  - hash: cc84a01af6a25af9cc54d41c6e9454fa564f5b8b
+  - commit:
+  - UPDATE：
+  - 1.packet_io_marsio增加线程命名，同时调整cmakelist和makefile支持marsio模式
+
+* Fri Nov 30  2018 yangwei yangwei@iie.ac.cn 
+  - hash: 177c80416fc7062002613ed18a1d1e8e01cc9b25
+  - commit:
+  - UPDATE：
+  - 1.main.conf新增FS_cycle参数，设置输出fs2的周期
+
+* Thu Nov 22  2018 liuxueli liuxueli@iie.ac.cn 
+  - hash: cdcb2ff4bcc90a0fe6c38a1f48bd7d4db3a98237
+  - commit:
+  - 支持sapp打rpm包
+
+* Thu Nov 22  2018 yangwei yangwei@iie.ac.cn 
+  - hash: 448c2ed33f3f54ac263d80ff33e706a6ef10ecdb
+  - commit:
+  - UPDATE：
+  - 1.默认开启支持CYCLE_PKT_DUMP
+  - 2.修复cycle_pkt_dump_through_write_offset中greedy_seek_flag开关==0时，MAC包计算后bpf_filter参数未赋值的bug
+
+  - TODO：
+  - 1.mpls信息缓存待实现
+  - 2.GTP信息缓存待实现
+  - 3.当前发包构造双向包时，预计算发送buf长度，无法支持MPLS不对称标签发包构造buf时双侧包长不一致的情况，TODO 3
+
+* Wed Nov 21  2018 yangwei yangwei@iie.ac.cn 
+  - hash: 08852e30046edabf8b2d9049c923ebb3d8507ac4
+  - commit:
+  - UPDATE：
+  - 1.main.conf开关send_fake_pkt_by_gdev改为send_fake_pkt_mode，支持按协议栈三层发包，二层单网关发包，二层多网关发包和GDEV注入发包四种模式
+  - 2.二层路由发包绑定MAC地址实现完成，多网关发包时支持从配置文件加载映射关系，提供parse_send_route_conf函数支持外部插件调用更新映射表，默认读取send_route.conf
+  - 3.GDEV注入支持从配置文件加载映射关系，提供parse_send_gdev_ip_conf函数支持外部插件更新映射表，默认读取send_gdev.conf
+
+  - TODO：
+  - 1.mpls信息缓存待实现
+  - 2.GTP信息缓存待实现
+  - 3.当前发包构造双向包时，预计算发送buf长度，无法支持MPLS不对称标签发包构造buf时双侧包长不一致的情况，TODO 3
+
+* Wed Nov 21  2018 yangwei yangwei@iie.ac.cn 
+  - hash: d199180972f0889acde829096773a7d2b5cb1981
+  - commit:
+  - UPDATE：
+  - 1.main.conf开关send_fake_pkt_by_gdev改为send_fake_pkt_mode，支持按协议栈三层发包，二层单网关发包，二层多网关发包和GDEV注入发包四种模式
+  - 2.二层路由发包绑定MAC地址实现完成，多网关发包时支持从配置文件加载映射关系，提供parse_send_route_conf函数支持外部插件调用更新映射表，默认读取send_route.conf
+  - 3.GDEV注入支持从配置文件加载映射关系，提供parse_send_gdev_ip_conf函数支持外部插件更新映射表，默认读取send_gdev.conf
+
+  - TODO：
+  - 1.mpls信息缓存待实现
+  - 2.GTP信息缓存待实现
+  - 3.当前发包构造双向包时，预计算发送buf长度，无法支持MPLS不对称标签发包构造buf时双侧包长不一致的情况，TODO 3
+
+* Fri Nov 16  2018 lijia lijia01@iie.ac.cn 
+  - hash: 4565fddb458aad94132ea24972832027f52ad12a
+  - commit:
+  - 修复MPLS update_opposite_addr BUG.
+
+* Fri Nov 16  2018 lijia lijia01@iie.ac.cn 
+  - hash: 3a22eda3c562f52a5822486b1039ed221a2a1c05
+  - commit:
+  - 修复tcpdump_mesa跳转内层IP, 对畸形数据包的处理BUG.
+
+* Fri Nov 16  2018 lijia lijia01@iie.ac.cn 
+  - hash: 3f457cf5b34a2a955d18ba5c8ad4db076aead2c0
+  - commit:
+  - 修复tcpdump_mesa内层IP跳转BUG.
+
+* Fri Nov 16  2018 lijia lijia01@iie.ac.cn 
+  - hash: 24a972f2e019e5d38004c40059eca414797ed059
+  - commit:
+  - 完善按最内层数据包过滤逻辑.
+
+* Fri Nov 16  2018 yangwei yangwei@iie.ac.cn 
+  - hash: e2edb98522131c56fda7ef90ada44c02f6f3ca19
+  - commit:
+  - UPDATE：
+  - 1.main.conf新增create_mpls_anyway开关，用于在MPLS处理非对称MPLS标签情况（一侧有一侧没有）
+  - 2.sendpacket.c新增g_mpls_cache_key和g_mpls_info_hash用于缓存二元组MPLS信息，个）mpls_register_addr用于在线程栈上存储二元组地址用于查询hash
+
+  - TODO：
+  - 1.mpls信息缓存待实现
+  - 2.GTP信息缓存待实现
+  - 3.二层路由发包绑定MAC地址待实现
+  - 4.当前发包构造双向包时，预计算发送buf长度，无法支持MPLS不对称标签发包构造buf时双侧包长不一致的情况，TODO 3
+
+* Thu Nov 15  2018 lijia lijia01@iie.ac.cn 
+  - hash: d7e2c63f9281dd32a994d33d3c0dcc156540f9db
+  - commit:
+  - 增加错误包sysinflo.log计数, 并记录日志.
+
+* Thu Nov 15  2018 lijia lijia01@iie.ac.cn 
+  - hash: 0cc7fa652a7e2fd4a54c6b329c64207d0a88d31d
+  - commit:
+  - 修改cycle_pkt_dump, 支持tcpdump_mesa过滤最内层ip,port,便于debug.
+
+* Tue Nov 13  2018 yangwei yangwei@iie.ac.cn 
+  - hash: 7df582d69209e1cbe3ef5c17f7c796e0fcd38dd4
+  - commit:
+  - 1.更新GTP发包逻辑，对侧无包时查询GTP信息缓存，此种情况无法支持带SEQ的情况（TODO：单独开发插件缓存GTP信息）
+
+* Tue Nov 13  2018 yangwei yangwei@iie.ac.cn 
+  - hash: 2771cc4626300c3efb6717a74662887f37906d89
+  - commit:
+  - 1.更新GTP地址处理逻辑，实现GTP地址的双向存储和发包（TODO：后续支持带SEQ的GTP隧道）
+
+* Mon Nov 12  2018 lijia lijia01@iie.ac.cn 
+  - hash: 38383fb6791f7dd27788d276bdbf14d46c2887f1
+  - commit:
+  - 更新GTP处理逻辑, 增加对端地址(TEID,SEQ等)更新逻辑。
+
+* Mon Nov 12  2018 yangwei yangwei@iie.ac.cn 
+  - hash: e13480aee812aed6a2660cf14c55b0eb314199cd
+  - commit:
+  - 1.更新GTP地址处理逻辑，未完成
+
+* Fri Nov 9  2018 yangwei yangwei@iie.ac.cn 
+  - hash: fa8a73da6a456b015dab67931cb5efd09144efa2
+  - commit:
+  - 1.更新GTP处理逻辑，增加对带seq消息的处理并保存在地址中
+
+* Fri Nov 9  2018 yangwei yangwei@iie.ac.cn 
+  - hash: 6a191a32c48961d7933b9034700b4f0c5b4c7b11
+  - commit:
+  - 1.移除run目录下的log文件
+
+* Fri Nov 9  2018 yangwei yangwei@iie.ac.cn 
+  - hash: ae53f77dd27f580d282eb2fa1d61155f907b9c43
+  - commit:
+  - 1.整理TODO，按重要程度分级
+
+* Thu Nov 8  2018 yangwei yangwei@iie.ac.cn 
+  - hash: 3eb2f540a26d16bcba085f8ff9218a73b787dd88
+  - commit:
+  - 1.main.conf新增send_fake_pkt_gdev_sport,用于指定注入发包时的源端口
+  - 2.更新packet_io_send_fake_pkt_gdev函数逻辑，正确的计算偏移填写发包内容时的data和datalen
+  - 3.更新packet_io_send_fake_pkt，对于注入发包，直接调用packet_io_send_fake_pkt_by_gdev
+  - 4.MESA_send_handle新增raw_udp_fd用于从udp负载开始发送注入包
+
+* Thu Nov 8  2018 yangwei yangwei@iie.ac.cn 
+  - hash: da54112c628e2a339fdcee533f8ecabe7fa598cd
+  - commit:
+  - 1.更新gprs tunnel协议识别逻辑，使用identify_gtp函数，取代原有的仅识别端口的逻辑
+
+* Wed Nov 7  2018 dump2file dump2file@gmail.com 
+  - hash: 229eb61a06a3b900e5ed1f76c87c3b93077e62c2
+  - commit:
+  - 1.修复stream_addr_ntop不识别GTP层地址导致返回报错的问题
+
+* Wed Nov 7  2018 dump2file dump2file@gmail.com 
+  - hash: faf647da1351e39dc9f18023a03b13f1a2635ec1
+  - commit:
+  - 1.更新dealpkt目录下的Makefile，保证兼容make命令
+  - 2.移除stream_addr_inet.c:23行无用代码
+  - 3.更新stream_base.h中大小头宏定义
+
+* Tue Nov 6  2018 dump2file dump2file@gmail.com 
+  - hash: d4b51724e23bff593151461c7ba52a24d3334e57
+  - commit:
+  - 1.适配cmake 3.0以上版本，更新CMakeList
+  - 2.MPLS处理逻辑更新，将多个MPLS标签合并成一层layer_addr,目前支持的最大标签层数是4层，超过4层丢弃
+  - 3.增加GTP协议处理entry，目前仅支持在UDP协议上按端口识别，仅支持T  -PDU消息，GTP识别的地址方向根据上层的UDP方向确定，后续进行发包时需要注意
+
+* Mon Nov 5  2018 lijia lijia01@iie.ac.cn 
+  - hash: fad959665c247b66fdc187fb2ed1e1bde6a54e4e
+  - commit:
+  - 修改标准makefile编译错误
+
+* Mon Nov 5  2018 yangwei yangwei@iie.ac.cn 
+  - hash: 8a0efc5d9926afdc5b2688c995b3c3a703c1275c
+  - commit:
+  - 1.适配cmake，pcap模式编译通过
+  - 2.TODO:PAG和MARSIO模式测试
+
+* Mon Nov 5  2018 lijia lijia01@iie.ac.cn 
+  - hash: 96c35b45a1d3ce9ccfc04df1b4105423a2371800
+  - commit:
+  - 1)修改mpls_hdr头部定义错误;
+  - 2)解析多层嵌套MPLS数据包.
+
+* Fri Nov 2  2018 lijia lijia01@iie.ac.cn 
+  - hash: e8dd50cb222dfdc1aa4d9e1b1cef77ae32c591ff
+  - commit:
+  - rename source file.
+
+* Fri Nov 2  2018 lijia lijia01@iie.ac.cn 
+  - hash: 19e878f155820780bef136f878f6b380cc92517c
+  - commit:
+  - 1)修改mpls_hdr头部定义错误;
+  - 2)解析多层嵌套MPLS数据包.
+
+* Thu Oct 25  2018 lijia lijia01@iie.ac.cn 
+  - hash: 169cf88ebd93f07244b929a576bf9b35f4ea3d6e
+  - commit:
+  - for pangu develop parallen version
+
+* Thu Oct 25  2018 lijia lijia01@iie.ac.cn 
+  - hash: 76acb369882087188f4fc08018ba59d9faa15827
+  - commit:
+  - sapp_develop_ntc_parallel
+
+* Thu Oct 25  2018 lijia lijia01@iie.ac.cn 
+  - hash: efa070923d8398b49f41acda82b839d11eb75230
+  - commit:
+  - add new branch for pangu ntc.
+

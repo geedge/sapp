@@ -6,6 +6,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include/public)
 include_directories(${CMAKE_SOURCE_DIR}/include/support)
 include_directories(${MESA_SDK_PREFIX}/include)
 include_directories(${MESA_SDK_PREFIX}/include/MESA)
+include_directories(${CMAKE_SOURCE_DIR}/src/support/breakpad_mini/inc/)
 
 
 if(CAPTURE_MODE MATCHES "MARSIO")

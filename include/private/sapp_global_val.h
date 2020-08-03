@@ -39,7 +39,12 @@ typedef struct{
 }sapp_config_tools_pktdump_t;
 
 typedef struct{
+	int signal;
+}sapp_config_tools_signal_handler_t;
+
+typedef struct{
 	sapp_config_tools_pktdump_t pkt_dump;
+	sapp_config_tools_signal_handler_t signal_handler;
 }sapp_config_tools_t;
 
 
@@ -219,6 +224,7 @@ typedef struct{
 	int packet_io_cap_level; 
 	sapp_gval_individual_fixed_fs_t field_stat2_para;
 	pthread_t pkt_process_tid[SAPP_MAX_THREADS];
+	void *breakpad;
 }sapp_gval_individual_fixed_t;
 
 typedef struct{
