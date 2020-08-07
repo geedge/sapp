@@ -675,6 +675,8 @@ printf("###### %s timeout is %d, remain %lld, can't be free!\n", printaddr(&tmps
 #if IKNOW_ENABLE
 	packet_io_status_stream_update(pstream->threadnum, pstream->type, pstream->stream_state, 1);	
 #endif
+
+	pindex->stream.global_stream_id = get_global_stream_id(pstream->threadnum);
 }
 
 
@@ -700,7 +702,7 @@ struct streamindex *malloc_and_copy_streamindex(int threadnum, struct streaminde
 	pindex->stream.stream_carry_up_layer_tunnel_type = 0;
 	pindex->stream.stream_low_layer_tunnel_type = 0;
 
-	pindex->stream.global_stream_id = get_global_stream_id(threadnum);
+	//pindex->stream.global_stream_id = get_global_stream_id(threadnum);//移动到streamaddlist,四元组重用时不会被调用.
 	
 	return pindex;
 	

@@ -59,6 +59,8 @@ dictator_enable=1
     syn_mandatory=1
     reorder_pkt_max=5
     analyse_option_enabled=1
+    tuple4_reuse_time_interval=30
+    
         [stream.tcp.inject]
         link_mss=1460
 	  
