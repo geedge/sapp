@@ -578,10 +578,22 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"CPU", (char *)"send_only_threads_max", (int *)&pconfig->cpu.send_only_threads_max_num, 0);
 
 	pconfig->cpu.bind_mask_array_num = SAPP_MAX_THREADS;
-	tomlc99_wrap_load_long_array(default_config_file, (char *)"CPU", (char *)"bind_mask", pconfig->cpu.bind_mask_array, &pconfig->cpu.bind_mask_array_num);
 
-	/*******************************  MEM *********************************/
-	tomlc99_wrap_load_int_def(default_config_file, (char *)"MEM", (char *)"dictator_enable", (int *)&pconfig->mem.dictator_enable, 1);
+	tomlc99_wrap_load_long_array(default_config_file, (char *)"CPU", (char *)"bind_mask", pconfig->cpu.bind_mask_array, &pconfig->cpu.bind_mask_array_num);
+	int tmp_bind_mask[SAPP_MAX_THREADS];
+	ret = MESA_load_profile_uint_range(
+		default_config_file, (char *)"CPU", (char *)"bind_mask",
+		SAPP_MAX_THREADS, (unsigned int *)tmp_bind_mask);
+	if(ret > 0)
+	{
+		pconfig->cpu.bind_mask_array_num = ret;
+		for (int i = 0; i < ret; i++)
+		{
+			pconfig->cpu.bind_mask_array[i] = (long)tmp_bind_mask[i];
+		}
+	}
+		/*******************************  MEM *********************************/
+		tomlc99_wrap_load_int_def(default_config_file, (char *)"MEM", (char *)"dictator_enable", (int *)&pconfig->mem.dictator_enable, 1);
 	
 	/*******************************  PACKET_IO ******************************/
 	/*******************************  packet_io.feature ******************************/
