@@ -1,7 +1,7 @@
 #ifndef _MESA_ATOMIC_H_
 #define _MESA_ATOMIC_H_
 
-#ifdef __x86_64__
+#if defined(__x86_64__) || defined(__aarch64__)
 
 #if(__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__ >= 411)
 typedef unsigned long MESA_ATOMIC_T;
