@@ -27,6 +27,8 @@ elseif(ENABLE_SANITIZE_THREAD)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
 endif()
 
+LINK_DIRECTORIES(/opt/MESA/lib)
+
 include_directories(${PROJECT_SOURCE_DIR}/inc/)
 include_directories(/opt/MESA/include/)
 include_directories(/opt/MESA/include/MESA)

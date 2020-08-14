@@ -532,7 +532,7 @@ static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 		return;
 	}
 
-	if(pktdump_cfg->bpf_filter[0] != '\0'){
+	if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
 		if(g_packet_io_cap_level != (enum addr_type_t)CAP_LEVEL_MAC){
 			if(0 == bpf_filter(G_PKT_DUMP_BPF_FILTER[thread_seq].bf_insns, 
 						    (const unsigned char *)p_raw_pkt->raw_pkt_data-14, 
@@ -1245,7 +1245,7 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 	if(PKT_DUMP_LOCAL_FILE == G_PKT_DUMP_MODE){
 		cycle_pkt_dump_set_thread_num(g_packet_io_thread_num);
 
-		if(pktdump_cfg->bpf_filter[0] != '\0'){
+		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
 			for(i = 0; i < g_packet_io_thread_num; i++){
 				phony_pcap_handle[i] = pcap_open_dead(DLT_EN10MB, 65535);
 				if(NULL == phony_pcap_handle[i]){
@@ -1253,7 +1253,7 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 					sapp_log(30, 1, 1, "pkt_dump_bpf_filter is not enable!\n");
 					return -1;
 				}		
-				if(pcap_compile(phony_pcap_handle[i], &G_PKT_DUMP_BPF_FILTER[i], pktdump_cfg->bpf_filter, 100, 0) < 0){                
+				if(pcap_compile(phony_pcap_handle[i], &G_PKT_DUMP_BPF_FILTER[i], G_PKT_DUMP_FILTER_STR, 100, 0) < 0){                
 					sapp_log(30, 1, 1, "Compile pcap filter '%s' error:%s\n", pktdump_cfg->bpf_filter, pcap_geterr(phony_pcap_handle[i]));                
 					return -1;        
 				}		
