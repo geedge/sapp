@@ -80,7 +80,7 @@ enum send_packet_type{
 };
 
 enum send_fake_packet_mode{
-	SEND_PKT_MODE_STACK_3_LAYER			= 0, /* 发送数据模式，协议栈三层发包 */
+	SEND_PKT_MODE_STACK_3_LAYER			= 0, /* 发送数据模式，协议栈三层发包, 并联模式的默认方式 */
     SEND_PKT_MODE_STACK_2_LAYER_1_ROUTE					= 1, /* 发送数据模式，协议栈二层发包，单一目的路由*/
 	SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE					= 2, /* 发送数据模式，协议栈二层发包，多个目的路由*/
 	SEND_PKT_MODE_GDEV			= 3, /* 发送数据模式， gdev注入 */

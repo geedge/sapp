@@ -127,7 +127,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 
 			case ETHERTYPE_VLAN:
 				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-				if(sapp_global_single.treat_vlan_as_mac_in_mac_sw){
+				if(sapp_global_val->config.protocol_feature.treat_vlan_as_mac_in_mac_enabled){
 					ret = mac_in_mac_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
 				}else{
 					ret = vlan_8021q_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);

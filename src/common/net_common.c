@@ -435,7 +435,7 @@ static int __common_eth_type_dispatch(UINT16 eth_type, const char *next_layer_da
 			if(ADDR_TYPE_VLAN == expect_layer_type){
 				break;
 			}else{
-				if(sapp_global_single.treat_vlan_as_mac_in_mac_sw){
+				if(sapp_global_val->config.protocol_feature.treat_vlan_as_mac_in_mac_enabled){
 					skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MAC, expect_layer_type);
 				}else{
 					skip_len = vlan8021q_jump_to_layer(next_layer_data, ADDR_TYPE_VLAN, expect_layer_type);
@@ -627,7 +627,7 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 			ret = arp_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
 		break;
 		case ADDR_TYPE_VLAN:
-			if(sapp_global_single.treat_vlan_as_mac_in_mac_sw){
+			if(sapp_global_val->config.protocol_feature.treat_vlan_as_mac_in_mac_enabled){
 				ret = mac_in_mac_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
 			}else{
 				ret = vlan8021q_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);

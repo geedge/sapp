@@ -77,7 +77,7 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 
 /* 	
 	获取本层流在原始包中对应的头部地址,
-	假设本层流类型为TCP, 调用此函数后, 得到原始包中对应的TCP头部地址.
+	注意: 如果本层流类型为TCP或UDP, 调用此函数后, 得到原始包中对应的承载本层传输层的IP头部地址.
 */
 const void *get_this_layer_header(const struct streaminfo *pstream);
 
