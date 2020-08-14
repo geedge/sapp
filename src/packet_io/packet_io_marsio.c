@@ -4,7 +4,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
-
+#include <assert.h>
 
 /*
 	netconnection_mode:
@@ -284,9 +284,14 @@ int marsio_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 
 	///ehdr->ether_type = ntohs(ETHERTYPE_IP);/* 底层设为ethernet */
 
-	//TODO, 在双网卡透明模式(transparent)下, 根据dir选择up or down device发出.
-	
-	ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[0].dl_io_param, thread_num);
+	//在双网卡透明模式(transparent)下, 根据dir选择up or down device发出.
+	if(NET_CONN_SERIAL_2CARD == g_marsio4_topology_mode){
+		assert((dir >= 0) && (dir <= 1));
+		ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[dir].dl_io_param, thread_num);
+	}else{
+		/* 并联和inline device模式都是一块卡, 默认都从0号端口发出 */
+		ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[0].dl_io_param, thread_num);
+	}
 	
 	return ret;
 }
@@ -569,8 +574,7 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 		}
 	}else if(NET_CONN_SERIAL_2CARD == g_marsio4_topology_mode){
 		for(i = 0; i < g_mr4_device_num; i++){
-			/* 双网卡串联模式下, 为了防止极端特殊情况下, 只有两个主机在通信, syn->syn/ack->ack, 这种单包模式, 没有第一个包就不会有后续的包, 一次只能取一个包 */
-			rcv_res = marsio_recv_burst(g_mr4_dev_up_handle_set[i], tid, rx_buff, 1);
+			rcv_res = marsio_recv_burst(g_mr4_dev_up_handle_set[i], tid, rx_buff, marsio4_burst_process_pkt_num);
 			if(rcv_res > 0){
 				//g_SysInputInfo[tid][PKT_MARSIO_RCV]+=(unsigned long long)rcv_res;
 				for(j = 0; j < rcv_res; j++){
@@ -587,7 +591,7 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 				}
 				pkt_num += rcv_res;
 			}
-			rcv_res = marsio_recv_burst(g_mr4_dev_down_handle_set[i], tid, rx_buff, 1);
+			rcv_res = marsio_recv_burst(g_mr4_dev_down_handle_set[i], tid, rx_buff, marsio4_burst_process_pkt_num);
 			if(rcv_res > 0){
 				//g_SysInputInfo[tid][PKT_MARSIO_RCV]+=(unsigned long long)rcv_res;
 				for(j = 0; j < rcv_res; j++){
@@ -754,12 +758,12 @@ int marsio_dl_io_init(int argc, char *argv[])
 
 	if(NET_CONN_SERIAL_GDEV == g_marsio4_topology_mode){
 		if(g_mr4_device_num != 1){
-			printf("\033[1;31;40m[Error] in gdev mode, capture device num is %d!\033[0m\n", g_mr4_device_num);			
+			printf("\033[1;31;40m[Error] in inline mode, capture device num is %d!\033[0m\n", g_mr4_device_num);			
 			return -1;
 		}
 	}else if(NET_CONN_SERIAL_2CARD == g_marsio4_topology_mode){
-		if(g_mr4_device_num != 2){
-			printf("\033[1;31;40m[Error] in gdev mode, capture device num is %d!\033[0m\n", g_mr4_device_num);			
+		if(g_mr4_device_num != 1){
+			printf("\033[1;31;40m[Error] in transparent mode, capture device num is %d!\033[0m\n", g_mr4_device_num);			
 			return -1;
 		}
 	}

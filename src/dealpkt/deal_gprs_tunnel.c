@@ -135,6 +135,29 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
 }
 
 
+/*
+	gprs头部根据标志位的不同, 长度也不同, 不能直接用sizeof(struct gtp_hdr)获取长度.
+	
+*/
+static int get_gprs_hdr_len(const struct gtp_hdr *gtph)
+{
+	int base_len = sizeof(struct gtp_hdr);
+
+	if(gtph->flags & GTP_HDR_FLAG_NEXT_EXT_HDR){
+		base_len += 1;
+	}
+
+	if(gtph->flags & GTP_HDR_FLAG_SEQ_NUM){
+		base_len += 4;
+	}
+
+	if(gtph->flags & GTP_HDR_FLAG_N_PDU){
+		base_len += 1;
+	}
+
+	return base_len;
+}
+
 static int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned int payload_len)
 {
     if (payload_len >= sizeof(struct gtp_hdr))
@@ -163,7 +186,7 @@ static int identify_gtp(const struct streaminfo *pstream,const char *payload, un
             if ((gtp_version == 0) || (gtp_version == 1) || (gtp_version == 2)) {
                 unsigned short message_len = ntohs(gtp->len);
 
-                if (message_len == (payload_len - sizeof(struct gtp_hdr))) {
+                if (message_len == (payload_len - get_gprs_hdr_len(gtp))) {
                     return 1;
                 }
             }
