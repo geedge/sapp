@@ -60,6 +60,9 @@ dictator_enable=1
     reorder_pkt_max=5
     analyse_option_enabled=1
     tuple4_reuse_time_interval=30
+
+    meaningful_statistics_minimum_pkt=3
+    meaningful_statistics_minimum_byte=5
     
         [stream.tcp.inject]
         link_mss=1460

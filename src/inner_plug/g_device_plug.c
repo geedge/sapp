@@ -27,7 +27,6 @@ extern int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * s
 #ifdef GIT_VERSION
  __attribute__((__used__)) const char *g_device_plug_git_ver = GIT_VERSION;
 #endif
-extern const char *sapp_git_ver;
 
 #define MAX_GDEV_STAT_LOG_NUM	(64)
 
@@ -720,20 +719,13 @@ unsigned char vxlan_id_map_to_service_id(int vxlan_id)
 int gdev_keepalive_plug_init(void)
 {
 	char tmp_ip_buf[16];
+	char deploy_mode_string[32];
+	int opt_len;
 	int i;
 
 	gdev_kp_log_handle = MESA_create_runtime_log_handle("./log/gdev_keeplive.log", 10);
 
 	MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]", "g_device_plug version: %s\n", g_device_plug_git_ver);	
-
-	if(strcasecmp(sapp_git_ver, g_device_plug_git_ver) != 0){
-		/* TODO, 
-			插件直接读取sapp的内部变量g_topology_mode, 如果改了结构体, 插件和sapp内存结构排列就不一致了, 此处强制校验一下版本!
-		   将gdev_plug改成.a集成到sapp内部, 不再作为一个插件.so存在, 通过配置文件控制是否加载保活插件 
-		*/
-		MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]", "g_device_plug version is different with sapp version:%s\n", sapp_git_ver);
-		return -1;
-	}
 
 
 #if IOMODE_MARSIO	
@@ -745,9 +737,15 @@ int gdev_keepalive_plug_init(void)
 
 	assert(sizeof(gdev_keepalive_status_t) % 64 == 0);
 
-	if(g_topology_mode != NET_CONN_SERIAL_GDEV){ /* 非G串联模式 */
+	opt_len = sizeof(deploy_mode_string);
+	if(sapp_get_platform_opt(SPO_DEPLOYMENT_MODE_STR, (void *)deploy_mode_string, &opt_len) < 0){
 		MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]", 
-								"In non-gdev mode, can't load gdev_keepalive.so, sapp mode:0x%x, expect:0x%x\n",g_topology_mode,NET_CONN_SERIAL_GDEV);
+								"can't get sapp deployment mode!\n");	
+		return -1;
+	}
+
+	if(strncasecmp(deploy_mode_string, "inline", strlen("inline")) != 0){ /* 非G串联模式 */
+		MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]", "not inline mode, can't load gdev_keepalive.so\n");
 		return -1;
 	}
 

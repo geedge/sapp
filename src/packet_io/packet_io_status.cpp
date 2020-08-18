@@ -302,7 +302,10 @@ void sysinfo_output(void)
 
 	fprintf(fp,"#################################################################\n");
 
-	fprintf(fp,"%-10s %12s %12s\n","TCP_LINK", "total_link", "link/s");
+	fprintf(fp, "These statistics meet the conditions: (total pkt num > %d and total byte > %d)\n", 
+				sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_pkt, 
+				sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_byte);
+	fprintf(fp,"%-10s %12s %12s\n","TCP_LINK", "total_link", "link_del/s");
 	//fprintf(fp,"%-10s %12llu %12llu\n", "TCP_NEW", cur_count[SYS_TCP_LINK_NEW],cur_count[SYS_TCP_LINK_NEW] - sysinfo_old[SYS_TCP_LINK_NEW]);
 	//fprintf(fp,"%-10s %12llu %12llu\n", "TCP_DATA", cur_count[SYS_TCP_LINK_DATA],cur_count[SYS_TCP_LINK_DATA] - sysinfo_old[SYS_TCP_LINK_DATA]);
 	///fprintf(fp,"%-10s %12llu %12llu\n", "TCP_DEL", cur_count[SYS_TCP_LINK_DEL],cur_count[SYS_TCP_LINK_DEL] - sysinfo_old[SYS_TCP_LINK_DEL]);

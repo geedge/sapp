@@ -65,6 +65,8 @@ typedef struct{
 	int syn_mandatory;
 	int analyse_option_enabled;
 	int tuple4_reuse_time_interval;
+	int meaningful_statistics_minimum_pkt;
+	int meaningful_statistics_minimum_byte;
 	sapp_config_stream_tcp_inject_t inject;
 }sapp_config_stream_tcp_t;
 

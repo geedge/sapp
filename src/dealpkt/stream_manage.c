@@ -1905,8 +1905,8 @@ void hash_del_stream(struct streamindex *pindex)
  		   //g_SysInputInfo[threadnum][SYS_TCP_LINK_DEL]++;
  		   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DEL]++;
  		   
- 		   if(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum >= 3
- 		    && ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes >= 5)
+ 		   if(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum >= sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_pkt
+ 		    && ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes >= sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_byte)
            {
                if(ptmp->dir == DIR_DOUBLE)
                {
