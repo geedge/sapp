@@ -17,3 +17,4 @@ GPATH
 GRTAGS
 GTAGS
 cmake-build*
+/src/support/breakpad_mini/cmake/changelog.txt

@@ -2331,7 +2331,7 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 	    send_handle->user_arg = (void *)stream;
     //}
 
-	if(sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_GDEV){ /* gdev注入模式时预留底层封装vxlan包的空间, 避免再二次copy */
+	if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){ /* gdev注入模式时预留底层封装vxlan包的空间, 避免再二次copy */
 		reserved_hdr_len += sizeof(vxlan_header_t);
 	}
 
@@ -2454,7 +2454,8 @@ int MESA_kill_tcp_remedy(struct streaminfo *stream, const void *ext_raw_pkt)
 	struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
 	int last_send_time = g_CurrentTime % 255;
 
-	if((sapp_global_single.kill_tcp_with_gdev != 0 ) && (stream_pr->gdev_block_timer < last_send_time)){
+	if((sapp_global_val->config.stream.tcp.inject.remedy_kill_tcp_by_inline_device != 0 ) 
+	 && (stream_pr->gdev_block_timer < last_send_time)){
 		/* 防止FD不生效频繁调用c3接口, 对于一个流, 每隔1秒调用一次C3 */
 		stream_pr->gdev_block_timer =  last_send_time;
 		gdev_block_send_rule(stream);
@@ -3131,7 +3132,7 @@ static int send_handle_init(int tot_thread_num)
 			struct sockaddr_in listen_addr;
 			bzero(&listen_addr, sizeof(listen_addr));
 			listen_addr.sin_family = AF_INET;
-			listen_addr.sin_port = htons((unsigned short)sapp_global_single.send_fake_pkt_gdev_sport); /* 根据配置文件填写vxlan源端口 */
+			listen_addr.sin_port = htons((unsigned short)sapp_global_val->config.packet_io.inject_mode_inline_device_sport); /* 根据配置文件填写vxlan源端口 */
 			if(bind(g_send_handle[i].raw_udp_fd, (struct sockaddr *) &listen_addr, sizeof(listen_addr)) != 0){
 				printf("socket bind udp error");
 				return -1;

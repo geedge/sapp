@@ -1787,6 +1787,8 @@ static void  tcp_set_new_data(struct streaminfo *a_tcp,struct  half_tcpstream  *
 
 	pdetail->lostlen=rcv->count_ideal-rcv->count-rcv->totallost;
 	rcv->totallost+=pdetail->lostlen;
+
+	sapp_global_val->mthread_volatile[a_tcp->threadnum]->sys_stat.length[SAPP_STAT_TCP_LOST_PKT] += pdetail->lostlen;		
 	
    	pdetail->datalen=len_new;
 	pdetail->pdata=pdata_new;
@@ -2135,6 +2137,7 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 		{
 			ret=tcp_deal_unorder(pindex,pstream,rcv,snd, !CHECK_ORDER_DATA);
 		}
+		pdetail_pr->has_lost_pkt_flag = 1;
 	}     
 	return ret;
 } 
@@ -2379,9 +2382,9 @@ static inline int tcp_tuple4_reuse(const struct streaminfo *pstream, const struc
 		 }
 	}
 
-	/* lijia 2017-12-06 add */
-	if((1 == is_reuse) && (sapp_global_single.tuple4_reuse_time_interval > 0)){
-		if(pdetail_pr->tcpdetail_public.createtime + sapp_global_single.tuple4_reuse_time_interval >= (UINT64)g_CurrentTime){
+	/* lijia 2017-12-06 add */  
+	if((1 == is_reuse) && (sapp_global_val->config.stream.tcp.tuple4_reuse_time_interval > 0)){
+		if(pdetail_pr->tcpdetail_public.createtime + sapp_global_val->config.stream.tcp.tuple4_reuse_time_interval >= (UINT64)g_CurrentTime){
 			is_reuse = 0; /* 四元组相同, 但序号不同的两个流间隔时间太短, 一般30秒以上, 疑似攻击或逃逸 */
 		}
 	}

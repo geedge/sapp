@@ -322,6 +322,17 @@ static int config_expression_convert(void)
 		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_TUN;
 	}
 
+	if(strncasecmp("sys_route", pconfig->packet_io.inject_pkt_mode_string, strlen("sys_route")) == 0){
+		pconfig->packet_io.inject_pkt_mode = SEND_PKT_MODE_STACK_3_LAYER;
+	}else if(strncasecmp("vxlan_by_inline_device", pconfig->packet_io.inject_pkt_mode_string, strlen("vxlan_by_inline_device")) == 0){
+		pconfig->packet_io.inject_pkt_mode = SEND_PKT_MODE_GDEV;
+	}else if(strncasecmp("raw_ethernet", pconfig->packet_io.inject_pkt_mode_string, strlen("raw_ethernet")) == 0){
+		pconfig->packet_io.inject_pkt_mode = SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE;
+	}else{
+	  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->PACKET_IO.inject_pkt_mode error, only support:%s!", "[sys_route, vxlan_by_inline_device, raw_ethernet]");
+		return -1;		
+	}
+
 	tmp_str = pconfig->packet_io.external.interface.type_str;
 	if(strncasecmp(tmp_str, "pcap", strlen("pcap")) == 0){
 		pconfig->packet_io.external.interface.type_bin = CAP_MODEL_PCAP_ONLINE;
@@ -566,7 +577,7 @@ void sapp_gval_init(void)
 int sapp_parse_config(void)
 {
 	int ret;
-	//int tmp_int;
+	int tmp_int;
 	sapp_config_t *pconfig;
 	char str_tmp[ARG_MAX];
 	
@@ -615,7 +626,16 @@ int sapp_parse_config(void)
 	}
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.feature", (char *)"inbound_route_dir", &pconfig->packet_io.inbound_route_dir, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"pcap_capture_direction", pconfig->packet_io.pcap_capture_direction, NAME_MAX, "in");
-		
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.feature", (char *)"create_mpls_anyway", &pconfig->packet_io.create_mpls_anyway, 0);
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"inject_pkt_mode", pconfig->packet_io.inject_pkt_mode_string, NAME_MAX, "sys_route");
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.feature", (char *)"inject_mode_inline_device_sport", &tmp_int, 54789);
+	if(tmp_int <= 0 || tmp_int > 65535){
+		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'packet_io.feature.inject_mode_inline_device_sport %d'", tmp_int);
+		return -1;
+	}else{
+		pconfig->packet_io.inject_mode_inline_device_sport = tmp_int;
+	}
+	
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.depolyment", (char *)"mode", pconfig->packet_io.depolyment_mode_str, NAME_MAX, "mirror");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.internal.interface", (char *)"type", pconfig->packet_io.internal.interface.type_str, NAME_MAX, "pcap");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.internal.interface", (char *)"name", pconfig->packet_io.internal.interface.name, NAME_MAX, "lo");
@@ -644,11 +664,15 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject.rst", (char *)"signature_seed1", (int *)&pconfig->stream.tcp.inject.rst_signature_seed1, 65535);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject.rst", (char *)"signature_seed2", (int *)&pconfig->stream.tcp.inject.rst_signature_seed2, 13);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject.rst", (char *)"number", (int *)&pconfig->stream.tcp.inject.rst_num, 3);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.tcp.inject.rst", (char *)"remedy_kill_tcp_by_inline_device", &pconfig->stream.tcp.inject.remedy_kill_tcp_by_inline_device, 0);
 
 
 	/*******************************  STREAM.UDP ******************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.udp", (char *)"max", (int *)&pconfig->stream.udp.max, 5000);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.udp", (char *)"timeout", (int *)&pconfig->stream.udp.timeout, 60);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.udp", (char *)"meaningful_statistics_minimum_pkt", (int *)&pconfig->stream.udp.meaningful_statistics_minimum_pkt, 3);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"stream.udp", (char *)"meaningful_statistics_minimum_byte", (int *)&pconfig->stream.udp.meaningful_statistics_minimum_byte, 5);
+	
 
 	/*******************************  PROFILING ******************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.pkt_latency", (char *)"enabled", (int *)&pconfig->profiling.pkt_latency_enabled, 0);

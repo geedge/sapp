@@ -1897,13 +1897,46 @@ void hash_del_stream(struct streamindex *pindex)
 		pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_talbe_hash_count;
 		//g_SysInputInfo[threadnum][SYS_UDP_LINK_DEL]++;
 		local_sys_stat->count[SAPP_STAT_UDP_STREAM_DEL]++;
+		   if(ptmp->pudpdetail->clientpktnum+ptmp->pudpdetail->serverpktnum >= sapp_global_val->config.stream.udp.meaningful_statistics_minimum_pkt
+			 && ptmp->pudpdetail->clientbytes+ptmp->pudpdetail->serverbytes >= sapp_global_val->config.stream.udp.meaningful_statistics_minimum_byte)
+	       {		
+			   if(ptmp->dir == DIR_DOUBLE)
+			   {
+				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_DOUBLE]++;
+			   }
+			   else if(ptmp->dir == DIR_C2S)
+			   {
+				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_C2S]++;
+			   }
+			   else if(ptmp->dir == DIR_S2C)
+			   {
+				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_S2C]++;
+			   }		
+	     }
+		   if(ptmp->dir == DIR_DOUBLE)
+		   {
+			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE]++;
+		   }
+		   else if(ptmp->dir == DIR_C2S)
+		   {
+			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_C2S]++;
+		   }
+		   else if(ptmp->dir == DIR_S2C)
+		   {
+			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_S2C]++;
+		   }		     
      }
 	 else if (STREAM_TYPE_TCP==ptmp->type)
 	 {
+	 	const struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private*)(ptmp->pdetail);
           phashstream=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_table;
  		  pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_talbe_hash_count;
  		   //g_SysInputInfo[threadnum][SYS_TCP_LINK_DEL]++;
  		   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DEL]++;
+
+ 		   if(pdetail_pr->has_lost_pkt_flag != 0){
+				local_sys_stat->count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM]++;
+ 		   }
  		   
  		   if(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum >= sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_pkt
  		    && ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes >= sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_byte)
@@ -1926,6 +1959,20 @@ void hash_del_stream(struct streamindex *pindex)
                else
                    ;
            }
+           
+		   if(ptmp->dir == DIR_DOUBLE)
+		   {
+			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE]++;
+		   }
+		   else if(ptmp->dir == DIR_C2S)
+		   {
+			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_C2S]++;
+		   }
+		   else if(ptmp->dir == DIR_S2C)
+		   {
+			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_S2C]++;
+		   }
+           
 	 }else{
       	phashstream = NULL;
        	pelementcount = 0;
@@ -2685,7 +2732,7 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 				}
 				break;
 			case ADDR_TYPE_MPLS:
-				if(sapp_global_single.create_mpls_anyway != 0){
+				if(sapp_global_val->config.packet_io.create_mpls_anyway != 0){
 					if(cur_dir == DIR_C2S){
 						memcpy(pstream_pr->stream_public.addr.mpls->src_mpls_pkt,
 						        p_stack->stream_public.addr.mpls->src_mpls_pkt,

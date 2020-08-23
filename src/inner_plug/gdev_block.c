@@ -4,7 +4,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
-
+#include "grule.h"
 
 static void * gdev_block_c3_handle;
 static unsigned char gdev_block_c3_license[8];
@@ -12,7 +12,7 @@ static unsigned gdev_block_c3_service_type;
 static unsigned gdev_block_c3_rule_scope;
 static int gdev_block_module_conn_flag = 0;
 
-#define GDEV_BLOCK_PLUG_CONF  "./conf/gdev_block.conf"
+#define GDEV_BLOCK_PLUG_CONF  "./etc/gdev_block.conf"
 
 /* 使用动态链接模式, 避免因libc3client.so的问题, 导致sapp都无法运行 */
 static void * (*dl_grule_open)(void);

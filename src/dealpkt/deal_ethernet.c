@@ -98,7 +98,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			((raw_pkt_t *)raw_pkt)->raw_pkt_len = raw_pkt->__lib_raw_pkt_len - sizeof(struct mesa_ethernet_hdr);
 		}
 	}
-	if(sapp_global_single.create_mpls_anyway != 0)
+	if(sapp_global_val->config.packet_io.create_mpls_anyway != 0)
 	{
 		if(eth_type == ETHERTYPE_IP || eth_type == ETHERTYPE_IPv6)
 		{

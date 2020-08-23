@@ -20,7 +20,7 @@ add_executable(sapp sapp_init.c sapp_main.c sapp_global_val.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
 target_link_libraries(sapp nsl pthread dl m pcap)
 target_link_libraries(sapp MESA_handle_logger MESA_prof_load)
-target_link_libraries(sapp sapp_assistant gdev_assistant)
+target_link_libraries(sapp sapp_assistant)
 
 #set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)  
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)  
@@ -28,7 +28,7 @@ target_link_libraries(sapp sapp_assistant gdev_assistant)
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)  
 
 
-set(SAPP_MODULES breakpad_mini_static breakpad-client-static iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap libevent-static)
+set(SAPP_MODULES breakpad_mini_static breakpad-client-static iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap libevent-static gdev_assistant  )
 
 target_link_libraries(sapp -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive ${SAPP_DEPEND_DYN_LIB})
 

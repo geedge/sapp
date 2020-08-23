@@ -198,7 +198,10 @@ install(FILES bin/etc/project_list.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/plugin.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/entrylist.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/gdev.conf DESTINATION etc COMPONENT PROFILE)
+install(FILES bin/etc/gdev_block.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/plug/conflist.inf DESTINATION plug COMPONENT PROFILE)
+install(FILES bin/etc/send_gdev.conf DESTINATION etc COMPONENT PROFILE)
+install(FILES bin/etc/send_route.conf DESTINATION etc COMPONENT PROFILE)
 
 if(NOT ENABLE_STATIC_LINK)
 

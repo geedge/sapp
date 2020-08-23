@@ -678,7 +678,16 @@ void packet_io_exit(void)
 
 int packet_io_init(int argc, char *argv[])
 {
-	int i;
+	int i, ret;
+
+	if(sapp_global_val->config.stream.tcp.inject.remedy_kill_tcp_by_inline_device != 0){
+		ret = gdev_block_init();
+		if(ret < 0){
+			printf("\n\033[33m[Error]gdev_block_init error!\033[0m\n");
+			return -1;
+		}
+	}
+	
 #if (0 == SAPP_AS_TARGET_SO)		
 	if(0 == use_custom_pkt_cb){
 		packet_io_register_cb(mesa_default_pkt_cb);	
@@ -805,7 +814,7 @@ static int packet_io_calc_ethernet_offset_to_ip(const unsigned char *sendbuf)
 	const struct mesa_ethernet_hdr *outer_ehdr;
 	///const struct mesa_ethernet_hdr *inner_ehdr;
 
-	if(sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_GDEV){
+	if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){
 		sendbuf += VXLAN_HDR_RESERVED_LEN; /* vxlan模式下预留了vxlan和外层mac,ip,udp头部, 跳转到内层mac头 */
 	}
 	
@@ -1016,7 +1025,7 @@ static int packet_io_send_by_manual_conf(MESA_send_handle *send_handle,int datal
     unsigned char send_route_mac[MAC_ADDR_LEN] = "";
 	unsigned char *p_dst_mac;
 
-	if(sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE )
+	if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE )
     {
         ret = packet_io_get_sendroute_mac(mim_mem_hdr.dev_id, mim_mem_hdr.link_id, send_route_mac);
         if(ret < 0){
@@ -1054,12 +1063,13 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 	
 	if(g_topology_mode & __NET_CONN_PARALLEL)
 	{
-		if(sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_GDEV)
+		if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV)
 		{
 			ret = packet_io_send_fake_pkt_by_gdev(send_handle, (enum addr_type_t)low_layer_type,
 												  (char *)send_handle->send_buf, datalen, dir, feedback_buf, feedback_buf_len);
 		}
-		else if(sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_1_ROUTE || sapp_global_single.send_fake_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE)
+		else if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_1_ROUTE 
+		     || sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE)
         {
             ether_type = net_layer_to_ethernet_protocol(low_layer_type);
             ret = packet_io_send_by_manual_conf(send_handle, datalen, dir, ether_type);

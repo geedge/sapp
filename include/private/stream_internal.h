@@ -192,7 +192,8 @@ struct tcpdetail_private
 #endif
 	UCHAR  auto_remedy_flag:1;	  //是否启用FD补救
 	UCHAR  needackflag:1;	  //需要上传ack报文
-	UCHAR  takeoverflag:2;
+	UCHAR  takeoverflag:1;
+	UCHAR  has_lost_pkt_flag:1;		//2020-08-23 lijia add, 本流曾经丢过包标志位
 	UCHAR  tcpstateflag;	   // 用于记录tcp的会话SYN相关状态
 	UCHAR  link_state;		   // 链接的状态
 	UCHAR  creat_mod;
@@ -298,22 +299,22 @@ struct l2tp_info_pri{
 struct sapp_global_single_t{
 	int signal_take_over_sw; /* 是否接管常见系统信号, 如SIGSEGV, SIGABRT等等 */
 	int ipentry_priority_over_ipfrag; /* IP_entry优先级高于IP_frag_entry, 默认为0, 适应WY串联特定需求 */
-	int kill_tcp_with_gdev; /* FD未生效时, 借助gdev串联规则 */
+	//int kill_tcp_with_gdev; /* FD未生效时, 借助gdev串联规则 */
 	int cfg_send_tcp_offload_sw; /* 超过网卡MTU时, 主动切片成多个小于MTU的包发送 */
 	//int cfg_kill_tcp_rst_num; /* kill_tcp发送rst包数量 */
 	//int cfg_kill_tcp_rst_signature; /* kill_tcp发送的rst是否需要指纹信息, 用于识别 */
-    int tuple4_reuse_time_interval; /* 四元组重用的最小间隔时间 */
+    //int tuple4_reuse_time_interval; /* 四元组重用的最小间隔时间 */
 	//void *fs2_handle;
 	const char *fs2_server_ip;
 	unsigned short fs2_server_port_host;
 	short __pad1;
 
-	int send_fake_pkt_mode; /* 2018-10-26 lijia add, for PanGu, 由于缺少FD路由, 需借用串联GDEV发送rst包, DNS-fake包等,mode 0： 协议栈三层发包， 1：协议栈二层发包，3：gdev注入发包，此模式下send_fake_pkt_gdev_sport有效 */
-	int send_fake_pkt_gdev_sport;  /* 2018-10-26 lijia add, for PanGu, 用于选择vxlan源端口 */
+	//int send_fake_pkt_mode; /* 2018-10-26 lijia add, for PanGu, 由于缺少FD路由, 需借用串联GDEV发送rst包, DNS-fake包等,mode 0： 协议栈三层发包， 1：协议栈二层发包，3：gdev注入发包，此模式下send_fake_pkt_gdev_sport有效 */
+	//int send_fake_pkt_gdev_sport;  /* 2018-10-26 lijia add, for PanGu, 用于选择vxlan源端口 */
 	int send_fake_pkt_sip;
 	int treat_vlan_as_mac_in_mac_sw; /* MAC_IN_MAC包会被协议栈改为vlan包, 在线捕包debug很不方便, 增加此配置, 强制将vlan包做为MAC_IN_MAC格式解析  */
 
-	int create_mpls_anyway;/*无条件在MAC和IP层之间创建MPLS层*/
+	//int create_mpls_anyway;/*无条件在MAC和IP层之间创建MPLS层*/
 	
 };
 

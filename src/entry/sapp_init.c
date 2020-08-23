@@ -144,8 +144,8 @@ int MESA_platform_init(int argc, char *argv[])
 
   	//MESA_load_profile_int_def("conf/main.conf","Module", "CreatLinkMode", &create_link_mode, TCP_CTEAT_LINK_BYSYN);
   	
-	MESA_load_profile_int_def("conf/main.conf","Module", "TcpAllEnable", &TcpAllEnable, 1);
-	tcp_set_support_tcpall_model(TcpAllEnable);
+	//MESA_load_profile_int_def("conf/main.conf","Module", "TcpAllEnable", &TcpAllEnable, 1);
+	//tcp_set_support_tcpall_model(TcpAllEnable);
 
 #if (0 == HIGH_PERF)
 	//MESA_load_profile_int_def("conf/main.conf","Module", "discard_ack",&g_discard_ack_sw, 0);
@@ -321,7 +321,7 @@ int MESA_platform_init(int argc, char *argv[])
 
 	MESA_load_profile_int_def("conf/main.conf", "Module", "signal_take_over_switch", &sapp_global_single.signal_take_over_sw, 0);
 	MESA_load_profile_int_def("conf/main.conf", "Module", "ipentry_priority_over_ipfrag", &sapp_global_single.ipentry_priority_over_ipfrag, 0);
-	MESA_load_profile_int_def("conf/main.conf", "Module", "tuple4_reuse_time_interval", &sapp_global_single.tuple4_reuse_time_interval, 3);
+	//MESA_load_profile_int_def("conf/main.conf", "Module", "tuple4_reuse_time_interval", &sapp_global_single.tuple4_reuse_time_interval, 3);
 #endif
 
 	init_stream_manage(g_iThreadNum);	
@@ -362,15 +362,16 @@ int MESA_platform_init(int argc, char *argv[])
 	stream_register_udp_raw(udp_teredo_identify_entry);
 	stream_register_udp_raw(udp_gtp_identify_entry);
 
+#if 0
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"kill_tcp_with_gdev", &sapp_global_single.kill_tcp_with_gdev, 0);
 	if(sapp_global_single.kill_tcp_with_gdev != 0){
 		if(gdev_block_init() < 0){
 			printf("\n\033[33m[Warning]gdev_block_init error!\033[0m\n");
 		}
 	}
+#endif	
 
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"symbol_conflict_check", &int_tmp,
-			0);
+	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"symbol_conflict_check", &int_tmp,0);
 	if(int_tmp != 0){
 		/* NOTE: 符号名检测一定要在plugctrl_proc(), 即所有插件加载之后, 默认开启 */
 		symbol_check(); /* 2016-01-13 Lijia add, 检查全局符号名冲突 */
@@ -382,9 +383,9 @@ int MESA_platform_init(int argc, char *argv[])
 		usleep(10000);
 	}
 
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"create_mpls_anyway",  &sapp_global_single.create_mpls_anyway, 0);
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_mode",  &sapp_global_single.send_fake_pkt_mode, 0);
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_gdev_sport",  &sapp_global_single.send_fake_pkt_gdev_sport, 15);
+	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"create_mpls_anyway",  &sapp_global_single.create_mpls_anyway, 0);
+	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_mode",  &sapp_global_single.send_fake_pkt_mode, 0);
+	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_gdev_sport",  &sapp_global_single.send_fake_pkt_gdev_sport, 15);
 	
 	sapp_assistant_init();
 

@@ -55,6 +55,7 @@ typedef struct{
 	int rst_signature_seed1;
 	int rst_signature_seed2;
 	int link_mss;
+	int remedy_kill_tcp_by_inline_device; /* 并联FD不生效时, 借助inline device下发DROP规则 */
 }sapp_config_stream_tcp_inject_t;
 
 
@@ -74,6 +75,8 @@ typedef struct{
 typedef struct{
 	int max;  /* max stream number per thread */
 	int timeout;
+	int meaningful_statistics_minimum_pkt;
+	int meaningful_statistics_minimum_byte;	
 }sapp_config_stream_udp_t;
 
 
@@ -175,6 +178,10 @@ typedef struct{
 	int polling_priority; /* call sapp_recv_pkt every call polling_entry times, 调用多少次polling后调用一次recv pkt, 1表示两者优先级相同 */
 	int inbound_route_dir; /* 表示入境, I2C方向的值是0还是1 */
 	char pcap_capture_direction[NAME_MAX]; /* in, out, inout */
+	int create_mpls_anyway;
+	char inject_pkt_mode_string[NAME_MAX];
+	int inject_pkt_mode; /* 包注入方式二进制值, 详见: enum send_fake_packet_mode */
+	unsigned short inject_mode_inline_device_sport; /* udp socket绑定的本端源端口, host order, 主机序 */
 }sapp_config_packet_io_t;
 
 typedef struct{
@@ -239,7 +246,7 @@ typedef struct{
 typedef struct{
 	sapp_gval_mthread_sys_stat_t sys_stat;
 	unsigned short stream_seq_per_thread;
-	char __padding[12];
+	char __padding[28];
 }sapp_gval_mthread_t; /*   for multi-thread, must 64byte alignment */
 
 

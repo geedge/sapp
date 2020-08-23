@@ -59,7 +59,10 @@ set(CPACK_RPM_EXECUTABLE_USER_FILELIST "%config(noreplace) ${CMAKE_INSTALL_PREFI
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/project_list.conf"
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/plugin.conf"
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/entrylist.conf"
-				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/plug/conflist.inf")
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/plug/conflist.inf"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/gdev_block.conf"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/send_gdev.conf"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/send_route.conf")
 
 # Must uninstall the debug package before install release package
 set(CPACK_RPM_PACKAGE_CONFLICTS ${MY_RPM_NAME_PREFIX})
