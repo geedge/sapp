@@ -15,7 +15,7 @@
 /* Client-----Gate-----Server */
 
 #ifndef MAX_THREAD_NUM
-#define MAX_THREAD_NUM  (64)
+#define MAX_THREAD_NUM  (128)
 #endif
 
 int trace_delay_version_VERSION_20160405;

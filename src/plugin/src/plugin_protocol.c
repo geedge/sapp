@@ -55,11 +55,12 @@ int plugin_load_protocol(char* conflist_filename)
 	int rec;
 
 	rec = process_conflist(conflist_filename,PLUGTYPE_PROTOCOL);
+#if 0	/* 此处错误继续执行plugin_protocol_info_convert(), 不能因某个protocol层插件挂载失败直接返回 */
 	if(rec < 0)
 	{
 		return -1;
 	}
-
+#endif
 	plugin_protocol_info_convert();
 
 	return 0;
