@@ -279,16 +279,16 @@ void sysinfo_output(void)
 
 	fprintf(fp,"#################################################################\n");
 	fprintf(fp,"Network Link Quality:\n");	
-	fprintf(fp,"%-12s %12s %12s %12s \n","LOST_STAT", "total", "dropped", "percent");
+	fprintf(fp,"%-12s %12s %12s %12s \n","LOST_STAT", "total", "lost", "percent");
 	if((cur_length[SAPP_STAT_RCV_TCP] > 0) && (cur_length[SAPP_STAT_TCP_LOST_PKT] > 0)){
 		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "bytes", cur_length[SAPP_STAT_RCV_TCP], cur_length[SAPP_STAT_TCP_LOST_PKT], (double)cur_length[SAPP_STAT_TCP_LOST_PKT]/(double)cur_length[SAPP_STAT_RCV_TCP]);
 	}else{
 		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "bytes", cur_length[SAPP_STAT_RCV_TCP], cur_length[SAPP_STAT_TCP_LOST_PKT], 0);
 	}
 	if((cur_count[SAPP_STAT_TCP_STREAM_NEW] > 0) && (cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM] > 0)){
-		fprintf(fp,"%-12s %12llu %12llu %3.10f\n", "stream", cur_count[SAPP_STAT_TCP_STREAM_NEW], cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM], (double)cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM]/(double)cur_count[SAPP_STAT_TCP_STREAM_NEW]);
+		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "stream", cur_count[SAPP_STAT_TCP_STREAM_NEW], cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM], (double)cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM]/(double)cur_count[SAPP_STAT_TCP_STREAM_NEW]);
 	}else{
-		fprintf(fp,"%-12s %12llu %12llu %3.10f\n", "stream", cur_count[SAPP_STAT_TCP_STREAM_NEW], cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM], 0);
+		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "stream", cur_count[SAPP_STAT_TCP_STREAM_NEW], cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM], 0);
 	}
 	
 	fprintf(fp,"-----------------------------------------------------------------\n");
@@ -308,9 +308,12 @@ void sysinfo_output(void)
 			cur_count[SAPP_STAT_UDP_STREAM_TOTAL_S2C] - history_count[SAPP_STAT_UDP_STREAM_TOTAL_S2C]);
 			
 	fprintf(fp,"----------------------------------------------------------------\n");		
-	fprintf(fp, "The follow statistics meet the conditions:(stream pkt num > %d and byte > %d)\n", 
+	fprintf(fp, "The follow TCP statistics meet the conditions:(total pkt_num>=%d and byte>=%d)\n", 
 				sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_pkt, 
 				sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_byte);
+	fprintf(fp, "The follow UDP statistics meet the conditions:(total pkt_num>=%d and byte>=%d)\n", 
+				sapp_global_val->config.stream.udp.meaningful_statistics_minimum_pkt, 
+				sapp_global_val->config.stream.udp.meaningful_statistics_minimum_byte);				
 	fprintf(fp,"%-12s %12s %12s\n","STREAM_TYPE", "total_stream", "link_del/s");
 	fprintf(fp,"%-12s %12llu %12llu\n", "TCP_DOU", cur_count[SAPP_STAT_TCP_STREAM_DOUBLE],
 			cur_count[SAPP_STAT_TCP_STREAM_DOUBLE] - history_count[SAPP_STAT_TCP_STREAM_DOUBLE]);
