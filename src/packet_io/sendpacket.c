@@ -3278,6 +3278,40 @@ int MESA_dir_human_to_link(int human_dir)
 	return link_route_dir;
 }
 
+/*
+	args:
+		链路传输方向: 0或1, 通常来自stream->routedir;
+	
+	返回值:
+		'E' or 'e': 表示发包方向是从Internal to External.
+		'I' or 'i': 表示发包方向是从External to Internal.
+		'x': 参数错误;
+*/
+int MESA_dir_link_to_human(int link_route_dir)
+{	
+	int human_dir;
+	
+	if((link_route_dir != 0) && (link_route_dir != 1)){
+		return 'x';
+	}
+	
+	if(0 == sapp_global_val->config.packet_io.inbound_route_dir){
+		if(0 == link_route_dir){
+			human_dir = 'I';
+		}else{
+			human_dir = 'E';
+		}
+	}else{
+		if(0 == link_route_dir){
+			human_dir = 'E';
+		}else{
+			human_dir = 'I';
+		}
+	}
+	
+	return human_dir;
+}
+
 
 
 static inline int dir_check(unsigned char raw_dir)

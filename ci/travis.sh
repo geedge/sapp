@@ -33,6 +33,7 @@ env | sort
 : "${COMPILER_IS_GNUCXX:=OFF}"
 
 # Install dependency from YUM
+yum install -y mrzcpd numactl-devel zlib-devel librdkafka-devel systemd-devel
 yum install libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel -y
 source /etc/profile.d/framework.sh
 
@@ -40,6 +41,8 @@ mkdir build || true
 cd build
 
 cmake3 -DCMAKE_CXX_FLAGS=$CXX_FLAGS \
+      -DCAPTURE_MODE=$CAPTURE_MODE \
+      -DPLATFORM_MODE=$PLATFORM_MODE \
       -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
       -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
       -DENABLE_DEVEL=$ENABLE_DEVEL_SWITCH \

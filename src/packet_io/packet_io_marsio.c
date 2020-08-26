@@ -686,7 +686,7 @@ static void *marsio4_worker(void *arg)
 		}else{
 			flush_buf(tid);
 			/* 无包时要调用polling接口 */
-			if(stream_process_polling(tid) > 0){
+			if((stream_process_polling(tid) & POLLING_STATE_WORK) != 0){
 				polling_work_times++;
 			}
 		}
@@ -695,7 +695,7 @@ static void *marsio4_worker(void *arg)
 
 		if((rcv_pkt_tims % sapp_global_val->config.packet_io.polling_priority) == 0){
 			/* 如果流量巨大, 一直有包时, 每隔polling_priority个包也要调用polling接口 */
-			if(stream_process_polling(tid) > 0){
+			if((stream_process_polling(tid) & POLLING_STATE_WORK) != 0){
 				polling_work_times++;
 			}
 			total_call_times++;
@@ -707,8 +707,6 @@ static void *marsio4_worker(void *arg)
 			rcv_pkt_tims = 0;
 			polling_work_times = 0;
 		}
-
-		
 	}
 
 	return NULL;
