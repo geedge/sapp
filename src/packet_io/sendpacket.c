@@ -58,7 +58,6 @@ static tcp_rst_finger_mark_t g_tcp_rst_finger[MAX_THREAD_NUM];
 
 extern void *g_packet_dl_send_handle[MAX_THREAD_NUM];
 extern dl_io_fun_list_t dl_io_fun_list;
-extern char g_send_dev_name[DEV_NAME_STR_LEN];
 extern int g_app_send_rst_type ;
 extern int calc_l2tp_hdr_len(const struct l2tp_hdr_v2 *l2tp_hdr);
 extern int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_type, 
@@ -3110,6 +3109,7 @@ static int send_handle_init(int tot_thread_num)
 {
 	int i, ret;
 	int max_thread_num;
+	const sapp_config_packet_io_t *pcfg_io = &sapp_global_val->config.packet_io;
 #if 0 /* 2018 lijia modify , 增加插件创建的线程主动发包功能 */
 	for(i = 0; i < tot_thread_num; i++){
 #else
@@ -3118,12 +3118,12 @@ static int send_handle_init(int tot_thread_num)
 #endif	
 		g_send_handle[i].raw_ipv4_fd = socket(PF_INET, SOCK_RAW, IPPROTO_RAW);
 		if(g_send_handle[i].raw_ipv4_fd < 0){
-			printf("socket v4 error, %s\n", strerror(errno));
+			sapp_log(30, ~0, ~0, "socket v4 error, %s\n", strerror(errno));
 			return -1;
 		}
 		g_send_handle[i].raw_udp_fd = socket(AF_INET, SOCK_DGRAM, 0);
 		if(g_send_handle[i].raw_udp_fd < 0){
-			printf("socket udp error, %s\n", strerror(errno));
+			sapp_log(30, ~0, ~0, "socket udp error, %s\n", strerror(errno));
 			return -1;
 		} else
 		{
@@ -3134,28 +3134,29 @@ static int send_handle_init(int tot_thread_num)
 			listen_addr.sin_family = AF_INET;
 			listen_addr.sin_port = htons((unsigned short)sapp_global_val->config.packet_io.inject_mode_inline_device_sport); /* 根据配置文件填写vxlan源端口 */
 			if(bind(g_send_handle[i].raw_udp_fd, (struct sockaddr *) &listen_addr, sizeof(listen_addr)) != 0){
-				printf("socket bind udp error");
+				sapp_log(30, ~0, ~0, "socket bind udp port '%u' error", sapp_global_val->config.packet_io.inject_mode_inline_device_sport);
 				return -1;
 			}
 		}
 		if(g_ipv6_send_packet_enabled){
 			g_send_handle[i].raw_ipv6_fd = socket(PF_INET6, SOCK_RAW, IPPROTO_RAW);
 			if(g_send_handle[i].raw_ipv6_fd < 0){
-				printf("socket v6 error, %s\n", strerror(errno));
-				printf("Please disable IPv6 module, then try again!\n");
+				sapp_log(30, ~0, ~0, "socket v6 error, %s\n", strerror(errno));
+				sapp_log(30, ~0, ~0, "Please disable IPv6 module, then try again!\n");
 				return -1;
 			}
 		}
-		if(g_send_dev_name[0] != '\0'){
+		
+		if(pcfg_io->inject_mode_single_gateway_device[0] != '\0'){
 			ret = g_send_handle[i].raw_eth_fd =  socket(PF_INET, SOCK_PACKET, htons(ETH_P_ALL));
 			if(g_send_handle[i].raw_eth_fd < 0){
-				printf("socket raw eth error, %s\n", strerror(errno));
+				sapp_log(30, ~0, ~0, "socket raw eth error, %s\n", strerror(errno));
 				return -1;
 			}
 			ret = snprintf(g_send_handle[i].saddr_raw_eth.sa_data, sizeof(g_send_handle[i].saddr_raw_eth.sa_data), 
-						"%s", g_send_dev_name);
-			if(ret >= 	(int)sizeof(g_send_handle[i].saddr_raw_eth.sa_data)){
-				printf("send device name is too long!\n");
+						   "%s", pcfg_io->inject_mode_single_gateway_device);
+			if(ret >= (int)sizeof(g_send_handle[i].saddr_raw_eth.sa_data)){
+				sapp_log(30, ~0, ~0, "send device name is too long!\n");
 				return -1;
 			}
 			g_send_handle[i].saddr_raw_eth.sa_family = PF_INET;

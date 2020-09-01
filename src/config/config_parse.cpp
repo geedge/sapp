@@ -326,11 +326,25 @@ static int config_expression_convert(void)
 		pconfig->packet_io.inject_pkt_mode = SEND_PKT_MODE_STACK_3_LAYER;
 	}else if(strncasecmp("vxlan_by_inline_device", pconfig->packet_io.inject_pkt_mode_string, strlen("vxlan_by_inline_device")) == 0){
 		pconfig->packet_io.inject_pkt_mode = SEND_PKT_MODE_GDEV;
-	}else if(strncasecmp("raw_ethernet", pconfig->packet_io.inject_pkt_mode_string, strlen("raw_ethernet")) == 0){
+	}else if(strncasecmp("raw_ethernet_single_gateway", pconfig->packet_io.inject_pkt_mode_string, strlen("raw_ethernet_single_gateway")) == 0){
+		pconfig->packet_io.inject_pkt_mode = SEND_PKT_MODE_STACK_2_LAYER_1_ROUTE;
+	}else if(strncasecmp("raw_ethernet_multi_gateway", pconfig->packet_io.inject_pkt_mode_string, strlen("raw_ethernet_multi_gateway")) == 0){
 		pconfig->packet_io.inject_pkt_mode = SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE;
 	}else{
-	  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->PACKET_IO.inject_pkt_mode error, only support:%s!", "[sys_route, vxlan_by_inline_device, raw_ethernet]");
+	  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->PACKET_IO.inject_pkt_mode error, only support:%s!", "[sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]");
 		return -1;		
+	}
+
+	if(strncasecmp(pconfig->packet_io.inject_pkt_mode_string, "raw_ethernet_single_gateway", strlen("raw_ethernet_single_gateway")) == 0){
+		if(MESA_mac_pton(pconfig->packet_io.inject_mode_single_gateway_dst_mac_string, ':', pconfig->packet_io.inject_mode_single_gateway_dst_mac) < 0){
+			sapp_log(30, ~0, ~0, "[Error]sapp.toml->[packet_io.feature]->inject_mode_single_gateway_dst_mac error: %s", pconfig->packet_io.inject_mode_single_gateway_dst_mac_string);
+			return -1;	
+		}
+
+		if(MESA_get_dev_mac(pconfig->packet_io.inject_mode_single_gateway_device, (unsigned char *)pconfig->packet_io.inject_mode_single_gateway_src_mac) < 0){
+			sapp_log(30, ~0, ~0, "[Error]can't get sapp.toml->[packet_io.feature]->inject_mode_single_gateway_device: '%s' mac address", pconfig->packet_io.inject_mode_single_gateway_device);
+			return -1;				
+		}
 	}
 
 	tmp_str = pconfig->packet_io.external.interface.type_str;
@@ -628,6 +642,10 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"pcap_capture_direction", pconfig->packet_io.pcap_capture_direction, NAME_MAX, "in");
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.feature", (char *)"create_mpls_anyway", &pconfig->packet_io.create_mpls_anyway, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"inject_pkt_mode", pconfig->packet_io.inject_pkt_mode_string, NAME_MAX, "sys_route");
+	if(strncasecmp(pconfig->packet_io.inject_pkt_mode_string, "raw_ethernet_single_gateway", strlen("raw_ethernet_single_gateway")) == 0){
+		tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"inject_mode_single_gateway_device", pconfig->packet_io.inject_mode_single_gateway_device, NAME_MAX, "lo");
+		tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"inject_mode_single_gateway_dst_mac", pconfig->packet_io.inject_mode_single_gateway_dst_mac_string, sizeof(pconfig->packet_io.inject_mode_single_gateway_dst_mac_string), "$");
+	}
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.feature", (char *)"inject_mode_inline_device_sport", &tmp_int, 54789);
 	if(tmp_int <= 0 || tmp_int > 65535){
 		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'packet_io.feature.inject_mode_inline_device_sport %d'", tmp_int);

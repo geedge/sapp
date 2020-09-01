@@ -119,7 +119,7 @@ int project_req_add_struct(struct streaminfo *stream, int project_req_id, const 
 	For example:
 		int value = project_req_get_int(stream, req_id);
 		if((-1 == value) && (ERANGE == errno)){
-			error_handle();
+			error_handle();                      
 		}else{
 			// this is not an error!!
 			do_something();

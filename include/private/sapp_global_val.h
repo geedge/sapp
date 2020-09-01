@@ -182,6 +182,10 @@ typedef struct{
 	char inject_pkt_mode_string[NAME_MAX];
 	int inject_pkt_mode; /* 包注入方式二进制值, 详见: enum send_fake_packet_mode */
 	unsigned short inject_mode_inline_device_sport; /* udp socket绑定的本端源端口, host order, 主机序 */
+	char inject_mode_single_gateway_device[NAME_MAX];
+	char inject_mode_single_gateway_dst_mac_string[20];
+	char inject_mode_single_gateway_dst_mac[6]; /* gateway的MAC */
+	char inject_mode_single_gateway_src_mac[6]; /* inject_mode_single_gateway_device网卡的MAC */
 }sapp_config_packet_io_t;
 
 typedef struct{

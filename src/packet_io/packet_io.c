@@ -35,8 +35,8 @@ int gdev_init(void);
 extern int packet_io_status_init(void);
 extern MESA_send_handle g_send_handle[MAX_THREAD_NUM];
 char g_send_dev_name[DEV_NAME_STR_LEN]; /* 发包网卡名 */
-unsigned char g_send_dev_mac[MAC_ADDR_LEN];
-unsigned char g_send_gateway_mac[MAC_ADDR_LEN]; /* 通过手工配置或查询路由表和ARP表得到 */
+//unsigned char g_send_dev_mac[MAC_ADDR_LEN];
+//unsigned char g_send_gateway_mac[MAC_ADDR_LEN]; /* 通过手工配置或查询路由表和ARP表得到 */
 unsigned char g_send_gateway_mac_table[64][16][18];
 static int G_SND_ROUTE_INFO_NUM = 0;
 
@@ -260,6 +260,7 @@ int packet_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 	
 	return ret;
 }
+#if 0
 
 int packet_io_set_send_dev(const char *send_dev)
 {
@@ -274,6 +275,7 @@ int packet_io_set_send_dev(const char *send_dev)
 	return ret;
 }
 
+
 int packet_io_set_gateway_mac(const char *gateway_mac)
 {
 	if(MESA_mac_pton(gateway_mac, ':', (char *)g_send_gateway_mac) < 0){
@@ -283,6 +285,7 @@ int packet_io_set_gateway_mac(const char *gateway_mac)
 	
 	return 0;
 }
+#endif
 
 int packet_io_set_capture_filter(const char *filter_rule)
 {
@@ -722,15 +725,6 @@ int packet_io_init(int argc, char *argv[])
 		dl_io_fun_list.dl_io_register_exit_cb(packet_io_exit);
 	}
 
-	if(g_send_dev_name[0] != '\0'){
-		if(MESA_get_dev_mac(g_send_dev_name, g_send_dev_mac) < 0){
-			printf("Warning, can't get %s mac addr!\n", g_send_dev_name);
-		}
-	}else{
-		//printf("Warning, not assign send device!\n");
-		;
-	}
-
     parse_send_gdev_ip_conf("conf/send_gdev.conf");
 
 	parse_send_route_conf("conf/send_route.conf");
@@ -1004,14 +998,6 @@ static int packet_io_send_by_manual_conf(MESA_send_handle *send_handle,int datal
 		
 	*/	
 
-#if 0 /* for test, use 10.0.6.201 mac addr */
-	static char mac_201_gateway[6] = {0xdc, 0xd2, 0xfc, 0x66, 0xec, 0xb2};
-	static char mac_201_em2[6] = {0x74, 0x86,0x7A,0xD0,0x12,0xFD};
-
-	memcpy(g_send_gateway_mac, mac_201_gateway, 6);
-	memcpy(g_send_dev_mac, mac_201_em2, 6);
-
-#endif
 	const struct streaminfo_private *pstrem_pr =  (const struct streaminfo_private *)send_handle->user_arg;
 	const struct streaminfo *pstream = (const struct streaminfo *)send_handle->user_arg;
 	const struct streaminfo *tmpstream = pstream;
@@ -1036,9 +1022,10 @@ static int packet_io_send_by_manual_conf(MESA_send_handle *send_handle,int datal
     }
     else
     {
-        p_dst_mac = g_send_gateway_mac;
+        //p_dst_mac = g_send_gateway_mac; 
+        p_dst_mac = sapp_global_val->config.packet_io.inject_mode_single_gateway_dst_mac;
     }
-    sendpacket_build_ethernet(p_dst_mac, g_send_dev_mac, ether_type, NULL, 0, send_handle->send_buf);
+    sendpacket_build_ethernet(p_dst_mac, sapp_global_val->config.packet_io.inject_mode_single_gateway_src_mac, ether_type, NULL, 0, send_handle->send_buf);
 
 send_again:
 	ret = sendto(send_handle->raw_eth_fd, send_handle->send_buf, datalen, 0, 

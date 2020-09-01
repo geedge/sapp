@@ -33,14 +33,19 @@ dictator_enable=1
 
     create_mpls_anyway=0
 
-### note, depolyment.mode options: [sys_route, vxlan_by_inline_device, raw_ethernet]
-### sys_route: send ip(ipv6) packet by system route table, default mode in mirror mode;
+### note, depolyment.mode options: [sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]
+### sys_route: send ip(ipv6) packet by system route table, this is default mode in mirror mode;
 ### vxlan_by_inline_device: encapsulation inject packet with vxlan, and then send to inline device by udp socket.
-### raw_ethernet: send layer2 ethernet packet to specific gateway in same broadcast domain. 
+### raw_ethernet_single_gateway: send layer2 ethernet packet to specific gateway in same broadcast domain. 
+### raw_ethernet_multi_gateway: send layer2 ethernet packet to multiple gateway in same broadcast domain. 
     inject_pkt_mode=sys_route
 
 ### note, this config is valid if inject_pkt_mode==vxlan_by_inline_device, means udp socket src port.
     inject_mode_inline_device_sport=54789
+
+### note, this config is valid if inject_pkt_mode==raw_ethernet_single_gateway.
+    inject_mode_single_gateway_device="eth1"
+    inject_mode_single_gateway_dst_mac="00:11:22:33:44:55"
    
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]
@@ -84,7 +89,7 @@ dictator_enable=1
         signature_enabled=1
         signature_seed1=65535
         signature_seed2=13
-        remedy_kill_tcp_by_inline_device=1
+        remedy_kill_tcp_by_inline_device=0
 	
     [stream.udp]
     max=10000
