@@ -31,7 +31,7 @@ extern int MESA_get_dev_ipv4(const char *device, int *ip_add);
 extern int MESA_get_dev_mac(const char *device, unsigned char mac[6]);
 
 void * (*dl_marsio_buff_ctrlzone)(void *m, uint8_t id);
-
+extern void * (*ptr_marsio_buff_ctrlzone)(marsio_buff_t *m, uint8_t id);
 
 static int sapp_identify_broad_multicast_init(void)
 {
@@ -53,7 +53,7 @@ static int sapp_identify_broad_multicast_init(void)
 
 		/* 此处不要用dlclose(), 因为后续还要用dlopen打开packet_io_marsio.so,  */
 #else
-	dl_marsio_buff_ctrlzone = (void * (*)(void *m, uint8_t id))marsio_buff_ctrlzone;
+	dl_marsio_buff_ctrlzone = (void * (*)(void *m, uint8_t id))ptr_marsio_buff_ctrlzone;
 #endif
 	}
 #endif

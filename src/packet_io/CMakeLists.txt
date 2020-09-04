@@ -52,7 +52,7 @@ if(CAPTURE_MODE MATCHES "MARSIO")
     else()
         add_library(packet_io_marsio SHARED ${PACKET_IO_SOURCE})
     endif()
-	target_link_libraries(packet_io_marsio marsio)
+	##target_link_libraries(packet_io_marsio marsio)
 	set_target_properties(packet_io_marsio  PROPERTIES PREFIX "")
 endif()
 
@@ -74,7 +74,7 @@ sapp_inject.c)
 
 add_library(packet_io STATIC ${PACKET_IO_STATIC_SOURCE})
 if(CAPTURE_MODE MATCHES "MARSIO")
-    target_link_libraries(packet_io marsio)
+    ##target_link_libraries(packet_io marsio)
 endif() 
 
 target_link_libraries(packet_io timestamp_record iknow)

@@ -408,7 +408,7 @@ int Gserial_sendpacket_ipv6_udp_detail(int plug_id,struct streaminfo *stream, st
 	return ret;
 }
 
-#if IOMODE_MARSIO
+#if 0
 
 /* 
 	发包的同时, 给tcpdump_mesa一份, 便于捕包分析,
@@ -437,7 +437,7 @@ int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath
 		cycle_pkt_dump(sid, &rawpkt);
 	}
 
-	return marsio_send_burst_with_options(sendpath, sid, mbufs, nr_mbufs, options);	
+	return ptr_marsio_send_burst_with_options(sendpath, sid, mbufs, nr_mbufs, options);	
 }
 #endif
 

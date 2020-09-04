@@ -3724,6 +3724,13 @@ int MESA_fakepacket_send_udp_detail(int thread_index, u_int sip_host_order, u_in
 static struct mr_instance *dl_io_marsio4_instance = NULL;
 extern struct mr_instance *sapp_marsio4_instance;
 extern int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath, queue_id_t sid, marsio_buff_t * mbufs[], int nr_mbufs, uint16_t options);
+extern int (*ptr_marsio_buff_malloc_global)(struct mr_instance * instance, marsio_buff_t *marsio_buff[], unsigned int nr_mbufs, int socket_id, int thread_id);
+extern  char * (*ptr_marsio_buff_append)(marsio_buff_t *m, uint16_t len);
+extern void (*ptr_marsio_buff_ctrlzone_set)(marsio_buff_t *m, uint8_t id, void* ptr_data, uint8_t size);
+extern int (*ptr_marsio_send_burst)(struct mr_sendpath * sendpath,  queue_id_t qid, marsio_buff_t * mbufs[], int nr_mbufs);
+extern marsio_buff_t * (*ptr_marsio_buff_clone_with_options)(struct mr_instance * instance, marsio_buff_t * md, int socket_id, int thread_id, uint16_t options);
+extern void (*ptr_marsio_buff_set_rehash_index)(marsio_buff_t *m, uint32_t hash);
+
 struct mr_instance *sapp_get_marsio_instance(void)
 {
 	void *address_of_sapp_marsio4_instance;
@@ -3848,14 +3855,14 @@ static int __MESA_sendpacket_iplayer_options(int thread_index,const char *data, 
 		dl_io_marsio4_instance = sapp_get_marsio_instance();
 	}
 	
-	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
+	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
 		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
 		return -1;
 	}	
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 	
-	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], data_len+sizeof(struct mesa_ethernet_hdr));
+	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], data_len+sizeof(struct mesa_ethernet_hdr));
 	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
 	inner_ehdr->ether_type = ntohs(ether_type_host);/* 底层设为ethernet */
 
@@ -3867,7 +3874,7 @@ static int __MESA_sendpacket_iplayer_options(int thread_index,const char *data, 
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
+			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -3876,7 +3883,7 @@ static int __MESA_sendpacket_iplayer_options(int thread_index,const char *data, 
 
 	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
 	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
+	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
 								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
 	if(inner_ret < 0){
@@ -3942,7 +3949,7 @@ int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t p
 		dl_io_marsio4_instance = sapp_get_marsio_instance();
 	}
 	
-	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
+	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
 		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
 		return -1;
@@ -3950,7 +3957,7 @@ int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t p
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr));
+	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr));
 	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
 	inner_ehdr->ether_type = ntohs(ETHERTYPE_IP);/* 底层设为ethernte */
 	
@@ -3966,7 +3973,7 @@ int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t p
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
+			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -3983,7 +3990,7 @@ int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t p
 
 	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
 	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
+	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
 								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
 
@@ -4020,14 +4027,14 @@ int MESA_fakepacket_send_ipv6_options(const struct streaminfo *stream, uint8_t p
 		dl_io_marsio4_instance = sapp_get_marsio_instance();
 	}
 	
-	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
+	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
 		return -1;
 	}	
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr));
+	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr));
 	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
 	inner_ehdr->ether_type = ntohs(ETHERTYPE_IPv6);/* 底层设为ethernet */
 	
@@ -4041,7 +4048,7 @@ int MESA_fakepacket_send_ipv6_options(const struct streaminfo *stream, uint8_t p
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
+			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -4052,7 +4059,7 @@ int MESA_fakepacket_send_ipv6_options(const struct streaminfo *stream, uint8_t p
 
 	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
 	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
+	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
 								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
 	if(inner_ret < 0){
@@ -4091,7 +4098,7 @@ int MESA_fakepacket_send_tcp_options(const struct streaminfo *stream,
 		dl_io_marsio4_instance = sapp_get_marsio_instance();
 	}
 	
-	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
+	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
 		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
 		return -1;
@@ -4099,7 +4106,7 @@ int MESA_fakepacket_send_tcp_options(const struct streaminfo *stream,
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_tcp_hdr) + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr));
+	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_tcp_hdr) + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr));
 	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
 	inner_ehdr->ether_type = ntohs(ETHERTYPE_IP);/* 底层设为ethernte */
 	
@@ -4116,7 +4123,7 @@ int MESA_fakepacket_send_tcp_options(const struct streaminfo *stream,
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
+			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -4134,7 +4141,7 @@ int MESA_fakepacket_send_tcp_options(const struct streaminfo *stream,
 
 	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
 	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
+	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
 								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
 
@@ -4175,7 +4182,7 @@ int MESA_fakepacket_send_ipv6_tcp_options(const struct streaminfo *stream,
 		dl_io_marsio4_instance = sapp_get_marsio_instance();
 	}
 	
-	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
+	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
 		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
 		return -1;
@@ -4183,7 +4190,7 @@ int MESA_fakepacket_send_ipv6_tcp_options(const struct streaminfo *stream,
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_tcp_hdr) + sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr));
+	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_tcp_hdr) + sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr));
 	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
 	inner_ehdr->ether_type = ntohs(ETHERTYPE_IPv6);/* 底层设为ethernte */
 	
@@ -4198,7 +4205,7 @@ int MESA_fakepacket_send_ipv6_tcp_options(const struct streaminfo *stream,
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
+			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -4215,7 +4222,7 @@ int MESA_fakepacket_send_ipv6_tcp_options(const struct streaminfo *stream,
 
 	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
 	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
+	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
 								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
 	if(inner_ret < 0){
@@ -4251,7 +4258,7 @@ int MESA_fakepacket_send_udp_options(const struct streaminfo *stream,
 		dl_io_marsio4_instance = sapp_get_marsio_instance();
 	}
 	
-	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
+	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
 		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
 		return -1;
@@ -4259,7 +4266,7 @@ int MESA_fakepacket_send_udp_options(const struct streaminfo *stream,
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr));
+	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr));
 	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
 	inner_ehdr->ether_type = ntohs(ETHERTYPE_IP);/* 底层设为ethernte */
 	
@@ -4274,7 +4281,7 @@ int MESA_fakepacket_send_udp_options(const struct streaminfo *stream,
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
+			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -4294,7 +4301,7 @@ int MESA_fakepacket_send_udp_options(const struct streaminfo *stream,
 		mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
 	}
 	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
+	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 #if 0
 	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
 								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
@@ -4334,7 +4341,7 @@ int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream,
 		dl_io_marsio4_instance = sapp_get_marsio_instance();
 	}
 	
-	inner_ret = marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
+	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
 		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
 		return -1;
@@ -4342,7 +4349,7 @@ int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream,
 	//g_SysInputInfo[thread_index][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = (unsigned char *)marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr));
+	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr));
 	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
 	inner_ehdr->ether_type = ntohs(ETHERTYPE_IPv6);/* 底层设为ethernte */
 	
@@ -4355,7 +4362,7 @@ int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream,
 		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
 			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
 		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
+			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
 		}else{
 			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
 		}
@@ -4372,7 +4379,7 @@ int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream,
 
 	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
 	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
+	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
 								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
 	if(inner_ret < 0){
@@ -4425,14 +4432,14 @@ int sapp_forward_current_pkt(const struct streaminfo *stream, unsigned int targe
 		所以此处给从应用网卡发送之前, 先clone一份new_clone_buf, 发送后会自动free.
 		回注原始包的还用原来的raw_mbuf. 
 	*/	
-	new_clone_buf = marsio_buff_clone_with_options(dl_io_marsio4_instance, raw_mbuf, 
+	new_clone_buf = ptr_marsio_buff_clone_with_options(dl_io_marsio4_instance, raw_mbuf, 
 										MARSIO_SOCKET_ID_ANY, stream->threadnum, 
 										MR_BUFF_CLONE_BUFF  | MR_BUFF_CLONE_CTRLZONE);
 
 	assert(new_clone_buf);
 	//g_SysInputInfo[stream->threadnum][PKT_MARSIO_MALLOC]++;
 
-	ret = marsio_send_burst((struct mr_sendpath *)g_packet_device_alias[target_id].dl_io_param, 
+	ret = ptr_marsio_send_burst((struct mr_sendpath *)g_packet_device_alias[target_id].dl_io_param, 
 									stream->threadnum, &new_clone_buf, 1); 
 	//g_SysInputInfo[stream->threadnum][PKT_MARSIO_SND]++;
 	
