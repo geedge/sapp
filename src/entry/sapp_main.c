@@ -25,7 +25,7 @@ extern int sapp_args_v;
 int dpdk_init(int argc, char **argv);
 
 
-static void signal_handler(int signo)
+static void signal_user_handler(int signo)
 {
 	//time_t last_time = time(NULL);
 	//while(time(NULL) < last_time + 10); /* wait 10 second, for DPDK IO module detect this process is not running */
@@ -33,16 +33,23 @@ static void signal_handler(int signo)
 	kill(getpid(), signo);
 }
 
+static void signal_hup_handler(int signo)
+{
+	printf("SIGHUP recviced!\n");
+	MESA_handle_runtime_log_reconstruction(NULL);
+}
+
 static void signal_take_over(void)
 {
 	sapp_config_t *pconfig = &sapp_global_val->config;
+	signal(SIGHUP, signal_hup_handler);
 	if (0 == sapp_global_single.signal_take_over_sw && 0 == pconfig->tools.signal_handler.signal)
 	{
 		return;
 	}
 
-	signal(SIGUSR1, signal_handler);
-	signal(SIGUSR2, signal_handler);
+	signal(SIGUSR1, signal_user_handler);
+	signal(SIGUSR2, signal_user_handler);
 	//signal(pconfig->tools.signal_handler.signal, signal_handler);
 }
 

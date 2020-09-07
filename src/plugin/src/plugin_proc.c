@@ -1,6 +1,6 @@
 #include "sapp_api.h"
+#include "sapp_declaration.h"
 #include "sapp_private_api.h"
-
 
 void* g_plugin_runtime_handle;
 extern int g_business_plug_type;
@@ -102,7 +102,7 @@ int plugctrl_proc()
 	}
 
 	 	//MESA_handle_logger init
-	g_plugin_runtime_handle = MESA_create_runtime_log_handle(logger_filepath,logger_level);
+	g_plugin_runtime_handle = sapp_global_val->individual_fixed.log_handle;
 	if(g_plugin_runtime_handle == NULL)
 	{
 		printf("rawdata MESA_create_runtime_log_handle() error!\n");

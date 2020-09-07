@@ -92,6 +92,7 @@ typedef struct{
 	int enabled;
 	int file_truncate_enabled; /* append or truncate */
 	char log_file_name[PATH_MAX];
+	char log_conf_name[PATH_MAX];
 }sapp_config_profiling_log_local_t;
 
 

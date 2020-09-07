@@ -562,7 +562,7 @@ static int config_sanity_check(void)
 static void log_handle_init(void)
 {
 	void *lhand;
-
+	MESA_handle_runtime_log_creation(sapp_global_val->config.profiling.log.local.log_conf_name);
 	lhand = MESA_create_runtime_log_handle("./log/runtimelog", sapp_global_val->config.profiling.log.level);
 
 	sapp_global_val->individual_fixed.log_handle = lhand;
@@ -705,6 +705,7 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.local", (char *)"enabled", (int *)&pconfig->profiling.log.local.enabled, 1);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.local", (char *)"file_truncate_enabled", (int *)&pconfig->profiling.log.local.file_truncate_enabled, 1);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.local", (char *)"log_file_name", pconfig->profiling.log.local.log_file_name, NAME_MAX, "fs2_sysinfo.log");
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.local", (char *)"log_conf_name", pconfig->profiling.log.local.log_conf_name, NAME_MAX, "./etc/zlog.conf");
 	/*******************************  PROFILING.LOG.remote **********************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.remote", (char *)"enabled", (int *)&pconfig->profiling.log.remote.enabled, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote", (char *)"server_ip", pconfig->profiling.log.remote.server_ip, INET_ADDRSTRLEN, "#");
