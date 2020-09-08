@@ -124,6 +124,7 @@ dictator_enable=1
 ### note, if "file_truncate_open_enabled=1", file will be truncated, otherwise open the file for appending.	 
         file_truncate_enabled = 1
         log_file_name = "fs2_sysinfo.log"
+        log_conf_name = "etc/sapp_log.conf"
      
         [profiling.log.remote]
         enabled=1
