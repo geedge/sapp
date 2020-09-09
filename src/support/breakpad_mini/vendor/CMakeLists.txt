@@ -6,7 +6,6 @@ ExternalProject_Add(breakpad
 	URL ${CMAKE_CURRENT_SOURCE_DIR}/breakpad-master-abfe08e.tar.gz
 	URL_MD5 96fb25a9d96cc55db71a7f374ad363b4
 	CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
-	INSTALL_DIR /usr/local/
 	BUILD_IN_SOURCE 1)
 
 ExternalProject_Get_Property(breakpad INSTALL_DIR)
@@ -19,8 +18,8 @@ set_property(TARGET breakpad-client-static PROPERTY INTERFACE_INCLUDE_DIRECTORIE
 target_link_libraries(breakpad-client-static INTERFACE pthread)
 
 # install the minidump tools to target binary dir
-install(PROGRAMS ${INSTALL_DIR}/bin/minidump-2-core DESTINATION bin COMPONENT Program)
-install(PROGRAMS ${INSTALL_DIR}/bin/minidump_dump DESTINATION bin COMPONENT Program)
-install(PROGRAMS ${INSTALL_DIR}/bin/minidump_stackwalk DESTINATION bin COMPONENT Program)
-install(PROGRAMS ${INSTALL_DIR}/bin/minidump_upload DESTINATION bin COMPONENT Program)
+install(PROGRAMS ${INSTALL_DIR}/bin/minidump-2-core DESTINATION . COMPONENT EXECUTABLE)
+install(PROGRAMS ${INSTALL_DIR}/bin/minidump_dump DESTINATION . COMPONENT EXECUTABLE)
+install(PROGRAMS ${INSTALL_DIR}/bin/minidump_stackwalk DESTINATION . COMPONENT EXECUTABLE)
+install(PROGRAMS ${INSTALL_DIR}/bin/minidump_upload DESTINATION . COMPONENT EXECUTABLE)
 
