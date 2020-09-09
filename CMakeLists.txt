@@ -202,6 +202,7 @@ install(FILES bin/etc/gdev_block.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/plug/conflist.inf DESTINATION plug COMPONENT PROFILE)
 install(FILES bin/etc/send_gdev.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/send_route.conf DESTINATION etc COMPONENT PROFILE)
+install(FILES bin/etc/sapp_log.conf DESTINATION etc COMPONENT PROFILE)
 
 if(NOT ENABLE_STATIC_LINK)
 
