@@ -9,6 +9,8 @@ include(Version)
 
 set(CMAKE_MACOSX_RPATH 0)
 
+find_package(SYSTEMD REQUIRED)
+
 set(CMAKE_BUILD_TYPE "DEBUG" CACHE STRING
     " set CMAKE_BUILD_TYPE chosen by the user, using DEBUG as default")
 set_property(CACHE CMAKE_BUILD_TYPE  PROPERTY STRINGS DEBUG RELEASE
