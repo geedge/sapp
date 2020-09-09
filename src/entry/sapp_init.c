@@ -1,6 +1,8 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
+/* Systemd */
+#include <systemd/sd-daemon.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -422,6 +424,12 @@ int MESA_platform_init(int argc, char *argv[])
 	return 0;	
 }
 
+/* 检查本进程是否通过SYSTEMD启动 */
+static int check_is_started_by_notify()
+{
+	char *notify_socket = getenv("NOTIFY_SOCKET");
+	return notify_socket == NULL ? 0 : 1;
+}
 
 void MESA_platform_run(void)
 {
@@ -436,6 +444,14 @@ void MESA_platform_run(void)
 	packet_io_run();
 
 	sapp_set_current_state(SAPP_STATE_PROCESSING);
+	/* If TFE is run by systemd's notify, then tell the systemd our tfe is ready.
+	 * and disable the stderr log, only print logs into files */
+	if (check_is_started_by_notify())
+	{
+		sd_notify(0, "READY=1");
+		sleep(1);
+	}
+
 
 #if (0 == SAPP_AS_TARGET_SO)	
 	while(1){
