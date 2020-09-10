@@ -28,7 +28,8 @@ branch_build_debug:
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
   except:
-    - /^develop.*$/i
+    - /^dev*.*$/i
+    - /^rel*.*$/i
     - /^master.*$/i
     - tags
 
@@ -40,7 +41,8 @@ branch_build_release:
     PLATFORM_MODE: INLINE
   extends: .build_by_travis
   except:
-    - /^develop.*$/i
+    - /^dev*.*$/i
+    - /^rel*.*$/i
     - /^master.*$/i
     - tags
 
@@ -57,7 +59,8 @@ develop_build_debug:
     paths:
       - build/*.rpm
   only:
-    - /^develop.*$/i
+    - /^dev*.*$/i
+    - /^rel*.*$/i
     - /^master.*$/i
 
 develop_build_release:
@@ -73,7 +76,8 @@ develop_build_release:
     paths:
       - build/*.rpm
   only:
-    - /^develop.*$/i
+    - /^dev*.*$/i
+    - /^rel*.*$/i
     - /^master.*$/i
 
 
@@ -95,3 +99,24 @@ release_build_release:
       - build/*.rpm
   only:
     - tags
+  except:
+    - /^v[0-9].*-testing$/i    
+
+testing_build_release:
+  stage: build
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
+    PACKAGE: 1
+    UPLOAD: 1
+    SYMBOL_TARGET: sapp
+    PULP3_REPO_NAME: platform-testing-x86_64.el7
+    PULP3_DIST_NAME: platform-testing-x86_64.el7
+  extends: .build_by_travis
+  artifacts:
+    name: "sapp-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*.rpm
+  only:
+    - /^v[0-9].*-testing$/i 
