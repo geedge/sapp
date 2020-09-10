@@ -3,10 +3,18 @@ Description=sapp service
 After=After=network.target
 
 [Service]
+Type=notify
 WorkingDirectory=${CMAKE_INSTALL_PREFIX}
 ExecStart=${CMAKE_INSTALL_PREFIX}/sapp
+TimeoutSec=300s
+RestartSec=10s
 Restart=always
-RestartSec=5s
+LimitNOFILE=524288
+LimitNPROC=infinity
+LimitCORE=infinity
+TasksMax=infinity
+Delegate=yes
+KillMode=processs
 
 [Install]
 WantedBy=multi-user.target
