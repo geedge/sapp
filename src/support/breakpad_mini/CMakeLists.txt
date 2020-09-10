@@ -38,7 +38,7 @@ add_subdirectory(vendor)
 add_subdirectory(src)
 add_subdirectory(demo)
 
-set(DEPEND_DYN_LIB MESA_handle_logger  MESA_prof_load)
+set(DEPEND_DYN_LIB MESA_handle_logger2  MESA_prof_load)
 
 set(CMAKE_INSTALL_PREFIX /opt/MESA/)
 
