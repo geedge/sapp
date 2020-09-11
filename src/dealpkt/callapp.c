@@ -442,10 +442,6 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 #endif
 			}
 			local_app_ret = pFunInfo->appState;
-			if(pFunInfo->appState&APP_STATE_DROPPKT)	
-			{
-				ret=DROP;
-			}
 
 			if(!(pFunInfo->appState&APP_STATE_DROPME))
 			{
@@ -482,6 +478,12 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 				/* 如果在pending阶段, KILL FOLLOW直接退出循环即可 */
 				break;
 			}
+			
+			if(local_app_ret & APP_STATE_DROPPKT)	
+			{
+				ret=DROP;
+				break; //2020-09-10 lijia add, 后续插件不调用
+			}			
 		}
 		
 		//不需要再次送入包的fun，在这里释放
@@ -545,11 +547,6 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 			}
 			local_app_ret = pFunInfo->appState;
 			
-			if(pFunInfo->appState&APP_STATE_DROPPKT)	
-			{
-				ret=DROP;			
-			}
-			
 			if(pFunInfo->appState&APP_STATE_DROPME)
 			{
 				if(pPrev==NULL)
@@ -609,6 +606,11 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 			if(local_app_ret & (APP_STATE_KILL_FOLLOW | APP_STATE_KILL_OTHER)){
 				break;
 			}
+			if(local_app_ret&APP_STATE_DROPPKT)	
+			{
+				ret=DROP;	
+				break; //2020-09-10 lijia add, 后续插件不调用
+			}			
 		}
 
 		//处理过程中大家都不需要了
