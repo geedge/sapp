@@ -564,11 +564,12 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 
 				if(local_app_ret & APP_STATE_KILL_FOLLOW){
 					plug_entry_kick_out_tot_list(pNext, a_stream);
-					pPrev->next = NULL;
 					if(NULL == pPrev){
 						/* 当前插件在第一个, KILL_FOLLOW &    APP_STATE_DROPME相当于全部插件DROPME*/
 						pFunList = NULL; /* 全部插件CLOSE */
 						*apme = NULL; /* 2020-05-08 lijia modify */
+					}else{
+						pPrev->next = NULL;
 					}
 				/* 2019-11-15 lijia add for plug kill other */
 				}else if(local_app_ret & APP_STATE_KILL_OTHER){
