@@ -4,6 +4,7 @@
 extern "C" {
 #endif
 
+#if 0  //move to stream_control.h
 enum sapp_state_t{
 	SAPP_STATE_JUST_START, /* main() called by shell command */
 	SAPP_STATE_CONFIG_PARSE,
@@ -16,8 +17,7 @@ enum sapp_state_t{
 	SAPP_STATE_PROCESSING,
 	SAPP_STATE_READY_TO_EXIT, /* only for pcap dumpfile */
 };
-
-enum sapp_state_t sapp_get_current_state(void);
+#endif
 
 #ifdef __cplusplus
 }

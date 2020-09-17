@@ -1,3 +1,4 @@
+#include "stream.h"
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
@@ -13,6 +14,33 @@ static unsigned short phony_protocol_plugid;
 #define TEST_NETWORK_FLOW  1
 #define TEST_SAPP_API		   1
 
+
+char test_gtp_volatile_addr_entry(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
+{
+	enum stream_carry_tunnel_t tunnel_type;
+	int opt_len = sizeof(tunnel_type);
+	char addr_list_str[1024];
+
+	if(stream_addr_list_ntop(pstream, addr_list_str, sizeof(addr_list_str)) < 0){
+		printf("stream_addr_list_ntop() error!\n");
+		return -1;
+	}
+
+	if(pstream->opstate== OP_STATE_PENDING){
+		MESA_get_stream_opt(pstream, MSO_STREAM_TUNNEL_TYPE, &tunnel_type, &opt_len);
+		if(tunnel_type != STREAM_TUNNEL_GPRS_TUNNEL){
+			return APP_STATE_DROPME;
+		}
+		
+		printf("gtp layer pending: %s\n", addr_list_str);
+	}else if(pstream->opstate== OP_STATE_CLOSE){
+		printf("gtp layer close  : %s\n", addr_list_str);
+	}else{
+		printf("gtp layer data   : %s\n", addr_list_str);
+	}
+
+	return APP_STATE_GIVEME;
+}
 
 
 #if TEST_SAPP_API
@@ -797,7 +825,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 }
 
 
-/* 关于网络相关字段, 均为网络序, network order */
+/* 关于网络相关字段, 均为网络�? network order */
 struct __inline_vxlan_hdr{
 	unsigned char flags;
 
@@ -805,7 +833,7 @@ struct __inline_vxlan_hdr{
 #if 0	
 	unsigned char reserved[3];
 #else
-	unsigned char nat_type; /* 复用一个保留字段, 表示NAT类型 */
+	unsigned char nat_type; /* 复用一个保留字�? 表示NAT类型 */
 	unsigned char reserved[2];
 #endif
 	/*--------int delim -------*/
@@ -1333,6 +1361,22 @@ char test_get_rawpkt_options(struct streaminfo *stream,void **pme, int thread_se
 	return APP_STATE_GIVEME;
 }
 
+char test_stream_addr_list_ntop(const struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+{
+	int ret;
+	char addr_list_str[4096];
+
+	if(OP_STATE_CLOSE == stream->opstate){
+		ret = stream_addr_list_ntop(stream, addr_list_str, 4096);
+		if(ret < 0){
+			printf("stream_addr_list_ntop ret = %d\n", ret);
+			assert(0);
+		}
+		printf("addr-list len is:\t%d, value:\t%s\n", ret, addr_list_str);
+	}
+
+	return APP_STATE_GIVEME;
+}
 
 
 char test_inet_addr_list_addr(const struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)

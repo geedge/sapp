@@ -441,7 +441,7 @@ void *sapp_time_event_thread(void *arg)
 		
 		ABBR_CURRENT_TIME_MS = sapp_get_current_time_in_ms();
 		
-		usleep(100);
+		usleep(10);
 	}
 	
 	return NULL;

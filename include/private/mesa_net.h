@@ -39,7 +39,7 @@ extern "C"
 #define ETHERTYPE_VLAN          		0x8100  /* IEEE 802.1Q VLAN tagging */
 #define ETHERTYPE_LOOPBACK      	0x9000  /* used to test interfaces */
 
-#define ETH_P_MAC_IN_MAC			0x88A8 /* pangu项目借用88a8类型, 用于回流MAC_IN_MAC数据包 */
+#define ETH_P_MAC_IN_MAC			0x88A8 /* pangu项目借用88a8类型, 用于回流MAC_IN_MAC数据包, 按linux标准0x88A8是ETH_P_8021AD类型 */
 
 #define ETHERTYPE_PANGU_MAC_IN_MAC 0x88A8 /* 2018-08-16 lijia add, for pangu MAC-in-MAC */
 
@@ -622,7 +622,8 @@ struct mesa_gre_hdr{
 #define MPLS_TTL_MASK		(0x000000FF)
 struct mesa_mpls_hdr{
 #if __BYTE_ORDER == __LITTLE_ENDIAN 
-	unsigned short mpls_label_low;
+	unsigned char mpls_label_low;
+	unsigned char mpls_label_mid;
 	unsigned char mpls_bls:1;	/* bottom of label stack */
 	unsigned char mpls_exp:3;
 	unsigned char mpls_label_high:4;

@@ -4,6 +4,8 @@
 #include <pthread.h>
 #include <netinet/in.h>
 #include "sapp_pkt_stat.h"
+#include "sapp_limits.h"
+
 
 #ifndef RTE_CACHE_LINE_SIZE
 	#define RTE_CACHE_LINE_SIZE 64

@@ -85,6 +85,29 @@ static void sapp_dictator_init(void)
 #endif	
 }
 
+static void sapp_platform_finish_up(void)
+{
+	/* 
+		新建文件夹: ./sapp_status/
+		
+		输出已注册成功的project tag 列表, project_list.status, 
+		name, type
+
+		
+		输出所有插件的加载信息, 不管是成功还是不成功, 要不每次cat | grep runtime.log
+		plug_load.status, plug_name, plug_path, state(succ,fail)
+
+		
+		输出sapp状态迁移变化的时间记录, sapp_state.staus:
+		start_time  	state
+		01:00:00		just_start
+		01:00:01		platform_init
+		01:01:01		plugctrl_init
+		02:01:01		processing
+	*/
+	return;
+}
+
 int MESA_platform_init(int argc, char *argv[])
 {
 	int queue_max_num, ipv6_switch = 0;
@@ -409,6 +432,18 @@ int MESA_platform_init(int argc, char *argv[])
 	/*
 		2019-04-11, marsio已经无上述问题, 再恢复成先调用packet_io_init(), 后调用plugctrl().
 	*/
+
+	/*
+		2020-09-15, 如果packet_io_init先调用, 驱动已经打开收包队列, 
+		但是插件可能还没初始化完成, sapp不会真正开始收包, 流量大的情况下, 驱动队列缓冲区满了会导致丢包,
+		改成先调用plugctrl(), 后调用packet_io_init().
+	*/
+	sapp_set_current_state(SAPP_STATE_PLUG_INITING);
+	plugctrl_proc();
+
+	sapp_platform_finish_up(); /* 支持动态project tag注册, 必须在所有插件初始化完成后调用, 做一些平台初始化阶段的收尾工作 */
+	sapp_set_current_state(SAPP_STATE_PLUG_INITED);
+
 	sapp_set_current_state(SAPP_STATE_PKT_IO_INITING);
 #if (0 == SAPP_AS_TARGET_SO) /* 做为.so模式, 无需初始化packet_io */	
 	if(packet_io_init(argc, argv) < 0){
@@ -417,10 +452,6 @@ int MESA_platform_init(int argc, char *argv[])
 #endif	
 	sapp_set_current_state(SAPP_STATE_PKT_IO_INITED);
 
-	sapp_set_current_state(SAPP_STATE_PLUG_INITING);
-	plugctrl_proc();
-	sapp_set_current_state(SAPP_STATE_PLUG_INITED);
-	
 	return 0;	
 }
 

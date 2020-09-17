@@ -98,15 +98,19 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			((raw_pkt_t *)raw_pkt)->raw_pkt_len = raw_pkt->__lib_raw_pkt_len - sizeof(struct mesa_ethernet_hdr);
 		}
 	}
+	
 	if(sapp_global_val->config.packet_io.create_mpls_anyway != 0)
 	{
 		if(eth_type == ETHERTYPE_IP || eth_type == ETHERTYPE_IPv6)
 		{
 			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
 			ret = mpls_empty_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+			return ret;
 		}
 	}
-	else
+
+	/* 2020-09-17 lijia modify, create_mpls_anyway标志, 如果上层不是标准的ipv4, ipv6层, 比如是MAC_IN_MAC, VLAN等, 此处要继续执行, 不能是else */
+	//else
 	{
 		switch(eth_type){
 			case ETHERTYPE_IP:
@@ -150,9 +154,10 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			break;
 
 			/* 2018-08-19 lijia add, for PanGu项目并联回流流量格式, 复用了ETH_P_8021AD(0x88A8)字段, 实际是MAC-IN-MAC格式数据包 */
-			case ETH_P_MAC_IN_MAC:
+			case ETHERTYPE_PANGU_MAC_IN_MAC:
 				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-				ret = mac_in_mac_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
+				//ret = mac_in_mac_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
+				ret = eth_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
 			break;
 
 			default:

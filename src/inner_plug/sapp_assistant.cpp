@@ -140,7 +140,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_TOTAL_RCV_PKT error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			unsigned long long *tot_pkt = (unsigned long long *)opt_val;
@@ -152,7 +152,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_TOTAL_RCV_BYTE error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			unsigned long long *tot_byte = (unsigned long long *)opt_val;
@@ -164,7 +164,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_TOTAL_INBOUND_PKT error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			unsigned long long *inbound_pkt = (unsigned long long *)opt_val;
@@ -176,7 +176,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_TOTAL_INBOUND_BYTE error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			unsigned long long *inbound_byte = (unsigned long long *)opt_val;
@@ -189,7 +189,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_TOTAL_OUTBOUND_PKT error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			unsigned long long *outbound_pkt = (unsigned long long *)opt_val;
@@ -201,7 +201,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_TOTAL_OUTBOUND_BYTE error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			unsigned long long *outbound_byte = (unsigned long long *)opt_val;
@@ -214,7 +214,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_TCP_STREAM_NEW error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			unsigned long long *tot_num = (unsigned long long *)opt_val;
@@ -226,7 +226,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_TCP_STREAM_ESTAB error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			unsigned long long *tot_num = (unsigned long long *)opt_val;
@@ -238,7 +238,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_TCP_STREAM_CLOSE error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			unsigned long long *tot_num = (unsigned long long *)opt_val;
@@ -250,7 +250,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_UDP_STREAM_NEW error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			unsigned long long *tot_num = (unsigned long long *)opt_val;
@@ -262,7 +262,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_UDP_STREAM_CONCURRENT error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			unsigned long long *tot_num = (unsigned long long *)opt_val;
@@ -275,7 +275,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_UDP_STREAM_CLOSE error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			unsigned long long *tot_num = (unsigned long long *)opt_val;
@@ -494,7 +494,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(int)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_THREAD_COUNT error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 
@@ -507,7 +507,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(time_t)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_CURTIME_TIMET error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			time_t *curtime = (time_t *)opt_val;
@@ -533,7 +533,8 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			if(*opt_val_len <= (int)strlen("1970-01-01 11:11:11")){
 
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_CURTIME_STRING error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;			
 			}
 			time_t cur_time = g_CurrentTime;
@@ -552,7 +553,8 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(time_t)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_START_TIME error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			time_t *stime = (time_t *)opt_val;
@@ -564,7 +566,8 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(time_t)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_RUN_TIME error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			time_t *runtime = (time_t *)opt_val;
@@ -577,7 +580,8 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_RAND_NUMBER error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 
@@ -594,7 +598,8 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_FIELD_STAT_HANDLE error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
 			void **out_handle = (void **)opt_val;
@@ -646,7 +651,8 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		{
 			if(*opt_val_len <= strlen(sapp_global_val->config.packet_io.depolyment_mode_str)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() SPO_DEPLOYMENT_MODE_STR error:opt_val_len:%d is not enough!\n", *opt_val_len);
+				
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_DEPLOYMENT_MODE_STR error:opt_val_len:%d is not enough!\n", *opt_val_len);
 				break;
 			}
 			strncpy((char *)opt_val, sapp_global_val->config.packet_io.depolyment_mode_str, *opt_val_len);
@@ -663,9 +669,10 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			enum sapp_state_t *cur_stage = (enum sapp_state_t *)opt_val;
 			*cur_stage = (enum sapp_state_t)sapp_global_val->individual_volatile->current_state;
 		}
-	
+		
 		default:
-			sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_type:%d not support!\n", (int)opt);
+			
+			sapp_runtime_log(RLOG_LV_FATAL, "sapp_get_platform_opt() error:opt_type:%d not support!\n", (int)opt);
 			ret = -1;
 	}
 

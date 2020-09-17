@@ -18,9 +18,18 @@ bind_mask=[]
 dictator_enable=1
 
 [PACKET_IO]
+	[overlay_tunnel_definition]
+
+### note, for mpls asymmetric, 0 vs N
+	create_mpls_anyway=0
+	    
+### note, layer number starts from 0, for example: ethernet[0]	
+	overlay_layer_set="ethernet[0],ipv4[1],tupl4v4[1]"
+	prune_inject_layer_set="gtp[3]"
+	
     [packet_io.feature]
 ### note, used to represent inbound or outbound direction value,
-### because it comes from other device, so it needs to be specified manually,
+### because it comes from Third party device, so it needs to be specified manually,
 ### if inbound_route_dir=1, then outbound_route_dir=0, vice versa,
 ### in other words, outbound_route_dir = 1 ^ inbound_route_dir;
     inbound_route_dir=1
@@ -31,7 +40,7 @@ dictator_enable=1
 ### note, same as tcpdump -Q/-P arg, possible values are `in', `out' and `inout', default is "in"
     pcap_capture_direction="in"
 
-    create_mpls_anyway=0
+
 
 ### note, depolyment.mode options: [sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]
 ### sys_route: send ip(ipv6) packet by system route table, this is default mode in mirror mode;

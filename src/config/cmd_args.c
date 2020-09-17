@@ -50,7 +50,7 @@ static const struct option sapp_cla_long_options[] =
 	{"dumpfile-file",	required_argument,  NULL,      'r'},
 	{"dumpfile-speed",	required_argument,  NULL,      0},
 	{"sample-config", 	no_argument,      	NULL,      'c'},
-	{"coredump", 	no_argument,      	NULL,      'g'},
+	{"coredump", 		no_argument,      	NULL,      'g'},
 	{NULL,          	0,      			NULL,      0}
 };
 
@@ -83,7 +83,8 @@ static int check_args_sanity(void)
 	if(sapp_get_cla_raw("dumpfile", &no_use) >= 0){
 		dumpfile_mode_enabled = 1;
 	}
-	
+
+#if 0	
 	if((sapp_get_cla_raw("dumpfile-file", &no_use) >= 0) && (0 == dumpfile_mode_enabled)){
 		sapp_log(30, ~0, ~0, "args --dumpfile-file must used with --dumpfile!");
 		exit(1);
@@ -93,6 +94,7 @@ static int check_args_sanity(void)
 		sapp_log(30, ~0, ~0, "args --dumpfile-speed must used with --dumpfile!");
 		exit(1);
 	}
+#endif
 
 	return 0;
 }
@@ -250,6 +252,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 			break;
 
 			case 'r':
+				store_cmd_args("dumpfile", NULL);
 				store_cmd_args("dumpfile-file", optarg);
 				continue;
 			break;

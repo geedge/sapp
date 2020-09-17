@@ -460,7 +460,7 @@ static void *gdev_keepalive_log_thread(void *arg)
 			continue;
 		}
 		platform_thread_num = get_thread_count();
-		timet_to_str(g_CurrentTime, cur_time_str, 64);
+		timet_to_str(time(NULL), cur_time_str, 64);
 		fprintf(gdev_status_fp, "%-20s %-16s %-11s %-5s %-5s %-16s %-16s\n", 
 						    "Last-update-time", "Gdev-ip", "Service-Num", "Ctrl", "Type", "Rcv-pkt", "Snd-pkt");
 		

@@ -84,25 +84,25 @@ static const addr_convert_t G_ADDR_CONVERT_HANDLE[] =
 	{ADDR_TYPE_IPV6,			STREAM_TYPE_UDP,"ADDR_TYPE_TUPLE4V6",	"IPv6_UDP",	"IPv6_UDP<",__addr_udp_n2p_fun, __addr_udpv6_pton},	/* 2, 基于IPv6地址的四元组信息 */
 #endif
 	{ADDR_TYPE_VLAN,			STREAM_TYPE_NON,"ADDR_TYPE_VLAN",		"VLAN",		"VLAN<",__addr_vlan_n2p_fun,__addr_vlan_pton},	/* 3 */
-	{ADDR_TYPE_MAC,			STREAM_TYPE_NON,"ADDR_TYPE_MAC",		"MAC",		"MAC<",__addr_mac_n2p_fun,__addr_mac_pton}, /* 4 */
-	{ADDR_TYPE_ARP,			STREAM_TYPE_NON,"ADDR_TYPE_ARP",		"ARP",		"ARP<",__addr_arp_n2p_fun,__addr_arp_pton},				/* 5 */
-	{ADDR_TYPE_GRE,			STREAM_TYPE_NON,"ADDR_TYPE_GRE",		"GRE",		"GRE<",__addr_gre_n2p_fun,__addr_gre_pton},		/* 6 */
+	{ADDR_TYPE_MAC,				STREAM_TYPE_NON,"ADDR_TYPE_MAC",		"MAC",		"MAC<",__addr_mac_n2p_fun,__addr_mac_pton}, /* 4 */
+	{ADDR_TYPE_ARP,				STREAM_TYPE_NON,"ADDR_TYPE_ARP",		"ARP",		"ARP<",__addr_arp_n2p_fun,__addr_arp_pton},				/* 5 */
+	{ADDR_TYPE_GRE,				STREAM_TYPE_NON,"ADDR_TYPE_GRE",		"GRE",		"GRE<",__addr_gre_n2p_fun,__addr_gre_pton},		/* 6 */
 	{ADDR_TYPE_MPLS,			STREAM_TYPE_NON,"ADDR_TYPE_MPLS",		"MPLS",		"MPLS<",__addr_mpls_n2p_fun,__addr_mpls_pton},/* 7 */
 	{ADDR_TYPE_PPPOE_SES,		STREAM_TYPE_PPPOE,"ADDR_TYPE_PPPOE",	"PPPOE",		"PPPOE<",__addr_pppoe_n2p_fun,__addr_pppoe_pton},/* 8 */
-	{ADDR_TYPE_TCP,			STREAM_TYPE_NON,"ADDR_TYPE_TCP",		"TCP",		"TCP<",__addr_pure_tcp_n2p_fun, __addr_pure_tcp_pton},		/* 9 */
-	{ADDR_TYPE_UDP,			STREAM_TYPE_NON,"ADDR_TYPE_UDP",		"UDP",		"UDP<",__addr_pure_udp_n2p_fun,__addr_pure_udp_pton},		/* 10 */
+	{ADDR_TYPE_TCP,				STREAM_TYPE_NON,"ADDR_TYPE_TCP",		"TCP",		"TCP<",__addr_pure_tcp_n2p_fun, __addr_pure_tcp_pton},		/* 9 */
+	{ADDR_TYPE_UDP,				STREAM_TYPE_NON,"ADDR_TYPE_UDP",		"UDP",		"UDP<",__addr_pure_udp_n2p_fun,__addr_pure_udp_pton},		/* 10 */
 	{ADDR_TYPE_L2TP,			STREAM_TYPE_L2TP,"ADDR_TYPE_L2TP",		"L2TP",		"L2TP<",__addr_l2tp_n2p_fun,__addr_l2tp_pton},	/* 11 */
 	{__ADDR_TYPE_IP_PAIR_V4,	STREAM_TYPE_NON,"ADDR_TYPE_IPPAIR_V4",	"IPv4",		"IPv4<",__addr_ip4_n2p_fun,__addr_ipv4_pton},/* 12, 纯IPv4地址对 */
 	{__ADDR_TYPE_IP_PAIR_V6,	STREAM_TYPE_NON,"ADDR_TYPE_IPPAIR_V6",	"IPv6",		"IPv6<",__addr_ip6_n2p_fun,__addr_ipv6_pton},/* 13, 纯IPv6地址对 */
-	{ADDR_TYPE_PPP,			STREAM_TYPE_NON,"ADDR_TYPE_PPP",		"PPP",		"PPP<",__addr_ppp_n2p_fun,__addr_ppp_pton},/* 14 */
+	{ADDR_TYPE_PPP,				STREAM_TYPE_NON,"ADDR_TYPE_PPP",		"PPP",		"PPP<",__addr_ppp_n2p_fun,__addr_ppp_pton},/* 14 */
 	{ADDR_TYPE_IPV4,			STREAM_TYPE_SOCKS4,"ADDR_TYPE_SOCKS",	"SOCKS",		"SOCKS<",__addr_socks_n2p_fun,__addr_sockv4_pton},/* 14 */
 	{ADDR_TYPE_IPV4,			STREAM_TYPE_SOCKS5,"ADDR_TYPE_SOCKS",	"SOCKS",		"SOCKS<",__addr_socks_n2p_fun,__addr_sockv4_pton},/* 14 */
 	{ADDR_TYPE_PPTP,			STREAM_TYPE_PPTP,"ADDR_TYPE_PPPTP",		"PPTP", 		"PPTP<",__addr_pptp_n2p_fun, __addr_pptp_pton}, /* 15 */
-	{ADDR_TYPE_MAC_IN_MAC,	STREAM_TYPE_NON, "ADDR_TYPE_MAC_IN_MAC",		"MAC_IN_MAC",		"MAC_IN_MAC<",__addr_mac_in_mac_n2p_fun,__addr_mac_in_mac_pton}, /* 4 */
+	{ADDR_TYPE_MAC_IN_MAC,		STREAM_TYPE_NON, "ADDR_TYPE_MAC_IN_MAC",	"MAC_IN_MAC",	"MAC_IN_MAC<",__addr_mac_in_mac_n2p_fun,__addr_mac_in_mac_pton}, /* 4 */
 	{ADDR_TYPE_IPV4,			STREAM_TYPE_OPENVPN,"ADDR_TYPE_OPENVPN",	"OpenVPN",	"OpenVPN<",__addr_openvpn_n2p_fun,__addr_openvpn_pton},/* 2017-02-10 lijia add */
 	{ADDR_TYPE_IPV6,			STREAM_TYPE_OPENVPN,"ADDR_TYPE_OPENVPN",	"OpenVPN",	"OpenVPN<",__addr_openvpn_n2p_fun,__addr_openvpn_pton},/* 2017-02-10 lijia add */
-    {ADDR_TYPE_GPRS_TUNNEL,			STREAM_TYPE_NON,"ADDR_TYPE_GTP",		"GTP",		"GTP<",__addr_gtp_n2p_fun,__addr_gtp_pton},	/*  */
-    {__ADDR_TYPE_MAX,		STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL} /* EOF */
+    {ADDR_TYPE_GPRS_TUNNEL,		STREAM_TYPE_NON,"ADDR_TYPE_GTP",			"GTP",		"GTP<",__addr_gtp_n2p_fun,__addr_gtp_pton},	/*  */
+    {__ADDR_TYPE_MAX,			STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL} /* EOF */
 };
 
 
@@ -1375,13 +1375,45 @@ static int __addr_gre_n2p_fun(const struct layer_addr *paddr, char *buf, int buf
 
 static int __addr_mpls_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
-#define __MPLS_ADDR_STRING		"NULL"
+	const struct layer_addr_mpls *mpls_addr = paddr->mpls;
+	const struct mesa_mpls_hdr *net_mpls_hdr;
+	int i;
+	int mpls_label;
+	char tmp_buf[32];
+	/* 注意有非对称mpls的情况 */
+	int max_layer_num = mpls_addr->src_mpls_layer_num > mpls_addr->dest_mpls_layer_num ? mpls_addr->src_mpls_layer_num:mpls_addr->dest_mpls_layer_num;
 
-	int addr_len = strlen(__MPLS_ADDR_STRING);
+	char mpls_addr_string[128] = {};
+
+	for(i = 0; i < max_layer_num; i++){
+		if(mpls_addr->src_mpls_layer_num >= i+1){
+			mpls_label = 0;
+			net_mpls_hdr = (struct mesa_mpls_hdr *)&mpls_addr->src_mpls_pkt[i];
+			mpls_label = (net_mpls_hdr->mpls_label_low<<12) | (net_mpls_hdr->mpls_label_mid<<4) | net_mpls_hdr->mpls_label_high; /* network order */
+			snprintf(tmp_buf, 32, "%d", mpls_label);
+			strcat(mpls_addr_string, tmp_buf);
+		}else{
+			strcat(mpls_addr_string, "N/A");
+		}
+		if(mpls_addr->dest_mpls_layer_num >= i+1){
+			mpls_label = 0;
+			net_mpls_hdr = (struct mesa_mpls_hdr *)&mpls_addr->dest_mpls_pkt[i];
+			mpls_label = (net_mpls_hdr->mpls_label_low<<12) | (net_mpls_hdr->mpls_label_mid<<4) | net_mpls_hdr->mpls_label_high; /* network order */
+			snprintf(tmp_buf, 32, "-%d", mpls_label);
+			strcat(mpls_addr_string, tmp_buf);
+		}else{
+			strcat(mpls_addr_string, "-N/A");
+		}
+		if(i < max_layer_num-1){
+			strcat(mpls_addr_string, ",");
+		}
+	}
+	
+	int addr_len = strlen(mpls_addr_string);
 	if(buf_len <= addr_len + 1){
 		return -1;
 	}
-	strncpy(buf, __MPLS_ADDR_STRING, addr_len + 1);
+	strncpy(buf, mpls_addr_string, addr_len + 1);
 
 	return addr_len + 1;
 }

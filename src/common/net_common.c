@@ -530,7 +530,12 @@ static int vlan8021q_jump_to_layer(const char *raw_data,  int raw_layer_type, in
 			skip_len = -1;
 		break;
 
-		case 0x8200: /* XinJing捕包发现此类型, 未知什么包 */
+		/* QinQ */
+		case ETH_P_8021Q:
+			skip_len = sizeof(struct mesa_vlan_hdr);
+		break;
+
+		case 0x8200: /* XinJiang捕包发现此类型, 未知什么包 */
 			skip_len = -1;
 		break;
 		
@@ -824,6 +829,10 @@ UINT16 net_layer_to_ethernet_protocol(int addr_type)
 
 		case ADDR_TYPE_ARP:
 			ether_type = ETH_P_ARP;
+		break;
+
+		case ADDR_TYPE_MAC:
+			ether_type = ETHERTYPE_PANGU_MAC_IN_MAC;
 		break;
 		
 		default:

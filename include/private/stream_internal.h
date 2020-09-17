@@ -142,7 +142,7 @@ struct streaminfo_private
 	UCHAR  stream_dir:1; /* 流的生存期内有效, 流的存储的地址是否和默认规则"大端口是客户端"相同  */		
 	UCHAR  stream_c2s_route_dir:1; /* c2s方向的包, 对应的链路route dir方向, 用于获取inbound, outbound流量 */
 	UCHAR  addr_use_as_hash:1; /* 本层的addr是否做为HASH计算和比较的参数, 如:MAC地址不参与计算 */
-	UCHAR  addr_skip_for_layer_cmp:1;/*本层的addr是否作为地址比较的层级，如：MPLS地址不作为层数计算，直接跳过，该值默认为0，即需要比较*/
+	UCHAR  addr_skip_for_layer_cmp:1;/*因MPLS两侧不对称, 尤其是还有一边有MPLS, 另一端没有MPLS的流, 此变量=1表示虚拟构建的层, 解析时不作为地址比较, 发包时也要跳过 */
 	UCHAR  need_update_opposite_addr:1;/*本层的addr是否在对侧来包时更新，如：MPLS标签非对称时需要在S2C侧第一个包记录本侧标签,该值默认为0，即不需要更新*/
 	UCHAR  stream_killed_flag:1; /* 2014-08-22 lijia add, 串联模式下, 已经被插件Kill, 之后此流可直接Drop或Kill, 无需再给上层插件 */
 	UCHAR  dirreverse;	     /* 建立连接时是否进行了ip地址反转, 即与"大端口是客户端"规则相反 */
@@ -182,6 +182,11 @@ struct streaminfo_private
 	*/
 	unsigned long long global_stream_id; 
 	unsigned long long stream_create_timestamp_ms; 
+	/* ===8 bytes=== */
+	unsigned char layer_index:4; /* 表示当前层的计数, 从最底层开始,一般是ethernet开始, 从0开始计数, 4bit最多支持15层嵌套, 也能防止隧道嵌套攻击(目前还没捕到过包) */
+	char __pad2:4;
+	char __pad3[7];
+	/* ===8 bytes=== */
 };
 
 struct tcpdetail_private
@@ -373,6 +378,7 @@ int save_polling_inject_context(struct streaminfo_private *pstream_pr, const raw
 void free_polling_inject_context(struct streaminfo_private *pstream_pr);
 int update_polling_inject_context(struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt);
 unsigned long long get_global_stream_id(unsigned long long thread_seq);
+enum sapp_state_t sapp_get_current_state(void);
 
 
 #ifdef __cplusplus

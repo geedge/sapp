@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define STREAM_CONTROL_H_VERSION		(20191226)
+#define STREAM_CONTROL_H_VERSION		(20200915)
 
 #define TCP_CTEAT_LINK_BYSYN   			0x01  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
 #define TCP_CTEAT_LINK_BYDATA 			0x02  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
@@ -81,7 +81,11 @@ enum sapp_platform_opt{
 	SPO_UDP_STREAM_NEW,			/* total created udp streams from start, opt_val type must be unsigned long long */
 	SPO_UDP_STREAM_CLOSE,		/* total closed udp streams from start, opt_val type must be unsigned long long */
 	SPO_UDP_STREAM_CONCURRENT,	/* realtime Concurrent udp streams, opt_val type must be unsigned long long */	
+<<<<<<< .mine
 
+=======
+
+>>>>>>> .theirs
 	SPO_TOTAL_RCV_INBOUND_IPV4_PKT,		/* total recv ipv4 packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_INBOUND_IPV4_BYTE,		/* total recv ipv4 packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_OUTBOUND_IPV4_PKT,	/* total recv ipv4 packet bytes, opt_val type must be unsigned long long */
@@ -184,6 +188,20 @@ struct vxlan_info{
 	unsigned char inner_dmac[18]; /* 内层真实DMAC, string类型, 例: "11:22:33:44:55:66"  */
 	unsigned char inner_smac_hex[6]; /* 内层真实SMAC, 原始二进制类型  */
 	unsigned char inner_dmac_hex[6]; /* 内层真实DMAC, 原始二进制类型  */	
+};
+
+
+enum sapp_state_t{
+	SAPP_STATE_JUST_START, /* main() called by shell command */
+	SAPP_STATE_CONFIG_PARSE,
+	SAPP_STATE_PLATFORM_INITING,
+	SAPP_STATE_PLATFORM_INITED,
+	SAPP_STATE_PLUG_INITING,
+	SAPP_STATE_PLUG_INITED, 
+	SAPP_STATE_PKT_IO_INITING,
+	SAPP_STATE_PKT_IO_INITED,		
+	SAPP_STATE_PROCESSING,
+	SAPP_STATE_READY_TO_EXIT, /* pcap dumpfile mode, or recv custom signal */
 };
 
 

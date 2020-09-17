@@ -633,6 +633,10 @@ int sapp_parse_config(void)
 		tomlc99_wrap_load_int_def(default_config_file, (char *)"MEM", (char *)"dictator_enable", (int *)&pconfig->mem.dictator_enable, 1);
 	
 	/*******************************  PACKET_IO ******************************/
+
+	/*******************************  packet_io.overlay_tunnel_definition ******************************/
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"create_mpls_anyway", &pconfig->packet_io.create_mpls_anyway, 0);
+	
 	/*******************************  packet_io.feature ******************************/
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"BSD_packet_filter", str_tmp, NAME_MAX, "");
 	if(str_tmp[0] != '\0'){
@@ -640,7 +644,6 @@ int sapp_parse_config(void)
 	}
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.feature", (char *)"inbound_route_dir", &pconfig->packet_io.inbound_route_dir, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"pcap_capture_direction", pconfig->packet_io.pcap_capture_direction, NAME_MAX, "in");
-	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.feature", (char *)"create_mpls_anyway", &pconfig->packet_io.create_mpls_anyway, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"inject_pkt_mode", pconfig->packet_io.inject_pkt_mode_string, NAME_MAX, "sys_route");
 	if(strncasecmp(pconfig->packet_io.inject_pkt_mode_string, "raw_ethernet_single_gateway", strlen("raw_ethernet_single_gateway")) == 0){
 		tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"inject_mode_single_gateway_device", pconfig->packet_io.inject_mode_single_gateway_device, NAME_MAX, "lo");

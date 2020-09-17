@@ -21,7 +21,7 @@ static inline void set_mpls_addr(struct layer_addr_mpls *addr, struct mesa_mpls_
 	return;
 }
 
-MESA_htable_handle g_mpls_info_hash[MAX_THREAD_NUM];
+//MESA_htable_handle g_mpls_info_hash[MAX_THREAD_NUM];
 
 int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_data,int thread_num, 
 						unsigned char routedir, const raw_pkt_t *raw_pkt,int offset_to_raw_pkt_hdr)

@@ -2747,7 +2747,7 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 			case ADDR_TYPE_GPRS_TUNNEL:
 				    /* GTP地址C2S, S2C方向独立, 无法靠当前包地址区分dir, 每次栈里的变量都存储于source方向, 即C2S方向,  
 				       创建流时, 已经根据最内层TCP, UDP的流方向, 将GTP的地址存于source或dest, 
-				       此函数是更新的对端缺失的地址, 仅靠最内层的cur_dir表示需要更新哪个方向的地址, 固定从当前包的source拷贝. 
+				       此函数是更新的对端缺失的地址, 仅靠最内层的cur_dir表示需要更新哪个方向的地址, 固定从当前包p_stack的source拷贝. 
 				     */
 				if(cur_dir == DIR_C2S){
                     pstream_pr->stream_public.addr.gtp->source = p_stack->stream_public.addr.gtp->source;
