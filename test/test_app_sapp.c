@@ -537,21 +537,6 @@ char testIPv6App_1(struct streaminfo *pstream,unsigned char routedir, int thread
 	return APP_STATE_GIVEME;
 }
 
-static unsigned long long test_get_stream_id(struct streaminfo *a_stream)
-{
-	int ret = 0;
-	int device_id_size = sizeof(unsigned long long);
-	unsigned long long device_id = 0;
-
-	ret = MESA_get_stream_opt(a_stream, MSO_GLOBAL_STREAM_ID, (void *)&device_id, &device_id_size);
-	if (ret == 0)
-	{
-		return device_id;
-	}
-
-	return -1;
-}
-
 static int test_udp_flow_id = -1;
 char testudpApp_1(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
 {
@@ -565,7 +550,8 @@ char testudpApp_1(struct streaminfo *pstream,void **pme, int thread_seq,void *a_
 			printf("'udp_flow_stat' is disable, no statistics\n");
 		}
 	}
-		if(pstream->opstate== OP_STATE_PENDING)
+
+        if(pstream->opstate== OP_STATE_PENDING)
         {
 test_set_stream_timeout(pstream, pme, thread_seq, a_packet);        
         	plug_stat = (struct udp_flow_stat *)malloc(sizeof(struct udp_flow_stat));
@@ -589,7 +575,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 	if(pstream->opstate==OP_STATE_CLOSE)
 	{
 		if(pdetail != NULL){
-			printf("%20s: %s, %llu, ", "UdpallstreaM-inter", printaddr(&(pstream->addr), pstream->threadnum), test_get_stream_id(pstream));
+			printf("%20s: %s, ", "UdpallstreaM-inter", printaddr(&(pstream->addr),	pstream->threadnum));
 			printf("server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, datalen=%u, ",
 				pdetail->serverpktnum, pdetail->serverbytes,
 				pdetail->clientpktnum,pdetail->clientbytes, pdetail->datalen);
@@ -802,7 +788,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 		/* 2015-12-29 lijia add */
 		struct tcp_flow_stat *tflow_inter = ((struct tcpdetail_private *)pstream->pdetail)->flow_stat;
 		if(tflow_inter){
-			printf("%17s: %s, %llu,", "TcpstreaM-inter", printaddr(&(pstream->addr), pstream->threadnum), test_get_stream_id(pstream));
+			printf("%17s: %s, ","TcpstreaM-inter", printaddr(&(pstream->addr),	pstream->threadnum));
 			printf("opstate=%d, server pkt=%u, count=%lu, client pkt=%u, count=%lu\n",
 				pstream->opstate,
 				tflow_inter->C2S_data_pkt,tflow_inter->C2S_data_byte,
@@ -979,7 +965,7 @@ char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq,voi
 		/* 2015-12-29 lijia add */
 		struct tcp_flow_stat *tflow_inter = pdetail_pr->flow_stat;
 		if(tflow_inter){
-			printf("%20s: %s, %llu", "TcpallstreaM-inter", printaddr(&(pstream->addr),	pstream->threadnum), test_get_stream_id(pstream));
+			printf("%20s: %s, ", "TcpallstreaM-inter", printaddr(&(pstream->addr),	pstream->threadnum));
 			printf("out:%d, pktstate=%d, opstate=%d, server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, ",
 				pdetail_pr->link_state,pstream->pktstate,pstream->opstate,
 				tflow_inter->C2S_all_pkt,tflow_inter->C2S_all_byte,
@@ -1360,20 +1346,6 @@ char test_get_rawpkt_options(struct streaminfo *stream,void **pme, int thread_se
 	
 	return APP_STATE_GIVEME;
 }
-
-char test_layer_index(const struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
-{
-	const struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
-
-	while(stream_pr){
-		printf(" --- layer_index:%d, addr_type:%d, addr_ntop:%s\n", stream_pr->layer_index, stream_pr->stream_public.addr.addrtype, layer_addr_ntop(&stream_pr->stream_public));
-		stream_pr = (struct streaminfo_private *)stream_pr->stream_public.pfather;
-	}
-	printf(" --- \n");
-	return APP_STATE_DROPME;
-}
-
-
 
 char test_stream_addr_list_ntop(const struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {

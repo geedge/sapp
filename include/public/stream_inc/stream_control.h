@@ -84,7 +84,18 @@ enum sapp_platform_opt{
 <<<<<<< .mine
 
 =======
+<<<<<<< .mine
+>>>>>>> .theirs
+	SPO_CURTIME_TIMET_MS,		/* current time in millisecond, opt_val type must be long long */
+	SPO_CURRENT_STATE,			/* running stage of sapp, opt_val type is enum sapp_state_t */
 
+=======
+<<<<<<< .mine
+
+
+=======
+
+>>>>>>> .theirs
 >>>>>>> .theirs
 	SPO_TOTAL_RCV_INBOUND_IPV4_PKT,		/* total recv ipv4 packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_INBOUND_IPV4_BYTE,		/* total recv ipv4 packet number, opt_val type must be unsigned long long */

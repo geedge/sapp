@@ -1718,29 +1718,27 @@ static int build_net_layer_gre(struct streaminfo_private *stream_pr, int carry_l
 	return gre_hdr_len;
 }
 
-
-
 static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_layer_type,
 			int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt)
 {
 	const struct layer_addr_mpls *in_stream_addr;
-	int layer_len;
+	int build_mpls_hdr_len = 0;
 
 	in_stream_addr = (struct layer_addr_mpls *)(stream_pr->stream_public.addr.mpls);
 
 	if(0 == reverse){
 		if(in_stream_addr->src_mpls_layer_num > 0){
-			layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->src_mpls_layer_num;
-			memcpy(buf, in_stream_addr->src_mpls_pkt, layer_len);
+			build_mpls_hdr_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->src_mpls_layer_num;
+			memcpy(buf, in_stream_addr->src_mpls_pkt, sizeof(struct mesa_mpls_hdr) * in_stream_addr->src_mpls_layer_num);
 		}
 	}else{
 		if(in_stream_addr->dest_mpls_layer_num > 0){
-			layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->dest_mpls_layer_num;
-			memcpy(buf, in_stream_addr->dest_mpls_pkt, layer_len);
+			build_mpls_hdr_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->dest_mpls_layer_num;
+			memcpy(buf, in_stream_addr->dest_mpls_pkt, sizeof(struct mesa_mpls_hdr) * in_stream_addr->dest_mpls_layer_num);
 		}
 	}	
 
-	return layer_len;
+	return build_mpls_hdr_len;
 }
 
 static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_layer_type,
@@ -1992,7 +1990,6 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			*/
 			unsigned short eth_type_host = net_layer_to_ethernet_protocol(carry_layer_type);
 			if((unsigned short)-1 == eth_type_host){
-				sapp_runtime_log(20, "build_net_layer_pkt()-->ADDR_TYPE_MAC, unsupport eth_type:%d!\n", carry_layer_type);
 				return -1;
 			}
 			if(g_topology_mode & __NET_CONN_PARALLEL){
@@ -2003,9 +2000,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			}
 
 			this_layer_len = sizeof(struct mesa_ethernet_hdr);
-			carry_layer_type = ADDR_TYPE_MAC;
-			//ethernet不一定是最后一层, 因为有MAC-in-MAC
-			//return carry_layer_len;
+			return carry_layer_len;
 		}
 		break;
 
@@ -2016,33 +2011,15 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			buf -= this_layer_len;
 			ret = build_net_layer_gre(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
 			if(ret < 0){
-				sapp_runtime_log(20, "build_net_layer_gre() error!\n");
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_GRE;
 		break;
 
 		case ADDR_TYPE_MPLS:
-			if(0 == reverse){
-				this_layer_len = calc_mpls_hdr_len(stream_pr, stream_pr->stream_public.routedir);
-			}else{
-				this_layer_len = calc_mpls_hdr_len(stream_pr, stream_pr->stream_public.routedir ^ 1);
-			}
-			
-			if(0 == this_layer_len){
-				if(sapp_global_val->config.packet_io.create_mpls_anyway != 0){
-					/* 非对称MPLS, 为了流对齐生造出来的一层, 不构造实际包头 */
-					sapp_runtime_log(10, "build_net_layer_mps() skip fake mpls layer.\n");
-					break;
-				}else{
-					sapp_runtime_log(20, "build_net_layer_mps() error, layer len is 0, but create_mpls_anyway is disable!\n");
-					return -1;					
-				}
-			}else{
-				buf -= this_layer_len;
-				build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
-				carry_layer_type = ADDR_TYPE_MPLS;
-			}
+			this_layer_len = build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
+			buf -= this_layer_len;
+			carry_layer_type = ADDR_TYPE_MPLS;
 		break;
 
 		case ADDR_TYPE_GPRS_TUNNEL:
@@ -2078,13 +2055,11 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			this_layer_len = calc_l2tp_hdr_len(
 						 (const struct l2tp_hdr_v2 *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
 			if(this_layer_len < 0){
-				sapp_runtime_log(20, "calc_l2tp_hdr_len() error!\n");
 				return -1;
 			}
 			buf -= this_layer_len;
 			ret = build_net_layer_l2tp(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt, this_layer_len);
 			if(ret < 0){
-				sapp_runtime_log(20, "build_net_layer_l2tp() error!\n");
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_L2TP;
@@ -2106,7 +2081,6 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			gre_layer_len = calc_gre_hdr_len(
 						 (const struct mesa_gre_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
 			if(gre_layer_len < 0){
-				sapp_runtime_log(20, "calc_gre_hdr_len() error!\n");
 				return -1;
 			}						 
 			ppp_hdr_len = stream_pr->cur_layer_raw_hdr_len - gre_layer_len;
@@ -2123,7 +2097,6 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			buf -= gre_layer_len;
 			ret = build_net_layer_gre(stream_pr, ADDR_TYPE_PPP, carry_layer_len, buf, reverse, raw_pkt);
 			if(ret < 0){ 
-				sapp_runtime_log(20, "build_net_layer_gre() error!\n");
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_GRE;
@@ -3041,9 +3014,7 @@ static int send_handle_init(int tot_thread_num)
 		if(g_send_handle[i].raw_udp_fd < 0){
 			sapp_log(30, ~0, ~0, "socket udp error, %s\n", strerror(errno));
 			return -1;
-		} 
-
-		if(SEND_PKT_MODE_GDEV == pcfg_io->inject_pkt_mode)
+		} else
 		{
 			int opt_value = 1;
 			setsockopt(g_send_handle[i].raw_udp_fd, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof(int));
@@ -3056,7 +3027,6 @@ static int send_handle_init(int tot_thread_num)
 				return -1;
 			}
 		}
-		
 		if(g_ipv6_send_packet_enabled){
 			g_send_handle[i].raw_ipv6_fd = socket(PF_INET6, SOCK_RAW, IPPROTO_RAW);
 			if(g_send_handle[i].raw_ipv6_fd < 0){
