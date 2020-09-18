@@ -385,6 +385,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 	StreamFunInfo *pNext=NULL,*pPrev=NULL;
 	UCHAR threadnum = a_stream->threadnum;
 	UCHAR local_app_ret;
+	int break_flag = 0;
 
 	if(funnum==0)
 	{
@@ -406,6 +407,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 
 		for(i=0;i<funnum;i++)
 		{
+			break_flag = 0;
 			if(pFunInfo==NULL)
 			{
 				pFunInfo=(StreamFunInfo *)dictator_malloc(threadnum,sizeof(StreamFunInfo));
@@ -476,14 +478,17 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 			/* 2019-11-15 lijia add for plug kill other */
 			if(local_app_ret & (APP_STATE_KILL_FOLLOW | APP_STATE_KILL_OTHER)){
 				/* 如果在pending阶段, KILL FOLLOW直接退出循环即可 */
-				break;
+				break_flag = 1;
 			}
 			
 			if(local_app_ret & APP_STATE_DROPPKT)	
 			{
 				ret=DROP;
-				break; //2020-09-10 lijia add, 后续插件不调用
-			}			
+				break_flag = 1; 
+			}		
+			if(break_flag){//2020-09-10 lijia add, 后续插件不调用
+				break;
+			}
 		}
 		
 		//不需要再次送入包的fun，在这里释放
@@ -521,6 +526,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 		pPrev=NULL;
 		while(pFunInfo)
 		{
+			break_flag = 0;
 			//add by lqy 20141230
 			//注意如下的只有是stream_raw类型的函数，函数调用不一样
 			//if(pFunInfo->funtype>FUN_TYPE_IPV6_RAW)
@@ -605,13 +611,17 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 
 			/* 2019-11-15 lijia add for plug kill other */
 			if(local_app_ret & (APP_STATE_KILL_FOLLOW | APP_STATE_KILL_OTHER)){
-				break;
+				break_flag = 1;
 			}
 			if(local_app_ret&APP_STATE_DROPPKT)	
 			{
 				ret=DROP;	
-				break; //2020-09-10 lijia add, 后续插件不调用
-			}			
+				break_flag = 1;
+			}
+
+			if(break_flag){
+				break;
+			}
 		}
 
 		//处理过程中大家都不需要了
@@ -626,6 +636,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 		pFunInfo=pFunList;
 		while(pFunInfo)
 		{
+			break_flag = 0;
 			//add by lqy 20141230
 			//注意如下的只有是stream_raw类型的函数，函数调用不一样
 			//if(pFunInfo->funtype>FUN_TYPE_IPV6_RAW)
