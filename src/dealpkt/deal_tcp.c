@@ -684,6 +684,8 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 			pdetail->serverbytes=datalen;
 		}	   
 		pstream_pr->stream_killed_flag = 0;
+		/* 链接复用, 重新生成一个新的streamid */
+		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);
 	}
 
 	/* 2014-07-31 LiJia add, for set one stream unorder number */
@@ -875,6 +877,10 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 			pdetail->serverpktnum=1;
 			pdetail->serverbytes=datalen;
 		}
+		
+		pstream_pr->stream_killed_flag = 0;
+		/* 链接复用, 重新生成一个新的streamid */
+		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);		
 	}
 
 	pstream->dir=createdir;

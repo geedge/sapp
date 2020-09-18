@@ -676,7 +676,8 @@ printf("###### %s timeout is %d, remain %lld, can't be free!\n", printaddr(&tmps
 	packet_io_status_stream_update(pstream->threadnum, pstream->type, pstream->stream_state, 1);	
 #endif
 
-	pindex->stream.global_stream_id = get_global_stream_id(pstream->threadnum);
+	/* Fix bug, 放在streamaddlist函数, 每个流状态变化时会生成多个不同的streamid, 移动至hash_add_stream */
+	//pindex->stream.global_stream_id = get_global_stream_id(pstream->threadnum);
 }
 
 
@@ -1879,6 +1880,8 @@ if(pelementcount[pindex->hash_index] >= listnum){
 		ptmindex=ptmindex->phashnext;
 	}	
 	*/
+
+	pindex->stream.global_stream_id = get_global_stream_id(threadnum);
 }
 
 
