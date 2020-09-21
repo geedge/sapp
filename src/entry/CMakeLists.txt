@@ -19,7 +19,7 @@ endif()
 add_executable(sapp sapp_init.c sapp_main.c sapp_global_val.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
 target_link_libraries(sapp nsl pthread dl m pcap)
-target_link_libraries(sapp MESA_handle_logger2 MESA_prof_load)
+target_link_libraries(sapp MESA_handle_logger MESA_prof_load)
 target_link_libraries(sapp sapp_assistant)
 target_include_directories(sapp PRIVATE ${SYSTEMD_INCLUDE_DIRS})
 

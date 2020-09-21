@@ -1,4 +1,4 @@
-set(DEPEND_DYN_LIB MESA_handle_logger2  MESA_prof_load)
+set(DEPEND_DYN_LIB MESA_handle_logger  MESA_prof_load)
 
 # Shared Library Output
 add_library(${lib_name} SHARED breakpad.cpp)
