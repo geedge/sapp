@@ -34,7 +34,7 @@ env | sort
 
 # Install dependency from YUM
 yum install -y mrzcpd numactl-devel zlib-devel librdkafka-devel systemd-devel
-yum install libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env libwiredcfg-devel libWiredLB-devel libMESA_handle_logger2-devel -y
+yum install libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel -y
 source /etc/profile.d/framework.sh
 
 mkdir build || true
