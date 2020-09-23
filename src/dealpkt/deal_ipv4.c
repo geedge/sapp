@@ -630,6 +630,8 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	pstream_pr = &ptmp->stream;
 	pstream = &pstream_pr->stream_public;
 	
+	pstream_pr->layer_index = pfstream_pr->layer_index + 1;
+	
 	set_ipv4_addr(&addr, (struct mesa_ip4_hdr *)a_packet);
 	pstream->addr.paddr = &addr;
 

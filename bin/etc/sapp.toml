@@ -23,9 +23,10 @@ dictator_enable=1
 ### note, for mpls asymmetric, 0 vs N
 	create_mpls_anyway=0
 	    
-### note, layer number starts from 0, for example: ethernet[0]	
+### note, layer number starts from 0, for example: ethernet[0], ipv4[1], gre[2]	
+### note, * means don't care layer index, for example: gtp[*], mpls[*]
 	overlay_layer_set="ethernet[0],ipv4[1],tupl4v4[1]"
-	prune_inject_layer_set="gtp[3]"
+	prune_inject_layer_set="gtp[*]"
 	
     [packet_io.feature]
 ### note, used to represent inbound or outbound direction value,
@@ -75,6 +76,15 @@ dictator_enable=1
 ### note, polling_priority = call sapp_recv_pkt every call polling_entry times,     
     polling_priority=1
 
+[PROTOCOL_FEATURE]
+	ipv6_decapsulation_enabled=1
+	ipv6_send_packet_enabled=1
+	tcp_drop_pure_ack_pkt=0
+	tcp_syn_option_parse_enabled=1 
+	skip_not_ip_layer_over_eth=0
+	treat_vlan_as_mac_in_mac=1
+
+	
 [STREAM]
 ### note, stream_id_base_time format is "%Y-%m-%d %H:%M:%S" 
 	stream_id_base_time="2018-08-08 08:00:00"
@@ -106,13 +116,6 @@ dictator_enable=1
     meaningful_statistics_minimum_pkt=3
     meaningful_statistics_minimum_byte=5
     
-[PROTOCOL_FEATURE]
-	ipv6_decapsulation_enabled=1
-	ipv6_send_packet_enabled=1
-	tcp_drop_pure_ack_pkt=0
-	tcp_syn_option_parse_enabled=1 
-	skip_not_ip_layer_over_eth=1
-	treat_vlan_as_mac_in_mac=0
 
 [PROFILING]
     [profiling.pkt_latency]

@@ -476,6 +476,15 @@ static int config_sanity_check(void)
 	const char *tmp_str;
 	const sapp_config_t *pconfig = &sapp_global_val->config;
 
+	struct streaminfo_private phony_stream_pr;
+
+	phony_stream_pr.layer_index = ~0;
+	assert(SAPP_SUPPORT_LAYER_NUM_MAX == phony_stream_pr.layer_index); /* 用于判断无意中修改了layer_index或SAPP_SUPPORT_LAYER_NUM_MAX, 两个变量不一致的情况 */
+	if(SAPP_SUPPORT_LAYER_NUM_MAX != phony_stream_pr.layer_index){
+		sapp_log(30, ~0, ~0, "[Error]SAPP_SUPPORT_LAYER_NUM_MAX is:%d, but streaminfo_private->layer_index max is:%d", SAPP_SUPPORT_LAYER_NUM_MAX, phony_stream_pr.layer_index); 
+		return -1;
+	}
+
 	/*******************************  CPU  ********************************/
 	cur_cpu_num = get_nprocs();
 	if(cur_cpu_num < pconfig->cpu.worker_threads){

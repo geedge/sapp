@@ -90,6 +90,12 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			local_sys_stat->count[SAPP_STAT_ETH_OUTBOUND]++;
 			local_sys_stat->length[SAPP_STAT_ETH_OUTBOUND] += (unsigned long long)raw_pkt->raw_pkt_len;
 		}
+
+		if(NULL == fstream_pr){
+			pstream_pr->layer_index = 0; /* first layer, index start from 0 */
+		}else{
+			pstream_pr->layer_index = fstream_pr->layer_index + 1;
+		}
 	}else{
 		pstream_pr = NULL; /* 使上层承载协议的pfather为NULL */
 		next_layer_offset = 0;
@@ -132,7 +138,8 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			case ETHERTYPE_VLAN:
 				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
 				if(sapp_global_val->config.protocol_feature.treat_vlan_as_mac_in_mac_enabled){
-					ret = mac_in_mac_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
+					//ret = mac_in_mac_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
+					ret = eth_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
 				}else{
 					ret = vlan_8021q_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
 				}

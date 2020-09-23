@@ -255,6 +255,8 @@ int gre_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_data
 	pstream_pr->addr_use_as_hash = 0; 	
 	pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 	pstream_pr->raw_pkt = raw_pkt;
+
+	pstream_pr->layer_index = pfstream_pr->layer_index + 1;
 	
 	pstream->pfather=&pfstream_pr->stream_public;
 	pstream->type=STREAM_TYPE_NON;

@@ -50,6 +50,8 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 		pstream->type=STREAM_TYPE_NON;
 		pstream->routedir=routedir;
 		pstream->threadnum=thread_num;
+
+		pstream_pr->layer_index = pfstream_pr->layer_index + 1;
 	}else{
 		pstream_pr = pfstream_pr; /* 2015-07-03 lijia add, skip this layer */
 	}

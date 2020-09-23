@@ -832,7 +832,11 @@ UINT16 net_layer_to_ethernet_protocol(int addr_type)
 		break;
 
 		case ADDR_TYPE_MAC:
-			ether_type = ETHERTYPE_PANGU_MAC_IN_MAC;
+			if(sapp_global_val->config.protocol_feature.treat_vlan_as_mac_in_mac_enabled){
+				ether_type = ETHERTYPE_VLAN;
+			}else{
+				ether_type = ETHERTYPE_PANGU_MAC_IN_MAC;
+			}
 		break;
 		
 		default:

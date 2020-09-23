@@ -84,6 +84,8 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		pstream->type=STREAM_TYPE_NON;
 		pstream->routedir=routedir;
 		pstream->threadnum=thread_num;
+
+		pstream_pr->layer_index = pfstream_pr->layer_index + 1;
 	}else{
 		pstream_pr = pfstream_pr;
 	}
@@ -176,6 +178,7 @@ int mpls_empty_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 	{
 		ret = ipv6_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
 	}
+	//TODO VPLS
 	else
 	{
 		sapp_runtime_log(20, "mpls_empty_entry MPLS next layer not IPv4 or IPv6, drop pkt !\n");

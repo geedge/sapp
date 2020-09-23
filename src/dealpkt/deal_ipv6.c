@@ -735,6 +735,8 @@ static void set_ipv6_stream(struct streaminfo_private *pfstream_pr, struct strea
 	pstream->type=STREAM_TYPE_NON;
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
+
+	pstream_pr->layer_index = pfstream_pr->layer_index + 1;
 }
 
 

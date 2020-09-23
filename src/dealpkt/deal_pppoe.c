@@ -51,6 +51,8 @@ int pppoe_session_entry(struct streaminfo_private *pfstream_pr,const void *this_
 		pstream->type=STREAM_TYPE_PPPOE;
 		pstream->routedir=routedir;
 		pstream->threadnum=thread_num;
+
+		pstream_pr->layer_index = pfstream_pr->layer_index + 1;
 	}else{
 		pstream_pr = pfstream_pr;
 	}

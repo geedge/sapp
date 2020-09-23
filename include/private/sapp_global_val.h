@@ -247,6 +247,9 @@ typedef struct{
 	sapp_gval_individual_fixed_fs_t field_stat2_para;
 	pthread_t pkt_process_tid[SAPP_MAX_THREADS];
 	void *breakpad;
+
+	char overlay_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX]; /* 表示在原始报文基础上封装的隧道, 如vxlan, 这些层不应该调用插件, 回注时需要特殊处理 */
+	char prune_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   /* 表示注入包时需要跳过的层, 用于代替最早的配置文件: skip_not_iop_layer, 比如vlan, mpls等, 用于mirror模式下, 接入点和注入点不一样的网络环境 */
 }sapp_gval_individual_fixed_t;
 
 typedef struct{

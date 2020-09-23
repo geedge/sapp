@@ -2874,10 +2874,12 @@ void free_polling_inject_context(struct streaminfo_private *pstream_pr)
 	pstream_pr->polling_inject_context = NULL;
 }
 
-/* 鍏ㄥ眬娴乮d, stream_index鍘嗗彶涓婂凡缁忚〃绀哄崟鏈哄唴鍞?涓�id, 姝ゅ?勮?佷繚璇侀泦缇ゆ墍鏈夋満鍣ㄤ笉閲嶅??, 鎵�浠ユ柊寤哄彉閲?  
-	楂樹綅 --- 浣庝綅
+/* 
+    全局流id, stream_index历史上已经表示单机内唯一id, 此处要保证集群所有机器不重复, 
+	高位 --- 低位
 	1 |  12bit device_id | 8bit thread_id | 28bit timestamp in sec | 15bit sequence per thread
 */
+
 unsigned long long get_global_stream_id(unsigned long long thread_seq)
 {
 #define RELATIVE_TIME_MAX (268435456L)
