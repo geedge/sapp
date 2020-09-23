@@ -1347,6 +1347,20 @@ char test_get_rawpkt_options(struct streaminfo *stream,void **pme, int thread_se
 	return APP_STATE_GIVEME;
 }
 
+char test_layer_index(const struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+{
+	const struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
+
+	while(stream_pr){
+		printf(" --- layer_index:%d, addr_type:%d, addr_ntop:%s\n", stream_pr->layer_index, stream_pr->stream_public.addr.addrtype, layer_addr_ntop(&stream_pr->stream_public));
+		stream_pr = (struct streaminfo_private *)stream_pr->stream_public.pfather;
+	}
+	printf(" --- \n");
+	return APP_STATE_DROPME;
+}
+
+
+
 char test_stream_addr_list_ntop(const struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
 	int ret;
