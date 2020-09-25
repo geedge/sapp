@@ -14,7 +14,6 @@ extern int udp_stream_table_size;
 extern int raw_ip_frag_list_stream_attach(struct streaminfo *stream);
 extern int raw_ip_frag_list_stream_detach(struct streaminfo *stream);
 extern int set_transport_addr(struct streaminfo *pfstream, UINT16 sport, UINT16 dport);
-extern struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream, int reverse);
 extern void free_heap_stream_info(struct streaminfo *heap_stream, int layer);
 extern void reverse_addr(void *addr, int addrtype);
 int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *pstream_stack, int reverse);
@@ -609,6 +608,10 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 //	}
 #endif
 
+	if(DROP == ret){
+		sapp_runtime_log(RLOG_LV_INFO, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+	}
+
 	return ret;
 }
 
@@ -751,6 +754,10 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	}
 
 	/* TODO 2, 基于IPv6的UDP port 1701 L2TP协议 */
+
+	if(DROP == ret){
+		sapp_runtime_log(20, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+	}
 	
 	return ret;
 }
@@ -854,7 +861,7 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 			//g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;	
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;				
-			sapp_runtime_log(20, "unsupport Ipv4 protocol:%u!\n", a_packet->ip_p);
+			sapp_runtime_log(RLOG_LV_INFO, "unsupport Ipv4 protocol:%u!\n", a_packet->ip_p);
 		break;
 	}
 	

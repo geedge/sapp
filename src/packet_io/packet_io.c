@@ -1035,7 +1035,6 @@ static int packet_io_send_by_manual_conf(MESA_send_handle *send_handle,int datal
     }
     else
     {
-        //p_dst_mac = g_send_gateway_mac; 
         p_dst_mac = sapp_global_val->config.packet_io.inject_mode_single_gateway_dst_mac;
     }
     sendpacket_build_ethernet(p_dst_mac, sapp_global_val->config.packet_io.inject_mode_single_gateway_src_mac, ether_type, NULL, 0, send_handle->send_buf);

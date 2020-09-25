@@ -43,7 +43,7 @@ extern "C" {
 int set_transport_addr(struct streaminfo *pfstream, UINT16 sport, UINT16 dport);
 extern void free_heap_stream_info(struct streaminfo *heap_stream, int layer);
 struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream_pr, int reverse);		
-int set_stream_addr_transport(struct streaminfo_private *pfstream_pr, UINT16 sport, UINT16 dport);
+
 struct streaminfo *skip_proxy_phony_stream(struct streaminfo *a_tcp);
 static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const void *this_iphdr, 
 	const raw_pkt_t *stack_raw_pkt,struct mesa_tcp_hdr *this_tcphdr, 
@@ -593,22 +593,20 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		if(DIR_C2S == createdir){ /* 当前地址在TCP逻辑层面上符合C->S传输方向 */
 			if(1 == pstream_pr->layer_dir){
 				pstream_pr->stream_dir = 1; /* 在地址传输层面, 和"大地址是客户端"规则相反 */
-				//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir;
 			}else{
 				pstream_pr->stream_dir = 0;
-				//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir ^ 1;
 			}
 			need_reverse = 0;
+			pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir;
 		}else{
 			need_reverse = 1; /* 必须将地址方向颠倒, 插件读取地址结构时, src固定指向逻辑上的源地址 */
 			if(1 == pstream_pr->layer_dir){
 				/* 因为在copy_stream_info_to_heap()中会做地址颠倒, 所以此处就和"大地址是客户端"规则相同了 */
 				pstream_pr->stream_dir = 0; 
-				//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir ^ 1;
 			}else{
 				pstream_pr->stream_dir = 1;
-				//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir;
 			}
+			pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir ^ 1;
 		}
 
 #if USE_RBTREE_INSTEAD_LIST
@@ -721,7 +719,6 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pdetail_pr->iserverseq=ntohl (this_tcphdr->th_ack);
 		//pdetail->clientpkt++; //adjust by lqy 20140515 只有新建时计数
 		pdetail_pr->S2C_first_ack_seq = pdetail_pr->iserverseq;
-		pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir ^ 1;
 	}
 	else if(createdir==DIR_C2S)
 	{
@@ -729,7 +726,6 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pdetail_pr->iserverseq=ntohl (this_tcphdr->th_seq)+1;
 		//pdetail->serverpkt++; //adjust by lqy 20140515 只有新建时计数
 		pdetail_pr->C2S_first_ack_seq = ntohl (this_tcphdr->th_ack);
-		pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir;
 	}
 	pdetail->lastmtime=g_CurrentTime;	
 	pdetail_pr->link_state=STREAM_LINK_JUST_EST;	
@@ -776,7 +772,6 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		}
 	}
 
-	
 	tcp_parse_opts(pstream_pr, createdir, (const struct tcphdr *)this_tcphdr); /* 2016-07-07 lijia add, for janus hijack */
 
 
@@ -815,7 +810,12 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		pindex_tcp=malloc_and_copy_streamindex(threadnum, pindex);
 		pstream_pr = &pindex_tcp->stream;
 		pstream = &pstream_pr->stream_public;	
- 		//copy_fstream_info_to_heap(&(pindex_tcp->stream), 0);
+
+		if(createdir==DIR_C2S){
+			pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir;
+		}else{
+			pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir ^ 1;
+		}
 
  		copy_ipport_union_addr(pstream, &pindex->stream.stream_public, pstream_pr->layer_dir ^1);
  		
@@ -870,6 +870,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 			pdetail->clientbytes=datalen;
 			pdetail->serverpktnum=0;
 			pdetail->serverbytes=0;
+			pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir ^ 1;
 		}
 		else if(createdir==DIR_C2S)
 		{
@@ -877,6 +878,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 			pdetail->clientbytes=0;
 			pdetail->serverpktnum=1;
 			pdetail->serverbytes=datalen;
+			pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir;
 		}
 		pstream_pr->stream_killed_flag = 0;
 		/* 链接复用, 重新生成一个新的streamid */
@@ -1015,11 +1017,6 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 
 	pdetail_pr->auto_remedy_flag = sapp_global_val->config.stream.tcp.inject.auto_remedy;
 
-	if(createdir==DIR_C2S){
-		pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir;
-	}else{
-		pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir ^ 1;
-	}
 	return pindex_tcp;
 }
 
@@ -2604,7 +2601,8 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	/* 2014-10-11 lijia add, Fd补救由平台实现 */
 	if(unlikely(pstream_pr->stream_killed_flag != 0)){
 		if((pdetail_pr->auto_remedy_flag != 0) && (tcplen > 0)){ /* 防止flood攻击, 只有带数据的包才发RST */
-			//MESA_kill_tcp(pstream, raw_pkt);
+			sapp_runtime_log(RLOG_LV_INFO, "TCP stream: %s, kill_tcp remedy, curdir:%d, send RST pkt.", 
+				printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 			MESA_kill_tcp_remedy(pstream, raw_pkt);
 		}
 		
@@ -2618,6 +2616,8 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	}
 
 	if(unlikely(pdetail_pr->drop_stream_flag != 0)){
+		sapp_runtime_log(RLOG_LV_INFO, "TCP stream: %s, has been set drop flag, curdir:%d, return DROP.", 
+						printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 		return DROP;
 	}
 
@@ -2753,6 +2753,11 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	}
 
 fun_exit:    
+
+	if(DROP == ret){
+		sapp_runtime_log(RLOG_LV_INFO, "TCP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+	}
+
 	return ret;
 }
 
@@ -3018,112 +3023,8 @@ int set_transport_addr(struct streaminfo *this_stream, UINT16 sport, UINT16 dpor
 }
 #endif
 
-int set_stream_addr_transport(struct streaminfo_private *this_stream_pr, UINT16 sport, UINT16 dport)
-{
-	struct streaminfo *this_stream = &this_stream_pr->stream_public;
-	struct layer_addr *this_addr = &this_stream->addr;
-	
-	if(__ADDR_TYPE_IP_PAIR_V4== this_stream->addr.addrtype){
-		struct stream_tuple4_v4 *ip4_addr = this_stream->addr.tuple4_v4;
-		if(ntohs(sport) > ntohs(dport)){
-			this_stream_pr->layer_dir = 1;
-			this_stream->curdir = DIR_C2S;
-		}else{
-			if(sport == dport){
-				if(ntohl(ip4_addr->saddr) > ntohl(ip4_addr->daddr)){
-					this_stream_pr->layer_dir = 1;
-					this_stream->curdir = DIR_C2S;				
-				}else{
-					this_stream_pr->layer_dir = 0;
-					this_stream->curdir = DIR_S2C;
-				}
-			}else{
-				this_stream_pr->layer_dir = 0;
-				this_stream->curdir = DIR_S2C;
-			}
-		}
-		ip4_addr->source = sport;
-		ip4_addr->dest = dport;
-		this_addr->addrtype = ADDR_TYPE_IPV4; /* 兼容papp平台, TCP层的四元组使用'ADDR_TYPE_IPV4表示' */
-		this_stream->addr.addrlen = sizeof(struct stream_tuple4_v4);
-	}else if(__ADDR_TYPE_IP_PAIR_V6 == this_stream->addr.addrtype){
-		struct stream_tuple4_v6 *ip6_addr = this_stream->addr.tuple4_v6;
-		if(ntohs(sport) > ntohs(dport)){
-			this_stream_pr->layer_dir = 1;
-			this_stream->curdir = DIR_C2S;
-		}else{
-			if(sport == dport){
-				if(memcmp(ip6_addr->saddr, ip6_addr->daddr, IPV6_ADDR_LEN) >= 0){
-					this_stream_pr->layer_dir = 1;
-					this_stream->curdir = DIR_C2S;				
-				}else{
-					this_stream_pr->layer_dir = 0;
-					this_stream->curdir = DIR_S2C;
-				}
-			}else{
-				this_stream_pr->layer_dir = 0;
-				this_stream->curdir = DIR_S2C;
-			}
-		}		
-		ip6_addr->source = sport;
-		ip6_addr->dest = dport;
-		this_addr->addrtype = ADDR_TYPE_IPV6;/* 兼容papp平台, TCP-v6层的四元组使用'ADDR_TYPE_IPV6表示' */
-		this_stream->addr.addrlen = sizeof(struct stream_tuple4_v6);
-	}else{
-		//printf("set_stream_addr_transport() error, addr type is not IPv4 or IPv6!\n");
-		sapp_runtime_log(RLOG_LV_FATAL, "set_stream_addr_transport() error, addr type is not IPv4 or IPv6!\n");
-		abort();
-	}
 
-	//this_addr->paddr = pfstream->addr.paddr;
-	//this_addr->pktipfragtype = pfstream->addr.pktipfragtype; /* 2015-01-29 lijia add, IP分片类型拆分 */
-	return 0;
-}
 
-/* 
-   2014-04-08 LiJia add,
-   每个包的地址信息临时存于栈空间, 函数返回后此块内存地址就无效了, 
-   创建新流时, 需copy到malloc的堆空间内, 用于以后的地址比对. 
- */
-struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream_pr, int reverse)
-{
-	struct streaminfo_private *heap_stream_pr = NULL;
-	void *heap_addr;
-	struct streaminfo *heap_stream;
-	const struct streaminfo *stack_stream;
-
-	if(NULL == stack_stream_pr){
-		return NULL;
-	}
-
-	stack_stream = &(stack_stream_pr->stream_public);
-
-	heap_stream_pr = (struct streaminfo_private *)dictator_malloc(stack_stream->threadnum, sizeof(struct streaminfo_private));
-	memcpy(heap_stream_pr, stack_stream_pr, sizeof(struct streaminfo_private));
-	heap_stream = &(heap_stream_pr->stream_public);
-
-	heap_stream->pfather = (struct streaminfo *)copy_stream_info_to_heap((const struct streaminfo_private *)stack_stream->pfather, reverse);
-
-	heap_addr = dictator_malloc(stack_stream->threadnum, stack_stream->addr.addrlen);
-	memset(heap_addr, 0, stack_stream->addr.addrlen);
-		
-	if(reverse){
-		heap_stream_pr->dirreverse=1;
-		heap_stream_pr->stream_dir = 1 ^ heap_stream_pr->layer_dir; /* lijia comment, 与"src>=dst"默认规则不一致 */
-		//reverse_addr_new(heap_addr, heap_stream->addr.addrtype);
-		/* 地址COPY时, 如果需要反转, 直接反向COPY, 不要先memcpy, 再交换地址源、目的的顺序 */
-		addr_reverse_memcpy(heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrtype, stack_stream->addr.addrlen);
-	}else{
-		heap_stream_pr->stream_dir = heap_stream_pr->layer_dir;
-		memcpy(heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrlen);
-	}
-	
-	heap_stream->addr.paddr = heap_addr;
-	heap_stream->addr.addrlen = stack_stream->addr.addrlen;
-	heap_stream->addr.addrtype = stack_stream->addr.addrtype;
-	
-	return (struct streaminfo_private *)heap_stream;
-}
 
 /* 2014-12-30 lijia add, 代理流做为一个虚拟结构, 不做为获取地址的实际结构, 跳过之 */
 struct streaminfo *skip_proxy_phony_stream(struct streaminfo *a_tcp)

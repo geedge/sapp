@@ -28,7 +28,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 	int ret = PASS;
 	const  unsigned char *next_layer_data = (const unsigned char *)this_layer_hdr + sizeof(struct mesa_ethernet_hdr);
 	const struct mesa_ethernet_hdr *p_eth_hdr = (const struct mesa_ethernet_hdr *)this_layer_hdr;
-	//unsigned short eth_type = ntohs(p_eth_hdr->ether_type);
+	//struct layer_addr_mac addr;
 	unsigned short eth_type = ntohs(p_eth_hdr->ether_type); 
 	int next_layer_offset;
 	struct streamindex tmp_index;
@@ -79,8 +79,6 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			pstream->curdir = DIR_S2C;
 		}
 
-		//g_SysInputInfo[thread_num][PKT_ETHERNET]++;
-		//g_SysInputInfo[thread_num][PKT_ETHERNET_LEN] += (unsigned long long)raw_pkt->raw_pkt_len;	
 		local_sys_stat->count[SAPP_STAT_RCV_ETHERNET]++;
 		local_sys_stat->length[SAPP_STAT_RCV_ETHERNET] += (unsigned long long)raw_pkt->raw_pkt_len;
 		if(dir == sapp_global_val->config.packet_io.inbound_route_dir){
@@ -113,8 +111,8 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			ret = mpls_empty_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
 			return ret;
 		}
+		//else , if not ipv4 or ipv6, go on.
 	}
-
 	/* 2020-09-17 lijia modify, create_mpls_anyway标志, 如果上层不是标准的ipv4, ipv6层, 比如是MAC_IN_MAC, VLAN等, 此处要继续执行, 不能是else */
 	//else
 	{

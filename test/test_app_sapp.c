@@ -2661,6 +2661,15 @@ char KILL_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_p
 	return APP_STATE_GIVEME | APP_STATE_DROPPKT;
 }
 
+char KILL_STREAM_ONLY_DOU(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
+{
+	if(DIR_DOUBLE == a_tcp->dir){
+		MESA_kill_tcp(a_tcp, a_packet);
+	}
+	return APP_STATE_GIVEME | APP_STATE_DROPPKT;
+}
+
+
 char RST_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
 	struct rst_tcp_para rst_args;
@@ -2857,14 +2866,14 @@ char POLLING_ENTRY(struct streaminfo *stream,  void **pme, int thread_seq,void *
 
 int CHAR_INIT()
 {
-	test_sapp_get_device_opt("ens33");
+	//test_sapp_get_device_opt("ens33");
 	
 	int demo_plugid = 51;
 
 //  函数实现自定义
 //  只要求函数返回值为插件ID；
 
-	stream_register_arp((SAPP_PKT_CB_FUN_T)arp_plug_entry);
+	//stream_register_arp((SAPP_PKT_CB_FUN_T)arp_plug_entry);
 	
 	return demo_plugid;
 }

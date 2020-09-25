@@ -14,9 +14,10 @@ struct sapp_global_mthread_t sapp_global_mthread[MAX_THREAD_NUM];
 extern int tcpstate_num[MAX_TCP_STATE];
 extern int udpstate_num[MAX_UDP_STATE];
 
-/* 以下先使用全局变量, 以后动态读取配置文件,
-   overlay层定义, 比如vxlan的环境下, overlay包括三层, eth[0], ipv4[1], udp[2], vxlan[3], 这些层不能调用插件, 
-   但需要处理跳层, 且实际回注、发包时也要携带,
+/* 测试时先使用全局变量, 以后动态读取配置文件,
+   overlay层定义, 比如vxlan的环境下, overlay包括四层, eth[0], ipv4[1], udp[2], vxlan[3], 这些层不是原始包内容, 是为了便于分流生造出来的层, 不能调用插件, 
+   但实际回注、发包时也要携带,
+
    TODO, 那vxlan保活插件怎么办?  
    将gdev_keepalive模块移到sapp内部, 不作为插件.so挂载, 使用sapp.toml开关控制而不是靠plug conflist控制.
 */
@@ -27,9 +28,26 @@ int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
    mirror模式下, 捕包和注入点不一样时, 发rst包要跳过vlan, mpls, gtp等层, 
    因为不像overlay, overlay格式肯定是预先规定好的, 但真实流量不一定能预先指定某个协议在哪层, 
    所以支持模糊层数, 用*表示, 如vlan[*], gtp[*]等, 表示发包时包括此层肯定跳过, 不论在哪一层,
-   如果是ip-in-ip这类隧道, 想跳过外层ip直接注入内层四元组, 这个配置要小心, 不能写成ip[*].
+   如果是ip-in-ip, ip-gre-ip, 4over6, 6over4这类隧道, 想跳过外层ip直接注入内层ip和四元组, 是非常危险的, 
+   因为即不能写成ip[*], 也不能写成ip[1], ip[2]这种, 会把不含隧道的纯ip/tcp包搞乱, 
+
+   所以设置成一个地址层数组, 必须同时符合指定数组所有层, 才跳过.
 */
-int prune_inject_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
+
+/*
+	发包时必须同时满足一条完整的prune链才跳过.
+	最多可支持N条跳层配置,   mirror模式下, 最底层的ethernet写不写都可以, 
+
+	比如卫星项目gtp原始包层数为:     ethernet/ipv4/udp/gtp/ipv4/tcp/http, 跳过gtp的配置: "ip[1],udp[2],gtp[3]", 
+
+	比如某隧道原始包层数为: ethernet/ipv4/gre/ipv4/udp/dns,   跳过最外层隧道的配置: "ip[1],gre[2]", 
+*/
+
+typedef struct{
+	int prune_inject_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
+}prune_inject_layer_t;
+prune_inject_layer_t prune_inject_layer_set[4];
+
 
 extern char *MESA_MD5_sum_str(unsigned char *raw_data, unsigned int raw_data_len, char result[33]);
 

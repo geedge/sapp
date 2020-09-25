@@ -478,7 +478,7 @@ static int config_sanity_check(void)
 
 	struct streaminfo_private phony_stream_pr;
 
-	phony_stream_pr.layer_index = ~0;
+	phony_stream_pr.layer_index = 0xF;
 	assert(SAPP_SUPPORT_LAYER_NUM_MAX == phony_stream_pr.layer_index); /* 用于判断无意中修改了layer_index或SAPP_SUPPORT_LAYER_NUM_MAX, 两个变量不一致的情况 */
 	if(SAPP_SUPPORT_LAYER_NUM_MAX != phony_stream_pr.layer_index){
 		sapp_log(30, ~0, ~0, "[Error]SAPP_SUPPORT_LAYER_NUM_MAX is:%d, but streaminfo_private->layer_index max is:%d", SAPP_SUPPORT_LAYER_NUM_MAX, phony_stream_pr.layer_index); 
@@ -763,6 +763,7 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"tcp_syn_option_parse_enabled", (int *)&pconfig->protocol_feature.tcp_syn_option_parse_enabled, 1);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"skip_not_ip_layer_over_eth", (int *)&pconfig->protocol_feature.skip_not_ip_layer_over_eth, 0);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"treat_vlan_as_mac_in_mac", (int *)&pconfig->protocol_feature.treat_vlan_as_mac_in_mac_enabled, 0);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"reverse_ethernet_addr", (int *)&pconfig->protocol_feature.reverse_ethernet_addr_enabled, 1);
 
 	/*******************************  TOOLS **********************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.signal_handler", (char *)"signal", (int *)&pconfig->tools.signal_handler.signal, 0);

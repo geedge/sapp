@@ -81,7 +81,6 @@ int tcp_flood_detect_model=TCP_FLOOD_DETECT_OFF;
 int tcp_support_all=TCP_SUPPORT_ENTRYALL_ON;
 int tcp_dataflood_pktlen=5;
 //extern int g_packet_io_thread_num;
-extern int g_reverse_ethernet_addr_sw;
 
 struct global_stream **G_MESA_GLOBAL_STREAM;
 
@@ -2276,7 +2275,7 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
 
 		case ADDR_TYPE_MAC: /* 2015-06-15 lijia add, 木马检测设备需求 */
 		{
-			if (g_reverse_ethernet_addr_sw == 1)//2018-12-07 yw add, mac地址中包含信息时无需翻转
+			if (1 == sapp_global_val->config.protocol_feature.reverse_ethernet_addr_enabled) //2018-12-07 yw add, mac地址中包含信息时无需翻转
 			{
 				const struct layer_addr_mac *mac_saddr = (const struct layer_addr_mac *) saddr;
 				struct layer_addr_mac *mac_daddr = (struct layer_addr_mac *) daddr;
@@ -2331,13 +2330,16 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
             const struct layer_addr_mpls *src_mpls = (const struct layer_addr_mpls *)saddr;
             struct layer_addr_mpls *dst_mpls = (struct layer_addr_mpls *)daddr;
 
-            memcpy(dst_mpls->src_mpls_pkt, src_mpls->dest_mpls_pkt, sizeof(src_mpls->dest_mpls_pkt));
-            dst_mpls->src_mpls_layer_num = src_mpls->dest_mpls_layer_num;
+            memset(dst_mpls, 0, sizeof(struct layer_addr_mpls));
+
+            //memcpy(dst_mpls->src_mpls_pkt, src_mpls->dest_mpls_pkt, sizeof(src_mpls->dest_mpls_pkt));
+            //dst_mpls->src_mpls_layer_num = src_mpls->dest_mpls_layer_num;
 
             memcpy(dst_mpls->dest_mpls_pkt, src_mpls->src_mpls_pkt, sizeof(src_mpls->src_mpls_pkt));
             dst_mpls->dest_mpls_layer_num = src_mpls->src_mpls_layer_num;
         }
-            break;
+        break;
+        
 		/* TODO 1:PPTP-addr */
 		case ADDR_TYPE_PPTP:
 		{
@@ -2346,7 +2348,8 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
 			pptp_daddr->C2S_call_id = pptp_saddr->C2S_call_id;
 			pptp_daddr->S2C_call_id = pptp_saddr->S2C_call_id;
 		}
-			break;
+		break;
+		
 		default:
 			/* 其他地址类型, 如VLAN, L2TP等, 无方向性特征,直接copy */
 			memcpy(daddr, saddr, addrlen);
@@ -2759,7 +2762,8 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 				}
 				break;
 			case ADDR_TYPE_MPLS:
-				if(sapp_global_val->config.packet_io.create_mpls_anyway != 0){
+				if((sapp_global_val->config.packet_io.create_mpls_anyway != 0)
+				 ||(ADDR_TYPE_MPLS == pstream_pr->stream_public.addr.addrtype)){ /* 如果是MPLS 1:N的模式, 即使不开启create_mpls_anyway, 也要更新对端地址 */
 					if(cur_dir == DIR_C2S){
 						memcpy(pstream_pr->stream_public.addr.mpls->src_mpls_pkt,
 						        p_stack->stream_public.addr.mpls->src_mpls_pkt,
@@ -2893,6 +2897,56 @@ unsigned long long get_global_stream_id(unsigned long long thread_seq)
 	glo_sid = (thread_seq << 43) | (relative_base_time << 15) | (stream_seq);
 
 	return glo_sid;
+}
+
+/* 
+   2014-04-08 LiJia add,
+   每个包的地址信息临时存于栈空间, 函数返回后此块内存地址就无效了, 
+   创建新流时, 需copy到malloc的堆空间内, 用于以后的地址比对. 
+
+   2014-04-08 LiJia add new arg stream_c2s_route_dir,
+   因为之前的reverse的定义其实有局限性, 表示当前层地址跟'大地址是客户端'规则是否一致, 是否需要翻转,
+   但是mpls, gtp等协议地址是单向的, reverse的规则不好使.
+ */
+struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream_pr, int reverse)
+{
+	struct streaminfo_private *heap_stream_pr = NULL;
+	void *heap_addr;
+	struct streaminfo *heap_stream;
+	const struct streaminfo *stack_stream;
+
+	if(NULL == stack_stream_pr){
+		return NULL;
+	}
+
+	stack_stream = &(stack_stream_pr->stream_public);
+
+	heap_stream_pr = (struct streaminfo_private *)dictator_malloc(stack_stream->threadnum, sizeof(struct streaminfo_private));
+	memcpy(heap_stream_pr, stack_stream_pr, sizeof(struct streaminfo_private));
+	heap_stream = &(heap_stream_pr->stream_public);
+
+	heap_stream->pfather = (struct streaminfo *)copy_stream_info_to_heap((const struct streaminfo_private *)stack_stream->pfather, reverse);
+
+	heap_addr = dictator_malloc(stack_stream->threadnum, stack_stream->addr.addrlen);
+	memset(heap_addr, 0, stack_stream->addr.addrlen);
+		
+	if(reverse){
+		heap_stream_pr->dirreverse=1;
+		heap_stream_pr->stream_dir = 1 ^ heap_stream_pr->layer_dir; /* lijia comment, 与"src>=dst"默认规则不一致 */
+		heap_stream_pr->stream_c2s_route_dir = 1 ^ heap_stream_pr->stream_c2s_route_dir; 
+		//reverse_addr_new(heap_addr, heap_stream->addr.addrtype);
+		/* 地址COPY时, 如果需要反转, 直接反向COPY, 不要先memcpy, 再交换地址源、目的的顺序 */
+		addr_reverse_memcpy(heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrtype, stack_stream->addr.addrlen);
+	}else{
+		heap_stream_pr->stream_dir = heap_stream_pr->layer_dir;
+		memcpy(heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrlen);
+	}
+	
+	heap_stream->addr.paddr = heap_addr;
+	heap_stream->addr.addrlen = stack_stream->addr.addrlen;
+	heap_stream->addr.addrtype = stack_stream->addr.addrtype;
+	
+	return (struct streaminfo_private *)heap_stream;
 }
 
 

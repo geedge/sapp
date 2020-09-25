@@ -83,7 +83,7 @@ typedef struct{
 	raw_pkt_t raw_pkt;
 	//unsigned char *data;
 	//int data_len;
-	unsigned char route_dir;
+	//unsigned char route_dir;
 	char op_flag; /* 2014-12-01 lijia add */
 }pkt_queue_t;
 
@@ -803,16 +803,16 @@ static void *__pcap_work_thread(void *arg)
 		}
 
 		raw_pkt_hdr[thread_num] = (struct mesa_ethernet_hdr *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data;
-		raw_pkt_route_dir[thread_num] =  pkt_queue_node.route_dir;
+		raw_pkt_route_dir[thread_num] =  pkt_queue_node.raw_pkt.route_dir;
 
 #if DEBUG
 		timestamp_record(TS_LEVEL_WORK, &(pkt_queue_node.raw_pkt), thread_num);
 #endif		
-		ret = (*g_pcap_work_fun)(&(pkt_queue_node.raw_pkt), pkt_queue_node.route_dir, thread_num);
+		ret = (*g_pcap_work_fun)(&(pkt_queue_node.raw_pkt), pkt_queue_node.raw_pkt.route_dir, thread_num);
 		/* 串联模式且返回值为PASS, 需要转发包 */
 		if((g_pcap_topology_mode & __NET_CONN_SERIAL) && (PASS == ret)){
 			pcap_forward_pkt(thread_num, (unsigned char *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data, 
-						pkt_queue_node.raw_pkt.__lib_raw_pkt_len, pkt_queue_node.route_dir);
+						pkt_queue_node.raw_pkt.__lib_raw_pkt_len, pkt_queue_node.raw_pkt.route_dir);
 		}
 
 		PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
@@ -995,6 +995,47 @@ static void dumpfile_wait_according_timestamp(const struct pcap_pkthdr *hdr)
 }
 
 
+static int gen_route_dir_for_dumpfile_mode(const u_char *data)
+{
+	int datalink_type = pcap_datalink(pcap_up_handle);
+	int route_dir = 0;
+	const struct mesa_ip4_hdr *ihdr4;
+	const struct mesa_ip6_hdr *ihdr6;
+	int raw_layer_type = ADDR_TYPE_MAC;
+
+	if(DLT_EN10MB == datalink_type){
+		raw_layer_type = ADDR_TYPE_MAC;
+	}else if(DLT_RAW == datalink_type){
+		raw_layer_type = ADDR_TYPE_IPV4;
+	}
+
+	ihdr4 = (struct mesa_ip4_hdr *)MESA_net_jump_to_layer(data, raw_layer_type, ADDR_TYPE_IPV4);
+	if(NULL == ihdr4){
+		ihdr6 = (struct mesa_ip6_hdr *)MESA_net_jump_to_layer(data, raw_layer_type, ADDR_TYPE_IPV6);
+		if(NULL == ihdr6){
+			return 0;
+		}else{
+			if(memcmp(&ihdr6->ip6_src, &ihdr6->ip6_dst, sizeof(struct in6_addr)) > 0){
+				route_dir = 1;
+			}else{
+				route_dir = 0;
+			}
+		}
+	}else{
+		if(memcmp(&ihdr4->ip_src.s_addr, &ihdr4->ip_dst.s_addr, sizeof(int)) > 0){
+			route_dir = 1;
+		}else{
+			route_dir = 0;
+		}
+	}
+
+	/* 
+		todo, 两个IP地址一样怎么办? 比如127.0.0.1本机通信, 再比端口.
+	*/
+
+	return route_dir;
+}
+
 static void __pcap_pkt_handle(u_char *user, const struct pcap_pkthdr *hdr, const u_char *data)
 {
 	pkt_queue_t pkt_queue_node;
@@ -1020,7 +1061,6 @@ static void __pcap_pkt_handle(u_char *user, const struct pcap_pkthdr *hdr, const
 			dumpfile_wait_according_timestamp(hdr);
 		}
 	}
-	
 
 #if 0
 retry:	
@@ -1068,10 +1108,15 @@ retry:
 	pkt_queue_node.raw_pkt.raw_pkt_ts.tv_usec = hdr->ts.tv_usec;
 	pkt_queue_node.raw_pkt.low_layer_type = (enum addr_type_t)g_pcap_cap_level;
 	pkt_queue_node.raw_pkt.magic_num = RAW_PKT_MAGIC_NUM; /* 2014-12-11 lijia add */
-	pkt_queue_node.route_dir = *((unsigned char *)user);
 	pkt_queue_node.raw_pkt.hd_hash = 0; /* 2016-05-05 lijia add, pcap模式不支持硬件HASH */
 	pkt_queue_node.raw_pkt.io_lib_pkt_reference = pkt_queue_node.raw_pkt.__lib_raw_pkt_data; /* 兼容dpdk模式, 将此变量赋值 */
-	pkt_queue_node.raw_pkt.route_dir = *((unsigned char *)user);
+
+	if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
+		/* 读包模式下本来没有routedir的概念, 为了便于测试上层业务, 使用最底层地址比较算出一个routedir */
+		pkt_queue_node.raw_pkt.route_dir = gen_route_dir_for_dumpfile_mode(data);
+	}else{
+		pkt_queue_node.raw_pkt.route_dir = *((unsigned char *)user);
+	}
 
 	pkt_queue_node.op_flag = PCAP_OP_FLAG_PKT;
 #if DEBUG

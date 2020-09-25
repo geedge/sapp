@@ -15,10 +15,30 @@ extern int ipv6_entry(struct streaminfo_private *pfstream, const void *this_laye
 extern int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,int thread_num,
 					 unsigned char dir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr);
 
-static inline void set_mpls_addr(struct layer_addr_mpls *addr, struct mesa_mpls_hdr *this_mpls_hdr)
+int set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mpls_pkt_data)
 {
-	memcpy(&addr->src_mpls_pkt, this_mpls_hdr, sizeof(struct mesa_mpls_hdr));
-	return;
+	const struct mesa_mpls_hdr *this_mpls_hdr;
+	int i;
+	
+    memset(addr, 0, sizeof(struct layer_addr_mpls));
+	for(i = 0; i < MAX_MPLS_ADDR_LAYER; i++)
+	{
+		this_mpls_hdr = (const struct mesa_mpls_hdr *)raw_mpls_pkt_data;
+		memcpy(&addr->src_mpls_pkt[i], raw_mpls_pkt_data,  sizeof(struct mesa_mpls_hdr));
+		addr->src_mpls_layer_num += 1;
+		if(1 == this_mpls_hdr->mpls_bls){
+			break;
+		}
+		raw_mpls_pkt_data += sizeof(struct mesa_mpls_hdr);
+	}
+
+	if(1 != this_mpls_hdr->mpls_bls) /* 超过MAX_MPLS_ADDR_LAYER, MPLS还没有结束 */
+	{
+		sapp_runtime_log(30, "MPLS layer number over load, only support %d\n", MAX_MPLS_ADDR_LAYER);
+		return -1;
+	}
+
+	return 0;
 }
 
 //MESA_htable_handle g_mpls_info_hash[MAX_THREAD_NUM];
@@ -32,28 +52,14 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 	int ret = PASS;
 	struct streamindex tmp_index;
 	struct layer_addr_mpls addr;
-	const struct mesa_mpls_hdr *this_mpls_hdr;
 	struct streamindex *ptmp=&tmp_index;
 	struct streaminfo_private *pstream_pr = &ptmp->stream;
 	struct streaminfo *pstream = &pstream_pr->stream_public;	
-	unsigned char *mpls_pkt_data = (unsigned char *)this_layer_data;
 	char *next_layer_hdr = NULL;
 	int next_layer_offset = 0, i = 0;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
-	
-    memset(&addr, 0, sizeof(addr));
-	for(i = 0; i < MAX_MPLS_ADDR_LAYER; i++)
-	{
-		this_mpls_hdr = (const struct mesa_mpls_hdr *)mpls_pkt_data;
-		memcpy(&addr.src_mpls_pkt[i], mpls_pkt_data,  sizeof(struct mesa_mpls_hdr));
-		addr.src_mpls_layer_num += 1;
-		if(1 == this_mpls_hdr->mpls_bls)break;
-		mpls_pkt_data += sizeof(struct mesa_mpls_hdr);
-	}
 
-	if(1 != this_mpls_hdr->mpls_bls)
-	{
-		sapp_runtime_log(20, "MPLS layer over %d !\n", MAX_MPLS_ADDR_LAYER);
+	if(set_mpls_addr(&addr, (unsigned char *)this_layer_data) < 0){
 		return PASS;
 	}
 
@@ -90,43 +96,37 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		pstream_pr = pfstream_pr;
 	}
 	
-	if(1 == this_mpls_hdr->mpls_bls)
-	{ /* 已到栈底, MPLS已结束 */
-		/* MPLS没有字段表示承载的协议类型, 如果MPLS承载的是IPv6协议，靠猜 */
-		((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-		struct iphdr  *ip4_hdr = (struct iphdr *)next_layer_hdr;
-		if((*next_layer_hdr & 0xF0) == 0x40)
-        {
-            int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
-			if(left_pkt_len < 20 || ntohs(ip4_hdr->tot_len) > left_pkt_len)
-			{
-                //g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-                //g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
-				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
-				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;                
-                sapp_runtime_log(20, "illegal left Ipv4 len %d, total len %d!\n", left_pkt_len, ntohs(ip4_hdr->tot_len));
-				return -1;
-			}
-            ret = ipv4_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
-        }
-        else if((*next_layer_hdr & 0xF0) == 0x60)
-        {
-            ret = ipv6_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
-        }
-        else if(ip4_hdr->version == 0)//pw ether control word, jump 4 byte
-		{
-			ret = eth_entry(pstream_pr,next_layer_hdr+4,thread_num,routedir,raw_pkt, next_layer_offset+4);
-		}
-        else
-        {
-            sapp_runtime_log(20, "MPLS next layer not IPv4 or IPv6, try to parse next layer as eth !\n");
-			ret = eth_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
-        }
 
-	}else{
-		/* MPLS嵌套, 递归调用自身 */
-		ret = mpls_uc_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
+	/* MPLS没有字段表示承载的协议类型, 如果MPLS承载的是IPv6协议，靠猜 */
+	((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+	struct iphdr  *ip4_hdr = (struct iphdr *)next_layer_hdr;
+	if((*next_layer_hdr & 0xF0) == 0x40)
+    {
+        int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
+		if(left_pkt_len < 20 || ntohs(ip4_hdr->tot_len) > left_pkt_len)
+		{
+            //g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
+            //g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
+			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;                
+            sapp_runtime_log(20, "illegal left Ipv4 len %d, total len %d!\n", left_pkt_len, ntohs(ip4_hdr->tot_len));
+			return -1;
+		}
+        ret = ipv4_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
+    }
+    else if((*next_layer_hdr & 0xF0) == 0x60)
+    {
+        ret = ipv6_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
+    }
+    else if(ip4_hdr->version == 0)//pw ether control word, jump 4 byte
+	{
+		ret = eth_entry(pstream_pr,next_layer_hdr+4,thread_num,routedir,raw_pkt, next_layer_offset+4);
 	}
+    else
+    {
+        sapp_runtime_log(20, "MPLS next layer not IPv4 or IPv6, try to parse next layer as eth !\n");
+		ret = eth_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
+    }
 
 	return ret;
 }
@@ -178,7 +178,6 @@ int mpls_empty_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 	{
 		ret = ipv6_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
 	}
-	//TODO VPLS
 	else
 	{
 		sapp_runtime_log(20, "mpls_empty_entry MPLS next layer not IPv4 or IPv6, drop pkt !\n");

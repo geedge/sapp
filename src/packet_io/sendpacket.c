@@ -64,6 +64,7 @@ extern int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int
 					int low_layer_type, int dir,int thread_num,
 					char *feedback_buf, int *feedback_buf_len);					
 static inline int dir_check(unsigned char raw_dir);
+extern int set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mpls_pkt_data);
 
 extern MESA_htable_handle g_gtp_info_hash[MAX_THREAD_NUM];
 
@@ -816,222 +817,13 @@ int sendpacket_build_ethernet(u_char *dst, u_char *src, u_short type,
 	return (0);
 }
 
-#if 0
-static int __do_kill_tcp(sendpacketTool *pSend, int thread_num, char CtoS_dir, char StoC_dir,
-		u_int32_t sip,ushort sid,ushort sport,u_int32_t sseq,u_int32_t sack,
-		u_int32_t dip,ushort did,ushort dport,u_int32_t dseq,u_int32_t dack)
-{
-	u_char sttl, dttl;
-	ushort swin, dwin, nouse;
-	int i, n_rst;
-	  int sendnum=0;
-#ifdef USE_TIME_TEST
-         struct timeval tv;
-        long begintime,endtime;
-        gettimeofday(&tv, 0);
-        begintime = tv.tv_sec* 1000*1000 + tv.tv_usec;
 
-#endif
-
-	sip = htonl(sip);
-#if 1	
-	dip = htonl(dip);
-#else /* test  */	
-	dip = htonl(0x0A00069A);
-#endif
-	if((0 == rst_whom || 2 == rst_whom) && (0!=sseq)) {	/* rst server */
-		if(0 == sip || 0 == sport) return -1;
-
-		 //如果使用发包，那么每次需要重新得到缓冲区
-        if(g_UseSendpktCard)
-    	{
-			pSend->send_buf=(char *)getbuffrompag(thread_num);
-    	}
-
-		//if(0 != param->n_rst) n_rst = param->n_rst;
-		//else	n_rst=num_of_rst_tos_send;
-		n_rst = num_of_rst_to_send;
-		for(i = 0; i < n_rst; i ++) 
-		{
-		    getrandval(thread_num,sip,dip,&nouse,&swin,&sttl);
-		    if(-1 == sendpacket_build_ip(SENDPACKET_TCP_H, 0, sid, 0x4000, sttl,
-			IPPROTO_TCP, sip, dip, NULL, 0, pSend->send_buf))
-		    {
-				pSend->errflag=SEND_PACKET_IP_ERR;
-				return -1;
-		    }
-		    if(-1 == sendpacket_build_tcp(sport,dport,sseq,sack,
-				TH_RST|TH_ACK, swin, 0,NULL, 0,
-				pSend->send_buf + SENDPACKET_IP_H))
-		     {
-			  pSend->errflag=SEND_PACKET_TCP_ERR;
-			  return -1;
-		      }
-			if(-1 == sendpacket_do_checksum(pSend->send_buf,
-				IPPROTO_TCP, SENDPACKET_TCP_H))
-			{
-			  pSend->errflag=SEND_PACKET_CHECKSUM_ERR;
-			  return -1;
-		      }
-		      sendpacket_do_checksum(pSend->send_buf, IPPROTO_IP, SENDPACKET_IP_H);
-			pSend->send_buf_location = 1;
-			pSend->send_ptr = pSend->send_buf;		      
-			sendnum=sendpacket_write_new(pSend, SENDPACKET_TCP_H + SENDPACKET_IP_H, CtoS_dir);
-			if(sendnum==-1)
-			{
-			  return -1;
-			}
-			
-			g_OutInfo.rstnum[thread_num]++;
-			sseq += 1460 * (i + 1);
-			//如果使用重新获得缓冲区
-			if(g_UseSendpktCard)
-			{
-			   if(i<n_rst-1)
-			   pSend->send_buf=(char *)regetbuffrompag(thread_num,pSend->send_buf,0,SENDPACKET_IP_H);
-			}
-		}
-		 //如果使用发包，那么每次需要重新得到缓冲区
-        if(g_UseSendpktCard)
-    	{
-            	pag_freesendbuf(thread_num);
-    	}
-
-	}
-	if ((0 == rst_whom || 1 == rst_whom)&&(0!=dseq)) {	/* rst client */
-		if(0 == dip || 0 == dport) return -1;
-		  //如果使用发包，那么每次需要重新得到缓冲区
-                if(g_UseSendpktCard)
-                {
-                        pSend->send_buf=(char *)getbuffrompag(thread_num);
-                }
-
-
-		//if(0 != param->n_rst) n_rst = param->n_rst;
-		//else	n_rst=num_of_rst_toc_send;
-		n_rst = num_of_rst_to_send;
-		for(i = 0; i < n_rst; i ++) {
-		
-			getrandval(thread_num,sip,dip,&nouse,&dwin,&dttl);
-			
-			if(-1 == sendpacket_build_ip(SENDPACKET_TCP_H, 0, did, 0x4000, dttl,
-				IPPROTO_TCP, dip, sip, NULL, 0, pSend->send_buf))
-			{
-				pSend->errflag=SEND_PACKET_IP_ERR;
-				return -1;
-			}
-			if(-1 == sendpacket_build_tcp(dport,sport,dseq,dack,
-				TH_RST|TH_ACK, dwin, 0, NULL, 0,
-				pSend->send_buf + SENDPACKET_IP_H))
-			{
-			  pSend->errflag=SEND_PACKET_TCP_ERR;
-			  return -1;
-		      }
-			if(-1 == sendpacket_do_checksum(pSend->send_buf,
-				IPPROTO_TCP, SENDPACKET_TCP_H))
-		      {
-			  pSend->errflag=SEND_PACKET_CHECKSUM_ERR;
-			  return -1;
-		      }
-		      	sendpacket_do_checksum(pSend->send_buf, IPPROTO_IP, SENDPACKET_IP_H);
-
-			pSend->send_buf_location = 1;
-			pSend->send_ptr = pSend->send_buf;	
-			sendnum=sendpacket_write_new(pSend, SENDPACKET_TCP_H + SENDPACKET_IP_H, StoC_dir);
-			if(sendnum==-1)
-			{
-			   return -1;
-			}
-
-			g_OutInfo.rstnum[thread_num]++;
-			dseq += 1460 * (i + 1);
-			//如果使用,重新获得缓冲区
-			if(g_UseSendpktCard)
-			{
-			   if(i<n_rst-1)
-			   pSend->send_buf=(char *)regetbuffrompag(thread_num,pSend->send_buf,0,SENDPACKET_IP_H);
-			}
-		}
-		  //如果使用发包，那么每次需要重新得到缓冲区
-            if(g_UseSendpktCard)
-            {
-                    pag_freesendbuf(thread_num);
-            }
-	}
-	
-#ifdef USE_TIME_TEST
-        gettimeofday(&tv, 0);
-        endtime = tv.tv_sec* 1000*1000 + tv.tv_usec;
-        killcount++;
-        killtime+=endtime-begintime;
-        if(killcount%10000==0)
-        {
-           fprintf(stderr,"killcount=%lu,average usetime is %lu\n",killcount,(killtime-oldtime)/10000);
-	  MESA_runtime_log(RLOG_LV_INFO, "KILL TCP COUNT:", "killcount=%lu,average usetime is %lu\n",killcount,(killtime-oldtime)/10000);
-           oldtime=killtime;
-        }
-#endif	
-	return 0;
-}
-
-
-int MESA_kill_tcp(struct streaminfo *stream)
-{
-	u_int32_t sip, sseq, sack, dip, dseq, dack, payload;
-	u_int16_t sid, sport, did, dport;
-	struct tcphdr *thdr;
-	sendpacketTool *pTool;
-	unsigned char C2S_dir, S2C_dir;
-
-	thdr = (struct tcphdr*)((u_int8_t *)a_packet + (a_packet->ip_hl << 2) );
-
-	payload = ntohs(a_packet->ip_len) - ((a_packet->ip_hl) << 2) - ((thdr->th_off) << 2);
-	if(0 != (TH_SYN & thdr->th_flags))
-	       payload ++;
-	
-	sip = ntohl((a_packet->ip_src).s_addr);
-	sseq = ntohl(thdr->th_seq) + payload;
-	sack = ntohl(thdr->th_ack);
-	dip = ntohl((a_packet->ip_dst).s_addr);
-	dseq = ntohl(thdr->th_ack);
-	dack = ntohl(thdr->th_seq) + payload;
-#if 1	
-	sid = a_packet->ip_id;	/* sender host byte order */
-	did = 128;
-#else /* test  */
-	sid = 0x1234;
-	did = 0xdddd;
-#endif
-
-	sport = ntohs(thdr->th_sport);
-	dport = ntohs(thdr->th_dport);
-
-	pTool = &g_SendPacketTools[stream->threadnum];
-
-	if(1 == stream->curdir)
-	{
-		C2S_dir = stream->routedir;
-		S2C_dir = stream->routedir ^ 0x80;
-	}
-	else
-	{
-		S2C_dir = stream->routedir;
-		C2S_dir = stream->routedir ^ 0x80;
-	}
-	
-	return __do_kill_tcp(pTool, stream->threadnum, (char)C2S_dir, (char)S2C_dir,
-					     sip, sid, sport, sseq, sack,
-		                 dip, did, dport, dseq, dack);
-}
-#endif
-
-
-static int calc_mpls_hdr_len(struct streaminfo_private * stream_pr, char send_route_dir)
+static int calc_mpls_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_stream_dir)
 {
 	int mpls_layer_len;
 	struct layer_addr_mpls *mpls_addr = stream_pr->stream_public.addr.mpls;
 	
-	if(send_route_dir == stream_pr->stream_c2s_route_dir){
+	if(send_stream_dir == DIR_C2S){
 		mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
 	}else{
 		mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
@@ -1057,9 +849,10 @@ static int calc_gtp_hdr_len(const struct gtp_hdr *gtp_hdr)
 	1-计算所有包头的长度, 用于预留空间. 计算到最底层协议, 如果有MAC也包含MAC头空间;
 	2-递归过程中获取Ethernet层承载的协议类型.
 
-	2020-09-17 lijia add send_route_dir, 因MPLS协议可能是非对称的, 需要知道发包方向, 才能确定预留头部长度. 
+	2020-09-25 lijia add args send_stream_dir, 
+	send_stream_dir: 因MPLS协议只有单向地址, 可能层数还是非对称的, 需要知道发包方向, 才能确定预留头部长度. 
 */
-static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type, char send_route_dir)
+static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type, UCHAR send_stream_dir)
 {
 	int  reserved_hdr_len = 0;
     struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
@@ -1127,7 +920,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 		break;
 
 		case ADDR_TYPE_MPLS:
-			reserved_hdr_len = calc_mpls_hdr_len(stream_pr, send_route_dir);
+			reserved_hdr_len = calc_mpls_hdr_len(stream_pr, send_stream_dir);
 		break;
 		
 		case ADDR_TYPE_PPPOE_SES:
@@ -1183,7 +976,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 		break;
 		
 		case ADDR_TYPE_MAC_IN_MAC:
-			reserved_hdr_len = sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ethernet_hdr);
+			reserved_hdr_len = sizeof(struct mesa_ethernet_hdr);
 		break;
 		
 		default:
@@ -1224,7 +1017,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 
 	
 done:
-	pfather_hdr_len = calc_reserved_hdr_len(stream->pfather, net_layer_type, send_route_dir);
+	pfather_hdr_len = calc_reserved_hdr_len(stream->pfather, net_layer_type, send_stream_dir);
 	if(pfather_hdr_len < 0){
 		return -1;
 	}
@@ -1721,14 +1514,14 @@ static int build_net_layer_gre(struct streaminfo_private *stream_pr, int carry_l
 
 
 static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_layer_type,
-			int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt)
+			int carry_layer_len, unsigned char *buf, UCHAR send_stream_dir, const raw_pkt_t *raw_pkt)
 {
 	const struct layer_addr_mpls *in_stream_addr;
 	int layer_len;
 
 	in_stream_addr = (struct layer_addr_mpls *)(stream_pr->stream_public.addr.mpls);
 
-	if(0 == reverse){
+	if(DIR_C2S == send_stream_dir){
 		if(in_stream_addr->src_mpls_layer_num > 0){
 			layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->src_mpls_layer_num;
 			memcpy(buf, in_stream_addr->src_mpls_pkt, layer_len);
@@ -1888,10 +1681,14 @@ static int build_net_layer_l2tp(struct streaminfo_private *stream_pr, int carry_
 
 /* 
 	buf: 执向应用层负载地址, skip hdr.
-	reverse: 对于有方向性的地址, 需反向.
+	reverse: 从应用层的角度区别dir, 表示与当前raw_pkt包相比, 方向是否一致, 对于有方向性的地址, 需反向造包.
+
+	2020-09-25 lijia add args send_stream_dir:
+	send_stream_dir: 表示当前发包的流方向, DIR_C2S或者DIR_S2C, 
+	                 因为MPLS, GTP等层原始包里只有单向地址, reverse的含义不能精确表示mpls, gtp等层到底使用哪个方向的地址.
 */
 static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_layer_type,
-			int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt)
+			int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt, UCHAR send_stream_dir)
 {
 	int this_layer_len = 0, ret;
 	int transport_layer_len;
@@ -1931,7 +1728,8 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			/* TCP层校验和需要IP地址信息, 所以要在构造完IP层信息后, 再计算checksum */
 			checksum_for_carry_layer(buf, __ADDR_TYPE_IP_PAIR_V4, carry_layer_type, carry_layer_len+transport_layer_len);
 			carry_layer_type = __ADDR_TYPE_IP_PAIR_V4;
-			
+
+			sapp_runtime_log(10, "build_net_layer_pkt()-->ADDR_TYPE_IPV4, buf start addr:%p, this_layer_len:%d", buf, this_layer_len);
 		break;
 		
 		case ADDR_TYPE_IPV6:
@@ -1992,20 +1790,18 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			*/
 			unsigned short eth_type_host = net_layer_to_ethernet_protocol(carry_layer_type);
 			if((unsigned short)-1 == eth_type_host){
-				sapp_runtime_log(20, "build_net_layer_pkt()-->ADDR_TYPE_MAC, unsupport eth_type:%d!\n", carry_layer_type);
+				sapp_runtime_log(20, "build_net_layer_pkt()-->ADDR_TYPE_MAC, unsupport carry_layer_type:0x%x!\n", carry_layer_type);
 				return -1;
 			}
-			if(g_topology_mode & __NET_CONN_PARALLEL){
-				struct mesa_ethernet_hdr * ehdr = (struct mesa_ethernet_hdr *)buf;
-				ehdr->ether_type = htons(eth_type_host);
-			}else{
-				build_net_layer_ethernet(stream_pr, eth_type_host, carry_layer_len, buf, reverse, raw_pkt);
-			}
+
+			build_net_layer_ethernet(stream_pr, eth_type_host, carry_layer_len, buf, reverse, raw_pkt);
 
 			this_layer_len = sizeof(struct mesa_ethernet_hdr);
 			carry_layer_type = ADDR_TYPE_MAC;
-			//ethernet不一定是最后一层, 因为有MAC-in-MAC
+			//ethernet不一定是最后一层, 因为有MAC-in-MAC, 本函数递归结束靠判断NULL == fstream_pr条件.
 			//return carry_layer_len;
+
+			sapp_runtime_log(10, "build_net_layer_pkt()-->ADDR_TYPE_MAC, buf start addr:%p, this_layer_len:%d\n", buf, this_layer_len);
 		}
 		break;
 
@@ -2023,26 +1819,25 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 		break;
 
 		case ADDR_TYPE_MPLS:
-			if(0 == reverse){
-				this_layer_len = calc_mpls_hdr_len(stream_pr, stream_pr->stream_public.routedir);
-			}else{
-				this_layer_len = calc_mpls_hdr_len(stream_pr, stream_pr->stream_public.routedir ^ 1);
-			}
-			
+		{
+			this_layer_len = calc_mpls_hdr_len(stream_pr, send_stream_dir);
 			if(0 == this_layer_len){
 				if(sapp_global_val->config.packet_io.create_mpls_anyway != 0){
 					/* 非对称MPLS, 为了流对齐生造出来的一层, 不构造实际包头 */
 					sapp_runtime_log(10, "build_net_layer_mps() skip fake mpls layer.\n");
 					break;
 				}else{
-					sapp_runtime_log(20, "build_net_layer_mps() error, layer len is 0, but create_mpls_anyway is disable!\n");
+					sapp_runtime_log(20, "build_net_layer_mps() error, send streamdir:%d, layer len is 0, but create_mpls_anyway is disable!\n", send_stream_dir);
 					return -1;					
 				}
 			}else{
 				buf -= this_layer_len;
-				build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
+				build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
 				carry_layer_type = ADDR_TYPE_MPLS;
 			}
+
+			sapp_runtime_log(10, "build_net_layer_pkt()-->ADDR_TYPE_MPLS, buf start addr:%p, this_layer_len:%d", buf, this_layer_len);
+		}	
 		break;
 
 		case ADDR_TYPE_GPRS_TUNNEL:
@@ -2050,6 +1845,8 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			buf -= this_layer_len;
 			build_net_layer_gtp(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
 			carry_layer_type = ADDR_TYPE_GPRS_TUNNEL;
+
+			sapp_runtime_log(10, "build_net_layer_pkt()-->ADDR_TYPE_GPRS_TUNNEL, buf start addr:%p, this_layer_len:%d", buf, this_layer_len);
 			break;
 
 		case ADDR_TYPE_PPPOE_SES:
@@ -2133,18 +1930,17 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 		
 		case ADDR_TYPE_MAC_IN_MAC:
 		{
-			this_layer_len = 0;
-			buf -= MAC_IN_MAC_HDR_LEN; 
-			struct mesa_ethernet_hdr * outer_ehdr = (struct mesa_ethernet_hdr *)buf;
-			outer_ehdr->ether_type = htons(ETHERTYPE_PANGU_MAC_IN_MAC);		
-
-			struct mesa_ethernet_hdr * inner_ehdr = (struct mesa_ethernet_hdr *)(buf + sizeof(struct mesa_ethernet_hdr));
-			inner_ehdr->ether_type = htons(net_layer_to_ethernet_protocol(carry_layer_type));
+			buf -= sizeof(struct mesa_ethernet_hdr); 
+	
+			build_net_layer_ethernet(stream_pr, ETHERTYPE_PANGU_MAC_IN_MAC, carry_layer_len, buf, reverse, raw_pkt);
 			
 			/* 此处可以不构造mac地址, 仅告知packet_io_send_fake_pkt函数底层类型, MAC还是MAC_IN_MAC */
 		
 			/* 并联模式下, 与MAC类似, 可以直接靠系统sendto发送, 所以MAC地址不在build系列函数中添加, 在dl_io中填充 */
-			return carry_layer_len;
+			this_layer_len = sizeof(struct mesa_ethernet_hdr);
+			carry_layer_type = ETHERTYPE_PANGU_MAC_IN_MAC;
+
+			sapp_runtime_log(10, "build_net_layer_pkt()-->ADDR_TYPE_MAC_IN_MAC, buf start addr:%p, this_layer_len:%d", buf, this_layer_len);
 		}	
 		break;
 		
@@ -2156,8 +1952,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 
 done:	
 	return build_net_layer_pkt((struct streaminfo_private *)stream->pfather,carry_layer_type, 
-							this_layer_len+carry_layer_len, 
-							buf, reverse, raw_pkt);
+							this_layer_len+carry_layer_len, buf, reverse, raw_pkt, send_stream_dir);
 
 err:
 	return -1;
@@ -2238,8 +2033,8 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 	}
 	
 	for(i = 0; i < kill_num; i++){
-		/* 因MPLS非对称问题,  calc_reserved_hdr_len()需要分不同方向计算 */
-		reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type, stream_pr->stream_c2s_route_dir);
+		/* 因MPLS非对称问题,  calc_reserved_hdr_len()需要分不同方向计算, 与当前包同向发包 */
+		reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type, stream_pr->stream_public.curdir);
 		if((reserved_hdr_len < 0) || (-1 == low_net_layer_type)){
 			sapp_runtime_log(RLOG_LV_INFO, "MESA_kill_tcp() calc_reserved_hdr_len error !");
 			ret = -1;
@@ -2250,35 +2045,41 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 		}
 	
 		send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
-		
-		send_len = build_net_layer_pkt(stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 0, raw_pkt);
-		if(send_len < 0){
-			ret = -1;
-			goto fun_exit;
-		}
-		ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
-							low_net_layer_type, stream->routedir, thread_num,
-							feedback_buf, feedback_buf_len);		
-		if(ret < 0){
-			send_handle->tot_send_err++;
-		}else{
-			send_handle->tot_send_pkt++;
-			send_handle->tot_send_byte += send_len;
-		}
-		
-		packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
 
-		//g_SysInputInfo[thread_num][SEND_TCP_RST]++;
-		//g_SysInputInfo[thread_num][SEND_TCP_RST_LEN]+=send_len;
-		local_sys_stat->count[SAPP_STAT_SND_TCP_RST]++;
+		sapp_runtime_log(10, "before build_net_layer_pkt(), buf addr:%p, streamdir:%d, total layer len:%d", send_handle->send_buf, stream->curdir, reserved_hdr_len);
+		send_len = build_net_layer_pkt(stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 0, raw_pkt, stream->curdir);
+		if(send_len > 0){		
+			/* 修改错误判断逻辑, 构造失败不退出, 继续尝试反方向造包 */
+			ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
+								low_net_layer_type, stream_pr->stream_public.routedir, thread_num,
+								feedback_buf, feedback_buf_len);		
+			if(ret < 0){
+				send_handle->tot_send_err++;
+			}else{
+				send_handle->tot_send_pkt++;
+				send_handle->tot_send_byte += send_len;
+			}
+			
+			packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
+			local_sys_stat->count[SAPP_STAT_SND_TCP_RST]++;
+
+			sapp_runtime_log(RLOG_LV_DEBUG, "do_kill_tcp() succ, stream:%s, streamdir:%d, routedir:%d, send_len=%d\n", 
+							printaddr(&stream->addr, thread_num),
+							stream_pr->stream_public.curdir,
+							stream_pr->stream_public.routedir, send_len);
+		}else{
+			sapp_runtime_log(RLOG_LV_INFO, "do_kill_tcp()-->build_net_layer_pkt() error, send streamdir:%d, routedir:%d, send_len=%d\n", 
+							stream_pr->stream_public.curdir ^ DIR_DOUBLE,
+							stream_pr->stream_public.routedir, send_len);
+		}
 		
  /****************************************** 
     并联模式下, 两个方向各发一个, 总计三次, 
     而不是先发C2S三次、再发S2C三次,
     防止因RST包延时问题, 另一方迟迟没有包; 
  ******************************************/			
-		 /* 因MPLS非对称问题,  calc_reserved_hdr_len()需要分不同方向计算 */
-		 reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type, stream_pr->stream_c2s_route_dir ^ 1);
+		 /* 因MPLS非对称问题,  calc_reserved_hdr_len()需要分不同方向计算, 与当前包反向发包 */
+		 reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type, stream_pr->stream_public.curdir ^ DIR_DOUBLE);
 		 if((reserved_hdr_len < 0) || (-1 == low_net_layer_type)){
 			 sapp_runtime_log(RLOG_LV_INFO, "MESA_kill_tcp() calc_reserved_hdr_len error !");
 			 ret = -1;
@@ -2289,25 +2090,31 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 		 }
 
 		send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
-		send_len = build_net_layer_pkt(stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 1, raw_pkt);
-		if(send_len < 0){
-			ret = -1;
-			goto fun_exit;
-			break;
-		}
-		ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
-							low_net_layer_type, stream->routedir ^ 1, thread_num,
-							feedback_buf, feedback_buf_len);	
-		if(ret < 0){
-			send_handle->tot_send_err++;
+		sapp_runtime_log(10, "before build_net_layer_pkt(), buf addr:%p, streamdir:%d, total layer len:%d", send_handle->send_buf, stream->curdir ^ DIR_DOUBLE, reserved_hdr_len);
+		send_len = build_net_layer_pkt(stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 1, raw_pkt, stream->curdir ^ DIR_DOUBLE);
+		if(send_len > 0){
+			/* 修改错误判断逻辑, 构造失败不退出, 继续尝试反方向造包 */
+			ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
+								low_net_layer_type, stream_pr->stream_public.routedir ^ 1, thread_num,
+								feedback_buf, feedback_buf_len);	
+			if(ret < 0){
+				send_handle->tot_send_err++;
+			}else{
+				send_handle->tot_send_pkt++;
+				send_handle->tot_send_byte += send_len;
+			}
+			packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
+			local_sys_stat->count[SAPP_STAT_SND_TCP_RST]++;
+
+			sapp_runtime_log(RLOG_LV_DEBUG, "do_kill_tcp() succ, stream:%s, streamdir:%d, routedir:%d, send_len=%d\n", 
+							printaddr(&stream->addr, thread_num),
+							stream_pr->stream_public.curdir ^ DIR_DOUBLE,
+							stream_pr->stream_public.routedir ^ 1, send_len);
 		}else{
-			send_handle->tot_send_pkt++;
-			send_handle->tot_send_byte += send_len;
+			sapp_runtime_log(RLOG_LV_INFO, "do_kill_tcp()-->build_net_layer_pkt() error, send streamdir:%d, routedir:%d, send_len=%d\n",
+							stream_pr->stream_public.curdir ^ DIR_DOUBLE,
+							stream_pr->stream_public.routedir ^ 1, send_len);
 		}
-		packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
-		//g_SysInputInfo[thread_num][SEND_TCP_RST]++;
-		//g_SysInputInfo[thread_num][SEND_TCP_RST_LEN]+=send_len;	
-		local_sys_stat->count[SAPP_STAT_SND_TCP_RST]++;
 	}
 
 fun_exit:
@@ -2417,7 +2224,7 @@ static int __do_kill_tcp_synack(struct streaminfo *stream, const void *ext_raw_p
 	for(i = 0; i < KILL_TCP_SYN_ACK_NUM; i++){
 		send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
 		
-		send_len = build_net_layer_pkt(stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 1, raw_pkt);
+		send_len = build_net_layer_pkt(stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 1, raw_pkt, stream->curdir ^ DIR_DOUBLE);
 		if(send_len < 0){
 			ret = -1;
 			goto fun_exit;		
@@ -2746,7 +2553,8 @@ int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_
 	MESA_send_handle *send_handle;
 	int thread_num = stream->threadnum;
 	int low_net_layer_type;
-	int snd_dir_reverse;
+	int snd_routedir_reverse;
+	UCHAR stream_send_dir;
 	const raw_pkt_t *raw_pkt;
 	struct streaminfo_private *stream_pr;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
@@ -2767,8 +2575,14 @@ int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_
 	if((NULL == raw_pkt) || (RAW_PKT_MAGIC_NUM != raw_pkt->magic_num)){
 		return -1;
 	}
-	
-	snd_dir_reverse = ((snd_routedir == stream->routedir) ? 0: 1);
+
+	if(snd_routedir == stream->routedir){
+		snd_routedir_reverse = 0;
+		stream_send_dir = stream->curdir;
+	}else{
+		snd_routedir_reverse = 1;
+		stream_send_dir = stream->curdir ^ DIR_DOUBLE;
+	}
 	
 	send_handle = &g_send_handle[thread_num];
 
@@ -2794,7 +2608,7 @@ int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_
 	memcpy(send_handle->send_buf + reserved_hdr_len, payload, payload_len);
 	
 	send_len = build_net_layer_pkt(stream_pr, stream->addr.addrtype, payload_len, 
-							   send_handle->send_buf + reserved_hdr_len, snd_dir_reverse, raw_pkt);
+							   send_handle->send_buf + reserved_hdr_len, snd_routedir_reverse, raw_pkt, stream_send_dir);
 	if(send_len < 0){
 		ret = -1;
 		goto err;
@@ -2898,7 +2712,8 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	MESA_send_handle *send_handle;
 	int thread_num = raw_stream->threadnum;
 	int low_net_layer_type;
-	int snd_dir_reverse;
+	int snd_routedir_reverse;
+	UCHAR send_stream_dir;
 	const raw_pkt_t *raw_pkt;
 	struct streaminfo_private *raw_stream_pr;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
@@ -2931,8 +2746,14 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	
 	raw_stream_pr = (struct streaminfo_private *)raw_stream;
 	/* 因改变了某些回调函数的原始包类型为IP包头, 所以不需要插件传输原始包, 信息都存储于私有流结构体内 */
-	raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_dir_reverse);
+	raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_routedir_reverse);
 	assert(raw_pkt != NULL);	
+
+	if(snd_routedir_reverse == raw_stream->routedir){
+		send_stream_dir = raw_stream->curdir;
+	}else{
+		send_stream_dir = raw_stream->curdir ^ DIR_DOUBLE;
+	}
 	
 	send_handle = &g_send_handle[thread_num];
 
@@ -2958,7 +2779,7 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	memcpy(send_handle->send_buf + reserved_hdr_len, payload, payload_len);
 	
 	send_len = build_net_layer_pkt(inject_stream_pr, carry_layer_type, payload_len, 
-							   send_handle->send_buf + reserved_hdr_len, snd_dir_reverse, raw_pkt);
+							   send_handle->send_buf + reserved_hdr_len, snd_routedir_reverse, raw_pkt, send_stream_dir);
 	if(send_len < 0){
 		ret = -1;
 		goto err;

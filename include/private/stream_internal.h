@@ -379,6 +379,7 @@ void free_polling_inject_context(struct streaminfo_private *pstream_pr);
 int update_polling_inject_context(struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt);
 unsigned long long get_global_stream_id(unsigned long long thread_seq);
 enum sapp_state_t sapp_get_current_state(void);
+extern struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream, int reverse);
 
 
 #ifdef __cplusplus
