@@ -2757,7 +2757,7 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	
 	send_handle = &g_send_handle[thread_num];
 
-	reserved_hdr_len = calc_reserved_hdr_len(inject_stream, &low_net_layer_type, snd_routedir);
+	reserved_hdr_len = calc_reserved_hdr_len(inject_stream, &low_net_layer_type, send_stream_dir);
 	if(reserved_hdr_len < 0){
 		return -1;
 	}

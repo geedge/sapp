@@ -342,8 +342,17 @@ static int config_expression_convert(void)
 		}
 
 		if(MESA_get_dev_mac(pconfig->packet_io.inject_mode_single_gateway_device, (unsigned char *)pconfig->packet_io.inject_mode_single_gateway_src_mac) < 0){
-			sapp_log(30, ~0, ~0, "[Error]can't get sapp.toml->[packet_io.feature]->inject_mode_single_gateway_device: '%s' mac address", pconfig->packet_io.inject_mode_single_gateway_device);
-			return -1;				
+			sapp_log(20, ~0, ~0, "[Warning]can't get sapp.toml->[packet_io.feature]->inject_mode_single_gateway_device: '%s' mac address", pconfig->packet_io.inject_mode_single_gateway_device);
+			
+			tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"inject_mode_single_gateway_src_mac", pconfig->packet_io.inject_mode_single_gateway_src_mac_string, sizeof(pconfig->packet_io.inject_mode_single_gateway_src_mac_string), "$");
+			if('$' == pconfig->packet_io.inject_mode_single_gateway_src_mac_string[0]){
+				sapp_log(30, ~0, ~0, "[Error]can't get local device '%s' mac address, and no valid inject_mode_single_gateway_src_mac", pconfig->packet_io.inject_mode_single_gateway_device);
+				return -1;
+			}
+			if(MESA_mac_pton(pconfig->packet_io.inject_mode_single_gateway_src_mac_string, ':', pconfig->packet_io.inject_mode_single_gateway_src_mac) < 0){
+				sapp_log(30, ~0, ~0, "[Error]sapp.toml->[packet_io.feature]->inject_mode_single_gateway_src_mac error: %s", pconfig->packet_io.inject_mode_single_gateway_src_mac_string);
+				return -1;	
+			}			
 		}
 	}
 

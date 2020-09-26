@@ -55,6 +55,8 @@ dictator_enable=1
 
 ### note, this config is valid if inject_pkt_mode==raw_ethernet_single_gateway.
     inject_mode_single_gateway_device="eth1"
+    ### inject_mode_single_gateway_src_mac has higher priority than get mac from inject_mode_single_gateway_device
+    inject_mode_single_gateway_src_mac="00:11:22:77:88:99"
     inject_mode_single_gateway_dst_mac="00:11:22:33:44:55"
    
 ### note, depolyment.mode options: [mirror, inline, transparent]
