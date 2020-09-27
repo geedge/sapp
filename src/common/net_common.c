@@ -388,26 +388,33 @@ static int ppp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 	return skip_len + sizeof(struct mesa_pppoe_session_hdr);
 }
 
-
+extern int set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mpls_pkt_data);
 static int mpls_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
 {
 	int skip_len = 0;
-	const struct mesa_mpls_hdr *mpls_hdr = (const struct mesa_mpls_hdr *)raw_data;
-	const char *next_layer_data = raw_data + sizeof(struct mesa_mpls_hdr);
+	struct layer_addr_mpls mpls_addr = {};
+	const char *next_layer_data;
+	int mpls_layer_len;
 
 	if(raw_layer_type == expect_layer_type){
 		return 0;
 	}
 
-	if(0 == mpls_hdr->mpls_bls){ /* 非MPLS栈底, 递归调用自身 */
-		return mpls_jump_to_layer(next_layer_data, ADDR_TYPE_MPLS, expect_layer_type) + sizeof(struct mesa_mpls_hdr);
+	set_mpls_addr(&mpls_addr, (unsigned char *)raw_data);
+	mpls_layer_len = mpls_addr.src_mpls_layer_num * sizeof(int);
+	if(mpls_addr.src_has_ctrl_word){
+		mpls_layer_len += sizeof(int);
 	}
+
+	next_layer_data = raw_data + mpls_layer_len;
 
 	/* MPLS没有字段标识下一层是什么, 靠猜测下一层的IP类型 */
 	if((*next_layer_data & 0x40) == 0x40){
 		skip_len = ipv4_jump_to_layer(next_layer_data, __ADDR_TYPE_IP_PAIR_V4, expect_layer_type);
 	}else if((*next_layer_data & 0x60) == 0x60){
 		skip_len = ipv6_jump_to_layer(next_layer_data, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
+	}else if((*next_layer_data & 0xF) == 0){ //VPLS
+		skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MAC, expect_layer_type);
 	}else{
 		//skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MPLS, expect_layer_type);
 		sapp_runtime_log(20, "WARNING: jmp unsupport type in MPLS to Ethernet, 0x%x!\n",  
@@ -415,7 +422,7 @@ static int mpls_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 		return -1;
 	}
 
-	return skip_len + sizeof(struct mesa_mpls_hdr); /* mpls header is 4 byte */
+	return skip_len + mpls_layer_len;
 }
 
 static int __common_eth_type_dispatch(UINT16 eth_type, const char *next_layer_data, int raw_layer_type, int expect_layer_type)

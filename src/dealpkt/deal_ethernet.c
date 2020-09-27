@@ -22,6 +22,23 @@ static inline void set_mac_addr(struct layer_addr_mac *addr, const struct mesa_e
 }
 
 
+static inline int should_create_empty_mpls_layer_for_symmetric(const struct streaminfo *pstream, unsigned short next_eth_type)
+{
+	if(0 == sapp_global_val->config.packet_io.create_mpls_anyway){
+		return 0;
+	}
+
+	if((next_eth_type != ETHERTYPE_IP) || (next_eth_type != ETHERTYPE_IPV6)){
+		return 0;
+	}
+
+	if((NULL != pstream->pfather) && (ADDR_TYPE_MPLS == pstream->pfather->addr.addrtype)){ /* 说明是从VPLS进入到ethernet层, 不再创建空的mpls层 */
+		return 0;
+	}
+
+	return 1;
+}
+
 int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,int thread_num, 
 			unsigned char dir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
@@ -103,15 +120,11 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 		}
 	}
 	
-	if(sapp_global_val->config.packet_io.create_mpls_anyway != 0)
+	if(should_create_empty_mpls_layer_for_symmetric(pstream, eth_type) != 0) 
 	{
-		if(eth_type == ETHERTYPE_IP || eth_type == ETHERTYPE_IPv6)
-		{
-			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			ret = mpls_empty_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
-			return ret;
-		}
-		//else , if not ipv4 or ipv6, go on.
+		((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+		ret = mpls_empty_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+		return ret;
 	}
 	/* 2020-09-17 lijia modify, create_mpls_anyway标志, 如果上层不是标准的ipv4, ipv6层, 比如是MAC_IN_MAC, VLAN等, 此处要继续执行, 不能是else */
 	//else

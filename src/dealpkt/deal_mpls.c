@@ -27,6 +27,7 @@ int set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mpls_pk
 		memcpy(&addr->src_mpls_pkt[i], raw_mpls_pkt_data,  sizeof(struct mesa_mpls_hdr));
 		addr->src_mpls_layer_num += 1;
 		if(1 == this_mpls_hdr->mpls_bls){
+			raw_mpls_pkt_data += sizeof(struct mesa_mpls_hdr); /* 为了后面方便判断是否还有ctrl word */
 			break;
 		}
 		raw_mpls_pkt_data += sizeof(struct mesa_mpls_hdr);
@@ -36,6 +37,11 @@ int set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mpls_pk
 	{
 		sapp_runtime_log(30, "MPLS layer number over load, only support %d\n", MAX_MPLS_ADDR_LAYER);
 		return -1;
+	}
+
+	if(((*raw_mpls_pkt_data & 0xF0) != 0x60) && (*raw_mpls_pkt_data & 0xF) == 0){
+		memcpy(&addr->src_mpls_ctrl_word, raw_mpls_pkt_data,  sizeof(int));
+		addr->src_has_ctrl_word = 1;
 	}
 
 	return 0;
@@ -118,7 +124,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
     {
         ret = ipv6_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
     }
-    else if(ip4_hdr->version == 0)//pw ether control word, jump 4 byte
+    else if((*next_layer_hdr & 0xF) == 0)//VPLS, refer to RFC4623, or https://wiki.mikrotik.com/wiki/Manual:VPLS_Control_Word
 	{
 		ret = eth_entry(pstream_pr,next_layer_hdr+4,thread_num,routedir,raw_pkt, next_layer_offset+4);
 	}

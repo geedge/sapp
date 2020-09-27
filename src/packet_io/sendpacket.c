@@ -825,8 +825,14 @@ static int calc_mpls_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_s
 	
 	if(send_stream_dir == DIR_C2S){
 		mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
+		if(mpls_addr->src_has_ctrl_word){
+			mpls_layer_len += sizeof(int);
+		}
 	}else{
 		mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
+		if(mpls_addr->dst_has_ctrl_word){
+			mpls_layer_len += sizeof(int);
+		}		
 	}
 
 	return mpls_layer_len;
@@ -1517,7 +1523,7 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 			int carry_layer_len, unsigned char *buf, UCHAR send_stream_dir, const raw_pkt_t *raw_pkt)
 {
 	const struct layer_addr_mpls *in_stream_addr;
-	int layer_len;
+	int layer_len = 0;
 
 	in_stream_addr = (struct layer_addr_mpls *)(stream_pr->stream_public.addr.mpls);
 
@@ -1526,11 +1532,19 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 			layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->src_mpls_layer_num;
 			memcpy(buf, in_stream_addr->src_mpls_pkt, layer_len);
 		}
+		if(in_stream_addr->src_has_ctrl_word){
+			memcpy(buf + layer_len, &in_stream_addr->src_mpls_ctrl_word, sizeof(int));
+		}
+		layer_len += sizeof(int);
 	}else{
 		if(in_stream_addr->dest_mpls_layer_num > 0){
 			layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->dest_mpls_layer_num;
 			memcpy(buf, in_stream_addr->dest_mpls_pkt, layer_len);
 		}
+		if(in_stream_addr->dst_has_ctrl_word){
+			memcpy(buf + layer_len, &in_stream_addr->dst_mpls_ctrl_word, sizeof(int));
+		}
+		layer_len += sizeof(int);
 	}	
 
 	return layer_len;

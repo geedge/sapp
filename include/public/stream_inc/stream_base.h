@@ -288,9 +288,13 @@ struct layer_addr_l2tp
 struct layer_addr_mpls
 {
 	unsigned int src_mpls_pkt[MAX_MPLS_ADDR_LAYER];
+	unsigned int dest_mpls_pkt[MAX_MPLS_ADDR_LAYER];
     char src_mpls_layer_num;
-    unsigned int dest_mpls_pkt[MAX_MPLS_ADDR_LAYER];
     char dest_mpls_layer_num;
+	char src_has_ctrl_word;
+	char dst_has_ctrl_word;
+    unsigned int src_mpls_ctrl_word; /* refer to RFC4623 */
+    unsigned int dst_mpls_ctrl_word; /* refer to RFC4623 */
 };
 
 struct layer_addr_pptp

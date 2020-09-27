@@ -2331,12 +2331,13 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
             struct layer_addr_mpls *dst_mpls = (struct layer_addr_mpls *)daddr;
 
             memset(dst_mpls, 0, sizeof(struct layer_addr_mpls));
-
-            //memcpy(dst_mpls->src_mpls_pkt, src_mpls->dest_mpls_pkt, sizeof(src_mpls->dest_mpls_pkt));
-            //dst_mpls->src_mpls_layer_num = src_mpls->dest_mpls_layer_num;
-
+			/* 当前stack里的包地址信息固定存储于src方向, 反向copy是将stack地址拷贝到堆里的地址 */
             memcpy(dst_mpls->dest_mpls_pkt, src_mpls->src_mpls_pkt, sizeof(src_mpls->src_mpls_pkt));
             dst_mpls->dest_mpls_layer_num = src_mpls->src_mpls_layer_num;
+            if(src_mpls->src_has_ctrl_word){
+            	dst_mpls->dst_mpls_ctrl_word = src_mpls->src_mpls_ctrl_word;
+				dst_mpls->dst_has_ctrl_word = 1;
+            }
         }
         break;
         
@@ -2763,18 +2764,26 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 				break;
 			case ADDR_TYPE_MPLS:
 				if((sapp_global_val->config.packet_io.create_mpls_anyway != 0)
-				 ||(ADDR_TYPE_MPLS == pstream_pr->stream_public.addr.addrtype)){ /* 如果是MPLS 1:N的模式, 即使不开启create_mpls_anyway, 也要更新对端地址 */
+				 ||(ADDR_TYPE_MPLS == pstream_pr->stream_public.addr.addrtype)){ /* 如果是MPLS 1:N的模式, 即两端都有MPLS层, 但有可能不对称, 不开启create_mpls_anyway, 也要更新对端地址 */
 					if(cur_dir == DIR_C2S){
 						memcpy(pstream_pr->stream_public.addr.mpls->src_mpls_pkt,
 						        p_stack->stream_public.addr.mpls->src_mpls_pkt,
 						        sizeof(p_stack->stream_public.addr.mpls->src_mpls_pkt));
 	                    pstream_pr->stream_public.addr.mpls->src_mpls_layer_num = p_stack->stream_public.addr.mpls->src_mpls_layer_num;
+	                    if(p_stack->stream_public.addr.mpls->src_has_ctrl_word){//注意, 这里固定判断src方向!!
+							pstream_pr->stream_public.addr.mpls->src_mpls_ctrl_word = p_stack->stream_public.addr.mpls->src_mpls_ctrl_word;
+							pstream_pr->stream_public.addr.mpls->src_has_ctrl_word = 1;
+	                    }
 					}
 					else{
 	                    memcpy(pstream_pr->stream_public.addr.mpls->dest_mpls_pkt,
 	                           p_stack->stream_public.addr.mpls->src_mpls_pkt,
 	                           sizeof(p_stack->stream_public.addr.mpls->src_mpls_pkt));
 	                    pstream_pr->stream_public.addr.mpls->dest_mpls_layer_num = p_stack->stream_public.addr.mpls->src_mpls_layer_num;
+	                    if(p_stack->stream_public.addr.mpls->src_has_ctrl_word){ //注意, 这里固定判断src方向!!
+							pstream_pr->stream_public.addr.mpls->dst_mpls_ctrl_word = p_stack->stream_public.addr.mpls->src_mpls_ctrl_word;
+							pstream_pr->stream_public.addr.mpls->dst_has_ctrl_word = 1;
+	                    }	                    
 					}
 				}
 				break;
