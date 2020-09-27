@@ -66,7 +66,6 @@ static long G_PCAP_SIZE[MAX_THREAD_NUM];
 static char G_PKT_DUMP_FILTER_STR[PATH_MAX];
 
 static struct bpf_program G_PKT_DUMP_BPF_FILTER[MAX_THREAD_NUM];
-static pcap_t *phony_pcap_handle[MAX_THREAD_NUM]; /* 仅用于BPF过滤时使用 */
 static unsigned short pkt_dump_data_offset = 0; /* 捕包时可指定偏移量, 用于vxlan环境下捕获内层数据包 */
 static unsigned short pkt_dump_tcp_bind_port = 12345; /* 默认TCP监听端口, 用于接收外部tcpdump命令 */
 static int pkt_dump_tcp_cmd_sd = -1;/* TCP fd,  用于接收外部tcpdump命令 */
@@ -435,18 +434,22 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 		return;
 	}
 
+	if (p_raw_pkt->low_layer_type != (enum addr_type_t)CAP_LEVEL_MAC)
+	{
+		pktdata = (const unsigned char *)p_raw_pkt->raw_pkt_data - 14 + pkt_dump_data_offset;
+		for_bpf_filter_data = pktdata;
+		pktlen = p_raw_pkt->raw_pkt_len + 14 - pkt_dump_data_offset;
+		for_bpf_filter_len = pktlen;
+	}
+	else
+	{
+		pktdata = (const unsigned char *)p_raw_pkt->raw_pkt_data + pkt_dump_data_offset;
+		pktlen = p_raw_pkt->raw_pkt_len - pkt_dump_data_offset;
+		for_bpf_filter_len = pktlen;
+		for_bpf_filter_data = pktdata;
+	}
 	if(0 == greedy_seek_flag){
-		if(p_raw_pkt->low_layer_type  != (enum addr_type_t)CAP_LEVEL_MAC){
-			pktdata =  (const unsigned char *)p_raw_pkt->raw_pkt_data-14 + pkt_dump_data_offset;
-			for_bpf_filter_data = pktdata;
-			pktlen = p_raw_pkt->raw_pkt_len + 14 - pkt_dump_data_offset;
-			for_bpf_filter_len = pktlen;
-		}else{
-			pktdata =  (const unsigned char *)p_raw_pkt->raw_pkt_data + pkt_dump_data_offset;
-			pktlen = p_raw_pkt->raw_pkt_len - pkt_dump_data_offset;
-			for_bpf_filter_len = pktlen;
-			for_bpf_filter_data = pktdata;
-		}
+
 
 		/* 如果有正确的过滤条件, 不设采样率, 保证捕包尽量全, 符合调用者意图;
 	       如果没有过滤条件, 即全捕包模式, 为了尽量不影响包处理线程, 根据采样率只捕一部分包.
@@ -466,15 +469,42 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 		}
 	
 	}else{
-		pktlen = p_raw_pkt->raw_pkt_len>2048?2048:p_raw_pkt->raw_pkt_len;
-		memcpy(modify_pkt_buf, p_raw_pkt->raw_pkt_data, pktlen);
-		pktlen = cycle_pkt_dump_seek_to_inner_ip(modify_pkt_buf, pktlen, thread_seq);
-		if(pktlen < 0){
-			return;
+		struct mesa_ip4_hdr *ip4hdr_greedy;
+		struct mesa_ip6_hdr *ip6hdr_greedy;
+		int inner_pkt_len;
+		const unsigned char *inner_iphdr = NULL;
+		ip4hdr_greedy = (struct mesa_ip4_hdr *)MESA_net_jump_to_layer_greedy(for_bpf_filter_data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
+		if (ip4hdr_greedy)
+		{
+			inner_iphdr = (const unsigned char *)ip4hdr_greedy;
+			inner_pkt_len = for_bpf_filter_len - ((const u_char *)ip4hdr_greedy - for_bpf_filter_data);
 		}
-		pktdata = (unsigned char *)modify_pkt_buf;
-		for_bpf_filter_data = pktdata;
-		for_bpf_filter_len = pktlen;
+		else
+		{
+			ip6hdr_greedy = (struct mesa_ip6_hdr *)MESA_net_jump_to_layer_greedy(for_bpf_filter_data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
+			if (ip6hdr_greedy)
+			{
+				inner_iphdr = (const unsigned char *)ip6hdr_greedy;
+				inner_pkt_len = for_bpf_filter_len - ((const u_char *)ip6hdr_greedy - for_bpf_filter_data);
+			}
+			else
+			{
+				return;
+			}
+		}
+		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
+			if(0 == bpf_filter(G_PKT_DUMP_BPF_FILTER[thread_seq].bf_insns, 
+						    (const unsigned char *)inner_iphdr, inner_pkt_len, inner_pkt_len)){
+				return;
+			}
+		}else{
+			if(cur_conn_pkt_dump_ratio > 0){
+				if(0 == cycle_pkt_dump_sample_by_ratio(thread_seq)){
+					tot_udp_send_willful_discard_num++;
+					return;
+				}
+			}
+		}
 	}
 
 	if(tcpdump_perceptive_flag > 0){ /* 丢包检测 */
@@ -1102,16 +1132,13 @@ static void cycle_pkt_dump_command_parse(int connfd)
 				break;
 		}
 	}
-
+	int pcap_link_type = DLT_EN10MB;
+	if(greedy_seek_flag == 1)pcap_link_type = DLT_RAW;
 	for(i = 0; i < (unsigned int )g_packet_io_thread_num; i++){
-		phony_pcap_handle[i] = pcap_open_dead(DLT_EN10MB, 65535);
-		if(NULL == phony_pcap_handle[i]){
-			goto err_exit;
-		}		
 
 		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){ /* 允许没有filter, 即全捕包 */
-			if(pcap_compile(phony_pcap_handle[i], &G_PKT_DUMP_BPF_FILTER[i], G_PKT_DUMP_FILTER_STR, 100, 0) < 0){                
-				printf("Compile pcap filter '%s' error:%s\n", G_PKT_DUMP_FILTER_STR, pcap_geterr(phony_pcap_handle[i]));                
+			if(pcap_compile_nopcap(65535, pcap_link_type, &G_PKT_DUMP_BPF_FILTER[i], G_PKT_DUMP_FILTER_STR, 100, 0) < 0){                
+				printf("Compile pcap filter '%s' error\n", G_PKT_DUMP_FILTER_STR);                
 				goto err_exit;    
 			}
 			/* 如果有正确的过滤条件, 不设采样率, 保证捕包尽量符合调用者意图 */
@@ -1247,14 +1274,8 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 
 		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
 			for(i = 0; i < g_packet_io_thread_num; i++){
-				phony_pcap_handle[i] = pcap_open_dead(DLT_EN10MB, 65535);
-				if(NULL == phony_pcap_handle[i]){
-					sapp_log(30, 1, 1, "pcap_open %s error, %s\n", "lo", pcap_errbuf);
-					sapp_log(30, 1, 1, "pkt_dump_bpf_filter is not enable!\n");
-					return -1;
-				}		
-				if(pcap_compile(phony_pcap_handle[i], &G_PKT_DUMP_BPF_FILTER[i], G_PKT_DUMP_FILTER_STR, 100, 0) < 0){                
-					sapp_log(30, 1, 1, "Compile pcap filter '%s' error:%s\n", pktdump_cfg->bpf_filter, pcap_geterr(phony_pcap_handle[i]));                
+				if(pcap_compile_nopcap(65535,DLT_EN10MB, &G_PKT_DUMP_BPF_FILTER[i], G_PKT_DUMP_FILTER_STR, 100, 0) < 0){                
+					sapp_log(30, 1, 1, "Compile pcap filter '%s' error\n", pktdump_cfg->bpf_filter);                
 					return -1;        
 				}		
 			}
