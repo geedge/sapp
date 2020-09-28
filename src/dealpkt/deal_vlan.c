@@ -11,10 +11,28 @@ extern "C" {
 static inline void packet_io_vlan_status_update(int thread_seq, const struct layer_addr_vlan *addr, int raw_pkt_len);
 #endif
 
-static inline void set_vlanid(struct layer_addr_vlan *addr, unsigned short *vlan_tag)
+int set_vlan_addr(struct layer_addr_vlan *addr, const unsigned char *vlan_tag)
 {
-	addr->vlan_id = ntohs(*vlan_tag) & VLAN_ID_MASK;
-	return;
+	int i;
+	const struct mesa_vlan_hdr *vhdr;
+	int vlan_layer_len = 0;
+
+	memset(addr, 0, sizeof(struct layer_addr_vlan));
+
+	addr->vlan_id = ntohs(*(unsigned short *)vlan_tag) & VLAN_ID_MASK; //compat old value
+
+	for(i = 0; i < MAX_VLAN_ADDR_LAYER; i++){
+		vhdr = (struct mesa_vlan_hdr *)vlan_tag;
+		memcpy(&addr->src_vlan_pkt[i], vlan_tag, sizeof(struct mesa_vlan_hdr));
+		vlan_tag += sizeof(struct mesa_vlan_hdr);
+		addr->src_vlan_layer_num++;
+		vlan_layer_len += sizeof(struct mesa_vlan_hdr);
+		if(ETH_P_8021Q != ntohs(vhdr->type)){
+			break;
+		}
+	}
+	
+	return vlan_layer_len;
 }
 
 int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_data,int thread_num, 
@@ -26,21 +44,25 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 	struct streaminfo_private *pstream_pr = &ptmp->stream;
 	struct streaminfo *pstream = &pstream_pr->stream_public;	
 	struct layer_addr_vlan addr;
-	u_short ether_type;
-	char *next_layer_hdr = (char *)this_layer_data+ VLAN_TAG_LEN;
-	int next_layer_offset = offset_to_raw_pkt_hdr + VLAN_TAG_LEN;
+	u_short next_layer_type;
+	char *next_layer_hdr;
+	int next_layer_offset;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	int vlan_layer_len;
+	const struct mesa_vlan_hdr *vhdr;
 
 	if(likely(0 == G_SKIP_NOT_IP_LAYER)){
 		memset(ptmp,0,sizeof(struct streamindex));
-		set_vlanid(&addr, (unsigned short *)this_layer_data);
-#if IKNOW_ENABLE
-		packet_io_vlan_status_update(thread_num, &addr, raw_pkt->raw_pkt_len);
-#endif
+		vlan_layer_len = set_vlan_addr(&addr, (unsigned char *)this_layer_data);
+
 		pstream->addr.paddr=&addr;
 		pstream->addr.addrtype = ADDR_TYPE_VLAN;
 		pstream->addr.addrlen = sizeof(struct layer_addr_vlan);
-		pstream_pr->addr_use_as_hash = 1;	
+		if(1){ //asymmetric layer
+			pstream_pr->addr_use_as_hash = 0;	
+		}else{
+			pstream_pr->addr_use_as_hash = 1;	
+		}
 		//ptmp->stream.p_layer_header = this_layer_data;
 		//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_layer_data - (char *)raw_pkt->raw_pkt_data;
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
@@ -56,10 +78,13 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 		pstream_pr = pfstream_pr; /* 2015-07-03 lijia add, skip this layer */
 	}
 
-	ether_type=*((unsigned short *)((char *)this_layer_data + 2));
-	ether_type = ntohs(ether_type);
+	vhdr = (struct mesa_vlan_hdr *)&addr.src_vlan_pkt[addr.src_vlan_layer_num-1];
+	next_layer_type = ntohs(vhdr->type);
 
-	switch(ether_type)
+	next_layer_hdr = (char *)this_layer_data + vlan_layer_len;
+	next_layer_offset = offset_to_raw_pkt_hdr + vlan_layer_len;
+
+	switch(next_layer_type)
 	{
 		case ETH_P_IP:
 			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
@@ -71,8 +96,10 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 			break;
 
 		case ETH_P_8021Q:
-			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			ret=vlan_8021q_entry(pstream_pr, next_layer_hdr,thread_num, routedir,raw_pkt, next_layer_offset);
+			//((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
+			//ret=vlan_8021q_entry(pstream_pr, next_layer_hdr,thread_num, routedir,raw_pkt, next_layer_offset);
+			sapp_runtime_log(30, "vlan_8021q_entry(): VLAN combine to one layer!\n");
+			assert(0);
 			break;
 			
 		case ETH_P_PPP_SES:
@@ -91,12 +118,10 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 
 		default:
 			/* unknown protocol */	
-			//g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-			//g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;
 
-			sapp_runtime_log(20, "VLAN unknown protocol: 0x%x\n", ether_type);
+			sapp_runtime_log(20, "VLAN unknown protocol: 0x%x\n", next_layer_type);
 			
 			if(NET_CONN_SERIAL_GDEV == g_topology_mode){
 				if(sapp_identify_tunnel_inner_pkt(raw_pkt) != 0){
@@ -113,117 +138,6 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 
 	return ret;
 }
-
-#if IKNOW_ENABLE
-#include "iknow.h"
-
-//extern int g_packet_io_thread_num;
-extern packet_io_status_t *g_packet_io_status_pool[MAX_THREAD_NUM];
-
-/* 
-	sysinfo之前是简单二维数组, 不能表示多线程、多协议、多协议的具体参数.
-	
-	新的架构中, 每类协议自身结构, 在packet_io_status_base_t基础上扩展,
-	与之前的sysinfo的简单二维数组不同, 
-	新结构每种协议存储的类型不同, 结构也不同, 
-	逻辑清晰, 内存使用最优化.
-*/
-typedef struct{
-	packet_io_status_base_t io_base_status; /* VLAN包总计数 */
-	unsigned long long vlan_pkt_num[VLAN_ID_MAX]; /* 每个VLAN的包数 */
-	unsigned long long vlan_pkt_byte[VLAN_ID_MAX]; /* 每个VLAN的字节数 */
-}packet_io_status_vlan_t;
-
-/* 例如: 上一秒:1000B, 当前:5000B, 可计算得最近一秒的实时流量:4000B/s */
-static volatile packet_io_status_vlan_t g_io_vlan_last_status, g_io_vlan_cur_status, g_io_vlan_realtime_status;
-
-static long ifuncb_show_vlan_id_summary(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg,const char *cmd_args)
-{
-	int i;
-	/* 全局vlan-id总包数, 总字节数 */
-	iprintf(ihandle, iconn, "vlan id summary:\n %7s %9s %10s\n", "VLAN-ID", "Total-pkt", "Total-byte");
-	for(i = 0; i < VLAN_ID_MAX; i++){
-		if(g_io_vlan_cur_status.vlan_pkt_num[i] > 0){
-			iprintf(ihandle, iconn, "%7d %9llu %10llu\n", i, g_io_vlan_cur_status.vlan_pkt_num[i], g_io_vlan_cur_status.vlan_pkt_byte[i] );
-		}
-	}
-
-	return 0;
-}
-
-static long ifuncb_show_vlan_summary(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg, const char *cmd_args)
-{
-	/* 全局总包数, 总字节数 */
-	iprintf(ihandle, iconn,"NOTE: unit of byte for total is 'byte', for realtime is 'bps, bit per second'!\n");
-	iprintf(ihandle, iconn, "%8s %8s %12s\n", " ", "packet", "byte");
-	iprintf(ihandle, iconn, "%8s %8llu %12llu\n%8s %8llu %12llu\n", 
-		  "total", g_io_vlan_cur_status.io_base_status.pkt_num, g_io_vlan_cur_status.io_base_status.pkt_byte,
-	    	  "realtime", g_io_vlan_realtime_status.io_base_status.pkt_num, g_io_vlan_realtime_status.io_base_status.pkt_byte*8);
-
-	return 0;
-}
-
-
-void iknow_register_vlan_cb(void *ihandle)
-{
-	int ret;
-
-	ret = iknow_register_cmd(ihandle, "show vlan summary", "display vlan flow summary", ifuncb_show_vlan_summary, NULL, 0, NULL);
-	assert(0 == ret);
-
-	ret = iknow_register_cmd(ihandle, "show vlan id summary", "display vlan flow summary by id", ifuncb_show_vlan_id_summary, NULL, 0, NULL);
-	assert(0 == ret);		
-}
-
-
-void packet_io_status_vlan_time_cb(void)
-{
-	int i, j;
-	packet_io_status_vlan_t *global_vlan_status;
-
- 	memcpy((void *)&g_io_vlan_last_status, (void *)&g_io_vlan_cur_status, sizeof(packet_io_status_vlan_t)); /* 保存上一秒的值 */
- 	memset((void *)&g_io_vlan_cur_status, 0, sizeof(packet_io_status_vlan_t)); /* 清零 */
-	
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		global_vlan_status = (packet_io_status_vlan_t *)(g_packet_io_status_pool[i]->packet_io_status[IO_STATUS_VLAN]);
-		g_io_vlan_cur_status.io_base_status.pkt_num += global_vlan_status->io_base_status.pkt_num;
-		g_io_vlan_cur_status.io_base_status.pkt_byte += global_vlan_status->io_base_status.pkt_byte;
-		for(j = 0; j < VLAN_ID_MAX; j++){
-			g_io_vlan_cur_status.vlan_pkt_num[j] += global_vlan_status->vlan_pkt_num[j];
-			g_io_vlan_cur_status.vlan_pkt_byte[j] += global_vlan_status->vlan_pkt_byte[j];
-		}
-	}
-
-	g_io_vlan_realtime_status.io_base_status.pkt_num = g_io_vlan_cur_status.io_base_status.pkt_num - g_io_vlan_last_status.io_base_status.pkt_num;
-	g_io_vlan_realtime_status.io_base_status.pkt_byte = g_io_vlan_cur_status.io_base_status.pkt_byte - g_io_vlan_last_status.io_base_status.pkt_byte;
-}
-
-void *packet_io_status_vlan_mem_init(void)
-{
-	void *vlan_mem;
-	
-	vlan_mem = malloc(sizeof(packet_io_status_vlan_t));
-	memset(vlan_mem, 0, sizeof(packet_io_status_vlan_t));
-
-	return vlan_mem;
-}
-
-static inline void packet_io_vlan_status_update(int thread_seq, const struct layer_addr_vlan *addr, int raw_pkt_len)
-{
-	packet_io_status_vlan_t *io_vlan_status = (packet_io_status_vlan_t *)(g_packet_io_status_pool[thread_seq]->packet_io_status[IO_STATUS_VLAN]);
-
-	io_vlan_status->io_base_status.pkt_num++;
-	io_vlan_status->io_base_status.pkt_byte += raw_pkt_len;
-
-	io_vlan_status->vlan_pkt_num[addr->vlan_id]++;
-	io_vlan_status->vlan_pkt_byte[addr->vlan_id] += raw_pkt_len;
-}
-#else
-int packet_io_status_vlan_init(void)
-{
-	return 0;
-}
-#endif
 
 
 #ifdef __cplusplus

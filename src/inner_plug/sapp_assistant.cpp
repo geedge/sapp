@@ -15,7 +15,6 @@ extern "C" {
 #endif
 
 //extern time_t g_CurrentTime;//add by lqy 20070606
-extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
 //extern int g_packet_io_thread_num;
 extern char g_app_instance_name[64];
 //extern int g_timestamp_record_sw;
@@ -588,9 +587,9 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			long long *rnum = (long long *)opt_val;
 
 			*rnum = ((sapp_get_cpu_cycle() & 0xFFFF) << 48)
-			         | ((g_SysInputInfo[0][PKT_TCPLEN] & 0xFFFF) << 32)
-			         | ((g_SysInputInfo[0][PKT_IPLEN] & 0xFFFF) << 16)
-			         | ((g_SysInputInfo[0][PKT_ETHERNET_LEN] & 0xFFFF));
+			         | ((sapp_global_val->mthread_volatile[0]->sys_stat.count[SAPP_STAT_RCV_ETHERNET] & 0xFFFF) << 32)
+			         | ((sapp_global_val->mthread_volatile[0]->sys_stat.length[SAPP_STAT_RCV_ETHERNET] & 0xFFFF) << 16)
+			         | ((sapp_global_val->mthread_volatile[0]->sys_stat.count[SAPP_STAT_RCV_IPV4] & 0xFFFF));
 		}
 		break;
 

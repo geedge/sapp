@@ -160,7 +160,6 @@ void sysinfo_output(void)
 	int i, j;
 	FILE* fp;
 	//unsigned long long cur_count[COUNTER_NUM] = {0};
-	//static unsigned long long g_SysInputInfo_old[MAX_THREAD_NUM][COUNTER_NUM];
 	char time_string[32];
 	static unsigned long long history_count[SAPP_STAT_NUM_MAX];
 	static unsigned long long history_length[SAPP_STAT_NUM_MAX];
@@ -368,8 +367,6 @@ void sysinfo_output(void)
 
 	////line_protocol_update_metrics();
 
-	//memcpy(sysinfo_old,cur_count,sizeof(unsigned long long)*COUNTER_NUM);
-	///memcpy(g_SysInputInfo_old, (void *)g_SysInputInfo, sizeof(g_SysInputInfo));
 	fclose(fp);
 	memcpy(history_count, cur_count, sizeof(history_count));
 	memcpy(history_length, cur_length, sizeof(history_length));

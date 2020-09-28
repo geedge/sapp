@@ -12,7 +12,6 @@ extern "C" {
 static volatile long stream_num = 0;
 //int g_iThreadNum = 1;
 //time_t g_CurrentTime;//add by lqy 20070606
-volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
 extern int sapp_args_v;
 int ipv4_frag_init(int thread_count, unsigned int hash_size);
 int ipv6_frag_init(int thread_count, unsigned hash_size);

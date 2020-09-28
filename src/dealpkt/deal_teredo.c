@@ -105,8 +105,6 @@ int teredo_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,in
 			return -1;
 		}
 	}
-	//g_SysInputInfo[thread_num][TUNNEL_TEREDO]++;
-	//g_SysInputInfo[thread_num][TUNNEL_TEREDO_LEN] += ntohs(udphdr->uh_ulen);
 	local_sys_stat->count[SAPP_STAT_TUNNEL_TEREDO]++;
 
 	/* NOTE: Teredo实际传输时没有包结构, 也就无需分配stream结构, 直接跳到Ipv6层即可 */

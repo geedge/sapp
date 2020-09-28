@@ -582,10 +582,6 @@ void streamleavlist(struct streamindex *pindex,struct stream_list *plist)
 	__do_streamleavlist(pindex, plist);
 
 	update_stream_status(pstream->threadnum, pstream->type, pstream->stream_state, -1);
-
-#if IKNOW_ENABLE
-	packet_io_status_stream_update(pstream->threadnum, pstream->type, pstream->stream_state, -1);	
-#endif
 }
 
 
@@ -671,9 +667,6 @@ printf("###### %s timeout is %d, remain %lld, can't be free!\n", printaddr(&tmps
 	}
 #endif		
 	update_stream_status(pstream->threadnum, pstream->type, pstream->stream_state, 1);
-#if IKNOW_ENABLE
-	packet_io_status_stream_update(pstream->threadnum, pstream->type, pstream->stream_state, 1);	
-#endif
 
 	/* Fix bug, 放在streamaddlist函数, 每个流状态变化时会生成多个不同的streamid, 移动至hash_add_stream */
 	//pindex->stream.global_stream_id = get_global_stream_id(pstream->threadnum);
@@ -1263,10 +1256,10 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 		struct streaminfo_private *pstack_stream_pr, unsigned short hash_elem_count)
 {
 	int ret;
-	//int isreverse=0;
 	struct streaminfo *pheap_stream;
 	struct streaminfo *pstack_stream;
 
+#if 0  //addr_skip_for_layer_cmp已经将层数对齐了, 此处不用跳过, addr_use_as_hash设为0, 肯定不比较地址
 	while(pheap_stream_pr!= NULL && pheap_stream_pr->addr_skip_for_layer_cmp == 1)
 	{
 		pheap_stream_pr = (struct streaminfo_private *)pheap_stream_pr->stream_public.pfather;
@@ -1275,6 +1268,7 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 	{
 		pstack_stream_pr = (struct streaminfo_private *)pstack_stream_pr->stream_public.pfather;
 	}
+#endif
 
 	if(pheap_stream_pr==NULL)
 	{
@@ -1289,7 +1283,7 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 		if(unlikely(pstack_stream_pr==NULL)){			
 			return 1;
 		}	
-	}
+	}	
 
 	pheap_stream = &pheap_stream_pr->stream_public;
 	pstack_stream = &pstack_stream_pr->stream_public;
@@ -1414,15 +1408,9 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 		hash_list_num++;
 	}
 
-	//if(unlikely(hash_list_num > g_SysInputInfo[threadnum][SYS_HASH_LIST_MAX])){
 	if(unlikely(hash_list_num > local_sys_stat->count[SAPP_STAT_HASH_LIST_MAX])){
-		//g_SysInputInfo[threadnum][SYS_HASH_LIST_MAX] = hash_list_num;
 		local_sys_stat->count[SAPP_STAT_HASH_LIST_MAX] = hash_list_num;
 	}
-
-#if IKNOW_ENABLE
-	packet_io_status_stream_hash_update(threadnum, hash_list_num+1);
-#endif
 
 	return res;
 }
@@ -1640,13 +1628,11 @@ void hash_add_stream(struct streamindex *pindex)
 	if (STREAM_TYPE_TCP==ptmp->type)
 	 {
 		rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->tcp_rb_root_table;
-		//g_SysInputInfo[threadnum][SYS_TCP_LINK_NEW]++;
 		local_sys_stat->count[SAPP_STAT_TCP_STREAM_NEW]++;
 	 }	
 	else if(STREAM_TYPE_UDP==ptmp->type)
     {
 		rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->udp_rb_root_table;
-   		//g_SysInputInfo[threadnum][SYS_UDP_LINK_NEW]++;
    		local_sys_stat->count[SAPP_STAT_UDP_STREAM_NEW]++;
     } 
 	 
@@ -1663,13 +1649,11 @@ void hash_del_stream(struct streamindex *pindex)
 	if (STREAM_TYPE_TCP==ptmp->type)
 	 {
 	 	rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->tcp_rb_root_table;
- 	 	  //g_SysInputInfo[threadnum][SYS_TCP_LINK_DEL]++;
  	 	  local_sys_stat->count[SAPP_STAT_TCP_STREAM_DEL]++;
 	 }	
 	else if(STREAM_TYPE_UDP==ptmp->type)
     {
 		rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->udp_rb_root_table;
-   		///g_SysInputInfo[threadnum][SYS_UDP_LINK_DEL]++;
    		local_sys_stat->count[SAPP_STAT_UDP_STREAM_DEL]++;
     } 
 	 
@@ -1823,14 +1807,12 @@ void hash_add_stream(struct streamindex *pindex)
 	 {
           phashstream=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_table;
  	 	  pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_talbe_hash_count;
- 	 	  //g_SysInputInfo[threadnum][SYS_TCP_LINK_NEW]++;
  	 	  local_sys_stat->count[SAPP_STAT_TCP_STREAM_NEW]++;
 	 }	
 	else if(STREAM_TYPE_UDP==ptmp->type)
      {
         phashstream=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_table;
  	    pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_talbe_hash_count;
-		//g_SysInputInfo[threadnum][SYS_UDP_LINK_NEW]++;
 		local_sys_stat->count[SAPP_STAT_UDP_STREAM_NEW]++;
      } else{
      	phashstream = NULL;
@@ -1897,7 +1879,6 @@ void hash_del_stream(struct streamindex *pindex)
      {
          phashstream=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_table;
 		pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_talbe_hash_count;
-		//g_SysInputInfo[threadnum][SYS_UDP_LINK_DEL]++;
 		local_sys_stat->count[SAPP_STAT_UDP_STREAM_DEL]++;
 		   if(ptmp->pudpdetail->clientpktnum+ptmp->pudpdetail->serverpktnum >= sapp_global_val->config.stream.udp.meaningful_statistics_minimum_pkt
 			 && ptmp->pudpdetail->clientbytes+ptmp->pudpdetail->serverbytes >= sapp_global_val->config.stream.udp.meaningful_statistics_minimum_byte)
@@ -1945,7 +1926,6 @@ void hash_del_stream(struct streamindex *pindex)
 	 	const struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private*)(ptmp->pdetail);
           phashstream=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_table;
  		  pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_talbe_hash_count;
- 		   //g_SysInputInfo[threadnum][SYS_TCP_LINK_DEL]++;
  		   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DEL]++;
 
  		   if(pdetail_pr->has_lost_pkt_flag != 0){
@@ -1957,21 +1937,18 @@ void hash_del_stream(struct streamindex *pindex)
            {
                if(ptmp->dir == DIR_DOUBLE)
                {
-                   //g_SysInputInfo[threadnum][LINK_DOUBLE]++;
                    local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE]++;
 				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE_PKTS]+=(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum);
 				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE_BYTES]+=(ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes );
                }
                else if(ptmp->dir == DIR_C2S)
                {
-                   //g_SysInputInfo[threadnum][LINK_SINGLE_C2S]++;
                    local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S]++;
 				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S_PKTS]+=(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum);
 				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S_BYTES]+=(ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes );
                }
                else if(ptmp->dir == DIR_S2C)
                {
-                   //g_SysInputInfo[threadnum][LINK_SINGLE_S2C]++;
                    local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C]++;
 				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C_PKTS]+=(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum);
 				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C_BYTES]+=(ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes );
@@ -2313,6 +2290,18 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
 		}		
 		break;
 
+        case ADDR_TYPE_VLAN:
+        {
+            const struct layer_addr_vlan *src_vlan = (const struct layer_addr_vlan *)saddr;
+            struct layer_addr_vlan *dst_vlan = (struct layer_addr_vlan *)daddr;
+
+            memset(dst_vlan, 0, sizeof(struct layer_addr_vlan));
+			/* 当前stack里的包地址信息固定存储于src方向, 反向copy是将stack地址拷贝到堆里的地址 */
+            memcpy(dst_vlan->dst_vlan_pkt, src_vlan->src_vlan_pkt, sizeof(src_vlan->src_vlan_pkt));
+            dst_vlan->dst_vlan_layer_num = src_vlan->src_vlan_layer_num;
+        }
+        break;
+
 		case ADDR_TYPE_GPRS_TUNNEL:
 		{
 			const struct layer_addr_gtp *src_gtp = (const struct layer_addr_gtp *)saddr;
@@ -2520,15 +2509,12 @@ static inline void update_stream_status(UCHAR threadnum, UCHAR stream_type, UCHA
 		switch(stream_state)
 		{
 			case TCP_DATA_STATE:
-					//g_SysInputInfo[threadnum][SYS_TCP_LINK_DATA] += action;
 					local_sys_stat->count[SAPP_STAT_TCP_STREAM_DATA] += action;
 					break;
 			case TCP_NOUSE_STATE:
-					//g_SysInputInfo[threadnum][SYS_TCP_LINK_NOUSE] += action;
 					local_sys_stat->count[SAPP_STAT_TCP_STREAM_NOUSE] += action;
 					break;
 			case TCP_SYN_STATE:
-					//g_SysInputInfo[threadnum][SYS_TCP_LINK_SYN] += action;
 					local_sys_stat->count[SAPP_STAT_TCP_STREAM_SYN] += action;
 					break;					
 		}	
@@ -2536,15 +2522,12 @@ static inline void update_stream_status(UCHAR threadnum, UCHAR stream_type, UCHA
 		switch(stream_state)
 		{
 			case UDP_TWO_STATE:
-					//g_SysInputInfo[threadnum][SYS_UDP_LINK_TWO] += action;
 					local_sys_stat->count[SAPP_STAT_UDP_STREAM_TWO] += action;
 					break;
 			case UDP_MORE_STATE:
-					//g_SysInputInfo[threadnum][SYS_UDP_LINK_MORE] += action;
 					local_sys_stat->count[SAPP_STAT_UDP_STREAM_MORE] += action;
 					break;
 			case UDP_ONE_STATE:
-					//g_SysInputInfo[threadnum][SYS_UDP_LINK_ONE] += action;
 					local_sys_stat->count[SAPP_STAT_UDP_STREAM_ONE] += action;
 					break;
 		}			
@@ -2561,105 +2544,6 @@ int thread_self_init(int thread_seq)
 {
 	return 0;
 }
-
-
-
-#if IKNOW_ENABLE
-#include "iknow.h"
-typedef struct{
-	packet_io_status_base_t io_base_status; 
-	unsigned long long total_search_times; /* 总HASH搜索数, 即调用了多少次findstreamindex() */
-	unsigned long long total_hash_list_num; /* 总HASH冲突链表长度, (total_hash_list_num/total_search_times)即hash平均查找长度 */
-	unsigned long long max_hash_list_num; /* 最大冲突链表数 */
-}packet_io_status_stream_hash_t;
-
-extern packet_io_status_t *g_packet_io_status_pool[MAX_THREAD_NUM];
-
-static packet_io_status_stream_hash_t g_packet_io_status_stream_hash;
-
-void *packet_io_status_stream_hash_mem_init(void)
-{
-	void *stream_hash_mem;
-	
-	stream_hash_mem = malloc(sizeof(packet_io_status_stream_hash_t));
-	memset(stream_hash_mem, 0, sizeof(packet_io_status_stream_hash_t));
-
-	return stream_hash_mem;
-}
-
-
-void packet_io_status_stream_hash_time_cb(void)
-{
-	int i;
-	unsigned long long tmp_max_hlist_num = 0;
-	packet_io_status_stream_hash_t *psh;
-
-	g_packet_io_status_stream_hash.total_search_times = 0;
-	g_packet_io_status_stream_hash.total_hash_list_num = 0;
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		psh = (packet_io_status_stream_hash_t *)(g_packet_io_status_pool[i]->packet_io_status[IO_STATUS_STREAM_HASH]);
-		g_packet_io_status_stream_hash.total_search_times += psh->total_search_times;
-		g_packet_io_status_stream_hash.total_hash_list_num += psh->total_hash_list_num;
-		if(psh->max_hash_list_num > tmp_max_hlist_num){
-			tmp_max_hlist_num = psh->max_hash_list_num;
-		}
-	}	
-	g_packet_io_status_stream_hash.max_hash_list_num = tmp_max_hlist_num;
-}
-
-static long ifuncb_show_stream_hash_summary(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg, const char *cmd_args)
-{
-
-	iprintf(ihandle, iconn, "stream hash summary:\ntotal-hash-search-num:%llu\ntotal-hash-list-num:%llu\nmax-hash-list-num:%llu\navg-hlist-num:%.2f",
-		  g_packet_io_status_stream_hash.total_search_times,	
-		  g_packet_io_status_stream_hash.total_hash_list_num,
-		  g_packet_io_status_stream_hash.max_hash_list_num,
-		  (float)g_packet_io_status_stream_hash.total_hash_list_num/(float)g_packet_io_status_stream_hash.total_search_times);
-
-	return 0;
-}
-
-static long ifuncb_show_stream_hash_detail(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg, const char *cmd_args)
-{
-	int i;
-	packet_io_status_stream_hash_t *psh;
-
-	iprintf(ihandle, iconn, "stream hash detail:\n%10s %15s %13s %13s %13s\n", "thread-seq", "hash-search-num", "hash-list-num", "max-hlist-num", "avg-hlist-num");
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		psh = (packet_io_status_stream_hash_t *)(g_packet_io_status_pool[i]->packet_io_status[IO_STATUS_STREAM_HASH]);
-		iprintf(ihandle, iconn, "%10d %15llu %13llu %13llu %13.2f\n", 
-		         i, psh->total_search_times, psh->total_hash_list_num, psh->max_hash_list_num,
-		         (float)psh->total_hash_list_num/(float)psh->total_search_times);
-	}	
-		  
-
-	return 0;
-}
-
-void iknow_register_stream_hash_cb(void *ihandle)
-{
-	int ret;
-
-	ret = iknow_register_cmd(ihandle, "show stream summary", "display stream hash summary", ifuncb_show_stream_hash_summary, NULL, 0, NULL);
-	assert(0 == ret);
-	ret = iknow_register_cmd(ihandle, "show stream detail", "display stream hash detail", ifuncb_show_stream_hash_detail, NULL, 0, NULL);
-	assert(0 == ret);		
-}
-
-void packet_io_status_stream_hash_update(int thread_seq, unsigned long hash_list_num)
-{
-	packet_io_status_stream_hash_t *psh;
-
-	psh = (packet_io_status_stream_hash_t *)g_packet_io_status_pool[thread_seq]->packet_io_status[IO_STATUS_STREAM_HASH];
-
-	psh->total_search_times++;
-	psh->total_hash_list_num += hash_list_num;
-
-	if(unlikely(hash_list_num > psh->max_hash_list_num)){
-		psh->max_hash_list_num = hash_list_num;
-	}
-}
-#endif
 
 
 int get_stream_carry_tunnel_type(const struct streaminfo *this_stream, 

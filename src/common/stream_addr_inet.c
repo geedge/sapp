@@ -1265,31 +1265,47 @@ static int __addr_pure_udp_n2p_fun(const struct layer_addr *paddr, char *buf, in
 
 static int __addr_vlan_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
-#if 0
-	int addr_len;
-	char vlan_str_buf[MAX_ADDR_TYPE_STRING_LEN];
-	const struct layer_addr_vlan *vlan_hdr = (const struct layer_addr_vlan *)addr->vlan;
+	const struct layer_addr_vlan *vlan_addr = paddr->vlan;
+	const struct mesa_vlan_hdr *vhdr;
+	int i;
+	unsigned short vlan_id;
+	char tmp_buf[32] = {};
+	char vlan_addr_string[128] = {};
+	
+	/* 注意: 可能有非对称vlan的情况 */
+	int max_layer_num = vlan_addr->src_vlan_layer_num > vlan_addr->dst_vlan_layer_num ? vlan_addr->src_vlan_layer_num:vlan_addr->dst_vlan_layer_num;
 
-	addr_len = snprintf(vlan_str_buf, MAX_ADDR_TYPE_STRING_LEN, "%u", vlan_hdr->vlan_id);
-	if(addr_len >= buf_len || addr_len >= MAX_ADDR_TYPE_STRING_LEN){
-		buf[0] = '\0';
-		return -1;
+	for(i = 0; i < max_layer_num; i++){
+		if(vlan_addr->src_vlan_layer_num >= i+1){
+			vhdr = (struct mesa_vlan_hdr *)&vlan_addr->src_vlan_pkt[i];
+			vlan_id = ntohs(vhdr->pri_cfi_id) & VLAN_ID_MASK;
+			snprintf(tmp_buf, 32, "%d", vlan_id);
+			strcat(vlan_addr_string, tmp_buf);
+		}else{
+			strcat(vlan_addr_string, "N/A");
+		}
+		if(vlan_addr->dst_vlan_layer_num >= i+1){
+			vhdr = (struct mesa_vlan_hdr *)&vlan_addr->dst_vlan_pkt[i];
+			vlan_id = ntohs(vhdr->pri_cfi_id) & VLAN_ID_MASK;
+			snprintf(tmp_buf, 32, "%d", vlan_id);
+			strcat(vlan_addr_string, tmp_buf);
+		}else{
+			strcat(vlan_addr_string, "-N/A");
+		}
+		if(i < max_layer_num-1){
+			strcat(vlan_addr_string, ",");
+		}
 	}
-	strncpy(vlan_str_buf, buf, addr_len+1);
-	return addr_len + 1;
-#else
-#define __VLAN_ADDR_STRING		"NULL"
-
-	int addr_len = strlen(__VLAN_ADDR_STRING);
+	
+	int addr_len = strlen(vlan_addr_string);
 	if(buf_len <= addr_len + 1){
 		return -1;
 	}
-	strncpy(buf, __VLAN_ADDR_STRING, addr_len + 1);
+	strncpy(buf, vlan_addr_string, addr_len + 1);
 
 	return addr_len + 1;
-
-#endif
 }
+
 
 static int __addr_mac_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {

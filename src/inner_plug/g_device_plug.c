@@ -303,7 +303,6 @@ static int gdev_keepalive_plug(const raw_pkt_t *raw_pkt, int thread_id, unsigned
 	if(ret < 0){
 		goto err;
 	}
-	//g_SysInputInfo[thread_id][PKT_MARSIO_MALLOC]++;
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
 	real_buf = ptr_marsio_buff_append(send_mbuf[0], send_len + 14);
@@ -312,7 +311,6 @@ static int gdev_keepalive_plug(const raw_pkt_t *raw_pkt, int thread_id, unsigned
 
 	ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, 
 								thread_id, send_mbuf, 1, MARSIO_SEND_OPT_FAST);
-	//g_SysInputInfo[thread_id][PKT_MARSIO_SND]++;
 	/* mbuf 发送完后自动释放 */							
 #else
 	ret = packet_io_send(snd_handle, send_len, SEND_TYPE_LINK_INJECT, 

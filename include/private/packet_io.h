@@ -30,8 +30,6 @@ extern int g_UseFilterCard; //add by lqy 20081110
 extern int g_UseSendpktCard; //add by lqy 20090313
 extern int g_UseFilterTag; //add by lqy 20090414
 
-extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
-
 enum io_dir_t{
 	IO_DIR_UP 		= 0,
 	IO_DIR_DOWN	= 1,

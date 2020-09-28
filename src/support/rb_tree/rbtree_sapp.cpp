@@ -6,8 +6,6 @@ extern int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 		struct streaminfo_private *pstack_stream_pr, unsigned short hash_elem_count);
 extern void packet_io_status_stream_hash_update(int thread_seq, unsigned long hash_list_num);
 
-extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
-
 void rb_sapp_insert(struct streamindex *new_sapp_node, struct rb_root *root)
 {
 	int cmp_res;

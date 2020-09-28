@@ -1,6 +1,7 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
+#if 0
 #ifndef COUNTER_NUM
 	#define COUNTER_NUM 4096
 #endif
@@ -14,7 +15,6 @@
 #endif
 
 
-extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
 
 typedef struct _syn_count_elem
 {
@@ -184,4 +184,5 @@ int synflood_detector(int thread_num)
 	}
 	return g_syn_counter[thread_num].attack_flag;	
 }
+#endif
 

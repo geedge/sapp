@@ -190,15 +190,15 @@ struct layer_addr_gre
 
 #define VLAN_ID_MASK		(0x0FFF)
 #define VLAN_TAG_LEN 		(4)
+#define MAX_VLAN_ADDR_LAYER (3)
+
 struct layer_addr_vlan
 {
-	UINT16 vlan_id;	/* network order */
-};
-
-#define VLAN_ID_LEN 4
-struct tuplevlan
-{
-	UCHAR vlan_id[VLAN_ID_LEN];
+	UINT16 vlan_id;	/* network order, old value, to be obsoleted */
+	UCHAR src_vlan_layer_num;
+	UCHAR dst_vlan_layer_num;
+	UINT32 src_vlan_pkt[MAX_VLAN_ADDR_LAYER]; /* network order */
+	UINT32 dst_vlan_pkt[MAX_VLAN_ADDR_LAYER]; /* network order */
 };
 
 struct layer_addr_pppoe_session

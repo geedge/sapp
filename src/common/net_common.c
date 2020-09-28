@@ -490,17 +490,27 @@ static int __common_eth_type_dispatch(UINT16 eth_type, const char *next_layer_da
 	return skip_len;
 }
 
+extern int set_vlan_addr(struct layer_addr_vlan *addr, const unsigned char *vlan_tag);
 static int vlan8021q_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
 {
 	int skip_len = 0;
-	const struct mesa_vlan_hdr *vlan_hdr = (const struct mesa_vlan_hdr *)raw_data;
-	const char *next_layer_data = raw_data + sizeof(struct mesa_vlan_hdr);
+	struct layer_addr_vlan vlan_addr;
+	const char *next_layer_data;
+	const struct mesa_vlan_hdr *vhdr;
+	unsigned short next_layer_type;
+	int vlan_layer_len;
 
 	if(raw_layer_type == expect_layer_type){
 		return 0;
 	}
+
+	set_vlan_addr(&vlan_addr, raw_data);
+	vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr.src_vlan_layer_num;
+	next_layer_data = raw_data + vlan_layer_len;
+	vhdr = (struct mesa_vlan_hdr *)&vlan_addr.src_vlan_pkt[vlan_addr.src_vlan_layer_num-1];
+	next_layer_type = ntohs(vhdr->type);
 	
-	switch(ntohs(vlan_hdr->type)){
+	switch(next_layer_type){
 		case ETH_P_ARP:
 			if(ADDR_TYPE_ARP == expect_layer_type){
 				break;
@@ -539,7 +549,8 @@ static int vlan8021q_jump_to_layer(const char *raw_data,  int raw_layer_type, in
 
 		/* QinQ */
 		case ETH_P_8021Q:
-			skip_len = sizeof(struct mesa_vlan_hdr);
+			sapp_runtime_log(30, "vlan8021q_jump_to_layer(): VLAN combine to one layer!\n");
+			assert(0);
 		break;
 
 		case 0x8200: /* XinJiang捕包发现此类型, 未知什么包 */
@@ -547,7 +558,7 @@ static int vlan8021q_jump_to_layer(const char *raw_data,  int raw_layer_type, in
 		break;
 		
 		default:
-			sapp_runtime_log(20, "vlan8021q_jump_to_layer(): unsupport type: 0x%x!\n", ntohs(vlan_hdr->type));
+			sapp_runtime_log(20, "vlan8021q_jump_to_layer(): unsupport type: 0x%x!\n", next_layer_type);
 			skip_len = -1;
 	}
 
@@ -555,7 +566,7 @@ static int vlan8021q_jump_to_layer(const char *raw_data,  int raw_layer_type, in
 		return -1;
 	}
 
-	return skip_len + sizeof(struct mesa_vlan_hdr);
+	return skip_len + vlan_layer_len;
 }
 
 static int eth_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)

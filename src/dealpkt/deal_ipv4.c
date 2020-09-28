@@ -29,7 +29,6 @@ extern "C" {
 static struct frag_manage *g_ipv4_frag_manage;
 static unsigned int FRAG_IP4_RANDOM;
 //extern int g_packet_io_thread_num;
-//extern volatile unsigned long long g_SysInputInfo[MAX_THREAD_NUM][COUNTER_NUM];
 extern void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq);
 int update_global_ip_frag_list(raw_ipfrag_list_t *list_head, int thread_num, int type);
 extern void raw_frags_list_free_one(int thread_seq, void *project_req_value);
@@ -617,7 +616,6 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 		}
 */
 		if(is_multicast_addr_v4(ntohl(a_packet->ip_dst.s_addr))){
-			//g_SysInputInfo[thread_num][SAPP_STAT_DROP]++;
 			local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
 			local_sys_stat->length[SAPP_STAT_DROP_IPV4]+=raw_pkt->raw_pkt_len;
 			return DROP;
@@ -676,7 +674,6 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 #endif	    	
 	    	if(NULL == new_iph)
 	    	{
-				//g_SysInputInfo[thread_num][PKT_IP_FRAG]++;
 				local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;
 				local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG]++;
 				/* 纯IP分片, 还未重组完成, 此处只调用IPFRAG, 
@@ -714,9 +711,6 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 			ret = process_ipv4_pkt(ptmp, a_packet, thread_num, routedir, raw_pkt, offset_to_raw_pkt_hdr);
 		}
   	}
-
-	//g_SysInputInfo[thread_num][PKT_IPLEN] += ntohs(a_packet->ip_len);
-	//g_SysInputInfo[thread_num][PKT_IP]++;
 
 	if(need_free){
 		local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;

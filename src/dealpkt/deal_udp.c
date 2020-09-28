@@ -376,7 +376,6 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 //		streamaddlist(pstream,plist);
 		streamaddlist(pindex,plist);
 
-		//g_SysInputInfo[threadnum][SYS_UDP_LINK_RESET]++;
 		local_sys_stat->count[SAPP_STAT_UDP_STREAM_RESET]++;
 		return 1;
 	}
@@ -466,8 +465,6 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
 
-	//g_SysInputInfo[thread_num][PKT_UDP]++;
-	//g_SysInputInfo[thread_num][PKT_UDPLEN] += ulen;
 	local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
 	local_sys_stat->length[SAPP_STAT_RCV_UDP]+=ulen;
 	if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
@@ -635,8 +632,6 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		return PASS;
 	}		
 
-	//g_SysInputInfo[thread_num][PKT_UDP]++;
-	//g_SysInputInfo[thread_num][PKT_UDPLEN] += ulen;
 	local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
 	local_sys_stat->length[SAPP_STAT_RCV_UDP]+=ulen;
 	if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
@@ -801,8 +796,6 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offest;
 			//void *next_layer_hdr = (char *)a_packet + a_packet->ip_hl*4;
 			ret = ipv6_entry(pfstream_pr,next_layer_hdr,thread_num,routedir, raw_pkt, next_layer_offest);
-			//g_SysInputInfo[thread_num][TUNNEL_6OVER4]++;
-			//g_SysInputInfo[thread_num][TUNNEL_6OVER4_LEN] += ntohs(a_packet->ip_len);
 			local_sys_stat->count[SAPP_STAT_TUNNEL_6OVER4]++;
 			local_sys_stat->length[SAPP_STAT_TUNNEL_6OVER4]+= ntohs(a_packet->ip_len);
 		}	
@@ -822,8 +815,6 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 #endif		
 			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offest;
 			ret = ipv4_entry(pfstream_pr,next_layer_hdr,thread_num,routedir, raw_pkt, next_layer_offest);
-			//g_SysInputInfo[thread_num][TUNNEL_IP_IN_IP]++;
-			//g_SysInputInfo[thread_num][TUNNEL_IP_IN_IP] += ntohs(a_packet->ip_len);			
 			local_sys_stat->count[SAPP_STAT_TUNNEL_IPIP]++;
 			local_sys_stat->length[SAPP_STAT_TUNNEL_IPIP]+= ntohs(a_packet->ip_len);			
 		break;
@@ -857,8 +848,6 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 
 		default:	
 			/* unknown protocol */	
-			//g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-			//g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;	
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;				
 			sapp_runtime_log(RLOG_LV_INFO, "unsupport Ipv4 protocol:%u!\n", a_packet->ip_p);

@@ -85,7 +85,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		pstream->addr.addrtype = ADDR_TYPE_MPLS;
 		pstream->addr.addrlen = sizeof(struct layer_addr_mpls);
 		pstream_pr->addr_use_as_hash = 0;//地址不参与hash比对，仅算层数
-		pstream_pr->addr_skip_for_layer_cmp = 1;//MPLS存在一侧有标签，一侧没有的情况，该标志位设成1
+		pstream_pr->addr_skip_for_layer_cmp = 0;//为了地址比较, 创建的空MPLS层为1, 此处有实际mpls地址, 设为0
 		pstream_pr->need_update_opposite_addr = 1;//两侧地址不一样，需要更新对侧信息
 		//ptmp->stream.p_layer_header = this_layer_data;
 		//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_layer_data - (char *)raw_pkt->raw_pkt_data;
@@ -111,8 +111,6 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
         int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
 		if(left_pkt_len < 20 || ntohs(ip4_hdr->tot_len) > left_pkt_len)
 		{
-            //g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-            //g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;                
             sapp_runtime_log(20, "illegal left Ipv4 len %d, total len %d!\n", left_pkt_len, ntohs(ip4_hdr->tot_len));
@@ -162,7 +160,7 @@ int mpls_empty_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 		pstream->addr.addrtype = ADDR_TYPE_MPLS;
 		pstream->addr.addrlen = sizeof(struct layer_addr_mpls);
 		pstream_pr->addr_use_as_hash = 0;//地址不参与hash比对，仅算层数
-		pstream_pr->addr_skip_for_layer_cmp = 1;//MPLS存在一侧有标签，一侧没有的情况，该标志位设成1
+		pstream_pr->addr_skip_for_layer_cmp = 1;//MPLS存在一侧有标签，一侧没有的情况，创建空层, 该标志位设成1
 		pstream_pr->need_update_opposite_addr = 1;//两侧地址不一样，需要更新对侧信息
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 		pstream_pr->raw_pkt = raw_pkt;

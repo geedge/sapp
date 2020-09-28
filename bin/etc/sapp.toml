@@ -20,6 +20,10 @@ dictator_enable=1
 [PACKET_IO]
 	[overlay_tunnel_definition]
 
+	mac_flipping_enabled=1
+
+	vlan_flipping={"couple":[{"c_router_id":1001,"i_router_id":1002},{"c_router_id":1003,"i_router_id":1004}]}
+
 ### note, for mpls asymmetric, 0 vs N
 	create_mpls_anyway=0
 	    

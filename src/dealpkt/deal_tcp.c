@@ -293,7 +293,6 @@ done:
 	return opt_num;
 
 err:
-	//printf("tcp-opt error, pkt number is:%ld\n", g_SysInputInfo[0][0]);
 	return -1;
 }
 
@@ -483,7 +482,6 @@ done:
 	return opt_num;
 
 err:
-	//printf("tcp-opt error, pkt number is:%ld\n", g_SysInputInfo[0][0]);
 	return -1;
 }
 
@@ -1439,7 +1437,6 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 		}
 	}	
 
-	//g_SysInputInfo[threadnum][SYS_TCP_LINK_RESET]++;
 	local_sys_stat->count[SAPP_STAT_TCP_STREAM_RESET]++;
 	return ret;
 }
@@ -2511,12 +2508,14 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			//if(g_RunSYNFloodDetect == 1)
 			if (unlikely(TCP_SYNFLOOD_DETECT_ON & tcp_flood_detect_model))
 			{
+#if 0			
 				if( synflood_detector(pstream->threadnum) == ATTACKING)
                	{     
                     tcp_creatlink_model = TCP_CTEAT_LINK_BYDATA;
 					return PASS;
                	}
                 else
+#endif                
                 {
                 	tcp_creatlink_model = TCP_CTEAT_LINK_BYSYN;
                 }
@@ -2557,6 +2556,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			if(TCP_CTEAT_LINK_BYDATA  & tcp_creatlink_model )
 			{
 				//add by yw to detect dataflood attack
+#if 0				
 				//if(tcplen < g_DataFloodPacketLen && g_RunDataFloodDetect == 1)
 				if((tcplen<tcp_dataflood_pktlen) && (1==(TCP_DATAFLOOD_DETECT_ON  & tcp_flood_detect_model)))
 				{
@@ -2566,6 +2566,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 						return PASS;
 					}
 				}
+#endif				
 				//end of add by yw to detect dataflood attack			
 			pindex_tcp=tcp_add_new_stream_bydata(pindex,this_tcphdr,tcplen,CTREAT_LINK, raw_pkt);
 			if(likely(pindex_tcp != NULL))
@@ -2781,8 +2782,6 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 	struct streaminfo *pstream = (struct streaminfo *)(&pstream_pr->stream_public);
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	
-	//g_SysInputInfo[thread_num][PKT_TCP]++;
-	//g_SysInputInfo[thread_num][PKT_TCPLEN] += tcpdatalen;
 	local_sys_stat->count[SAPP_STAT_RCV_TCP]++;
 	local_sys_stat->length[SAPP_STAT_RCV_TCP]+=tcpdatalen;
 	if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
@@ -2795,10 +2794,6 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 		local_sys_stat->count[SAPP_STAT_TCP_OUTBOUND]++;
 		local_sys_stat->length[SAPP_STAT_TCP_OUTBOUND] += tcpdatalen;
 	}
-
-#if IKNOW_ENABLE
-	packet_io_status_tcp_pkt_update(thread_num, this_tcphdr->th_flags, tcpdatalen);
-#endif
 
 	set_transport_addr(pstream, this_tcphdr->th_sport, this_tcphdr->th_dport);
 
@@ -3170,341 +3165,6 @@ static inline void update_stream_list_raw_pkt_pointer(struct streaminfo_private 
 
 	return;
 }
-
-/* TODO 1: 更新每个流的平均包数, 字节数, 平均流时间跨度统计 */
-#if IKNOW_ENABLE
-#include "iknow.h"
-typedef struct{
-	packet_io_status_base_t io_base_status; /* TCP包总计数 */
-	unsigned long long syn_pkt_num;
-	unsigned long long synack_pkt_num;
-	unsigned long long rst_pkt_num;
-	unsigned long long nodata_pkt_num; /* data length = 0 */
-}packet_io_status_tcp_pkt_t;
-
-typedef struct{
-	packet_io_status_base_t io_base_status; /* nouse */
-	unsigned long long create_by_syn_num;
-	unsigned long long create_by_data_num;
-	unsigned long long create_nouse_num;
-	unsigned long long del_syn_num;
-	unsigned long long del_data_num;
-	unsigned long long del_nouse_num;	
-}packet_io_status_tcp_stream_t;
-
-typedef struct{
-	time_t max_live_time; /* 全局最大生存时间, 可能是正常结束, 也可能是因超时被淘汰的 */
-	time_t min_live_time;
-	time_t avg_live_time;
-	time_t normal_finish_max_live_time; /* 流正常结束的最大时间, 即有FIN包或RST包的流 */
-	time_t normal_finish_avg_live_time; /* 流正常结束的最大时间, 即有FIN包或RST包的流 */	
-}packet_io_status_tcp_stream_time_t;
-
-//extern int g_packet_io_thread_num;
-extern packet_io_status_t *g_packet_io_status_pool[MAX_THREAD_NUM];
-static volatile packet_io_status_tcp_pkt_t g_last_tcp_pkt_status, g_cur_tcp_pkt_status, g_realtime_tcp_pkt_status;
-static volatile packet_io_status_tcp_pkt_t g_thread_last_tcp_pkt_status[MAX_THREAD_NUM], g_thread_realtime_tcp_pkt_status[MAX_THREAD_NUM];
-static volatile packet_io_status_tcp_stream_t g_last_tcp_stream_status, g_cur_tcp_stream_status, g_realtime_tcp_stream_status;
-static volatile packet_io_status_tcp_stream_t g_thread_last_tcp_stream_status[MAX_THREAD_NUM], g_thread_realtime_tcp_stream_status[MAX_THREAD_NUM];
-
-void *packet_io_status_tcp_pkt_mem_init(void)
-{
-	void *tcp_pkt_mem;
-	
-	tcp_pkt_mem = malloc(sizeof(packet_io_status_tcp_pkt_t));
-	memset(tcp_pkt_mem, 0, sizeof(packet_io_status_tcp_pkt_t));
-
-	return tcp_pkt_mem;
-}
-
-void packet_io_status_tcp_pkt_time_cb(void)
-{
-	int i;
-	packet_io_status_tcp_pkt_t *p_tcp_pkt_status;
-
- 	memcpy((void *)&g_last_tcp_pkt_status, (void*)&g_cur_tcp_pkt_status, sizeof(packet_io_status_tcp_pkt_t)); /* 保存上一秒的值 */
- 	memset((void *)&g_cur_tcp_pkt_status, 0, sizeof(packet_io_status_tcp_pkt_t)); /* 清零 */
-
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		p_tcp_pkt_status = (packet_io_status_tcp_pkt_t *)(g_packet_io_status_pool[i]->packet_io_status[IO_STATUS_TCP_PKT]);
-		/* for summary */
-		g_cur_tcp_pkt_status.io_base_status.pkt_num += p_tcp_pkt_status->io_base_status.pkt_num;
-		g_cur_tcp_pkt_status.io_base_status.pkt_byte += p_tcp_pkt_status->io_base_status.pkt_byte;
-		g_cur_tcp_pkt_status.syn_pkt_num += p_tcp_pkt_status->syn_pkt_num;
-		g_cur_tcp_pkt_status.synack_pkt_num += p_tcp_pkt_status->synack_pkt_num;
-		g_cur_tcp_pkt_status.rst_pkt_num += p_tcp_pkt_status->rst_pkt_num;
-		g_cur_tcp_pkt_status.nodata_pkt_num += p_tcp_pkt_status->nodata_pkt_num;
-
-		/* for detail real time */
-		g_thread_realtime_tcp_pkt_status[i].io_base_status.pkt_num = p_tcp_pkt_status->io_base_status.pkt_num - g_thread_last_tcp_pkt_status[i].io_base_status.pkt_num;
-		g_thread_realtime_tcp_pkt_status[i].io_base_status.pkt_byte = p_tcp_pkt_status->io_base_status.pkt_byte - g_thread_last_tcp_pkt_status[i].io_base_status.pkt_byte;
-		g_thread_realtime_tcp_pkt_status[i].syn_pkt_num = p_tcp_pkt_status->syn_pkt_num - g_thread_last_tcp_pkt_status[i].syn_pkt_num;
-		g_thread_realtime_tcp_pkt_status[i].synack_pkt_num = p_tcp_pkt_status->synack_pkt_num - g_thread_last_tcp_pkt_status[i].synack_pkt_num;
-		g_thread_realtime_tcp_pkt_status[i].rst_pkt_num = p_tcp_pkt_status->rst_pkt_num - g_thread_last_tcp_pkt_status[i].rst_pkt_num;
-		g_thread_realtime_tcp_pkt_status[i].nodata_pkt_num = p_tcp_pkt_status->nodata_pkt_num - g_thread_last_tcp_pkt_status[i].nodata_pkt_num;
-
-		/* save last status */
-		g_thread_last_tcp_pkt_status[i].io_base_status.pkt_num = p_tcp_pkt_status->io_base_status.pkt_num;
-		g_thread_last_tcp_pkt_status[i].io_base_status.pkt_byte = p_tcp_pkt_status->io_base_status.pkt_byte;
-		g_thread_last_tcp_pkt_status[i].syn_pkt_num = p_tcp_pkt_status->syn_pkt_num;
-		g_thread_last_tcp_pkt_status[i].synack_pkt_num = p_tcp_pkt_status->synack_pkt_num;
-		g_thread_last_tcp_pkt_status[i].rst_pkt_num = p_tcp_pkt_status->rst_pkt_num;
-		g_thread_last_tcp_pkt_status[i].nodata_pkt_num = p_tcp_pkt_status->nodata_pkt_num;
-	}
-
-	g_realtime_tcp_pkt_status.io_base_status.pkt_num = g_cur_tcp_pkt_status.io_base_status.pkt_num - g_last_tcp_pkt_status.io_base_status.pkt_num;
-	g_realtime_tcp_pkt_status.io_base_status.pkt_byte = g_cur_tcp_pkt_status.io_base_status.pkt_byte - g_last_tcp_pkt_status.io_base_status.pkt_byte;
-	g_realtime_tcp_pkt_status.syn_pkt_num = g_cur_tcp_pkt_status.syn_pkt_num - g_last_tcp_pkt_status.syn_pkt_num;
-	g_realtime_tcp_pkt_status.synack_pkt_num = g_cur_tcp_pkt_status.synack_pkt_num - g_last_tcp_pkt_status.synack_pkt_num;
-	g_realtime_tcp_pkt_status.rst_pkt_num = g_cur_tcp_pkt_status.rst_pkt_num - g_last_tcp_pkt_status.rst_pkt_num;
-	g_realtime_tcp_pkt_status.nodata_pkt_num = g_cur_tcp_pkt_status.nodata_pkt_num - g_last_tcp_pkt_status.nodata_pkt_num;
-}
-
-
-static void packet_io_status_tcp_pkt_update(int tid, unsigned char th_flags, int payload_len)
-{
-	packet_io_status_tcp_pkt_t *p_tcp_pkt_status;
-
-	p_tcp_pkt_status = (packet_io_status_tcp_pkt_t *)(g_packet_io_status_pool[tid]->packet_io_status[IO_STATUS_TCP_PKT]);
-
-	p_tcp_pkt_status->io_base_status.pkt_num++;
-	p_tcp_pkt_status->io_base_status.pkt_byte += payload_len;
-	
-	switch(th_flags){
-		case TH_SYN:
-			p_tcp_pkt_status->syn_pkt_num++;
-		break;
-
-		case TH_RST:
-			p_tcp_pkt_status->rst_pkt_num++;
-		break;
-
-		case 0x12: /* SYN/ACK */
-			p_tcp_pkt_status->synack_pkt_num++;
-		break;
-
-		default:
-		break;
-	}
-
-	if(0 == payload_len){
-		p_tcp_pkt_status->nodata_pkt_num++;
-	}
-}
-
-
-static inline void packet_io_status_tcp_stream_update(int tid, UCHAR stream_state,  int action)
-{
-	packet_io_status_tcp_stream_t *p_tcp_stream_status;
-
-	p_tcp_stream_status = (packet_io_status_tcp_stream_t *)(g_packet_io_status_pool[tid]->packet_io_status[IO_STATUS_TCP_STREAM]);
-
-	if(action > 0){
-		switch(stream_state){
-			case TCP_DATA_STATE:
-					p_tcp_stream_status->create_by_data_num ++;
-					break;
-			case TCP_NOUSE_STATE:
-					p_tcp_stream_status->create_nouse_num ++;
-					break;
-			case TCP_SYN_STATE:
-					p_tcp_stream_status->create_by_syn_num ++;
-					break;					
-		}	
-	}else{
-		switch(stream_state){
-			case TCP_DATA_STATE:
-					p_tcp_stream_status->del_data_num++;
-					break;
-			case TCP_NOUSE_STATE:
-					p_tcp_stream_status->del_nouse_num++;
-					break;
-			case TCP_SYN_STATE:
-					p_tcp_stream_status->del_syn_num ++;
-					break;					
-		}	
-	}
-}
-
-
-static long ifuncb_show_tcp_pkt_summary(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg, const char *cmd_args)
-{
-	/* 全局总包数, 总字节数 */
-
-	iprintf(ihandle, iconn,"NOTE: unit of byte for total is 'byte', for realtime is 'bps, bit per second'!\n");
-	iprintf(ihandle, iconn, "%8s %10s %12s %8s %10s %8s %10s %11s\n", " ", "packet", "byte", "SYN-PKT", "SYNACK-PKT", "RST-PKT", "NO-PAYLOAD", "AVG-PKT-LEN"); 
-	iprintf(ihandle, iconn, "%8s %10llu %12llu %8llu %10llu %8llu %10llu %.2f\n", "total", 
-		  g_cur_tcp_pkt_status.io_base_status.pkt_num, 
-		  g_cur_tcp_pkt_status.io_base_status.pkt_byte,
-		  g_cur_tcp_pkt_status.syn_pkt_num,
-		  g_cur_tcp_pkt_status.synack_pkt_num,
-		  g_cur_tcp_pkt_status.rst_pkt_num,
-		  g_cur_tcp_pkt_status.nodata_pkt_num,
-		  (g_cur_tcp_pkt_status.io_base_status.pkt_num > 0) ? (float)g_cur_tcp_pkt_status.io_base_status.pkt_byte/(float)g_cur_tcp_pkt_status.io_base_status.pkt_num : 0);
-
-	iprintf(ihandle, iconn, "%8s %10llu %12llu %8llu %10llu %8llu %10llu %.2f\n", "realtime", 
-		  g_realtime_tcp_pkt_status.io_base_status.pkt_num, 
-		  g_realtime_tcp_pkt_status.io_base_status.pkt_byte,
-		  g_realtime_tcp_pkt_status.syn_pkt_num,
-		  g_realtime_tcp_pkt_status.synack_pkt_num,
-		  g_realtime_tcp_pkt_status.rst_pkt_num,
-		  g_realtime_tcp_pkt_status.nodata_pkt_num,
-		  (g_realtime_tcp_pkt_status.io_base_status.pkt_num > 0) ?(float)g_realtime_tcp_pkt_status.io_base_status.pkt_byte/(float)g_realtime_tcp_pkt_status.io_base_status.pkt_num : 0);
-		  
-	return 0;
-}
-
-static long ifuncb_show_tcp_pkt_detail_total(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg, const char *cmd_args)
-{
-	int i;
-	packet_io_status_tcp_pkt_t *p_tcp_pkt_status;
-
-	iprintf(ihandle, iconn,"NOTE: unit of byte for total is 'byte', for realtime is 'bps, bit per second'!\n");
-	iprintf(ihandle, iconn, "%8s %10s %12s %8s %10s %8s %10s %11s\n", "tid", "packet", "byte", "SYN-PKT", "SYNACK-PKT", "RST-PKT", "NO-PAYLOAD", "AVG-PKT-LEN"); 
-
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		p_tcp_pkt_status = (packet_io_status_tcp_pkt_t *)(g_packet_io_status_pool[i]->packet_io_status[IO_STATUS_TCP_PKT]);
-		iprintf(ihandle, iconn, "%8d %10llu %12llu %8llu %10llu %8llu %10llu %.2f\n", 
-			  i, 
-			  p_tcp_pkt_status->io_base_status.pkt_num, 
-			  p_tcp_pkt_status->io_base_status.pkt_byte,
-			  p_tcp_pkt_status->syn_pkt_num,
-			  p_tcp_pkt_status->synack_pkt_num,
-			  p_tcp_pkt_status->rst_pkt_num,
-			  p_tcp_pkt_status->nodata_pkt_num,
-			  (p_tcp_pkt_status->io_base_status.pkt_num > 0) ? (float)p_tcp_pkt_status->io_base_status.pkt_byte/(float)p_tcp_pkt_status->io_base_status.pkt_num : 0);
-	}
-	
-	return 0;
-}
-
-static long ifuncb_show_tcp_pkt_detail_realtime(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg, const char *cmd_args)
-{
-	int i;
-	//packet_io_status_tcp_pkt_t *p_tcp_pkt_status;
-
-	iprintf(ihandle, iconn,"NOTE: unit of byte for total is 'byte', for realtime is 'bps, bit per second'!\n");
-	iprintf(ihandle, iconn, "%8s %10s %12s %8s %10s %8s %10s %11s\n", "tid", "packet", "byte", "SYN-PKT", "SYNACK-PKT", "RST-PKT", "NO-PAYLOAD", "AVG-PKT-LEN"); 
-
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		iprintf(ihandle, iconn, "%8d %10llu %12llu %8llu %10llu %8llu %10llu %.2f\n", 
-			  i, 
-			  g_thread_realtime_tcp_pkt_status[i].io_base_status.pkt_num, 
-			  g_thread_realtime_tcp_pkt_status[i].io_base_status.pkt_byte,
-			  g_thread_realtime_tcp_pkt_status[i].syn_pkt_num,
-			  g_thread_realtime_tcp_pkt_status[i].synack_pkt_num,
-			  g_thread_realtime_tcp_pkt_status[i].rst_pkt_num,
-			  g_thread_realtime_tcp_pkt_status[i].nodata_pkt_num,
-			  (g_thread_realtime_tcp_pkt_status[i].io_base_status.pkt_num > 0) ? (float)g_thread_realtime_tcp_pkt_status[i].io_base_status.pkt_byte/(float)g_thread_realtime_tcp_pkt_status[i].io_base_status.pkt_num : 0);
-	}
-	
-	return 0;
-}
-
-#if IKNOW_ENABLE
-void iknow_register_tcp_pkt_cb(void *ihandle)
-{
-	int ret;
-
-	ret = iknow_register_cmd(ihandle, "show tcp pkt summary", "display tcp pkt summary", ifuncb_show_tcp_pkt_summary, NULL, 0, NULL);
-	assert(0 == ret);
-	ret = iknow_register_cmd(ihandle, "show tcp pkt detail total", "display tcp pkt detail total", ifuncb_show_tcp_pkt_detail_total, NULL, 0, NULL);
-	assert(0 == ret);	
-	ret = iknow_register_cmd(ihandle, "show tcp pkt detail realtime", "display tcp pkt detail realtime", ifuncb_show_tcp_pkt_detail_realtime, NULL, 0, NULL);
-	assert(0 == ret);	
-}
-#endif
-
-void *packet_io_status_tcp_stream_mem_init(void)
-{
-	void *tcp_stream_mem;
-	
-	tcp_stream_mem = malloc(sizeof(packet_io_status_tcp_stream_t));
-	memset(tcp_stream_mem, 0, sizeof(packet_io_status_tcp_stream_t));
-
-	return tcp_stream_mem;
-}
-
-void packet_io_status_stream_update(int tid, UCHAR stream_type, UCHAR stream_state,  int action)
-{
-	if(STREAM_TYPE_TCP == stream_type){
-		packet_io_status_tcp_stream_update(tid, stream_state, action);
-	}else if(STREAM_TYPE_UDP == stream_type){
-		/*  */
-	}
-}
-
-static long ifuncb_show_tcp_stream_summary(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg, const char *cmd_args)
-{
-	iprintf(ihandle, iconn, "%9s %10s\n", " ", "stream-num"); 
-	iprintf(ihandle, iconn, "%9s %10llu\n", "current", 
-		  (g_cur_tcp_stream_status.create_by_syn_num+g_cur_tcp_stream_status.create_by_data_num+g_cur_tcp_stream_status.create_nouse_num)\
-		   - (g_cur_tcp_stream_status.del_syn_num+g_cur_tcp_stream_status.del_data_num+g_cur_tcp_stream_status.del_nouse_num));
-	iprintf(ihandle, iconn, "%9s %10llu/s\n", "rt-create", 	   
-		  (g_realtime_tcp_stream_status.create_by_syn_num+g_realtime_tcp_stream_status.create_by_data_num+g_realtime_tcp_stream_status.create_nouse_num));
-	iprintf(ihandle, iconn, "%9s %10llu\n/s", "rt-delete", 		  
-		   (g_realtime_tcp_stream_status.del_syn_num+g_realtime_tcp_stream_status.del_data_num+g_realtime_tcp_stream_status.del_nouse_num));
-
-	return 0;
-}
-
-void packet_io_status_tcp_stream_time_cb(void)
-{
-	int i;
-	packet_io_status_tcp_stream_t *p_tcp_stream;
-
-	memcpy((void *)&g_last_tcp_stream_status, (void *)&g_cur_tcp_stream_status, sizeof(packet_io_status_tcp_stream_t));
-	memset((void *)&g_cur_tcp_stream_status, 0, sizeof(packet_io_status_tcp_stream_t));
-
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		p_tcp_stream = (packet_io_status_tcp_stream_t *)(g_packet_io_status_pool[i]->packet_io_status[IO_STATUS_TCP_STREAM]);
-		g_cur_tcp_stream_status.create_by_syn_num += p_tcp_stream->create_by_syn_num;
-		g_cur_tcp_stream_status.create_by_data_num += p_tcp_stream->create_by_data_num;
-		g_cur_tcp_stream_status.create_nouse_num += p_tcp_stream->create_nouse_num;
-		g_cur_tcp_stream_status.del_syn_num += p_tcp_stream->del_syn_num;
-		g_cur_tcp_stream_status.del_data_num += p_tcp_stream->del_data_num;
-		g_cur_tcp_stream_status.del_nouse_num += p_tcp_stream->del_nouse_num;
-
-		/* calc realtime */
-		g_thread_realtime_tcp_stream_status[i].create_by_syn_num = p_tcp_stream->create_by_syn_num - g_thread_last_tcp_stream_status[i].create_by_syn_num;
-		g_thread_realtime_tcp_stream_status[i].create_by_data_num = p_tcp_stream->create_by_data_num - g_thread_last_tcp_stream_status[i].create_by_data_num;
-		g_thread_realtime_tcp_stream_status[i].create_nouse_num = p_tcp_stream->create_nouse_num - g_thread_last_tcp_stream_status[i].create_nouse_num;
-		g_thread_realtime_tcp_stream_status[i].del_syn_num = p_tcp_stream->del_syn_num - g_thread_last_tcp_stream_status[i].del_syn_num;
-		g_thread_realtime_tcp_stream_status[i].del_data_num = p_tcp_stream->del_data_num - g_thread_last_tcp_stream_status[i].del_data_num;
-		g_thread_realtime_tcp_stream_status[i].del_nouse_num = p_tcp_stream->del_nouse_num - g_thread_last_tcp_stream_status[i].del_nouse_num;
-
-		/* save last */
-		g_thread_last_tcp_stream_status[i].create_by_syn_num = p_tcp_stream->create_by_syn_num;
-		g_thread_last_tcp_stream_status[i].create_by_data_num = p_tcp_stream->create_by_data_num;
-		g_thread_last_tcp_stream_status[i].create_nouse_num = p_tcp_stream->create_nouse_num;
-		g_thread_last_tcp_stream_status[i].del_syn_num = p_tcp_stream->del_syn_num;
-		g_thread_last_tcp_stream_status[i].del_data_num = p_tcp_stream->del_data_num;
-		g_thread_last_tcp_stream_status[i].del_nouse_num = p_tcp_stream->del_nouse_num;
-	}
-
-	g_realtime_tcp_stream_status.create_by_syn_num = g_cur_tcp_stream_status.create_by_syn_num -g_last_tcp_stream_status.create_by_syn_num;
-	g_realtime_tcp_stream_status.create_by_data_num = g_cur_tcp_stream_status.create_by_data_num -g_last_tcp_stream_status.create_by_data_num;
-	g_realtime_tcp_stream_status.create_nouse_num = g_cur_tcp_stream_status.create_nouse_num -g_last_tcp_stream_status.create_nouse_num;
-	g_realtime_tcp_stream_status.del_syn_num = g_cur_tcp_stream_status.del_syn_num -g_last_tcp_stream_status.del_syn_num;
-	g_realtime_tcp_stream_status.del_data_num = g_cur_tcp_stream_status.del_data_num -g_last_tcp_stream_status.del_data_num;
-	g_realtime_tcp_stream_status.del_nouse_num = g_cur_tcp_stream_status.del_nouse_num -g_last_tcp_stream_status.del_nouse_num;
-}
-
-#if IKNOW_ENABLE
-void iknow_register_tcp_stream_cb(void *ihandle)
-{
-	int ret;
-
-	ret = iknow_register_cmd(ihandle, "show tcp stream summary", "display tcp stream summary", ifuncb_show_tcp_stream_summary, NULL, 0, NULL);
-	assert(0 == ret);
-	//ret = iknow_register_cmd(ihandle, "show tcp stream detail total", "display tcp stream detail total", ifuncb_show_tcp_stream_detail, NULL, 0, NULL);
-	//assert(0 == ret);	
-	//ret = iknow_register_cmd(ihandle, "show tcp stream detail realtime", "display tcp stream detail realtime", ifuncb_show_tcp_stream_detail, NULL, 0, NULL);
-	//assert(0 == ret);		
-}
-#endif
-#endif
-
 
 static void tcp_flow_stat_free(int thread_seq, void *project_req_value)
 {

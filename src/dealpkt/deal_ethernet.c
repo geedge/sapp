@@ -6,13 +6,6 @@ extern "C" {
 #include "sapp_private_api.h"
 
 
-#if IKNOW_ENABLE
-#include "iknow.h"
-extern packet_io_status_t *g_packet_io_status_pool[MAX_THREAD_NUM];
-//extern int g_packet_io_thread_num;
-static inline void packet_io_eth_status_update(int thread_seq,  int raw_pkt_len);
-#endif
-
 extern int g_skip_ethernet_layer_sw;
 
 static inline void set_mac_addr(struct layer_addr_mac *addr, const struct mesa_ethernet_hdr *p_eth_hdr)
@@ -28,11 +21,11 @@ static inline int should_create_empty_mpls_layer_for_symmetric(const struct stre
 		return 0;
 	}
 
-	if((next_eth_type != ETHERTYPE_IP) || (next_eth_type != ETHERTYPE_IPV6)){
+	if((next_eth_type != ETHERTYPE_IP) && (next_eth_type != ETHERTYPE_IPV6)){
 		return 0;
 	}
 
-	if((NULL != pstream->pfather) && (ADDR_TYPE_MPLS == pstream->pfather->addr.addrtype)){ /* 说明是从VPLS进入到ethernet层, 不再创建空的mpls层 */
+	if((NULL != pstream->pfather) && (ADDR_TYPE_MPLS == pstream->pfather->addr.addrtype)){ /* 说明是从VPLS进入到ethernet层, 不再重复创建空的mpls层 */
 		return 0;
 	}
 
@@ -56,7 +49,6 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 
 	if(NET_CONN_SERIAL_GDEV == g_topology_mode){
 		if(unlikely(sapp_identify_broad_multicast_pkt(this_layer_hdr, raw_pkt) != 0)){
-			//g_SysInputInfo[thread_num][SAPP_STAT_DROP]++;
 			local_sys_stat->count[SAPP_STAT_DROP_ETHERNET]++;
 			local_sys_stat->length[SAPP_STAT_DROP_ETHERNET]+=raw_pkt->raw_pkt_len;
 			return DROP;
@@ -69,9 +61,6 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 		pstream = &pstream_pr->stream_public;
 		next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct mesa_ethernet_hdr);
 
-#if IKNOW_ENABLE
-		packet_io_eth_status_update(thread_num, raw_pkt->raw_pkt_len);
-#endif
 		memset(ptmp, 0, sizeof(struct streamindex));
 		//set_mac_addr(&addr, p_eth_hdr);
 		pstream->addr.mac = (struct layer_addr_mac *)this_layer_hdr;
@@ -180,8 +169,6 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 
 			default:
 				/* unknown protocol */
-				//g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-				//g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += (unsigned long long)raw_pkt->raw_pkt_len;				
 				if(NET_CONN_SERIAL_GDEV == g_topology_mode){
@@ -189,7 +176,6 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 						ret = PASS;
 					}else{
 						/* GDEV模式下, 什么时候都不应该把非隧道内不认识的包再转发出去, 在线发现把SPT生成树协议再注回去, 导致网络故障 */
-						//g_SysInputInfo[thread_num][SAPP_STAT_DROP]++;
 						local_sys_stat->count[SAPP_STAT_DROP_ETHERNET]++;
 						ret = DROP;
 					}
@@ -202,67 +188,6 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 	return ret;
 }
 
-#if IKNOW_ENABLE
-static packet_io_status_base_t g_io_eth_last_status, g_io_eth_cur_status, g_io_eth_realtime_status; 	
-long ifuncb_show_eth_summary(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg, const char *cmd_args)
-{
-	iprintf(ihandle, iconn,"NOTE: unit of byte for total is 'byte', for realtime is 'bps, bit per second'!\n");
-	iprintf(ihandle, iconn, "%8s %8s %12s\n", " ", "packet", "byte");
-	iprintf(ihandle, iconn, "%8s %8llu %12llu\n%8s %8llu %12llu\n", 
-		  "total", g_io_eth_cur_status.pkt_num, g_io_eth_cur_status.pkt_byte,
-	    	  "realtime", g_io_eth_realtime_status.pkt_num, g_io_eth_realtime_status.pkt_byte*8);
-	
-	return 0;
-}
-
-void *packet_io_status_eth_mem_init(void)
-{
-	void *eth_mem;
-	
-	eth_mem = malloc(sizeof(packet_io_status_base_t));
-	memset(eth_mem, 0, sizeof(packet_io_status_base_t));
-
-	return eth_mem;
-}
-
-void iknow_register_eth_cb(void *ihandle)
-{
-	int ret;
-
-	ret = iknow_register_cmd(ihandle, "show eth summary", "display eth flow summary", ifuncb_show_eth_summary, NULL, 0, NULL);
-	assert(0 == ret);
-}
-
-
-static inline void packet_io_eth_status_update(int thread_seq,  int raw_pkt_len)
-{
-	packet_io_status_base_t *p_eth_status;
-
-	p_eth_status = (packet_io_status_base_t *)(g_packet_io_status_pool[thread_seq]->packet_io_status[IO_STATUS_ETH]);
-
-	p_eth_status->pkt_num++;
-	p_eth_status->pkt_byte += raw_pkt_len;
-}
-
-void packet_io_status_eth_time_cb(void)
-{
-	/* 全局总包数, 总字节数, 平均包长, 当前实时流量 */
-	int i;
-	packet_io_status_base_t *p_eth_status;
-
- 	memcpy((void *)&g_io_eth_last_status, (void *)&g_io_eth_cur_status, sizeof(packet_io_status_base_t)); /* 保存上一秒的值 */
- 	memset((void *)&g_io_eth_cur_status, 0, sizeof(packet_io_status_base_t)); /* 清零 */
-	
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		p_eth_status = (packet_io_status_base_t *)(g_packet_io_status_pool[i]->packet_io_status[IO_STATUS_ETH]);
-		g_io_eth_cur_status.pkt_num += p_eth_status->pkt_num;
-		g_io_eth_cur_status.pkt_byte += p_eth_status->pkt_byte;
-	}	
-
-	g_io_eth_realtime_status.pkt_num = g_io_eth_cur_status.pkt_num - g_io_eth_last_status.pkt_num;
-	g_io_eth_realtime_status.pkt_byte = g_io_eth_cur_status.pkt_byte - g_io_eth_last_status.pkt_byte;
-}
-#endif
 
 #ifdef __cplusplus
 }

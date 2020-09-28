@@ -892,8 +892,6 @@ retry:
 		if(EINTR == errno){
 			goto retry; /* 被信号中断的IO调用需要重试 */
 		}else{
-			//g_SysInputInfo[send_handle->threadnum][SEND_PKT_ERR]++;
-			//g_SysInputInfo[send_handle->threadnum][SEND_PKT_ERR_LEN] += datalen;
 			local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
 			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: sendto error, %s\n", __FILE__,__LINE__,strerror(errno));
 			return ret;
@@ -960,8 +958,6 @@ retry:
 		if(EINTR == errno){
 			goto retry; /* 被信号中断的IO调用需要重试 */
 		}else{
-			//g_SysInputInfo[send_handle->threadnum][SEND_PKT_ERR]++;
-			//g_SysInputInfo[send_handle->threadnum][SEND_PKT_ERR_LEN] += datalen;	
 			local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
 			sapp_runtime_log(RLOG_LV_FATAL,"%s:%d: packet_io_send_by_sys_routev6() sendto error, %s\n", __FILE__,__LINE__,strerror(errno));
 			return ret;

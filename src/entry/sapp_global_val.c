@@ -35,18 +35,32 @@ int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
 */
 
 /*
-	发包时必须同时满足一条完整的prune链才跳过.
+	发包时必须同时满足一条完整的prune链才跳过, 顺序是从internal到external, 
 	最多可支持N条跳层配置,   mirror模式下, 最底层的ethernet写不写都可以, 
 
-	比如卫星项目gtp原始包层数为:     ethernet/ipv4/udp/gtp/ipv4/tcp/http, 跳过gtp的配置: "ip[1],udp[2],gtp[3]", 
+	比如卫星项目gtp原始包层数为:     ethernet/ipv4/udp/gtp/ipv4/tcp/http, 跳过gtp的配置: "gtp[3],udp[2],ip[1]", 
 
-	比如某隧道原始包层数为: ethernet/ipv4/gre/ipv4/udp/dns,   跳过最外层隧道的配置: "ip[1],gre[2]", 
+	比如某GRE隧道原始包层数为: ethernet/ipv4/gre/ipv4/udp/dns,   跳过最外层隧道的配置: "gre[2],ip[1]", 
 */
 
 typedef struct{
 	int prune_inject_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
 }prune_inject_layer_t;
 prune_inject_layer_t prune_inject_layer_set[4];
+
+
+/*
+	描述哪些层是非对称存在层, 即C2S和S2C方向有可能没有这一层,导致创建流compare_addr时不对称, 需要创建一个空层, 注入包时尤其注意, 需要跳过. 
+*/
+int g_asymmetric_presence_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];    
+
+
+/*
+	描述哪些层是双向地址不一致的层, 即C2S和S2C方向的层数虽然是一样的,但双向的地址不一样, 常见的如gtp, gre, mpls等, ethernet, vlan也有可能.
+	如果反向注入数据包, 必须是双向流, 
+	前两个包需要更新对侧信息, 注入包时尤其注意. 
+*/
+int g_asymmetric_addr_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];    
 
 
 extern char *MESA_MD5_sum_str(unsigned char *raw_data, unsigned int raw_data_len, char result[33]);

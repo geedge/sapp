@@ -75,7 +75,6 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
         seq_offset = sizeof(unsigned int);
     }
 
-    //g_SysInputInfo[thread_num][TUNNEL_GTP]++;
     local_sys_stat->count[SAPP_STAT_TUNNEL_GTP]++;
 
     memset(&tmp_index, 0, sizeof(struct streamindex));
@@ -115,8 +114,6 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
         struct iphdr  *ip4_hdr = (struct iphdr *)next_layer_hdr;
         if(left_pkt_len < 20 || ntohs(ip4_hdr->tot_len) > left_pkt_len)
         {
-            //g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-            //g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
             local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	
             sapp_runtime_log(20, "illegal left Ipv4 len %d, total len %d!\n", left_pkt_len, ntohs(ip4_hdr->tot_len));

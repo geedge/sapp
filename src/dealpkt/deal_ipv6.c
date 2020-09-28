@@ -788,8 +788,6 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 
 	if((sapp_global_mthread[thread_num].ipv6_pkt_type_flag & PKT_TYPE_IPREBUILD) == 0){
 		/* IP分片重组的包会重入ipv6_entry, 不能再计数 */
-		//g_SysInputInfo[thread_num][PKT_IPV6LEN] += payload_len + sizeof(struct mesa_ip6_hdr);
-		//g_SysInputInfo[thread_num][PKT_IPV6]++;	
 		local_sys_stat->count[SAPP_STAT_RCV_IPV6]++;
 		local_sys_stat->length[SAPP_STAT_RCV_IPV6]+=payload_len + sizeof(struct mesa_ip6_hdr);
 		if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
@@ -925,8 +923,6 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 				goto done;
 
 			default:
-				//g_SysInputInfo[thread_num][PKT_UNKNOWN]++;
-				//g_SysInputInfo[thread_num][PKT_UNKNOWN_LEN] += raw_pkt->raw_pkt_len;
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+=raw_pkt->raw_pkt_len;
 				sapp_runtime_log(20, "unsupport Ipv6 protocol:%u!\n", next_hdr_type);			
