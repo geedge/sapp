@@ -5,7 +5,7 @@ set(lib_name breakpad_mini)
 project (${lib_name})
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-include(Version)
+#include(Version)
 
 set(CMAKE_MACOSX_RPATH 0)
 
@@ -43,4 +43,4 @@ set(CMAKE_INSTALL_PREFIX /opt/MESA/)
 #install(TARGETS ${plugin_name} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib COMPONENT LIBRARY)
 #install(FILES inc/${plugin_name}.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/MESA/ COMPONENT PROFILE)
 
-include(Package)
+#include(Package)

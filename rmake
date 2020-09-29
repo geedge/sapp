@@ -1,3 +1,0 @@
-#!/bin/bash
-rm -rf ./build/
-make -f makefile-cmake $1
