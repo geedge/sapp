@@ -160,8 +160,8 @@ int process_confelem_protocol(char* confelem_filename)
 		g_protocol_plug_info = plug_info;
 	}
 
-	printf("\033[32m[Notice]%s, load %s success!\033[0m\n", PLUGIN_LOGNAME, plug_info->plugname);
-	MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"load %s success!\n",plug_info->plugname);
+	//printf("\033[32m[Notice]%s, load %s success!\033[0m\n", PLUGIN_LOGNAME, plug_info->plugname);
+	MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"load \033[32m%s\033[0m success!",plug_info->plugname);
 
 	return 0;
 

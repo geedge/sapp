@@ -100,7 +100,7 @@ int process_confelem_business(char* confelem_filename)
 	rec = process_confelem_appentry(confelem_filename,plug_info);
 	if(rec < 0)
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's process_confelem_appentry() error\n",confelem_filename);
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's process_confelem_appentry() error",confelem_filename);
 		destroy_pluginfo_elem_bus(plug_info);
 		return -1;
 	}
@@ -118,8 +118,8 @@ int process_confelem_business(char* confelem_filename)
 		g_business_plug_info = plug_info;
 	}
 
-	printf("\033[32m[Notice]%s, load %s success!\033[0m\n", PLUGIN_LOGNAME, plug_info->plugname);
-	MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"load %s success!\n",plug_info->plugname);
+	//printf("\033[32m[Notice]%s, load %s success!\033[0m\n", PLUGIN_LOGNAME, plug_info->plugname);
+	MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"load \033[32m%s\033[0m success!",plug_info->plugname);
 	
 	return 0;
 

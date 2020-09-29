@@ -20,7 +20,7 @@ int plugin_readconf(char* filename_platform,char* filename_protocol,char* filena
 	int rec;
 
 
-	MESA_load_profile_string_def((char*)PLUGIN_CONFNAME,(char*)PLUGIN_CONFMODULE,(char*)"logger_filepath",logger_filepath,PLUGIN_FILENAME_MAXLEN,(char*)"./log/runtimelog");
+	MESA_load_profile_string_def((char*)PLUGIN_CONFNAME,(char*)PLUGIN_CONFMODULE,(char*)"logger_filepath",logger_filepath,PLUGIN_FILENAME_MAXLEN,(char*)"./log/runtimelog_plugin");
 	MESA_load_profile_uint_def((char*)PLUGIN_CONFNAME,(char*)PLUGIN_CONFMODULE,(char*)"logger_level",(unsigned int*)logger_level,RLOG_LV_DEBUG);
 
 //20170525 liuy add for wy serial
@@ -102,7 +102,7 @@ int plugctrl_proc()
 	}
 
 	 	//MESA_handle_logger init
-	g_plugin_runtime_handle = sapp_global_val->individual_fixed.log_handle;
+	g_plugin_runtime_handle = MESA_create_runtime_log_handle(logger_filepath, logger_level);
 	if(g_plugin_runtime_handle == NULL)
 	{
 		printf("rawdata MESA_create_runtime_log_handle() error!\n");
@@ -113,7 +113,7 @@ int plugctrl_proc()
 	rec = process_conf_entryname();
 	if(rec < 0)
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"plugin_readconf error!\n");
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"plugin_readconf error!");
 		return -1;
 	}
 

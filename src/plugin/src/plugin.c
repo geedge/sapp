@@ -139,6 +139,19 @@ char* g_plugin_entryname[PLUGIN_MAX_ENTRYNUM] =
 
 int g_plugin_version_VERSION_20170511;
 
+static void record_time_start(struct timespec *start)
+{
+    clock_gettime(CLOCK_MONOTONIC, start);
+}
+static long record_time_elapse_us(struct timespec *start)
+{
+    struct timespec end;
+    long elapsed = 0;
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsed = (end.tv_sec - start->tv_sec)*1000000 + (end.tv_nsec - start->tv_nsec)/1000;
+    return elapsed;
+}
+
  /* 删除开头的空格,tab, 以及末尾的换行符, 空格, tab等 "\r\n " */
 static void plugin_del_blank_rn(char *data, int max_len)
 {
@@ -167,7 +180,7 @@ static void plugin_del_blank_rn(char *data, int max_len)
 输出：
 //add by yw 20150318, reset cwd to exe dir
 *****************************************************************************/
-int reset_cwd()
+static int reset_cwd()
 {
 	char cur_path[1024];
 	memset(cur_path, 0, sizeof(cur_path));
@@ -415,7 +428,7 @@ int check_plug_conf(char* filename,int plugtype)
 	FILE* fp = fopen(filename,"r");
 	if(fp == NULL)
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"check_plug_conf(): fopen() %s error!\n",filename);
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"check_plug_conf(): fopen() %s error!",filename);
 		return -1;
 	}
 
@@ -469,7 +482,7 @@ int check_plug_conf(char* filename,int plugtype)
 		fclose(fp);
 		fp=NULL;
 		
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's entry name is unknow:%s\n",filename,config_buf);
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's entry name is unknow:%s",filename,config_buf);
 		return -1;
 		
 
@@ -502,7 +515,7 @@ int process_conf_entryname()
 									"entrylist_config",filename,PLUGIN_FILENAME_MAXLEN,FILENAME_CONFLIST_DEF);
 	if(rec < 0)
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"filename_entryname get error!\n");
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"filename_entryname get error!");
 		return -1;
 
 	}
@@ -592,7 +605,7 @@ int process_confelem_plugname(char* filename,int plugtype,char** plugname)
 	rec = MESA_load_profile_string_nodef(filename,SECTION_PLUGINFO,KEYWORD_PLUGNAME,buf_plugname,PLUGIN_MAX_CONFLEN);
 	if(rec < 0)
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s get plugname error\n",filename);
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s get plugname error",filename);
 		return -1;
 	}
 
@@ -601,7 +614,7 @@ int process_confelem_plugname(char* filename,int plugtype,char** plugname)
 		rec = check_name_fromentrylist(buf_plugname);
 		if(rec != 1)
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's plugname is %s,not in the entrylist.conf\n",filename,buf_plugname);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's plugname is %s,not in the entrylist.conf",filename,buf_plugname);
 			return -1;
 		}
 	}
@@ -646,7 +659,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	MESA_load_profile_string_nodef(filename,SECTION_PLUGINFO,KEYWORD_FILENAME,buf_sofilename,PLUGIN_MAX_CONFLEN);
 	if(buf_sofilename[0] == '\0')
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s get %s error\n",filename,KEYWORD_FILENAME);
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s get %s error",filename,KEYWORD_FILENAME);
 		return -1;
 	}
 
@@ -663,7 +676,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 
 	if( filepoint == NULL ) 
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"dlopen %s in %s error:%s\n",buf_sofilename,filename,dlerror());
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"dlopen %s in %s error:%s",buf_sofilename,filename,dlerror());
 		return -1;
 	}
 
@@ -672,7 +685,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	MESA_load_profile_string_nodef(filename,SECTION_PLUGINFO,KEYWORD_FUNINIT,buf_funname,PLUGIN_MAX_CONFLEN);
 	if(buf_funname[0]=='\0')
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no FUNNAME_INIT!\n",buf_sofilename);
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no FUNNAME_INIT!",buf_sofilename);
 		return -1;
 	}
 
@@ -683,22 +696,25 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 #endif	
 	if(fun_init == NULL)
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no function %s error!\n",buf_sofilename,buf_funname);
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no function %s error!",buf_sofilename,buf_funname);
 		return -1;
 	}
 	else
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ\n",filename,buf_funname);
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ",filename,buf_funname);
 
 	}
-
-	
+	struct timespec start;
+	long time_cost_us = 0;
+	record_time_start(&start);
 	rec = fun_init();
+	time_cost_us = record_time_elapse_us(&start);
 	if(rec < 0)
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s init error,don't load it\n",buf_sofilename);
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s init error,don't load it",buf_sofilename);
 		return -1;
 	}
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[32m%s\033[0m init succ, using [\033[32m%lld\033[0m] us",buf_sofilename,time_cost_us);
 
 
 	//load FUNNAME_DESTROY
@@ -709,11 +725,11 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 		fun_destroy = (void(*)())(dlsym(filepoint,buf_funname));
 		if(fun_destroy == NULL)
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has func:%s,but there is no in %s\n",filename,buf_funname,buf_sofilename);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has func:%s,but there is no in %s",filename,buf_funname,buf_sofilename);
 		}
 		else
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ\n",filename,buf_funname);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ",filename,buf_funname);
 
 		}
 	}
@@ -726,11 +742,11 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 		pluginfo_bus->fun_update = (int (*)(int,char*,int))(dlsym(filepoint,buf_funname));
 		if(pluginfo_bus->fun_update == NULL)
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has func:%s,but there is no in %s\n",filename,buf_funname,buf_sofilename);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has func:%s,but there is no in %s",filename,buf_funname,buf_sofilename);
 		}
 		else
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ\n",filename,buf_funname);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ",filename,buf_funname);
 
 		}
 
@@ -750,19 +766,19 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 		MESA_load_profile_string_nodef(filename,SECTION_PLUGINFO,KEYWORD_FUNGETID,buf_funname,PLUGIN_MAX_CONFLEN);
 		if(buf_funname[0]=='\0')
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no %s!\n",buf_sofilename,KEYWORD_FUNGETID);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no %s!",buf_sofilename,KEYWORD_FUNGETID);
 			return -1;
 		}
 
 		fun_getplugid = (void(*)(unsigned short))(dlsym(filepoint,buf_funname));
 		if(fun_getplugid == NULL)
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no %s!\n",buf_sofilename,buf_funname);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no %s!",buf_sofilename,buf_funname);
 			return -1;
 		}
 		else
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ\n",filename,buf_funname);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ",filename,buf_funname);
 
 		}
 
@@ -776,19 +792,19 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 		MESA_load_profile_string_nodef(filename,SECTION_PLUGINFO,KEYWORD_FUNCHANGE,buf_funname,PLUGIN_MAX_CONFLEN);
 		if(buf_funname[0]=='\0')
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no %s!\n",buf_sofilename,KEYWORD_FUNCHANGE);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no %s!",buf_sofilename,KEYWORD_FUNCHANGE);
 			return -1;
 		}
 
 		pluginfo_pro->fun_flagchange = (long long (*)(char*))(dlsym(filepoint,buf_funname));
 		if(pluginfo_pro->fun_flagchange == NULL)
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no function %s error!\n",buf_sofilename,buf_funname);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no function %s error!",buf_sofilename,buf_funname);
 			return -1;
 		}
 		else
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ\n",filename,buf_funname);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ",filename,buf_funname);
 
 		}
 
@@ -798,18 +814,18 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 		MESA_load_profile_string_nodef(filename,SECTION_PLUGINFO,KEYWORD_FUNSTATE,buf_funname,PLUGIN_MAX_CONFLEN);
 		if(buf_funname[0]=='\0')
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no %s!\n",buf_sofilename,KEYWORD_FUNSTATE);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no %s!",buf_sofilename,KEYWORD_FUNSTATE);
 			return -1;
 		}
 
 		pluginfo_pro->fun_flagstate = (void (*)(long long))(dlsym(filepoint,buf_funname));
 		if(pluginfo_pro->fun_flagstate == NULL)
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no function %s error!\n",buf_sofilename,buf_funname);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no function %s error!",buf_sofilename,buf_funname);
 		}
 		else
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ\n",filename,buf_funname);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ",filename,buf_funname);
 		}
 
 	}
@@ -873,7 +889,7 @@ int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname)
 			if(buf_funname[0] == '\0')
 			{
 				printf("\033[1;31;40m[Error]%s has [%s] and %s,but no %s\033[0m\n", filename,g_plugin_entryname[i],KEYWORD_FUNFLAG,KEYWORD_FUNNAME);
-				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has [%s] and %s,but no %s\n",filename,g_plugin_entryname[i],KEYWORD_FUNFLAG,KEYWORD_FUNNAME);
+				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has [%s] and %s,but no %s",filename,g_plugin_entryname[i],KEYWORD_FUNFLAG,KEYWORD_FUNNAME);
 				return -1;
 			}
 		
@@ -881,7 +897,7 @@ int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname)
 			if(fun_pointer == NULL)
 			{
 				printf("\033[1;31;40m[Error]%s has [%s],but not load %s from %s sofile\033[0m\n", filename,g_plugin_entryname[i],buf_funname,plugname);
-				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has [%s],but not load %s from %s sofile\n",filename,g_plugin_entryname[i],buf_funname,plugname);
+				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has [%s],but not load %s from %s sofile",filename,g_plugin_entryname[i],buf_funname,plugname);
 				return -1;
 			}
 			
@@ -889,11 +905,11 @@ int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname)
 			if(ret==-1)
 			{
 				printf("\033[1;31;40m[Error]%s stream_register %s entry error\033[0m\n",filename,g_plugin_entryname[i]);
-				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s stream_register %s entry error!\n",filename,g_plugin_entryname[i]);
+				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s stream_register %s entry error!",filename,g_plugin_entryname[i]);
 			}
 			else
 			{
-				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s stream_register %s entry succ!\n",filename,g_plugin_entryname[i]);
+				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s stream_register %s entry succ!",filename,g_plugin_entryname[i]);
 			}
 			
 		}
@@ -1196,14 +1212,14 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 			if(pluginfo_pro == NULL)
 			{
 				printf("\033[1;31;40m[Error]%s has %s entry,but ther is no  protocol plug %s\033[0m\n", filename,entryname,entryname);
-				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has %s entry,but ther is no  protocol plug %s\n",filename,entryname,entryname);
+				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has %s entry,but ther is no  protocol plug %s",filename,entryname,entryname);
 				return -1;
 			}
 
 			flag = pluginfo_pro->fun_flagchange(buf_funflag);
 			if(flag < 0)
 			{
-				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's %s in [%s] error!\n",filename,KEYWORD_FUNFLAG,entryname);
+				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's %s in [%s] error!",filename,KEYWORD_FUNFLAG,entryname);
 				return -1;
 			}
 
@@ -1211,7 +1227,7 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 			if(buf_funname[0] =='\0')
 			{
 				printf("\033[1;31;40m[Error]%s has [%s] and %s,but no %s\033[0m\n", filename,entryname,KEYWORD_FUNFLAG,KEYWORD_FUNNAME);			
-				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has [%s] and %s,but no %s\n",filename,entryname,KEYWORD_FUNFLAG,KEYWORD_FUNNAME);
+				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has [%s] and %s,but no %s",filename,entryname,KEYWORD_FUNFLAG,KEYWORD_FUNNAME);
 				return -1;
 			}
 		
@@ -1219,7 +1235,7 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 			if(appentry == NULL)
 			{
 				printf("\033[1;31;40m[Error]%s has %s in [%s],not load from %s sofile\033[0m\n", filename,buf_funname,entryname,pluginfo_bus->plugname);
-				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has %s in [%s],not load from %s sofile\n",filename,buf_funname,entryname,pluginfo_bus->plugname);
+				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has %s in [%s],not load from %s sofile",filename,buf_funname,entryname,pluginfo_bus->plugname);
 				return -1;
 			}
 			
@@ -1227,11 +1243,11 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 			if(rec < 0)
 			{
 				printf("\033[1;31;40m[Error]%s's %s stream_register_app() error\033[0m\n", pluginfo_bus->plugname,buf_funname);
-				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's %s stream_register_app() error!\n",pluginfo_bus->plugname,buf_funname);
+				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's %s stream_register_app() error!",pluginfo_bus->plugname,buf_funname);
 				continue;
 			}
 
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s entry succ!\n",filename,entryname);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s entry succ!",filename,entryname);
 
 		}
 
@@ -1276,7 +1292,7 @@ static int process_conflist_single(char* filename, int plug_type, char *wanted_s
 	FILE* fp = fopen(filename,"r");
 	if(fp == NULL)
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"process_conflist() fopen %s error!\n",filename);
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"process_conflist() fopen %s error!",filename);
 		return -1;	
 	}
 
