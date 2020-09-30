@@ -38,6 +38,7 @@ enum MESA_stream_opt{
 	MSO_TOTAL_INBOUND_BYTE, /* inbound packet byte of this stream, opt_val type must be unsigned long long  */
 	MSO_TOTAL_OUTBOUND_PKT, /* outbound packet pkt of this stream, opt_val type must be unsigned long long  */
 	MSO_TOTAL_OUTBOUND_BYTE,/* outbound packet byte of this stream, opt_val type must be unsigned long long  */
+	MSO_STREAM_CREATE_TIMESTAMP_MS,/* first c2s pkt arrive timestamp of this stream, opt_val type must be unsigned long long  */
 	__MSO_MAX,
 };
 
@@ -60,6 +61,7 @@ enum sapp_platform_opt{
 	SPO_REALTIME_RCV_PKT,		/* realtime recv packet number, opt_val type must be unsigned long long */
 	SPO_REALTIME_RCV_BYTE,	/* realtime recv packet byte, opt_val type must be unsigned long long */
 	SPO_THREAD_COUNT,			/* total thread count, opt_val type must be int */
+	SPO_CURTIME_TIMESTAMP_MS,		/* current timestamp in ms, opt_val type must be long long */
 	SPO_CURTIME_TIMET,			/* current time, opt_val type must be time_t */
 	SPO_CURTIME_STRING,		/* current time, opt_val type must be char[], opt_val_len must more than strlen("1970-01-01 01:01:01") */
 	SPO_START_TIME,			/* platform start time, opt_val type must be time_t */
@@ -71,6 +73,7 @@ enum sapp_platform_opt{
 	SPO_TCP_STREAM_NEW,			/* total created tcp streams from start, opt_val type must be unsigned long long */
 	SPO_TCP_STREAM_CLOSE,		/* total closed tcp streams from start, opt_val type must be unsigned long long */
 	SPO_TCP_STREAM_ESTAB,		/* realtime established tcp streams, opt_val type must be unsigned long long */
+
 	SPO_TOTAL_INBOUND_PKT,		/* total inbound packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_INBOUND_BYTE,		/* total inbound packet bytes, opt_val type must be unsigned long long */
 	SPO_TOTAL_OUTBOUND_PKT,		/* total outbound packet number, opt_val type must be unsigned long long */
@@ -79,6 +82,16 @@ enum sapp_platform_opt{
 	SPO_UDP_STREAM_NEW,			/* total created udp streams from start, opt_val type must be unsigned long long */
 	SPO_UDP_STREAM_CLOSE,		/* total closed udp streams from start, opt_val type must be unsigned long long */
 	SPO_UDP_STREAM_CONCURRENT,	/* realtime Concurrent udp streams, opt_val type must be unsigned long long */	
+
+	SPO_TOTAL_RCV_INBOUND_IPV4_PKT,		/* total recv ipv4 packet number, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_OUTBOUND_IPV4_BYTE,	/* total recv ipv4 packet bytes, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_INBOUND_IPV6_PKT,		/* total recv ipv6 packet number, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_OUTBOUND_IPV6_BYTE,	/* total recv ipv6 packet bytes, opt_val type must be unsigned long long */
+
+	SPO_TOTAL_RCV_INBOUND_TCP_PKT,		/* total recv tcp packet number, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_OUTBOUND_TCP_BYTE,		/* total recv tcp packet bytes, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_INBOUND_UDP_PKT,		/* total recv udp packet number, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_OUTBOUND_UDP_BYTE,		/* total recv udp packet bytes, opt_val type must be unsigned long long */
 };
 
 

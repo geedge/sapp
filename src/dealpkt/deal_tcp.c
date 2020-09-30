@@ -648,6 +648,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pindex_tcp->stream.stream_public.pdetail=(void *)pdetail_pr;
 		memset(pdetail_pr,0,sizeof(struct tcpdetail_private));   
 		pdetail->createtime=g_CurrentTime;
+		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
 		//adjust by lqy 20140515 只有新建时计数
 		if(createdir==DIR_S2C){
 			pdetail->clientpktnum++;
@@ -931,6 +932,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
                 pstream->pktstate=OP_STATE_PENDING;
         }	
 	pdetail->createtime=g_CurrentTime;	
+	pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
 	pdetail->lastmtime=g_CurrentTime;
 	pdetail_pr->link_state=STREAM_LINK_DATA;	
 	//if(datalen>0)
@@ -2779,6 +2781,16 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 	//g_SysInputInfo[thread_num][PKT_TCPLEN] += tcpdatalen;
 	local_sys_stat->count[SAPP_STAT_RCV_TCP]++;
 	local_sys_stat->length[SAPP_STAT_RCV_TCP]+=tcpdatalen;
+	if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
+	{
+		local_sys_stat->count[SAPP_STAT_TCP_INBOUND]++;
+		local_sys_stat->length[SAPP_STAT_TCP_INBOUND] += tcpdatalen;
+	}
+	else
+	{
+		local_sys_stat->count[SAPP_STAT_TCP_OUTBOUND]++;
+		local_sys_stat->length[SAPP_STAT_TCP_OUTBOUND] += tcpdatalen;
+	}
 
 #if IKNOW_ENABLE
 	packet_io_status_tcp_pkt_update(thread_num, this_tcphdr->th_flags, tcpdatalen);

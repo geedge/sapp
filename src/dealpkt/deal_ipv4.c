@@ -722,6 +722,16 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	}else{
 		local_sys_stat->count[SAPP_STAT_RCV_IPV4]++;
 		local_sys_stat->length[SAPP_STAT_RCV_IPV4] += ntohs(a_packet->ip_len);
+		if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
+		{
+			local_sys_stat->count[SAPP_STAT_IPV4_INBOUND]++;
+			local_sys_stat->length[SAPP_STAT_IPV4_INBOUND] += (unsigned long long)raw_pkt->raw_pkt_len;
+		}
+		else
+		{
+			local_sys_stat->count[SAPP_STAT_IPV4_OUTBOUND]++;
+			local_sys_stat->length[SAPP_STAT_IPV4_OUTBOUND] += (unsigned long long)raw_pkt->raw_pkt_len;
+		}
 	}
 
 	if(unlikely(need_free)){

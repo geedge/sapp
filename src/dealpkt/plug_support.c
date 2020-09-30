@@ -1078,7 +1078,19 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			unsigned long long *outbound_byte = (unsigned long long *)opt_val;
 			*outbound_byte = __get_stream_opt_traffic('l', 'o', (struct streaminfo_private *)pstream);
 		}	
-		break;		
+		break;
+		case MSO_STREAM_CREATE_TIMESTAMP_MS:
+		{
+			if ((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type))
+			{
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_STREAM_CREATE_TIMESTAMP_MS error: stream type is not tcp or udp!\n");
+				ret = -1;
+				break;
+			}
+			unsigned long long *timestamp_ms = (unsigned long long *)opt_val;
+			*timestamp_ms = ((struct streaminfo_private *)pstream)->stream_create_timestamp_ms;
+		}
+		break;
 		default:
 			sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n", opt);
 			ret = -1;

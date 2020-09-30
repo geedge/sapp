@@ -790,6 +790,16 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 		//g_SysInputInfo[thread_num][PKT_IPV6]++;	
 		local_sys_stat->count[SAPP_STAT_RCV_IPV6]++;
 		local_sys_stat->length[SAPP_STAT_RCV_IPV6]+=payload_len + sizeof(struct mesa_ip6_hdr);
+		if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
+		{
+			local_sys_stat->count[SAPP_STAT_IPV6_INBOUND]++;
+			local_sys_stat->length[SAPP_STAT_IPV6_INBOUND] += payload_len + sizeof(struct mesa_ip6_hdr);
+		}
+		else
+		{
+			local_sys_stat->count[SAPP_STAT_IPV6_OUTBOUND]++;
+			local_sys_stat->length[SAPP_STAT_IPV6_OUTBOUND] += payload_len + sizeof(struct mesa_ip6_hdr);
+		}
 	}
 
 	set_ipv6_stream(pfstream_pr, &tmp_index, &ip6_addr, a_packet, routedir, thread_num, raw_pkt, offset_to_raw_pkt_hdr);

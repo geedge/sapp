@@ -175,6 +175,7 @@ struct streaminfo_private
 		1 |  12bit device_id | 8bit thread_id | 28bit timestamp in sec | 15bit sequence per thread
 	*/
 	unsigned long long global_stream_id; 
+	unsigned long long stream_create_timestamp_ms; 
 };
 
 struct tcpdetail_private

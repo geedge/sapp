@@ -192,6 +192,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	pstream_udp->opstate=OP_STATE_PENDING;
 	pstream_udp->pktstate=OP_STATE_PENDING;
 	pdetail->createtime=g_CurrentTime;	
+	pstream_udp_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 	pdetail->lastmtime=g_CurrentTime;
 	pstream_udp_pr->timeout=udp_reset_time;
 
@@ -370,6 +371,7 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 		pstream->pktstate=OP_STATE_PENDING;
 
 		pdetail->createtime=g_CurrentTime;
+		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 		plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[UDP_ONE_STATE]);
 		pstream->stream_state=UDP_ONE_STATE;
 //		streamaddlist(pstream,plist);
@@ -469,7 +471,17 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 	//g_SysInputInfo[thread_num][PKT_UDPLEN] += ulen;
 	local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
 	local_sys_stat->length[SAPP_STAT_RCV_UDP]+=ulen;
-	
+	if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
+	{
+		local_sys_stat->count[SAPP_STAT_UDP_INBOUND]++;
+		local_sys_stat->length[SAPP_STAT_UDP_INBOUND] += ulen;
+	}
+	else
+	{
+		local_sys_stat->count[SAPP_STAT_UDP_OUTBOUND]++;
+		local_sys_stat->length[SAPP_STAT_UDP_OUTBOUND] += ulen;
+	}
+
 	//add by lqy 20130530 
 	// udp有不开启流还原的功能需求，直接按单包单流处理
 	if(unlikely(0 ==udp_stream_table_size))
@@ -498,6 +510,7 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 		}
 
 		pdetail->createtime = g_CurrentTime;
+		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 		pdetail->datalen = datalen;
 		pdetail->pdata = (char *)udph + sizeof (struct udphdr);
 		pstream->pdetail=(void *)pdetail;
@@ -623,7 +636,17 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	//g_SysInputInfo[thread_num][PKT_UDPLEN] += ulen;
 	local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
 	local_sys_stat->length[SAPP_STAT_RCV_UDP]+=ulen;
-	
+	if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
+	{
+		local_sys_stat->count[SAPP_STAT_UDP_INBOUND]++;
+		local_sys_stat->length[SAPP_STAT_UDP_INBOUND] += ulen;
+	}
+	else
+	{
+		local_sys_stat->count[SAPP_STAT_UDP_OUTBOUND]++;
+		local_sys_stat->length[SAPP_STAT_UDP_OUTBOUND] += ulen;
+	}
+
 	pstream->addr.addrlen=sizeof(struct layer_addr_udp);
 	pstream_pr->addr_use_as_hash = 0;
 	//ptmp->stream.p_layer_header = udph;
