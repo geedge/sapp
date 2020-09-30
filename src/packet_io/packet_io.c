@@ -763,12 +763,12 @@ void packet_io_run(void)
 extern volatile int update_packet_io_status_sw;
 void packet_io_clean_thread_context(int thread_seq)
 {
+	free_thread_stream(thread_seq);
 	if(1 == update_packet_io_status_sw){
 		sysinfo_output(); /* 最后一次写统计信息, 关闭标志位, 因为流表将被清空, 再写就没意义了 */
 		update_packet_io_status_sw = 0;
 	}
 	
-	free_thread_stream(thread_seq);
 
 	ipv4_frag_per_thread_exit(thread_seq);
 	ipv6_frag_per_thread_exit(thread_seq);
