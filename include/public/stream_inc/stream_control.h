@@ -81,22 +81,6 @@ enum sapp_platform_opt{
 	SPO_UDP_STREAM_NEW,			/* total created udp streams from start, opt_val type must be unsigned long long */
 	SPO_UDP_STREAM_CLOSE,		/* total closed udp streams from start, opt_val type must be unsigned long long */
 	SPO_UDP_STREAM_CONCURRENT,	/* realtime Concurrent udp streams, opt_val type must be unsigned long long */	
-<<<<<<< .mine
-
-=======
-<<<<<<< .mine
->>>>>>> .theirs
-	SPO_CURTIME_TIMET_MS,		/* current time in millisecond, opt_val type must be long long */
-	SPO_CURRENT_STATE,			/* running stage of sapp, opt_val type is enum sapp_state_t */
-
-=======
-<<<<<<< .mine
-
-
-=======
-
->>>>>>> .theirs
->>>>>>> .theirs
 	SPO_TOTAL_RCV_INBOUND_IPV4_PKT,		/* total recv ipv4 packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_INBOUND_IPV4_BYTE,		/* total recv ipv4 packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_OUTBOUND_IPV4_PKT,	/* total recv ipv4 packet bytes, opt_val type must be unsigned long long */
