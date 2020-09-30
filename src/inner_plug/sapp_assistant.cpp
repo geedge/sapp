@@ -166,7 +166,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *inbound_pkt = (unsigned long long *)opt_val;
-			*inbound_pkt = __get_platform_opt_traffic('c', SAPP_STAT_ETH_INBOUND);
+			*inbound_pkt = __get_platform_opt_traffic('c', SAPP_STAT_RAW_INBOUND);
 		}
 		break;
 		
@@ -178,7 +178,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *inbound_byte = (unsigned long long *)opt_val;
-			*inbound_byte = __get_platform_opt_traffic('l', SAPP_STAT_ETH_INBOUND);
+			*inbound_byte = __get_platform_opt_traffic('l', SAPP_STAT_RAW_INBOUND);
 
 		}
 		break;
@@ -191,7 +191,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *outbound_pkt = (unsigned long long *)opt_val;
-			*outbound_pkt = __get_platform_opt_traffic('c', SAPP_STAT_ETH_OUTBOUND);
+			*outbound_pkt = __get_platform_opt_traffic('c', SAPP_STAT_RAW_OUTBOUND);
 		}
 		break;
 		
@@ -203,7 +203,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *outbound_byte = (unsigned long long *)opt_val;
-			*outbound_byte = __get_platform_opt_traffic('l', SAPP_STAT_ETH_OUTBOUND);
+			*outbound_byte = __get_platform_opt_traffic('l', SAPP_STAT_RAW_OUTBOUND);
 
 		}
 		break;
@@ -414,15 +414,16 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		}
 		break;
 
-		case SPO_CURTIME_TIMESTAMP_MS:
+		case SPO_CURTIME_TIMET_MS:
 		{
 			if(*opt_val_len != sizeof(long long)){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_CURTIME_TIMET_MS error:opt_val_len:%d is invalid!\n", *opt_val_len);
 				break;
 			}
-			long long *curtime = (long long *)opt_val;
-			*curtime = ABBR_CURRENT_TIME_MS;
+			long long *curtime_ms = (long long *)opt_val;
+			*curtime_ms = sapp_global_val->individual_volatile->current_time_ms;
+
 		}
 		break;
 
@@ -550,7 +551,18 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			strncpy((char *)opt_val, sapp_global_val->config.packet_io.depolyment_mode_str, *opt_val_len);
 		}
 		break;
-		
+
+		case SPO_CURRENT_STATE:
+		{
+			if(*opt_val_len != sizeof(enum sapp_state_t)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_CURRENT_STATE error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			enum sapp_state_t *cur_stage = (enum sapp_state_t *)opt_val;
+			*cur_stage = (enum sapp_state_t)sapp_global_val->individual_volatile->current_state;
+		}
+	
 		default:
 			sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_type:%d not support!\n", (int)opt);
 			ret = -1;

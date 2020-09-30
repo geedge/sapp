@@ -9,6 +9,7 @@
 
 typedef enum __sapp_sys_stat_type{
 	/*************  receive packet  ****************/
+	SAPP_STAT_RCV_RAW, /* 收到的真实原始包数量, ethernet由于mac-in-mac, vpls等原因也可能会重复计算 */
 	SAPP_STAT_RCV_ETHERNET,
 	SAPP_STAT_RCV_IPV4,		 /* 不包括SAPP_STAT_RCV_IPV4_FRAG */
 	SAPP_STAT_RCV_IPV4_FRAG, /* 不含在SAPP_STAT_RCV_IPV4之内,  独立计数   */
@@ -21,6 +22,8 @@ typedef enum __sapp_sys_stat_type{
 	
 	/*************  send packet  *******************/
 
+	SAPP_STAT_RAW_INBOUND,  /* 串联模式下, 非当前网卡的I/O流量, 而是相对于当前设备所在物理位置, 出入境方向流量 */
+	SAPP_STAT_RAW_OUTBOUND, /* 串联模式下, 非当前网卡的I/O流量, 而是相对于当前设备所在物理位置, 出入境方向流量 */
 
 	SAPP_STAT_ETH_INBOUND,  /* 串联模式下, 非当前网卡的I/O流量, 而是相对于当前设备所在物理位置, 出入境方向流量 */
 	SAPP_STAT_ETH_OUTBOUND, /* 串联模式下, 非当前网卡的I/O流量, 而是相对于当前设备所在物理位置, 出入境方向流量 */

@@ -61,7 +61,6 @@ enum sapp_platform_opt{
 	SPO_REALTIME_RCV_PKT,		/* realtime recv packet number, opt_val type must be unsigned long long */
 	SPO_REALTIME_RCV_BYTE,	/* realtime recv packet byte, opt_val type must be unsigned long long */
 	SPO_THREAD_COUNT,			/* total thread count, opt_val type must be int */
-	SPO_CURTIME_TIMESTAMP_MS,		/* current timestamp in ms, opt_val type must be long long */
 	SPO_CURTIME_TIMET,			/* current time, opt_val type must be time_t */
 	SPO_CURTIME_STRING,		/* current time, opt_val type must be char[], opt_val_len must more than strlen("1970-01-01 01:01:01") */
 	SPO_START_TIME,			/* platform start time, opt_val type must be time_t */
@@ -92,6 +91,8 @@ enum sapp_platform_opt{
 	SPO_TOTAL_RCV_OUTBOUND_TCP_BYTE,		/* total recv tcp packet bytes, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_INBOUND_UDP_PKT,		/* total recv udp packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_OUTBOUND_UDP_BYTE,		/* total recv udp packet bytes, opt_val type must be unsigned long long */
+	SPO_CURTIME_TIMET_MS,		/* current time in millisecond, opt_val type must be long long */
+	SPO_CURRENT_STATE,			/* running stage of sapp, opt_val type is enum sapp_state_t */
 };
 
 
