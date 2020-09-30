@@ -822,17 +822,50 @@ static int calc_mpls_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_s
 {
 	int mpls_layer_len;
 	struct layer_addr_mpls *mpls_addr = stream_pr->stream_public.addr.mpls;
-	
-	if(send_stream_dir == DIR_C2S){
-		mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
-		if(mpls_addr->src_has_ctrl_word){
-			mpls_layer_len += sizeof(int);
-		}
+
+	if(stream_pr->fake_layer_dir_for_asymmetric_cmp & send_stream_dir){
+		mpls_layer_len = 0;  //虚拟构建的空层, 直接跳过
 	}else{
-		mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
-		if(mpls_addr->dst_has_ctrl_word){
-			mpls_layer_len += sizeof(int);
-		}		
+		if(g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
+			if(send_stream_dir == DIR_C2S){
+				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
+				if(mpls_addr->src_has_ctrl_word){
+					mpls_layer_len += sizeof(int);
+				}
+			}else{
+				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
+				if(mpls_addr->dst_has_ctrl_word){
+					mpls_layer_len += sizeof(int);
+				}		
+			}
+		}else{
+			/* 如果不强制要求非对称地址, 如果本侧没有地址, 先使用对侧地址信息 */
+			if(send_stream_dir == DIR_C2S){
+				if(mpls_addr->src_mpls_layer_num > 0){
+					mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
+					if(mpls_addr->src_has_ctrl_word){
+						mpls_layer_len += sizeof(int);
+					}
+				}else{
+					mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
+					if(mpls_addr->dst_has_ctrl_word){
+						mpls_layer_len += sizeof(int);
+					}
+				}
+			}else{
+				if(mpls_addr->dest_mpls_layer_num < 0){
+					mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
+					if(mpls_addr->dst_has_ctrl_word){
+						mpls_layer_len += sizeof(int);
+					}		
+				}else{
+					mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
+					if(mpls_addr->src_has_ctrl_word){
+						mpls_layer_len += sizeof(int);
+					}	
+				}
+			}			
+		}
 	}
 
 	return mpls_layer_len;
@@ -842,11 +875,32 @@ static int calc_vlan_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_s
 {
 	int vlan_layer_len;
 	struct layer_addr_vlan *vlan_addr = stream_pr->stream_public.addr.vlan;
-	
-	if(send_stream_dir == DIR_C2S){
-		vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->src_vlan_layer_num;
+
+	if(stream_pr->fake_layer_dir_for_asymmetric_cmp & send_stream_dir){
+		vlan_layer_len = 0;  //虚拟构建的空层, 直接跳过
 	}else{
-		vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;		
+		if(g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
+			if(send_stream_dir == DIR_C2S){
+				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->src_vlan_layer_num;
+			}else{
+				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;		
+			}
+		}else{
+			/* 如果不强制要求非对称地址, 如果本侧没有, 先使用对侧地址信息 */
+			if(send_stream_dir == DIR_C2S){
+				if(vlan_addr->src_vlan_layer_num != 0){
+					vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->src_vlan_layer_num;
+				}else{
+					vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;
+				}
+			}else{
+				if(vlan_addr->dst_vlan_layer_num != 0){
+					vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;
+				}else{
+					vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->src_vlan_layer_num;
+				}	
+			}			
+		}
 	}
 
 	return vlan_layer_len;
@@ -1385,11 +1439,23 @@ static int build_net_layer_vlan(struct streaminfo_private *stream_pr, int carry_
 		if(in_stream_addr->src_vlan_layer_num > 0){
 			layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->src_vlan_layer_num;
 			memcpy(buf, in_stream_addr->src_vlan_pkt, layer_len);
+		}else{ 
+			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
+			if(0 == g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][stream_pr->layer_index]){
+				layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->dst_vlan_layer_num;
+				memcpy(buf, in_stream_addr->dst_vlan_pkt, layer_len);
+			}
 		}
 	}else{
 		if(in_stream_addr->dst_vlan_layer_num > 0){
 			layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->dst_vlan_layer_num;
 			memcpy(buf, in_stream_addr->dst_vlan_pkt, layer_len);
+		}else{
+			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
+			if(0 == g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][stream_pr->layer_index]){
+				layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->src_vlan_layer_num;
+				memcpy(buf, in_stream_addr->src_vlan_pkt, layer_len);
+			}
 		}
 	}
 
@@ -1553,19 +1619,39 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 		if(in_stream_addr->src_mpls_layer_num > 0){
 			layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->src_mpls_layer_num;
 			memcpy(buf, in_stream_addr->src_mpls_pkt, layer_len);
-		}
-		if(in_stream_addr->src_has_ctrl_word){
-			memcpy(buf + layer_len, &in_stream_addr->src_mpls_ctrl_word, sizeof(int));
-			layer_len += sizeof(int);
+			if(in_stream_addr->src_has_ctrl_word){
+				memcpy(buf + layer_len, &in_stream_addr->src_mpls_ctrl_word, sizeof(int));
+				layer_len += sizeof(int);
+			}
+		}else{
+			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
+			if(0 == g_asymmetric_addr_layer_set[ADDR_TYPE_MPLS][stream_pr->layer_index]){
+				layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->dest_mpls_layer_num;
+				memcpy(buf, in_stream_addr->dest_mpls_pkt, layer_len);
+				if(in_stream_addr->dst_has_ctrl_word){
+					memcpy(buf + layer_len, &in_stream_addr->dst_mpls_ctrl_word, sizeof(int));
+					layer_len += sizeof(int);
+				}				
+			}
 		}
 	}else{
 		if(in_stream_addr->dest_mpls_layer_num > 0){
 			layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->dest_mpls_layer_num;
 			memcpy(buf, in_stream_addr->dest_mpls_pkt, layer_len);
-		}
-		if(in_stream_addr->dst_has_ctrl_word){
-			memcpy(buf + layer_len, &in_stream_addr->dst_mpls_ctrl_word, sizeof(int));
-			layer_len += sizeof(int);
+			if(in_stream_addr->dst_has_ctrl_word){
+				memcpy(buf + layer_len, &in_stream_addr->dst_mpls_ctrl_word, sizeof(int));
+				layer_len += sizeof(int);
+			}
+		}else{
+			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
+			if(0 == g_asymmetric_addr_layer_set[ADDR_TYPE_MPLS][stream_pr->layer_index]){
+				layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->src_mpls_layer_num;
+				memcpy(buf, in_stream_addr->src_mpls_pkt, layer_len);
+				if(in_stream_addr->src_has_ctrl_word){
+					memcpy(buf + layer_len, &in_stream_addr->src_mpls_ctrl_word, sizeof(int));
+					layer_len += sizeof(int);
+				}
+			}
 		}
 	}	
 
@@ -1814,14 +1900,20 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 		case ADDR_TYPE_VLAN:
 			this_layer_len = calc_vlan_hdr_len(stream_pr, send_stream_dir);
 			if(0 == this_layer_len){
-				if(1){
-					/* 非对称VLAN, 为了流对齐生造出来的一层, 或者是对端还没收到包, 没有更新信息 */
-					sapp_runtime_log(10, "build_net_layer_vlan() skip fake vlan layer.\n");
+				if((stream_pr->fake_layer_dir_for_asymmetric_cmp & send_stream_dir) != 0){ /* 虚假空层, 为了流对齐生造出来的一层 */
+					sapp_runtime_log(10, "build_net_layer_vlan() skip fake vlan layer for asymmetric.\n");
+				}else if(0 == stream_pr->need_update_opposite_addr){
+					/* 复用反向地址, 从新计算长度, 构造vlan地址 */
+					this_layer_len = calc_vlan_hdr_len(stream_pr, send_stream_dir ^ DIR_DOUBLE);
+					buf -= this_layer_len;
+					build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir ^ DIR_DOUBLE, raw_pkt);
+					carry_layer_type = ADDR_TYPE_VLAN;					
+					sapp_runtime_log(10, "build_net_layer_vlan() build vlan layer, but no addr of dir:%d, use opposite_addr.\n", send_stream_dir);
 				}else{
 					sapp_runtime_log(20, "build_net_layer_vlan() error, send streamdir:%d, layer len is 0, but create_vlan_anyway is disable!\n", send_stream_dir);
-					return -1;					
+					return -1;
 				}
-			}else{		
+			}else{
 				buf -= this_layer_len;
 				build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
 				carry_layer_type = ADDR_TYPE_VLAN;
@@ -2720,18 +2812,30 @@ int MESA_inject_pkt_feedback(struct streaminfo *stream, const char *payload, int
 static int skip_asymmetric_presence_layer(const struct streaminfo *stream, UCHAR send_stream_dir)
 {
 	int need_skip = 0;
+	const struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
 	
 	switch(stream->addr.addrtype){
 		case ADDR_TYPE_VLAN:
 		{
 			const struct layer_addr_vlan *vaddr = stream->addr.vlan;
-			if(DIR_C2S == send_stream_dir){
-				if(0 == vaddr->src_vlan_layer_num){
-					need_skip = 1;
-				}
+			if((stream_pr->fake_layer_dir_for_asymmetric_cmp & send_stream_dir) != 0){
+				need_skip = 1;
 			}else{
-				if(0 == vaddr->dst_vlan_layer_num){
-					need_skip = 1;
+				/* 如果不是生造出来的虚拟空层, 还有可能是单向流, 还要看实际有没有地址 */
+				if(DIR_C2S == send_stream_dir){
+					if(0 == vaddr->src_vlan_layer_num){
+						/* 如果本侧没有地址, 看是否强制要求非对称原则, 如果是, 其实都走不到这里,构造包时就失败了; 如果不是可以复用对侧地址 */
+						if(g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
+							need_skip = 1;
+						}
+					}
+				}else{
+					if(0 == vaddr->dst_vlan_layer_num){
+						/* 如果本侧没有地址, 看是否强制要求非对称原则, 如果是, 其实都走不到这里,构造包时就失败了; 如果不是可以复用对侧地址 */
+						if(g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
+							need_skip = 1;
+						}
+					}
 				}
 			}
 		}
@@ -2740,20 +2844,30 @@ static int skip_asymmetric_presence_layer(const struct streaminfo *stream, UCHAR
 		case ADDR_TYPE_MPLS:
 		{
 			const struct layer_addr_mpls *maddr = stream->addr.mpls;
-			if(DIR_C2S == send_stream_dir){
-				if(0 == maddr->src_mpls_layer_num){
-					need_skip = 1;
-				}
+
+			if((stream_pr->fake_layer_dir_for_asymmetric_cmp & send_stream_dir) != 0){
+				need_skip = 1;
 			}else{
-				if(0 == maddr->dest_mpls_layer_num){
-					need_skip = 1;
+				if(DIR_C2S == send_stream_dir){
+					if(0 == maddr->src_mpls_layer_num){
+						/* 如果本侧没有地址, 看是否强制要求非对称原则, 如果是, 其实都走不到这里,构造包时就失败了; 如果不是可以复用对侧地址 */
+						if(g_asymmetric_addr_layer_set[ADDR_TYPE_MPLS][stream_pr->layer_index] != 0){
+							need_skip = 1;
+						}
+					}
+				}else{
+					if(0 == maddr->dest_mpls_layer_num){
+						if(g_asymmetric_addr_layer_set[ADDR_TYPE_MPLS][stream_pr->layer_index] != 0){
+							need_skip = 1;
+						}
+					}
 				}
 			}
-		}		
+		}
 		break;
 
 		default:
-			sapp_runtime_log(10, "skip_asymmetric_presence_layer(): unsupport addr type:%d", stream->addr.addrtype);
+			sapp_runtime_log(10, "skip_asymmetric_presence_layer(): not asymmetric addr type:%d", stream->addr.addrtype);
 	}
 
 	return need_skip;

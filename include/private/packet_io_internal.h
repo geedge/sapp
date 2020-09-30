@@ -196,6 +196,9 @@ extern int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum a
 unsigned long long MESA_rand_range(unsigned long long start, unsigned long long end);
 int __MESA_rst_tcp_c(struct streaminfo *stream, unsigned char rst_th_flags, int rst_pkt_num, unsigned char snd_rst_dir, 
 							unsigned short signature_seed1, unsigned short signature_seed2);
+int packet_io_hook_input(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num);
+int packet_io_hook_output(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num);
+
 
 /********************** funcitons for dynamic link ***********************/
 extern int dl_io_set_cap_level(int cap_level);

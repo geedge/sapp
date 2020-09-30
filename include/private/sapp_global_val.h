@@ -7,11 +7,22 @@
 #include "sapp_limits.h"
 
 
-#ifndef RTE_CACHE_LINE_SIZE
-	#define RTE_CACHE_LINE_SIZE 64
-	#define __sapp_aligned(a) __attribute__((__aligned__(a)))
-	#define __sapp_cache_aligned __sapp_aligned(RTE_CACHE_LINE_SIZE)
-#endif
+enum pkt_dump_mode{
+	PKT_DUMP_LOCAL_FILE		=	1, 
+	PKT_DUMP_UDP_SOCKET		=	2, 
+};
+
+enum depolyment_mode_config{
+	DEPOLYMENT_MODE_MIRROR		= 1,
+	DEPOLYMENT_MODE_TRANSPARENT	= 2,
+	DEPOLYMENT_MODE_INLINE		= 3,
+};
+
+enum overlay_mode_config{
+	OVERLAY_MODE_VXLAN		= 1,
+	OVERLAY_MODE_VLAN_FLIP_ADEV	= 2,
+};
+
 
 typedef struct{
 	int worker_threads;
@@ -176,10 +187,29 @@ enum __sapp_config_packet_io_depolyment_mode{
 	SAPP_CFG_PKT_IO_DEPOLY_MODE_TRANSPARENT,
 };
 
+#define MAX_VLAN_FLIPPING_MAP_NUM	(4096) /* vlan_id最大范围是4096 */
+
 typedef struct{
+	unsigned short c_router_vlan_id; /* network order */
+	unsigned short i_router_vlan_id; /* network order */
+}sapp_vlan_flipping_map_t;
+
+
+typedef struct{
+	char overlay_mode_string[NAME_MAX];
+	enum overlay_mode_config overlay_mode_bin;
+	char vlan_flipping_cfg_file[PATH_MAX];
+	int vlan_flipping_map_num;
+	sapp_vlan_flipping_map_t vlan_flipping_map_array[MAX_VLAN_FLIPPING_MAP_NUM];
+	int mac_flipping_enabled;
+}sapp_config_packet_io_tunnel_t;
+
+
+typedef struct{
+	sapp_config_packet_io_tunnel_t packet_io_tunnel;
 	const char *input_bpf_filter;
 	char depolyment_mode_str[NAME_MAX]; /* [mirror, inline, transparent, dumpfile] */
-	int depolyment_mode_bin; /* 方便程序内处理, 转成数值形式, 如1:mirror; 2:transparent; 3:inline等 */
+	enum depolyment_mode_config depolyment_mode_bin; /* 方便程序内处理, 转成数值形式, 如1:mirror; 2:transparent; 3:inline等, 详见: enum depolyment_mode_config */
 	sapp_config_packet_io_dev_t internal;
 	sapp_config_packet_io_dev_t external;
 	char pcap_dumpfile_name[NAME_MAX];
@@ -257,23 +287,23 @@ typedef struct{
 typedef struct{
 	unsigned long long count[SAPP_STAT_NUM_MAX];  /* 计数类, 如包数, 新建链接数, 并发链接数等 */
 	unsigned long long length[SAPP_STAT_NUM_MAX]; /* 长度类, 如数据包总字节数 */
-}sapp_gval_mthread_sys_stat_t __sapp_cache_aligned;
+}sapp_gval_mthread_sys_stat_t;
 
 
 
 typedef struct{
 	sapp_gval_mthread_sys_stat_t sys_stat;
 	unsigned short stream_seq_per_thread;
-	//char __padding[14];
-}sapp_gval_mthread_t __sapp_cache_aligned; /*   for multi-thread, must 64byte alignment */
+	char __padding[8];
+}sapp_gval_mthread_t; /*   for multi-thread, must 64byte alignment */
 
 
 typedef struct{
 	volatile time_t current_time;
 	volatile long long current_time_ms;
-	volatile int current_state __sapp_cache_aligned;
-	//char __padding[44];
-}sapp_gval_individual_volatile_t ;
+	volatile int current_state;
+	char __padding[44];
+}sapp_gval_individual_volatile_t;
 
 
 typedef struct{
@@ -290,6 +320,9 @@ typedef struct{
 	sapp_gval_mthread_t *mthread_volatile[SAPP_MAX_THREADS];
 }sapp_global_t;
 
+
+extern int g_asymmetric_addr_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];  
+extern int g_asymmetric_presence_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   
 
 #endif
 

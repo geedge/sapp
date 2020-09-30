@@ -86,7 +86,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		pstream->addr.addrlen = sizeof(struct layer_addr_mpls);
 		pstream_pr->addr_use_as_hash = 0;//地址不参与hash比对，仅算层数
 		pstream_pr->addr_skip_for_layer_cmp = 0;//为了地址比较, 创建的空MPLS层为1, 此处有实际mpls地址, 设为0
-		pstream_pr->need_update_opposite_addr = 1;//两侧地址不一样，需要更新对侧信息
+		pstream_pr->fake_layer_dir_for_asymmetric_cmp = 0;
 		//ptmp->stream.p_layer_header = this_layer_data;
 		//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_layer_data - (char *)raw_pkt->raw_pkt_data;
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
@@ -98,10 +98,15 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		pstream->threadnum=thread_num;
 
 		pstream_pr->layer_index = pfstream_pr->layer_index + 1;
+		if(g_asymmetric_addr_layer_set[ADDR_TYPE_MPLS][pstream_pr->layer_index] != 0){
+			pstream_pr->need_update_opposite_addr = 1;//两侧地址不一样，需要更新对侧信息
+		}else{
+			pstream_pr->need_update_opposite_addr = 0;
+		}	
+		pstream_pr->fake_layer_dir_for_asymmetric_cmp = 0; //todo, 根据g_asymmetric_presence_layer_set判断
 	}else{
 		pstream_pr = pfstream_pr;
 	}
-	
 
 	/* MPLS没有字段表示承载的协议类型, 如果MPLS承载的是IPv6协议，靠猜 */
 	((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
@@ -128,7 +133,16 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 	}
     else
     {
-        sapp_runtime_log(20, "MPLS next layer not IPv4 or IPv6, try to parse next layer as eth !\n");
+		int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
+		 if(left_pkt_len < sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr))
+		 {
+			 local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+			 local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	 
+
+			 sapp_runtime_log(20, "MPLS next layer type: 0x%x, but left len only:%d, pkt seq:%llu\n", *next_layer_hdr,left_pkt_len, local_sys_stat->count[SAPP_STAT_RCV_RAW]);
+			 return PASS;
+		 }
+
 		ret = eth_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
     }
 
@@ -161,6 +175,7 @@ int mpls_empty_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 		pstream->addr.addrlen = sizeof(struct layer_addr_mpls);
 		pstream_pr->addr_use_as_hash = 0;//地址不参与hash比对，仅算层数
 		pstream_pr->addr_skip_for_layer_cmp = 1;//MPLS存在一侧有标签，一侧没有的情况，创建空层, 该标志位设成1
+		pstream_pr->fake_layer_dir_for_asymmetric_cmp = DIR_C2S; //todo, 根据g_asymmetric_presence_layer_set判断
 		pstream_pr->need_update_opposite_addr = 1;//两侧地址不一样，需要更新对侧信息
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 		pstream_pr->raw_pkt = raw_pkt;

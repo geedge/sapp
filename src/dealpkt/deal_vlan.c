@@ -72,8 +72,13 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 		pstream->type=STREAM_TYPE_NON;
 		pstream->routedir=routedir;
 		pstream->threadnum=thread_num;
-
 		pstream_pr->layer_index = pfstream_pr->layer_index + 1;
+		if(g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][pstream_pr->layer_index] != 0){
+			pstream_pr->need_update_opposite_addr = 1;//两侧地址不一样，需要更新对侧信息
+		}else{
+			pstream_pr->need_update_opposite_addr = 0;
+		}
+		pstream_pr->fake_layer_dir_for_asymmetric_cmp = 0; //todo, 根据g_asymmetric_presence_layer_set判断
 	}else{
 		pstream_pr = pfstream_pr; /* 2015-07-03 lijia add, skip this layer */
 	}
@@ -121,7 +126,7 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;
 
-			sapp_runtime_log(20, "VLAN unknown protocol: 0x%x\n", next_layer_type);
+			sapp_runtime_log(20, "VLAN unknown protocol: 0x%x, pkt seq:%llu\n", next_layer_type, local_sys_stat->count[SAPP_STAT_RCV_RAW]);
 			
 			if(NET_CONN_SERIAL_GDEV == g_topology_mode){
 				if(sapp_identify_tunnel_inner_pkt(raw_pkt) != 0){

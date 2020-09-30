@@ -17,7 +17,7 @@ static inline void set_mac_addr(struct layer_addr_mac *addr, const struct mesa_e
 
 static inline int should_create_empty_mpls_layer_for_symmetric(const struct streaminfo *pstream, unsigned short next_eth_type)
 {
-	if(0 == sapp_global_val->config.packet_io.create_mpls_anyway){
+	if(0 == sapp_global_val->config.packet_io.create_mpls_anyway){ //todo, ¸ù¾Ýg_asymmetric_presence_layer_setÅÐ¶Ï
 		return 0;
 	}
 
@@ -180,7 +180,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 						ret = DROP;
 					}
 				}
-				sapp_log(20, 0, 20, "eth_entry() recv unknown pkt, protocol is:0x%04x", eth_type);
+				sapp_runtime_log(20, "eth_entry() recv unknown pkt, protocol is:0x%04x, pkt seq:%llu", eth_type, local_sys_stat->count[SAPP_STAT_RCV_RAW]);
 			break;
 		}
 	}

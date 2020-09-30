@@ -581,7 +581,11 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	int ret = PASS;
 	//long long before_call = 0, after_call;
 	long long timecost;
-    struct timespec start, end;
+	struct timespec start, end;
+
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	local_sys_stat->count[SAPP_STAT_RCV_RAW]++;
+	local_sys_stat->length[SAPP_STAT_RCV_RAW] += p_raw_pkt->raw_pkt_len;	
 
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	local_sys_stat->count[SAPP_STAT_RCV_RAW]++;
@@ -611,11 +615,15 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	}
 #endif
 
+	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
+		packet_io_hook_input((raw_pkt_t *)p_raw_pkt, dir, thread_num);
+	}
+
 	if(unlikely(g_encapsulate_with_ddp)){
 		/* 开启ddp解封装功能后, 在packet_io_process_ddp_pkt()函数中捕获DDP负载数据 */
-		ret = packet_io_strip_ddp_hdr(p_raw_pkt, dir, thread_num);
+		ret = packet_io_strip_ddp_hdr(p_raw_pkt, p_raw_pkt->route_dir, thread_num);
 	} else if(unlikely(g_encapsulate_with_L2E)){
-		ret = packet_io_strip_L2E_hdr((raw_pkt_t *)p_raw_pkt, dir, thread_num);
+		ret = packet_io_strip_L2E_hdr((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
 	}else{
 
 #if CYCLE_PKT_DUMP
@@ -623,15 +631,15 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 #endif
 		switch(p_raw_pkt->low_layer_type){
 			case CAP_LEVEL_MAC:
-				ret = eth_entry(NULL,p_raw_pkt->raw_pkt_data,thread_num,dir, p_raw_pkt, 0);
+				ret = eth_entry(NULL,p_raw_pkt->raw_pkt_data,thread_num,p_raw_pkt->route_dir, p_raw_pkt, 0);
 			break;
 
 			case CAP_LEVEL_IPV4:
-				ret = ipv4_entry(NULL,(void *)p_raw_pkt->raw_pkt_data,thread_num,dir, p_raw_pkt, 0);
+				ret = ipv4_entry(NULL,(void *)p_raw_pkt->raw_pkt_data,thread_num,p_raw_pkt->route_dir, p_raw_pkt, 0);
 			break;
 
 			case CAP_LEVEL_IPV6:
-				ret = ipv6_entry(NULL,(void *)p_raw_pkt->raw_pkt_data,thread_num,dir, p_raw_pkt, 0);
+				ret = ipv6_entry(NULL,(void *)p_raw_pkt->raw_pkt_data,thread_num,p_raw_pkt->route_dir, p_raw_pkt, 0);
 			break;
 
 			default:
@@ -670,7 +678,9 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		ret = g_platform_action_cb_fun(sapp_global_val->config.packet_io.depolyment_mode_bin, ret);
 	}
 
-
+	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin) && (PASS == ret)){
+		packet_io_hook_output((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
+	}
 
 	return ret;
 }

@@ -416,10 +416,12 @@ static int mpls_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 	}else if((*next_layer_data & 0xF) == 0){ //VPLS
 		skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MAC, expect_layer_type);
 	}else{
-		//skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MPLS, expect_layer_type);
-		sapp_runtime_log(20, "WARNING: jmp unsupport type in MPLS to Ethernet, 0x%x!\n",  
-						(unsigned char)(*next_layer_data));
-		return -1;
+		skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MAC, expect_layer_type);
+		if(skip_len < 0){
+			sapp_runtime_log(20, "WARNING: jmp unsupport type in MPLS to Ethernet, 0x%x!\n",  
+							(unsigned char)(*next_layer_data));
+			return -1;
+		}
 	}
 
 	return skip_len + mpls_layer_len;
@@ -549,12 +551,12 @@ static int vlan8021q_jump_to_layer(const char *raw_data,  int raw_layer_type, in
 
 		/* QinQ */
 		case ETH_P_8021Q:
-			sapp_runtime_log(30, "vlan8021q_jump_to_layer(): VLAN combine to one layer!\n");
+			sapp_runtime_log(30, "vlan8021q_jump_to_layer(): multiple VLAN combine to one layer!\n");
 			assert(0);
 		break;
 
-		case 0x8200: /* XinJiang捕包发现此类型, 未知什么包 */
-			skip_len = -1;
+		case ETH_P_MPLS_UC:
+			skip_len = mpls_jump_to_layer(next_layer_data, ADDR_TYPE_MPLS, expect_layer_type);
 		break;
 		
 		default:
@@ -1108,6 +1110,8 @@ int get_pkt_len_from_eth_hdr(const struct mesa_ethernet_hdr *ehdr)
 
 	return raw_pkt_len;
 }
+
+
 
 
 #ifdef __cplusplus

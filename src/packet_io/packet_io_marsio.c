@@ -78,6 +78,8 @@ uint32_t (*ptr_marsio_buff_datalen)(marsio_buff_t *m);
 uint32_t (*ptr_marsio_buff_buflen)(marsio_buff_t *m);
 
 marsio_buff_t * (*ptr_marsio_buff_clone_with_options)(struct mr_instance * instance, marsio_buff_t * md, int socket_id, int thread_id, uint16_t options);
+unsigned short (*marsio_get_vlan_id_from_mbuff)(void *pkt_reference);
+int (*marsio_set_vlan_id_to_mbuff)(void *pkt_reference, unsigned short vlan_id_net_order);
 
 /************************  funcitons for dynamic link *************************/
 

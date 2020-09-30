@@ -76,6 +76,8 @@ typedef struct {
 	struct timeval raw_pkt_ts;	/* 原始包捕获时间戳, 如果全为0则不支持此功能(如pag模式) */
 	const void *io_lib_pkt_reference; /* 引用底层I/O库的原始包管理结构, 例如:对于marsio来说, 即底层的mbuf结构 */
 	int route_dir;
+
+	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, for adev, index0表示收到当前包的vlan_id, index1表示原包转发的vlan_id */
 }raw_pkt_t;
 
 
@@ -184,7 +186,8 @@ struct streaminfo_private
 	unsigned long long stream_create_timestamp_ms; 
 	/* ===8 bytes=== */
 	unsigned char layer_index:4; /* 表示当前层的计数, 从最底层开始,一般是ethernet开始, 从0开始计数, 4bit最多支持15层嵌套, 也能防止隧道嵌套攻击(目前还没捕到过包) */
-	char __pad2:4;
+	char fake_layer_dir_for_asymmetric_cmp:2; /*因某些层两侧不对称, 尤其是还有一边有, 另一侧不存在的流, 此变量使用DIR_C2S, DIR_S2C表示哪个方向是虚拟构建的层, 解析时不作为地址比较, 发包时也要跳过 */ 
+	char __pad2:2;
 	char __pad3[7];
 	/* ===8 bytes=== */
 };

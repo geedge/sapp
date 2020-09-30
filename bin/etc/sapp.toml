@@ -20,9 +20,14 @@ dictator_enable=1
 [PACKET_IO]
 	[overlay_tunnel_definition]
 
+### note, optional value is [vxlan, vlan_flipping_adev]
+	overlay_mode=vlan_flipping_adev
+	vlan_flipping_cfg_file="etc/vlan_flipping_map.conf"
 	mac_flipping_enabled=1
 
-	vlan_flipping={"couple":[{"c_router_id":1001,"i_router_id":1002},{"c_router_id":1003,"i_router_id":1004}]}
+	asymmetric_presence_layer_cfg_file="etc/asymmetric_presence_layer.conf"
+	asymmetric_addr_layer_cfg_file="etc/asymmetric_addr_layer.conf"
+	prune_inject_layer_cfg_file="etc/prune_inject_layer.conf"
 
 ### note, for mpls asymmetric, 0 vs N
 	create_mpls_anyway=0
@@ -30,7 +35,7 @@ dictator_enable=1
 ### note, layer number starts from 0, for example: ethernet[0], ipv4[1], gre[2]	
 ### note, * means don't care layer index, for example: gtp[*], mpls[*]
 	overlay_layer_set="ethernet[0],ipv4[1],tupl4v4[1]"
-	prune_inject_layer_set="gtp[*]"
+	prune_inject_layer_set="gtp[3],udp[2],ip[1]"
 	
     [packet_io.feature]
 ### note, used to represent inbound or outbound direction value,

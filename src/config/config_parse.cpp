@@ -292,11 +292,82 @@ static int pkt_dump_thread_id_convert(void)
 	return 0;
 }
 
+
+static int parse_vlan_flipping_map_config(void)
+{
+	FILE *fp;
+	char line_cont[MAX_INPUT];
+	const char *filename = sapp_global_val->config.packet_io.packet_io_tunnel.vlan_flipping_cfg_file;
+	sapp_vlan_flipping_map_t *vlan_map = sapp_global_val->config.packet_io.packet_io_tunnel.vlan_flipping_map_array;
+	int vlan_map_num = 0;
+	int i, ret;
+	unsigned long long c_router_vlan_id, i_router_vlan_id;
+
+	fp = fopen(filename, "r");
+	if(NULL == fp){
+		sapp_log(30, ~0, ~0, "[Error]can't open sapp.toml->vlan_flipping_cfg_file:%s", filename);
+		return -1;
+	}
+
+	while(fgets(line_cont, MAX_INPUT, fp)){
+		if('#' == line_cont[0] || ' ' == line_cont[0] || '\r' == line_cont[0] || '\n' == line_cont[0]){
+			continue;
+		}
+
+		ret = sscanf(line_cont, "%u %u", &c_router_vlan_id, &i_router_vlan_id);
+		if(ret != 2){
+			sapp_log(30, ~0, ~0, "[Error]parse sapp.toml->vlan_flipping_cfg_file:%s error!", filename);
+			return -1;
+		}
+		if(c_router_vlan_id>= 4096 || i_router_vlan_id >= 4096){
+			sapp_log(30, ~0, ~0, "[Error]parse sapp.toml->vlan_flipping_cfg_file:%s error, vlan id must in range[1,4095]!", filename);
+			return -1;			
+		}
+		vlan_map[vlan_map_num].c_router_vlan_id = c_router_vlan_id;
+		vlan_map[vlan_map_num].i_router_vlan_id = i_router_vlan_id;
+
+		vlan_map_num++;
+	}
+
+	sapp_global_val->config.packet_io.packet_io_tunnel.vlan_flipping_map_num = vlan_map_num;
+
+	if(0 == vlan_map_num){
+		sapp_runtime_log(10, "parse vlan_flipping_cfg_file, no valid config!");
+	}else{
+		for(i = 0; i < vlan_map_num; i++){
+			sapp_runtime_log(10, "vlan_flipping_cfg_file %d: c_router_vlan_id:%u, i_router_vlan_id:%u", i, vlan_map[i].c_router_vlan_id, vlan_map[i].i_router_vlan_id);
+		}
+	}
+
+	return 0;
+}
+
+
+static int parse_asymmetric_addr_layer_config(void)
+{
+	int i;
+	//to do, parse conf file
+
+	memset(g_asymmetric_addr_layer_set, 0, sizeof(g_asymmetric_addr_layer_set));
+
+	//vlan[*]
+	for(i = 0; i < SAPP_SUPPORT_LAYER_NUM_MAX; i++){
+		g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][i] = 1;
+		g_asymmetric_addr_layer_set[ADDR_TYPE_MPLS][i] = 1;
+		g_asymmetric_addr_layer_set[ADDR_TYPE_GRE][i] = 1;
+		g_asymmetric_addr_layer_set[ADDR_TYPE_GPRS_TUNNEL][i] = 1;
+	}
+
+	return 0;
+}
+
+
 /* 配置格式转换, 如字符串类型转为int类型,便于程序处理 */
 static int config_expression_convert(void)
 {
 	sapp_config_t *pconfig;
 	const char *tmp_str;
+	int ret;
 	
 	pconfig = &sapp_global_val->config;
 
@@ -311,6 +382,29 @@ static int config_expression_convert(void)
 	}
 
 	/******************************  PACKET_IO  *******************************/
+
+	tmp_str = pconfig->packet_io.packet_io_tunnel.overlay_mode_string;
+	if(strncasecmp(tmp_str, "vxlan", strlen("vxlan")) == 0){
+		pconfig->packet_io.packet_io_tunnel.overlay_mode_bin = OVERLAY_MODE_VXLAN;
+	}else if(strncasecmp(tmp_str, "vlan_flipping_adev", strlen("vlan_flipping_adev")) == 0){
+		pconfig->packet_io.packet_io_tunnel.overlay_mode_bin = OVERLAY_MODE_VLAN_FLIP_ADEV;
+	}else{
+		sapp_log(30, ~0, ~0, "[Error]sapp.toml->overlay_mode error, unsupport : %s", tmp_str); 
+		return -1;
+	}
+
+	ret = parse_vlan_flipping_map_config();
+	if(ret < 0){
+		sapp_log(30, ~0, ~0, "[Error]sapp.toml->vlan_flipping_cfg_file parse error"); 
+		return- 1;
+	}
+
+	ret = parse_asymmetric_addr_layer_config();
+	if(ret < 0){
+		sapp_log(30, ~0, ~0, "[Error]sapp.toml->vlan_flipping_cfg_file parse error"); 
+		return- 1;
+	}
+	
 	tmp_str = pconfig->packet_io.internal.interface.type_str;
 	if(strncasecmp(tmp_str, "pcap", strlen("pcap")) == 0){
 		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_PCAP_ONLINE;
@@ -320,6 +414,9 @@ static int config_expression_convert(void)
 		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_MARSIOV4;
 	}else if(strncasecmp(tmp_str, "tun", strlen("tun")) == 0){
 		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_TUN;
+	}else{
+		sapp_log(30, ~0, ~0, "[Error]sapp.toml->type error, unsupport : %s", tmp_str); 
+		return -1;
 	}
 
 	if(strncasecmp("sys_route", pconfig->packet_io.inject_pkt_mode_string, strlen("sys_route")) == 0){
@@ -654,7 +751,10 @@ int sapp_parse_config(void)
 
 	/*******************************  packet_io.overlay_tunnel_definition ******************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"create_mpls_anyway", &pconfig->packet_io.create_mpls_anyway, 0);
-	
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"vlan_flipping_cfg_file", pconfig->packet_io.packet_io_tunnel.vlan_flipping_cfg_file, PATH_MAX, "etc/vlan_flipping_map.conf");
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"mac_flipping_enabled", &pconfig->packet_io.packet_io_tunnel.mac_flipping_enabled, 0);
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"overlay_mode", pconfig->packet_io.packet_io_tunnel.overlay_mode_string, NAME_MAX, "_no_default_");
+
 	/*******************************  packet_io.feature ******************************/
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"BSD_packet_filter", str_tmp, NAME_MAX, "");
 	if(str_tmp[0] != '\0'){

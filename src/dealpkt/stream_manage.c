@@ -2646,6 +2646,7 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
                     pstream_pr->stream_public.addr.gtp->dest_seq = p_stack->stream_public.addr.gtp->src_seq;
 				}
 				break;
+				
 			case ADDR_TYPE_MPLS:
 				if((sapp_global_val->config.packet_io.create_mpls_anyway != 0)
 				 ||(ADDR_TYPE_MPLS == pstream_pr->stream_public.addr.addrtype)){ /* 如果是MPLS 1:N的模式, 即两端都有MPLS层, 但有可能不对称, 不开启create_mpls_anyway, 也要更新对端地址 */
@@ -2658,6 +2659,9 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 							pstream_pr->stream_public.addr.mpls->src_mpls_ctrl_word = p_stack->stream_public.addr.mpls->src_mpls_ctrl_word;
 							pstream_pr->stream_public.addr.mpls->src_has_ctrl_word = 1;
 	                    }
+	                    if(p_stack->fake_layer_dir_for_asymmetric_cmp != 0){
+							pstream_pr->fake_layer_dir_for_asymmetric_cmp |= DIR_C2S;
+	                    }
 					}
 					else{
 	                    memcpy(pstream_pr->stream_public.addr.mpls->dest_mpls_pkt,
@@ -2667,10 +2671,31 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 	                    if(p_stack->stream_public.addr.mpls->src_has_ctrl_word){ //注意, 这里固定判断src方向!!
 							pstream_pr->stream_public.addr.mpls->dst_mpls_ctrl_word = p_stack->stream_public.addr.mpls->src_mpls_ctrl_word;
 							pstream_pr->stream_public.addr.mpls->dst_has_ctrl_word = 1;
-	                    }	                    
+	                    }	 
+	                    if(p_stack->fake_layer_dir_for_asymmetric_cmp != 0){
+							pstream_pr->fake_layer_dir_for_asymmetric_cmp |= DIR_S2C;
+	                    }     
 					}
 				}
 				break;
+				
+			case ADDR_TYPE_VLAN:
+				if(ADDR_TYPE_VLAN == pstream_pr->stream_public.addr.addrtype){
+					if(cur_dir == DIR_C2S){
+						memcpy(pstream_pr->stream_public.addr.vlan->src_vlan_pkt,
+						        p_stack->stream_public.addr.vlan->src_vlan_pkt,
+						        sizeof(p_stack->stream_public.addr.vlan->src_vlan_pkt));
+	                    pstream_pr->stream_public.addr.vlan->src_vlan_layer_num = p_stack->stream_public.addr.vlan->src_vlan_layer_num;
+					}
+					else{
+	                    memcpy(pstream_pr->stream_public.addr.vlan->dst_vlan_pkt,
+	                           p_stack->stream_public.addr.vlan->src_vlan_pkt,  //注意, 这里固定用src方向!!
+	                           sizeof(p_stack->stream_public.addr.vlan->dst_vlan_pkt));
+	                    pstream_pr->stream_public.addr.vlan->dst_vlan_layer_num = p_stack->stream_public.addr.vlan->src_vlan_layer_num;    //注意, 这里固定用src方向!!                 
+					}
+				}			
+			break;
+			
 			default:
 				return update_opposite_addr_info((struct streaminfo_private *) pstream_pr->stream_public.pfather,
 				                             (struct streaminfo_private *) p_stack->stream_public.pfather, cur_dir);			

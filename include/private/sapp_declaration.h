@@ -7,17 +7,6 @@ extern "C" {
 
 #include "sapp_private_api.h"
 
-enum pkt_dump_mode{
-	PKT_DUMP_LOCAL_FILE		=	1, 
-	PKT_DUMP_UDP_SOCKET		=	2, 
-};
-
-enum depolyment_mode_config{
-	DEPOLYMENT_MODE_MIRROR		= 1,
-	DEPOLYMENT_MODE_TRANSPARENT	= 2,
-	DEPOLYMENT_MODE_INLINE		= 3,
-};
-
 
 /* ÒòÇ¶Ì×²ã´ÎÌ«¶à, Ê¹ÓÃ¼ò³ÆÃèÊö */
 #define ABBR_SAPP_LOG_LEVEL 	sapp_global_val->config.profiling.log.level

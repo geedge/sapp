@@ -42,6 +42,101 @@ char test_gtp_volatile_addr_entry(struct streaminfo *pstream,void **pme, int thr
 	return APP_STATE_GIVEME;
 }
 
+struct hierarchical_layer{
+	int addrtype;
+	int layer_index;
+};
+#define MAX_LAYER_DEPTH (15)
+#define MAX_LAYER_STAT_NUM (128)
+
+static int hierarchical_layer_stat_num = 0;
+static struct hierarchical_layer g_hierarchical_layer_stat[MAX_LAYER_STAT_NUM][MAX_LAYER_DEPTH];
+
+extern const char *addr_type_to_prefix(enum addr_type_t layer_type);
+
+static int hierarchical_layer_stat_cmp(const struct hierarchical_layer *layer1, const struct hierarchical_layer *layer2)
+{
+	int i;
+
+	for(i = 0; i < MAX_LAYER_DEPTH; i++){
+		if(layer1[i].addrtype != layer2[i].addrtype){
+			return -1;
+		}	
+	}
+
+	return 0;
+}
+
+/*
+	return value:
+		1: bingo, found;
+		0: not found;
+*/
+static int search_g_hierarchical_layer_stat(const struct hierarchical_layer *stream_hierarchical_layer_stat)
+{
+	int i;
+	
+	for(i = 0; i < hierarchical_layer_stat_num; i++){
+		if(hierarchical_layer_stat_cmp(&g_hierarchical_layer_stat[i][0], stream_hierarchical_layer_stat) == 0){
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+
+static void show_hierarchical_layer_stat(void)
+{
+	int i, layer_index;
+
+	for(i = 0; i < hierarchical_layer_stat_num; i++){
+		for(layer_index = 0; layer_index < MAX_LAYER_DEPTH; layer_index++){
+			if(g_hierarchical_layer_stat[i][layer_index].addrtype <= 0){
+				break;
+			}
+			printf("%s-", addr_type_to_prefix((enum addr_type_t )g_hierarchical_layer_stat[i][layer_index].addrtype));
+		}
+		printf("\b\n");
+	}
+}
+
+
+static int update_hierarchical_layer_stat(const struct hierarchical_layer *stream_hierarchical_layer_stat)
+{
+	int i;
+	
+	if(search_g_hierarchical_layer_stat(stream_hierarchical_layer_stat) == 0){ //不存在, 是新的流结构
+		memcpy(&g_hierarchical_layer_stat[hierarchical_layer_stat_num], stream_hierarchical_layer_stat, sizeof(struct hierarchical_layer) * MAX_LAYER_DEPTH);
+		hierarchical_layer_stat_num++;
+		show_hierarchical_layer_stat();
+	}
+
+	return 0;
+}
+
+char hierarchical_embed_layer_entry(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
+{
+	struct hierarchical_layer stream_hierarchical_layer_stat[MAX_LAYER_DEPTH] = {};
+	int layer_num;
+	if(0 != thread_seq){
+		printf("hierarchical_embed_layer_entry only support one thread!\n");
+		return APP_STATE_DROPME;
+	}
+
+	if(OP_STATE_CLOSE == pstream->opstate){
+		layer_num = 0;
+		while(pstream){
+			stream_hierarchical_layer_stat[layer_num].addrtype = pstream->addr.addrtype;
+			layer_num++;
+			pstream = pstream->pfather;
+		}
+
+		update_hierarchical_layer_stat(stream_hierarchical_layer_stat);
+	}
+
+	return APP_STATE_GIVEME;
+}
 
 #if TEST_SAPP_API
 char phony_biz_test(stSessionInfo* session_info,  void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet)

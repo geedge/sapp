@@ -434,6 +434,7 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 	int hlen=0;
 	int ret=PASS;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	int try_to_update_addr_info = 0;
 
 	iplen = ntohs (this_iphdr->ip_len);
 	hlen=4 * this_iphdr->ip_hl;
@@ -553,6 +554,20 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 			return DROP;
 		}
 
+		if(pstream->curdir==DIR_S2C){
+			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* 当前方向的第一个包, 尝试更新底层隧道的单向地址信息(如MPLS, GTP) */
+				try_to_update_addr_info = 1;
+			}
+		}else{
+			if(pdetail_pr->udpdetail_public.serverpktnum == 0){ /* 当前方向的第一个包, 尝试更新底层隧道的单向地址信息(如MPLS, GTP) */
+				try_to_update_addr_info = 1;
+			}
+		}
+		if(try_to_update_addr_info == 1){
+			update_opposite_addr_info((struct streaminfo_private *)(pstream->pfather),
+					(struct streaminfo_private *)(pindex->stream.stream_public.pfather), pstream->curdir);
+		}
+		
 		update_polling_inject_context(pstream_pr, raw_pkt);
 		
 		udp_change_stream_state(a_index,udph);
@@ -624,6 +639,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	void *tmpme=NULL;
 	int ret=PASS;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	int try_to_update_addr_info = 0;
 
 	iplen = ntohs (a_packet->ip6_payload_len);
 	ulen = ntohs (udph->uh_ulen);
@@ -728,6 +744,25 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		if(unlikely(a_index->stream.stream_killed_flag != 0)){
 			return DROP;
 		}
+
+		/* NOTE: 更新pstream指针, 指向堆中存储的内存 */
+		pstream_pr=&(a_index->stream);
+		pstream=&(pstream_pr->stream_public);		
+		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
+
+		if(pstream->curdir==DIR_S2C){
+			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* 当前方向的第一个包, 尝试更新底层隧道的单向地址信息(如MPLS, GTP) */
+				try_to_update_addr_info = 1;
+			}
+		}else{
+			if(pdetail_pr->udpdetail_public.serverpktnum == 0){ /* 当前方向的第一个包, 尝试更新底层隧道的单向地址信息(如MPLS, GTP) */
+				try_to_update_addr_info = 1;
+			}
+		}
+		if(try_to_update_addr_info == 1){
+			update_opposite_addr_info((struct streaminfo_private *)(pstream->pfather),
+					(struct streaminfo_private *)(pindex->stream.stream_public.pfather), pstream->curdir);
+		}
 		
 		udp_change_stream_state(a_index,udph);
 
@@ -751,7 +786,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	/* TODO 2, 基于IPv6的UDP port 1701 L2TP协议 */
 
 	if(DROP == ret){
-		sapp_runtime_log(20, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+		sapp_runtime_log(RLOG_LV_INFO, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 	}
 	
 	return ret;
@@ -827,22 +862,22 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 		break;
 
 		case IPPROTO_L2TPV3:
-			sapp_runtime_log(20, "recv ipv4 carry L2TPv3, not support yet!\n");
+			sapp_runtime_log(RLOG_LV_INFO, "recv ipv4 carry L2TPv3, not support yet!\n");
 			ret = PASS;
 		break;
 
 		case IPPROTO_ESP:
-			sapp_runtime_log(20, "recv IPPROTO_ESP, not support yet!\n");
+			sapp_runtime_log(RLOG_LV_INFO, "ipv4_layer recv IPPROTO_ESP, not support yet!\n");
 			ret = PASS;
 		break;
 		
 		case IPPROTO_SCTP:
-			sapp_runtime_log(20, "recv IPPROTO_SCTP, not support yet!\n");
+			sapp_runtime_log(RLOG_LV_INFO, "ipv4_layer recv IPPROTO_SCTP, not support yet!\n");
 			ret = PASS;
 		break;
 
 		case IPPROTO_IGMP:
-			sapp_runtime_log(20, "recv IPPROTO_IGMP, not support yet!\n");
+			sapp_runtime_log(RLOG_LV_INFO, "ipv4_layer recv IPPROTO_IGMP, not support yet!\n");
 			ret = PASS;		
 		break;
 
@@ -850,7 +885,7 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 			/* unknown protocol */	
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;				
-			sapp_runtime_log(RLOG_LV_INFO, "unsupport Ipv4 protocol:%u!\n", a_packet->ip_p);
+			sapp_runtime_log(RLOG_LV_INFO, "unsupport Ipv4 protocol:%u, pkt seq:%llu\n", a_packet->ip_p,local_sys_stat->count[SAPP_STAT_RCV_RAW]);
 		break;
 	}
 	
