@@ -62,6 +62,14 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_TCP_STREAM_S2C,/*  满足以下条件的统计(total pkt num > m and total byte > n) */
 	SAPP_STAT_TCP_STREAM_DOUBLE,/*  满足以下条件的统计  (total pkt num > m and total byte > n) */
 
+	SAPP_STAT_TCP_STREAM_C2S_PKTS, /* 满足以下条件的统计  (total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_S2C_PKTS,/*  满足以下条件的统计(total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_DOUBLE_PKTS,/*  满足以下条件的统计  (total pkt num > m and total byte > n) */
+
+	SAPP_STAT_TCP_STREAM_C2S_BYTES, /* 满足以下条件的统计  (total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_S2C_BYTES,/*  满足以下条件的统计(total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_DOUBLE_BYTES,/*  满足以下条件的统计  (total pkt num > m and total byte > n) */
+
 	SAPP_STAT_TCP_STREAM_NEW,
 	SAPP_STAT_TCP_STREAM_DEL,
 	SAPP_STAT_TCP_STREAM_RESET,
@@ -73,9 +81,17 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_UDP_STREAM_DEL,
 	SAPP_STAT_UDP_STREAM_RESET,
 
-	SAPP_STAT_TCP_STREAM_TOTAL_C2S, /* 全部TCP流统计 */
-	SAPP_STAT_TCP_STREAM_TOTAL_S2C,/* 全部TCP流统计 */
-	SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE,	/* 全部TCP流统计 */
+	SAPP_STAT_TCP_STREAM_TOTAL_C2S, /* 全部TCP流统计 连接数*/
+	SAPP_STAT_TCP_STREAM_TOTAL_S2C,/* 全部TCP流统计 连接数*/
+	SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE,	/* 全部TCP流统计 连接数*/
+
+	SAPP_STAT_TCP_STREAM_TOTAL_C2S_PKTS, /* 全部TCP流统计 包数 */
+	SAPP_STAT_TCP_STREAM_TOTAL_S2C_PKTS,/* 全部TCP流统计 包数*/
+	SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_PKTS,	/* 全部TCP流统计 包数*/
+
+	SAPP_STAT_TCP_STREAM_TOTAL_C2S_BYTES, /* 全部TCP流统计 字节数 */
+	SAPP_STAT_TCP_STREAM_TOTAL_S2C_BYTES,/* 全部TCP流统计 字节数*/
+	SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_BYTES,	/* 全部TCP流统计 字节数*/
 
 	SAPP_STAT_TCP_LOST_PKT_STREAM_NUM, /* 曾经丢包的流计数 */
 	SAPP_STAT_TCP_LOST_PKT, /* 丢包字节总计数 */
@@ -84,9 +100,26 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_UDP_STREAM_S2C,/*  满足以下条件的统计(total pkt num > m and total byte > n) */
 	SAPP_STAT_UDP_STREAM_DOUBLE,/*  满足以下条件的统计  (total pkt num > m and total byte > n) */
 	
+
+	SAPP_STAT_UDP_STREAM_C2S_PKTS, /* 满足以下条件的统计  (total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_S2C_PKTS,/*  满足以下条件的统计(total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_DOUBLE_PKTS,/*  满足以下条件的统计  (total pkt num > m and total byte > n) */
+
+	SAPP_STAT_UDP_STREAM_C2S_BYTES, /* 满足以下条件的统计  (total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_S2C_BYTES,/*  满足以下条件的统计(total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_DOUBLE_BYTES,/*  满足以下条件的统计  (total pkt num > m and total byte > n) */
+
 	SAPP_STAT_UDP_STREAM_TOTAL_C2S, /* 全部UDP流统计 */
 	SAPP_STAT_UDP_STREAM_TOTAL_S2C,/* 全部UDP流统计 */
 	SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE,	/* 全部UDP流统计 */	
+
+	SAPP_STAT_UDP_STREAM_TOTAL_C2S_PKTS, /* 全部UDP流统计 */
+	SAPP_STAT_UDP_STREAM_TOTAL_S2C_PKTS,/* 全部UDP流统计 */
+	SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_PKTS,	/* 全部UDP流统计 */	
+
+	SAPP_STAT_UDP_STREAM_TOTAL_C2S_BYTES, /* 全部UDP流统计 */
+	SAPP_STAT_UDP_STREAM_TOTAL_S2C_BYTES,/* 全部UDP流统计 */
+	SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_BYTES,	/* 全部UDP流统计 */	
 
 	SAPP_STAT_HASH_LIST_MAX,
 	

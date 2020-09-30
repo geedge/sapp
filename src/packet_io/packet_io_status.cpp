@@ -292,20 +292,32 @@ void sysinfo_output(void)
 	}
 	
 	fprintf(fp,"-----------------------------------------------------------------\n");
-	fprintf(fp,"%-12s %12s %12s\n","STREAM_TYPE", "total_stream", "link_del/s");
-	fprintf(fp,"%-12s %12llu %12llu\n", "TCP_DOU", cur_count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE],
-			cur_count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE] - history_count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE]);
-	fprintf(fp,"%-12s %12llu %12llu\n", "TCP_C2S", cur_count[SAPP_STAT_TCP_STREAM_TOTAL_C2S],
-			cur_count[SAPP_STAT_TCP_STREAM_TOTAL_C2S] - history_count[SAPP_STAT_TCP_STREAM_TOTAL_C2S]);
-	fprintf(fp,"%-12s %12llu %12llu\n", "TCP_S2C", cur_count[SAPP_STAT_TCP_STREAM_TOTAL_S2C],
-			cur_count[SAPP_STAT_TCP_STREAM_TOTAL_S2C] - history_count[SAPP_STAT_TCP_STREAM_TOTAL_S2C]);	
+	fprintf(fp,"%-12s %12s %12s %12s %12s\n","STREAM_TYPE", "total_stream", "link_del/s", "total_pkts", "total_len");
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s\n", "TCP_DOU", cur_count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE],
+			cur_count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE] - history_count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE],
+			cur_count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_PKTS],
+			byte_convert_human(cur_count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_BYTES],1,1,s1));
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s\n", "TCP_C2S", cur_count[SAPP_STAT_TCP_STREAM_TOTAL_C2S],
+			cur_count[SAPP_STAT_TCP_STREAM_TOTAL_C2S] - history_count[SAPP_STAT_TCP_STREAM_TOTAL_C2S],
+			cur_count[SAPP_STAT_TCP_STREAM_TOTAL_C2S_PKTS],
+			byte_convert_human(cur_count[SAPP_STAT_TCP_STREAM_TOTAL_C2S_BYTES],1,1,s1));
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s\n", "TCP_S2C", cur_count[SAPP_STAT_TCP_STREAM_TOTAL_S2C],
+			cur_count[SAPP_STAT_TCP_STREAM_TOTAL_S2C] - history_count[SAPP_STAT_TCP_STREAM_TOTAL_S2C],
+			cur_count[SAPP_STAT_TCP_STREAM_TOTAL_S2C_PKTS],
+			byte_convert_human(cur_count[SAPP_STAT_TCP_STREAM_TOTAL_S2C_BYTES],1,1,s1));	
 
-	fprintf(fp,"%-12s %12llu %12llu\n", "UDP_DOU", cur_count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE],
-			cur_count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE] - history_count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE]);
-	fprintf(fp,"%-12s %12llu %12llu\n", "UDP_C2S", cur_count[SAPP_STAT_UDP_STREAM_TOTAL_C2S],
-			cur_count[SAPP_STAT_UDP_STREAM_TOTAL_C2S] - history_count[SAPP_STAT_UDP_STREAM_TOTAL_C2S]);
-	fprintf(fp,"%-12s %12llu %12llu\n", "UDP_S2C", cur_count[SAPP_STAT_UDP_STREAM_TOTAL_S2C],
-			cur_count[SAPP_STAT_UDP_STREAM_TOTAL_S2C] - history_count[SAPP_STAT_UDP_STREAM_TOTAL_S2C]);
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s\n", "UDP_DOU", cur_count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE],
+			cur_count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE] - history_count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE],
+			cur_count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_PKTS],
+			byte_convert_human(cur_count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_BYTES],1,1,s1));
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s\n", "UDP_C2S", cur_count[SAPP_STAT_UDP_STREAM_TOTAL_C2S],
+			cur_count[SAPP_STAT_UDP_STREAM_TOTAL_C2S] - history_count[SAPP_STAT_UDP_STREAM_TOTAL_C2S],
+			cur_count[SAPP_STAT_UDP_STREAM_TOTAL_C2S_PKTS],
+			byte_convert_human(cur_count[SAPP_STAT_UDP_STREAM_TOTAL_C2S_BYTES],1,1,s1));
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s\n", "UDP_S2C", cur_count[SAPP_STAT_UDP_STREAM_TOTAL_S2C],
+			cur_count[SAPP_STAT_UDP_STREAM_TOTAL_S2C] - history_count[SAPP_STAT_UDP_STREAM_TOTAL_S2C],
+			cur_count[SAPP_STAT_UDP_STREAM_TOTAL_S2C_PKTS],
+			byte_convert_human(cur_count[SAPP_STAT_UDP_STREAM_TOTAL_S2C_BYTES],1,1,s2));
 			
 	fprintf(fp,"----------------------------------------------------------------\n");		
 	fprintf(fp, "The follow TCP statistics meet the conditions:(total pkt_num>=%d and byte>=%d)\n", 
@@ -314,20 +326,32 @@ void sysinfo_output(void)
 	fprintf(fp, "The follow UDP statistics meet the conditions:(total pkt_num>=%d and byte>=%d)\n", 
 				sapp_global_val->config.stream.udp.meaningful_statistics_minimum_pkt, 
 				sapp_global_val->config.stream.udp.meaningful_statistics_minimum_byte);				
-	fprintf(fp,"%-12s %12s %12s\n","STREAM_TYPE", "total_stream", "link_del/s");
-	fprintf(fp,"%-12s %12llu %12llu\n", "TCP_DOU", cur_count[SAPP_STAT_TCP_STREAM_DOUBLE],
-			cur_count[SAPP_STAT_TCP_STREAM_DOUBLE] - history_count[SAPP_STAT_TCP_STREAM_DOUBLE]);
-	fprintf(fp,"%-12s %12llu %12llu\n", "TCP_C2S", cur_count[SAPP_STAT_TCP_STREAM_C2S],
-			cur_count[SAPP_STAT_TCP_STREAM_C2S] - history_count[SAPP_STAT_TCP_STREAM_C2S]);
-	fprintf(fp,"%-12s %12llu %12llu\n", "TCP_S2C", cur_count[SAPP_STAT_TCP_STREAM_S2C],
-			cur_count[SAPP_STAT_TCP_STREAM_S2C] - history_count[SAPP_STAT_TCP_STREAM_S2C]);
+	fprintf(fp,"%-12s %12s %12s %12s %12s\n","STREAM_TYPE", "total_stream", "link_del/s", "total_pkts", "total_len");
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s\n", "TCP_DOU", cur_count[SAPP_STAT_TCP_STREAM_DOUBLE],
+			cur_count[SAPP_STAT_TCP_STREAM_DOUBLE] - history_count[SAPP_STAT_TCP_STREAM_DOUBLE],
+			cur_count[SAPP_STAT_TCP_STREAM_DOUBLE_PKTS],
+			byte_convert_human(cur_count[SAPP_STAT_TCP_STREAM_DOUBLE_BYTES],1,1,s1));
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s\n", "TCP_C2S", cur_count[SAPP_STAT_TCP_STREAM_C2S],
+			cur_count[SAPP_STAT_TCP_STREAM_C2S] - history_count[SAPP_STAT_TCP_STREAM_C2S],
+			cur_count[SAPP_STAT_TCP_STREAM_C2S_PKTS],
+			byte_convert_human(cur_count[SAPP_STAT_TCP_STREAM_C2S_BYTES],1,1,s1));
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s\n", "TCP_S2C", cur_count[SAPP_STAT_TCP_STREAM_S2C],
+			cur_count[SAPP_STAT_TCP_STREAM_S2C] - history_count[SAPP_STAT_TCP_STREAM_S2C],
+			cur_count[SAPP_STAT_TCP_STREAM_S2C_PKTS],
+			byte_convert_human(cur_count[SAPP_STAT_TCP_STREAM_S2C_BYTES],1,1,s1));
 
-	fprintf(fp,"%-12s %12llu %12llu\n", "UDP_DOU", cur_count[SAPP_STAT_UDP_STREAM_DOUBLE],
-			cur_count[SAPP_STAT_UDP_STREAM_DOUBLE] - history_count[SAPP_STAT_UDP_STREAM_DOUBLE]);
-	fprintf(fp,"%-12s %12llu %12llu\n", "UDP_C2S", cur_count[SAPP_STAT_UDP_STREAM_C2S],
-			cur_count[SAPP_STAT_UDP_STREAM_C2S] - history_count[SAPP_STAT_UDP_STREAM_C2S]);
-	fprintf(fp,"%-12s %12llu %12llu\n", "UDP_S2C", cur_count[SAPP_STAT_UDP_STREAM_S2C],
-			cur_count[SAPP_STAT_UDP_STREAM_S2C] - history_count[SAPP_STAT_UDP_STREAM_S2C]);
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s\n", "UDP_DOU", cur_count[SAPP_STAT_UDP_STREAM_DOUBLE],
+			cur_count[SAPP_STAT_UDP_STREAM_DOUBLE] - history_count[SAPP_STAT_UDP_STREAM_DOUBLE],
+			cur_count[SAPP_STAT_UDP_STREAM_DOUBLE_PKTS],
+			byte_convert_human(cur_count[SAPP_STAT_UDP_STREAM_DOUBLE_BYTES],1,1,s1));
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s\n", "UDP_C2S", cur_count[SAPP_STAT_UDP_STREAM_C2S],
+			cur_count[SAPP_STAT_UDP_STREAM_C2S] - history_count[SAPP_STAT_UDP_STREAM_C2S],
+			cur_count[SAPP_STAT_UDP_STREAM_C2S_PKTS],
+			byte_convert_human(cur_count[SAPP_STAT_UDP_STREAM_C2S_BYTES],1,1,s1));
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s\n", "UDP_S2C", cur_count[SAPP_STAT_UDP_STREAM_S2C],
+			cur_count[SAPP_STAT_UDP_STREAM_S2C] - history_count[SAPP_STAT_UDP_STREAM_S2C],
+			cur_count[SAPP_STAT_UDP_STREAM_S2C_PKTS],
+			byte_convert_human(cur_count[SAPP_STAT_UDP_STREAM_S2C_BYTES],1,1,s1));
 
 	fprintf(fp,"#################################################################\n");
 	fprintf(fp,"%-10s %12s %12s %12s %12s\n","SND-PKT", "total_pkt", "total_len","pps", "bps");

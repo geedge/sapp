@@ -1906,27 +1906,39 @@ void hash_del_stream(struct streamindex *pindex)
 			   if(ptmp->dir == DIR_DOUBLE)
 			   {
 				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_DOUBLE]++;
+				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_DOUBLE_PKTS]+=(ptmp->pudpdetail->clientpktnum+ptmp->pudpdetail->serverpktnum);
+				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_DOUBLE_BYTES]+=(ptmp->pudpdetail->clientbytes+ptmp->pudpdetail->serverbytes);
 			   }
 			   else if(ptmp->dir == DIR_C2S)
 			   {
 				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_C2S]++;
+				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_C2S_PKTS]+=(ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_C2S_BYTES]+=(ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
 			   }
 			   else if(ptmp->dir == DIR_S2C)
 			   {
 				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_S2C]++;
+				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_S2C_PKTS]+=(ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_S2C_BYTES]+=(ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
 			   }		
 	     }
 		   if(ptmp->dir == DIR_DOUBLE)
 		   {
 			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE]++;
+			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_PKTS] += (ptmp->pudpdetail->clientpktnum + ptmp->pudpdetail->serverpktnum);
+			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_BYTES] += (ptmp->pudpdetail->clientbytes + ptmp->pudpdetail->serverbytes);
 		   }
 		   else if(ptmp->dir == DIR_C2S)
 		   {
 			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_C2S]++;
+			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_C2S_PKTS] += (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_C2S_BYTES] += (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
 		   }
 		   else if(ptmp->dir == DIR_S2C)
 		   {
 			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_S2C]++;
+			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_S2C_PKTS] += (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_S2C_BYTES] += (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
 		   }		     
      }
 	 else if (STREAM_TYPE_TCP==ptmp->type)
@@ -1948,16 +1960,22 @@ void hash_del_stream(struct streamindex *pindex)
                {
                    //g_SysInputInfo[threadnum][LINK_DOUBLE]++;
                    local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE]++;
+				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE_PKTS]+=(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum);
+				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE_BYTES]+=(ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes );
                }
                else if(ptmp->dir == DIR_C2S)
                {
                    //g_SysInputInfo[threadnum][LINK_SINGLE_C2S]++;
                    local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S]++;
+				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S_PKTS]+=(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum);
+				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S_BYTES]+=(ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes );
                }
                else if(ptmp->dir == DIR_S2C)
                {
                    //g_SysInputInfo[threadnum][LINK_SINGLE_S2C]++;
                    local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C]++;
+				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C_PKTS]+=(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum);
+				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C_BYTES]+=(ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes );
                }
                else
                    ;
@@ -1966,14 +1984,20 @@ void hash_del_stream(struct streamindex *pindex)
 		   if(ptmp->dir == DIR_DOUBLE)
 		   {
 			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE]++;
+			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_PKTS] += (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_BYTES] += (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
 		   }
 		   else if(ptmp->dir == DIR_C2S)
 		   {
 			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_C2S]++;
+			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_C2S_PKTS] += (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_C2S_BYTES] += (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
 		   }
 		   else if(ptmp->dir == DIR_S2C)
 		   {
 			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_S2C]++;
+			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_S2C_PKTS] += (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_S2C_BYTES] += (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
 		   }
            
 	 }else{
@@ -2850,7 +2874,7 @@ void free_polling_inject_context(struct streaminfo_private *pstream_pr)
 	pstream_pr->polling_inject_context = NULL;
 }
 
-/* 全局流id, stream_index历史上已经表示单机内唯一id, 此处要保证集群所有机器不重复, 所以新建变�?  
+/* 全局流id, stream_index历史上已经表示单机内�?一id, 此�?��?�保证集群所有机器不重�??, 所以新建变�?  
 	高位 --- 低位
 	1 |  12bit device_id | 8bit thread_id | 28bit timestamp in sec | 15bit sequence per thread
 */
