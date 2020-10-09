@@ -45,6 +45,7 @@ struct project_req_info{
 typedef struct project_req_info project_req_info_t;
 
 static project_req_manage_t G_PROJECT_REQ_MANAGE[PROJECT_REQ_MAX_PLUG_NUM];
+static void *G_PROJECT_NAME_HASH = NULL;
 
 static int G_PROJECT_PLUG_NUM = 0;
 
@@ -98,11 +99,53 @@ static int __project_find_id_by_name(const char *project_req_name, const char *p
 	return pro_req_id;
 }
 
+static int project_platform_register(const char *project_req_name, enum pro_type_list type, project_req_free_t *free_cb)
+{
+	int pid = G_PROJECT_PLUG_NUM;
+	if(sapp_get_current_state() == SAPP_STATE_PROCESSING)
+	{
+		sapp_runtime_log(30, "project_platform_register (%s) FAIL: SAPP_STATE_PROCESSING state not allow to register", project_req_name);
+		return -1;
+	}
+	if (G_PROJECT_NAME_HASH == NULL || (type >= PROGECT_REQ_VALUE_TYPE_MAX || type < 0))
+	{
+		sapp_runtime_log(30, "project_platform_register (%s) FAIL: Empty G_PROJECT_NAME_HASH or Invalid pro_type(%d)", project_req_name, type);
+		return -1;
+	}
+	int *project_id = (int *)MESA_htable_search(G_PROJECT_NAME_HASH, project_req_name, strlen(project_req_name));
+	if (project_id != NULL)
+	{
+		sapp_runtime_log(30, "project_platform_register (%s) DUPLICATE, exist project_id %d", project_req_name, *project_id);
+		return *project_id;
+	}
+	else
+	{
+
+		if (pid >= PROJECT_REQ_MAX_PLUG_NUM)
+		{
+
+			sapp_runtime_log(30, "project_platform_register (%s) FAIL: Project tag number overflow, more than %d", project_req_name, PROJECT_REQ_MAX_PLUG_NUM);
+			return -1;
+		}
+		G_PROJECT_REQ_MANAGE[G_PROJECT_PLUG_NUM].project_req_id = G_PROJECT_PLUG_NUM;
+		strncpy(G_PROJECT_REQ_MANAGE[G_PROJECT_PLUG_NUM].project_req_name, project_req_name, PROJECT_REQ_NAME_MAX_LEN);
+		G_PROJECT_REQ_MANAGE[G_PROJECT_PLUG_NUM].free_cb = free_cb;
+		G_PROJECT_REQ_MANAGE[G_PROJECT_PLUG_NUM].project_req_type = type;
+		project_id = (int *)calloc(sizeof(int), 1);
+		*project_id = pid;
+		MESA_htable_add(G_PROJECT_NAME_HASH, project_req_name, strlen(project_req_name), (const void *)project_id);
+		G_PROJECT_PLUG_NUM++;
+		sapp_runtime_log(20, "project_platform_register (%s) SUCCEED, project_id return %d", project_req_name, pid);
+		return pid;
+	}
+}
+
 int project_producer_register(const char *project_req_name, const char *project_req_val_type, project_req_free_t *free_cb)
 {
 	int pro_req_id = -1;
 
-	pro_req_id = __project_find_id_by_name(project_req_name, project_req_val_type);
+	//pro_req_id = __project_find_id_by_name(project_req_name, project_req_val_type);
+	pro_req_id = project_platform_register(project_req_name, project_req_str_to_type_id(project_req_val_type), free_cb);
 
 	if(pro_req_id != -1){
 		if((NULL == free_cb )
@@ -110,7 +153,8 @@ int project_producer_register(const char *project_req_name, const char *project_
 			sapp_runtime_log(30, "project_producer_register() must implement 'free_cb' with 'struct' type!\n");
 			return -1;
 		}
-		G_PROJECT_REQ_MANAGE[pro_req_id].free_cb = free_cb;
+		sapp_runtime_log(30, "project_platform_register (\033[32m%s, %s\033[0m) SUCCEED, project_id return \033[32m%d\033[0m!", project_req_name, project_req_val_type, pro_req_id);
+		G_PROJECT_REQ_MANAGE[pro_req_id].free_cb = free_cb;//overwrite free_cb with new register operation
 	}
 	
 	return pro_req_id;
@@ -386,19 +430,7 @@ void *project_requirement_create(int thread_num)
 }
 
 
-static int project_platform_register(const char *project_req_name, enum pro_type_list type, project_req_free_t *free_cb)
-{
-	int pid = G_PROJECT_PLUG_NUM;
-	
-	G_PROJECT_REQ_MANAGE[G_PROJECT_PLUG_NUM].project_req_id = G_PROJECT_PLUG_NUM;
-	strncpy(G_PROJECT_REQ_MANAGE[G_PROJECT_PLUG_NUM].project_req_name, project_req_name, PROJECT_REQ_NAME_MAX_LEN);
-	G_PROJECT_REQ_MANAGE[G_PROJECT_PLUG_NUM].free_cb = free_cb;
-	G_PROJECT_REQ_MANAGE[G_PROJECT_PLUG_NUM].project_req_type = type;
 
-	G_PROJECT_PLUG_NUM++;
-
-	return pid;
-}
 
 /* 
 	2015-12-25 lijia add, for TCP/UDP流量统计, 平台内置功能,
@@ -411,7 +443,7 @@ static int teredo_identify_init(void)
 	G_UDP_TEREDO_IDENTIFY_PROJECT_ID = project_platform_register("__tunnel_teredo_identify", 
 							PROGECT_REQ_VALUE_TYPE_SIMPLE_LONG, NULL);
 
-	return 0;
+	return G_UDP_TEREDO_IDENTIFY_PROJECT_ID;
 }
 
 
@@ -463,12 +495,39 @@ static int udp_flow_stat_init(void)
 	return 0;
 }
 
+static void project_env_init()
+{
+	MESA_htable_create_args_t hargs;
+	memset(&hargs, 0, sizeof(MESA_htable_create_args_t));
+	hargs.thread_safe = 0;
+	hargs.hash_slot_size = PROJECT_REQ_MAX_PLUG_NUM;
+	hargs.max_elem_num = 0;
+	hargs.eliminate_type = HASH_ELIMINATE_ALGO_FIFO;
+	hargs.expire_time = 0;
+	hargs.key_comp = NULL;
+	hargs.key2index = NULL;
+	hargs.data_free = free;
+	hargs.data_expire_with_condition = NULL;
+	hargs.recursive = 1;
+
+	if(G_PROJECT_NAME_HASH == NULL)
+	{
+		G_PROJECT_NAME_HASH	= MESA_htable_create(&hargs, sizeof(hargs));
+		if(G_PROJECT_NAME_HASH == NULL)
+		{
+			MESA_htable_destroy(G_PROJECT_NAME_HASH, NULL);
+		}
+	}
+	return;
+}
+
 int project_requirement_global_init(void)
 {
+	project_env_init();
 	/* 平台内部固定开启的模块初始化 */
 	teredo_identify_init();
 
-	parse_project_req_conf();
+	//parse_project_req_conf();
 	
 	/* 平台内置project模块初始化, 功能是否启用取决于配置文件开关 */
 	project_req_terminal_tag_init();
