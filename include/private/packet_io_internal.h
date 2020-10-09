@@ -9,6 +9,12 @@
 extern "C" {
 #endif
 
+#ifndef RTE_CACHE_LINE_SIZE
+	#define RTE_CACHE_LINE_SIZE 64
+	#define __sapp_aligned(a) __attribute__((__aligned__(a)))
+	#define __sapp_cache_aligned __sapp_aligned(RTE_CACHE_LINE_SIZE)
+#endif
+
 /* 虚假指针, 用于MESA_kill_tcp和MESA_kill_tcp_feedback区分, 是否需要反馈数据包 */
 #define KILL_TCP_PHONY_POINTER			((void *)0x1A2B3C4D5E6F)
 #define INDEPENDENT_SEND_QUEUE_MAX_NUM	(64) /* 插件自己创建的线程, 支持的最大发送队列数量, 此值主要受限于marsio模式, 其他比如libpcap其实无影响, 为了统一, 不能高于64!! */
@@ -163,8 +169,8 @@ enum timestamp_level{
 /* 临时存储用于构造每层包头的参数, 如ip->id, ip->ttl, tcp->flags, tcp->win参数等 */
 typedef struct{
 	void *layer_args[__ADDR_TYPE_MAX];
-	long __pad[6];
-}layer_args_t;
+	//long __pad[6];
+}layer_args_t __sapp_cache_aligned;
 
 
 int MESA_get_dev_mac(const char *device, unsigned char mac[6]);

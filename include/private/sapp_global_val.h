@@ -5,6 +5,12 @@
 #include <netinet/in.h>
 #include "sapp_pkt_stat.h"
 
+#ifndef RTE_CACHE_LINE_SIZE
+	#define RTE_CACHE_LINE_SIZE 64
+	#define __sapp_aligned(a) __attribute__((__aligned__(a)))
+	#define __sapp_cache_aligned __sapp_aligned(RTE_CACHE_LINE_SIZE)
+#endif
+
 typedef struct{
 	int worker_threads;
 	int send_only_threads_max_num; /* 纯发包线程最大数量, 是插件动态创建的, sapp可能无法预知, 只能设个最大值 */
@@ -244,23 +250,23 @@ typedef struct{
 typedef struct{
 	unsigned long long count[SAPP_STAT_NUM_MAX];  /* 计数类, 如包数, 新建链接数, 并发链接数等 */
 	unsigned long long length[SAPP_STAT_NUM_MAX]; /* 长度类, 如数据包总字节数 */
-}sapp_gval_mthread_sys_stat_t;
+}sapp_gval_mthread_sys_stat_t __sapp_cache_aligned;
 
 
 
 typedef struct{
 	sapp_gval_mthread_sys_stat_t sys_stat;
 	unsigned short stream_seq_per_thread;
-	char __padding[28];
-}sapp_gval_mthread_t; /*   for multi-thread, must 64byte alignment */
+	//char __padding[14];
+}sapp_gval_mthread_t __sapp_cache_aligned; /*   for multi-thread, must 64byte alignment */
 
 
 typedef struct{
 	volatile time_t current_time;
 	volatile long long current_time_ms;
 	volatile int current_state;
-	char __padding[44];
-}sapp_gval_individual_volatile_t;
+	//char __padding[44];
+}sapp_gval_individual_volatile_t __sapp_cache_aligned;
 
 
 typedef struct{

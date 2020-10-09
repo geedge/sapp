@@ -15,6 +15,12 @@
 //#define STREAM_RAWPKT_MD5_CHECK		"48fdc3294bced1c74a853e197db8fd67"
 //#define STREAM_TUNNEL_MD5_CHECK		"d20aa6b4f5683b7b0040676547997be0"
 
+#ifndef RTE_CACHE_LINE_SIZE
+	#define RTE_CACHE_LINE_SIZE 64
+	#define __sapp_aligned(a) __attribute__((__aligned__(a)))
+	#define __sapp_cache_aligned __sapp_aligned(RTE_CACHE_LINE_SIZE)
+#endif
+
 #define IP_PORT_UNION_VERSION			(1) /* 是否将IP-PORT合并 */
 #define COMPAT_PAPP_FOR_BENCHMARK	(0) /* 2015-01-07 lijia add, 同papp对比结果时, 临时关闭嵌套、各种隧道协议, 否则不一致 */
 #define USE_RBTREE_INSTEAD_LIST		(0) /* 当HASH冲突时, 使用红黑树代替链表, 避免特殊情况下遍历 */
@@ -340,8 +346,8 @@ struct sapp_global_mthread_t{
 	int udp_stream_special_timeout_num;/* 设置单独超时时间的流, 默认不允许超过总流表的10% */
 	timestamp_record_region_t runtime_record;
 	timestamp_record_region_t runtime_record_driver; /* 驱动从网卡拿到包, 到平台拿到包的延时 */
-	char __pad2__[40];
-};
+	//char __pad2__[40];
+}__sapp_cache_aligned;
 
 extern struct sapp_global_single_t sapp_global_single;
 extern struct sapp_global_mthread_t sapp_global_mthread[MAX_THREAD_NUM];
