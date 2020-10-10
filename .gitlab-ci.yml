@@ -90,6 +90,7 @@ release_build_release:
     PACKAGE: 1
     UPLOAD: 1
     SYMBOL_TARGET: sapp
+    MEM_POOL: TCMALLOC_MINI
     PULP3_REPO_NAME: platform-stable-x86_64.el7
     PULP3_DIST_NAME: platform-stable-x86_64.el7
   extends: .build_by_travis
@@ -111,6 +112,8 @@ testing_build_release:
     PACKAGE: 1
     UPLOAD: 1
     SYMBOL_TARGET: sapp
+    ASAN_OPTION: ADDRESS
+    MEM_POOL: TCMALLOC
     PULP3_REPO_NAME: platform-testing-x86_64.el7
     PULP3_DIST_NAME: platform-testing-x86_64.el7
   extends: .build_by_travis

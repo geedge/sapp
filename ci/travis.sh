@@ -33,8 +33,9 @@ env | sort
 : "${COMPILER_IS_GNUCXX:=OFF}"
 
 # Install dependency from YUM
+yum install -y libunwind gperftools
 yum install -y mrzcpd numactl-devel zlib-devel librdkafka-devel systemd-devel
-yum install libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel -y
+yum install libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libasan -y
 source /etc/profile.d/framework.sh
 
 mkdir build || true
@@ -46,6 +47,8 @@ cmake3 -DCMAKE_CXX_FLAGS=$CXX_FLAGS \
       -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
       -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
       -DENABLE_DEVEL=$ENABLE_DEVEL_SWITCH \
+      -DMEM_POOL=$MEM_POOL \
+      -DASAN_OPTION=$ASAN_OPTION \
       ..
 
 make
