@@ -1259,7 +1259,7 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 	struct streaminfo *pheap_stream;
 	struct streaminfo *pstack_stream;
 
-#if 0  //addr_skip_for_layer_cmp已经将层数对齐了, 此处不用跳过, addr_use_as_hash设为0, 肯定不比较地址
+#if 0  //stream_pr->addr_skip_for_layer_cmp标志已经将层数对齐了, 此处不用跳过, addr_use_as_hash设为0, 肯定不比较地址
 	while(pheap_stream_pr!= NULL && pheap_stream_pr->addr_skip_for_layer_cmp == 1)
 	{
 		pheap_stream_pr = (struct streaminfo_private *)pheap_stream_pr->stream_public.pfather;
@@ -2254,10 +2254,9 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
 		{
 			if (1 == sapp_global_val->config.protocol_feature.reverse_ethernet_addr_enabled) //2018-12-07 yw add, mac地址中包含信息时无需翻转
 			{
-				const struct layer_addr_mac *mac_saddr = (const struct layer_addr_mac *) saddr;
-				struct layer_addr_mac *mac_daddr = (struct layer_addr_mac *) daddr;
-				memcpy(mac_daddr->src_mac, mac_saddr->dst_mac, MAC_ADDR_LEN);
-				memcpy(mac_daddr->dst_mac, mac_saddr->src_mac, MAC_ADDR_LEN);
+				const struct layer_addr_mac *cur_stack_mac_saddr = (const struct layer_addr_mac *) saddr;
+				struct layer_addr_mac *heap_stream_mac_daddr = (struct layer_addr_mac *) daddr;
+				memcpy(&heap_stream_mac_daddr->dst_addr, &cur_stack_mac_saddr->src_addr, sizeof(struct ethhdr));
 			}
 			else
 			{
@@ -2316,15 +2315,15 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
 
         case ADDR_TYPE_MPLS:
         {
-            const struct layer_addr_mpls *src_mpls = (const struct layer_addr_mpls *)saddr;
+            const struct layer_addr_mpls *current_stack_addr = (const struct layer_addr_mpls *)saddr;
             struct layer_addr_mpls *dst_mpls = (struct layer_addr_mpls *)daddr;
 
             memset(dst_mpls, 0, sizeof(struct layer_addr_mpls));
 			/* 当前stack里的包地址信息固定存储于src方向, 反向copy是将stack地址拷贝到堆里的地址 */
-            memcpy(dst_mpls->dest_mpls_pkt, src_mpls->src_mpls_pkt, sizeof(src_mpls->src_mpls_pkt));
-            dst_mpls->dest_mpls_layer_num = src_mpls->src_mpls_layer_num;
-            if(src_mpls->src_has_ctrl_word){
-            	dst_mpls->dst_mpls_ctrl_word = src_mpls->src_mpls_ctrl_word;
+            memcpy(dst_mpls->dest_mpls_pkt, current_stack_addr->src_mpls_pkt, sizeof(current_stack_addr->src_mpls_pkt));
+            dst_mpls->dest_mpls_layer_num = current_stack_addr->src_mpls_layer_num;
+            if(current_stack_addr->src_has_ctrl_word){
+            	dst_mpls->dst_mpls_ctrl_word = current_stack_addr->src_mpls_ctrl_word;
 				dst_mpls->dst_has_ctrl_word = 1;
             }
         }
@@ -2626,10 +2625,8 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 	{
 		return;
 	}
-	if(p_stack->need_update_opposite_addr == 0) {
-		return update_opposite_addr_info((struct streaminfo_private *) pstream_pr->stream_public.pfather,
-		                             (struct streaminfo_private *) p_stack->stream_public.pfather, cur_dir);
-	} else{
+	
+	if(p_stack->need_update_opposite_addr != 0) {
 		switch(p_stack->stream_public.addr.addrtype)
 		{
 			case ADDR_TYPE_GPRS_TUNNEL:
@@ -2648,8 +2645,7 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 				break;
 				
 			case ADDR_TYPE_MPLS:
-				if((sapp_global_val->config.packet_io.create_mpls_anyway != 0)
-				 ||(ADDR_TYPE_MPLS == pstream_pr->stream_public.addr.addrtype)){ /* 如果是MPLS 1:N的模式, 即两端都有MPLS层, 但有可能不对称, 不开启create_mpls_anyway, 也要更新对端地址 */
+				if(ADDR_TYPE_MPLS == pstream_pr->stream_public.addr.addrtype){
 					if(cur_dir == DIR_C2S){
 						memcpy(pstream_pr->stream_public.addr.mpls->src_mpls_pkt,
 						        p_stack->stream_public.addr.mpls->src_mpls_pkt,
@@ -2659,9 +2655,9 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 							pstream_pr->stream_public.addr.mpls->src_mpls_ctrl_word = p_stack->stream_public.addr.mpls->src_mpls_ctrl_word;
 							pstream_pr->stream_public.addr.mpls->src_has_ctrl_word = 1;
 	                    }
-	                    if(p_stack->fake_layer_dir_for_asymmetric_cmp != 0){
-							pstream_pr->fake_layer_dir_for_asymmetric_cmp |= DIR_C2S;
-	                    }
+	                    //if(p_stack->fake_layer_dir_for_asymmetric_cmp != 0){
+						//	pstream_pr->fake_layer_dir_for_asymmetric_cmp |= DIR_C2S;
+	                    //}
 					}
 					else{
 	                    memcpy(pstream_pr->stream_public.addr.mpls->dest_mpls_pkt,
@@ -2672,10 +2668,12 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 							pstream_pr->stream_public.addr.mpls->dst_mpls_ctrl_word = p_stack->stream_public.addr.mpls->src_mpls_ctrl_word;
 							pstream_pr->stream_public.addr.mpls->dst_has_ctrl_word = 1;
 	                    }	 
-	                    if(p_stack->fake_layer_dir_for_asymmetric_cmp != 0){
-							pstream_pr->fake_layer_dir_for_asymmetric_cmp |= DIR_S2C;
-	                    }     
+	                    //if(p_stack->fake_layer_dir_for_asymmetric_cmp != 0){
+						//	pstream_pr->fake_layer_dir_for_asymmetric_cmp |= DIR_S2C;
+	                    //}     
 					}
+				}else{
+					sapp_runtime_log(RLOG_LV_INFO, "update_opposite_addr_info() error, current addrtype is mpls, but pstream->addrtype is not mpls!");
 				}
 				break;
 				
@@ -2693,16 +2691,36 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 	                           sizeof(p_stack->stream_public.addr.vlan->dst_vlan_pkt));
 	                    pstream_pr->stream_public.addr.vlan->dst_vlan_layer_num = p_stack->stream_public.addr.vlan->src_vlan_layer_num;    //注意, 这里固定用src方向!!                 
 					}
-				}			
+				}else{
+					sapp_runtime_log(RLOG_LV_INFO, "update_opposite_addr_info() error, current addrtype is vlan, but pstream->addrtype is not vlan!");
+				}
+			break;
+
+			case ADDR_TYPE_MAC:
+				if(ADDR_TYPE_MAC == pstream_pr->stream_public.addr.addrtype){
+					if(cur_dir == DIR_C2S){
+						memcpy(&pstream_pr->stream_public.addr.mac->src_addr,
+						        &p_stack->stream_public.addr.mac->src_addr,
+						        sizeof(struct ethhdr));
+					}
+					else{
+	                    memcpy(&pstream_pr->stream_public.addr.mac->dst_addr,
+	                           &p_stack->stream_public.addr.mac->src_addr,  //注意, 这里固定用src方向!!
+	                           sizeof(struct ethhdr));
+					}
+				}else{
+					sapp_runtime_log(RLOG_LV_INFO, "update_opposite_addr_info() error, current addrtype is ethernet, but pstream->addrtype is not ethernet!");
+				}
+
 			break;
 			
-			default:
-				return update_opposite_addr_info((struct streaminfo_private *) pstream_pr->stream_public.pfather,
-				                             (struct streaminfo_private *) p_stack->stream_public.pfather, cur_dir);			
+			default:		
 				break;
 		}
 	}
-	return;
+	
+	return update_opposite_addr_info((struct streaminfo_private *) pstream_pr->stream_public.pfather,
+								 (struct streaminfo_private *) p_stack->stream_public.pfather, cur_dir);	
 }
 
 

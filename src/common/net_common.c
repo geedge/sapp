@@ -409,13 +409,12 @@ static int mpls_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 	next_layer_data = raw_data + mpls_layer_len;
 
 	/* MPLS没有字段标识下一层是什么, 靠猜测下一层的IP类型 */
-	if((*next_layer_data & 0x40) == 0x40){
+	if((*next_layer_data & 0xF0) == 0x40){
 		skip_len = ipv4_jump_to_layer(next_layer_data, __ADDR_TYPE_IP_PAIR_V4, expect_layer_type);
-	}else if((*next_layer_data & 0x60) == 0x60){
+	}else if((*next_layer_data & 0xF0) == 0x60){
 		skip_len = ipv6_jump_to_layer(next_layer_data, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
-	}else if((*next_layer_data & 0xF) == 0){ //VPLS
-		skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MAC, expect_layer_type);
-	}else{
+	}else{	
+		/* VPLS和不带control word一并处理, 在set_mpls_addr()函数中, 如果包括Control word, next_layer_data已经跳过了四字节的control word  */
 		skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MAC, expect_layer_type);
 		if(skip_len < 0){
 			sapp_runtime_log(20, "WARNING: jmp unsupport type in MPLS to Ethernet, 0x%x!\n",  
@@ -674,9 +673,12 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 		case ADDR_TYPE_UDP:
 			ret = udp_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
 		break;
-				
-		case ADDR_TYPE_PPPOE_SES:
-		case ADDR_TYPE_MPLS:		
+
+		case ADDR_TYPE_MPLS:	
+			ret = mpls_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
+		break;
+		
+		case ADDR_TYPE_PPPOE_SES:	
 		case ADDR_TYPE_GRE:
 		default:
 			sapp_runtime_log(20, "MESA_net_jump_to_layer(): unsupport raw_layer_type:%d in MESA_net_jump_to_layer()!\n", raw_layer_type);
@@ -868,6 +870,53 @@ UINT16 net_layer_to_ethernet_protocol(int addr_type)
 
 	return ether_type;
 }
+
+
+/*
+	将标准Ethernet类型转换为MESA地址类型;
+*/
+enum addr_type_t ethernet_protocol_to_net_layer(UINT16 ether_type_host)
+{
+	enum addr_type_t addrtype = __ADDR_TYPE_INIT;
+
+	switch(ether_type_host){
+		case ETH_P_IP:
+			addrtype = __ADDR_TYPE_IP_PAIR_V4;
+		break;
+
+		case ETH_P_IPV6:
+			addrtype = __ADDR_TYPE_IP_PAIR_V6;
+		break;
+
+		case ETHERTYPE_VLAN:
+			addrtype = ADDR_TYPE_VLAN;
+		break;
+
+		case ETH_P_PPP_SES:
+			addrtype =  ADDR_TYPE_PPPOE_SES;
+		break;
+
+		case ETH_P_MPLS_UC :
+			addrtype = ADDR_TYPE_MPLS;
+		break;
+
+		case ETH_P_ARP:
+			addrtype = ADDR_TYPE_ARP;
+		break;
+
+		case ETHERTYPE_PANGU_MAC_IN_MAC:
+			addrtype = ADDR_TYPE_MAC_IN_MAC;
+		break;
+		
+		default:
+			/* to do, unknown type */
+			sapp_runtime_log(RLOG_LV_INFO, "%s:%d: unknown ethernet carry addr type:0x%x\n", __FILE__, __LINE__, ether_type_host);
+		break;
+	}
+
+	return addrtype;
+}
+
 
 /* 串联模式下, 将收到的包正常转发 */
 int packet_io_forward_pkt(int thread_num, int top_mode)

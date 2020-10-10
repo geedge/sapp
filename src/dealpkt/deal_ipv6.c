@@ -764,17 +764,13 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 	struct layer_addr_ipv6 ip6_addr;
 	struct streamindex tmp_index;
 	struct streaminfo *plocal_stream = &tmp_index.stream.stream_public;
+	struct streaminfo_private *plocal_stream_pr = &tmp_index.stream;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 #if IPV6_DEBUG
 	static unsigned int ipv6_frag_reassemble_num = 0;
 #endif
 
-	if(0 == g_ipv6_decapsulation_enabled){
-		static int __print_flag = 1; /* 前端警告只打印一次, 不狂刷屏 */
-		if(__print_flag){
-			printf("\033[41m[Warning]recv a IPv6 packet, but IPv6 decapsulation is not enable!\033[0m\n");
-			__print_flag = 0;
-		}
+	if(unlikely(0 == g_ipv6_decapsulation_enabled)){
 		sapp_runtime_log(20, "recv a IPv6 packet, but IPv6 decapsulation is not enable!\n");
 		return PASS;
 	}
@@ -784,6 +780,14 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 		local_sys_stat->count[SAPP_STAT_DROP_IPV6]++;
 		local_sys_stat->length[SAPP_STAT_DROP_IPV6]+=raw_pkt->raw_pkt_len;
 		return PASS;
+	}
+
+	if(unlikely(pfstream_pr->layer_index >= SAPP_SUPPORT_LAYER_NUM_MAX)){
+		local_sys_stat->count[SAPP_STAT_DROP_IPV6]++;
+		sapp_runtime_log(RLOG_LV_INFO, "ipv6_entry: layer index more than:%d", pfstream_pr->layer_index);
+		return PASS;
+	}else{
+		plocal_stream_pr->layer_index = pfstream_pr->layer_index + 1;
 	}
 
 	if((sapp_global_mthread[thread_num].ipv6_pkt_type_flag & PKT_TYPE_IPREBUILD) == 0){
@@ -821,7 +825,7 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 	{
 		switch(next_hdr_type)
 		{			
-			case NEXTHDR_TCP:	
+			case NEXTHDR_TCP:			
 				ret=stream_process_ipv6(plocal_stream,(const struct ip6_hdr *)a_packet,thread_num,routedir,raw_pkt);
 				if(ret==DROP){
 					goto prosecc_pkt_drop;

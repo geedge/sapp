@@ -26,6 +26,19 @@ typedef struct{
 	struct mr_sendpath *sendpath_up, *sendpath_down; /* 并联模式下, 直接使用sendpath_up; 同时兼容双网卡串联模式 */
 }marsio4_io_handle;
 
+/* for vlan flipping */
+enum mr_buff_metadata_type
+{
+	MR_BUFF_REHASH_INDEX = 0,
+	MR_BUFF_METADATA_VLAN_TCI = 1, /* int类型, 主机序, host order */
+};
+
+extern int marsio_buff_get_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
+extern int marsio_buff_set_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
+extern int marsio_buff_unset_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type);
+
+
+
 int g_marsio4_version_VERSION_20190907;
 int g_marsio4_version_VERSION = 20190907;
 static PACKET_IO_CB_T g_marsio4_work_fun;
@@ -78,8 +91,12 @@ uint32_t (*ptr_marsio_buff_datalen)(marsio_buff_t *m);
 uint32_t (*ptr_marsio_buff_buflen)(marsio_buff_t *m);
 
 marsio_buff_t * (*ptr_marsio_buff_clone_with_options)(struct mr_instance * instance, marsio_buff_t * md, int socket_id, int thread_id, uint16_t options);
-unsigned short (*marsio_get_vlan_id_from_mbuff)(void *pkt_reference);
-int (*marsio_set_vlan_id_to_mbuff)(void *pkt_reference, unsigned short vlan_id_net_order);
+
+
+int (*ptr_marsio_buff_get_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
+int (*ptr_marsio_buff_set_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
+int (*ptr_marsio_buff_unset_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type);
+
 
 /************************  funcitons for dynamic link *************************/
 
@@ -271,7 +288,8 @@ void marsio_dl_io_free_sendbuf(void *phandle, int thread_seq)
 	return;
 }
 
-int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_seq)
+int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, 
+			int thread_seq, unsigned char route_dir, const raw_pkt_t *raw_pkt)
 {
 	int ret;
 	marsio_buff_t *send_mbuf[1];
@@ -288,7 +306,12 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	
 	memcpy(real_buf, data, datalen);
 
-	mr_ctrlzone.action = TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
+	if(sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin != OVERLAY_MODE_NONE){
+		mr_ctrlzone.action = TUNNAT_CZ_ACTION_ENCAP_NO_SESSION;
+		packet_io_hook_sendto(raw_pkt, route_dir, real_buf, (void *)send_mbuf[0]);
+	}else{
+		mr_ctrlzone.action = TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
+	}
 	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 
 	ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, MARSIO_SEND_OPT_FAST|MARSIO_SEND_OPT_REHASH);
@@ -302,7 +325,7 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 }
 
 int marsio_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
-						int eth_carry_layer_addr_type, int dir,int thread_num)
+						int eth_carry_layer_addr_type, int dir,int thread_num,const raw_pkt_t *raw_pkt)
 {
 	int ret;
 
@@ -313,10 +336,10 @@ int marsio_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 	//在双网卡透明模式(transparent)下, 根据dir选择up or down device发出.
 	if(NET_CONN_SERIAL_2CARD == g_marsio4_topology_mode){
 		assert((dir >= 0) && (dir <= 1));
-		ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[dir].dl_io_param, thread_num);
+		ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[dir].dl_io_param, thread_num, dir, raw_pkt);
 	}else{
 		/* 并联和inline device模式都是一块卡, 默认都从0号端口发出 */
-		ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[0].dl_io_param, thread_num);
+		ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[0].dl_io_param, thread_num,dir, raw_pkt);
 	}
 	
 	return ret;
@@ -548,6 +571,7 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 		for(i = 0; i < g_mr4_device_num; i++){
 			rcv_res = ptr_marsio_recv_burst(g_mr4_dev_up_handle_set[i], tid, rx_buff, marsio4_burst_process_pkt_num);
 			if(rcv_res > 0){
+				raw_pkt->device_index = i;
 				for(j = 0; j < rcv_res; j++){
 					marsio4_pkt_hand(tid, rx_buff[j], raw_pkt, DIR_ROUTE_UP); /* 并联模式不关心返回值 */
 				}
@@ -560,7 +584,7 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 			rcv_res = ptr_marsio_recv_burst(g_mr4_dev_up_handle_set[i], tid, rx_buff, 16);
 			if(rcv_res > 0){
 				for(j = 0; j < rcv_res; j++){
-#if TIME_DELAY_MONITOR				
+#if TIME_DELAY_MONITOR
 					driver = marsio_buff_get_timestamp(rx_buff[j]);		
 					clock_gettime(CLOCK_MONOTONIC, &curtime);
 					recv_from_driver = curtime.tv_nsec ;	
@@ -864,6 +888,28 @@ static int marsio_dl_get_function_entry(void)
 		//go on
 	}
 
+	/* for vlan flipping */
+	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	&& (OVERLAY_MODE_VLAN_FLIP_ADEV == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)){
+		ptr_marsio_buff_get_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_get_metadata");
+		if(NULL == ptr_marsio_buff_get_metadata){
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_get_metadata", MARSIO_SO_FILE_PATH);
+			return -1;
+		}
+
+		ptr_marsio_buff_set_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_set_metadata");
+		if(NULL == ptr_marsio_buff_set_metadata){
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_metadata", MARSIO_SO_FILE_PATH);
+			return -1;
+		}
+
+		ptr_marsio_buff_unset_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type))dlsym(marsio_so_handle, "marsio_buff_unset_metadata");
+		if(NULL == ptr_marsio_buff_unset_metadata){
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_unset_metadata", MARSIO_SO_FILE_PATH);
+			return -1;
+		}		
+	}
+
 	return 0;
 }
 
@@ -896,6 +942,21 @@ int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath
 	}
 
 	return ptr_marsio_send_burst_with_options(sendpath, sid, mbufs, nr_mbufs, options);	
+}
+
+
+unsigned int marsio_get_vlan_id_from_mbuff(void *pkt_reference)
+{
+	unsigned int vlan_id = 0;
+	
+	ptr_marsio_buff_get_metadata((marsio_buff_t *)pkt_reference, MR_BUFF_METADATA_VLAN_TCI, &vlan_id, sizeof(int));
+
+	return vlan_id;
+}
+
+int marsio_set_vlan_id_to_mbuff(void *pkt_reference, unsigned int vlan_id_host_order)
+{
+	return ptr_marsio_buff_set_metadata((marsio_buff_t *)pkt_reference, MR_BUFF_METADATA_VLAN_TCI, &vlan_id_host_order, sizeof(int));
 }
 
 

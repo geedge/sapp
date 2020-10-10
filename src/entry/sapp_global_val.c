@@ -43,16 +43,14 @@ int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
 	比如某GRE隧道原始包层数为: ethernet/ipv4/gre/ipv4/udp/dns,   跳过最外层隧道的配置: "gre[2],ip[1]", 
 */
 
-typedef struct{
-	int prune_inject_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
-}embed_layer_t;
-embed_layer_t prune_inject_layer_set[4];
+
+embed_layer_t g_prune_inject_layer_set[10];
 
 
 /*
 	描述哪些层是非对称存在层, 即C2S和S2C方向有可能没有这一层,导致创建流compare_addr时两侧不对称, 需要创建一个空层, 但注入包时尤其注意, 需要跳过. 
 */
-int g_asymmetric_presence_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];    
+asymmetric_presence_layer_t g_asymmetric_presence_layer_set[__ADDR_TYPE_MAX];    
 
 
 /*
@@ -62,7 +60,7 @@ int g_asymmetric_presence_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX]
 	需要更新对侧信息, 注入包时尤其注意. 
 	如果是单向流, 且开启此项配置, 反向注入包是失败的!!
 */
-int g_asymmetric_addr_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];    
+embed_layer_t g_asymmetric_addr_layer_set; 
 
 
 extern char *MESA_MD5_sum_str(unsigned char *raw_data, unsigned int raw_data_len, char result[33]);

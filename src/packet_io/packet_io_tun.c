@@ -162,7 +162,7 @@ void *tun_dl_io_get_send_handle(int thread_num)
 }
 
 int tun_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
-						int eth_carry_layer_addr_type, int dir,int thread_num)
+						int eth_carry_layer_addr_type, int dir,int thread_num,const raw_pkt_t *raw_pkt)
 {
 	tun_send_handle *send_handle = (tun_send_handle *)phandle;
 	int dir_reverse, ret;

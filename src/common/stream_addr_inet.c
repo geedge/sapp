@@ -73,36 +73,36 @@ static const addr_convert_t G_ADDR_CONVERT_HANDLE[] =
 {
 	{__ADDR_TYPE_INIT,			STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL},
 #if (0 == IP_PORT_UNION_VERSION) /* 在IP-PORT合并的版本里, 没有纯IP地址层 */
-	{ADDR_TYPE_IPV4,			STREAM_TYPE_TCP,"ADDR_TYPE_TUPLE4V4",	"IPv4_TCP",	"IPv4_TCP<",__addr_tcp_n2p_fun, __addr_tcpv4_pton}, /* 1, 基于IPv4地址的四元组信息 */
-	{ADDR_TYPE_IPV4,			STREAM_TYPE_UDP,"ADDR_TYPE_TUPLE4V4",	"IPv4_UDP",	"IPv4_UDP<",__addr_udp_n2p_fun, __addr_udpv4_pton}, /* 1, 基于IPv4地址的四元组信息 */
-	{ADDR_TYPE_IPV6,			STREAM_TYPE_TCP,"ADDR_TYPE_TUPLE4V6",	"IPv6_TCP",	"IPv6_TCP<",__addr_tcp_n2p_fun, __addr_tcpv6_pton},	/* 2, 基于IPv6地址的四元组信息 */
-	{ADDR_TYPE_IPV6,			STREAM_TYPE_UDP,"ADDR_TYPE_TUPLE4V6",	"IPv6_UDP",	"IPv6_UDP<",__addr_udp_n2p_fun, __addr_udpv6_pton},	/* 2, 基于IPv6地址的四元组信息 */
+	{ADDR_TYPE_IPV4,			STREAM_TYPE_TCP,"ADDR_TYPE_TUPLE4V4",	"IPv4_TCP",	"IPv4_TCP<",__addr_tcp_n2p_fun, __addr_tcpv4_pton, "tuple4v4"}, /* 1, 基于IPv4地址的四元组信息 */
+	{ADDR_TYPE_IPV4,			STREAM_TYPE_UDP,"ADDR_TYPE_TUPLE4V4",	"IPv4_UDP",	"IPv4_UDP<",__addr_udp_n2p_fun, __addr_udpv4_pton, "tuple4v4"}, /* 1, 基于IPv4地址的四元组信息 */
+	{ADDR_TYPE_IPV6,			STREAM_TYPE_TCP,"ADDR_TYPE_TUPLE4V6",	"IPv6_TCP",	"IPv6_TCP<",__addr_tcp_n2p_fun, __addr_tcpv6_pton, "tuple4v6"},	/* 2, 基于IPv6地址的四元组信息 */
+	{ADDR_TYPE_IPV6,			STREAM_TYPE_UDP,"ADDR_TYPE_TUPLE4V6",	"IPv6_UDP",	"IPv6_UDP<",__addr_udp_n2p_fun, __addr_udpv6_pton, "tuple4v6"},	/* 2, 基于IPv6地址的四元组信息 */
 #else /* 将四元组prefix改名, 用UNION字母U与老版区别开 */
-	{ADDR_TYPE_IPV4,			STREAM_TYPE_TCP,"ADDR_TYPE_TUPLE4V4",	"IPv4_TCP",	"IPv4_TCP<",__addr_tcp_n2p_fun, __addr_tcpv4_pton}, /* 1, 基于IPv4地址的四元组信息 */
-	{ADDR_TYPE_IPV4,			STREAM_TYPE_UDP,"ADDR_TYPE_TUPLE4V4",	"IPv4_UDP",	"IPv4_UDP<",__addr_udp_n2p_fun, __addr_udpv4_pton}, /* 1, 基于IPv4地址的四元组信息 */
-	{ADDR_TYPE_IPV6,			STREAM_TYPE_TCP,"ADDR_TYPE_TUPLE4V6",	"IPv6_TCP",	"IPv6_TCP<",__addr_tcp_n2p_fun, __addr_tcpv6_pton},	/* 2, 基于IPv6地址的四元组信息 */
-	{ADDR_TYPE_IPV6,			STREAM_TYPE_UDP,"ADDR_TYPE_TUPLE4V6",	"IPv6_UDP",	"IPv6_UDP<",__addr_udp_n2p_fun, __addr_udpv6_pton},	/* 2, 基于IPv6地址的四元组信息 */
+	{ADDR_TYPE_IPV4,			STREAM_TYPE_TCP,"ADDR_TYPE_TUPLE4V4",	"IPv4_TCP",	"IPv4_TCP<",__addr_tcp_n2p_fun, __addr_tcpv4_pton, "tuple4v4"}, /* 1, 基于IPv4地址的四元组信息 */
+	{ADDR_TYPE_IPV4,			STREAM_TYPE_UDP,"ADDR_TYPE_TUPLE4V4",	"IPv4_UDP",	"IPv4_UDP<",__addr_udp_n2p_fun, __addr_udpv4_pton, "tuple4v4"}, /* 1, 基于IPv4地址的四元组信息 */
+	{ADDR_TYPE_IPV6,			STREAM_TYPE_TCP,"ADDR_TYPE_TUPLE4V6",	"IPv6_TCP",	"IPv6_TCP<",__addr_tcp_n2p_fun, __addr_tcpv6_pton, "tuple4v6"},	/* 2, 基于IPv6地址的四元组信息 */
+	{ADDR_TYPE_IPV6,			STREAM_TYPE_UDP,"ADDR_TYPE_TUPLE4V6",	"IPv6_UDP",	"IPv6_UDP<",__addr_udp_n2p_fun, __addr_udpv6_pton, "tuple4v6"},	/* 2, 基于IPv6地址的四元组信息 */
 #endif
-	{ADDR_TYPE_VLAN,			STREAM_TYPE_NON,"ADDR_TYPE_VLAN",		"VLAN",		"VLAN<",__addr_vlan_n2p_fun,__addr_vlan_pton},	/* 3 */
-	{ADDR_TYPE_MAC,				STREAM_TYPE_NON,"ADDR_TYPE_MAC",		"MAC",		"MAC<",__addr_mac_n2p_fun,__addr_mac_pton}, /* 4 */
-	{ADDR_TYPE_ARP,				STREAM_TYPE_NON,"ADDR_TYPE_ARP",		"ARP",		"ARP<",__addr_arp_n2p_fun,__addr_arp_pton},				/* 5 */
-	{ADDR_TYPE_GRE,				STREAM_TYPE_NON,"ADDR_TYPE_GRE",		"GRE",		"GRE<",__addr_gre_n2p_fun,__addr_gre_pton},		/* 6 */
-	{ADDR_TYPE_MPLS,			STREAM_TYPE_NON,"ADDR_TYPE_MPLS",		"MPLS",		"MPLS<",__addr_mpls_n2p_fun,__addr_mpls_pton},/* 7 */
-	{ADDR_TYPE_PPPOE_SES,		STREAM_TYPE_PPPOE,"ADDR_TYPE_PPPOE",	"PPPOE",		"PPPOE<",__addr_pppoe_n2p_fun,__addr_pppoe_pton},/* 8 */
-	{ADDR_TYPE_TCP,				STREAM_TYPE_NON,"ADDR_TYPE_TCP",		"TCP",		"TCP<",__addr_pure_tcp_n2p_fun, __addr_pure_tcp_pton},		/* 9 */
-	{ADDR_TYPE_UDP,				STREAM_TYPE_NON,"ADDR_TYPE_UDP",		"UDP",		"UDP<",__addr_pure_udp_n2p_fun,__addr_pure_udp_pton},		/* 10 */
-	{ADDR_TYPE_L2TP,			STREAM_TYPE_L2TP,"ADDR_TYPE_L2TP",		"L2TP",		"L2TP<",__addr_l2tp_n2p_fun,__addr_l2tp_pton},	/* 11 */
-	{__ADDR_TYPE_IP_PAIR_V4,	STREAM_TYPE_NON,"ADDR_TYPE_IPPAIR_V4",	"IPv4",		"IPv4<",__addr_ip4_n2p_fun,__addr_ipv4_pton},/* 12, 纯IPv4地址对 */
-	{__ADDR_TYPE_IP_PAIR_V6,	STREAM_TYPE_NON,"ADDR_TYPE_IPPAIR_V6",	"IPv6",		"IPv6<",__addr_ip6_n2p_fun,__addr_ipv6_pton},/* 13, 纯IPv6地址对 */
-	{ADDR_TYPE_PPP,				STREAM_TYPE_NON,"ADDR_TYPE_PPP",		"PPP",		"PPP<",__addr_ppp_n2p_fun,__addr_ppp_pton},/* 14 */
-	{ADDR_TYPE_IPV4,			STREAM_TYPE_SOCKS4,"ADDR_TYPE_SOCKS",	"SOCKS",		"SOCKS<",__addr_socks_n2p_fun,__addr_sockv4_pton},/* 14 */
-	{ADDR_TYPE_IPV4,			STREAM_TYPE_SOCKS5,"ADDR_TYPE_SOCKS",	"SOCKS",		"SOCKS<",__addr_socks_n2p_fun,__addr_sockv4_pton},/* 14 */
-	{ADDR_TYPE_PPTP,			STREAM_TYPE_PPTP,"ADDR_TYPE_PPPTP",		"PPTP", 		"PPTP<",__addr_pptp_n2p_fun, __addr_pptp_pton}, /* 15 */
-	{ADDR_TYPE_MAC_IN_MAC,		STREAM_TYPE_NON, "ADDR_TYPE_MAC_IN_MAC",	"MAC_IN_MAC",	"MAC_IN_MAC<",__addr_mac_in_mac_n2p_fun,__addr_mac_in_mac_pton}, /* 4 */
-	{ADDR_TYPE_IPV4,			STREAM_TYPE_OPENVPN,"ADDR_TYPE_OPENVPN",	"OpenVPN",	"OpenVPN<",__addr_openvpn_n2p_fun,__addr_openvpn_pton},/* 2017-02-10 lijia add */
-	{ADDR_TYPE_IPV6,			STREAM_TYPE_OPENVPN,"ADDR_TYPE_OPENVPN",	"OpenVPN",	"OpenVPN<",__addr_openvpn_n2p_fun,__addr_openvpn_pton},/* 2017-02-10 lijia add */
-    {ADDR_TYPE_GPRS_TUNNEL,		STREAM_TYPE_NON,"ADDR_TYPE_GTP",			"GTP",		"GTP<",__addr_gtp_n2p_fun,__addr_gtp_pton},	/*  */
-    {__ADDR_TYPE_MAX,			STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL} /* EOF */
+	{ADDR_TYPE_VLAN,			STREAM_TYPE_NON,"ADDR_TYPE_VLAN",		"VLAN",		"VLAN<",__addr_vlan_n2p_fun,__addr_vlan_pton, "vlan"},	/* 3 */
+	{ADDR_TYPE_MAC,				STREAM_TYPE_NON,"ADDR_TYPE_MAC",		"MAC",		"MAC<",__addr_mac_n2p_fun,__addr_mac_pton, "ethernet"}, /* 4 */
+	{ADDR_TYPE_ARP,				STREAM_TYPE_NON,"ADDR_TYPE_ARP",		"ARP",		"ARP<",__addr_arp_n2p_fun,__addr_arp_pton, "arp"},				/* 5 */
+	{ADDR_TYPE_GRE,				STREAM_TYPE_NON,"ADDR_TYPE_GRE",		"GRE",		"GRE<",__addr_gre_n2p_fun,__addr_gre_pton, "gre"},		/* 6 */
+	{ADDR_TYPE_MPLS,			STREAM_TYPE_NON,"ADDR_TYPE_MPLS",		"MPLS",		"MPLS<",__addr_mpls_n2p_fun,__addr_mpls_pton, "mpls"},/* 7 */
+	{ADDR_TYPE_PPPOE_SES,		STREAM_TYPE_PPPOE,"ADDR_TYPE_PPPOE",	"PPPOE",		"PPPOE<",__addr_pppoe_n2p_fun,__addr_pppoe_pton, "pppoe"},/* 8 */
+	{ADDR_TYPE_TCP,				STREAM_TYPE_NON,"ADDR_TYPE_TCP",		"TCP",		"TCP<",__addr_pure_tcp_n2p_fun, __addr_pure_tcp_pton, "tcp"},		/* 9 */
+	{ADDR_TYPE_UDP,				STREAM_TYPE_NON,"ADDR_TYPE_UDP",		"UDP",		"UDP<",__addr_pure_udp_n2p_fun,__addr_pure_udp_pton, "udp"},		/* 10 */
+	{ADDR_TYPE_L2TP,			STREAM_TYPE_L2TP,"ADDR_TYPE_L2TP",		"L2TP",		"L2TP<",__addr_l2tp_n2p_fun,__addr_l2tp_pton, "l2tp"},	/* 11 */
+	{__ADDR_TYPE_IP_PAIR_V4,	STREAM_TYPE_NON,"ADDR_TYPE_IPPAIR_V4",	"IPv4",		"IPv4<",__addr_ip4_n2p_fun,__addr_ipv4_pton, "ipv4"},/* 12, 纯IPv4地址对 */
+	{__ADDR_TYPE_IP_PAIR_V6,	STREAM_TYPE_NON,"ADDR_TYPE_IPPAIR_V6",	"IPv6",		"IPv6<",__addr_ip6_n2p_fun,__addr_ipv6_pton, "ipv6"},/* 13, 纯IPv6地址对 */
+	{ADDR_TYPE_PPP,				STREAM_TYPE_NON,"ADDR_TYPE_PPP",		"PPP",		"PPP<",__addr_ppp_n2p_fun,__addr_ppp_pton, "ppp"},/* 14 */
+	{ADDR_TYPE_IPV4,			STREAM_TYPE_SOCKS4,"ADDR_TYPE_SOCKS",	"SOCKS",		"SOCKS<",__addr_socks_n2p_fun,__addr_sockv4_pton, "socks"},/* 14 */
+	{ADDR_TYPE_IPV4,			STREAM_TYPE_SOCKS5,"ADDR_TYPE_SOCKS",	"SOCKS",		"SOCKS<",__addr_socks_n2p_fun,__addr_sockv4_pton, "socks"},/* 14 */
+	{ADDR_TYPE_PPTP,			STREAM_TYPE_PPTP,"ADDR_TYPE_PPPTP",		"PPTP", 		"PPTP<",__addr_pptp_n2p_fun, __addr_pptp_pton, "pptp"}, /* 15 */
+	{ADDR_TYPE_MAC_IN_MAC,		STREAM_TYPE_NON, "ADDR_TYPE_MAC_IN_MAC",	"MAC_IN_MAC",	"MAC_IN_MAC<",__addr_mac_in_mac_n2p_fun,__addr_mac_in_mac_pton, "mac_in_mac"}, /* 4 */
+	{ADDR_TYPE_IPV4,			STREAM_TYPE_OPENVPN,"ADDR_TYPE_OPENVPN",	"OpenVPN",	"OpenVPN<",__addr_openvpn_n2p_fun,__addr_openvpn_pton, "openvpn"},/* 2017-02-10 lijia add */
+	{ADDR_TYPE_IPV6,			STREAM_TYPE_OPENVPN,"ADDR_TYPE_OPENVPN",	"OpenVPN",	"OpenVPN<",__addr_openvpn_n2p_fun,__addr_openvpn_pton, "openvpn"},/* 2017-02-10 lijia add */
+    {ADDR_TYPE_GPRS_TUNNEL,		STREAM_TYPE_NON,"ADDR_TYPE_GTP",			"GTP",		"GTP<",__addr_gtp_n2p_fun,__addr_gtp_pton, "gtp"},	/*  */
+    {__ADDR_TYPE_MAX,			STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL, NULL} /* EOF */
 };
 
 
@@ -551,7 +551,7 @@ static int __addr_mac_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 		}
 		tmp_bin_val |= MESA_ascii_to_hex(*str_val);
 		str_val++;
-		macaddr->src_mac[i] = tmp_bin_val;
+		macaddr->src_addr.h_source[i] = tmp_bin_val;
 	}
 
 	if(*str_val != '-'){
@@ -575,7 +575,7 @@ static int __addr_mac_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 		}
 		tmp_bin_val |= MESA_ascii_to_hex(*str_val);
 		str_val++;
-		macaddr->dst_mac[i] = tmp_bin_val;
+		macaddr->src_addr.h_dest[i] = tmp_bin_val;
 	}
 	
 	addr_bin_val->stream.addr.paddr = addr_bin_val->addr_value;
@@ -1320,13 +1320,13 @@ static int __addr_mac_n2p_fun(const struct layer_addr *paddr, char *buf, int buf
 	}
 
 	for(i = 0; i < 6; i++,buf+=2){
-		sprintf(buf, "%02x", macaddr->src_mac[i]);
+		sprintf(buf, "%02x", macaddr->src_addr.h_source[i]);
 	}
 	*buf = '-';
 	buf++;
 	//mac_addr += MAC_ADDR_LEN;
 	for(i = 0; i < 6; i++,buf+=2){
-		sprintf(buf, "%02x", macaddr->dst_mac[i]);
+		sprintf(buf, "%02x", macaddr->src_addr.h_dest[i]);
 	}
 	*buf = '\0';
 	buf++;
@@ -1889,6 +1889,39 @@ const char *layer_addr_prefix_ntop(const struct streaminfo *pstream)
 	
 	return addr_type_str;
 }
+
+/* ipv4, ipv6, ethernet,vlan, arp, gre, mpls, pppoe, tcp, udp, l2tp, ppp, pptp, gtp */
+enum addr_type_t addr_type_abbreviation_pton(const char *addr_type_abbreviation)
+{
+	int i;
+	enum addr_type_t addrtype = __ADDR_TYPE_MAX;
+
+	for(i = __ADDR_TYPE_INIT+1; G_ADDR_CONVERT_HANDLE[i].addr_type_bin!= __ADDR_TYPE_MAX; i++){
+		if((strncasecmp(addr_type_abbreviation, G_ADDR_CONVERT_HANDLE[i].addr_type_string_abbreviation, strlen(addr_type_abbreviation)) == 0)
+		&& (strncasecmp(addr_type_abbreviation, G_ADDR_CONVERT_HANDLE[i].addr_type_string_abbreviation, strlen(G_ADDR_CONVERT_HANDLE[i].addr_type_string_abbreviation)) == 0)){
+			addrtype =  G_ADDR_CONVERT_HANDLE[i].addr_type_bin;
+			break;
+		}
+	}
+
+	return addrtype;	
+}
+
+const char *addr_type_abbreviation_ntop(enum addr_type_t addrtype)
+{
+	int i;
+	const char *addr_abbr_str = "unknown";
+
+	for(i = __ADDR_TYPE_INIT+1; G_ADDR_CONVERT_HANDLE[i].addr_type_bin!= __ADDR_TYPE_MAX; i++){
+		if(G_ADDR_CONVERT_HANDLE[i].addr_type_bin == addrtype){
+			addr_abbr_str =	G_ADDR_CONVERT_HANDLE[i].addr_type_string_abbreviation;
+			break;
+		}
+	}
+
+	return addr_abbr_str;	
+}
+
 
 #ifdef __cplusplus
 }

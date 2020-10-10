@@ -343,20 +343,243 @@ static int parse_vlan_flipping_map_config(void)
 }
 
 
-static int parse_asymmetric_addr_layer_config(void)
+static int embed_layer_t_pton(char *config_val, embed_layer_t *result)
+{
+	enum addr_type_t addrtype;
+	int i, j, ret, layer_index;
+	const char *delim = "[] ";
+	char *save_ptr;
+	const char *layer_type_string;
+	const char *layer_index_string;
+
+	layer_type_string = strtok_r(config_val, delim, &save_ptr);
+	layer_index_string = strtok_r(NULL, delim, &save_ptr);
+
+	if(NULL == layer_type_string || NULL == layer_index_string ){
+		return -1;
+	}
+	
+	addrtype = addr_type_abbreviation_pton(layer_type_string);
+	if(__ADDR_TYPE_MAX == addrtype){
+		return -1;
+	}
+
+	memset(result, 0, sizeof(embed_layer_t));
+
+	if('*' == layer_index_string[0]){
+		for(j = 0; j < SAPP_SUPPORT_LAYER_NUM_MAX; j++){
+			result->layer_type_index[addrtype][j] = 1;
+		}
+	}else{
+		layer_index = atoi(layer_index_string);
+		if(layer_index < 0 || layer_index >= (int)__ADDR_TYPE_MAX){
+			return -1;
+		}
+
+		result->layer_type_index[addrtype][layer_index] = 1;
+	}
+
+	return 0;
+}
+
+/*
+	return value pattern: 
+	    addr_type_name[layer_index]
+*/
+static const char *embed_layer_t_ntop(const embed_layer_t *layer_st, char *result, int res_max_len)
+{
+	char addrtype_name_str[NAME_MAX] = {};
+	char layer_index_str[NAME_MAX] = {};
+	char one_layer_index_str[NAME_MAX];
+	int i, j;
+
+	memset(result, 0, res_max_len);
+	
+	for(i = __ADDR_TYPE_INIT + 1; i < __ADDR_TYPE_MAX; i++){
+		for(j = 0; j < SAPP_SUPPORT_LAYER_NUM_MAX; j++){
+			if(layer_st->layer_type_index[i][j] != 0){
+				sprintf(addrtype_name_str, "%s", addr_type_abbreviation_ntop((enum addr_type_t)i));
+				goto bingo;
+			}
+		}
+	}
+
+bingo:
+	for(j = 0; j < SAPP_SUPPORT_LAYER_NUM_MAX; j++){
+		if(layer_st->layer_type_index[i][j] != 0){
+			sprintf(one_layer_index_str, "%d,", j);
+			strcat(layer_index_str, one_layer_index_str);
+		}
+	}	
+
+	snprintf(result, res_max_len, "%s[%s]", addrtype_name_str, layer_index_str);
+	
+	return result;
+}
+
+static int update_asymmetric_addr_layer(embed_layer_t *result)
+{
+	int type_index, layer_index;
+
+	for(type_index = 0; type_index < __ADDR_TYPE_MAX; type_index++){
+		for(layer_index = 0; layer_index < SAPP_SUPPORT_LAYER_NUM_MAX; layer_index++){
+			if(result->layer_type_index[type_index][layer_index] != 0){
+				g_asymmetric_addr_layer_set.layer_type_index[type_index][layer_index] = 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
+static int update_asymmetric_presence_layer(enum addr_type_t addrtype, embed_layer_t *under_layer, embed_layer_t *upper_layer)
 {
 	int i;
-	//to do, parse conf file
 
-	memset(g_asymmetric_addr_layer_set, 0, sizeof(g_asymmetric_addr_layer_set));
+	g_asymmetric_presence_layer_set[addrtype].is_asymmetric_layer = 1;
+	memcpy(&g_asymmetric_presence_layer_set[addrtype].under_layer, under_layer, sizeof(embed_layer_t));
+	memcpy(&g_asymmetric_presence_layer_set[addrtype].upper_layer, upper_layer, sizeof(embed_layer_t));
 
-	//vlan[*]
-	for(i = 0; i < SAPP_SUPPORT_LAYER_NUM_MAX; i++){
-		g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][i] = 1;
-		g_asymmetric_addr_layer_set[ADDR_TYPE_MPLS][i] = 1;
-		g_asymmetric_addr_layer_set[ADDR_TYPE_GRE][i] = 1;
-		g_asymmetric_addr_layer_set[ADDR_TYPE_GPRS_TUNNEL][i] = 1;
+	return 0;
+}
+
+/* 
+    #pattern: asymmetric_layer_name[layer index]
+    ethernet[1]
+    mpls[*]
+*/
+static int parse_asymmetric_addr_layer_config(void)
+{
+	int i, j, ret, asymmetric_addr_layer_config_num = 0;
+	FILE *fp;
+	char line_cont[MAX_INPUT];
+	embed_layer_t embed_layer;
+	
+	fp = fopen(sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_addr_layer_cfg_file, "r");
+	if(NULL == fp){
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]can't open sapp.toml->asymmetric_addr_layer_cfg_file:%s", 
+				sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_addr_layer_cfg_file);
+		return -1;
 	}
+
+	memset(&g_asymmetric_addr_layer_set, 0, sizeof(g_asymmetric_addr_layer_set));
+
+	while(fgets(line_cont, MAX_INPUT, fp)){
+		if('#' == line_cont[0] || ' ' == line_cont[0] || '\r' == line_cont[0] || '\n' == line_cont[0]){
+			continue;
+		}
+		memset(&embed_layer, 0, sizeof(embed_layer));
+		ret = embed_layer_t_pton(line_cont, &embed_layer);
+		if(ret < 0){
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, inlavid:%s", 
+					sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_addr_layer_cfg_file,
+					line_cont); 
+			return -1;
+		}
+
+		update_asymmetric_addr_layer(&embed_layer);
+		asymmetric_addr_layer_config_num++;
+	}
+
+	char one_layer_index_str[NAME_MAX];
+	char debug_layer_index_str[NAME_MAX];
+	
+	for(i = __ADDR_TYPE_INIT + 1; i < __ADDR_TYPE_MAX; i++){
+		memset(debug_layer_index_str, 0, sizeof(debug_layer_index_str));
+		for(j = 0; j < SAPP_SUPPORT_LAYER_NUM_MAX; j++){
+			if(g_asymmetric_addr_layer_set.layer_type_index[i][j] != 0){
+				sprintf(one_layer_index_str, "%d,", j);
+				strcat(debug_layer_index_str, one_layer_index_str);
+			}
+		}
+		sapp_runtime_log(RLOG_LV_DEBUG, "asymmetric_addr_layer: %s:%s", 
+					addr_type_abbreviation_ntop((enum addr_type_t)i),
+					debug_layer_index_str);
+	}
+
+	return 0;
+}
+
+
+
+
+/*
+    #pattern: asymmetric_layer_name  under_of_this_asymmetric_layer upper_of_this_asymmetric_layer
+    vlan    ethernet[0]    ipv4[1]
+*/
+static int parse_asymmetric_presence_layer_config(void)
+{
+	int i, j, ret, asymmetric_presence_layer_config_num = 0;
+	FILE *fp;
+	char line_cont[MAX_INPUT];
+	char layer_name[MAX_INPUT], under_layer_name[MAX_INPUT], upper_layer_name[MAX_INPUT];
+	enum addr_type_t this_layer;
+	embed_layer_t under_layer, upper_layer;
+	
+	fp = fopen(sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file, "r");
+	if(NULL == fp){
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]can't open sapp.toml->asymmetric_presence_layer_cfg_file:%s", 
+				sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file);
+		return -1;
+	}
+
+	memset(g_asymmetric_presence_layer_set, 0, sizeof(g_asymmetric_presence_layer_set));
+
+	while(fgets(line_cont, MAX_INPUT, fp)){
+		if('#' == line_cont[0] || ' ' == line_cont[0] || '\r' == line_cont[0] || '\n' == line_cont[0]){
+			continue;
+		}
+
+		ret = sscanf(line_cont, "%s\t%s\t%s", layer_name,under_layer_name,upper_layer_name);
+		if(ret != 3){
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse sapp.toml->asymmetric_presence_layer_cfg_file:%s error, invalid config:%s", 
+				sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file, line_cont);
+			return -1;
+		}
+
+		this_layer = addr_type_abbreviation_pton(layer_name);
+		if(__ADDR_TYPE_MAX == this_layer){
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, inlavid:%s", 
+					sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file,
+					line_cont); 
+			return -1;
+		}
+
+		ret = embed_layer_t_pton(under_layer_name, &under_layer);
+		if(ret < 0){
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, inlavid:%s", 
+					sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file,
+					line_cont); 
+			return -1;
+		}
+
+		ret = embed_layer_t_pton(upper_layer_name, &upper_layer);
+		if(ret < 0){
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, inlavid:%s", 
+					sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file,
+					line_cont); 
+			return -1;
+		}
+		
+		update_asymmetric_presence_layer(this_layer, &under_layer, &upper_layer);
+		asymmetric_presence_layer_config_num++;
+	}
+
+	//////// debug print
+
+	char under_layer_index_str[NAME_MAX];
+	char upper_layer_index_str[NAME_MAX];	
+	for(i = __ADDR_TYPE_INIT + 1; i < __ADDR_TYPE_MAX; i++){
+		if(g_asymmetric_presence_layer_set[i].is_asymmetric_layer != 0){
+			embed_layer_t_ntop(&g_asymmetric_presence_layer_set[i].under_layer, under_layer_index_str, NAME_MAX);
+			embed_layer_t_ntop(&g_asymmetric_presence_layer_set[i].upper_layer, upper_layer_index_str, NAME_MAX);
+			sapp_runtime_log(RLOG_LV_DEBUG, "asymmetric_presence_layer: %s, under_layer:%s, upperlayer:%s", 
+						addr_type_abbreviation_ntop((enum addr_type_t)i),
+						under_layer_index_str,
+						upper_layer_index_str);
+		}
+	}
+	
 
 	return 0;
 }
@@ -383,8 +606,32 @@ static int config_expression_convert(void)
 
 	/******************************  PACKET_IO  *******************************/
 
+	/*
+		net_connection_mode:
+			0: don't send packet, only capture;
+			1: parallel mode with single card;
+			2: serial mode with two card;
+			3: logic serial mode with G device.
+	*/	
+	tmp_str = pconfig->packet_io.depolyment_mode_str;
+	if(strncasecmp(tmp_str, "mirror", strlen("mirror")) == 0){
+		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
+		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
+	}else if(strncasecmp(tmp_str, "inline", strlen("inline")) == 0){
+		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_INLINE;
+		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_SERIAL_GDEV;
+	}else if(strncasecmp(tmp_str, "transparent", strlen("transparent")) == 0){
+		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_TRANSPARENT;
+		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_SERIAL_2CARD;
+	}else{
+		sapp_log(30, ~0, ~0, "[Error]sapp.toml->PACKET_IO.depolyment.mode error, only support:%s!", "[mirror, inline, transparent]");
+		return -1;
+	}
+
 	tmp_str = pconfig->packet_io.packet_io_tunnel.overlay_mode_string;
-	if(strncasecmp(tmp_str, "vxlan", strlen("vxlan")) == 0){
+	if(strncasecmp(tmp_str, "none", strlen("none")) == 0){
+		pconfig->packet_io.packet_io_tunnel.overlay_mode_bin = OVERLAY_MODE_NONE;
+	}else if(strncasecmp(tmp_str, "vxlan", strlen("vxlan")) == 0){
 		pconfig->packet_io.packet_io_tunnel.overlay_mode_bin = OVERLAY_MODE_VXLAN;
 	}else if(strncasecmp(tmp_str, "vlan_flipping_adev", strlen("vlan_flipping_adev")) == 0){
 		pconfig->packet_io.packet_io_tunnel.overlay_mode_bin = OVERLAY_MODE_VLAN_FLIP_ADEV;
@@ -393,16 +640,27 @@ static int config_expression_convert(void)
 		return -1;
 	}
 
-	ret = parse_vlan_flipping_map_config();
-	if(ret < 0){
-		sapp_log(30, ~0, ~0, "[Error]sapp.toml->vlan_flipping_cfg_file parse error"); 
-		return- 1;
-	}
+	//if(DEPOLYMENT_MODE_INLINE == pconfig->packet_io.depolyment_mode_bin)
+	{
+		if(OVERLAY_MODE_VLAN_FLIP_ADEV == pconfig->packet_io.packet_io_tunnel.overlay_mode_bin){
+			ret = parse_vlan_flipping_map_config();
+			if(ret < 0){
+				sapp_log(30, ~0, ~0, "[Error]sapp.toml->vlan_flipping_cfg_file parse error"); 
+				return- 1;
+			}
+		}	
+		ret = parse_asymmetric_addr_layer_config();
+		if(ret < 0){
+			sapp_log(30, ~0, ~0, "[Error]sapp.toml->vlan_flipping_cfg_file parse error"); 
+			return- 1;
+		}
+		ret = parse_asymmetric_presence_layer_config();
+		if(ret < 0){
+			sapp_log(30, ~0, ~0, "[Error]sapp.toml->vlan_flipping_cfg_file parse error"); 
+			return- 1;
+		}	
 
-	ret = parse_asymmetric_addr_layer_config();
-	if(ret < 0){
-		sapp_log(30, ~0, ~0, "[Error]sapp.toml->vlan_flipping_cfg_file parse error"); 
-		return- 1;
+		//todo, parse prune inject cfg file
 	}
 	
 	tmp_str = pconfig->packet_io.internal.interface.type_str;
@@ -464,27 +722,6 @@ static int config_expression_convert(void)
 		pconfig->packet_io.external.interface.type_bin = CAP_MODEL_TUN;
 	}
 
-/*
-	net_connection_mode:
-		0: don't send packet, only capture;
-		1: parallel mode with single card;
-		2: serial mode with two card;
-		3: logic serial mode with G device.
-*/	
-	tmp_str = pconfig->packet_io.depolyment_mode_str;
-	if(strncasecmp(tmp_str, "mirror", strlen("mirror")) == 0){
-		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
-		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
-	}else if(strncasecmp(tmp_str, "inline", strlen("inline")) == 0){
-		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_INLINE;
-		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_SERIAL_GDEV;
-	}else if(strncasecmp(tmp_str, "transparent", strlen("transparent")) == 0){
-		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_TRANSPARENT;
-		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_SERIAL_2CARD;
-	}else{
-	  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->PACKET_IO.depolyment.mode error, only support:%s!", "[mirror, inline, transparent]");
-		return -1;
-	}
 
 	/******************************  STREAM  *******************************/
 	struct tm ttm;
@@ -752,6 +989,10 @@ int sapp_parse_config(void)
 	/*******************************  packet_io.overlay_tunnel_definition ******************************/
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"create_mpls_anyway", &pconfig->packet_io.create_mpls_anyway, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"vlan_flipping_cfg_file", pconfig->packet_io.packet_io_tunnel.vlan_flipping_cfg_file, PATH_MAX, "etc/vlan_flipping_map.conf");
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"asymmetric_addr_layer_cfg_file", pconfig->packet_io.packet_io_tunnel.asymmetric_addr_layer_cfg_file, PATH_MAX, "etc/asymmetric_addr_layer.conf");
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"asymmetric_presence_layer_cfg_file", pconfig->packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file, PATH_MAX, "etc/asymmetric_presence_layer.conf");
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"prune_inject_layer_cfg_file", pconfig->packet_io.packet_io_tunnel.prune_inject_layer_cfg_file, PATH_MAX, "etc/prune_inject_layer.conf");
+
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"mac_flipping_enabled", &pconfig->packet_io.packet_io_tunnel.mac_flipping_enabled, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"overlay_mode", pconfig->packet_io.packet_io_tunnel.overlay_mode_string, NAME_MAX, "_no_default_");
 

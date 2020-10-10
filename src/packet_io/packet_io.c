@@ -576,18 +576,24 @@ static int packet_io_strip_L2E_hdr(raw_pkt_t *p_raw_pkt, unsigned char dir, int 
 extern void sapp_fs2_set_latency(int thead_seq, long long time_cost);
 extern char (*g_platform_action_cb_fun)(int net_conn_mode, char plug_action);
 
+
 static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, int thread_num)
 {
 	int ret = PASS;
 	//long long before_call = 0, after_call;
 	long long timecost;
 	struct timespec start, end;
-
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	local_sys_stat->count[SAPP_STAT_RCV_RAW]++;
 	local_sys_stat->length[SAPP_STAT_RCV_RAW] += p_raw_pkt->raw_pkt_len;	
 
-	if (dir == sapp_global_val->config.packet_io.inbound_route_dir)
+	sapp_global_val->mthread_volatile[thread_num]->raw_pkt = p_raw_pkt;
+	
+	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
+		packet_io_hook_input((raw_pkt_t *)p_raw_pkt, dir, thread_num);
+	}
+
+	if (p_raw_pkt->route_dir == sapp_global_val->config.packet_io.inbound_route_dir)
 	{
 		local_sys_stat->count[SAPP_STAT_RAW_INBOUND]++;
 		local_sys_stat->length[SAPP_STAT_RAW_INBOUND] += (unsigned long long)p_raw_pkt->raw_pkt_len;
@@ -611,10 +617,6 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		MESA_MD5_sum_bin((unsigned char *)p_raw_pkt->raw_pkt_data, p_raw_pkt->raw_pkt_len, raw_pkt_md5_before);
 	}
 #endif
-
-	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
-		packet_io_hook_input((raw_pkt_t *)p_raw_pkt, dir, thread_num);
-	}
 
 	if(unlikely(g_encapsulate_with_ddp)){
 		/* 开启ddp解封装功能后, 在packet_io_process_ddp_pkt()函数中捕获DDP负载数据 */
@@ -676,7 +678,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	}
 
 	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin) && (PASS == ret)){
-		packet_io_hook_output((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
+		packet_io_hook_forward((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
 	}
 
 	return ret;
@@ -1058,7 +1060,7 @@ send_again:
 
 int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_type, 
 					int low_layer_type, int dir,int thread_num,
-					char *feedback_buf, int *feedback_buf_len)
+					char *feedback_buf, int *feedback_buf_len, const raw_pkt_t *raw_pkt)
 {
 	int ret;
 	UINT16 ether_type;
@@ -1100,12 +1102,17 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 	}
 	else
 	{
+		if(NULL == raw_pkt){
+			raw_pkt = sapp_global_val->mthread_volatile[thread_num]->raw_pkt;
+		}
+		
 		ret = dl_io_fun_list.dl_io_low_level_send(send_handle->low_level_send_handle, 
 										(UINT8 *)send_handle->send_buf,
 										datalen,
 										low_layer_type,
 										dir,
-										thread_num);
+										thread_num,
+										raw_pkt);
 	}
 
 
@@ -1120,14 +1127,14 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 */
 int packet_io_send(MESA_send_handle *send_handle,int datalen,int send_type, 
 					int low_layer_type, int dir,int thread_num,
-					char *feedback_buf, int *feedback_buf_len)
+					char *feedback_buf, int *feedback_buf_len, const raw_pkt_t *raw_pkt)
 {
 	int ret = -1;
 
 	switch(send_type){
 		case SEND_TYPE_LINK_INJECT:
 			ret = packet_io_send_fake_pkt(send_handle, datalen, send_type, low_layer_type, 
-									dir, thread_num, feedback_buf, feedback_buf_len);
+									dir, thread_num, feedback_buf, feedback_buf_len, raw_pkt);
 		break;
 
 		case SEND_TYPE_LOG:
@@ -1268,7 +1275,9 @@ int packet_io_send_raw(int thread_num, char *data, int datalen,unsigned int targ
 									(unsigned char *)data,
 									datalen,
 									g_packet_device_alias[target_id].dl_io_param,
-									thread_num);
+									thread_num,
+									0, /* 此处是直接构造全部包头, 并指定发包网卡, 发包方向无意义 */
+									sapp_global_val->mthread_volatile[thread_num]->raw_pkt);
 	return ret;
 }
 

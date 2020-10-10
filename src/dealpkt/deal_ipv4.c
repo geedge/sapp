@@ -627,9 +627,14 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	memset(ptmp, 0x0, sizeof(struct streamindex));
 	pstream_pr = &ptmp->stream;
 	pstream = &pstream_pr->stream_public;
-	
-	pstream_pr->layer_index = pfstream_pr->layer_index + 1;
-	
+
+	if(unlikely(pfstream_pr->layer_index >= SAPP_SUPPORT_LAYER_NUM_MAX)){
+		local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
+		sapp_runtime_log(RLOG_LV_INFO, "ipv4_entry: layer index more than:%d", pfstream_pr->layer_index);
+		return PASS;
+	}else{
+		pstream_pr->layer_index = pfstream_pr->layer_index + 1;
+	}
 	set_ipv4_addr(&addr, (struct mesa_ip4_hdr *)a_packet);
 	pstream->addr.paddr = &addr;
 

@@ -115,8 +115,8 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_sendbuf = (unsigned char *  (*)(void *, int thread_num))pcap_dl_io_get_sendbuf;
 		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_free_sendbuf = (void (*)(void *, int thread_num))pcap_dl_io_free_sendbuf;
 		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_get_send_handle = (void * (*)(int thread_num))pcap_dl_io_get_send_handle;
-		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_low_level_send = (int (*)(void *, unsigned char *,int ,int , int ,int ))pcap_dl_io_low_level_send;
-		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_raw_pkt_send = (int (*)(void *, unsigned char *,int , void *,int ))pcap_dl_io_raw_pkt_send;	
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_low_level_send = (int (*)(void *, unsigned char *,int ,int , int ,int ,const raw_pkt_t *))pcap_dl_io_low_level_send;
+		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_raw_pkt_send = (int (*)(void *, unsigned char *,int , void *,int,unsigned char, const raw_pkt_t * ))pcap_dl_io_raw_pkt_send;	
 		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_init = (int (*)(int argc, char *argv[]))pcap_dl_io_init;
 		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_run = (void (*)(void))pcap_dl_io_run;
 		dl_io_fun_list_static_link[CAP_MODEL_PCAP_ONLINE].dl_io_register_cb = (int (*)(PACKET_IO_CB_T fun))pcap_dl_io_register_cb;
@@ -144,8 +144,8 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_sendbuf = (unsigned char *	(*)(void *, int thread_num))marsio_dl_io_get_sendbuf;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_free_sendbuf = (void (*)(void *, int thread_num))marsio_dl_io_free_sendbuf;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get_send_handle = (void * (*)(int thread_num))marsio_dl_io_get_send_handle;
-		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_low_level_send = (int (*)(void *, unsigned char *,int ,int , int ,int ))marsio_dl_io_low_level_send;
-		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_raw_pkt_send = (int (*)(void *, unsigned char *,int , void *,int ))marsio_dl_io_raw_pkt_send; 
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_low_level_send = (int (*)(void *, unsigned char *,int ,int , int ,int, const raw_pkt_t *))marsio_dl_io_low_level_send;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_raw_pkt_send = (int (*)(void *, unsigned char *,int , void *,int, unsigned char, const raw_pkt_t * ))marsio_dl_io_raw_pkt_send; 
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_init = (int (*)(int argc, char *argv[]))marsio_dl_io_init;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_run = (void (*)(void))marsio_dl_io_run;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_register_cb = (int (*)(PACKET_IO_CB_T fun))marsio_dl_io_register_cb;

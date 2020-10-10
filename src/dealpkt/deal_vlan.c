@@ -58,11 +58,7 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 		pstream->addr.paddr=&addr;
 		pstream->addr.addrtype = ADDR_TYPE_VLAN;
 		pstream->addr.addrlen = sizeof(struct layer_addr_vlan);
-		if(1){ //asymmetric layer
-			pstream_pr->addr_use_as_hash = 0;	
-		}else{
-			pstream_pr->addr_use_as_hash = 1;	
-		}
+		pstream_pr->addr_use_as_hash = 0;//地址不参与hash比对，仅算层数
 		//ptmp->stream.p_layer_header = this_layer_data;
 		//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_layer_data - (char *)raw_pkt->raw_pkt_data;
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
@@ -72,13 +68,15 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 		pstream->type=STREAM_TYPE_NON;
 		pstream->routedir=routedir;
 		pstream->threadnum=thread_num;
+		
 		pstream_pr->layer_index = pfstream_pr->layer_index + 1;
-		if(g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][pstream_pr->layer_index] != 0){
+		if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][pstream_pr->layer_index] != 0){
 			pstream_pr->need_update_opposite_addr = 1;//两侧地址不一样，需要更新对侧信息
 		}else{
 			pstream_pr->need_update_opposite_addr = 0;
 		}
-		pstream_pr->fake_layer_dir_for_asymmetric_cmp = 0; //todo, 根据g_asymmetric_presence_layer_set判断
+
+		//pstream_pr->fake_layer_dir_for_asymmetric_cmp = 0; //todo, 根据g_asymmetric_presence_layer_set判断
 	}else{
 		pstream_pr = pfstream_pr; /* 2015-07-03 lijia add, skip this layer */
 	}
@@ -124,7 +122,7 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 		default:
 			/* unknown protocol */	
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
-			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;
+			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;
 
 			sapp_runtime_log(20, "VLAN unknown protocol: 0x%x, pkt seq:%llu\n", next_layer_type, local_sys_stat->count[SAPP_STAT_RCV_RAW]);
 			

@@ -748,7 +748,7 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
     else
     {
         mac_addr = mim_stream->addr.mac;
-        sapp_mac_addr_to_long(mac_addr->src_mac, &smac_integer_type);
+        sapp_mac_addr_to_long(mac_addr->src_addr.h_source, &smac_integer_type);
     }
 	vxinfo->encap_type = (smac_integer_type & GDEV_SMAC_MASK_ENCAP_TYPE) >> 16;
 	vxinfo->entrance_id = (smac_integer_type & GDEV_SMAC_MASK_ENTRANCE_ID) >> 10;
@@ -776,17 +776,17 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
     {
 		ptr = vxinfo->inner_smac;
 		for(i = 0; i < 6; i++, ptr += 3){
-			sprintf((char *)ptr, "%02x:", mac_addr->src_mac[i]);
+			sprintf((char *)ptr, "%02x:", mac_addr->src_addr.h_source[i]);
 		}
 		vxinfo->inner_smac[17] = '\0'; /* 最后一位清零 */
-		memcpy(vxinfo->inner_smac_hex, mac_addr->src_mac, 6);
+		memcpy(vxinfo->inner_smac_hex, mac_addr->src_addr.h_source, 6);
 
         ptr = vxinfo->inner_dmac;
         for(i = 0; i < 6; i++, ptr += 3){
-            sprintf((char *)ptr, "%02x:", mac_addr->dst_mac[i]);
+            sprintf((char *)ptr, "%02x:", mac_addr->src_addr.h_dest[i]);
         }
         vxinfo->inner_dmac[17] = '\0'; /* 最后一位清零 */
-        memcpy(vxinfo->inner_dmac_hex, mac_addr->dst_mac, 6);
+        memcpy(vxinfo->inner_dmac_hex, mac_addr->src_addr.h_dest, 6);
     }
 	return 0;
 }

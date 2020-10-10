@@ -56,13 +56,15 @@ static layer_args_t g_build_pkt_args[MAX_THREAD_NUM];
 
 static tcp_rst_finger_mark_t g_tcp_rst_finger[MAX_THREAD_NUM];
 
+static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream_dir);
+
 extern void *g_packet_dl_send_handle[MAX_THREAD_NUM];
 extern dl_io_fun_list_t dl_io_fun_list;
 extern int g_app_send_rst_type ;
 extern int calc_l2tp_hdr_len(const struct l2tp_hdr_v2 *l2tp_hdr);
 extern int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_type, 
 					int low_layer_type, int dir,int thread_num,
-					char *feedback_buf, int *feedback_buf_len);					
+					char *feedback_buf, int *feedback_buf_len, const raw_pkt_t *raw_pkt);					
 static inline int dir_check(unsigned char raw_dir);
 extern int set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mpls_pkt_data);
 
@@ -823,11 +825,22 @@ static int calc_mpls_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_s
 	int mpls_layer_len;
 	struct layer_addr_mpls *mpls_addr = stream_pr->stream_public.addr.mpls;
 
-	if(stream_pr->fake_layer_dir_for_asymmetric_cmp & send_stream_dir){
-		mpls_layer_len = 0;  //虚拟构建的空层, 直接跳过
+	if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index] != 0){
+		if(send_stream_dir == DIR_C2S){
+			mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
+			if(mpls_addr->src_has_ctrl_word){
+				mpls_layer_len += sizeof(int);
+			}
+		}else{
+			mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
+			if(mpls_addr->dst_has_ctrl_word){
+				mpls_layer_len += sizeof(int);
+			}		
+		}
 	}else{
-		if(g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
-			if(send_stream_dir == DIR_C2S){
+		/* 如果不强制要求非对称地址, 如果本侧没有地址, 先使用对侧地址信息 */
+		if(send_stream_dir == DIR_C2S){
+			if(mpls_addr->src_mpls_layer_num > 0){
 				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
 				if(mpls_addr->src_has_ctrl_word){
 					mpls_layer_len += sizeof(int);
@@ -836,36 +849,21 @@ static int calc_mpls_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_s
 				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
 				if(mpls_addr->dst_has_ctrl_word){
 					mpls_layer_len += sizeof(int);
-				}		
+				}
 			}
 		}else{
-			/* 如果不强制要求非对称地址, 如果本侧没有地址, 先使用对侧地址信息 */
-			if(send_stream_dir == DIR_C2S){
-				if(mpls_addr->src_mpls_layer_num > 0){
-					mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
-					if(mpls_addr->src_has_ctrl_word){
-						mpls_layer_len += sizeof(int);
-					}
-				}else{
-					mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
-					if(mpls_addr->dst_has_ctrl_word){
-						mpls_layer_len += sizeof(int);
-					}
-				}
+			if(mpls_addr->dest_mpls_layer_num > 0){
+				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
+				if(mpls_addr->dst_has_ctrl_word){
+					mpls_layer_len += sizeof(int);
+				}		
 			}else{
-				if(mpls_addr->dest_mpls_layer_num < 0){
-					mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
-					if(mpls_addr->dst_has_ctrl_word){
-						mpls_layer_len += sizeof(int);
-					}		
-				}else{
-					mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
-					if(mpls_addr->src_has_ctrl_word){
-						mpls_layer_len += sizeof(int);
-					}	
-				}
-			}			
-		}
+				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
+				if(mpls_addr->src_has_ctrl_word){
+					mpls_layer_len += sizeof(int);
+				}	
+			}
+		}			
 	}
 
 	return mpls_layer_len;
@@ -876,31 +874,27 @@ static int calc_vlan_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_s
 	int vlan_layer_len;
 	struct layer_addr_vlan *vlan_addr = stream_pr->stream_public.addr.vlan;
 
-	if(stream_pr->fake_layer_dir_for_asymmetric_cmp & send_stream_dir){
-		vlan_layer_len = 0;  //虚拟构建的空层, 直接跳过
+	if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
+		if(send_stream_dir == DIR_C2S){
+			vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->src_vlan_layer_num;
+		}else{
+			vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;		
+		}
 	}else{
-		if(g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
-			if(send_stream_dir == DIR_C2S){
+		/* 如果不强制要求非对称地址, 如果本侧没有, 先使用对侧地址信息 */
+		if(send_stream_dir == DIR_C2S){
+			if(vlan_addr->src_vlan_layer_num != 0){
 				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->src_vlan_layer_num;
 			}else{
-				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;		
+				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;
 			}
 		}else{
-			/* 如果不强制要求非对称地址, 如果本侧没有, 先使用对侧地址信息 */
-			if(send_stream_dir == DIR_C2S){
-				if(vlan_addr->src_vlan_layer_num != 0){
-					vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->src_vlan_layer_num;
-				}else{
-					vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;
-				}
+			if(vlan_addr->dst_vlan_layer_num != 0){
+				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;
 			}else{
-				if(vlan_addr->dst_vlan_layer_num != 0){
-					vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;
-				}else{
-					vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->src_vlan_layer_num;
-				}	
-			}			
-		}
+				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->src_vlan_layer_num;
+			}	
+		}			
 	}
 
 	return vlan_layer_len;
@@ -1179,19 +1173,23 @@ static int __get_tcp_network_addr(struct streaminfo *stream, void *src_addr, voi
 #endif
 
 static int build_net_layer_ethernet(struct streaminfo_private *stream_pr, unsigned short eth_type_host,
-			int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt)
+			int carry_layer_len, unsigned char *buf, UCHAR send_stream_dir, const raw_pkt_t *raw_pkt)
 {
-	struct mesa_ethernet_hdr *raw_hdr;
+	/* 
+	   注意此处不能使用原始包中的地址, 因为涉及到两侧地址不对称, 不像ip地址和端口, 颠倒src和dst即可,
+	   如果C2S和S2C流量分别来自两条链路, C2S和S2C方向的mac全部不一样, 一共会有四个MAC地址, 而不是两个!
+	   如果是反向发包, 即使颠倒src, dst也是错误的!!
+	*/
+	const struct layer_addr_mac *in_stream_addr;
+	in_stream_addr = (struct layer_addr_mac *)(stream_pr->stream_public.addr.mac);
 	struct mesa_ethernet_hdr *send_hdr = (struct mesa_ethernet_hdr *)buf;
-	
-	raw_hdr = (struct mesa_ethernet_hdr *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
 
-	if(reverse){
-		memcpy(send_hdr->ether_shost, raw_hdr->ether_dhost, ETHER_ADDR_LEN);
-		memcpy(send_hdr->ether_dhost, raw_hdr->ether_shost, ETHER_ADDR_LEN);
+	if(DIR_C2S == send_stream_dir){
+		memcpy(send_hdr->ether_shost, in_stream_addr->src_addr.h_source, ETHER_ADDR_LEN);
+		memcpy(send_hdr->ether_dhost, in_stream_addr->src_addr.h_dest, ETHER_ADDR_LEN);
 	}else{
-		memcpy(send_hdr->ether_shost, raw_hdr->ether_shost, ETHER_ADDR_LEN);
-		memcpy(send_hdr->ether_dhost, raw_hdr->ether_dhost, ETHER_ADDR_LEN);
+		memcpy(send_hdr->ether_shost, in_stream_addr->dst_addr.h_source, ETHER_ADDR_LEN);
+		memcpy(send_hdr->ether_dhost, in_stream_addr->dst_addr.h_dest, ETHER_ADDR_LEN);
 	}
 
 	send_hdr->ether_type = htons(eth_type_host);
@@ -1441,7 +1439,7 @@ static int build_net_layer_vlan(struct streaminfo_private *stream_pr, int carry_
 			memcpy(buf, in_stream_addr->src_vlan_pkt, layer_len);
 		}else{ 
 			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
-			if(0 == g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][stream_pr->layer_index]){
+			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index]){
 				layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->dst_vlan_layer_num;
 				memcpy(buf, in_stream_addr->dst_vlan_pkt, layer_len);
 			}
@@ -1452,7 +1450,7 @@ static int build_net_layer_vlan(struct streaminfo_private *stream_pr, int carry_
 			memcpy(buf, in_stream_addr->dst_vlan_pkt, layer_len);
 		}else{
 			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
-			if(0 == g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][stream_pr->layer_index]){
+			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index]){
 				layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->src_vlan_layer_num;
 				memcpy(buf, in_stream_addr->src_vlan_pkt, layer_len);
 			}
@@ -1625,7 +1623,7 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 			}
 		}else{
 			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
-			if(0 == g_asymmetric_addr_layer_set[ADDR_TYPE_MPLS][stream_pr->layer_index]){
+			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index]){
 				layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->dest_mpls_layer_num;
 				memcpy(buf, in_stream_addr->dest_mpls_pkt, layer_len);
 				if(in_stream_addr->dst_has_ctrl_word){
@@ -1644,7 +1642,7 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 			}
 		}else{
 			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
-			if(0 == g_asymmetric_addr_layer_set[ADDR_TYPE_MPLS][stream_pr->layer_index]){
+			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index]){
 				layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->src_mpls_layer_num;
 				memcpy(buf, in_stream_addr->src_mpls_pkt, layer_len);
 				if(in_stream_addr->src_has_ctrl_word){
@@ -1900,9 +1898,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 		case ADDR_TYPE_VLAN:
 			this_layer_len = calc_vlan_hdr_len(stream_pr, send_stream_dir);
 			if(0 == this_layer_len){
-				if((stream_pr->fake_layer_dir_for_asymmetric_cmp & send_stream_dir) != 0){ /* 虚假空层, 为了流对齐生造出来的一层 */
-					sapp_runtime_log(10, "build_net_layer_vlan() skip fake vlan layer for asymmetric.\n");
-				}else if(0 == stream_pr->need_update_opposite_addr){
+				if(0 == stream_pr->need_update_opposite_addr){
 					/* 复用反向地址, 从新计算长度, 构造vlan地址 */
 					this_layer_len = calc_vlan_hdr_len(stream_pr, send_stream_dir ^ DIR_DOUBLE);
 					buf -= this_layer_len;
@@ -1932,7 +1928,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 				return -1;
 			}
 
-			build_net_layer_ethernet(stream_pr, eth_type_host, carry_layer_len, buf, reverse, raw_pkt);
+			build_net_layer_ethernet(stream_pr, eth_type_host, carry_layer_len, buf, send_stream_dir, raw_pkt);
 
 			this_layer_len = sizeof(struct mesa_ethernet_hdr);
 			carry_layer_type = ADDR_TYPE_MAC;
@@ -1962,7 +1958,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			if(0 == this_layer_len){
 				if(sapp_global_val->config.packet_io.create_mpls_anyway != 0){
 					/* 非对称MPLS, 为了流对齐生造出来的一层, 不构造实际包头 */
-					sapp_runtime_log(10, "build_net_layer_mpls() skip fake mpls layer.\n");
+					sapp_runtime_log(10, "build_net_layer_mpls() send streamdir:%d, skip fake mpls layer.\n", send_stream_dir);
 					break;
 				}else{
 					sapp_runtime_log(20, "build_net_layer_mpls() error, send streamdir:%d, layer len is 0, but create_mpls_anyway is disable!\n", send_stream_dir);
@@ -2174,10 +2170,16 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 		/* 因MPLS非对称问题,  calc_reserved_hdr_len()需要分不同方向计算, 与当前包同向发包 */
 		reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type, stream_pr->stream_public.curdir);
 		if((reserved_hdr_len < 0) || (-1 == low_net_layer_type)){
-			sapp_runtime_log(RLOG_LV_INFO, "MESA_kill_tcp() calc_reserved_hdr_len error !");
+			sapp_runtime_log(RLOG_LV_INFO, "__do_kill_tcp() calc_reserved_hdr_len error !");
 			ret = -1;
 			goto fun_exit;
 		}
+		low_net_layer_type = get_eth_carry_layer_type(stream, stream_pr->stream_public.curdir);
+		if(low_net_layer_type < 0){
+			sapp_runtime_log(RLOG_LV_FATAL, "__do_kill_tcp(): can't get ethernet carry layer type");
+			ret = -1;
+			goto fun_exit;
+		}		
 		if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){ /* gdev注入模式时预留底层封装vxlan包的空间, 避免再二次copy */
 			reserved_hdr_len += sizeof(vxlan_header_t);
 		}
@@ -2190,7 +2192,7 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 			/* 修改错误判断逻辑, 构造失败不退出, 继续尝试反方向造包 */
 			ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
 								low_net_layer_type, stream_pr->stream_public.routedir, thread_num,
-								feedback_buf, feedback_buf_len);		
+								feedback_buf, feedback_buf_len, stream_pr->raw_pkt);		
 			if(ret < 0){
 				send_handle->tot_send_err++;
 			}else{
@@ -2226,6 +2228,12 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 		 if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){ /* gdev注入模式时预留底层封装vxlan包的空间, 避免再二次copy */
 			 reserved_hdr_len += sizeof(vxlan_header_t);
 		 }
+		 low_net_layer_type = get_eth_carry_layer_type(stream, stream_pr->stream_public.curdir ^ DIR_DOUBLE);
+		 if(low_net_layer_type < 0){
+			 sapp_runtime_log(RLOG_LV_FATAL, "__do_kill_tcp(): can't get ethernet carry layer type");
+			 ret = -1;
+			 goto fun_exit;
+		 }	 
 
 		send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
 		sapp_runtime_log(10, "before build_net_layer_pkt(), buf addr:%p, streamdir:%d, total layer len:%d", send_handle->send_buf, stream->curdir ^ DIR_DOUBLE, reserved_hdr_len);
@@ -2234,9 +2242,9 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 			/* 修改错误判断逻辑, 构造失败不退出, 继续尝试反方向造包 */
 			ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
 								low_net_layer_type, stream_pr->stream_public.routedir ^ 1, thread_num,
-								feedback_buf, feedback_buf_len);	
+								feedback_buf, feedback_buf_len, stream_pr->raw_pkt);	
 			if(ret < 0){
-				send_handle->tot_send_err++;
+			send_handle->tot_send_err++;
 			}else{
 				send_handle->tot_send_pkt++;
 				send_handle->tot_send_byte += send_len;
@@ -2281,6 +2289,7 @@ fun_exit:
 	实际的seq和ack使用的是第5个包的!
 	应该使用buf_unorder中的seq和ack, 而不是当前流的原始包.
 */
+#if 0
 int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
 {
 	if(STREAM_TYPE_TCP != stream->type){
@@ -2291,6 +2300,42 @@ int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
 	/* 外部调用, 第一次FD, 发送KILL_TCP_RST_NUM次. */
 	return __do_kill_tcp(stream, ext_raw_pkt, ABBR_INJECT_RST_NUM, (char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
 }
+#else //2020-10-05 lijia modify
+int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
+{
+	int ret;
+	struct rst_tcp_para rst_paras = {};
+	struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
+	
+	if(STREAM_TYPE_TCP != stream->type){
+		sapp_runtime_log(RLOG_LV_INFO, "MESA_kill_tcp error: stream type is not tcp!\n");
+		return -1;
+	}				
+
+	rst_paras.th_flags = TH_RST | TH_ACK; 
+	rst_paras.rst_pkt_num = ABBR_INJECT_RST_NUM;
+	rst_paras.dir = stream->curdir;
+	rst_paras.signature_seed1 = sapp_global_val->config.stream.tcp.inject.rst_signature_seed1;
+	rst_paras.signature_seed2 = sapp_global_val->config.stream.tcp.inject.rst_signature_seed2;
+
+	ret = MESA_rst_tcp(stream, &rst_paras, sizeof(struct rst_tcp_para));
+
+	/* 反向发送 */
+	rst_paras.dir = stream->curdir ^ DIR_DOUBLE;
+	ret = MESA_rst_tcp(stream, &rst_paras, sizeof(struct rst_tcp_para));
+
+	/* 兼容新的标志位, kill_tcp自动设置, 保持功能跟之前一致 */
+	stream_pr->stream_killed_flag = 1;
+
+	struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private*)(stream->pdetail);
+	pdetail_pr->auto_remedy_flag = sapp_global_val->config.stream.tcp.inject.auto_remedy;
+	pdetail_pr->drop_stream_flag = 1;
+
+	/* 外部调用, 第一次FD, 发送KILL_TCP_RST_NUM次. */
+	return ret; 
+}
+
+#endif
 
 int MESA_kill_tcp_feedback(struct streaminfo *stream, const void *raw_pkt, char *feedback_buf, int *feedback_buf_len)
 {
@@ -2370,7 +2415,7 @@ static int __do_kill_tcp_synack(struct streaminfo *stream, const void *ext_raw_p
 		send_handle->user_arg = (void *)stream;
 		ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
 							low_net_layer_type, stream->routedir ^ 1, thread_num,
-							feedback_buf, feedback_buf_len);		
+							feedback_buf, feedback_buf_len, stream_pr->raw_pkt);		
 		if(ret < 0){
 			send_handle->tot_send_err++;
 		}else{
@@ -2752,7 +2797,7 @@ int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_
 	send_handle->user_arg = (void *)stream;
 	ret = packet_io_send(send_handle, reserved_hdr_len+payload_len, SEND_TYPE_LINK_INJECT, 
 						low_net_layer_type, snd_routedir, thread_num,
-						feedback_buf, feedback_buf_len);		
+						feedback_buf, feedback_buf_len, stream_pr->raw_pkt);		
 	if(ret < 0){
 		send_handle->tot_send_err++;
 	}else{
@@ -2780,12 +2825,21 @@ fun_exit:
 	return ret;
 }
 
+#if 0
 int MESA_inject_pkt(struct streaminfo *stream, const char *payload, int payload_len, 
 						const void *ext_raw_pkt, UCHAR snd_routedir)
 {
 	return __do_inject_pkt(stream, payload, payload_len, ext_raw_pkt, snd_routedir, 
 				(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
 }
+#else //2020-10-05 lijia modify
+int MESA_inject_pkt(struct streaminfo *stream, const char *payload, int payload_len, 
+						const void *ext_raw_pkt, UCHAR snd_routedir)
+{
+	return sapp_inject_pkt(stream, SIO_DEFAULT, payload, payload_len, snd_routedir);
+}
+
+#endif
 
 
 int MESA_inject_pkt_feedback(struct streaminfo *stream, const char *payload, int payload_len, 
@@ -2818,23 +2872,20 @@ static int skip_asymmetric_presence_layer(const struct streaminfo *stream, UCHAR
 		case ADDR_TYPE_VLAN:
 		{
 			const struct layer_addr_vlan *vaddr = stream->addr.vlan;
-			if((stream_pr->fake_layer_dir_for_asymmetric_cmp & send_stream_dir) != 0){
-				need_skip = 1;
-			}else{
-				/* 如果不是生造出来的虚拟空层, 还有可能是单向流, 还要看实际有没有地址 */
-				if(DIR_C2S == send_stream_dir){
-					if(0 == vaddr->src_vlan_layer_num){
-						/* 如果本侧没有地址, 看是否强制要求非对称原则, 如果是, 其实都走不到这里,构造包时就失败了; 如果不是可以复用对侧地址 */
-						if(g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
-							need_skip = 1;
-						}
+
+			/* 如果不是生造出来的虚拟空层, 还有可能是单向流, 还要看实际有没有地址 */
+			if(DIR_C2S == send_stream_dir){
+				if(0 == vaddr->src_vlan_layer_num){
+					/* 如果本侧没有地址, 看是否强制要求非对称原则, 如果是, 其实都走不到这里,构造包时就失败了; 如果不是可以复用对侧地址 */
+					if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
+						need_skip = 1;
 					}
-				}else{
-					if(0 == vaddr->dst_vlan_layer_num){
-						/* 如果本侧没有地址, 看是否强制要求非对称原则, 如果是, 其实都走不到这里,构造包时就失败了; 如果不是可以复用对侧地址 */
-						if(g_asymmetric_addr_layer_set[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
-							need_skip = 1;
-						}
+				}
+			}else{
+				if(0 == vaddr->dst_vlan_layer_num){
+					/* 如果本侧没有地址, 看是否强制要求非对称原则, 如果是, 其实都走不到这里,构造包时就失败了; 如果不是可以复用对侧地址 */
+					if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
+						need_skip = 1;
 					}
 				}
 			}
@@ -2845,21 +2896,17 @@ static int skip_asymmetric_presence_layer(const struct streaminfo *stream, UCHAR
 		{
 			const struct layer_addr_mpls *maddr = stream->addr.mpls;
 
-			if((stream_pr->fake_layer_dir_for_asymmetric_cmp & send_stream_dir) != 0){
-				need_skip = 1;
-			}else{
-				if(DIR_C2S == send_stream_dir){
-					if(0 == maddr->src_mpls_layer_num){
-						/* 如果本侧没有地址, 看是否强制要求非对称原则, 如果是, 其实都走不到这里,构造包时就失败了; 如果不是可以复用对侧地址 */
-						if(g_asymmetric_addr_layer_set[ADDR_TYPE_MPLS][stream_pr->layer_index] != 0){
-							need_skip = 1;
-						}
+			if(DIR_C2S == send_stream_dir){
+				if(0 == maddr->src_mpls_layer_num){
+					/* 如果本侧没有地址, 看是否强制要求非对称原则, 如果是, 其实都走不到这里,构造包时就失败了; 如果不是可以复用对侧地址 */
+					if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index] != 0){
+						need_skip = 1;
 					}
-				}else{
-					if(0 == maddr->dest_mpls_layer_num){
-						if(g_asymmetric_addr_layer_set[ADDR_TYPE_MPLS][stream_pr->layer_index] != 0){
-							need_skip = 1;
-						}
+				}
+			}else{
+				if(0 == maddr->dest_mpls_layer_num){
+					if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index] != 0){
+						need_skip = 1;
 					}
 				}
 			}
@@ -2994,7 +3041,8 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	send_handle->user_arg = (void *)raw_stream;
 	ret = packet_io_send(send_handle, reserved_hdr_len+payload_len, SEND_TYPE_LINK_INJECT, 
 						low_net_layer_type, snd_routedir, thread_num,
-						(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);		
+						(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER,
+						raw_stream_pr->raw_pkt);		
 	if(ret < 0){
 		send_handle->tot_send_err++;
 	}else{
@@ -3307,7 +3355,7 @@ static int __MESA_sendpacket_iplayer(int thread_index,const char *data,  int dat
 	
 	ret = packet_io_send_fake_pkt(send_handle, data_len+sizeof(struct mesa_ethernet_hdr), SEND_TYPE_LINK_INJECT, 
 							   layer_type, dir, thread_index,
-							   (char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
+							   (char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
@@ -3368,7 +3416,7 @@ int MESA_fakepacket_send_ipv4(int thread_index,u_int8_t ttl,
 
 	ret = packet_io_send_fake_pkt(send_handle, payload_len+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
 								SEND_TYPE_LINK_INJECT, __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
-								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
+								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 							   
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
@@ -3416,7 +3464,7 @@ int MESA_fakepacket_send_ipv4_detail(int thread_index,u_int8_t ttl,
 
 	ret = packet_io_send_fake_pkt(send_handle, payload_len+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
 								SEND_TYPE_LINK_INJECT, __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
-								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
+								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 							   
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
@@ -3475,7 +3523,7 @@ int MESA_fakepacket_send_tcp(int thread_index,u_int sip_host_order,u_int dip_hos
 
 	ret = packet_io_send_fake_pkt(send_handle, payload_len+sizeof(struct mesa_tcp_hdr)+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
 								SEND_TYPE_LINK_INJECT, __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
-								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
+								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 							   
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
@@ -3531,7 +3579,7 @@ int MESA_fakepacket_send_tcp_detail(int thread_index,u_int sip_host_order,u_int 
 
 	ret = packet_io_send_fake_pkt(send_handle, payload_len+sizeof(struct mesa_tcp_hdr)+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
 								SEND_TYPE_LINK_INJECT, __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
-								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
+								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 							   
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
@@ -3586,7 +3634,7 @@ int MESA_fakepacket_send_udp(int thread_index, u_int sip_host_order, u_int dip_h
 
 	ret = packet_io_send_fake_pkt(send_handle, payload_len+sizeof(struct mesa_udp_hdr)+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
 								SEND_TYPE_LINK_INJECT, __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
-								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
+								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 							   
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 
@@ -3640,7 +3688,7 @@ int MESA_fakepacket_send_udp_detail(int thread_index, u_int sip_host_order, u_in
 
 	ret = packet_io_send_fake_pkt(send_handle, payload_len+sizeof(struct mesa_udp_hdr)+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
 								SEND_TYPE_LINK_INJECT, __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
-								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
+								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 							   
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_index);	
 

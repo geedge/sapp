@@ -1,7 +1,7 @@
 #ifndef _APP_STREAM_BASE_H_
 #define _APP_STREAM_BASE_H_ 
 
-#define STREAM_BASE_H_VERSION		(20191118)
+#define STREAM_BASE_H_VERSION		(20201009)
 
 #include <sys/types.h>
 #include <netinet/in.h>            
@@ -9,6 +9,7 @@
 #include <netinet/ip6.h>   
 #include <netinet/tcp.h>   
 #include <netinet/udp.h>   
+#include <linux/if_ether.h>   
 #include <stdlib.h>
 #include <string.h>
 
@@ -220,8 +221,16 @@ struct layer_addr_pppoe_session
 
 struct layer_addr_mac
 {
-	UCHAR dst_mac[MAC_ADDR_LEN]; /* network order */
-	UCHAR src_mac[MAC_ADDR_LEN]; /* network order */
+	/* 
+	   C2S和S2C方向来自不同的链路和设备, 会导致两个方向的mac地址全不一样, 反向注入时不能用传统方式, 即简单的颠倒src和dst,
+	   修改定义如下, mirror模式下, 还是存储在src_addr中,
+	   API不同了, ABI还是向前兼容的, 结构体内存分布与之前的一致. 
+	*/
+	struct ethhdr src_addr;
+	struct ethhdr dst_addr;
+	
+	//UCHAR dst_mac[MAC_ADDR_LEN]; /* network order */
+	//UCHAR src_mac[MAC_ADDR_LEN]; /* network order */
 };
 
 struct layer_addr_ipv4

@@ -15,12 +15,6 @@
 //#define STREAM_RAWPKT_MD5_CHECK		"48fdc3294bced1c74a853e197db8fd67"
 //#define STREAM_TUNNEL_MD5_CHECK		"d20aa6b4f5683b7b0040676547997be0"
 
-#ifndef RTE_CACHE_LINE_SIZE
-	#define RTE_CACHE_LINE_SIZE 64
-	#define __sapp_aligned(a) __attribute__((__aligned__(a)))
-	#define __sapp_cache_aligned __sapp_aligned(RTE_CACHE_LINE_SIZE)
-#endif
-
 #define IP_PORT_UNION_VERSION			(1) /* 是否将IP-PORT合并 */
 #define COMPAT_PAPP_FOR_BENCHMARK	(0) /* 2015-01-07 lijia add, 同papp对比结果时, 临时关闭嵌套、各种隧道协议, 否则不一致 */
 #define USE_RBTREE_INSTEAD_LIST		(0) /* 当HASH冲突时, 使用红黑树代替链表, 避免特殊情况下遍历 */
@@ -76,8 +70,8 @@ typedef struct {
 	struct timeval raw_pkt_ts;	/* 原始包捕获时间戳, 如果全为0则不支持此功能(如pag模式) */
 	const void *io_lib_pkt_reference; /* 引用底层I/O库的原始包管理结构, 例如:对于marsio来说, 即底层的mbuf结构 */
 	int route_dir;
-
-	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, for adev, index0表示收到当前包的vlan_id, index1表示原包转发的vlan_id */
+	int device_index;/* 有多块网卡时, 要保证从哪个卡进就从哪个卡出 */
+	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, in host order, vlan flipping for adev, index0表示收到当前包的vlan_id, index1表示原包转发的vlan_id */
 }raw_pkt_t;
 
 
@@ -186,8 +180,8 @@ struct streaminfo_private
 	unsigned long long stream_create_timestamp_ms; 
 	/* ===8 bytes=== */
 	unsigned char layer_index:4; /* 表示当前层的计数, 从最底层开始,一般是ethernet开始, 从0开始计数, 4bit最多支持15层嵌套, 也能防止隧道嵌套攻击(目前还没捕到过包) */
-	char fake_layer_dir_for_asymmetric_cmp:2; /*因某些层两侧不对称, 尤其是还有一边有, 另一侧不存在的流, 此变量使用DIR_C2S, DIR_S2C表示哪个方向是虚拟构建的层, 解析时不作为地址比较, 发包时也要跳过 */ 
-	char __pad2:2;
+	//char fake_layer_dir_for_asymmetric_cmp:2; /*因某些层两侧不对称, 尤其是还有一边有, 另一侧不存在的流, 此变量使用DIR_C2S, DIR_S2C表示哪个方向是虚拟构建的层, 解析时不作为地址比较, 发包时也要跳过 */ 
+	char __pad2:4;
 	char __pad3[7];
 	/* ===8 bytes=== */
 };
@@ -259,6 +253,7 @@ typedef struct{
 	const char *addr_type_prefix_with_delim; /* 带分隔符的前缀, 用于比较字符串, 防止IPv4和IPv4_TCP字符串比较时混淆, 如果用IPv4:, IPv4_TCP:就不存在混淆风险 */
 	int (*addr_n2p_fun)(const struct layer_addr *paddr, char *buf, int buf_len);
 	int (*addr_p2n_fun)(char *addr_str, addr_continuous_bin_t *addr_bin_val);
+	const char *addr_type_string_abbreviation;
 }addr_convert_t;
 
 struct pptp_stream_key{
@@ -354,8 +349,7 @@ struct sapp_global_mthread_t{
 	int udp_stream_special_timeout_num;/* 设置单独超时时间的流, 默认不允许超过总流表的10% */
 	timestamp_record_region_t runtime_record;
 	timestamp_record_region_t runtime_record_driver; /* 驱动从网卡拿到包, 到平台拿到包的延时 */
-	//char __pad2__[40];
-}__sapp_cache_aligned;
+}__attribute__ ((aligned (64)));
 
 extern struct sapp_global_single_t sapp_global_single;
 extern struct sapp_global_mthread_t sapp_global_mthread[MAX_THREAD_NUM];
@@ -383,6 +377,8 @@ int update_polling_inject_context(struct streaminfo_private *pstream_pr, const r
 unsigned long long get_global_stream_id(unsigned long long thread_seq);
 enum sapp_state_t sapp_get_current_state(void);
 extern struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream, int reverse);
+enum addr_type_t addr_type_abbreviation_pton(const char *addr_type_abbreviation);
+const char *addr_type_abbreviation_ntop(enum addr_type_t addrtype);
 
 
 #ifdef __cplusplus

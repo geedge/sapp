@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include "sapp_pkt_stat.h"
 #include "sapp_limits.h"
+#include "stream_inc/stream_base.h"
 
 
 enum pkt_dump_mode{
@@ -19,9 +20,21 @@ enum depolyment_mode_config{
 };
 
 enum overlay_mode_config{
-	OVERLAY_MODE_VXLAN		= 1,
+	OVERLAY_MODE_NONE			= 0,
+	OVERLAY_MODE_VXLAN			= 1,
 	OVERLAY_MODE_VLAN_FLIP_ADEV	= 2,
 };
+
+typedef struct{
+	int layer_type_index[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
+}embed_layer_t;
+
+
+typedef struct{
+	int is_asymmetric_layer;
+	embed_layer_t under_layer;
+	embed_layer_t upper_layer;
+}asymmetric_presence_layer_t;
 
 
 typedef struct{
@@ -199,6 +212,9 @@ typedef struct{
 	char overlay_mode_string[NAME_MAX];
 	enum overlay_mode_config overlay_mode_bin;
 	char vlan_flipping_cfg_file[PATH_MAX];
+	char asymmetric_addr_layer_cfg_file[PATH_MAX];
+	char asymmetric_presence_layer_cfg_file[PATH_MAX];
+	char prune_inject_layer_cfg_file[PATH_MAX];
 	int vlan_flipping_map_num;
 	sapp_vlan_flipping_map_t vlan_flipping_map_array[MAX_VLAN_FLIPPING_MAP_NUM];
 	int mac_flipping_enabled;
@@ -291,19 +307,20 @@ typedef struct{
 
 
 
-typedef struct{
+struct __sapp_gval_mthread{
 	sapp_gval_mthread_sys_stat_t sys_stat;
 	unsigned short stream_seq_per_thread;
-	char __padding[8];
-}sapp_gval_mthread_t; /*   for multi-thread, must 64byte alignment */
+	const raw_pkt_t *raw_pkt; /* 因为MESA_fakepacket_send_xxx系列函数没有raw_pkt参数, 也没有stream_info, 为了向前兼容, 不好修改接口, 增加全局变量用于存储当前包 */
+}__attribute__ ((aligned (64))); /* for multi-thread, must 64byte alignment */
+typedef struct __sapp_gval_mthread sapp_gval_mthread_t; 
 
 
-typedef struct{
+struct __sapp_gval_individual_volatile{
 	volatile time_t current_time;
 	volatile long long current_time_ms;
 	volatile int current_state;
-	char __padding[44];
-}sapp_gval_individual_volatile_t;
+}__attribute__ ((aligned (64)));
+typedef struct __sapp_gval_individual_volatile sapp_gval_individual_volatile_t;
 
 
 typedef struct{
@@ -321,8 +338,8 @@ typedef struct{
 }sapp_global_t;
 
 
-extern int g_asymmetric_addr_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];  
-extern int g_asymmetric_presence_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   
+extern embed_layer_t g_asymmetric_addr_layer_set; 
+extern asymmetric_presence_layer_t g_asymmetric_presence_layer_set[__ADDR_TYPE_MAX];   
 
 #endif
 

@@ -20,7 +20,7 @@ dictator_enable=1
 [PACKET_IO]
 	[overlay_tunnel_definition]
 
-### note, optional value is [vxlan, vlan_flipping_adev]
+### note, optional value is [none, vxlan, vlan_flipping_adev]
 	overlay_mode=vlan_flipping_adev
 	vlan_flipping_cfg_file="etc/vlan_flipping_map.conf"
 	mac_flipping_enabled=1

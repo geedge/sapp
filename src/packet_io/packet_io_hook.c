@@ -17,8 +17,8 @@ extern "C" {
 #endif
 
 
-extern unsigned short (*marsio_get_vlan_id_from_mbuff)(void *pkt_reference);
-extern int (*marsio_set_vlan_id_to_mbuff)(void *pkt_reference, unsigned short vlan_id_net_order);
+extern unsigned int marsio_get_vlan_id_from_mbuff(void *pkt_reference);
+extern int marsio_set_vlan_id_to_mbuff(void *pkt_reference, unsigned int vlan_id_host_order);
 
 
 static const sapp_vlan_flipping_map_t *vlan_flipping_get_opposite(int cori, unsigned short vlan_id)
@@ -43,27 +43,31 @@ static const sapp_vlan_flipping_map_t *vlan_flipping_get_opposite(int cori, unsi
 }
 
 
-static int packet_io_hook_output_vlan_flipping_adev(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
+static int packet_io_hook_output_vlan_flipping_adev(raw_pkt_t *raw_pkt, unsigned char route_dir, void *raw_pkt_data, void *io_lib_pkt_reference)
 {
 	struct mesa_ethernet_hdr *ehdr;
 	unsigned char tmp_mac_addr[ETHER_ADDR_LEN];
 	unsigned short vlan_id;
 
 	if(sapp_global_val->config.packet_io.packet_io_tunnel.mac_flipping_enabled){
-		ehdr = (struct mesa_ethernet_hdr *)raw_pkt->raw_pkt_data;
+		ehdr = (struct mesa_ethernet_hdr *)raw_pkt_data;
 		memcpy(tmp_mac_addr, ehdr->ether_shost, ETHER_ADDR_LEN);
 		memcpy(ehdr->ether_shost, ehdr->ether_dhost, ETHER_ADDR_LEN);
 		memcpy(ehdr->ether_dhost, tmp_mac_addr, ETHER_ADDR_LEN);
 	}
 
-	/* 对端的vlan_id已经在收包input_hook阶段查询到, 此处直接set即可 */
-	marsio_set_vlan_id_to_mbuff((void *)raw_pkt->io_lib_pkt_reference, raw_pkt->vlan_flipping_couple[1]);
+	/* vlan_id couple已经在收包input_hook阶段查询到, 此处直接set即可 */
+	if(raw_pkt->route_dir == route_dir){
+		marsio_set_vlan_id_to_mbuff((void *)io_lib_pkt_reference, raw_pkt->vlan_flipping_couple[1]);
+	}else{
+		marsio_set_vlan_id_to_mbuff((void *)io_lib_pkt_reference, raw_pkt->vlan_flipping_couple[0]);
+	}
 
 	return 0;
 }
 
 
-static int packet_io_hook_output_vxlan(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
+static int packet_io_hook_output_vxlan(raw_pkt_t *raw_pkt, void *raw_pkt_data)
 {
 	//to do, 翻转最外层mac, 外层ip
 	return 0;
@@ -85,13 +89,14 @@ static int packet_io_hook_input_vlan_flipping_adev(raw_pkt_t *raw_pkt, unsigned 
 			sapp_runtime_log(20, "packet_io_hook_input() error, not found vlan_id:%u\n", vlan_id);
 			return -1;
 		}else{
-			/* 数据包来自I路由器端, 即I2C(E2I)方向, 更新route_dir的值 */
+			/* 数据包来自I路由器端, 即I2C(E2I)方向, 根据inbound_route_dir的值, 更新当前包route_dir的值 */
 			raw_pkt->route_dir = sapp_global_val->config.packet_io.inbound_route_dir;
 			raw_pkt->vlan_flipping_couple[1] = vf->c_router_vlan_id;
 		}
 	}else{
-		/* 数据包来自C路由器端, 即C2I(I2E)方向, 更新route_dir的值 */
+		/* 数据包来自C路由器端, 即C2I(I2E)方向, 根据inbound_route_dir的值, 更新当前包route_dir的值 */
 		raw_pkt->route_dir = sapp_global_val->config.packet_io.inbound_route_dir ^ 1;
+		//raw_pkt->human_route_dir = MESA_dir_link_to_human(raw_pkt->route_dir);
 		raw_pkt->vlan_flipping_couple[1] = vf->i_router_vlan_id;
 	}
 
@@ -100,7 +105,8 @@ static int packet_io_hook_input_vlan_flipping_adev(raw_pkt_t *raw_pkt, unsigned 
 
 static int packet_io_hook_input_vxlan(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
 {
-	//to do,
+	//to do, 根据vxlan dir方向设置route_dir
+	
 	return 0;
 }
 
@@ -115,7 +121,8 @@ int packet_io_hook_input(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
 	}else if(OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
 		ret = packet_io_hook_input_vxlan(raw_pkt, dir, thread_num);
 	}else{
-		sapp_runtime_log(20, "packet_io_hook_output() error, unsupport overlay_mode:%d\n", sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin);
+		sapp_runtime_log(RLOG_LV_INFO, "packet_io_hook_input() error, unsupport overlay_mode:%d\n", 
+						sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin);
 		assert(0);
 	}
 	
@@ -123,20 +130,37 @@ int packet_io_hook_input(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
 }
 
 
-int packet_io_hook_output(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
+int packet_io_hook_forward(raw_pkt_t *raw_pkt, unsigned char route_dir, int thread_num)
 {
 	int ret;
 
 	if(OVERLAY_MODE_VLAN_FLIP_ADEV == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
-		ret = packet_io_hook_output_vlan_flipping_adev(raw_pkt, dir, thread_num);
+		ret = packet_io_hook_output_vlan_flipping_adev(raw_pkt, route_dir, (void *)raw_pkt->raw_pkt_data, (void *)raw_pkt->io_lib_pkt_reference);
 	}else if(OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
-		ret = packet_io_hook_output_vxlan(raw_pkt, dir, thread_num);
+		ret = packet_io_hook_output_vxlan(raw_pkt, (void *)raw_pkt->raw_pkt_data);
 	}else{
-		sapp_runtime_log(20, "packet_io_hook_output() error, unsupport overlay_mode:%d\n", sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin);
+		sapp_runtime_log(20, "packet_io_hook_forward() error, unsupport overlay_mode:%d\n", sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin);
 		assert(0);
 	}
 	
 	return ret;
+}
+
+int packet_io_hook_sendto(const raw_pkt_t *raw_pkt, unsigned char route_dir, char *send_pkt_data, void *send_pkt_io_reference)
+{
+	int ret;
+
+	if(OVERLAY_MODE_VLAN_FLIP_ADEV == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
+		ret = packet_io_hook_output_vlan_flipping_adev((raw_pkt_t *)raw_pkt, route_dir, (void *)send_pkt_data, send_pkt_io_reference);
+	}else if(OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
+		ret = packet_io_hook_output_vxlan((raw_pkt_t *)raw_pkt, (void *)send_pkt_data);
+	}else{
+		sapp_runtime_log(20, "packet_io_hook_sendto() error, unsupport overlay_mode:%d\n", sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin);
+		assert(0);
+	}
+	
+	return ret;
+
 }
 
 

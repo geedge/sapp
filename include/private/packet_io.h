@@ -106,8 +106,8 @@ typedef struct{
 	void (*dl_io_free_sendbuf)(void *, int thread_num);
 	void * (*dl_io_get_send_handle)(int  thread_num);
 	int (*dl_io_low_level_send)(void *phandle, unsigned char *data,int datalen,
-							int eth_carry_layer_addr_type, int dir,int thread_num); /* 不含ethernet层 */
-	int (*dl_io_raw_pkt_send)(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num); /* 全部原始包 */
+							int eth_carry_layer_addr_type, int dir,int thread_num, const raw_pkt_t *raw_pkt); /* 不含ethernet层 */
+	int (*dl_io_raw_pkt_send)(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num,unsigned char, const raw_pkt_t *raw_pkt); /* 全部原始包 */
 	int (*dl_io_init)(int argc, char *argv[]);
 	void (*dl_io_run)(void);
 	int (*dl_io_register_cb)(PACKET_IO_CB_T fun);

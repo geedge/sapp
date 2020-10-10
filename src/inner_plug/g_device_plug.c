@@ -315,7 +315,7 @@ static int gdev_keepalive_plug(const raw_pkt_t *raw_pkt, int thread_id, unsigned
 #else
 	ret = packet_io_send(snd_handle, send_len, SEND_TYPE_LINK_INJECT, 
 						__ADDR_TYPE_IP_PAIR_V4, dir, thread_id,
-						(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);	
+						(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, raw_pkt);	
 
 #endif
 

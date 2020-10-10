@@ -773,10 +773,10 @@ char test_print_mac(struct streaminfo *pstream,void **pme, int thread_seq,void *
 			if(pstream->addr.addrtype == ADDR_TYPE_MAC){
 				struct layer_addr_mac *mac_addr = (struct layer_addr_mac *)pstream->addr.mac;
 				printf("smac: %02x-%02x-%02x-%02x-%02x-%02x,  dmac: %02x-%02x-%02x-%02x-%02x-%02x\n",
-				         mac_addr->src_mac[0], mac_addr->src_mac[1], mac_addr->src_mac[2], 
-				         mac_addr->src_mac[3], mac_addr->src_mac[4], mac_addr->src_mac[5], 
-				         mac_addr->dst_mac[0], mac_addr->dst_mac[1], mac_addr->dst_mac[2], 
-				         mac_addr->dst_mac[3], mac_addr->dst_mac[4], mac_addr->dst_mac[5]);
+				         mac_addr->src_addr.h_source[0], mac_addr->src_addr.h_source[1], mac_addr->src_addr.h_source[2], 
+				         mac_addr->src_addr.h_source[3], mac_addr->src_addr.h_source[4], mac_addr->src_addr.h_source[5], 
+				         mac_addr->src_addr.h_dest[0], mac_addr->src_addr.h_dest[1], mac_addr->src_addr.h_dest[2], 
+				         mac_addr->src_addr.h_dest[3], mac_addr->src_addr.h_dest[4], mac_addr->src_addr.h_dest[5]);
 				break;
 			}else{
 				pstream = pstream->pfather;

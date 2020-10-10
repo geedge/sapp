@@ -180,7 +180,8 @@ int packet_io_set_max_rand_value(int rand_max);
 int packet_io_set_rand_key(int rand_key);
 MESA_send_handle *packet_io_get_send_handle(int thread_id);
 int packet_io_send(MESA_send_handle *send_handle,int datalen,int send_type, 
-					int low_layer_type, int dir,int thread_num, char *feedback_buf, int *feedback_buf_len);
+					int low_layer_type, int dir,int thread_num, char *feedback_buf, 
+					int *feedback_buf_len, const raw_pkt_t *raw_pkt);
 
 void sysinfo_output(void);
 int is_proxy_stream(const struct streaminfo *pstream);
@@ -197,7 +198,7 @@ unsigned long long MESA_rand_range(unsigned long long start, unsigned long long 
 int __MESA_rst_tcp_c(struct streaminfo *stream, unsigned char rst_th_flags, int rst_pkt_num, unsigned char snd_rst_dir, 
 							unsigned short signature_seed1, unsigned short signature_seed2);
 int packet_io_hook_input(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num);
-int packet_io_hook_output(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num);
+int packet_io_hook_forward(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num);
 
 
 /********************** funcitons for dynamic link ***********************/
@@ -215,7 +216,7 @@ extern unsigned char * dl_io_get_sendbuf(void *, int );
 extern void dl_io_free_sendbuf(void *, int thread_num);
 extern void * dl_io_get_send_handle(int  thread_num);
 extern int dl_io_low_level_send(void *phandle, unsigned char *data,int datalen,
-						int eth_carry_layer_addr_type, int dir,int thread_num); /* 不含ethernet层 */
+						int eth_carry_layer_addr_type, int dir,int thread_num, const raw_pkt_t *raw_pkt); /* 不含ethernet层 */
 extern int dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num); /* 全部原始包 */
 extern int dl_io_init(int argc, char *argv[]);
 extern void dl_io_run(void);
@@ -242,8 +243,8 @@ extern unsigned char * pcap_dl_io_get_sendbuf(void *, int );
 extern void pcap_dl_io_free_sendbuf(void *, int thread_num);
 extern void * pcap_dl_io_get_send_handle(int  thread_num);
 extern int pcap_dl_io_low_level_send(void *phandle, unsigned char *data,int datalen,
-						int eth_carry_layer_addr_type, int dir,int thread_num); /* 不含ethernet层 */
-extern int pcap_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num); /* 全部原始包 */
+						int eth_carry_layer_addr_type, int dir,int thread_num, const raw_pkt_t *raw_pkt); /* 不含ethernet层 */
+extern int pcap_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num, unsigned char, const raw_pkt_t *raw_pkt); /* 全部原始包 */
 extern int pcap_dl_io_init(int argc, char *argv[]);
 extern void pcap_dl_io_run(void);
 extern int pcap_dl_io_register_cb(PACKET_IO_CB_T fun);
@@ -296,8 +297,8 @@ extern unsigned char * marsio_dl_io_get_sendbuf(void *, int );
 extern void marsio_dl_io_free_sendbuf(void *, int thread_num);
 extern void * marsio_dl_io_get_send_handle(int  thread_num);
 extern int marsio_dl_io_low_level_send(void *phandle, unsigned char *data,int datalen,
-						int eth_carry_layer_addr_type, int dir,int thread_num); /* 不含ethernet层 */
-extern int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num); /* 全部原始包 */
+						int eth_carry_layer_addr_type, int dir,int thread_num, const raw_pkt_t *raw_pkt); /* 不含ethernet层 */
+extern int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num, unsigned char routedir,const raw_pkt_t *raw_pkt); /* 全部原始包 */
 extern int marsio_dl_io_init(int argc, char *argv[]);
 extern void marsio_dl_io_run(void);
 extern int marsio_dl_io_register_cb(PACKET_IO_CB_T fun);
@@ -322,7 +323,7 @@ extern unsigned char * tun_dl_io_get_sendbuf(void *, int );
 extern void tun_dl_io_free_sendbuf(void *, int thread_num);
 extern void * tun_dl_io_get_send_handle(int  thread_num);
 extern int tun_dl_io_low_level_send(void *phandle, unsigned char *data,int datalen,
-						int eth_carry_layer_addr_type, int dir,int thread_num); /* 不含ethernet层 */
+						int eth_carry_layer_addr_type, int dir,int thread_num, const raw_pkt_t *raw_pkt); /* 不含ethernet层 */
 extern int tun_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, int thread_num); /* 全部原始包 */
 extern int tun_dl_io_init(int argc, char *argv[]);
 extern void tun_dl_io_run(void);
@@ -332,6 +333,7 @@ extern int tun_dl_io_get_version(void);
 extern void * tun_dl_io_device_alias(unsigned int target_id, char *device_args);
 
 /********************** tun funcitons for dynamic link ***********************/
+
 
 
 #ifdef __cplusplus
