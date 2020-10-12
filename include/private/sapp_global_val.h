@@ -264,9 +264,9 @@ typedef struct{
 typedef struct{
 	volatile time_t current_time;
 	volatile long long current_time_ms;
-	volatile int current_state;
+	volatile int current_state __sapp_cache_aligned;
 	//char __padding[44];
-}sapp_gval_individual_volatile_t __sapp_cache_aligned;
+}sapp_gval_individual_volatile_t ;
 
 
 typedef struct{
