@@ -614,7 +614,7 @@ int process_confelem_plugname(char* filename,int plugtype,char** plugname)
 		rec = check_name_fromentrylist(buf_plugname);
 		if(rec != 1)
 		{
-			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's plugname is %s,not in the entrylist.conf",filename,buf_plugname);
+			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[1;31;40m%s's\033[0m plugname is %s,not in the entrylist.conf",filename,buf_plugname);
 			return -1;
 		}
 	}
@@ -711,7 +711,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	time_cost_us = record_time_elapse_us(&start);
 	if(rec < 0)
 	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s init error,don't load it",buf_sofilename);
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[1;31;40m%s\033[0m init error,don't load it",buf_sofilename);
 		return -1;
 	}
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[32m%s\033[0m init succ, using [\033[32m%lld\033[0m] us",buf_sofilename,time_cost_us);
