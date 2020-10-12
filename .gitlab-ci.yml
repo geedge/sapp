@@ -54,6 +54,12 @@ develop_build_debug:
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
     PACKAGE: 1
+    UPLOAD: 1
+    ASAN_OPTION: ADDRESS
+    MEM_POOL: TCMALLOC
+    TESTING_VERSION_BUILD: 1
+    PULP3_REPO_NAME: platform-testing-x86_64.el7
+    PULP3_DIST_NAME: platform-testing-x86_64.el7
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-debug"
     paths:
@@ -71,6 +77,12 @@ develop_build_release:
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
     PACKAGE: 1
+    UPLOAD: 1
+    ASAN_OPTION: ADDRESS
+    MEM_POOL: TCMALLOC
+    TESTING_VERSION_BUILD: 1
+    PULP3_REPO_NAME: platform-testing-x86_64.el7
+    PULP3_DIST_NAME: platform-testing-x86_64.el7
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-release"
     paths:
@@ -99,27 +111,4 @@ release_build_release:
     paths:
       - build/*.rpm
   only:
-    - tags
-  except:
-    - /^v[0-9].*-testing$/i    
-
-testing_build_release:
-  stage: build
-  variables:
-    BUILD_TYPE: RelWithDebInfo
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
-    PACKAGE: 1
-    UPLOAD: 1
-    SYMBOL_TARGET: sapp
-    ASAN_OPTION: ADDRESS
-    MEM_POOL: TCMALLOC
-    PULP3_REPO_NAME: platform-testing-x86_64.el7
-    PULP3_DIST_NAME: platform-testing-x86_64.el7
-  extends: .build_by_travis
-  artifacts:
-    name: "sapp-$CI_COMMIT_REF_NAME-release"
-    paths:
-      - build/*.rpm
-  only:
-    - /^v[0-9].*-testing$/i 
+    - tags   
