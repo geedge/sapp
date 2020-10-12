@@ -560,14 +560,14 @@ int process_conf_entryname()
 		}
 		
 		//平台入口,IP,IPV6,TCP,TCPALL,UDP
-		if((memcmp(buf_entryname,SECTION_FUN_IP,strlen(buf_entryname))==0)||
-		      (memcmp(buf_entryname,SECTION_FUN_IP_FRAG ,strlen(buf_entryname))==0)||
-			(memcmp(buf_entryname,SECTION_FUN_IPV6,strlen(buf_entryname))==0)||
-			(memcmp(buf_entryname,SECTION_FUN_TCP,strlen(buf_entryname))==0)||
-			(memcmp(buf_entryname,SECTION_FUN_TCP_ALL,strlen(buf_entryname))==0)||
-			(memcmp(buf_entryname,SECTION_FUN_UDP,strlen(buf_entryname))==0) ||
-			(memcmp(buf_entryname,SECTION_FUN_PHONY,strlen(buf_entryname)) ==0) ||
-			(memcmp(buf_entryname,SECTION_FUN_POLLING,strlen(buf_entryname)) ==0))
+		if( ((strcmp(buf_entryname,SECTION_FUN_IP)==0))||
+		      (strcmp(buf_entryname,SECTION_FUN_IP_FRAG)==0)||
+			(strcmp(buf_entryname,SECTION_FUN_IPV6)==0)||
+			(strcmp(buf_entryname,SECTION_FUN_TCP)==0)||
+			(strcmp(buf_entryname,SECTION_FUN_TCP_ALL)==0)||
+			(strcmp(buf_entryname,SECTION_FUN_UDP)==0) ||
+			(strcmp(buf_entryname,SECTION_FUN_PHONY) ==0) ||
+			(strcmp(buf_entryname,SECTION_FUN_POLLING) ==0))
 		{
 			continue;
 		}
