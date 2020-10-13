@@ -2614,6 +2614,9 @@ int __MESA_rst_tcp(struct streaminfo *stream, unsigned char rst_th_flags, int rs
 
 	stream_pr = (struct streaminfo_private *)stream;
 	raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
+	if(NULL == raw_pkt){
+		return -1;
+	}
 
 	for(i = 0; i < rst_pkt_num; i++){
 		build_tcp_rst_pkt_finger(stream, signature_seed1, signature_seed2, &rst_finger);

@@ -97,10 +97,6 @@ Time       : 2007-05
 #endif
 
 
-#ifndef MTU_MAX
-#define MTU_MAX 					1514
-#endif
-
 #define SENDPACKET_ARP_H			0x1c    /* ARP header:          28 bytes */
 #define SENDPACKET_ETH_H			0xe     /* Etherner header:     14 bytes */
 #define SENDPACKET_IP_H            0x14    /* IP header:           20 bytes */

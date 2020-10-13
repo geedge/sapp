@@ -504,7 +504,10 @@ static int marsio4_pkt_forward(int tid, marsio_buff_t * mbufs)
 	/* 批量获取, 但考虑特殊情况下, vxlan和其他封装模式混杂使用, 要对每个mbuf判断底层封装模式 */
 
 	//if(ctrl_zone->__encap_len > 0){ /* 2018-06-01, marsio vxlan mode, 非vxlan封装的包不能回注 */
-	if(ctrl_zone->action & TUNNAT_CZ_ACTION_FORWARD){ /* 20190409 lijia modify, tunnel mode, 非隧道封装的包不能回注 */
+	if((ctrl_zone->action & TUNNAT_CZ_ACTION_FORWARD)
+	|| (OVERLAY_MODE_NONE != sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)){ 
+		/* 20201010 lijia modify, 开启overlay无mrtunnat的模式下, ctrl_zone是空, 默认都回注 */
+		/* 20190409 lijia modify, tunnel mode, 非隧道封装的包不能回注 */
 		/* vxlan封装内层数据转发不必做任何操作, 直接调用marsio_send_burst, 由marsio驱动负责 */
 		ctrl_zone->action = TUNNAT_CZ_ACTION_FORWARD;
 		ptr_marsio_buff_ctrlzone_set(mbufs, 0, ctrl_zone, sizeof(struct mr_tunnat_ctrlzone));
@@ -889,24 +892,26 @@ static int marsio_dl_get_function_entry(void)
 	}
 
 	/* for vlan flipping */
-	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
-	&& (OVERLAY_MODE_VLAN_FLIP_ADEV == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)){
+	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
 		ptr_marsio_buff_get_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_get_metadata");
 		if(NULL == ptr_marsio_buff_get_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_get_metadata", MARSIO_SO_FILE_PATH);
-			return -1;
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			sleep(1);
 		}
 
 		ptr_marsio_buff_set_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_set_metadata");
 		if(NULL == ptr_marsio_buff_set_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_metadata", MARSIO_SO_FILE_PATH);
-			return -1;
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			sleep(1);
 		}
 
 		ptr_marsio_buff_unset_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type))dlsym(marsio_so_handle, "marsio_buff_unset_metadata");
 		if(NULL == ptr_marsio_buff_unset_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_unset_metadata", MARSIO_SO_FILE_PATH);
-			return -1;
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			sleep(1);
 		}		
 	}
 
@@ -949,14 +954,21 @@ unsigned int marsio_get_vlan_id_from_mbuff(void *pkt_reference)
 {
 	unsigned int vlan_id = 0;
 	
-	ptr_marsio_buff_get_metadata((marsio_buff_t *)pkt_reference, MR_BUFF_METADATA_VLAN_TCI, &vlan_id, sizeof(int));
-
+	if(ptr_marsio_buff_get_metadata){
+		ptr_marsio_buff_get_metadata((marsio_buff_t *)pkt_reference, MR_BUFF_METADATA_VLAN_TCI, &vlan_id, sizeof(int));
+	}
+	
 	return vlan_id;
 }
 
 int marsio_set_vlan_id_to_mbuff(void *pkt_reference, unsigned int vlan_id_host_order)
 {
-	return ptr_marsio_buff_set_metadata((marsio_buff_t *)pkt_reference, MR_BUFF_METADATA_VLAN_TCI, &vlan_id_host_order, sizeof(int));
+	int ret = 0;
+	if(ptr_marsio_buff_set_metadata){
+		ret = ptr_marsio_buff_set_metadata((marsio_buff_t *)pkt_reference, MR_BUFF_METADATA_VLAN_TCI, &vlan_id_host_order, sizeof(int));
+	}
+
+	return ret;
 }
 
 

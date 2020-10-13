@@ -72,6 +72,7 @@ typedef struct {
 	int route_dir;
 	int device_index;/* 有多块网卡时, 要保证从哪个卡进就从哪个卡出 */
 	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, in host order, vlan flipping for adev, index0表示收到当前包的vlan_id, index1表示原包转发的vlan_id */
+	short mac_flipping_enable;
 }raw_pkt_t;
 
 
@@ -379,6 +380,7 @@ enum sapp_state_t sapp_get_current_state(void);
 extern struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream, int reverse);
 enum addr_type_t addr_type_abbreviation_pton(const char *addr_type_abbreviation);
 const char *addr_type_abbreviation_ntop(enum addr_type_t addrtype);
+int sapp_identify_broad_multicast_init(void);
 
 
 #ifdef __cplusplus

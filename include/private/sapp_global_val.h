@@ -19,10 +19,14 @@ enum depolyment_mode_config{
 	DEPOLYMENT_MODE_INLINE		= 3,
 };
 
+/*
+	vxlan和vlan_flipping是可以共存的,
+	vxlan用于在线流量,
+	vlan_flipping用于本机自检流量,
+*/
 enum overlay_mode_config{
 	OVERLAY_MODE_NONE			= 0,
 	OVERLAY_MODE_VXLAN			= 1,
-	OVERLAY_MODE_VLAN_FLIP_ADEV	= 2,
 };
 
 typedef struct{
@@ -203,8 +207,9 @@ enum __sapp_config_packet_io_depolyment_mode{
 #define MAX_VLAN_FLIPPING_MAP_NUM	(4096) /* vlan_id最大范围是4096 */
 
 typedef struct{
-	unsigned short c_router_vlan_id; /* network order */
-	unsigned short i_router_vlan_id; /* network order */
+	unsigned short c_router_vlan_id; /* host order */
+	unsigned short i_router_vlan_id; /* host order */
+	short mac_flipping_enable;
 }sapp_vlan_flipping_map_t;
 
 
@@ -217,7 +222,6 @@ typedef struct{
 	char prune_inject_layer_cfg_file[PATH_MAX];
 	int vlan_flipping_map_num;
 	sapp_vlan_flipping_map_t vlan_flipping_map_array[MAX_VLAN_FLIPPING_MAP_NUM];
-	int mac_flipping_enabled;
 }sapp_config_packet_io_tunnel_t;
 
 

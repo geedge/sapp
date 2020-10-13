@@ -17,10 +17,6 @@ extern "C" {
 #define MULTITHREAD 	(1)
 #endif
 
-#ifndef MTU_MAX
-#define MTU_MAX 					1514
-#endif
-
 
 #define RAW_PKT_BROKEN_TEST	(0) /* 防止上层插件无意修改原始包, 增加检测机制 */
 

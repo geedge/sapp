@@ -448,6 +448,8 @@ int MESA_platform_init(int argc, char *argv[])
 		return -1;
 	}
 #endif	
+
+	sapp_identify_broad_multicast_init();
 	sapp_set_current_state(SAPP_STATE_PKT_IO_INITED);
 
 	return 0;	

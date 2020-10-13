@@ -106,7 +106,7 @@ static int update_hierarchical_layer_stat(const struct hierarchical_layer *strea
 {
 	int i;
 	
-	if(search_g_hierarchical_layer_stat(stream_hierarchical_layer_stat) == 0){ //ä¸å­˜åœ¨, æ˜¯æ–°çš„æµç»“æ„
+	if(search_g_hierarchical_layer_stat(stream_hierarchical_layer_stat) == 0){ //ä¸å­˜åœ? æ˜¯æ–°çš„æµç»“æ„
 		memcpy(&g_hierarchical_layer_stat[hierarchical_layer_stat_num], stream_hierarchical_layer_stat, sizeof(struct hierarchical_layer) * MAX_LAYER_DEPTH);
 		hierarchical_layer_stat_num++;
 		show_hierarchical_layer_stat();
@@ -1844,6 +1844,61 @@ static int send_by_sapp_inject_pkt(struct streaminfo *a_tcp, const struct mesa_i
 }
 
 
+char MESA_inject_tcp_pkt_for_l2_l3_test(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+{
+	const char *modify_raw_data_c2s =    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"; //ÒªÌæ»»µÄÔ­Ê¼×Ö·û´®ÄÚÈİ
+	const char *modify_inject_data_c2s = "Mozilla/5.1 (Windows NT 10.1; Win64; x64)";
+
+	const char *modify_raw_data_s2c =    "<html><pre>"; //ÒªÌæ»»µÄÔ­Ê¼×Ö·û´®ÄÚÈİ
+	const char *modify_inject_data_s2c = "<html><pre> sapp test inject data";
+
+	char raw_data_c2s[2048];
+	char raw_data_s2c[2048];
+	char *modify_ptr_c2s, *modify_ptr_s2c;
+	char ret_flag = 0;
+	int ret;
+	
+	if(OP_STATE_CLOSE == stream->opstate){
+		return APP_STATE_DROPME;
+	}
+#if 0
+	if(ntohs(stream->addr.tuple4_v4->source) <= 30000){
+		return APP_STATE_DROPME;
+	}
+#endif	
+
+	if(DIR_C2S == stream->curdir){
+		memcpy(raw_data_c2s, stream->ptcpdetail->pdata, stream->ptcpdetail->datalen);
+		modify_ptr_c2s = memmem(raw_data_c2s, stream->ptcpdetail->datalen, modify_raw_data_c2s, strlen(modify_raw_data_c2s));
+		if(modify_ptr_c2s){
+			memcpy(modify_ptr_c2s, modify_inject_data_c2s, strlen(modify_inject_data_c2s));
+			ret = MESA_inject_pkt(stream, raw_data_c2s, stream->ptcpdetail->datalen, raw_pkt, stream->routedir);
+			if(ret < 0){
+				printf("%s, MESA_inject_pkt error!\n", printaddr(&stream->addr, thread_seq));
+			}else{
+				printf("%s, MESA_inject_pkt C2S succ:%d\n",printaddr(&stream->addr, thread_seq), ret);
+			}
+			ret_flag = APP_STATE_DROPPKT;
+		}
+	}else{
+		memcpy(raw_data_s2c, stream->ptcpdetail->pdata, stream->ptcpdetail->datalen);
+		modify_ptr_s2c = memmem(raw_data_s2c, stream->ptcpdetail->datalen, modify_raw_data_s2c, strlen(modify_raw_data_s2c));
+		if(modify_ptr_s2c){
+			memcpy(modify_ptr_s2c, modify_inject_data_s2c, strlen(modify_inject_data_s2c));
+			ret = MESA_inject_pkt(stream, raw_data_s2c, stream->ptcpdetail->datalen, raw_pkt, stream->routedir);
+			if(ret < 0){
+				printf("%s, MESA_inject_pkt error!\n", printaddr(&stream->addr, thread_seq));
+			}else{
+				printf("%s, MESA_inject_pkt S2C succ:%d\n", printaddr(&stream->addr, thread_seq), ret);
+			}	
+		}
+		ret_flag = APP_STATE_DROPPKT;
+	}
+	
+	return APP_STATE_GIVEME | ret_flag;
+}
+
+
 #if 0
 #include "http.h"
 char test_sapp_inject_http(stSessionInfo* session_info, void **param, int thread_seq, struct streaminfo *a_tcp, void *a_packet)
@@ -2766,7 +2821,9 @@ char SLEEP_ENTRY(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_p
 
 char KILL_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
-	MESA_kill_connection(a_tcp, a_packet);
+	if(OP_STATE_CLOSE != a_tcp->opstate){
+		MESA_kill_connection(a_tcp, a_packet);
+	}
 	return APP_STATE_GIVEME | APP_STATE_DROPPKT;
 }
 
@@ -2781,15 +2838,29 @@ char KILL_STREAM_ONLY_DOU(struct streaminfo *a_tcp,  void **pme, int thread_seq,
 
 char RST_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
-	struct rst_tcp_para rst_args;
-	rst_args.th_flags = TH_RST;
-	rst_args.rst_pkt_num = 1;
-	rst_args.dir = DIR_S2C;
-	rst_args.signature_seed1 = 65535;
-	rst_args.signature_seed2 = 17;
-	
-	MESA_rst_tcp(a_tcp, &rst_args, sizeof(struct rst_tcp_para));
-	printf("call MESA_rst_tcp()\n");
+	struct rst_tcp_para rst_args = {};
+
+	if(OP_STATE_CLOSE != a_tcp->opstate){
+
+		if(ntohs(a_tcp->addr.tuple4_v4->source) > 50000){
+			rst_args.th_flags = TH_RST;
+			rst_args.rst_pkt_num = 1;
+			rst_args.dir = DIR_C2S;
+			rst_args.signature_seed1 = 65535;
+			rst_args.signature_seed2 = 13;
+			
+			MESA_rst_tcp(a_tcp, &rst_args, sizeof(struct rst_tcp_para));
+			
+			rst_args.th_flags = TH_RST | TH_ACK;
+			rst_args.rst_pkt_num = 1;
+			rst_args.dir = DIR_S2C;
+			rst_args.signature_seed1 = 65535;
+			rst_args.signature_seed2 = 31;
+			
+			MESA_rst_tcp(a_tcp, &rst_args, sizeof(struct rst_tcp_para));
+		}
+
+	}
 	
 	return APP_STATE_GIVEME;
 }

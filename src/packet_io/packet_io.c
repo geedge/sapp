@@ -589,7 +589,8 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 
 	sapp_global_val->mthread_volatile[thread_num]->raw_pkt = p_raw_pkt;
 	
-	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
+	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	  &&(OVERLAY_MODE_NONE != sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)){
 		packet_io_hook_input((raw_pkt_t *)p_raw_pkt, dir, thread_num);
 	}
 
@@ -677,7 +678,9 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		ret = g_platform_action_cb_fun(sapp_global_val->config.packet_io.depolyment_mode_bin, ret);
 	}
 
-	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin) && (PASS == ret)){
+	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin) 
+	&& (OVERLAY_MODE_NONE != sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)
+	&& (PASS == ret)){
 		packet_io_hook_forward((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
 	}
 

@@ -29,14 +29,12 @@ int sapp_assistant_version_VERSION_20181024;
 extern int MESA_get_dev_ipv4(const char *device, int *ip_add);
 extern int MESA_get_dev_mac(const char *device, unsigned char mac[6]);
 
-#if IOMODE_MARSIO
-//void * (*dl_marsio_buff_ctrlzone)(void *m, uint8_t id);
+void * (*dl_marsio_buff_ctrlzone)(void *m, uint8_t id);
 extern void * (*ptr_marsio_buff_ctrlzone)(marsio_buff_t *m, uint8_t id);
-#endif
 
-static int sapp_identify_broad_multicast_init(void)
+int sapp_identify_broad_multicast_init(void)
 {
-#if 0
+#if IOMODE_MARSIO
 	void *io_lib_handle;
 	
 	if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
@@ -68,8 +66,6 @@ int sapp_identify_tunnel_inner_pkt(const raw_pkt_t *raw_pkt)
 #if IOMODE_MARSIO
 	if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
 		const struct mr_tunnat_ctrlzone *mr_ctzone;
-		if(ptr_marsio_buff_ctrlzone){
-			mr_ctzone = (const struct mr_tunnat_ctrlzone *)((*ptr_marsio_buff_ctrlzone)((void *)raw_pkt->io_lib_pkt_reference, 0));
 			if(mr_ctzone->action & TUNNAT_CZ_ACTION_FORWARD){
 				return 1;
 			}
@@ -855,8 +851,7 @@ void sapp_fs2_set_latency(int thead_seq, long long time_cost)
 int sapp_assistant_init(void)
 {
 	sapp_fs2_init();
-	//sapp_line_protocol_init();
-	
+
 	pthread_mutex_init(&g_plug_Independent_thread_mutex, NULL);
 
 	if(sapp_global_val->config.cpu.send_only_threads_max_num > 0){
