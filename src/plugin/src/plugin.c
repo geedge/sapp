@@ -219,7 +219,7 @@ stProtocolPlugInfo* get_propluginfo_name(char* plugname)
 
 	while(pluginfo)
 	{
-		if(memcmp(pluginfo->plugname,plugname,strlen(plugname)) == 0)
+		if(strcmp(pluginfo->plugname,plugname) == 0)
 		{
 			return pluginfo;
 		}
