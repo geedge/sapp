@@ -293,7 +293,31 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			*tot_pkt = __get_platform_opt_traffic('c', SAPP_STAT_IPV4_INBOUND);
 		}
 		break;
-
+		case SPO_TOTAL_RCV_INBOUND_IPV4_BYTE:
+		{
+			if (*opt_val_len != sizeof(long long))
+			{
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_pkt = (unsigned long long *)opt_val;
+			*tot_pkt = __get_platform_opt_traffic('l', SAPP_STAT_IPV4_INBOUND);
+		}
+		break;
+		case SPO_TOTAL_RCV_OUTBOUND_IPV4_PKT:
+		{
+			if (*opt_val_len != sizeof(long long))
+			{
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_byte = (unsigned long long *)opt_val;
+			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_IPV4_OUTBOUND);
+			;
+		}
+		break;
 		case SPO_TOTAL_RCV_OUTBOUND_IPV4_BYTE:
 		{
 			if (*opt_val_len != sizeof(long long))
@@ -320,7 +344,31 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			*tot_pkt = __get_platform_opt_traffic('c', SAPP_STAT_IPV6_INBOUND);
 		}
 		break;
-
+		case SPO_TOTAL_RCV_INBOUND_IPV6_BYTE:
+		{
+			if (*opt_val_len != sizeof(long long))
+			{
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_pkt = (unsigned long long *)opt_val;
+			*tot_pkt = __get_platform_opt_traffic('l', SAPP_STAT_IPV6_INBOUND);
+		}
+		break;
+		case SPO_TOTAL_RCV_OUTBOUND_IPV6_PKT:
+		{
+			if (*opt_val_len != sizeof(long long))
+			{
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_byte = (unsigned long long *)opt_val;
+			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_IPV6_OUTBOUND);
+			;
+		}
+		break;
 		case SPO_TOTAL_RCV_OUTBOUND_IPV6_BYTE:
 		{
 			if (*opt_val_len != sizeof(long long))
@@ -347,7 +395,31 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			*tot_pkt = __get_platform_opt_traffic('c', SAPP_STAT_TCP_INBOUND);
 		}
 		break;
-
+		case SPO_TOTAL_RCV_INBOUND_TCP_BYTE:
+		{
+			if (*opt_val_len != sizeof(long long))
+			{
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_pkt = (unsigned long long *)opt_val;
+			*tot_pkt = __get_platform_opt_traffic('l', SAPP_STAT_TCP_INBOUND);
+		}
+		break;
+		case SPO_TOTAL_RCV_OUTBOUND_TCP_PKT:
+		{
+			if (*opt_val_len != sizeof(long long))
+			{
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_byte = (unsigned long long *)opt_val;
+			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_TCP_OUTBOUND);
+			;
+		}
+		break;
 		case SPO_TOTAL_RCV_OUTBOUND_TCP_BYTE:
 		{
 			if (*opt_val_len != sizeof(long long))
@@ -372,6 +444,33 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			}
 			unsigned long long *tot_pkt = (unsigned long long *)opt_val;
 			*tot_pkt = __get_platform_opt_traffic('c', SAPP_STAT_UDP_INBOUND);
+		}
+		break;
+
+		case SPO_TOTAL_RCV_INBOUND_UDP_BYTE:
+		{
+			if (*opt_val_len != sizeof(long long))
+			{
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_pkt = (unsigned long long *)opt_val;
+			*tot_pkt = __get_platform_opt_traffic('l', SAPP_STAT_UDP_INBOUND);
+		}
+		break;
+
+		case SPO_TOTAL_RCV_OUTBOUND_UDP_PKT:
+		{
+			if (*opt_val_len != sizeof(long long))
+			{
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_DEBUG, "sapp_get_platform_opt() error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_byte = (unsigned long long *)opt_val;
+			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_UDP_OUTBOUND);
+			;
 		}
 		break;
 

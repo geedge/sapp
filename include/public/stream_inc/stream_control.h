@@ -83,13 +83,21 @@ enum sapp_platform_opt{
 	SPO_UDP_STREAM_CONCURRENT,	/* realtime Concurrent udp streams, opt_val type must be unsigned long long */	
 
 	SPO_TOTAL_RCV_INBOUND_IPV4_PKT,		/* total recv ipv4 packet number, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_INBOUND_IPV4_BYTE,		/* total recv ipv4 packet number, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_OUTBOUND_IPV4_PKT,	/* total recv ipv4 packet bytes, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_OUTBOUND_IPV4_BYTE,	/* total recv ipv4 packet bytes, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_INBOUND_IPV6_PKT,		/* total recv ipv6 packet number, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_INBOUND_IPV6_BYTE,		/* total recv ipv6 packet number, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_OUTBOUND_IPV6_PKT,	/* total recv ipv6 packet bytes, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_OUTBOUND_IPV6_BYTE,	/* total recv ipv6 packet bytes, opt_val type must be unsigned long long */
 
 	SPO_TOTAL_RCV_INBOUND_TCP_PKT,		/* total recv tcp packet number, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_INBOUND_TCP_BYTE,		/* total recv tcp packet number, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_OUTBOUND_TCP_PKT,		/* total recv tcp packet bytes, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_OUTBOUND_TCP_BYTE,		/* total recv tcp packet bytes, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_INBOUND_UDP_PKT,		/* total recv udp packet number, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_INBOUND_UDP_BYTE,		/* total recv udp packet number, opt_val type must be unsigned long long */
+	SPO_TOTAL_RCV_OUTBOUND_UDP_PKT,		/* total recv udp packet bytes, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_OUTBOUND_UDP_BYTE,		/* total recv udp packet bytes, opt_val type must be unsigned long long */
 	SPO_CURTIME_TIMET_MS,		/* current time in millisecond, opt_val type must be long long */
 	SPO_CURRENT_STATE,			/* running stage of sapp, opt_val type is enum sapp_state_t */
