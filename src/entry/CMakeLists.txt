@@ -21,6 +21,7 @@ target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
 target_link_libraries(sapp nsl pthread dl m pcap)
 target_link_libraries(sapp MESA_handle_logger MESA_prof_load)
 target_link_libraries(sapp sapp_assistant)
+target_link_libraries(sapp breakpad_mini)
 target_include_directories(sapp PRIVATE ${SYSTEMD_INCLUDE_DIRS})
 
 
@@ -30,7 +31,7 @@ target_include_directories(sapp PRIVATE ${SYSTEMD_INCLUDE_DIRS})
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)  
 
 
-set(SAPP_MODULES breakpad_mini_static breakpad-client-static iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap libevent-static gdev_assistant)
+set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap libevent-static gdev_assistant)
 
 if(MEM_POOL MATCHES "DICTATOR_DEBUG")
    set(SAPP_MODULES ${SAPP_MODULES} dictator2_debug)

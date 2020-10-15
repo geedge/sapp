@@ -1,4 +1,4 @@
-#include "breakpad.h"
+#include "breakpad_mini.h"
 
 #ifdef __cplusplus
 extern "C" {
