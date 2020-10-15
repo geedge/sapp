@@ -79,7 +79,7 @@ develop_build_release:
     PLATFORM_MODE: INLINE
     PACKAGE: 1
     UPLOAD: 1
-    ASAN_OPTION: ADDRESS
+    ASAN_OPTION: "OFF"
     MEM_POOL: TCMALLOC
     TESTING_VERSION_BUILD: 1
     PULP3_REPO_NAME: platform-testing-x86_64.el7
@@ -102,7 +102,6 @@ release_build_release:
     PLATFORM_MODE: INLINE
     PACKAGE: 1
     UPLOAD: 1
-    MEM_POOL: TCMALLOC_MINI
     PULP3_REPO_NAME: platform-stable-x86_64.el7
     PULP3_DIST_NAME: platform-stable-x86_64.el7
   extends: .build_by_travis
