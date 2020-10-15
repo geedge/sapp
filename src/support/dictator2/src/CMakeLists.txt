@@ -9,7 +9,11 @@ include_directories(${MESA_SDK_PREFIX}/include/MESA)
 #include_directories(${CMAKE_SOURCE_DIR}/dealpkt)
 
 add_definitions(${MEM_POOL_DEFINITIONS} -D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
-
 add_library(dictator2 STATIC  dictator.cpp dictator_debuger.cpp
     D_internal/D_kernel_list.cpp D_internal/list_common.cpp
     D_internal/MESA_hash_v2.cpp D_internal/MESA_list_v2.cpp)
+
+add_library(dictator2_debug STATIC  dictator.cpp dictator_debuger.cpp
+    D_internal/D_kernel_list.cpp D_internal/list_common.cpp
+    D_internal/MESA_hash_v2.cpp D_internal/MESA_list_v2.cpp)
+target_compile_definitions(dictator2_debug PRIVATE "-DDICTATOR_DEBUG")
