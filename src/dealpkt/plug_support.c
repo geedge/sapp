@@ -13,8 +13,9 @@ extern "C" {
 //extern int g_packet_io_thread_num;
 
 extern const raw_ipfrag_list_t *get_raw_frag_list(const struct streaminfo *stream);
+#if IOMODE_MARSIO
 extern void * (*ptr_marsio_buff_ctrlzone)(marsio_buff_t *m, uint8_t id);
-
+#endif
 
 int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 {
