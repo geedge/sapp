@@ -306,12 +306,9 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	
 	memcpy(real_buf, data, datalen);
 
-	if(sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin != OVERLAY_MODE_NONE){
-		mr_ctrlzone.action = TUNNAT_CZ_ACTION_ENCAP_NO_SESSION;
-		packet_io_hook_sendto(raw_pkt, route_dir, real_buf, (void *)send_mbuf[0]);
-	}else{
-		mr_ctrlzone.action = TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
-	}
+	mr_ctrlzone.action = TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
+	packet_io_hook_sendto(raw_pkt, route_dir, real_buf, (void *)send_mbuf[0]);
+
 	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 
 	ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, MARSIO_SEND_OPT_FAST|MARSIO_SEND_OPT_REHASH);
@@ -338,8 +335,8 @@ int marsio_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 		assert((dir >= 0) && (dir <= 1));
 		ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[dir].dl_io_param, thread_num, dir, raw_pkt);
 	}else{
-		/* 并联和inline device模式都是一块卡, 默认都从0号端口发出 */
-		ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[0].dl_io_param, thread_num,dir, raw_pkt);
+		/* 可支持多块网卡, 原始包从哪收到就从哪出去 */
+		ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_mr4_sendpath_up_set[raw_pkt->device_index], thread_num,dir, raw_pkt);
 	}
 	
 	return ret;
@@ -490,22 +487,18 @@ static int marsio4_pkt_forward_for_gdev_mode(int tid, struct mr_sendpath * sendp
 	return ptr_marsio_send_burst(sendpath, tid, &mbuf, 1);
 }
 
-static int marsio4_pkt_forward(int tid, marsio_buff_t * mbufs)
+static int marsio4_pkt_forward(int tid, struct mr_sendpath * sendpath, marsio_buff_t * mbufs)
 {
 	int ret = 0;
-	struct mr_sendpath * sendpath;
 	struct mr_tunnat_ctrlzone *ctrl_zone;
 
 	ctrl_zone = (struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone(mbufs, 0);
-
-	/* 使用targetid=0的设备号回注, 即send_raw_pkt.conf->vxlan_user网卡 */
-	sendpath = (struct mr_sendpath *)g_packet_device_alias[0].dl_io_param;
 
 	/* 批量获取, 但考虑特殊情况下, vxlan和其他封装模式混杂使用, 要对每个mbuf判断底层封装模式 */
 
 	//if(ctrl_zone->__encap_len > 0){ /* 2018-06-01, marsio vxlan mode, 非vxlan封装的包不能回注 */
 	if((ctrl_zone->action & TUNNAT_CZ_ACTION_FORWARD)
-	|| (OVERLAY_MODE_NONE != sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)){ 
+	|| (0 != sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support)){ 
 		/* 20201010 lijia modify, 开启overlay无mrtunnat的模式下, ctrl_zone是空, 默认都回注 */
 		/* 20190409 lijia modify, tunnel mode, 非隧道封装的包不能回注 */
 		/* vxlan封装内层数据转发不必做任何操作, 直接调用marsio_send_burst, 由marsio驱动负责 */
@@ -595,13 +588,14 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 						timestamp_region_update_driver(tid, recv_from_driver - driver);
 					}
 #endif
+					raw_pkt->device_index = i;
 					hand_res = marsio4_pkt_hand(tid, rx_buff[j], raw_pkt, DIR_ROUTE_UP); /* 在marsio4_pkt_hand()更新dir */
 					if((g_marsio4_topology_mode & __NET_CONN_SERIAL) && (PASS == hand_res)){
 						/* NOTE: 
 						    MARSIO主从模式独特性, 从虚拟网卡收包, 但要通过物理网卡回注包,  
 						*/
 #if 1	
-						int ret = marsio4_pkt_forward(tid, rx_buff[j]);
+						int ret = marsio4_pkt_forward(tid, g_mr4_sendpath_up_set[i], rx_buff[j]);
 						if(ret < 0)
 						{
 							ptr_marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);

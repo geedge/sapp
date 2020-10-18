@@ -18,23 +18,18 @@ bind_mask=[]
 dictator_enable=1
 
 [PACKET_IO]
-	[overlay_tunnel_definition]
+    [overlay_tunnel_definition]
+### note, since 2020-10-01, L2-L3 tunnel(VLAN,MPLS,PPPOE,etc.) is process and offload by mrtunnat, 	
+### after 2020-10-01, sapp support L2-L3 tunnel(VLAN,MPLS,PPPOE,etc.) without mrtunnat.
+    l2_l3_tunnel_support=1
 
 ### note, optional value is [none, vxlan]
-	overlay_mode=none
-	vlan_flipping_cfg_file="etc/vlan_flipping_map.conf"
-
-	asymmetric_presence_layer_cfg_file="etc/asymmetric_presence_layer.conf"
-	asymmetric_addr_layer_cfg_file="etc/asymmetric_addr_layer.conf"
-	prune_inject_layer_cfg_file="etc/prune_inject_layer.conf"
-
-### note, for mpls asymmetric, 0 vs N
-	create_mpls_anyway=0
-	    
-### note, layer number starts from 0, for example: ethernet[0], ipv4[1], gre[2]	
-### note, * means don't care layer index, for example: gtp[*], mpls[*]
-	overlay_layer_set="ethernet[0],ipv4[1],tupl4v4[1]"
-	prune_inject_layer_set="gtp[3],udp[2],ip[1]"
+    overlay_mode=none
+    stream_compare_layer_cfg_file="etc/stream_compare_layer.conf"
+    vlan_flipping_cfg_file="etc/vlan_flipping_map.conf"
+    asymmetric_presence_layer_cfg_file="etc/asymmetric_presence_layer.conf"
+    asymmetric_addr_layer_cfg_file="etc/asymmetric_addr_layer.conf"
+    prune_inject_layer_cfg_file="etc/prune_inject_layer.conf"
 	
     [packet_io.feature]
 ### note, used to represent inbound or outbound direction value,
@@ -50,7 +45,6 @@ dictator_enable=1
     pcap_capture_direction="in"
 
 
-
 ### note, depolyment.mode options: [sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]
 ### sys_route: send ip(ipv6) packet by system route table, this is default mode in mirror mode;
 ### vxlan_by_inline_device: encapsulation inject packet with vxlan, and then send to inline device by udp socket.
@@ -63,7 +57,7 @@ dictator_enable=1
 
 ### note, this config is valid if inject_pkt_mode==raw_ethernet_single_gateway.
     inject_mode_single_gateway_device="eth1"
-    ### inject_mode_single_gateway_src_mac has higher priority than get mac from inject_mode_single_gateway_device
+### inject_mode_single_gateway_src_mac has lower priority than get smac from inject_mode_single_gateway_device
     inject_mode_single_gateway_src_mac="00:11:22:77:88:99"
     inject_mode_single_gateway_dst_mac="00:11:22:33:44:55"
    
@@ -87,18 +81,18 @@ dictator_enable=1
     polling_priority=1
 
 [PROTOCOL_FEATURE]
-	ipv6_decapsulation_enabled=1
-	ipv6_send_packet_enabled=1
-	tcp_drop_pure_ack_pkt=0
-	tcp_syn_option_parse_enabled=1 
-	skip_not_ip_layer_over_eth=0
-	treat_vlan_as_mac_in_mac=1
-	reverse_ethernet_addr=1
+    ipv6_decapsulation_enabled=1
+    ipv6_send_packet_enabled=1
+    tcp_drop_pure_ack_pkt=0
+    tcp_syn_option_parse_enabled=1 
+    skip_not_ip_layer_over_eth=0
+    treat_vlan_as_mac_in_mac=1
+    reverse_ethernet_addr=1
 
 	
 [STREAM]
 ### note, stream_id_base_time format is "%Y-%m-%d %H:%M:%S" 
-	stream_id_base_time="2018-08-08 08:00:00"
+    stream_id_base_time="2018-08-08 08:00:00"
     [stream.tcp]
     max=10000
     timeout=60
@@ -129,7 +123,7 @@ dictator_enable=1
     
 
 [PROFILING]
-    [profiling.pkt_latency]
+[profiling.pkt_latency]
     enabled=0
 ### note, threshold unit is microseconds (us)
     threshold=1000000

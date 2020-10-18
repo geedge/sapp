@@ -2756,7 +2756,8 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 fun_exit:    
 
 	if(DROP == ret){
-		sapp_runtime_log(RLOG_LV_INFO, "TCP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+		sapp_runtime_log(RLOG_LV_INFO, "TCP stream: %s, tcphdr->checksum:0x%x, curdir:%d, return DROP.", 
+						printaddr(&pstream->addr, pstream->threadnum), ntohs(this_tcphdr->th_sum), pstream->curdir);
 	}
 
 	return ret;

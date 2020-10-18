@@ -19,6 +19,30 @@ static void set_mac_in_mac_addr(const struct mesa_ethernet_hdr *outer_ether_hdr,
 }
 
 
+static inline int should_create_empty_mpls_layer_for_symmetric(const struct streaminfo *pstream, unsigned short next_eth_type)
+{
+	const const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
+	int this_layer_type = (int)ADDR_TYPE_MAC;
+	int this_layer_index = pstream_pr->layer_index;
+	int next_layer_index = pstream_pr->layer_index + 1;
+	int next_layer_addrtype;
+
+	next_layer_addrtype = ethernet_protocol_to_net_layer(next_eth_type);
+	if(unlikely(next_layer_addrtype <= __ADDR_TYPE_INIT || next_layer_addrtype >= __ADDR_TYPE_MAX)){
+		return 0;
+	}
+
+	if(g_asymmetric_presence_layer_set[ADDR_TYPE_MPLS].is_asymmetric_layer != 0){
+		if((g_asymmetric_presence_layer_set[ADDR_TYPE_MPLS].under_layer.layer_type_index[this_layer_type][this_layer_index] != 0)
+		&& (g_asymmetric_presence_layer_set[ADDR_TYPE_MPLS].upper_layer.layer_type_index[next_layer_addrtype][next_layer_index] != 0)){
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+
 /* 2018-08-19 lijia add, for PanGu项目并联回流流量格式, 复用了ETH_P_8021AD字段, 实际是MAC-IN-MAC格式数据包,
 	outer_mac--inner_mac--ipv4/6--tcp/udp---layer7.
 */
@@ -66,15 +90,15 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 		}
 	}
     eth_type = ntohs(inner_ether_hdr->ether_type);
-	if(sapp_global_val->config.packet_io.create_mpls_anyway != 0)
-	{
+	if(should_create_empty_mpls_layer_for_symmetric(pstream, eth_type) != 0){
 		if(eth_type == ETHERTYPE_IP || eth_type == ETHERTYPE_IPv6)
 		{
 			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
 			ret = mpls_empty_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
+			return ret;
 		}
 	}
-	else
+	//else
 	{
 		switch(eth_type){
 			case ETHERTYPE_IP:

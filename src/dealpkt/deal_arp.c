@@ -25,18 +25,15 @@ extern "C" {
 	}
 #endif
 
-	if(OVERLAY_MODE_NONE != sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
-		/* TODO, 判断dip是否是本机的包 */
-		return PASS;
-	}
-
 	/* 如果是隧道内部的ARP, 应该是链路上正常的CS双方ARP包, 要回注 */
 	if(sapp_identify_tunnel_inner_pkt(raw_pkt) != 0){
 		return PASS;
 	}
 
+	/* TODO, mrtunnat之后, 此处要判断是不是给本机的包, 是不是overlay的原始链路上的arp包, 否则都应该DROP, 此处先默认返回PASS */
+
 	/* NOTE: 其他模式什么时候都不应该把原始ARP包再转发出去, 即便是GDEV模式下 */
-	return DROP;
+	return PASS;
 }
 
 #ifdef __cplusplus

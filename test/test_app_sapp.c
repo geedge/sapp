@@ -1793,6 +1793,23 @@ char test_inject_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,co
 	return plug_ret;
 }
 
+char test_inject_tcp_pkt2(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+{
+	char fake_http_data[] = "HTTP/1.1 200 OK\r\nServer: Apache-Coyote/1.1\r\nContent-Type: text/html;charset=UTF-8\r\nContent-Language: zh-CN\r\nContent-Length: 41\r\nConnection: Close\r\n\r\n<html><head>sapp inject pkt</head></html>";
+	char plug_ret = APP_STATE_DROPME;
+	int optval;
+	
+	if(OP_STATE_CLOSE == stream->opstate){
+		return APP_STATE_DROPME;
+	}
+
+	sapp_inject_pkt(stream, SIO_DEFAULT, fake_http_data, strlen(fake_http_data), stream->routedir ^ 1);
+
+	return plug_ret;
+}
+
+
+
 /* 使用新的发包接口  sapp_inject_pkt()发送伪造包 */
 static int send_by_sapp_inject_pkt(struct streaminfo *a_tcp, const struct mesa_ip4_hdr *raw_ip4hdr)
 {
@@ -1844,53 +1861,74 @@ static int send_by_sapp_inject_pkt(struct streaminfo *a_tcp, const struct mesa_i
 }
 
 
-char MESA_inject_tcp_pkt_for_l2_l3_test(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+char MESA_inject_pkt_for_l2_l3_tcp(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
-	const char *modify_raw_data_c2s =    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"; //要替换的原始字符串内容
-	const char *modify_inject_data_c2s = "Mozilla/5.1 (Windows NT 10.1; Win64; x64)";
+	const char *modify_raw_data_c2s =    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"; //C2S原始字符串内容	
+	const char *modify_inject_data_s2c = "HTTP/1.1 200 OK\r\nServer: Microsoft-IIS/8.5\r\nContent-Type: text/html\r\nContent-Length: 4000\r\n\r\n<html><pre> sapp test inject data.........";
 
-	const char *modify_raw_data_s2c =    "<html><pre>"; //要替换的原始字符串内容
-	const char *modify_inject_data_s2c = "<html><pre> sapp test inject data";
-
-	char raw_data_c2s[2048];
 	char raw_data_s2c[2048];
 	char *modify_ptr_c2s, *modify_ptr_s2c;
-	char ret_flag = 0;
 	int ret;
+	char ret_flag = 0;
 	
 	if(OP_STATE_CLOSE == stream->opstate){
 		return APP_STATE_DROPME;
 	}
-#if 0
-	if(ntohs(stream->addr.tuple4_v4->source) <= 30000){
-		return APP_STATE_DROPME;
-	}
-#endif	
 
 	if(DIR_C2S == stream->curdir){
-		memcpy(raw_data_c2s, stream->ptcpdetail->pdata, stream->ptcpdetail->datalen);
-		modify_ptr_c2s = memmem(raw_data_c2s, stream->ptcpdetail->datalen, modify_raw_data_c2s, strlen(modify_raw_data_c2s));
-		if(modify_ptr_c2s){
-			memcpy(modify_ptr_c2s, modify_inject_data_c2s, strlen(modify_inject_data_c2s));
-			ret = MESA_inject_pkt(stream, raw_data_c2s, stream->ptcpdetail->datalen, raw_pkt, stream->routedir);
+		if(memmem(stream->ptcpdetail->pdata, stream->ptcpdetail->datalen, modify_raw_data_c2s, strlen(modify_raw_data_c2s)) != NULL){
+
+			//看到第一个get包后, 反向发送一个虚假应答
+			ret = MESA_inject_pkt(stream, modify_inject_data_s2c, 1460, raw_pkt, stream->routedir ^ 1); 
 			if(ret < 0){
-				printf("%s, MESA_inject_pkt error!\n", printaddr(&stream->addr, thread_seq));
-			}else{
-				printf("%s, MESA_inject_pkt C2S succ:%d\n",printaddr(&stream->addr, thread_seq), ret);
-			}
-			ret_flag = APP_STATE_DROPPKT;
-		}
-	}else{
-		memcpy(raw_data_s2c, stream->ptcpdetail->pdata, stream->ptcpdetail->datalen);
-		modify_ptr_s2c = memmem(raw_data_s2c, stream->ptcpdetail->datalen, modify_raw_data_s2c, strlen(modify_raw_data_s2c));
-		if(modify_ptr_s2c){
-			memcpy(modify_ptr_s2c, modify_inject_data_s2c, strlen(modify_inject_data_s2c));
-			ret = MESA_inject_pkt(stream, raw_data_s2c, stream->ptcpdetail->datalen, raw_pkt, stream->routedir);
-			if(ret < 0){
-				printf("%s, MESA_inject_pkt error!\n", printaddr(&stream->addr, thread_seq));
+				printf("%s, MESA_inject_pkt S2C error!\n", printaddr(&stream->addr, thread_seq));
 			}else{
 				printf("%s, MESA_inject_pkt S2C succ:%d\n", printaddr(&stream->addr, thread_seq), ret);
 			}	
+
+			if(stream->ptcpdetail->serverpktnum <= 3){
+				ret_flag = APP_STATE_DROPPKT;//丢弃C2S方向第一个GET包, 在MESA_inject_pkt_for_l2_l3_tcpall()会发送一个假的
+			}
+		}
+	}else{
+		if(memmem(stream->ptcpdetail->pdata, stream->ptcpdetail->datalen, "<html><pre>******", strlen("<html><pre>******")) != NULL){
+			/* 第一个S2C应答包已经被伪造发送, 此处丢弃要 */
+			ret_flag = APP_STATE_DROPPKT;
+			return APP_STATE_DROPME | ret_flag;
+		}
+	}
+	
+	return APP_STATE_GIVEME | ret_flag;
+}
+
+char MESA_inject_pkt_for_l2_l3_tcpall(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+{
+	const char *modify_inject_data_c2s = "GET / HTTP/1.1\r\nHost: %s\r\nConnection: Keep-Alive\r\nUser-Agent: Mozilla/5.1 (Windows NT 10.1; Win64; x64)\r\nAccept: */*\r\nAccept-Language: en-us\r\nAccept-Encoding: gzip, deflate, compress\r\n\r\n";
+
+	char raw_data_c2s[2048];
+	char server_ip[32] = {};
+	char ret_flag = 0;
+	int ret;
+	
+	if(OP_STATE_CLOSE == stream->pktstate || NULL == raw_pkt){
+		return APP_STATE_DROPME;
+	}
+
+	if((DIR_C2S == stream->curdir) 
+	 && (stream->ptcpdetail->serverpktnum == 2)
+	 && (stream->ptcpdetail->datalen == 0)){ /* 只在三次握手刚刚完成后, 收到ACK包发送一次get请求,否则序号对不上 */
+		inet_ntop(AF_INET, &stream->addr.tuple4_v4->daddr, server_ip, 32);
+
+		sprintf(raw_data_c2s, modify_inject_data_c2s, server_ip);
+		if(strlen(raw_data_c2s) != 197){
+			printf("MESA_inject_pkt_for_l2_l3_tcpall(), C2S inject len is not 197, %s\n", strlen(raw_data_c2s)); //要与仪表造的流量长度一致, 后续的SEQ才能不乱
+			return APP_STATE_DROPME;
+		}		
+		ret = MESA_inject_pkt(stream, raw_data_c2s, strlen(raw_data_c2s), raw_pkt, stream->routedir);
+		if(ret < 0){
+			printf("%s, MESA_inject_pkt C2S error!\n", printaddr(&stream->addr, thread_seq));
+		}else{
+			printf("%s, MESA_inject_pkt C2S succ:%d\n",printaddr(&stream->addr, thread_seq), ret);
 		}
 		ret_flag = APP_STATE_DROPPKT;
 	}
@@ -2835,31 +2873,111 @@ char KILL_STREAM_ONLY_DOU(struct streaminfo *a_tcp,  void **pme, int thread_seq,
 	return APP_STATE_GIVEME | APP_STATE_DROPPKT;
 }
 
+char RST_STREAM_C2S(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
+{
+	struct rst_tcp_para rst_args = {};
+	
+	rst_args.th_flags = TH_RST;
+	rst_args.rst_pkt_num = 1;
+	rst_args.dir = DIR_C2S;
+	rst_args.signature_seed1 = 65535;
+	rst_args.signature_seed2 = 13;
+	
+	MESA_rst_tcp(a_tcp, &rst_args, sizeof(struct rst_tcp_para));
+
+
+	return APP_STATE_GIVEME;
+
+}
+
+char RST_STREAM_S2C(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
+{
+	struct rst_tcp_para rst_args = {};
+	
+	rst_args.th_flags = TH_RST;
+	rst_args.rst_pkt_num = 1;
+	rst_args.dir = DIR_S2C;
+	rst_args.signature_seed1 = 65535;
+	rst_args.signature_seed2 = 31;
+	
+	MESA_rst_tcp(a_tcp, &rst_args, sizeof(struct rst_tcp_para));
+
+
+	return APP_STATE_GIVEME;
+
+}
+
 
 char RST_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
-	struct rst_tcp_para rst_args = {};
+	unsigned short sport_host;
 
-	if(OP_STATE_CLOSE != a_tcp->opstate){
-
-		if(ntohs(a_tcp->addr.tuple4_v4->source) > 50000){
-			rst_args.th_flags = TH_RST;
-			rst_args.rst_pkt_num = 1;
-			rst_args.dir = DIR_C2S;
-			rst_args.signature_seed1 = 65535;
-			rst_args.signature_seed2 = 13;
-			
-			MESA_rst_tcp(a_tcp, &rst_args, sizeof(struct rst_tcp_para));
-			
-			rst_args.th_flags = TH_RST | TH_ACK;
-			rst_args.rst_pkt_num = 1;
-			rst_args.dir = DIR_S2C;
-			rst_args.signature_seed1 = 65535;
-			rst_args.signature_seed2 = 31;
-			
-			MESA_rst_tcp(a_tcp, &rst_args, sizeof(struct rst_tcp_para));
+	if((OP_STATE_CLOSE != a_tcp->opstate) && (DIR_DOUBLE == a_tcp->dir)){
+		sport_host = ntohs(a_tcp->addr.tuple4_v4->source);
+		
+		if((sport_host >= 10000) && (sport_host <= 19999)){
+			if(DIR_C2S == a_tcp->curdir){
+				RST_STREAM_C2S(a_tcp, pme, thread_seq, a_packet);  /* C2S原始包触发C2S注入RST */
+				printf("inject C2S rst by raw C2S pkt\n");
+			}
+		}else if((sport_host >= 20000) && (sport_host <= 29999)){
+			if(DIR_C2S == a_tcp->curdir){
+				RST_STREAM_S2C(a_tcp, pme, thread_seq, a_packet);  /* C2S原始包触发S2C注入RST */
+				printf("inject S2C rst by raw C2S pkt\n");
+			}
+		}else if((sport_host >= 30000) && (sport_host <= 39999)){
+			if(DIR_S2C == a_tcp->curdir){
+				RST_STREAM_C2S(a_tcp, pme, thread_seq, a_packet);  /* S2C原始包触发C2S注入RST */
+				printf("inject C2S rst by raw S2C pkt\n");
+			}
+		}else if((sport_host >= 40000) && (sport_host <= 49999)){
+			if(DIR_S2C == a_tcp->curdir){
+				RST_STREAM_S2C(a_tcp, pme, thread_seq, a_packet);  /* S2C原始包触发S2C注入RST */
+				printf("inject S2C rst by raw S2C pkt\n");
+			}
+		}else{
+			return APP_STATE_DROPME;
 		}
+	}
+	
+	return APP_STATE_GIVEME;
+}
 
+
+char INJECT_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
+{
+	unsigned short sport_host;
+	const char *inject_C2S_by_C2S = "sapp inject_C2S_by_C2S payload......";
+	const char *inject_S2C_by_C2S = "sapp inject_S2C_by_C2S payload......";
+	const char *inject_C2S_by_S2C = "sapp inject_C2S_by_S2C payload......";
+	const char *inject_S2C_by_S2C = "sapp inject_S2C_by_S2C payload......";
+
+	if((OP_STATE_CLOSE != a_tcp->opstate) && (DIR_DOUBLE == a_tcp->dir)){
+		sport_host = ntohs(a_tcp->addr.tuple4_v4->source);
+		
+		if((sport_host >= 10000) && (sport_host <= 19999)){
+			if(DIR_C2S == a_tcp->curdir){
+				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_C2S_by_C2S, strlen(inject_C2S_by_C2S), a_tcp->routedir);  /* C2S原始包触发C2S注入 */
+				printf("inject C2S pkt by raw C2S pkt\n");
+			}
+		}else if((sport_host >= 20000) && (sport_host <= 29999)){
+			if(DIR_C2S == a_tcp->curdir){
+				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_S2C_by_C2S, strlen(inject_S2C_by_C2S), a_tcp->routedir ^ 1);  /* C2S原始包触发S2C注入 */
+				printf("inject S2C pkt by raw C2S pkt\n");
+			}
+		}else if((sport_host >= 30000) && (sport_host <= 39999)){
+			if(DIR_S2C == a_tcp->curdir){
+				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_C2S_by_S2C, strlen(inject_C2S_by_S2C), a_tcp->routedir ^ 1);  /* S2C原始包触发C2S注入 */
+				printf("inject C2S pkt by raw S2C pkt\n");
+			}
+		}else if((sport_host >= 40000) && (sport_host <= 49999)){
+			if(DIR_S2C == a_tcp->curdir){
+				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_S2C_by_S2C, strlen(inject_S2C_by_S2C), a_tcp->routedir);  /* S2C原始包触发S2C注入 */
+				printf("inject S2C pkt by raw S2C pkt\n");
+			}
+		}else{
+			return APP_STATE_DROPME;
+		}
 	}
 	
 	return APP_STATE_GIVEME;

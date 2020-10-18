@@ -818,6 +818,9 @@ int net_common_adjust_forward_mac(struct mesa_ethernet_hdr *raw_eth_hdr,int net_
 const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
 const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_type, int expect_layer_type);
 char MESA_ascii_to_hex(char ascii);
+const char *sapp_raw_ipv4_ntop(const struct mesa_ip4_hdr *ip4_hdr, char *out_buf, int buf_len );
+const char *sapp_raw_ipv6_ntop(const struct mesa_ip6_hdr *ip6_hdr, char *out_buf, int buf_len);
+
 
 #ifdef __cplusplus
 }

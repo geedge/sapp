@@ -406,7 +406,6 @@ int MESA_platform_init(int argc, char *argv[])
 		usleep(10000);
 	}
 
-	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"create_mpls_anyway",  &sapp_global_single.create_mpls_anyway, 0);
 	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_mode",  &sapp_global_single.send_fake_pkt_mode, 0);
 	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_gdev_sport",  &sapp_global_single.send_fake_pkt_gdev_sport, 15);
 	
@@ -436,11 +435,7 @@ int MESA_platform_init(int argc, char *argv[])
 		但是插件可能还没初始化完成, sapp不会真正开始收包, 流量大的情况下, 驱动队列缓冲区满了会导致丢包,
 		改成先调用plugctrl(), 后调用packet_io_init().
 	*/
-	sapp_set_current_state(SAPP_STATE_PLUG_INITING);
-	plugctrl_proc();
 
-	sapp_platform_finish_up(); /* 支持动态project tag注册, 必须在所有插件初始化完成后调用, 做一些平台初始化阶段的收尾工作 */
-	sapp_set_current_state(SAPP_STATE_PLUG_INITED);
 
 	sapp_set_current_state(SAPP_STATE_PKT_IO_INITING);
 #if (0 == SAPP_AS_TARGET_SO) /* 做为.so模式, 无需初始化packet_io */	
@@ -449,7 +444,12 @@ int MESA_platform_init(int argc, char *argv[])
 	}
 #endif	
 
-	sapp_identify_broad_multicast_init();
+	sapp_set_current_state(SAPP_STATE_PLUG_INITING);
+	plugctrl_proc();
+
+	sapp_platform_finish_up(); /* 支持动态project tag注册, 必须在所有插件初始化完成后调用, 做一些平台初始化阶段的收尾工作 */
+	sapp_set_current_state(SAPP_STATE_PLUG_INITED);
+
 	sapp_set_current_state(SAPP_STATE_PKT_IO_INITED);
 
 	return 0;	

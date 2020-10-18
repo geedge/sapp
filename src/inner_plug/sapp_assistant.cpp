@@ -34,7 +34,7 @@ extern void * (*ptr_marsio_buff_ctrlzone)(marsio_buff_t *m, uint8_t id);
 
 int sapp_identify_broad_multicast_init(void)
 {
-#if IOMODE_MARSIO
+#if 0
 	void *io_lib_handle;
 	
 	if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
@@ -63,17 +63,25 @@ int sapp_identify_broad_multicast_init(void)
 /* 识别是否隧道内部数据包           , 隧道内的包应该无条件转发/回注        */
 int sapp_identify_tunnel_inner_pkt(const raw_pkt_t *raw_pkt)
 {
+	int ret = 0;
 #if IOMODE_MARSIO
 	if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-		const struct mr_tunnat_ctrlzone *mr_ctzone;
-			if(mr_ctzone->action & TUNNAT_CZ_ACTION_FORWARD){
-				return 1;
+		if(0 == sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support){
+			const struct mr_tunnat_ctrlzone *mr_ctzone;
+			if(ptr_marsio_buff_ctrlzone){
+				mr_ctzone = (const struct mr_tunnat_ctrlzone *)((*ptr_marsio_buff_ctrlzone)((void *)raw_pkt->io_lib_pkt_reference, 0));
+				if(mr_ctzone->action & TUNNAT_CZ_ACTION_FORWARD){
+					ret = 1;
+				}
 			}
+		}else{
+			/* TODO: 没有mrtunnat时, 要判断是否是给本机的, 是否是overlay网络里的包    */
+			ret = 1;
 		}
 	}
 #endif
 
-	return 0;
+	return ret;
 }
 int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt_t *raw_pkt)
 {

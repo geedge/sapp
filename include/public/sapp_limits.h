@@ -8,6 +8,7 @@
 #define SAPP_MAX_THREADS		MAX_THREAD_NUM
 
 #define SAPP_SUPPORT_LAYER_NUM_MAX	(15) /* sapp平台支持的最大嵌套层数, 与struct streaminfo_private->layer_index相关 */
+#define SAPP_PRUNE_LAYER_NUM_MAX    (10) /* sapp平台支持的最大修剪配置条数 */
 
 #ifndef MTU_MAX
 #define MTU_MAX 					2000

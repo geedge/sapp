@@ -25,6 +25,7 @@ int pppoe_session_entry(struct streaminfo_private *pfstream_pr,const void *this_
 	return PASS;
 #endif
 	int ret = PASS;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat;
 
 	struct streamindex tmp_index;
 	struct streamindex *ptmp=&tmp_index;
@@ -61,6 +62,10 @@ int pppoe_session_entry(struct streaminfo_private *pfstream_pr,const void *this_
 		ret = ipv4_entry(pstream_pr, up_layer_data, thread_num, routedir, raw_pkt, next_layer_offset);
 	}else if(PPP_PROTOCOL_IPv6 == ntohs(pppoe_ses_hdr->ppp_protocol)){
 		ret = ipv6_entry(pstream_pr, up_layer_data, thread_num, routedir, raw_pkt, next_layer_offset);
+	}else{
+		local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+		local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+		local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += (unsigned long long)raw_pkt->raw_pkt_len;		
 	}
 
 	return ret;

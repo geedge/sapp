@@ -1160,7 +1160,72 @@ int get_pkt_len_from_eth_hdr(const struct mesa_ethernet_hdr *ehdr)
 	return raw_pkt_len;
 }
 
+/* 模拟tcpdump格式:   192.168.40.137.22 > 192.168.36.40.49429  */
+const char *sapp_raw_ipv4_ntop(const struct mesa_ip4_hdr *ip4_hdr, char *out_buf, int buf_len )
+{
+	unsigned char inner_ip_proto;
+	const struct mesa_tcp_hdr *inner_thdr = NULL;
+	const struct mesa_udp_hdr *inner_uhdr = NULL;
+	unsigned short sport, dport;
+	char ipsrc_str[INET6_ADDRSTRLEN];
+	char ipdst_str[INET6_ADDRSTRLEN];
 
+	inner_ip_proto = ip4_hdr->ip_p;		
+	if(IPPROTO_TCP == inner_ip_proto){
+		inner_thdr = (struct tcphdr *)((char *)ip4_hdr + ip4_hdr->ip_hl*4);
+		sport = ntohs(inner_thdr->th_sport);
+		dport = ntohs(inner_thdr->th_dport);
+	}else if(IPPROTO_UDP){
+		inner_uhdr = (struct udphdr *)((char *)ip4_hdr + ip4_hdr->ip_hl*4);
+		sport = ntohs(inner_uhdr->uh_sport);
+		dport = ntohs(inner_uhdr->uh_dport);				
+	}else{
+		sapp_runtime_log(RLOG_LV_INFO, "sapp_raw_ipv4_ntop() error, unsupport ip protocol:%d", inner_ip_proto);
+		return NULL;
+	}
+	
+	inet_ntop(AF_INET, &ip4_hdr->ip_src.s_addr, ipsrc_str, sizeof(ipsrc_str));
+	inet_ntop(AF_INET, &ip4_hdr->ip_dst.s_addr, ipdst_str, sizeof(ipdst_str));
+
+	snprintf(out_buf, buf_len, "%s.%u > %s.%u", ipsrc_str, sport, ipdst_str, dport);
+
+	return out_buf;
+}
+
+
+const char *sapp_raw_ipv6_ntop(const struct mesa_ip6_hdr *ip6_hdr, char *out_buf, int buf_len)
+{
+	unsigned char inner_ip_proto;
+	const struct tcphdr *inner_thdr = NULL;
+	const struct udphdr *inner_uhdr = NULL;
+	unsigned short sport, dport;
+	char ipsrc_str[INET6_ADDRSTRLEN];
+	char ipdst_str[INET6_ADDRSTRLEN];
+	
+
+	/* TODO: 此处有可能包含选项或碎片, 不能直接获取下一层的协议类型, 如此处理并不严谨! */
+	inner_ip_proto = ip6_hdr->ip6_nxt_hdr;	
+	if(IPPROTO_TCP == inner_ip_proto){
+		inner_thdr = (struct tcphdr *)((char *)ip6_hdr + sizeof(struct ip6_hdr));
+		sport = inner_thdr->source;
+		dport = inner_thdr->dest;				
+	}else if(IPPROTO_UDP){
+		inner_uhdr = (struct udphdr *)((char *)ip6_hdr + sizeof(struct ip6_hdr));
+		sport = inner_uhdr->source;
+		dport = inner_uhdr->dest;					
+	}else{
+		sapp_runtime_log(RLOG_LV_INFO, "sapp_raw_ipv6_ntop() error, unsupport ip6_nxt_hdr:%d", inner_ip_proto);
+		return -1;
+	}	
+	
+	inet_ntop(AF_INET6, &ip6_hdr->ip6_src, ipsrc_str, sizeof(ipsrc_str));
+	inet_ntop(AF_INET6, &ip6_hdr->ip6_dst, ipdst_str, sizeof(ipdst_str));
+
+	snprintf(out_buf, buf_len, "%s.%u > %s.%u", ipsrc_str, sport, ipdst_str, dport);
+
+
+	return out_buf;
+}
 
 
 #ifdef __cplusplus

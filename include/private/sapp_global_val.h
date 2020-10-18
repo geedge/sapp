@@ -204,12 +204,12 @@ enum __sapp_config_packet_io_depolyment_mode{
 	SAPP_CFG_PKT_IO_DEPOLY_MODE_TRANSPARENT,
 };
 
-#define MAX_VLAN_FLIPPING_MAP_NUM	(4096) /* vlan_id最大范围是4096 */
+#define MAX_VLAN_FLIPPING_MAP_NUM	(4096) /* vlan_id最大范围是0~4095, 数组长度是4096 */
 
 typedef struct{
-	unsigned short c_router_vlan_id; /* host order */
-	unsigned short i_router_vlan_id; /* host order */
-	short mac_flipping_enable;
+	unsigned short couple_vlan_id; /* vlan flipping是成对存在, 数组下标表示一个vlanid, 元素的值是另一个vlanid, host order */
+	unsigned char this_vlan_route_location; // 'C' or 'I'
+	unsigned char mac_flipping_enable;
 }sapp_vlan_flipping_map_t;
 
 
@@ -220,6 +220,8 @@ typedef struct{
 	char asymmetric_addr_layer_cfg_file[PATH_MAX];
 	char asymmetric_presence_layer_cfg_file[PATH_MAX];
 	char prune_inject_layer_cfg_file[PATH_MAX];
+	char stream_compare_layer_cfg_file[PATH_MAX];
+	int l2_l3_tunnel_support;
 	int vlan_flipping_map_num;
 	sapp_vlan_flipping_map_t vlan_flipping_map_array[MAX_VLAN_FLIPPING_MAP_NUM];
 }sapp_config_packet_io_tunnel_t;
@@ -237,7 +239,7 @@ typedef struct{
 	int polling_priority; /* call sapp_recv_pkt every call polling_entry times, 调用多少次polling后调用一次recv pkt, 1表示两者优先级相同 */
 	int inbound_route_dir; /* 表示入境, I2C方向的值是0还是1 */
 	char pcap_capture_direction[NAME_MAX]; /* in, out, inout */
-	int create_mpls_anyway;
+	//int create_mpls_anyway;
 	char inject_pkt_mode_string[NAME_MAX];
 	int inject_pkt_mode; /* 包注入方式二进制值, 详见: enum send_fake_packet_mode */
 	unsigned short inject_mode_inline_device_sport; /* udp socket绑定的本端源端口, host order, 主机序 */
@@ -341,7 +343,7 @@ typedef struct{
 	sapp_gval_mthread_t *mthread_volatile[SAPP_MAX_THREADS];
 }sapp_global_t;
 
-
+extern embed_layer_t g_stream_compare_layer_set; 
 extern embed_layer_t g_asymmetric_addr_layer_set; 
 extern asymmetric_presence_layer_t g_asymmetric_presence_layer_set[__ADDR_TYPE_MAX];   
 

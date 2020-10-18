@@ -1813,6 +1813,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 	int this_layer_len = 0, ret;
 	int transport_layer_len;
 	struct streaminfo *stream;
+	char debug_print_buf[256];
 	
 	if(NULL == stream_pr){
 		return carry_layer_len;
@@ -1827,6 +1828,8 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 
 	switch(stream->addr.addrtype){
 		case ADDR_TYPE_IPV4:
+		{
+			const struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)buf;
 			/* 2015-12-30 lijia modify, IP和端口存储于一个结构, 先构造TCP/UDP层 */
 			if(STREAM_TYPE_TCP == stream->type){
 				transport_layer_len = sizeof(struct mesa_tcp_hdr);
@@ -1849,7 +1852,10 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			checksum_for_carry_layer(buf, __ADDR_TYPE_IP_PAIR_V4, carry_layer_type, carry_layer_len+transport_layer_len);
 			carry_layer_type = __ADDR_TYPE_IP_PAIR_V4;
 
-			sapp_runtime_log(10, "build_net_layer_pkt()-->ADDR_TYPE_IPV4, buf start addr:%p, this_layer_len:%d", buf, this_layer_len);
+			sapp_runtime_log(RLOG_LV_DEBUG, "build_net_layer_pkt()->IPV4, %s, send_dir:%d, ipid:%u, ip_checksum:0x%x", 
+							sapp_raw_ipv4_ntop(ip4hdr, debug_print_buf, sizeof(debug_print_buf)), send_stream_dir,
+							ntohs(ip4hdr->ip_id), ntohs(ip4hdr->ip_sum));
+		}	
 		break;
 		
 		case ADDR_TYPE_IPV6:
@@ -1956,14 +1962,9 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 		{
 			this_layer_len = calc_mpls_hdr_len(stream_pr, send_stream_dir);
 			if(0 == this_layer_len){
-				if(sapp_global_val->config.packet_io.create_mpls_anyway != 0){
-					/* 非对称MPLS, 为了流对齐生造出来的一层, 不构造实际包头 */
-					sapp_runtime_log(10, "build_net_layer_mpls() send streamdir:%d, skip fake mpls layer.\n", send_stream_dir);
-					break;
-				}else{
-					sapp_runtime_log(20, "build_net_layer_mpls() error, send streamdir:%d, layer len is 0, but create_mpls_anyway is disable!\n", send_stream_dir);
-					return -1;					
-				}
+				/* 非对称MPLS, 为了流对齐生造出来的一层, 不构造实际包头 */
+				sapp_runtime_log(10, "build_net_layer_mpls() send streamdir:%d, skip fake mpls layer.\n", send_stream_dir);
+				break;
 			}else{
 				buf -= this_layer_len;
 				build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
@@ -2658,7 +2659,7 @@ int __MESA_rst_tcp(struct streaminfo *stream, unsigned char rst_th_flags, int rs
 			}		
 
 				
-			ret = sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, rst_pkt_buf, rst_pkt_len, MESA_dir_reverse(stream->routedir));
+			ret = sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, rst_pkt_buf, rst_pkt_len, stream->routedir ^ 1);
 			if(ret < 0){
 				return -1;
 			}
@@ -3005,11 +3006,14 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_routedir_reverse);
 	assert(raw_pkt != NULL);	
 
-	/* inject使用的是routedir, 此处转换成stream dir */
-	if(snd_routedir == raw_stream->routedir){
-		send_stream_dir = raw_stream->curdir;
+	/* inject使用的是routedir, 此处转换成stream dir, 
+	   注意: 插件发包的动作可能不是由当前包触发的,  比如kni, 是从其他网卡收到数据包, 再注入链路的,
+	         不能从raw_pkt或raw_stream->routedir判断方向!!!!
+	*/
+	if(snd_routedir == raw_stream_pr->stream_c2s_route_dir){
+		send_stream_dir = DIR_C2S;
 	}else{
-		send_stream_dir = raw_stream->curdir ^ DIR_DOUBLE;
+		send_stream_dir = DIR_S2C;
 	}
 	
 	send_handle = &g_send_handle[thread_num];
@@ -3235,6 +3239,10 @@ int sendpacket_init_new(int tot_thread_num)
 unsigned char MESA_dir_reverse(unsigned char raw_dir)
 {
 	raw_dir ^= DIR_BIT_USE_MASK; /* 同时兼容sapp和旧版WY插件, 最高和最低bit位同时反向 */
+
+	if(raw_dir > 1){
+		raw_dir = raw_dir >> 7; /* sapp使用最低位Bit, 某些老旧插件使用最高位作为dir时, 移动到最低位 */
+	}
 
 	return raw_dir;
 }

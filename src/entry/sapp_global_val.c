@@ -43,8 +43,7 @@ int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
 	比如某GRE隧道原始包层数为: ethernet/ipv4/gre/ipv4/udp/dns,   跳过最外层隧道的配置: "gre[2],ip[1]", 
 */
 
-
-embed_layer_t g_prune_inject_layer_set[10];
+embed_layer_t g_prune_inject_layer_set[SAPP_PRUNE_LAYER_NUM_MAX];
 
 
 /*
@@ -61,6 +60,10 @@ asymmetric_presence_layer_t g_asymmetric_presence_layer_set[__ADDR_TYPE_MAX];
 	如果是单向流, 且开启此项配置, 反向注入包是失败的!!
 */
 embed_layer_t g_asymmetric_addr_layer_set; 
+
+
+/* 用于指定哪些协议层作为地址参数, 用于唯一确定一个流, 比如不同隧道内都使用私有地址时, 是有可能冲突的, 应该把底层vlan,mpls等层也作为地址比较参数 */
+embed_layer_t g_stream_compare_layer_set; 
 
 
 extern char *MESA_MD5_sum_str(unsigned char *raw_data, unsigned int raw_data_len, char result[33]);

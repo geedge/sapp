@@ -919,6 +919,60 @@ int mkstreamhash_new(struct streaminfo_private *pstream_pr, int maxsize)
 }
 #endif
 
+
+/*
+	MPLS层地址不像ipv4,ipv6,tcp,udp那样, 收到任意一个包可以推断另一侧的地址,
+	MPLS地址是单向的, 甚至还有可能是不对称存在的, 即一侧有而另一侧没有.
+*/
+static int cmpaddr_mpls(const struct layer_addr_mpls *addr_heap, const struct layer_addr_mpls  *addr_stack)
+{
+	int i, ret = 0;
+	int same_dir_diff = 0, reverse_dir_diff = 0;
+	
+	if(0 == addr_stack->src_mpls_layer_num){
+		return 0; /* 新来的包mpls是空层, 不用比较 */
+	}
+
+	if((addr_heap->src_mpls_layer_num == 0) || (addr_heap->dest_mpls_layer_num == 0)){
+		/* 如果堆里的地址某一侧是0, 也许是单向流, 即还没收到过对侧流量;
+		   也许是某一侧是空层, 根本就没有mpls, 
+		   此时没法判断是一个流对侧数据包首次到达, 还是根本不是一个隧道的另一个新流首次到达,
+		   先不比较地址了. 
+		*/
+		return 0;
+	}
+
+	/* 正向比较地址 */
+	if(addr_heap->src_mpls_layer_num != addr_stack->src_mpls_layer_num){
+		same_dir_diff = 1;
+	}else{
+		for(i = 0; i < addr_heap->src_mpls_layer_num; i++){
+			if(addr_heap->src_mpls_pkt[i] != addr_stack->src_mpls_pkt[i]){
+				same_dir_diff = 1;
+				break;
+			}
+		}
+	}
+
+	/* 反向比较地址 */
+	if(addr_heap->dest_mpls_layer_num != addr_stack->src_mpls_layer_num){
+		reverse_dir_diff = 1;
+	}else{
+		for(i = 0; i < addr_heap->dest_mpls_layer_num; i++){
+			if(addr_heap->dest_mpls_pkt[i] != addr_stack->src_mpls_pkt[i]){
+				reverse_dir_diff = 1;
+				break;
+			}
+		}
+	}
+
+	if(same_dir_diff && reverse_dir_diff){ /* 两个方向地址都不一样 */
+		return -1;
+	}
+
+	return ret;
+}
+
 static int  cmpaddr_positive(void *addr_heap, void *addr_stack, UCHAR addrtype, UCHAR addrlen)
 {
 	int ret;
@@ -1005,7 +1059,11 @@ static int  cmpaddr_positive(void *addr_heap, void *addr_stack, UCHAR addrtype, 
 			}		
 		}
 		break;
-		/* TODO:  MPLS地址只比较label, TTL等不参与地址HASH */
+
+		case ADDR_TYPE_MPLS:
+			ret = cmpaddr_mpls((struct layer_addr_mpls *)addr_heap, (struct layer_addr_mpls *)addr_stack);
+		break;
+		
 		default:
 			/* 其他地址类型, 如VLAN, L2TP等, 无方向性特征, 无需转换, 直接比较即可 */
 			ret = memcmp(addr_heap, addr_stack, addrlen);
@@ -1099,6 +1157,9 @@ static int  cmpaddr_reverse(void *addr_heap, void *addr_stack, UCHAR addrtype, U
 			}		
 		}
 		break;
+
+		case ADDR_TYPE_MPLS:
+		break;		
 		
 		default:
 			/* 其他地址类型, 如VLAN, L2TP等, 无方向性特征, 无需转换 */
@@ -1191,43 +1252,19 @@ static int cmpaddr_new(struct streaminfo_private *pheap_stream_pr,
 	int ret;
 	struct layer_addr *heap_addr, *stack_addr;
 
+	(void)hash_elem_count;
+
 	heap_addr = &pheap_stream_pr->stream_public.addr;
 	stack_addr = &pstack_stream_pr->stream_public.addr;
 
 	if(pheap_stream_pr->stream_dir == pstack_stream_pr->layer_dir){
-	/* 2015-07-15 lijia modify, 
-		四元组比较使用哪类方式, 取决于HASH冲突率, 
-		冲突率高时使用cmpaddr_positive()性能更好,
-		否则使用memcmp()性能好.
-
-		目前平台的HASH冲突率小于20%, 暂时使用memcmp().
-	*/
-		if(likely(hash_elem_count <= 2)){
-			ret = memcmp(heap_addr->paddr,  stack_addr->paddr, heap_addr->addrlen);
-		}else{
-			ret = cmpaddr_positive(heap_addr->paddr,  stack_addr->paddr,
-								heap_addr->addrtype, heap_addr->addrlen);
-		}
+		ret = cmpaddr_positive(heap_addr->paddr,  stack_addr->paddr,
+							heap_addr->addrtype, heap_addr->addrlen);
 	}else{
 		/* 2015-03-04 lijia add, 反向地址比较, 无需先COPY.*/	
 		ret = cmpaddr_reverse(heap_addr->paddr,  stack_addr->paddr,
 							heap_addr->addrtype, heap_addr->addrlen);
 	}
-#if 0
-printf("lijia debug: cmpaddr, addr_len:%d:\n", pst1->addr.addrlen);
-int i;
-printf("heap addr  \t :");
-for(i = 0; i < pst1->addr.addrlen; i++){
-printf("%02x,", ((UINT8 *)pst1->addr.paddr)[i]);
-}
-printf(" <-->\n");
-
-printf("new stack addr:\t");
-	for(i = 0; i < pst2->addr.addrlen; i++){
-	printf("%02x,", ((UINT8 *)ptmp)[i]);
-	}
-printf("\n====================================================\n\n");
-#endif
 	
 	if(0 == ret){
 		//pst1->p_layer_header = pst2->p_layer_header;
@@ -2549,7 +2586,7 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
                          const struct streaminfo *upper_stream, unsigned short *tunnel_type)
 {
 	if(NULL == this_stream){
-		return -1;
+		return 0;
 	}
 	/* 父流的指针, 注意: sapp_online版和sapp_ip_port_union版不一致 */
 	const struct streaminfo *pfather = this_stream->pfather; 

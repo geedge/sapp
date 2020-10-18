@@ -72,7 +72,7 @@ typedef struct {
 	int route_dir;
 	int device_index;/* 有多块网卡时, 要保证从哪个卡进就从哪个卡出 */
 	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, in host order, vlan flipping for adev, index0表示收到当前包的vlan_id, index1表示原包转发的vlan_id */
-	short mac_flipping_enable;
+	unsigned char mac_flipping_enable;
 }raw_pkt_t;
 
 
