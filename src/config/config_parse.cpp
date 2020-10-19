@@ -814,9 +814,13 @@ int sapp_parse_config(void)
 
 /* init breakpad_mini */
 void sapp_init_breakpad_mini(void)
-
 {
-	struct breakpad_instance * g_breakpad = breakpad_init(default_config_file, "breakpad", sapp_global_val->individual_fixed.log_handle);
+#ifdef GIT_VERSION
+	__attribute__((__used__)) const char *sapp_git_ver = GIT_VERSION;
+#else
+	 const char * sapp_git_ver = "sapp_version_unkonw"
+#endif
+	struct breakpad_instance * g_breakpad = breakpad_init(default_config_file, "breakpad", sapp_global_val->individual_fixed.log_handle,  sapp_git_ver);
 	if(g_breakpad == NULL){exit(-1);}
 	sapp_global_val->individual_fixed.breakpad = g_breakpad;
 	return;
