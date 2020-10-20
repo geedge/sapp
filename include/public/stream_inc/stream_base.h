@@ -123,14 +123,14 @@ enum stream_type_t{
 enum stream_carry_tunnel_t{
 	STREAM_TUNNLE_NON 		= 0, 	/* default is 0, not tunnel; 默认为0, 非隧道; */
 	STREAM_TUNNLE_6OVER4 	= 1 << 0,
-	STREAM_TUNNLE_4OVER6		= 1 << 1,
-	STREAM_TUNNLE_GRE			= 1 << 2,
+	STREAM_TUNNLE_4OVER6	= 1 << 1,
+	STREAM_TUNNLE_GRE		= 1 << 2,
 	STREAM_TUNNLE_IP_IN_IP	= 1 << 3,
 	STREAM_TUNNLE_PPTP		= 1 << 4,
 	STREAM_TUNNLE_L2TP		= 1 << 5,
-	STREAM_TUNNLE_TEREDO		= 1 << 6,
+	STREAM_TUNNLE_TEREDO	= 1 << 6,
 	STREAM_TUNNEL_GPRS_TUNNEL = 1 << 7,
-	STREAM_TUNNEL_MULTI_MAC = 1 << 8,
+	STREAM_TUNNEL_MULTI_MAC = 1 << 8, /* is obsoulte */
 };
 
 typedef struct raw_ipfrag_list{

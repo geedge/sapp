@@ -237,6 +237,7 @@ typedef struct{
 	char pcap_dumpfile_name[NAME_MAX];
 	int polling_enabled;
 	int polling_priority; /* call sapp_recv_pkt every call polling_entry times, 调用多少次polling后调用一次recv pkt, 1表示两者优先级相同 */
+	int without_usleep; /* 性能测试模式, 不会调用usleep, CPU会100% */
 	int inbound_route_dir; /* 表示入境, I2C方向的值是0还是1 */
 	char pcap_capture_direction[NAME_MAX]; /* in, out, inout */
 	//int create_mpls_anyway;

@@ -2595,7 +2595,7 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
 		case ADDR_TYPE_MAC:
 			pfather = this_stream->pfather;  //
 			if(pfather != NULL){
-					*tunnel_type = (unsigned short)STREAM_TUNNEL_MULTI_MAC;
+					//mac in mac不算做隧道, 只是一种overlay的方式.
 			}
 			break;
 

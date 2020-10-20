@@ -77,6 +77,7 @@ dictator_enable=1
     name=lo
     
     [packet_io.polling]
+    enabled=1    	
 ### note, polling_priority = call sapp_recv_pkt every call polling_entry times,     
     polling_priority=1
 

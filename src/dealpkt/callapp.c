@@ -1038,11 +1038,11 @@ int stream_process_polling(int thread_seq)
 	for(i = 0; i < g_PollingFunNum; i++){
 		plug_ret = g_PollingFun[i].stream_fun(NULL, NULL, thread_seq, NULL);
 		if(plug_ret & POLLING_STATE_WORK){
-			fun_ret = POLLING_STATE_WORK;
+			fun_ret |= POLLING_STATE_WORK;
 		}
 	}
 
-	if(POLLING_STATE_WORK == fun_ret){
+	if(POLLING_STATE_WORK & fun_ret){
 		sapp_global_val->mthread_volatile[thread_seq]->sys_stat.count[SAPP_POLLING_WORK]++;
 	}else{
 		sapp_global_val->mthread_volatile[thread_seq]->sys_stat.count[SAPP_POLLING_IDLE]++;
