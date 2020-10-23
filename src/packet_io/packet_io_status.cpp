@@ -16,7 +16,7 @@ static unsigned long long sysinfo_old[COUNTER_NUM] = {0};
 static const unsigned long long TO_KB = 1024;
 static const unsigned long long TO_MB = 0x100000ULL;
 static const unsigned long long TO_GB = 0x40000000ULL;
-static const unsigned long long TO_TB = 0x1000000000ULL;
+static const unsigned long long TO_TB = 0x10000000000ULL;
 
 static unsigned long long cur_count[SAPP_STAT_NUM_MAX] = {0};
 static unsigned long long cur_length[SAPP_STAT_NUM_MAX] = {0};
@@ -283,12 +283,12 @@ void sysinfo_output(void)
 	if((cur_length[SAPP_STAT_RCV_TCP] > 0) && (cur_length[SAPP_STAT_TCP_LOST_PKT] > 0)){
 		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "bytes", cur_length[SAPP_STAT_RCV_TCP], cur_length[SAPP_STAT_TCP_LOST_PKT], (double)cur_length[SAPP_STAT_TCP_LOST_PKT]/(double)cur_length[SAPP_STAT_RCV_TCP]);
 	}else{
-		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "bytes", cur_length[SAPP_STAT_RCV_TCP], cur_length[SAPP_STAT_TCP_LOST_PKT], 0);
+		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "bytes", cur_length[SAPP_STAT_RCV_TCP], cur_length[SAPP_STAT_TCP_LOST_PKT], 0.0);
 	}
 	if((cur_count[SAPP_STAT_TCP_STREAM_NEW] > 0) && (cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM] > 0)){
 		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "stream", cur_count[SAPP_STAT_TCP_STREAM_NEW], cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM], (double)cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM]/(double)cur_count[SAPP_STAT_TCP_STREAM_NEW]);
 	}else{
-		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "stream", cur_count[SAPP_STAT_TCP_STREAM_NEW], cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM], 0);
+		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "stream", cur_count[SAPP_STAT_TCP_STREAM_NEW], cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM], 0.0);
 	}
 	
 	fprintf(fp,"-----------------------------------------------------------------\n");

@@ -66,6 +66,7 @@ int pppoe_session_entry(struct streaminfo_private *pfstream_pr,const void *this_
 		local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 		local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 		local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += (unsigned long long)raw_pkt->raw_pkt_len;		
+		((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
 	}
 
 	return ret;

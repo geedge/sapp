@@ -1172,11 +1172,11 @@ const char *sapp_raw_ipv4_ntop(const struct mesa_ip4_hdr *ip4_hdr, char *out_buf
 
 	inner_ip_proto = ip4_hdr->ip_p;		
 	if(IPPROTO_TCP == inner_ip_proto){
-		inner_thdr = (struct tcphdr *)((char *)ip4_hdr + ip4_hdr->ip_hl*4);
+		inner_thdr = (struct mesa_tcp_hdr *)((char *)ip4_hdr + ip4_hdr->ip_hl*4);
 		sport = ntohs(inner_thdr->th_sport);
 		dport = ntohs(inner_thdr->th_dport);
 	}else if(IPPROTO_UDP){
-		inner_uhdr = (struct udphdr *)((char *)ip4_hdr + ip4_hdr->ip_hl*4);
+		inner_uhdr = (struct mesa_udp_hdr *)((char *)ip4_hdr + ip4_hdr->ip_hl*4);
 		sport = ntohs(inner_uhdr->uh_sport);
 		dport = ntohs(inner_uhdr->uh_dport);				
 	}else{
@@ -1215,7 +1215,7 @@ const char *sapp_raw_ipv6_ntop(const struct mesa_ip6_hdr *ip6_hdr, char *out_buf
 		dport = inner_uhdr->dest;					
 	}else{
 		sapp_runtime_log(RLOG_LV_INFO, "sapp_raw_ipv6_ntop() error, unsupport ip6_nxt_hdr:%d", inner_ip_proto);
-		return -1;
+		return NULL;
 	}	
 	
 	inet_ntop(AF_INET6, &ip6_hdr->ip6_src, ipsrc_str, sizeof(ipsrc_str));

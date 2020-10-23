@@ -602,6 +602,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	if(unlikely(checkipv4pkt(a_packet, raw_pkt) < 0)){
 		local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
 		local_sys_stat->length[SAPP_STAT_DROP_IPV4]+=raw_pkt->raw_pkt_len;
+		((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
 		return PASS;
 	}
 
@@ -631,6 +632,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	if(unlikely(pfstream_pr->layer_index >= SAPP_SUPPORT_LAYER_NUM_MAX)){
 		local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
 		sapp_runtime_log(RLOG_LV_INFO, "ipv4_entry: layer index more than:%d", pfstream_pr->layer_index);
+		((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
 		return PASS;
 	}else{
 		pstream_pr->layer_index = pfstream_pr->layer_index + 1;

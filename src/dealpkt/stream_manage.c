@@ -923,6 +923,7 @@ int mkstreamhash_new(struct streaminfo_private *pstream_pr, int maxsize)
 /*
 	MPLS层地址不像ipv4,ipv6,tcp,udp那样, 收到任意一个包可以推断另一侧的地址,
 	MPLS地址是单向的, 甚至还有可能是不对称存在的, 即一侧有而另一侧没有.
+	所以, 比较地址不分方向.
 */
 static int cmpaddr_mpls(const struct layer_addr_mpls *addr_heap, const struct layer_addr_mpls  *addr_stack)
 {
@@ -1159,6 +1160,7 @@ static int  cmpaddr_reverse(void *addr_heap, void *addr_stack, UCHAR addrtype, U
 		break;
 
 		case ADDR_TYPE_MPLS:
+			ret = cmpaddr_mpls((struct layer_addr_mpls *)addr_heap, (struct layer_addr_mpls *)addr_stack);
 		break;		
 		
 		default:
@@ -2588,6 +2590,11 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
 	if(NULL == this_stream){
 		return 0;
 	}
+
+	if(NULL == upper_stream){
+		*tunnel_type = STREAM_TUNNLE_NON;
+	}
+	
 	/* 父流的指针, 注意: sapp_online版和sapp_ip_port_union版不一致 */
 	const struct streaminfo *pfather = this_stream->pfather; 
 	
@@ -2603,25 +2610,41 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
 			pfather = this_stream->pfather;  /* IP-TCP/UDP被认为是一个整体, 更新pfather指针 */
 			if(pfather != NULL){
 				 if(__ADDR_TYPE_IP_PAIR_V4 == pfather->addr.addrtype){
-				 	*tunnel_type = (unsigned short)STREAM_TUNNLE_IP_IN_IP;
+				 	*tunnel_type |= (unsigned short)STREAM_TUNNLE_IP_IN_IP;
 				 }else if(__ADDR_TYPE_IP_PAIR_V6 == pfather->addr.addrtype){
-					*tunnel_type = (unsigned short)STREAM_TUNNLE_4OVER6;
+					*tunnel_type |= (unsigned short)STREAM_TUNNLE_4OVER6;
 				 }else if(ADDR_TYPE_GRE == pfather->addr.addrtype){
-				 	*tunnel_type = (unsigned short)STREAM_TUNNLE_GRE;
+				 	*tunnel_type |= (unsigned short)STREAM_TUNNLE_GRE;
 				 }
 			} 
 		break;
+
+		case __ADDR_TYPE_IP_PAIR_V4:
+			if(pfather != NULL){
+				 if(__ADDR_TYPE_IP_PAIR_V6 == pfather->addr.addrtype){
+				 	*tunnel_type |= (unsigned short)STREAM_TUNNLE_4OVER6;
+				 }				
+			}		
+		break;
+
+		case __ADDR_TYPE_IP_PAIR_V6:
+			if(pfather != NULL){
+				 if(__ADDR_TYPE_IP_PAIR_V4 == pfather->addr.addrtype){
+				 	*tunnel_type |= (unsigned short)STREAM_TUNNLE_6OVER4;
+				 }				
+			}
+		break;		
 		
 		case ADDR_TYPE_IPV6:
 			pfather = this_stream->pfather;  /* IP-TCP/UDP被认为是一个整体, 更新pfather指针 */
 			if(pfather != NULL){
 				if(__ADDR_TYPE_IP_PAIR_V4 == pfather->addr.addrtype){
-					*tunnel_type = (unsigned short)STREAM_TUNNLE_6OVER4;
+					*tunnel_type |= (unsigned short)STREAM_TUNNLE_6OVER4;
 				}else if((ADDR_TYPE_IPV4 == pfather->addr.addrtype)
 				 && (STREAM_TYPE_UDP == pfather->type)){
-					*tunnel_type = (unsigned short)STREAM_TUNNLE_TEREDO;
+					*tunnel_type |= (unsigned short)STREAM_TUNNLE_TEREDO;
 				}else if(ADDR_TYPE_GRE == pfather->addr.addrtype){
-				 	*tunnel_type = (unsigned short)STREAM_TUNNLE_GRE;
+				 	*tunnel_type |= (unsigned short)STREAM_TUNNLE_GRE;
 				 }
 			}
 		break;
@@ -2631,23 +2654,23 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
 			||((ADDR_TYPE_IPV6 == upper_stream->addr.addrtype))
 			||(__ADDR_TYPE_IP_PAIR_V4 == upper_stream->addr.addrtype)
 			||(__ADDR_TYPE_IP_PAIR_V6 == upper_stream->addr.addrtype)){
-				*tunnel_type = (unsigned short)STREAM_TUNNLE_GRE;
+				*tunnel_type |= (unsigned short)STREAM_TUNNLE_GRE;
 			}
 		break;
 
 		case ADDR_TYPE_PPTP:
 			/* pptp_entry()函数中已经将地址重置为ADDR_TYPE_PPTP, 肯定就是PPTP隧道 */
-			*tunnel_type = (unsigned short)STREAM_TUNNLE_PPTP;
+			*tunnel_type |= (unsigned short)STREAM_TUNNLE_PPTP;
 		break;
 
 		case ADDR_TYPE_L2TP:
 			/* l2tp_entry()函数中已经将地址重置为ADDR_TYPE_L2TP, 肯定就是L2TP隧道 */
-			*tunnel_type = (unsigned short)STREAM_TUNNLE_L2TP;
+			*tunnel_type |= (unsigned short)STREAM_TUNNLE_L2TP;
 		break;
 
 		case ADDR_TYPE_GPRS_TUNNEL:
 			/* gtp_entry()函数中已经将地址重置为ADDR_TYPE_GTP, 肯定就是GTP隧道 */
-			*tunnel_type = (unsigned short)STREAM_TUNNEL_GPRS_TUNNEL;
+			*tunnel_type |= (unsigned short)STREAM_TUNNEL_GPRS_TUNNEL;
 			break;
 	}
 

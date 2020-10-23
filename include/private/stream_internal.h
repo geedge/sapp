@@ -73,6 +73,7 @@ typedef struct {
 	int device_index;/* 有多块网卡时, 要保证从哪个卡进就从哪个卡出 */
 	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, in host order, vlan flipping for adev, index0表示收到当前包的vlan_id, index1表示原包转发的vlan_id */
 	unsigned char mac_flipping_enable;
+	char diagnose_to_dump; /* 是某种错误数据包, 期望pkt_dump存储或udp socket发送给tcpdump_mesa */
 }raw_pkt_t;
 
 
@@ -362,6 +363,7 @@ long long sapp_get_cpu_cycle(void);
 int get_stream_carry_tunnel_type(const struct streaminfo *this_stream, const struct streaminfo *upper_stream, unsigned short *tunnel_type);
 
 void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt);
+void cycle_diagnose_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt);
 
 char biz_retval_to_platform(char biz_ret);
 char plat_state_to_biz(char plat_state);

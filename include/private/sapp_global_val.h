@@ -59,9 +59,16 @@ typedef struct{
 }sapp_config_system_t;
 
 
+enum _packet_category_type{
+	PKTDUMP_CATEGORY_ALL = 0,
+	PKTDUMP_CATEGORY_DIAGNOSE = 1,
+};
+
 typedef struct{
 	int  enabled;
 	char mode_str[NAME_MAX];  /* storage/udp_socket */
+	char packet_category_str[NAME_MAX];  /* all, diagnose, all is default */
+	enum _packet_category_type packet_category_bin; 
 	int mode_bin;
 	unsigned int command_port; /* integer, host order, user should truncate to short */
 	unsigned int file_size_max_per_thread; /* MB */
@@ -316,7 +323,7 @@ typedef struct{
 
 struct __sapp_gval_mthread{
 	sapp_gval_mthread_sys_stat_t sys_stat;
-	unsigned short stream_seq_per_thread;
+	unsigned short stream_seq_per_thread; /* 用于计算全局流ID */
 	const raw_pkt_t *raw_pkt; /* 因为MESA_fakepacket_send_xxx系列函数没有raw_pkt参数, 也没有stream_info, 为了向前兼容, 不好修改接口, 增加全局变量用于存储当前包 */
 }__attribute__ ((aligned (64))); /* for multi-thread, must 64byte alignment */
 typedef struct __sapp_gval_mthread sapp_gval_mthread_t; 

@@ -114,6 +114,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 	if(set_mpls_addr(&addr, (unsigned char *)this_layer_data) < 0){
 		local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 		local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len; 	
+		((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
 		return PASS;
 	}
 
@@ -174,7 +175,8 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		if(left_pkt_len < ntohs(ip4_hdr->ip_len))
 		{
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
-			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;                
+			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;  
+			((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
             sapp_runtime_log(20, "illegal left Ipv4 len %d, total len %d!\n", left_pkt_len, ntohs(ip4_hdr->ip_len));            
 			inject_to_eth_flag = 1;
 		}
@@ -198,7 +200,8 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		if(left_pkt_len < sizeof(struct mesa_ip6_hdr) + ntohs(ip6_hdr->ip6_payload_len))
 		{
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
-			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;                
+			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;     
+			((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
             sapp_runtime_log(20, "illegal left Ipv6 len %d, total len %d!\n", left_pkt_len, ntohs(ip6_hdr->ip6_payload_len));        
 			inject_to_eth_flag = 1;
 		}
@@ -218,6 +221,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 			 if(left_pkt_len < sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_udp_hdr)){ /* 小于最小合法ethernet+ip+udp数据包长度 */
 				 local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				 local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	 
+				 ((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
 
 				 sapp_runtime_log(20, "MPLS next layer type: 0x%x, but left len only:%d, pkt seq:%llu\n", *next_layer_hdr,left_pkt_len, local_sys_stat->count[SAPP_STAT_RCV_RAW]);
 				 return PASS;

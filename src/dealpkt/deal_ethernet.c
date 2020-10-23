@@ -188,6 +188,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 
 			default:
 				/* unknown protocol */
+				((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += (unsigned long long)raw_pkt->raw_pkt_len;				
 				if(NET_CONN_SERIAL_GDEV == g_topology_mode){

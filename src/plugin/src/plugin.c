@@ -1285,7 +1285,7 @@ static int fetch_section_name(char *filename, char *section_name)
 
 static int process_conflist_single(char* filename, int plug_type, char *wanted_section_name)
 {
-	int rec;
+	int rec = 0;
 	char buf_confname[PLUGIN_FILENAME_MAXLEN] = {0};
 	char section_name[PLUGIN_FILENAME_MAXLEN];
 	
@@ -1375,58 +1375,7 @@ int process_conflist(char* filename,int plug_type)
 		rec = process_conflist_single(PLUG_CONTROL_INF, plug_type, "business");
 	}
 
-	return rec;
-	
-#if 0
-	FILE* fp = fopen(filename,"r");
-	if(fp == NULL)
-	{
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"process_conflist() fopen %s error!\n",filename);
-		return -1;	
-	}
-
-	while(feof(fp) == 0)
-	{
-	
-		if((fgets(buf_confname,PLUGIN_FILENAME_MAXLEN,fp)) == NULL)
-		{
-			//20160217 add fclose(fp) by liuyang
-			fclose(fp);
-			fp=NULL;
-			return 0;
-		}
-
-		if(buf_confname[0]=='#')
-		{
-			continue;
-		}
-		plugin_del_blank_rn(buf_confname, sizeof(buf_confname));
-
-		///len = strlen(buf_confname);
-		/////buf_confname[len-1] = '\0';
-
-		if(plug_type == PLUGTYPE_PROTOCOL)
-		{
-			rec = process_confelem_protocol(buf_confname);
-			
-		}
-		else if(plug_type == PLUGTYPE_BUSENISS)
-		{
-			rec = process_confelem_business(buf_confname);
-		}
-		else
-		{
-			rec = process_confelem_platform(buf_confname);
-		}
-
-	}
-	//20160217 add fclose(fp) by liuyang
-	fclose(fp);
-	fp=NULL;
-	//add end
-
-	return rec;
-#endif	
+	return rec;	
 }
 
 //20170525 add liuy for wy serial

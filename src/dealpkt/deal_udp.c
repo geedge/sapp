@@ -884,7 +884,8 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 		default:	
 			/* unknown protocol */	
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
-			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;				
+			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;		
+			((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
 			sapp_runtime_log(RLOG_LV_INFO, "unsupport Ipv4 protocol:%u, pkt seq:%llu\n", a_packet->ip_p,local_sys_stat->count[SAPP_STAT_RCV_RAW]);
 		break;
 	}

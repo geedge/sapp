@@ -641,8 +641,30 @@ void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 		return;
 	}
 
+	if(PKTDUMP_CATEGORY_DIAGNOSE == sapp_global_val->config.tools.pkt_dump.packet_category_bin){
+		return;
+	}
+
 	__do_cycle_pkt_dump(thread_seq, p_raw_pkt);
+
 }
+
+void cycle_diagnose_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
+{
+	if(likely(0 == G_PKT_DUMP_SW)){
+		return;
+	}
+
+	if((PKTDUMP_CATEGORY_DIAGNOSE != sapp_global_val->config.tools.pkt_dump.packet_category_bin)
+	  || (0 == p_raw_pkt->diagnose_to_dump)){
+		return;
+	}
+
+	__do_cycle_pkt_dump(thread_seq, p_raw_pkt);
+
+	((raw_pkt_t *)p_raw_pkt)->diagnose_to_dump = 0;
+}
+
 
 void cycle_pkt_dump_old(int thread_seq, const void *ippkt, int ippktlen)
 {

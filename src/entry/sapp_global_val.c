@@ -20,6 +20,8 @@ extern int udpstate_num[MAX_UDP_STATE];
 
    TODO, 那vxlan保活插件怎么办?  
    将gdev_keepalive模块移到sapp内部, 不作为插件.so挂载, 使用sapp.toml开关控制而不是靠plug conflist控制.
+
+   TODO: 移动到全局变量sapp_global_val中.
 */
 int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];    
 
@@ -41,6 +43,7 @@ int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
 	比如卫星项目gtp原始包层数为:     ethernet/ipv4/udp/gtp/ipv4/tcp/http, 跳过gtp的配置: "gtp[3],udp[2],ip[1]", 
 
 	比如某GRE隧道原始包层数为: ethernet/ipv4/gre/ipv4/udp/dns,   跳过最外层隧道的配置: "gre[2],ip[1]", 
+	TODO: 移动到全局变量sapp_global_val中.
 */
 
 embed_layer_t g_prune_inject_layer_set[SAPP_PRUNE_LAYER_NUM_MAX];
@@ -48,6 +51,7 @@ embed_layer_t g_prune_inject_layer_set[SAPP_PRUNE_LAYER_NUM_MAX];
 
 /*
 	描述哪些层是非对称存在层, 即C2S和S2C方向有可能没有这一层,导致创建流compare_addr时两侧不对称, 需要创建一个空层, 但注入包时尤其注意, 需要跳过. 
+	TODO: 移动到全局变量sapp_global_val中.
 */
 asymmetric_presence_layer_t g_asymmetric_presence_layer_set[__ADDR_TYPE_MAX];    
 
@@ -58,11 +62,15 @@ asymmetric_presence_layer_t g_asymmetric_presence_layer_set[__ADDR_TYPE_MAX];
 	如果反向注入数据包, 必须是双向流, 
 	需要更新对侧信息, 注入包时尤其注意. 
 	如果是单向流, 且开启此项配置, 反向注入包是失败的!!
+	TODO: 移动到全局变量sapp_global_val中.
 */
 embed_layer_t g_asymmetric_addr_layer_set; 
 
 
-/* 用于指定哪些协议层作为地址参数, 用于唯一确定一个流, 比如不同隧道内都使用私有地址时, 是有可能冲突的, 应该把底层vlan,mpls等层也作为地址比较参数 */
+/* 
+    用于指定哪些协议层作为地址参数, 用于唯一确定一个流, 比如不同隧道内都使用私有地址时, 是有可能冲突的, 应该把底层vlan,mpls等层也作为地址比较参数,
+    TODO: 移动到全局变量sapp_global_val中.
+*/
 embed_layer_t g_stream_compare_layer_set; 
 
 
