@@ -505,7 +505,7 @@ static int vlan8021q_jump_to_layer(const char *raw_data,  int raw_layer_type, in
 		return 0;
 	}
 
-	set_vlan_addr(&vlan_addr, raw_data);
+	set_vlan_addr(&vlan_addr, (const unsigned char *)raw_data);
 	vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr.src_vlan_layer_num;
 	next_layer_data = raw_data + vlan_layer_len;
 	vhdr = (struct mesa_vlan_hdr *)&vlan_addr.src_vlan_pkt[vlan_addr.src_vlan_layer_num-1];

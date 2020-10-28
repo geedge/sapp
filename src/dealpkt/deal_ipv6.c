@@ -779,14 +779,14 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 	if(unlikely(checkipv6pkt(a_packet, (int)payload_len, raw_pkt->raw_pkt_len) < 0)){
 		local_sys_stat->count[SAPP_STAT_DROP_IPV6]++;
 		local_sys_stat->length[SAPP_STAT_DROP_IPV6]+=raw_pkt->raw_pkt_len;
-		((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
+		((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
 		return PASS;
 	}
 
 	if(unlikely(pfstream_pr->layer_index >= SAPP_SUPPORT_LAYER_NUM_MAX)){
 		local_sys_stat->count[SAPP_STAT_DROP_IPV6]++;
 		sapp_runtime_log(RLOG_LV_INFO, "ipv6_entry: layer index more than:%d", pfstream_pr->layer_index);
-		((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
+		((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
 		return PASS;
 	}else{
 		plocal_stream_pr->layer_index = pfstream_pr->layer_index + 1;
@@ -931,7 +931,6 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 			default:
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+=raw_pkt->raw_pkt_len;
-				((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
 				sapp_runtime_log(20, "unsupport Ipv6 protocol:%u!\n", next_hdr_type);			
 				goto err_exit;
 			break;

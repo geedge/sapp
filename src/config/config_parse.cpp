@@ -360,7 +360,7 @@ static int parse_vlan_flipping_map_config(void)
 static int embed_layer_t_pton(char *config_val, embed_layer_t *result)
 {
 	enum addr_type_t addrtype;
-	int i, j, ret, layer_index;
+	int  j, ret, layer_index;
 	const char *delim = "[] ";
 	char *save_ptr;
 	const char *layer_type_string;
@@ -526,7 +526,7 @@ static int parse_asymmetric_addr_layer_config(void)
 */
 static int parse_asymmetric_presence_layer_config(void)
 {
-	int i, j, ret, asymmetric_presence_layer_config_num = 0;
+	int i, ret, asymmetric_presence_layer_config_num = 0;
 	FILE *fp;
 	char line_cont[MAX_INPUT];
 	char layer_name[MAX_INPUT], under_layer_name[MAX_INPUT], upper_layer_name[MAX_INPUT];
@@ -1297,7 +1297,7 @@ void sapp_init_breakpad_mini(void)
 #ifdef GIT_VERSION
 	__attribute__((__used__)) const char *sapp_git_ver = GIT_VERSION;
 #else
-	 const char * sapp_git_ver = "sapp_version_unkonw"
+	 const char * sapp_git_ver = "sapp_version_unkonw";
 #endif
 	struct breakpad_instance * g_breakpad = breakpad_init(default_config_file, "breakpad", sapp_global_val->individual_fixed.log_handle,  sapp_git_ver);
 	if(g_breakpad == NULL){exit(-1);}

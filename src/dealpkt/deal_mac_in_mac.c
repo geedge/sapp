@@ -21,7 +21,7 @@ static void set_mac_in_mac_addr(const struct mesa_ethernet_hdr *outer_ether_hdr,
 
 static inline int should_create_empty_mpls_layer_for_symmetric(const struct streaminfo *pstream, unsigned short next_eth_type)
 {
-	const const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
+	const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
 	int this_layer_type = (int)ADDR_TYPE_MAC;
 	int this_layer_index = pstream_pr->layer_index;
 	int next_layer_index = pstream_pr->layer_index + 1;
@@ -126,7 +126,6 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 				/* unknown protocol */
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	
-				((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
 				sapp_runtime_log(20, "MAC-IN-MAC unknown protocol: 0x%x\n", eth_type);
 				ret = PASS;
 			break;

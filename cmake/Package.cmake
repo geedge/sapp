@@ -65,7 +65,12 @@ set(CPACK_RPM_EXECUTABLE_USER_FILELIST "%config(noreplace) ${CMAKE_INSTALL_PREFI
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/plug/conflist.inf"
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/gdev_block.conf"
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/send_gdev.conf"
-				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/send_route.conf")
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/send_route.conf"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/asymmetric_addr_layer.conf"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/asymmetric_presence_layer.conf"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/vlan_flipping_map.conf"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/stream_compare_layer.conf"
+				)
 
 # Must uninstall the debug package before install release package
 set(CPACK_RPM_PACKAGE_CONFLICTS ${MY_RPM_NAME_PREFIX})

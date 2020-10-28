@@ -677,7 +677,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		ret = g_platform_action_cb_fun(sapp_global_val->config.packet_io.depolyment_mode_bin, ret);
 	}
 
-	cycle_diagnose_pkt_dump(thread_num, p_raw_pkt);
+	//cycle_diagnose_pkt_dump(thread_num, p_raw_pkt);
 
 	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin) 
 	 && (PASS == ret)){
@@ -1043,7 +1043,7 @@ static int packet_io_send_by_manual_conf(MESA_send_handle *send_handle,int datal
     }
     else
     {
-        p_dst_mac = sapp_global_val->config.packet_io.inject_mode_single_gateway_dst_mac;
+        p_dst_mac = (unsigned char *)sapp_global_val->config.packet_io.inject_mode_single_gateway_dst_mac;
     }
     sendpacket_build_ethernet(p_dst_mac, sapp_global_val->config.packet_io.inject_mode_single_gateway_src_mac, ether_type, NULL, 0, send_handle->send_buf);
 

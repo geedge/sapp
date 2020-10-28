@@ -20,7 +20,7 @@ static inline void set_mac_addr(struct layer_addr_mac *addr, const struct mesa_e
 
 static inline int should_create_empty_mpls_layer_for_symmetric(const struct streaminfo *pstream, unsigned short next_eth_type)
 {
-	const const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
+	const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
 	int this_layer_type = (int)ADDR_TYPE_MAC;
 	int this_layer_index = pstream_pr->layer_index;
 	int next_layer_index = pstream_pr->layer_index + 1;
@@ -188,7 +188,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 
 			default:
 				/* unknown protocol */
-				((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
+
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += (unsigned long long)raw_pkt->raw_pkt_len;				
 				if(NET_CONN_SERIAL_GDEV == g_topology_mode){

@@ -649,6 +649,11 @@ void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 
 }
 
+/*
+	TODO:
+		此处改成tcpdump_mesa传递参数, 动态改变输出包模式.
+		需要将cycle_pkt_dump()移动到数据包处理流程的最后, 才能根据raw_pkt中的标记决定怎么发送.
+*/
 void cycle_diagnose_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 {
 	if(likely(0 == G_PKT_DUMP_SW)){
@@ -656,13 +661,13 @@ void cycle_diagnose_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 	}
 
 	if((PKTDUMP_CATEGORY_DIAGNOSE != sapp_global_val->config.tools.pkt_dump.packet_category_bin)
-	  || (0 == p_raw_pkt->diagnose_to_dump)){
+	  || (0 == p_raw_pkt->diagnose_error_to_dump)){
 		return;
 	}
 
 	__do_cycle_pkt_dump(thread_seq, p_raw_pkt);
 
-	((raw_pkt_t *)p_raw_pkt)->diagnose_to_dump = 0;
+	((raw_pkt_t *)p_raw_pkt)->diagnose_error_to_dump = 0;
 }
 
 

@@ -158,10 +158,6 @@ dictator_enable=1
 [TOOLS]
     [tools.pkt_dump]
     enabled=1
-### note, packet_category options value:[all, diagnose]    
-### all is the default parameter, means dump the all packet which match BSD_packet_filter.
-### diagnose means only dump the illegal, unknown, or other error packet.
-    packet_category=all
 ### note, mode options value:[storage, udp_socket]
     mode=udp_socket
     BSD_packet_filter=""

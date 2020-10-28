@@ -116,7 +116,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
         {
             local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	
-			((raw_pkt_t *)raw_pkt)->diagnose_to_dump = 1;
+			((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
             sapp_runtime_log(20, "illegal left Ipv4 len %d, total len %d!\n", left_pkt_len, ntohs(ip4_hdr->tot_len));
             return DROP;
         }

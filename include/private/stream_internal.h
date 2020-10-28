@@ -73,7 +73,7 @@ typedef struct {
 	int device_index;/* 有多块网卡时, 要保证从哪个卡进就从哪个卡出 */
 	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, in host order, vlan flipping for adev, index0表示收到当前包的vlan_id, index1表示原包转发的vlan_id */
 	unsigned char mac_flipping_enable;
-	char diagnose_to_dump; /* 是某种错误数据包, 期望pkt_dump存储或udp socket发送给tcpdump_mesa */
+	char diagnose_error_to_dump; /* 是某种错误数据包, 期望pkt_dump存储或udp socket发送给tcpdump_mesa */
 }raw_pkt_t;
 
 
