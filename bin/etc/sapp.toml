@@ -87,7 +87,7 @@ dictator_enable=1
     tcp_drop_pure_ack_pkt=0
     tcp_syn_option_parse_enabled=1 
     skip_not_ip_layer_over_eth=0
-    treat_vlan_as_mac_in_mac=1
+    treat_vlan_as_mac_in_mac=0
     reverse_ethernet_addr=1
 
 	
@@ -134,7 +134,7 @@ dictator_enable=1
     symbol_conflict_enabled=0
   
     [profiling.log]
-    level=20
+    level=30
     interval=5
     
         [profiling.log.local]

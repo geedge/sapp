@@ -288,6 +288,8 @@ void marsio_dl_io_free_sendbuf(void *phandle, int thread_seq)
 	return;
 }
 
+
+
 int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, 
 			int thread_seq, unsigned char route_dir, const raw_pkt_t *raw_pkt)
 {
@@ -303,6 +305,10 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
 	real_buf = ptr_marsio_buff_append(send_mbuf[0], datalen);
+	if(NULL == real_buf){
+		ptr_marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
+		return -1;
+	}
 	
 	memcpy(real_buf, data, datalen);
 
@@ -313,11 +319,26 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 
 	ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, MARSIO_SEND_OPT_FAST|MARSIO_SEND_OPT_REHASH);
 	if(ret < 0){
+		ptr_marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
 		return -1;
 	}
+	
 	/* 发送接口自动free */
 	//marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
-	
+
+	/* 2020-10-30 lijia add, in/out/inject的包给tcpdump_mesa, 用于debug. */
+	{
+		raw_pkt_t to_tcpdump_mesa;
+		to_tcpdump_mesa.magic_num = RAW_PKT_MAGIC_NUM;
+		to_tcpdump_mesa.low_layer_type = ADDR_TYPE_MAC;
+		to_tcpdump_mesa.raw_pkt_data = ptr_marsio_buff_mtod(send_mbuf[0]);
+		to_tcpdump_mesa.raw_pkt_len = ptr_marsio_buff_buflen(send_mbuf[0]);
+		to_tcpdump_mesa.__lib_raw_pkt_data = to_tcpdump_mesa.raw_pkt_data;
+		to_tcpdump_mesa.__lib_raw_pkt_len = to_tcpdump_mesa.raw_pkt_len;
+
+		cycle_pkt_dump(thread_seq, &to_tcpdump_mesa);
+	}
+
 	return datalen;
 }
 

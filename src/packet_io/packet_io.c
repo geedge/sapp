@@ -682,6 +682,11 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin) 
 	 && (PASS == ret)){
 		packet_io_hook_forward((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
+
+		/* 2020-10-30 lijia add, in/out/inject的包给tcpdump_mesa, 用于debug. */
+		{
+			cycle_pkt_dump(thread_num, p_raw_pkt);
+		}		
 	}
 
 	return ret;

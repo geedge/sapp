@@ -3238,13 +3238,27 @@ int sendpacket_init_new(int tot_thread_num)
 ****************************************************************************************/
 unsigned char MESA_dir_reverse(unsigned char raw_dir)
 {
-	raw_dir ^= DIR_BIT_USE_MASK; /* 同时兼容sapp和旧版WY插件, 最高和最低bit位同时反向 */
+	unsigned char reverse_dir;
+	
+	switch(raw_dir){
+		case 0:
+			reverse_dir = 1;
+		break;
 
-	if(raw_dir > 1){
-		raw_dir = raw_dir >> 7; /* sapp使用最低位Bit, 某些老旧插件使用最高位作为dir时, 移动到最低位 */
+		case 0x80:
+			reverse_dir = 0;
+		break;
+
+		case 0x01:
+			reverse_dir = 0;
+		break;
+
+		case 0x81:
+			reverse_dir = 0;
+		break;
 	}
 
-	return raw_dir;
+	return reverse_dir;
 }
 
 
