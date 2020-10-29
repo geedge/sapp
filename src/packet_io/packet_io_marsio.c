@@ -27,11 +27,13 @@ typedef struct{
 }marsio4_io_handle;
 
 /* for vlan flipping */
+#if 0
 enum mr_buff_metadata_type
 {
 	MR_BUFF_REHASH_INDEX = 0,
 	MR_BUFF_METADATA_VLAN_TCI = 1, /* int类型, 主机序, host order */
 };
+#endif
 
 extern int marsio_buff_get_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
 extern int marsio_buff_set_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
