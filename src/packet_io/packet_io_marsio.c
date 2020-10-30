@@ -556,6 +556,12 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->io_lib_pkt_reference = rx_buff;
 	raw_pkt->route_dir = mr_ctrlzone->route_dir;
 
+	/* clear pkt status */
+	raw_pkt->is_overlay_pkt = 0;
+	raw_pkt->diagnose_error_to_dump = 0;
+	raw_pkt->vlan_flipping_couple[0] = 0;
+	raw_pkt->vlan_flipping_couple[1] = 0;
+
 	ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, mr_ctrlzone->route_dir, tid);
 	
 	return ret;
@@ -744,7 +750,7 @@ static void *marsio4_worker(void *arg)
 		usleep(1000);
 	}
 	
-	while(1){
+	while(1){		
 		if(marsio4_process_packet(tid, &raw_pkt) > 0){
 			rcv_pkt_tims++;
 		}else{

@@ -132,6 +132,7 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 				}else{			
 					/* GDEV模式下, 什么时候都不应该把不认识的包再转发出去, 在线发现把SPT生成树协议再注回去, 导致网络故障 */
 					ret = DROP;
+					sapp_runtime_log(RLOG_LV_DEBUG, "is not raw inline vlan pkt, upper layer type is:0x%x, drop it.", next_layer_type); 
 				}
 			}else{
 				ret = PASS;

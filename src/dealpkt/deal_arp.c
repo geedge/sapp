@@ -28,6 +28,8 @@ extern "C" {
 	/* 如果是隧道内部的ARP, 应该是链路上正常的CS双方ARP包, 要回注 */
 	if(sapp_identify_tunnel_inner_pkt(raw_pkt) != 0){
 		return PASS;
+	}else{
+		sapp_runtime_log(RLOG_LV_DEBUG, "is not raw inline arp pkt, drop it."); 
 	}
 
 	/* TODO, mrtunnat之后, 此处要判断是不是给本机的包, 是不是overlay的原始链路上的arp包, 否则都应该DROP, 此处先默认返回PASS */

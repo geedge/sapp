@@ -97,6 +97,9 @@ static int packet_io_hook_update_vlan_couple(raw_pkt_t *raw_pkt, unsigned short 
 		raw_pkt->route_dir = sapp_global_val->config.packet_io.inbound_route_dir;
 	}
 
+	sapp_runtime_log(RLOG_LV_DEBUG, "packet_io_hook_update_vlan(), this packet vlan:%u, the couple vlan:%u\n", vlan_id, vlan_map[vlan_id].couple_vlan_id);
+	raw_pkt->is_overlay_pkt = 1;
+
 	return 0;
 }
 
@@ -112,19 +115,20 @@ static unsigned short get_vlan_id_from_rawpkt(raw_pkt_t *raw_pkt)
 static int packet_io_hook_input_vlan_flipping(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
 {
 	unsigned short vlan_id = 1;
+	const sapp_vlan_flipping_map_t *vlan_map = sapp_global_val->config.packet_io.packet_io_tunnel.vlan_flipping_map_array;
 	
 	int ret;
 
 	vlan_id = marsio_get_vlan_id_from_mbuff((void *)raw_pkt->io_lib_pkt_reference);
-	if(vlan_id > 1){
+	if((vlan_id > 1) && (vlan_map[vlan_id].couple_vlan_id > 1)){ /* vlan_id 不在vlan flipping表中, 不算作overlay packet */
 		packet_io_hook_update_vlan_couple(raw_pkt, vlan_id);
 		ret=  0;
 	}else{
 		vlan_id = get_vlan_id_from_rawpkt(raw_pkt);
-		if(vlan_id > 1){
+		if((vlan_id > 1) && (vlan_map[vlan_id].couple_vlan_id > 1)){ /* vlan_id 不在vlan flipping表中, 不算作overlay packet */
 			packet_io_hook_update_vlan_couple(raw_pkt, vlan_id);
 		}else{
-			sapp_runtime_log(RLOG_LV_DEBUG, "warning: packet_io_hook_input(), not found vlan_id:%u\n", vlan_id);
+			sapp_runtime_log(RLOG_LV_DEBUG, "packet_io_hook_input(), not found vlan_id:%u in vlan flipping table\n", vlan_id);
 			ret = -1;
 		}
 	}

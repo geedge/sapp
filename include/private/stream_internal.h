@@ -71,6 +71,7 @@ typedef struct {
 	const void *io_lib_pkt_reference; /* 引用底层I/O库的原始包管理结构, 例如:对于marsio来说, 即底层的mbuf结构 */
 	int route_dir;
 	int device_index;/* 有多块网卡时, 要保证从哪个卡进就从哪个卡出 */
+	int is_overlay_pkt; /* 表示是真实链路中的数据包, 要无条件回注, 即本机看起来像一根网线; 否则要丢弃 */
 	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, in host order, vlan flipping for adev, index0表示收到当前包的vlan_id, index1表示原包转发的vlan_id */
 	unsigned char mac_flipping_enable;
 	char diagnose_error_to_dump; /* 是某种错误数据包, 期望pkt_dump存储或udp socket发送给tcpdump_mesa */

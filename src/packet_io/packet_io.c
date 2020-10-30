@@ -679,14 +679,14 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 
 	//cycle_diagnose_pkt_dump(thread_num, p_raw_pkt);
 
-	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin) 
-	 && (PASS == ret)){
-		packet_io_hook_forward((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
-
-		/* 2020-10-30 lijia add, in/out/inject的包给tcpdump_mesa, 用于debug. */
-		{
-			cycle_pkt_dump(thread_num, p_raw_pkt);
-		}		
+	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){ 
+		if((p_raw_pkt->is_overlay_pkt)&& (PASS == ret)){
+			packet_io_hook_forward((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
+		}else{
+			/* inline模式下, 非原始链路中的包, 或插件返回了DROP的包, 不能注入链路 */
+			ret = DROP;
+			//todo, pkt_dump for DROP
+		}
 	}
 
 	return ret;

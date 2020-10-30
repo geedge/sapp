@@ -75,8 +75,10 @@ int sapp_identify_tunnel_inner_pkt(const raw_pkt_t *raw_pkt)
 				}
 			}
 		}else{
-			/* TODO: 没有mrtunnat时, 要判断是否是给本机的, 是否是overlay网络里的包    */
-			ret = 1;
+			/* 没有mrtunnat时, 要判断是否是给本机的, 是否是overlay网络里的包    */
+			if(raw_pkt->is_overlay_pkt){
+				ret = 1;
+			}
 		}
 	}
 #endif

@@ -1865,14 +1865,39 @@ char *layer_addr_ntop_r(const struct streaminfo *pstream, char *out_buf, int out
 	return NULL;
 }
 
+/*
+	sapp为了层数对准, 某些是虚构的, 此时业务插件如果打印日志会比较迷惑, 此处使用"_PAD"标识一下, 非真正存在的物理层.
+*/
+const char *__layer_addr_prefix_ntop_pad(const struct streaminfo_private *pstream_pr)
+{
+	const char *addr_prefix = NULL;
+	
+	switch(pstream_pr->stream_public.addr.addrtype){
+		case ADDR_TYPE_MPLS:
+			addr_prefix = "_PAD_MPLS";
+		break;
+		
+		case ADDR_TYPE_VLAN:
+			addr_prefix = "_PAD_VLAN";
+		break;		
+	}
+
+	return addr_prefix;
+}
+
 
 const char *layer_addr_prefix_ntop(const struct streaminfo *pstream)
 {
 	int i;
 	const char *addr_type_str = NULL;
+	const struct streaminfo_private *pstream_pr = (struct streaminfo_private *)pstream;
 	
 	if(NULL == pstream){
 		return NULL;
+	}
+
+	if(pstream_pr->addr_skip_for_layer_cmp){
+		return __layer_addr_prefix_ntop_pad(pstream_pr);
 	}
 
 	for(i = __ADDR_TYPE_INIT+1; G_ADDR_CONVERT_HANDLE[i].addr_type_bin!= __ADDR_TYPE_MAX; i++){
