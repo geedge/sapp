@@ -105,6 +105,15 @@ int (*ptr_marsio_buff_set_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type
 int (*ptr_marsio_buff_unset_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type);
 
 
+static struct bpf_program MARSIO_BPF_FILTER[MAX_THREAD_NUM];
+static int g_marsio_have_bpf;
+
+struct __marsio_bpf_counter_t
+{
+	long  count;
+} __attribute__((aligned(64))); /*   for multi-thread, must 64byte alignment */
+struct __marsio_bpf_counter_t g_marsio_bpf_counter[MAX_THREAD_NUM]; 
+
 /************************  funcitons for dynamic link *************************/
 
 int marsio_dl_io_set_cap_level(int cap_level)
@@ -223,7 +232,26 @@ int marsio_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 
 int marsio_dl_io_set_capture_filter(const char *filter_rule)
 {
+	memset(&g_marsio_bpf_counter, 0, sizeof(g_marsio_bpf_counter));
+	g_marsio_have_bpf=0;
 	(void)filter_rule; /* marsio模式不支持过滤规则 */
+	if(strlen(filter_rule) <= 0)return -1;
+	int i,j;
+
+	int pcap_link_type = DLT_EN10MB;
+	for (i = 0; i < (unsigned int)g_packet_io_thread_num; i++)
+	{
+			if (pcap_compile_nopcap(65535, pcap_link_type, &MARSIO_BPF_FILTER[i], filter_rule, 100, 0) < 0)
+			{
+				printf("Compile pcap filter '%s' error\n", filter_rule);
+					for(j = 0; j <  (unsigned int )g_packet_io_thread_num; j++)
+					{
+						pcap_freecode(&MARSIO_BPF_FILTER[j]);
+					}
+					return -1;
+			}
+	}
+	g_marsio_have_bpf=1;
 	return 0;
 }
 
@@ -249,8 +277,13 @@ long marsio_dl_io_get_app_drop_num(int thread_num)
 
 long marsio_dl_io_get_lib_drop_num(void)
 {
-	/* pag模式查看丢包有专用工具, 程序目前不提供此功能 */
-	return 0;
+	long total_drop = 0;
+	int i;
+	for(i = 0; i < g_marsio4_work_thread_num; i++)
+	{
+		total_drop +=g_marsio_bpf_counter[i].count;
+	}
+	return total_drop;
 }
 
 
@@ -562,6 +595,9 @@ static int marsio4_pkt_forward(int tid, struct mr_sendpath * sendpath, marsio_bu
 static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *raw_pkt, unsigned char dir)
 {
 	int ret;
+
+
+
 	struct mr_tunnat_ctrlzone *mr_ctrlzone = (struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone(rx_buff, 0); /* index */
 
 	raw_pkt->__lib_raw_pkt_data = ptr_marsio_buff_mtod(rx_buff);
@@ -570,6 +606,17 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->raw_pkt_len = raw_pkt->__lib_raw_pkt_len;
 	raw_pkt->io_lib_pkt_reference = rx_buff;
 	raw_pkt->route_dir = mr_ctrlzone->route_dir;
+
+	if(unlikely(g_marsio_have_bpf == 1))
+	{
+		if (0 == bpf_filter(MARSIO_BPF_FILTER[tid].bf_insns,
+							(const unsigned char *)raw_pkt->raw_pkt_data,
+							raw_pkt->raw_pkt_len, raw_pkt->raw_pkt_len))
+		{
+			g_marsio_bpf_counter[tid].count++;
+			return DROP;
+		}
+	}
 
 	if(0 == sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support){
 		raw_pkt->is_overlay_pkt = mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD;
