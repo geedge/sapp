@@ -38,7 +38,12 @@ enum mr_buff_metadata_type
 extern int marsio_buff_get_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
 extern int marsio_buff_set_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
 extern int marsio_buff_unset_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type);
-
+/* 
+	发包的同时, 给tcpdump_mesa一份, 便于捕包分析,
+	回注的包无需tcpdump_mesa捕获, 直接在驱动底层捕获即可.
+*/
+extern void cycle_pkt_dump_by_classify(int thread_seq, const raw_pkt_t *p_raw_pkt, enum _pkt_classify class_val);
+extern int G_PKT_DUMP_SW;
 
 
 int g_marsio4_version_VERSION_20190907;
@@ -290,6 +295,25 @@ void marsio_dl_io_free_sendbuf(void *phandle, int thread_seq)
 	return;
 }
 
+/* 2020-10-30 lijia add, in/forward/inject的包给tcpdump_mesa, 用于debug. */
+static void marsio_pkt_dump(int thread_seq, const marsio_buff_t *send_mbuf, enum _pkt_classify class)
+{
+	raw_pkt_t to_tcpdump_mesa;
+
+	if(likely(0 == G_PKT_DUMP_SW)){
+		return;
+	}	
+	
+	to_tcpdump_mesa.magic_num = RAW_PKT_MAGIC_NUM;
+	to_tcpdump_mesa.low_layer_type = ADDR_TYPE_MAC;
+	to_tcpdump_mesa.raw_pkt_data = ptr_marsio_buff_mtod((marsio_buff_t *)send_mbuf);
+	to_tcpdump_mesa.raw_pkt_len = ptr_marsio_buff_buflen((marsio_buff_t *)send_mbuf);
+	to_tcpdump_mesa.__lib_raw_pkt_data = to_tcpdump_mesa.raw_pkt_data;
+	to_tcpdump_mesa.__lib_raw_pkt_len = to_tcpdump_mesa.raw_pkt_len;
+
+	cycle_pkt_dump_by_classify(thread_seq, &to_tcpdump_mesa, PKT_CLASSIFY_INJECT);
+
+}
 
 
 int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, 
@@ -324,22 +348,11 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 		ptr_marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
 		return -1;
 	}
+
+	marsio_pkt_dump(thread_seq, send_mbuf[0], PKT_CLASSIFY_INJECT);
 	
 	/* 发送接口自动free */
 	//marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
-
-	/* 2020-10-30 lijia add, in/out/inject的包给tcpdump_mesa, 用于debug. */
-	{
-		raw_pkt_t to_tcpdump_mesa;
-		to_tcpdump_mesa.magic_num = RAW_PKT_MAGIC_NUM;
-		to_tcpdump_mesa.low_layer_type = ADDR_TYPE_MAC;
-		to_tcpdump_mesa.raw_pkt_data = ptr_marsio_buff_mtod(send_mbuf[0]);
-		to_tcpdump_mesa.raw_pkt_len = ptr_marsio_buff_buflen(send_mbuf[0]);
-		to_tcpdump_mesa.__lib_raw_pkt_data = to_tcpdump_mesa.raw_pkt_data;
-		to_tcpdump_mesa.__lib_raw_pkt_len = to_tcpdump_mesa.raw_pkt_len;
-
-		cycle_pkt_dump(thread_seq, &to_tcpdump_mesa);
-	}
 
 	return datalen;
 }
@@ -528,6 +541,8 @@ static int marsio4_pkt_forward(int tid, struct mr_sendpath * sendpath, marsio_bu
 		ctrl_zone->action = TUNNAT_CZ_ACTION_FORWARD;
 		ptr_marsio_buff_ctrlzone_set(mbufs, 0, ctrl_zone, sizeof(struct mr_tunnat_ctrlzone));
 		ret = ptr_marsio_send_burst(sendpath, tid, &mbufs, 1);
+
+		marsio_pkt_dump(tid, mbufs, PKT_CLASSIFY_FORWARD);
 	}
 	else
 	{
@@ -556,8 +571,13 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->io_lib_pkt_reference = rx_buff;
 	raw_pkt->route_dir = mr_ctrlzone->route_dir;
 
+	if(0 == sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support){
+		raw_pkt->is_overlay_pkt = mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD;
+	}else{
+		raw_pkt->is_overlay_pkt = 0; /* 无mrtunnat时, 刚收到包还不确定, 靠packet_io_hook决定是否是overlay的包 */
+	}
+
 	/* clear pkt status */
-	raw_pkt->is_overlay_pkt = 0;
 	raw_pkt->diagnose_error_to_dump = 0;
 	raw_pkt->vlan_flipping_couple[0] = 0;
 	raw_pkt->vlan_flipping_couple[1] = 0;
@@ -942,13 +962,6 @@ static int marsio_dl_get_function_entry(void)
 }
 
 
-
-/* 
-	发包的同时, 给tcpdump_mesa一份, 便于捕包分析,
-	回注的包无需tcpdump_mesa捕获, 直接在驱动底层捕获即可.
-*/
-extern void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt);
-extern int G_PKT_DUMP_SW;
 int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath, queue_id_t sid, marsio_buff_t * mbufs[],
     int nr_mbufs, uint16_t options)
 {
@@ -966,7 +979,7 @@ int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath
 		rawpkt.__lib_raw_pkt_data = rawpkt_data;
 		rawpkt.__lib_raw_pkt_len = rawpkt_len;
 
-		cycle_pkt_dump(sid, &rawpkt);
+		cycle_pkt_dump_by_classify(sid, &rawpkt, PKT_CLASSIFY_INJECT);
 	}
 
 	return ptr_marsio_send_burst_with_options(sendpath, sid, mbufs, nr_mbufs, options);	

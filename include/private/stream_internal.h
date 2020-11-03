@@ -5,6 +5,7 @@
 #include "private/mesa_net.h"
 #include "private/sysinfo.h"
 #include "MESA_handle_logger.h"
+#include "mesa_pkt_dump.h"
 
 //#define STREAM_BASE_MD5_CHECK		"dd09b3b11993cc835200db477dad7d4b"
 //#define STREAM_CONTROL_MD5_CHECK 	"75aab0821e489b84355fa22ad02a2e78"
@@ -365,6 +366,7 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream, const str
 
 void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt);
 void cycle_diagnose_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt);
+void cycle_pkt_dump_by_classify(int thread_seq, const raw_pkt_t *p_raw_pkt, enum _pkt_classify class_val);
 
 char biz_retval_to_platform(char biz_ret);
 char plat_state_to_biz(char plat_state);

@@ -85,6 +85,8 @@ typedef struct{
 static send_raw_pkt_info_t G_SND_RAW_PKT_INFO[MAX_RAW_PKT_TARGET_NUM];
 static int G_SND_RAW_PKT_INFO_NUM = 0;
 
+extern int G_PKT_DUMP_SW;
+
 void packet_io_exit(void);
 int packet_io_lib_load(int cap_mode);
 void del_last_rn(char *data, int max_len);
@@ -400,7 +402,7 @@ static int packet_io_process_ddp_pkt(const MESA_feedback_raw_pkt_t *ddp_fix_hdr,
 		p_raw_pkt->raw_pkt_data = (char *)ddp_payload;
 #if CYCLE_PKT_DUMP
 		/* 2017-10-09 lijia add, for tcpdump_mesa capture ddp inner packet */
-		cycle_pkt_dump(thread_num, p_raw_pkt);
+		cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_IN);
 #endif
 		eth_entry(NULL, p_raw_pkt->raw_pkt_data, thread_num, dir, p_raw_pkt, 0);
 
@@ -561,7 +563,7 @@ static int packet_io_strip_L2E_hdr(raw_pkt_t *p_raw_pkt, unsigned char dir, int 
 			p_raw_pkt->low_layer_type = ADDR_TYPE_IPV4;
 #if CYCLE_PKT_DUMP
 			/* for tcpdump_mesa capture ddp inner packet */
-			cycle_pkt_dump(thread_num, p_raw_pkt);
+			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_IN);
 #endif			
 			ret = ipv4_entry(NULL, p_raw_pkt->raw_pkt_data, thread_num, dir, p_raw_pkt, 0);
 		
@@ -626,7 +628,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	}else{
 
 #if CYCLE_PKT_DUMP
-		cycle_pkt_dump(thread_num, p_raw_pkt);
+		cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_IN);
 #endif
 		switch(p_raw_pkt->low_layer_type){
 			case CAP_LEVEL_MAC:
@@ -677,16 +679,30 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		ret = g_platform_action_cb_fun(sapp_global_val->config.packet_io.depolyment_mode_bin, ret);
 	}
 
-	//cycle_diagnose_pkt_dump(thread_num, p_raw_pkt);
+	if(p_raw_pkt->diagnose_error_to_dump){
+		cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_ERROR);
+	}
 
 	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){ 
 		if((p_raw_pkt->is_overlay_pkt)&& (PASS == ret)){
+			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_FORWARD);
 			packet_io_hook_forward((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
 		}else{
-			/* inline模式下, 非原始链路中的包, 或插件返回了DROP的包, 不能注入链路 */
+			/* inline模式下, 非原始链路中的包, 即使插件返回了PASS, 也不能注入链路 */
 			ret = DROP;
-			//todo, pkt_dump for DROP
+			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
 		}
+	}else if(DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin){
+		if(PASS == ret){
+			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_FORWARD);
+		}else{
+			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
+		}
+	}else{
+		/* mirror模式下, 没有forward, 仅有drop,虽然drop也没实际意义,但是可以用于观察哪些包被插件返回了DROP */
+		if(DROP == ret){
+			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
+		}		
 	}
 
 	return ret;
@@ -865,6 +881,61 @@ static int packet_io_calc_ethernet_offset_to_ip(const unsigned char *sendbuf)
 	return offset;
 }
 
+/*
+	has_layer2_hdr: 是否包括ethernet头部, 如果没有, 需要临时copy一份并补充一个虚假mac头, 否则外部tcpdump_mesa会解析失败.
+*/
+static inline void pkt_dump_for_mirror_mode(int tid, const void *pkt, int pkt_len, int has_layer2_hdr, unsigned short eth_pro_host_order)
+{
+	raw_pkt_t raw_pkt;
+	char temp_dump_buff[MTU_MAX];
+	const void *to_tcpdump_buff;
+	int to_tcpdump_len;
+	struct mesa_ethernet_hdr *ehdr;
+	static const unsigned char uknown_mac_acsii[6] = {0x75, 0x6b, 0x6e, 0x6f, 0x77, 0x6e};
+
+	if(likely(0 == G_PKT_DUMP_SW)){
+		return;
+	}	
+
+	if(0 == has_layer2_hdr){
+		if(pkt_len + sizeof(struct mesa_ethernet_hdr) > MTU_MAX){
+			sapp_runtime_log(RLOG_LV_INFO, "inject packet length too long:%d, can't send to tcpdump_mesa!", pkt_len);
+			return;
+		}
+	}else{
+		if(pkt_len > MTU_MAX){
+			sapp_runtime_log(RLOG_LV_INFO, "inject packet length too long:%d, can't send to tcpdump_mesa!", pkt_len);
+			return;
+		}
+	}
+
+	if(0 == has_layer2_hdr){
+		ehdr = (struct mesa_ethernet_hdr *)temp_dump_buff;
+		memcpy(ehdr->ether_shost, uknown_mac_acsii, ETH_ALEN);
+		memcpy(ehdr->ether_dhost, uknown_mac_acsii, ETH_ALEN);
+		ehdr->ether_type = htons(eth_pro_host_order);
+		memcpy(temp_dump_buff + sizeof(struct mesa_ethernet_hdr), pkt, pkt_len);
+		to_tcpdump_buff = temp_dump_buff;
+		to_tcpdump_len = pkt_len + sizeof(struct mesa_ethernet_hdr);
+	}else{
+		to_tcpdump_buff = pkt;
+		to_tcpdump_len = pkt_len;
+	}
+
+	memset(&raw_pkt, 0, sizeof(raw_pkt_t));
+	raw_pkt.magic_num = RAW_PKT_MAGIC_NUM;
+	raw_pkt.low_layer_type = ADDR_TYPE_MAC;
+	raw_pkt.raw_pkt_data = to_tcpdump_buff;
+	raw_pkt.raw_pkt_len = to_tcpdump_len;
+	raw_pkt.__lib_raw_pkt_data = to_tcpdump_buff;
+	raw_pkt.__lib_raw_pkt_len = to_tcpdump_len;
+
+	cycle_pkt_dump_by_classify(tid, &raw_pkt, PKT_CLASSIFY_INJECT);
+
+	return;
+}
+
+
 static int packet_io_send_by_sys_routev4(MESA_send_handle *send_handle,int datalen,int dir,
 									char *feedback_buf, int *feedback_buf_len)
 {
@@ -902,6 +973,8 @@ static int packet_io_send_by_sys_routev4(MESA_send_handle *send_handle,int datal
 	//						feedback_buf, feedback_buf_len);
 	//}
 
+	pkt_dump_for_mirror_mode(send_handle->threadnum, actual_data_ptr, datalen, 0, ETH_P_IP);
+	
 retry:
 	ret = sendto(send_handle->raw_ipv4_fd, actual_data_ptr, datalen, 0,
 				(struct sockaddr *)&sock_addr_v4, sizeof(struct sockaddr));
@@ -968,6 +1041,8 @@ static int packet_io_send_by_sys_routev6(MESA_send_handle *send_handle,int datal
 	sock_addr_v6.sin6_family = AF_INET6;
 	memcpy(sock_addr_v6.sin6_addr.s6_addr, ip6_hdr->ip6_dst.s6_addr, IPV6_ADDR_LEN);
 
+	pkt_dump_for_mirror_mode(send_handle->threadnum,actual_data_ptr, datalen, 0, ETH_P_IPV6);
+	
 retry:	
 	ret = sendto(send_handle->raw_ipv6_fd, actual_data_ptr, datalen, 0,
 				(struct sockaddr *)&sock_addr_v6, sizeof(struct sockaddr_in6));
@@ -1052,6 +1127,8 @@ static int packet_io_send_by_manual_conf(MESA_send_handle *send_handle,int datal
     }
     sendpacket_build_ethernet(p_dst_mac, sapp_global_val->config.packet_io.inject_mode_single_gateway_src_mac, ether_type, NULL, 0, send_handle->send_buf);
 
+	pkt_dump_for_mirror_mode(send_handle->threadnum, send_handle->send_buf, datalen, 1, 0);
+	
 send_again:
 	ret = sendto(send_handle->raw_eth_fd, send_handle->send_buf, datalen, 0, 
 				(struct sockaddr *)&send_handle->saddr_raw_eth, sizeof(struct sockaddr));

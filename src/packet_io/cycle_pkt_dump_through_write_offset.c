@@ -74,6 +74,8 @@ static int pkt_dump_udp_pkt_sd[MAX_THREAD_NUM]; /* UDP发送数据包fd */
 static struct sockaddr_in udp_recv_addr;
 static int tcpdump_perceptive_flag = 0; /* 明察秋毫模式, 可以发现丢包数量 */	
 static int greedy_seek_flag = 0; /* 偏移到最内层IP, 便于隧道模式下查找BUG */
+static int tcpdump_mesa_pkt_classify = PKT_CLASSIFY_IN;
+static int pkt_classify_watermark_flag = 0; /* 保存捕包来源值到dmac, 便于分别数据包来源 */
 
 static unsigned char phony_mac_hdr[14] = 
 {
@@ -415,7 +417,66 @@ static int cycle_pkt_dump_seek_to_inner_ip(char *pkt_buf, int pktlen, int thread
 	return 1;
 }
 
-static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_raw_pkt)
+
+static void pkt_dump_with_watermark(int tid, const void *rawpkt, int pktlen, enum _pkt_classify class_val)
+{	
+	int ret;
+	char temp_pkt_buf[MTU_MAX];
+	struct mesa_ethernet_hdr *ehdr;
+	unsigned char watermaker = 'I';
+
+	if(pktlen > MTU_MAX){
+		tot_udp_send_err_num++;
+		return;
+	}
+
+	memcpy(temp_pkt_buf, rawpkt, pktlen);
+
+	ehdr = (struct mesa_ethernet_hdr *)temp_pkt_buf;
+	
+	switch(class_val){
+		case PKT_CLASSIFY_IN:
+			watermaker = 'I';
+		break;
+
+		case PKT_CLASSIFY_FORWARD:
+			watermaker = 'F';
+		break;
+
+		case PKT_CLASSIFY_INJECT:
+			watermaker = 'J';
+		break;
+
+		case PKT_CLASSIFY_DROP:
+			watermaker = 'D';
+		break;		
+		case PKT_CLASSIFY_ERROR:
+			watermaker = 'E';
+		break;			
+	}
+
+	memset(ehdr->ether_shost, watermaker, ETH_ALEN);
+	memset(ehdr->ether_dhost, watermaker, ETH_ALEN);
+
+
+	/* bingo, match filter, sendto */
+	ret = sendto(pkt_dump_udp_pkt_sd[tid], 
+			(void *)ehdr,  /* 过滤时使用内层数据包头, 但要发送整个原始包 */
+			pktlen,   	 /* 过滤时使用内层数据包头, 但要发送整个原始包 */
+		  	MSG_DONTWAIT,
+		  	(const struct sockaddr *)&udp_recv_addr,
+		  	sizeof(udp_recv_addr));	
+		  	
+	if(ret < 0){
+		tot_udp_send_err_num++;
+	}else{
+		tot_udp_send_succ_num ++;
+	}		
+	
+}
+
+
+static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_raw_pkt, enum _pkt_classify class_val)
 {
 	const unsigned char *pktdata, *for_bpf_filter_data;
 	int pktlen, for_bpf_filter_len, ret;
@@ -516,6 +577,10 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 		pktdata = (unsigned char *)modify_pkt_buf;
 		pktlen = pktlen>2048?2048:pktlen;
 	}
+
+	if(pkt_classify_watermark_flag){
+		return pkt_dump_with_watermark(thread_seq, pktdata, pktlen, class_val);
+	}
 	
 	/* bingo, match filter, sendto */
 	ret = sendto(pkt_dump_udp_pkt_sd[thread_seq], 
@@ -542,7 +607,7 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 
 }
 
-static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
+static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt, enum _pkt_classify class_val)
 {
 	int ret;
 	/* 定义为pcap_hdr[2]数组,是一个小小的trick, 数组[0]表示pcap包头部信息,
@@ -558,7 +623,7 @@ static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 			return;
 		}
 	}else{
-		__do_cycle_pkt_dump_udp_socket(thread_seq, p_raw_pkt);
+		__do_cycle_pkt_dump_udp_socket(thread_seq, p_raw_pkt, class_val);
 		return;
 	}
 
@@ -641,33 +706,22 @@ void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 		return;
 	}
 
-	if(PKTDUMP_CATEGORY_DIAGNOSE == sapp_global_val->config.tools.pkt_dump.packet_category_bin){
-		return;
-	}
-
-	__do_cycle_pkt_dump(thread_seq, p_raw_pkt);
+	__do_cycle_pkt_dump(thread_seq, p_raw_pkt, PKT_CLASSIFY_IN);
 
 }
 
-/*
-	TODO:
-		此处改成tcpdump_mesa传递参数, 动态改变输出包模式.
-		需要将cycle_pkt_dump()移动到数据包处理流程的最后, 才能根据raw_pkt中的标记决定怎么发送.
-*/
-void cycle_diagnose_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
+void cycle_pkt_dump_by_classify(int thread_seq, const raw_pkt_t *p_raw_pkt, enum _pkt_classify class_val)
 {
 	if(likely(0 == G_PKT_DUMP_SW)){
 		return;
 	}
 
-	if((PKTDUMP_CATEGORY_DIAGNOSE != sapp_global_val->config.tools.pkt_dump.packet_category_bin)
-	  || (0 == p_raw_pkt->diagnose_error_to_dump)){
+	if(0 == (class_val & tcpdump_mesa_pkt_classify)){
 		return;
 	}
 
-	__do_cycle_pkt_dump(thread_seq, p_raw_pkt);
+	__do_cycle_pkt_dump(thread_seq, p_raw_pkt, class_val);
 
-	((raw_pkt_t *)p_raw_pkt)->diagnose_error_to_dump = 0;
 }
 
 
@@ -1056,6 +1110,18 @@ static void pkt_dump_parse_opt_thread_index(const struct pkt_dump_opt *cmd_opt, 
 	return;
 }
 
+static void pkt_dump_parse_opt_classify(const struct pkt_dump_opt *cmd_opt, const char *opt_val)
+{
+	unsigned short opt_len = ntohs(cmd_opt->opt_len);
+	const unsigned short *classify_opt = (unsigned short *)opt_val;
+
+	tcpdump_mesa_pkt_classify = ntohs(*classify_opt);
+
+	sapp_runtime_log(RLOG_LV_DEBUG, "recv tcpdump_mesa classify option: 0x%x", tcpdump_mesa_pkt_classify);
+
+	return;
+}
+
 static int pkt_dump_reply_ack(int connfd)
 {
 	char send_buf[128];
@@ -1154,6 +1220,14 @@ static void cycle_pkt_dump_command_parse(int connfd)
 				greedy_seek_flag = 1;
 			break;
 
+			case PKT_DUMP_OPT_CLASSIFY:
+				pkt_dump_parse_opt_classify(&cmd_opt, cmd_buf);
+			break;
+
+			case PKT_DUMP_OPT_CLASSIFY_WATERMARK:
+				pkt_classify_watermark_flag = 1;
+			break;
+
 			default:
 				/* 未知选项跳过不处理 */
 				break;
@@ -1198,6 +1272,8 @@ err_exit:
 	tot_udp_send_willful_discard_num = 0; /* 主动丢弃数量 */
 	tcpdump_perceptive_flag = 0;
 	greedy_seek_flag = 0;
+	pkt_classify_watermark_flag = 0;
+	tcpdump_mesa_pkt_classify = PKT_CLASSIFY_IN;
 	
 	memset(G_PKT_DUMP_FILTER_STR, 0, sizeof(G_PKT_DUMP_FILTER_STR));
 	pkt_dump_data_offset = 0;

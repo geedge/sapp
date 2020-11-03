@@ -852,15 +852,6 @@ static int config_expression_convert(void)
 		return -1;
 	}
 
-	if(strncasecmp(pconfig->tools.pkt_dump.packet_category_str, "all" ,strlen("all")) == 0){
-		pconfig->tools.pkt_dump.packet_category_bin = PKTDUMP_CATEGORY_ALL;
-	}else if(strncasecmp(pconfig->tools.pkt_dump.packet_category_str, "diagnose" ,strlen("diagnose")) == 0){
-		pconfig->tools.pkt_dump.packet_category_bin = PKTDUMP_CATEGORY_DIAGNOSE;
-	}else{
-		sapp_log(30, ~0, ~0, "[Error] TOOLS.PKT_DUMP.packet_category: %s invalid!", pconfig->tools.pkt_dump.packet_category_str);
-		return -1;
-	}
-
 	if(pkt_dump_thread_id_convert() < 0){
 		return -1;
 	}
@@ -1101,7 +1092,7 @@ int sapp_parse_config(void)
 
 	/*******************************  packet_io.overlay_tunnel_definition ******************************/
 	
-	tomlc99_wrap_load_int_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"l2_l3_tunnel_support", &pconfig->packet_io.packet_io_tunnel.l2_l3_tunnel_support, 1);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"l2_l3_tunnel_support", &pconfig->packet_io.packet_io_tunnel.l2_l3_tunnel_support, 0);
 	//tomlc99_wrap_load_int_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"create_mpls_anyway", &pconfig->packet_io.create_mpls_anyway, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"vlan_flipping_cfg_file", pconfig->packet_io.packet_io_tunnel.vlan_flipping_cfg_file, PATH_MAX, "etc/vlan_flipping_map.conf");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"asymmetric_addr_layer_cfg_file", pconfig->packet_io.packet_io_tunnel.asymmetric_addr_layer_cfg_file, PATH_MAX, "etc/asymmetric_addr_layer.conf");
@@ -1235,7 +1226,6 @@ int sapp_parse_config(void)
 
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"tools.pkt_dump", (char *)"enabled", (int *)&pconfig->tools.pkt_dump.enabled, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"tools.pkt_dump", (char *)"mode", pconfig->tools.pkt_dump.mode_str, NAME_MAX, "udp_socket");
-	tomlc99_wrap_load_string_def(default_config_file, (char *)"tools.pkt_dump", (char *)"packet_category", pconfig->tools.pkt_dump.packet_category_str, NAME_MAX, "all");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"tools.pkt_dump", (char *)"BSD_packet_filter", str_tmp, ARG_MAX, "");
 	if(str_tmp[0] != '\0'){
 		pconfig->tools.pkt_dump.bpf_filter = strdup(str_tmp);

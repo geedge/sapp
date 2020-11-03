@@ -59,16 +59,10 @@ typedef struct{
 }sapp_config_system_t;
 
 
-enum _packet_category_type{
-	PKTDUMP_CATEGORY_ALL = 0,
-	PKTDUMP_CATEGORY_DIAGNOSE = 1,
-};
 
 typedef struct{
 	int  enabled;
 	char mode_str[NAME_MAX];  /* storage/udp_socket */
-	char packet_category_str[NAME_MAX];  /* all, diagnose, all is default */
-	enum _packet_category_type packet_category_bin; 
 	int mode_bin;
 	unsigned int command_port; /* integer, host order, user should truncate to short */
 	unsigned int file_size_max_per_thread; /* MB */
