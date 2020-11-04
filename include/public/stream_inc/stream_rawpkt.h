@@ -1,7 +1,7 @@
 #ifndef _APP_STREAM_RAWPKT_H_
 #define _APP_STREAM_RAWPKT_H_ 
 
-#define STREAM_RAWPKT_H_VERSION		(20190817)
+#define STREAM_RAWPKT_H_VERSION		(20201104)
 
 #include "stream_base.h"
 
@@ -22,8 +22,10 @@ enum{
 	RAW_PKT_GET_VIRTUAL_LINK_ID, //value type is uint64 *, out_value should be uint64 *
 	RAW_PKT_GET_REHASH_INDEX,    // value type is uint64 *, out_value should be uint64 *
 	RAW_PKT_GET_VXLAN_VPNID, // network-order, VPN_ID, value type is int, out_value should be int *
-	
 	RAW_PKT_GET_VXLAN_LOCAL_IP, // network-order, VXLAN Local IP, value type is int, out_value should be int *
+
+	RAW_PKT_GET_ORIGINAL_LOWEST_ETH_SMAC, /* value type is char[6],真实原始包最外层的smac地址,mirror模式下, 等同于RAW_PKT_GET_DATA, 或者使用stream->pfather自行偏移; inline + vxlan + mrtunnat模式下, 等同于RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC; */
+	RAW_PKT_GET_ORIGINAL_LOWEST_ETH_DMAC, /* value type is char[6],真实原始包最外层的dmac地址,mirror模式下, 等同于RAW_PKT_GET_DATA, 或者使用stream->pfather自行偏移; inline + vxlan + mrtunnat模式下, 等同于RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC; */
 };
 
 #ifdef __cplusplus
