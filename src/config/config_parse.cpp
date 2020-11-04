@@ -1100,7 +1100,7 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"prune_inject_layer_cfg_file", pconfig->packet_io.packet_io_tunnel.prune_inject_layer_cfg_file, PATH_MAX, "etc/prune_inject_layer.conf");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"stream_compare_layer_cfg_file", pconfig->packet_io.packet_io_tunnel.stream_compare_layer_cfg_file, PATH_MAX, "etc/stream_compare_layer.conf");
 
-	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"overlay_mode", pconfig->packet_io.packet_io_tunnel.overlay_mode_string, NAME_MAX, "_no_default_");
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"overlay_tunnel_definition", (char *)"overlay_mode", pconfig->packet_io.packet_io_tunnel.overlay_mode_string, NAME_MAX, "none");
 
 	/*******************************  packet_io.feature ******************************/
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.feature", (char *)"BSD_packet_filter", str_tmp, NAME_MAX, "");

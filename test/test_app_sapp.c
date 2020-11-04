@@ -2496,6 +2496,10 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 	int tot_len = -1, this_layer_remain_len = -1;
 	int ret;
 
+	if((OP_STATE_DATA != f_stream->opstate) && (OP_STATE_DATA != f_stream->pktstate)){ /* 可同时挂载到tcp,tcpall */
+		return APP_STATE_GIVEME;
+	}
+
 	ret = get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_DATA, &raw_pkt_hdr);
 	if(ret == 1){
 		raw_ipfrag_list_t *tlist = (raw_ipfrag_list_t *)raw_pkt_hdr;
@@ -2515,7 +2519,7 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_GDEV_IP, &gdev_ip);
 	inet_ntop(AF_INET, &gdev_ip, gdev_ip_str, 32);
 
-	int link_id;
+	int link_id = 0;
 	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_VXLAN_ID, &link_id);
 	
 	unsigned short vxlan_sport = 0;
@@ -2524,7 +2528,11 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 	unsigned char link_dir = 0;
 	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_VXLAN_LINK_DIR, &link_dir);
 
-	char gdev_mac[6], local_mac[6];
+	unsigned char gdev_mac[6], local_mac[6];
+	
+	memset(gdev_mac, 0, 6);
+	memset(local_mac, 0, 6);
+	
 	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC, gdev_mac);
 	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC, local_mac);
 
@@ -2533,6 +2541,16 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 		 gdev_mac[0], gdev_mac[1], gdev_mac[2], gdev_mac[3], gdev_mac[4], gdev_mac[5],
 		 local_mac[0], local_mac[1], local_mac[2],  local_mac[3], local_mac[4], local_mac[5]);
 
+	memset(gdev_mac, 0, 6);
+	memset(local_mac, 0, 6);
+	
+	 get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_ORIGINAL_LOWEST_ETH_SMAC, gdev_mac);
+	 get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_ORIGINAL_LOWEST_ETH_DMAC, local_mac);
+	 printf("get vxlan opt from RAW_PKT_GET_ORIGINAL_LOWEST_ETH_, smac:%02x-%02x-%02x-%02x-%02x-%02x, dmac:%02x-%02x-%02x-%02x-%02x-%02x \n", 
+		  gdev_mac[0], gdev_mac[1], gdev_mac[2], gdev_mac[3], gdev_mac[4], gdev_mac[5],
+		  local_mac[0], local_mac[1], local_mac[2],  local_mac[3], local_mac[4], local_mac[5]);
+
+	printf("\n-----------------------\n");
 	return APP_STATE_GIVEME;	
 }
 

@@ -262,6 +262,64 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		break;
 #endif
 
+		/* 用于插件获取最底层真实mac地址, 无论什么模式, 有没有mrtunnat, 都用这一个接口 */
+		case RAW_PKT_GET_ORIGINAL_LOWEST_ETH_SMAC:
+		{
+			const struct mesa_ethernet_hdr *lowest_ehdr;
+			
+			if(0 == sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support){ //with mrtunnat
+				if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
+					if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
+						const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
+						if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
+							ret = -1;
+						}else{
+							memcpy(void_value, mr_ctrlzone->g_device_mac, ETH_ALEN);
+						}
+					}else{
+						sapp_runtime_log(RLOG_LV_FATAL, "can't support option 'RAW_PKT_GET_ORIGINAL_LOWEST_ETH_SMAC' in no marsio inline mode!");
+						ret = -1;
+					}
+				}else{
+					lowest_ehdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
+					memcpy(void_value, lowest_ehdr->ether_shost, ETH_ALEN);
+				}
+			}else{ //from v4.2, without mrtunnat
+				lowest_ehdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
+				memcpy(void_value, lowest_ehdr->ether_shost, ETH_ALEN);
+			}
+		}
+		break;
+
+		/* 用于插件获取最底层真实mac地址, 无论什么模式, 有没有mrtunnat, 都用这一个接口 */
+		case RAW_PKT_GET_ORIGINAL_LOWEST_ETH_DMAC:
+		{
+			const struct mesa_ethernet_hdr *lowest_ehdr;
+			
+			if(0 == sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support){ //with mrtunnat
+				if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
+					if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
+						const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
+						if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
+							ret = -1;
+						}else{
+							memcpy(void_value, mr_ctrlzone->l_device_mac, ETH_ALEN);
+						}
+					}else{
+						sapp_runtime_log(RLOG_LV_FATAL, "can't support option 'RAW_PKT_GET_ORIGINAL_LOWEST_ETH_SMAC' in no marsio inline mode!");
+						ret = -1;
+					}
+				}else{
+					lowest_ehdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
+					memcpy(void_value, lowest_ehdr->ether_dhost, ETH_ALEN);
+				}
+			}else{ //from v4.2, without mrtunnat
+				lowest_ehdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
+				memcpy(void_value, lowest_ehdr->ether_dhost, ETH_ALEN);
+			}
+		}		
+		break;		
+
 		default:
 			ret = -1;
 		break;
