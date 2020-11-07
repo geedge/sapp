@@ -3004,7 +3004,10 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	raw_stream_pr = (struct streaminfo_private *)raw_stream;
 	/* 因改变了某些回调函数的原始包类型为IP包头, 所以不需要插件传输原始包, 信息都存储于私有流结构体内 */
 	raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_routedir_reverse);
-	assert(raw_pkt != NULL);	
+	if(NULL == raw_pkt){
+		sapp_runtime_log(RLOG_LV_FATAL, "sapp_inject_pkt() error, not found raw_pkt!");
+		return -1;
+	}
 
 	/* inject使用的是routedir, 此处转换成stream dir, 
 	   注意: 插件发包的动作可能不是由当前包触发的,  比如kni, 是从其他网卡收到数据包, 再注入链路的,
@@ -3020,6 +3023,7 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 
 	reserved_hdr_len = calc_reserved_hdr_len(inject_stream, &low_net_layer_type, send_stream_dir);
 	if(reserved_hdr_len < 0){
+		sapp_runtime_log(RLOG_LV_FATAL, "calc_reserved_hdr_len() error");
 		return -1;
 	}
 
@@ -3049,7 +3053,7 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	ret = packet_io_send(send_handle, reserved_hdr_len+payload_len, SEND_TYPE_LINK_INJECT, 
 						low_net_layer_type, snd_routedir, thread_num,
 						(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER,
-						raw_stream_pr->raw_pkt);		
+						raw_pkt);		
 	if(ret < 0){
 		send_handle->tot_send_err++;
 	}else{

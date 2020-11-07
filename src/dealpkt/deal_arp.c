@@ -32,10 +32,20 @@ extern "C" {
 		sapp_runtime_log(RLOG_LV_DEBUG, "is not raw inline arp pkt, drop it."); 
 	}
 
-	/* TODO, mrtunnat之后, 此处要判断是不是给本机的包, 是不是overlay的原始链路上的arp包, 否则都应该DROP, 此处先默认返回PASS */
-
-	/* NOTE: 其他模式什么时候都不应该把原始ARP包再转发出去, 即便是GDEV模式下 */
-	return PASS;
+	/* NOTE: 其他模式什么时候都不应该把原始ARP包再转发出去, 即便是inline模式下 */
+	if((ABBR_SAPP_LOG_LEVEL <= RLOG_LV_INFO ) && (NET_CONN_SERIAL_GDEV == g_topology_mode)){
+		const struct mesa_arp_hdr *arph = (struct mesa_arp_hdr *)this_layer_hdr;
+		char sendip_str[INET6_ADDRSTRLEN];
+		char targetip_str[INET6_ADDRSTRLEN];
+		inet_ntop(AF_INET, arph->ar_spa, sendip_str, sizeof(sendip_str));
+		inet_ntop(AF_INET, arph->ar_tpa, targetip_str, sizeof(targetip_str));
+		sapp_runtime_log(RLOG_LV_INFO, "inline mode drop not overlay arp pkt: sender_ip:%s, sender_mac:%02x-%02x-%02x-%02x-%02x-%02x,target_ip:%s",
+						sendip_str,
+						arph->ar_sha[0], arph->ar_sha[1], arph->ar_sha[2], arph->ar_sha[3], arph->ar_sha[4], arph->ar_sha[5], 
+						targetip_str);
+	}
+	
+	return DROP;
 }
 
 #ifdef __cplusplus
