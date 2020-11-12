@@ -138,12 +138,20 @@ typedef struct{
 	sapp_config_profiling_log_remote_field_stat2_t field_stat2;
 }sapp_config_profiling_log_remote_t;
 
+typedef struct{
+	int enabled;
+	int port; /* host order */
+	char url_path[NAME_MAX];
+}sapp_config_profiling_log_prometheus_t;
+
+
 
 typedef struct{
 	int level;
 	int interval;
 	sapp_config_profiling_log_local_t local;
 	sapp_config_profiling_log_remote_t remote;
+	sapp_config_profiling_log_prometheus_t prometheus;
 }sapp_config_profiling_log_t;
 
 

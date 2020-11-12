@@ -136,6 +136,11 @@ dictator_enable=1
 ### note, metric_type option value: [default, json]
         metric_type = default
         app_name=sapp
+
+		[profiling.log.prometheus]
+		prometheus_enabled=1
+        prometheus_port=9273
+        prometheus_url_path="/metrics"
      
 [TOOLS]
     [tools.pkt_dump]

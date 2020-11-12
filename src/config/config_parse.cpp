@@ -710,6 +710,12 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.remote", (char *)"enabled", (int *)&pconfig->profiling.log.remote.enabled, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote", (char *)"server_ip", pconfig->profiling.log.remote.server_ip, INET_ADDRSTRLEN, "#");
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.remote", (char *)"server_port", (int *)&pconfig->profiling.log.remote.server_port, 0);
+	/*******************************  PROFILING.LOG.prometheus **********************/
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.prometheus", (char *)"prometheus_enabled", (int *)&pconfig->profiling.log.prometheus.enabled, 1);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.prometheus", (char *)"prometheus_port", (int *)&pconfig->profiling.log.prometheus.port, 9273);
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.prometheus", (char *)"prometheus_url_path", pconfig->profiling.log.prometheus.url_path, NAME_MAX, "/metrics");
+	
+	
 #if 0
 	//tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote", (char *)"remote_send_out_type", pconfig->profiling.log.remote.remote_send_out_type, NAME_MAX, "field_stat2");
 	/*******************************  PROFILING.LOG.remote.field_stat2 **********************/
