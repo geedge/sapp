@@ -910,6 +910,17 @@ static int sapp_fs2_init(void)
 		return -1;
 	}
 
+	if(sapp_global_val->config.profiling.log.prometheus.enabled){
+		FS_library_set_prometheus_port((unsigned short)sapp_global_val->config.profiling.log.prometheus.port);
+		FS_library_set_prometheus_url_path(sapp_global_val->config.profiling.log.prometheus.url_path);
+		if(FS_library_init() < 0){
+			sapp_log(RLOG_LV_FATAL, 30, 30, "FS_library_init() error, port:%d, url:%s\n", 
+					sapp_global_val->config.profiling.log.prometheus.port,
+					sapp_global_val->config.profiling.log.prometheus.url_path);
+			return -1;			
+		}
+	}
+
 	fs2_handle = sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle;
 	if(fs2_remote_enabled){
 		sapp_global_val->individual_fixed.profiling_log_remote_handle = fs2_handle;
@@ -944,6 +955,11 @@ static int sapp_fs2_init(void)
 	}
 
 	FS_set_para(fs2_handle, METRIS_FORMAT, &sapp_global_val->config.profiling.log.remote.field_stat2.metrics_type, sizeof(int));
+
+	if(sapp_global_val->config.profiling.log.prometheus.enabled){
+		fs2_opt = 1;
+		FS_set_para(fs2_handle, OUTPUT_PROMETHEUS, &fs2_opt, sizeof(int));
+	}
 	
 	pfs_para->fs_id_count_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Eth_Pkt");
 	pfs_para->fs_id_length_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Eth_Bit");

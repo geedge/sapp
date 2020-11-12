@@ -323,10 +323,12 @@ static int parse_vlan_flipping_map_config(void)
 		ret = sscanf(line_cont, "%u %u %u", &c_router_vlan_id, &i_router_vlan_id, &mac_flip_enable);
 		if(ret != 3){
 			sapp_log(30, ~0, ~0, "[Error]parse sapp.toml->vlan_flipping_cfg_file:%s, line:%s error!", filename, line_cont);
+			fclose(fp);
 			return -1;
 		}
 		if(c_router_vlan_id>= 4096 || i_router_vlan_id >= 4096){
 			sapp_log(30, ~0, ~0, "[Error]parse sapp.toml->vlan_flipping_cfg_file:%s line:%s  error, vlan id must in range[1,4095]!", filename, line_cont);
+			fclose(fp);
 			return -1;			
 		}
 		vlan_map[c_router_vlan_id].this_vlan_route_location = 'C';
@@ -353,6 +355,7 @@ static int parse_vlan_flipping_map_config(void)
 		}
 	}
 
+	fclose(fp);
 	return 0;
 }
 
@@ -490,6 +493,7 @@ static int parse_asymmetric_addr_layer_config(void)
 			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, inlavid:%s", 
 					sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_addr_layer_cfg_file,
 					line_cont); 
+			fclose(fp);
 			return -1;
 		}
 
@@ -513,6 +517,7 @@ static int parse_asymmetric_addr_layer_config(void)
 					debug_layer_index_str);
 	}
 
+	fclose(fp);
 	return 0;
 }
 
@@ -552,6 +557,7 @@ static int parse_asymmetric_presence_layer_config(void)
 		if(ret != 3){
 			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse sapp.toml->asymmetric_presence_layer_cfg_file:%s error, invalid config:%s", 
 				sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file, line_cont);
+			fclose(fp);
 			return -1;
 		}
 
@@ -560,6 +566,7 @@ static int parse_asymmetric_presence_layer_config(void)
 			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, inlavid:%s", 
 					sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file,
 					line_cont); 
+			fclose(fp);
 			return -1;
 		}
 
@@ -568,6 +575,7 @@ static int parse_asymmetric_presence_layer_config(void)
 			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, inlavid:%s", 
 					sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file,
 					line_cont); 
+			fclose(fp);
 			return -1;
 		}
 
@@ -576,6 +584,7 @@ static int parse_asymmetric_presence_layer_config(void)
 			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, inlavid:%s", 
 					sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file,
 					line_cont); 
+			fclose(fp);
 			return -1;
 		}
 		
@@ -598,7 +607,7 @@ static int parse_asymmetric_presence_layer_config(void)
 		}
 	}
 	
-
+	fclose(fp);
 	return 0;
 }
 
@@ -1178,6 +1187,13 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.remote", (char *)"enabled", (int *)&pconfig->profiling.log.remote.enabled, 0);
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote", (char *)"server_ip", pconfig->profiling.log.remote.server_ip, INET_ADDRSTRLEN, "#");
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.remote", (char *)"server_port", (int *)&pconfig->profiling.log.remote.server_port, 0);
+
+	/*******************************  PROFILING.LOG.prometheus **********************/
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.prometheus", (char *)"prometheus_enabled", (int *)&pconfig->profiling.log.prometheus.enabled, 1);
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"profiling.log.prometheus", (char *)"prometheus_port", (int *)&pconfig->profiling.log.prometheus.port, 9273);
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.prometheus", (char *)"prometheus_url_path", pconfig->profiling.log.prometheus.url_path, NAME_MAX, "/metrics");
+	
+	
 #if 0
 	//tomlc99_wrap_load_string_def(default_config_file, (char *)"profiling.log.remote", (char *)"remote_send_out_type", pconfig->profiling.log.remote.remote_send_out_type, NAME_MAX, "field_stat2");
 	/*******************************  PROFILING.LOG.remote.field_stat2 **********************/
