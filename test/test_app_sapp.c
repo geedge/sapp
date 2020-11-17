@@ -329,6 +329,7 @@ char test_set_stream_timeout(struct streaminfo *pstream,  void **pme, int thread
 char test_sapp_get_platform_opt(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
 {
 	unsigned long long totpkt, totbyte, rand_num;
+	unsigned long long totpkt_in, totpkt_out;
 	int opt_len;
 	char time_str[32];
 
@@ -343,6 +344,13 @@ char test_sapp_get_platform_opt(struct streaminfo *pstream,  void **pme, int thr
 	opt_len = sizeof(long long );
 	sapp_get_platform_opt(SPO_RAND_NUMBER, &rand_num, &opt_len);
 
+	opt_len = sizeof(long long );
+	sapp_get_platform_opt(SPO_TOTAL_INBOUND_PKT, &totpkt_in, &opt_len);
+	
+	opt_len = sizeof(long long );
+	sapp_get_platform_opt(SPO_TOTAL_OUTBOUND_PKT, &totpkt_out, &opt_len);
+
+
 	printf("tot recv pkt by sapp_get_platform_opt is:%llu\n", totpkt);
 
 	printf("tot recv byte by sapp_get_platform_opt is:%llu\n", totbyte);
@@ -350,6 +358,10 @@ char test_sapp_get_platform_opt(struct streaminfo *pstream,  void **pme, int thr
 	printf("curtime-str by sapp_get_platform_opt is:%s\n", time_str);
 
 	printf("randnum by sapp_get_platform_opt is:%llu\n", rand_num);
+
+	printf("tot recv inbound pkt by sapp_get_platform_opt is:%llu\n", totpkt_in);
+	printf("tot recv outbound pkt by sapp_get_platform_opt is:%llu\n", totpkt_out);
+	
 
 	return APP_STATE_GIVEME;
 }
@@ -387,6 +399,51 @@ char test_get_stream_in_out_bound(struct streaminfo *pstream,  void **pme, int t
 	
 	return APP_STATE_GIVEME;	
 }
+
+
+char test_stream_with_platform_in_out_traffic(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
+{
+	unsigned long long stream_totpkt_in = 0, stream_totpkt_out = 0, stream_totbyte_in = 0, stream_totbyte_out = 0;
+	unsigned long long platform_totpkt_in = 0, platform_totpkt_out = 0, platform_totbyte_in = 0, platform_totbyte_out = 0;
+	
+	int opt_len;
+
+	if(pstream->opstate== OP_STATE_CLOSE){
+		opt_len = sizeof(long long );
+		sapp_get_platform_opt(SPO_TOTAL_INBOUND_PKT, &platform_totpkt_in, &opt_len);
+
+		opt_len = sizeof(long long );
+		sapp_get_platform_opt(SPO_TOTAL_OUTBOUND_PKT, &platform_totpkt_out, &opt_len);
+
+		opt_len = sizeof(long long );
+		sapp_get_platform_opt(SPO_TOTAL_INBOUND_BYTE, &platform_totbyte_in, &opt_len);
+
+		opt_len = sizeof(long long );
+		sapp_get_platform_opt(SPO_TOTAL_OUTBOUND_BYTE, &platform_totbyte_out, &opt_len);
+
+
+
+		opt_len = sizeof(long long);
+		MESA_get_stream_opt(pstream, MSO_TOTAL_INBOUND_PKT, &stream_totpkt_in, &opt_len);
+
+		opt_len = sizeof(long long);
+		//MESA_get_stream_opt(pstream, MSO_TOTAL_INBOUND_BYTE, &stream_totbyte_in, &opt_len);
+		MESA_get_stream_opt(pstream, MSO_TOTAL_INBOUND_BYTE_RAW, &stream_totbyte_in, &opt_len);
+		
+		opt_len = sizeof(long long);
+		MESA_get_stream_opt(pstream, MSO_TOTAL_OUTBOUND_PKT, &stream_totpkt_out, &opt_len);
+
+		opt_len = sizeof(long long);
+		//MESA_get_stream_opt(pstream, MSO_TOTAL_OUTBOUND_BYTE, &stream_totbyte_out, &opt_len);	
+		MESA_get_stream_opt(pstream, MSO_TOTAL_OUTBOUND_BYTE_RAW, &stream_totbyte_out, &opt_len);	
+
+		printf("stream  : pkt_in:%llu, pkt_out:%llu, byte_in:%llu, byte_out:%llu\n", stream_totpkt_in, stream_totpkt_out, stream_totbyte_in, stream_totbyte_out);
+		printf("platform: pkt_in:%llu, pkt_out:%llu, byte_in:%llu, byte_out:%llu\n", platform_totpkt_in, platform_totpkt_out, platform_totbyte_in, platform_totbyte_out);
+	}
+
+	return APP_STATE_GIVEME;	
+}
+
 
 int test_sapp_get_device_opt(const char *device)
 {
