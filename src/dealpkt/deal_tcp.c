@@ -743,17 +743,21 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 			if(DIR_C2S == pstream->curdir){
 				pdetail_pr->flow_stat->C2S_all_pkt++;
 				pdetail_pr->flow_stat->C2S_all_byte += datalen;
+				pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len;
 			}else{
 				pdetail_pr->flow_stat->S2C_all_pkt++;
 				pdetail_pr->flow_stat->S2C_all_byte += datalen;
+				pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len;
 			}
 		}else{
 			if(DIR_C2S == pstream->curdir){
 				pdetail_pr->flow_stat->C2S_all_pkt = 1;
 				pdetail_pr->flow_stat->C2S_all_byte = datalen;
+				pdetail_pr->flow_stat->C2S_all_byte_raw = raw_pkt->raw_pkt_len;
 			}else{
 				pdetail_pr->flow_stat->S2C_all_pkt = 1;
 				pdetail_pr->flow_stat->S2C_all_byte = datalen;
+				pdetail_pr->flow_stat->S2C_all_byte_raw = raw_pkt->raw_pkt_len;
 			}
 		}
 	}
@@ -987,9 +991,11 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 			if(pstream->curdir == DIR_C2S){
 				pdetail_pr->flow_stat->C2S_all_pkt = 1;
 				pdetail_pr->flow_stat->C2S_all_byte = datalen;
+				pdetail_pr->flow_stat->C2S_all_byte_raw = raw_pkt->raw_pkt_len;
 			}else{
 				pdetail_pr->flow_stat->S2C_all_pkt = 1;
-				pdetail_pr->flow_stat->S2C_all_byte = datalen;				
+				pdetail_pr->flow_stat->S2C_all_byte = datalen;	
+				pdetail_pr->flow_stat->S2C_all_byte_raw = raw_pkt->raw_pkt_len;
 			}
 		}
 		/* NOTE, tcp_data计数在stream_process_tcp()中累计 */
@@ -1322,9 +1328,11 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 		if(DIR_C2S == pstream->curdir){
 			pdetail_pr->flow_stat->C2S_all_pkt--;
 			pdetail_pr->flow_stat->C2S_all_byte -= datalen;
+			pdetail_pr->flow_stat->C2S_all_byte_raw -= raw_pkt->raw_pkt_len;
 		}else{
 			pdetail_pr->flow_stat->S2C_all_pkt--;
 			pdetail_pr->flow_stat->S2C_all_byte -= datalen;
+			pdetail_pr->flow_stat->S2C_all_byte_raw -= raw_pkt->raw_pkt_len;
 		}
 	}
 
@@ -2456,9 +2464,11 @@ static char tcp_process_newstreambydata(struct streamindex *pindex_tcp,const voi
 		if(DIR_S2C == pstream->curdir){
 			pdetail_pr->flow_stat->S2C_all_pkt++;
 			pdetail_pr->flow_stat->S2C_all_byte += tcplen;
+			pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len;
 		}else{
 			pdetail_pr->flow_stat->C2S_all_pkt++;
 			pdetail_pr->flow_stat->C2S_all_byte += tcplen;
+			pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len;
 		}
 	}
 	
@@ -2602,7 +2612,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	/* 2014-10-11 lijia add, Fd补救由平台实现 */
 	if(unlikely(pstream_pr->stream_killed_flag != 0)){
 		if((pdetail_pr->auto_remedy_flag != 0) && (tcplen > 0)){ /* 防止flood攻击, 只有带数据的包才发RST */
-			sapp_runtime_log(RLOG_LV_INFO, "TCP stream: %s, kill_tcp remedy, curdir:%d, send RST pkt.", 
+			sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, kill_tcp remedy, curdir:%d, send RST pkt.", 
 				printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 			MESA_kill_tcp_remedy(pstream, raw_pkt);
 		}
@@ -2617,7 +2627,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	}
 
 	if(unlikely(pdetail_pr->drop_stream_flag != 0)){
-		sapp_runtime_log(RLOG_LV_INFO, "TCP stream: %s, has been set drop flag, curdir:%d, return DROP.", 
+		sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, has been set drop flag, curdir:%d, return DROP.", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 		return DROP;
 	}
@@ -2652,9 +2662,11 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		if(DIR_C2S == pstream->curdir){
 			pdetail_pr->flow_stat->C2S_all_pkt++;
 			pdetail_pr->flow_stat->C2S_all_byte += tcplen;
+			pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len;
 		}else{
 			pdetail_pr->flow_stat->S2C_all_pkt++;
 			pdetail_pr->flow_stat->S2C_all_byte += tcplen;
+			pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len;
 		}
 	}
 
@@ -2756,7 +2768,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 fun_exit:    
 
 	if(DROP == ret){
-		sapp_runtime_log(RLOG_LV_INFO, "TCP stream: %s, tcphdr->checksum:0x%x, curdir:%d, return DROP.", 
+		sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, tcphdr->checksum:0x%x, curdir:%d, return DROP.", 
 						printaddr(&pstream->addr, pstream->threadnum), ntohs(this_tcphdr->th_sum), pstream->curdir);
 	}
 

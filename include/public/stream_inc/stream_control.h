@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define STREAM_CONTROL_H_VERSION		(20200915)
+#define STREAM_CONTROL_H_VERSION		(20201117)
 
 #define TCP_CTEAT_LINK_BYSYN   			0x01  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
 #define TCP_CTEAT_LINK_BYDATA 			0x02  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
@@ -39,6 +39,9 @@ enum MESA_stream_opt{
 	MSO_TOTAL_OUTBOUND_PKT, /* outbound packet pkt of this stream, opt_val type must be unsigned long long  */
 	MSO_TOTAL_OUTBOUND_BYTE,/* outbound packet byte of this stream, opt_val type must be unsigned long long  */
 	MSO_STREAM_CREATE_TIMESTAMP_MS,/* first c2s pkt arrive timestamp of this stream, opt_val type must be unsigned long long  */
+
+	MSO_TOTAL_INBOUND_BYTE_RAW, /* inbound packet byte of this stream, raw packet len, include ip hdr, ethernet hdr... opt_val type must be unsigned long long  */
+	MSO_TOTAL_OUTBOUND_BYTE_RAW,/* outbound packet byte of this stream, raw packet len, include ip hdr, ethernet hdr... opt_val type must be unsigned long long  */
 	__MSO_MAX,
 };
 

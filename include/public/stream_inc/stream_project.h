@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define STREAM_PROJECT_H_VERSION			(20160118)
+#define STREAM_PROJECT_H_VERSION			(20201117)
 
 #define PROJECT_REQ_NAME_MAX_LEN			(64)
 
@@ -58,6 +58,10 @@ struct tcp_flow_stat
 	UINT64 C2S_data_byte;	
 	UINT64 S2C_all_byte;
 	UINT64 S2C_data_byte;
+
+	/* 以下是2020-11-17新增, 包括所有底层包头的原始包长度, 之前的内存结构不变, 向前兼容 */
+	UINT64 C2S_all_byte_raw;
+	UINT64 S2C_all_byte_raw;
 };
 
 struct udp_flow_stat
@@ -66,6 +70,10 @@ struct udp_flow_stat
 	UINT32 S2C_pkt;
 	UINT64 C2S_byte;
 	UINT64 S2C_byte;
+
+	/* 以下是2020-11-17新增, 包括所有底层包头的原始包长度, 之前的内存结构不变, 向前兼容 */
+	UINT64 C2S_all_byte_raw;
+	UINT64 S2C_all_byte_raw;	
 };
 
 /*	

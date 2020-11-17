@@ -21,7 +21,7 @@ extern int guess_if_teredo(const struct streaminfo *pstream, struct mesa_udp_hdr
 int G_UDP_FLOW_STAT_PROJECT_ID = -1;
 int G_UDP_TEREDO_IDENTIFY_PROJECT_ID = -1;
 
-static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_hdr *udph)
+static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_hdr *udph, const raw_pkt_t *raw_pkt)
 {
 	int	ulen =0;
 	int	datalen =0;
@@ -47,6 +47,7 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
 			pdetail_pr->flow_stat->C2S_pkt++;
 			pdetail_pr->flow_stat->C2S_byte += datalen;
+			pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len;
 		}
 	}	
 	else
@@ -60,6 +61,7 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
 			pdetail_pr->flow_stat->S2C_pkt++;
 			pdetail_pr->flow_stat->S2C_byte += datalen;
+			pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len;
 		}
 			
 	}
@@ -570,7 +572,7 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 		
 		update_polling_inject_context(pstream_pr, raw_pkt);
 		
-		udp_change_stream_state(a_index,udph);
+		udp_change_stream_state(a_index,udph, raw_pkt);
 		//udp stream 回调
 
 	/* IP, UDP层合并后, 不再更新UDP层的offset_to_raw_pkt_hdr */
@@ -621,7 +623,7 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 #endif
 
 	if(DROP == ret){
-		sapp_runtime_log(RLOG_LV_INFO, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 	}
 
 	return ret;
@@ -764,7 +766,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 					(struct streaminfo_private *)(pindex->stream.stream_public.pfather), pstream->curdir);
 		}
 		
-		udp_change_stream_state(a_index,udph);
+		udp_change_stream_state(a_index,udph, raw_pkt);
 
 		/* 更新pstream指针 */
 		pstream_pr=&(a_index->stream);
@@ -786,7 +788,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	/* TODO 2, 基于IPv6的UDP port 1701 L2TP协议 */
 
 	if(DROP == ret){
-		sapp_runtime_log(RLOG_LV_INFO, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 	}
 	
 	return ret;
