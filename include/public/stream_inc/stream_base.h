@@ -57,7 +57,7 @@ enum addr_type_t{
 	__ADDR_TYPE_INIT = 0,
 	ADDR_TYPE_IPV4,				/* 1, struct stream_tuple4_v4 */
 	ADDR_TYPE_IPV6,				/* 2, struct stream_tuple4_v6 */
-	ADDR_TYPE_VLAN,				/* 3 */
+	ADDR_TYPE_VLAN,				/* 3, 802.1Q */
 	ADDR_TYPE_MAC,				/* 4 */
 	ADDR_TYPE_ARP = 5,			/* 5 */
 	ADDR_TYPE_GRE,				/* 6 */

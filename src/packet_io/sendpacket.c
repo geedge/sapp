@@ -1807,19 +1807,21 @@ static int build_net_layer_l2tp(struct streaminfo_private *stream_pr, int carry_
 	send_stream_dir: 表示当前发包的流方向, DIR_C2S或者DIR_S2C, 
 	                 因为MPLS, GTP等层原始包里只有单向地址, reverse的含义不能精确表示mpls, gtp等层到底使用哪个方向的地址.
 */
-static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_layer_type,
+static int build_net_layer_pkt(const struct streaminfo *up_stream, struct streaminfo_private *stream_pr, int carry_layer_type,
 			int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt, UCHAR send_stream_dir)
 {
 	int this_layer_len = 0, ret;
 	int transport_layer_len;
 	struct streaminfo *stream;
 	char debug_print_buf[256];
+	const struct streaminfo *carry_layer_stream;
 	
 	if(NULL == stream_pr){
 		return carry_layer_len;
 	}
 
 	stream = &stream_pr->stream_public;
+	carry_layer_stream = stream;
 
 	if(is_proxy_stream(stream)){ /* 代理流结构为虚拟结构, 实际的包不存在此层, 构造包时跳过不处理 */
 		this_layer_len = 0;
@@ -1928,7 +1930,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			/* 如果是并联模式, 此处可以不构造mac地址, 仅告知packet_io_send_fake_pkt函数底层类型, MAC还是MAC_IN_MAC 
 				串联模式需要根据当前原始包, 和send_dir构造mac地址.
 			*/
-			unsigned short eth_type_host = net_layer_to_ethernet_protocol(carry_layer_type);
+			unsigned short eth_type_host = net_layer_to_ethernet_protocol_by_stream(up_stream);
 			if((unsigned short)-1 == eth_type_host){
 				sapp_runtime_log(20, "build_net_layer_pkt()-->ADDR_TYPE_MAC, unsupport carry_layer_type:0x%x!\n", carry_layer_type);
 				return -1;
@@ -1964,6 +1966,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			if(0 == this_layer_len){
 				/* 非对称MPLS, 为了流对齐生造出来的一层, 不构造实际包头 */
 				sapp_runtime_log(10, "build_net_layer_mpls() send streamdir:%d, skip fake mpls layer.\n", send_stream_dir);
+				carry_layer_stream = up_stream;
 				break;
 			}else{
 				buf -= this_layer_len;
@@ -2024,10 +2027,10 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 
 		case ADDR_TYPE_PPP:
 			assert(0); /* PPTP隧道将gre和ppp合并为一层, 代码不会再执行到此处 */
-			this_layer_len = sizeof(struct mesa_ppp_hdr);
-			buf -= sizeof(struct mesa_ppp_hdr);
-			build_net_layer_ppp(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt, 0);
-			carry_layer_type = ADDR_TYPE_PPP;		
+			//this_layer_len = sizeof(struct mesa_ppp_hdr);
+			//buf -= sizeof(struct mesa_ppp_hdr);
+			//build_net_layer_ppp(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt, 0);
+			//carry_layer_type = ADDR_TYPE_PPP;		
 		break;
 		
 		case ADDR_TYPE_PPTP:
@@ -2062,7 +2065,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			this_layer_len = gre_layer_len + ppp_hdr_len;
 		}	
 		break;
-		
+#if 0		
 		case ADDR_TYPE_MAC_IN_MAC:
 		{
 			buf -= sizeof(struct mesa_ethernet_hdr); 
@@ -2078,7 +2081,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 			sapp_runtime_log(10, "build_net_layer_pkt()-->ADDR_TYPE_MAC_IN_MAC, buf start addr:%p, this_layer_len:%d", buf, this_layer_len);
 		}	
 		break;
-		
+#endif		
 		default:
 			sapp_runtime_log(30, "build_net_layer_pkt(): unsupport addr type:%d!\n", stream->addr.addrtype);
 			goto err;
@@ -2086,7 +2089,7 @@ static int build_net_layer_pkt(struct streaminfo_private *stream_pr, int carry_l
 	}
 
 done:	
-	return build_net_layer_pkt((struct streaminfo_private *)stream->pfather,carry_layer_type, 
+	return build_net_layer_pkt(carry_layer_stream, (struct streaminfo_private *)stream->pfather,carry_layer_type, 
 							this_layer_len+carry_layer_len, buf, reverse, raw_pkt, send_stream_dir);
 
 err:
@@ -2188,7 +2191,7 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 		send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
 
 		sapp_runtime_log(10, "before build_net_layer_pkt(), buf addr:%p, streamdir:%d, total layer len:%d", send_handle->send_buf, stream->curdir, reserved_hdr_len);
-		send_len = build_net_layer_pkt(stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 0, raw_pkt, stream->curdir);
+		send_len = build_net_layer_pkt(stream, stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 0, raw_pkt, stream->curdir);
 		if(send_len > 0){		
 			/* 修改错误判断逻辑, 构造失败不退出, 继续尝试反方向造包 */
 			ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
@@ -2238,7 +2241,7 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 
 		send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
 		sapp_runtime_log(10, "before build_net_layer_pkt(), buf addr:%p, streamdir:%d, total layer len:%d", send_handle->send_buf, stream->curdir ^ DIR_DOUBLE, reserved_hdr_len);
-		send_len = build_net_layer_pkt(stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 1, raw_pkt, stream->curdir ^ DIR_DOUBLE);
+		send_len = build_net_layer_pkt(stream, stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 1, raw_pkt, stream->curdir ^ DIR_DOUBLE);
 		if(send_len > 0){
 			/* 修改错误判断逻辑, 构造失败不退出, 继续尝试反方向造包 */
 			ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
@@ -2408,7 +2411,7 @@ static int __do_kill_tcp_synack(struct streaminfo *stream, const void *ext_raw_p
 	for(i = 0; i < KILL_TCP_SYN_ACK_NUM; i++){
 		send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
 		
-		send_len = build_net_layer_pkt(stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 1, raw_pkt, stream->curdir ^ DIR_DOUBLE);
+		send_len = build_net_layer_pkt(stream, stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 1, raw_pkt, stream->curdir ^ DIR_DOUBLE);
 		if(send_len < 0){
 			ret = -1;
 			goto fun_exit;		
@@ -2792,7 +2795,7 @@ int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_
 
 	memcpy(send_handle->send_buf + reserved_hdr_len, payload, payload_len);
 	
-	send_len = build_net_layer_pkt(stream_pr, stream->addr.addrtype, payload_len, 
+	send_len = build_net_layer_pkt(stream, stream_pr, stream->addr.addrtype, payload_len, 
 							   send_handle->send_buf + reserved_hdr_len, snd_routedir_reverse, raw_pkt, stream_send_dir);
 	if(send_len < 0){
 		ret = -1;
@@ -3043,7 +3046,7 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 
 	memcpy(send_handle->send_buf + reserved_hdr_len, payload, payload_len);
 	
-	send_len = build_net_layer_pkt(inject_stream_pr, carry_layer_type, payload_len, 
+	send_len = build_net_layer_pkt(raw_stream, inject_stream_pr, carry_layer_type, payload_len, 
 							   send_handle->send_buf + reserved_hdr_len, snd_routedir_reverse, raw_pkt, send_stream_dir);
 	if(send_len < 0){
 		ret = -1;

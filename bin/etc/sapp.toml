@@ -60,6 +60,8 @@ dictator_enable=1
 ### inject_mode_single_gateway_src_mac has lower priority than get smac from inject_mode_single_gateway_device
     inject_mode_single_gateway_src_mac="00:11:22:77:88:99"
     inject_mode_single_gateway_dst_mac="00:11:22:33:44:55"
+
+    dumpfile_sleep_time_before_exit=3
    
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]
@@ -87,7 +89,6 @@ dictator_enable=1
     tcp_drop_pure_ack_pkt=0
     tcp_syn_option_parse_enabled=1 
     skip_not_ip_layer_over_eth=0
-    treat_vlan_as_mac_in_mac=0
     reverse_ethernet_addr=1
 
 	

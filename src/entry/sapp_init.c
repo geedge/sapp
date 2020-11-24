@@ -412,11 +412,7 @@ int MESA_platform_init(int argc, char *argv[])
 	sapp_assistant_init();
 
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_tcp_offload", &sapp_global_single.cfg_send_tcp_offload_sw, 0);
-	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"treat_vlan_as_mac_in_mac", &sapp_global_single.treat_vlan_as_mac_in_mac_sw, 0);
-	//if(sapp_global_single.treat_vlan_as_mac_in_mac_sw){
-		//printf("\n\033[33m[Warning]'treat_vlan_as_mac_in_mac' is enable, vlan packet will be treat as MAC_IN_MAC!\033[0m\n");
-		//usleep(10000);
-	//}
+
 	sapp_set_current_state(SAPP_STATE_PLATFORM_INITED);
 	
 	/* 2017-02-24 lijia modify,

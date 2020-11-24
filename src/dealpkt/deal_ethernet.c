@@ -138,7 +138,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 	//else
 	{
 		switch(eth_type){
-			case ETHERTYPE_IP:
+			case ETH_P_IP:
 				if(g_skip_ethernet_layer_sw){
 					((raw_pkt_t *)raw_pkt)->low_layer_type = (enum addr_type_t)CAP_LEVEL_IPV4;
 				}
@@ -146,7 +146,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 				ret = ipv4_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
 			break;
 
-			case ETHERTYPE_IPv6:
+			case ETH_P_IPV6:
 				if(g_skip_ethernet_layer_sw){
 					((raw_pkt_t *)raw_pkt)->low_layer_type = (enum addr_type_t)CAP_LEVEL_IPV6;
 				}
@@ -154,15 +154,13 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 				ret = ipv6_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
 			break;
 
-			case ETHERTYPE_VLAN:
+			case ETH_P_8021Q:
+			/* 2020-11-23 lijia add, 不再支持2018年pangu一期使用0x88a8作为MAC-IN-MAC格式数据包，使用802.1ad原始格式解析 */
+			case ETH_P_8021AD:			
 				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-				if(sapp_global_val->config.protocol_feature.treat_vlan_as_mac_in_mac_enabled){
-					//ret = mac_in_mac_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
-					ret = eth_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
-				}else{
-					ret = vlan_8021q_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
-				}
+				ret = IEEE_8021_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset, eth_type);
 			break;
+			
 
 			case ETH_P_PPP_SES:
 				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
@@ -177,13 +175,6 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			case ETH_P_ARP:
 				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
 				ret = arp_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
-			break;
-
-			/* 2018-08-19 lijia add, for PanGu项目并联回流流量格式, 复用了ETH_P_8021AD(0x88A8)字段, 实际是MAC-IN-MAC格式数据包 */
-			case ETHERTYPE_PANGU_MAC_IN_MAC:
-				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-				//ret = mac_in_mac_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
-				ret = eth_entry(pstream_pr,next_layer_data,thread_num,dir,raw_pkt, next_layer_offset);
 			break;
 
 			default:

@@ -35,8 +35,11 @@ int set_vlan_addr(struct layer_addr_vlan *addr, const unsigned char *vlan_tag)
 	return vlan_layer_len;
 }
 
-int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_data,int thread_num, 
-						unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
+/*
+	802.1Q和802.1AD合用一个入口函数, 使用eth_type区别类型.
+*/
+int IEEE_8021_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_data,int thread_num, 
+						unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr, unsigned short eth_type)
 {
 	int ret = PASS;
 	struct streamindex tmp_index;
@@ -59,8 +62,12 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 		pstream->addr.addrtype = ADDR_TYPE_VLAN;
 		pstream->addr.addrlen = sizeof(struct layer_addr_vlan);
 		pstream_pr->addr_use_as_hash = 0;//地址不参与hash比对，仅算层数
-		//ptmp->stream.p_layer_header = this_layer_data;
-		//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_layer_data - (char *)raw_pkt->raw_pkt_data;
+		if(ETH_P_8021Q == eth_type){
+			pstream->addr.pkttype = ADDR_TYPE_8021Q_ABBR;
+		}else{
+			pstream->addr.pkttype = ADDR_TYPE_8021AD_ABBR;
+		}
+
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 		
@@ -99,9 +106,7 @@ int vlan_8021q_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 			break;
 
 		case ETH_P_8021Q:
-			//((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
-			//ret=vlan_8021q_entry(pstream_pr, next_layer_hdr,thread_num, routedir,raw_pkt, next_layer_offset);
-			sapp_runtime_log(30, "vlan_8021q_entry(): VLAN combine to one layer!\n");
+			sapp_runtime_log(30, "IEEE_8021_entry(): consecutive VLAN layer combine to one layer!\n");
 			assert(0);
 			break;
 			

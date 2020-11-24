@@ -713,11 +713,7 @@ void packet_io_exit(void)
 {
 	/* 读包模式下, 给其他线程一些时间, 处理未完成数据, 比如MESA_tcp异步发送数据等等. */
 	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
-	sched_yield();
-	sleep(1);
-	sched_yield();
-	sleep(1);
-
+	sleep(sapp_global_val->config.packet_io.dumpfile_sleep_time_before_exit);
 	plugctrl_destroy_all_plug();
 	
 	exit(1);
@@ -864,12 +860,7 @@ static int packet_io_calc_ethernet_offset_to_ip(const unsigned char *sendbuf)
         break;
         
         case CAP_LEVEL_MAC:
-        	outer_ehdr = (struct mesa_ethernet_hdr *)sendbuf;
-        	if(ETHERTYPE_PANGU_MAC_IN_MAC == ntohs(outer_ehdr->ether_type)){
-			offset =  MAC_IN_MAC_HDR_LEN;
-		}else{
 			offset =  sizeof(struct mesa_ethernet_hdr);
-		}
         break;
 
         default:
@@ -1148,10 +1139,14 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 					char *feedback_buf, int *feedback_buf_len, const raw_pkt_t *raw_pkt)
 {
 	int ret;
-	UINT16 ether_type;
+	UINT16 low_layer_ether_hproto;
+	const struct mesa_ethernet_hdr *ehdr = (struct mesa_ethernet_hdr *)send_handle->send_buf;
 	
 	if(g_topology_mode & __NET_CONN_PARALLEL)
 	{
+		
+		low_layer_ether_hproto = ntohs(ehdr->ether_type);
+		
 		if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV)
 		{
 			ret = packet_io_send_fake_pkt_by_gdev(send_handle, (enum addr_type_t)low_layer_type,
@@ -1160,8 +1155,7 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 		else if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_1_ROUTE 
 		     || sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE)
         {
-            ether_type = net_layer_to_ethernet_protocol(low_layer_type);
-            ret = packet_io_send_by_manual_conf(send_handle, datalen, dir, ether_type);
+            ret = packet_io_send_by_manual_conf(send_handle, datalen, dir, low_layer_ether_hproto);
         }
 		else
 		{
@@ -1179,8 +1173,7 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 
 				default:
 					/* 并联模式下的非IP协议, 不能使用系统路由发送, 必须使用raw_eth_fd通过指定网卡发送 */
-					ether_type = net_layer_to_ethernet_protocol(low_layer_type);
-					ret = packet_io_send_by_manual_conf(send_handle, datalen, dir, ether_type);
+					ret = packet_io_send_by_manual_conf(send_handle, datalen, dir, low_layer_ether_hproto);
 					break;
 			}
 		}

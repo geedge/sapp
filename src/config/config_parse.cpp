@@ -1014,11 +1014,6 @@ static int config_sanity_check(void)
 	old_config_file_detect("./conf/main.conf", "./etc/sapp.toml");
 
 
-	if(pconfig->protocol_feature.treat_vlan_as_mac_in_mac_enabled != 0){
-		sapp_log(30, ~0, ~0, "[Warning]'treat_vlan_as_mac_in_mac' is enable, vlan packet will be treat as MAC_IN_MAC!");
-		usleep(10000);
-	}
-
 	return 0;
 }
 
@@ -1130,6 +1125,7 @@ int sapp_parse_config(void)
 	}else{
 		pconfig->packet_io.inject_mode_inline_device_sport = tmp_int;
 	}
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.feature", (char *)"dumpfile_sleep_time_before_exit", &pconfig->packet_io.dumpfile_sleep_time_before_exit, 1);
 	
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.depolyment", (char *)"mode", pconfig->packet_io.depolyment_mode_str, NAME_MAX, "mirror");
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"packet_io.internal.interface", (char *)"type", pconfig->packet_io.internal.interface.type_str, NAME_MAX, "pcap");
@@ -1234,7 +1230,7 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"tcp_drop_pure_ack_pkt", (int *)&pconfig->protocol_feature.tcp_drop_pure_ack_pkt, 0);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"tcp_syn_option_parse_enabled", (int *)&pconfig->protocol_feature.tcp_syn_option_parse_enabled, 1);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"skip_not_ip_layer_over_eth", (int *)&pconfig->protocol_feature.skip_not_ip_layer_over_eth, 0);
-	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"treat_vlan_as_mac_in_mac", (int *)&pconfig->protocol_feature.treat_vlan_as_mac_in_mac_enabled, 0);
+	//tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"treat_vlan_as_mac_in_mac", (int *)&pconfig->protocol_feature.treat_vlan_as_mac_in_mac_enabled, 0);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"PROTOCOL_FEATURE", (char *)"reverse_ethernet_addr", (int *)&pconfig->protocol_feature.reverse_ethernet_addr_enabled, 1);
 
 	/*******************************  TOOLS **********************************/

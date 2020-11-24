@@ -39,9 +39,8 @@ extern "C"
 #define ETHERTYPE_VLAN          		0x8100  /* IEEE 802.1Q VLAN tagging */
 #define ETHERTYPE_LOOPBACK      	0x9000  /* used to test interfaces */
 
-#define ETH_P_MAC_IN_MAC			0x88A8 /* pangu项目借用88a8类型, 用于回流MAC_IN_MAC数据包, 按linux标准0x88A8是ETH_P_8021AD类型 */
-
-#define ETHERTYPE_PANGU_MAC_IN_MAC 0x88A8 /* 2018-08-16 lijia add, for pangu MAC-in-MAC */
+//#define ETH_P_8021AD			0x88A8 
+//#define ETHERTYPE_PANGU_MAC_IN_MAC 0x88A8 /* 2018-08-16 lijia add, for pangu MAC-in-MAC */
 
 
 
@@ -812,6 +811,7 @@ struct packet_io_mac_addr{
 unsigned char net_layer_to_ipv4_protocol(int addr_type);
 unsigned char net_layer_to_ipv6_protocol(int addr_type);
 unsigned short net_layer_to_ethernet_protocol(int addr_type);
+UINT16 net_layer_to_ethernet_protocol_by_stream(const struct streaminfo *pstream);
 enum addr_type_t ethernet_protocol_to_net_layer(UINT16 ether_type_host);
 int net_common_build_send_mac(unsigned char *buf, const struct mesa_ethernet_hdr *raw_eth_hdr, int addr_type, int dir_reverse, int net_topology_mode);
 int net_common_adjust_forward_mac(struct mesa_ethernet_hdr *raw_eth_hdr,int net_topology_mode);

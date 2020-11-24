@@ -152,8 +152,8 @@ extern int ipv6_entry(struct streaminfo_private *pfstream, const void *this_laye
 			unsigned char routedir, const raw_pkt_t *raw_pkt, int);
 int eth_entry(struct streaminfo_private *fstream, const void *this_layer_hdr, 
 		int thread_num,  unsigned char dir, const raw_pkt_t *raw_pkt, int offset_to_raw_hdr);
-int vlan_8021q_entry(struct streaminfo_private *pfstream,const void *this_layer_hdr,int thread_num,
-					unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr);
+int IEEE_8021_entry(struct streaminfo_private *pfstream,const void *this_layer_hdr,int thread_num,
+					unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr, unsigned short ethtype);
 int arp_entry(struct streaminfo_private *fstream, const void *this_layer_hdr, 
 			 int thread_num, unsigned char dir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr);
 extern int ppp_entry(struct streaminfo_private*pfstream, const void *this_layer_data, int thread_num, 

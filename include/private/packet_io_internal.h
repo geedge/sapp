@@ -9,6 +9,10 @@
 extern "C" {
 #endif
 
+/* 802.1Q和802.1AD 头部格式其实都一样, 只是ethernet type不一样, 但是不区分的话, 注入数据包会有错, 通过这些值存于addr.pkttype字段,用于区别两者 */
+#define ADDR_TYPE_8021Q_ABBR	(0x81)
+#define ADDR_TYPE_8021AD_ABBR	(0x88)
+
 #ifndef RTE_CACHE_LINE_SIZE
 	#define RTE_CACHE_LINE_SIZE 64
 	#define __sapp_aligned(a) __attribute__((__aligned__(a)))

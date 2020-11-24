@@ -258,6 +258,7 @@ typedef struct{
 	char inject_mode_single_gateway_dst_mac_string[20];
 	char inject_mode_single_gateway_dst_mac[6]; /* gateway的MAC */
 	char inject_mode_single_gateway_src_mac[6]; /* inject_mode_single_gateway_device网卡的MAC */
+	int dumpfile_sleep_time_before_exit; /* 读包模式退出之前, 为了某些线程能还写日志, 异步发送数据等操作, 再sleep一会 */
 }sapp_config_packet_io_t;
 
 typedef struct{
@@ -274,7 +275,6 @@ typedef struct{
 	int tcp_drop_pure_ack_pkt; /* 丢弃没有负载的纯ack包, 可以节约一次流表查询, 根据业务需求设置 */
 	int tcp_syn_option_parse_enabled; /* 是否解析tcp syn包头部选项 */
 	int skip_not_ip_layer_over_eth; /* 跳过非ip层, 保证在并联模式下, 可以通过系统路由发送rst包 */
-	int treat_vlan_as_mac_in_mac_enabled; /* MAC-in-MAC封装格式被tcpdump捕包存储后, 变成了0x8100, 读包复现时被当做vlan解析, 会出错, 通过配置文件强制指定0x8100作为mac-in-mac解析 */
 	int reverse_ethernet_addr_enabled;  /* smac地址中包含特殊信息时无需翻转 */
 }sapp_protocol_feature_t;
 

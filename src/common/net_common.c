@@ -440,14 +440,11 @@ static int __common_eth_type_dispatch(UINT16 eth_type, const char *next_layer_da
 		break;
 
 		case ETH_P_8021Q:
+		case ETH_P_8021AD:
 			if(ADDR_TYPE_VLAN == expect_layer_type){
 				break;
 			}else{
-				if(sapp_global_val->config.protocol_feature.treat_vlan_as_mac_in_mac_enabled){
-					skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MAC, expect_layer_type);
-				}else{
-					skip_len = vlan8021q_jump_to_layer(next_layer_data, ADDR_TYPE_VLAN, expect_layer_type);
-				}
+				skip_len = vlan8021q_jump_to_layer(next_layer_data, ADDR_TYPE_VLAN, expect_layer_type);
 			}
 		break;
 		
@@ -475,11 +472,7 @@ static int __common_eth_type_dispatch(UINT16 eth_type, const char *next_layer_da
 			}
 		break;		
 
-		case 0x88A8: /* MAC_IN_MAC */
-			skip_len = eth_jump_to_layer(next_layer_data, ADDR_TYPE_MAC, expect_layer_type);
-		break;
-
-		case 0x8847: /* MPLS, ETH_P_MPLS_UC */
+		case ETH_P_MPLS_UC: /* MPLS, ETH_P_MPLS_UC */
 			skip_len = mpls_jump_to_layer(next_layer_data, ADDR_TYPE_MPLS, expect_layer_type);
 		break;
 		
@@ -651,11 +644,7 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 			ret = arp_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
 		break;
 		case ADDR_TYPE_VLAN:
-			if(sapp_global_val->config.protocol_feature.treat_vlan_as_mac_in_mac_enabled){
-				ret = mac_in_mac_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
-			}else{
-				ret = vlan8021q_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
-			}
+			ret = vlan8021q_jump_to_layer((const char *)raw_data, raw_layer_type, expect_layer_type);
 		break;
 		
 		case __ADDR_TYPE_IP_PAIR_V4:
@@ -853,14 +842,65 @@ UINT16 net_layer_to_ethernet_protocol(int addr_type)
 			ether_type = ETH_P_ARP;
 		break;
 
-		case ADDR_TYPE_MAC:
-			if(sapp_global_val->config.protocol_feature.treat_vlan_as_mac_in_mac_enabled){
-				ether_type = ETHERTYPE_VLAN;
+		default:
+			/* to do, unknown type */
+			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: unknown ethernet carry addr type:%d!\n", __FILE__, __LINE__, addr_type);
+			ether_type = -1;
+		break;
+	}
+
+	return ether_type;
+}
+
+/*
+	将MESA地址类型转换为标准Ethernet类型;
+	
+	return value:
+		ethernet type, host order.
+*/
+UINT16 net_layer_to_ethernet_protocol_by_stream(const struct streaminfo *pstream)
+{
+	UINT16 ether_type = 0;
+	int addr_type = pstream->addr.addrtype;
+
+	switch(addr_type){
+		case __ADDR_TYPE_IP_PAIR_V4:
+		case ADDR_TYPE_IPV4:
+			ether_type = ETH_P_IP;
+		break;
+
+		case __ADDR_TYPE_IP_PAIR_V6:
+		case ADDR_TYPE_IPV6:
+			ether_type = ETH_P_IPV6;
+		break;
+
+		case ADDR_TYPE_VLAN:
+			if(ADDR_TYPE_8021Q_ABBR == pstream->addr.pkttype){
+				ether_type = ETH_P_8021Q;
 			}else{
-				ether_type = ETHERTYPE_PANGU_MAC_IN_MAC;
+				ether_type = ETH_P_8021AD;
 			}
 		break;
-		
+
+		case ADDR_TYPE_TCP:
+		case ADDR_TYPE_UDP:
+			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: Ethernet can't carry addr type:%d directly!\n", __FILE__, __LINE__,addr_type);
+			//assert(0);
+			ether_type = -1;
+		break;
+
+		case ADDR_TYPE_PPPOE_SES:
+			ether_type = ETH_P_PPP_SES;
+		break;
+
+		case ADDR_TYPE_MPLS:
+			ether_type = ETH_P_MPLS_UC;
+		break;
+
+		case ADDR_TYPE_ARP:
+			ether_type = ETH_P_ARP;
+		break;
+
 		default:
 			/* to do, unknown type */
 			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: unknown ethernet carry addr type:%d!\n", __FILE__, __LINE__, addr_type);
@@ -888,7 +928,8 @@ enum addr_type_t ethernet_protocol_to_net_layer(UINT16 ether_type_host)
 			addrtype = __ADDR_TYPE_IP_PAIR_V6;
 		break;
 
-		case ETHERTYPE_VLAN:
+		case ETH_P_8021Q:
+		case ETH_P_8021AD:
 			addrtype = ADDR_TYPE_VLAN;
 		break;
 
@@ -903,11 +944,12 @@ enum addr_type_t ethernet_protocol_to_net_layer(UINT16 ether_type_host)
 		case ETH_P_ARP:
 			addrtype = ADDR_TYPE_ARP;
 		break;
-
+#if 0
 		case ETHERTYPE_PANGU_MAC_IN_MAC:
 			addrtype = ADDR_TYPE_MAC_IN_MAC;
 		break;
-		
+#endif
+
 		default:
 			/* to do, unknown type */
 			sapp_runtime_log(RLOG_LV_INFO, "%s:%d: unknown ethernet carry addr type:0x%x\n", __FILE__, __LINE__, ether_type_host);
