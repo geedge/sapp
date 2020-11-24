@@ -610,7 +610,6 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 //		}
 //	}
 #endif
-
 	if(DROP == ret){
 		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 	}
@@ -757,7 +756,6 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	}
 
 	/* TODO 2, 基于IPv6的UDP port 1701 L2TP协议 */
-
 	if(DROP == ret){
 		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 	}

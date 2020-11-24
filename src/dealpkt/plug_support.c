@@ -11,6 +11,8 @@ extern "C" {
 extern int G_TCP_FLOW_STAT_PROJECT_ID ;
 extern int G_UDP_FLOW_STAT_PROJECT_ID ;
 
+//int G_DICTATOR_SW = 1;
+//extern int g_packet_io_thread_num;
 
 extern const raw_ipfrag_list_t *get_raw_frag_list(const struct streaminfo *stream);
 #if IOMODE_MARSIO
@@ -503,16 +505,10 @@ int get_thread_count(void)
 	return g_packet_io_thread_num;
 }
 
-/*
-	ctype:
-		'c':count;
-		'l':length;
-*/
 static inline unsigned long long __get_stream_opt_traffic_raw(int cltype, int iotype, struct streaminfo_private *pstream_pr)
 {
 	unsigned long long tval;
 	struct streaminfo *pstream = &pstream_pr->stream_public;
-
 	if('c' == cltype){ /* count */
 		if('i' == iotype){ /* inbound */
 			if(sapp_global_val->config.packet_io.inbound_route_dir == pstream_pr->stream_c2s_route_dir){
@@ -574,11 +570,8 @@ static inline unsigned long long __get_stream_opt_traffic_raw(int cltype, int io
 			}			
 		}		
 	}
-
 	return tval;
 }
-
-
 
 /*
 	ctype:
@@ -1212,13 +1205,10 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				ret = -1;
 				break;
 			}
-
 			unsigned long long *inbound_byte = (unsigned long long *)opt_val;
 			*inbound_byte = __get_stream_opt_traffic_raw('l', 'i', (struct streaminfo_private *)pstream);
 		}
 		break;
-
-		
 		case MSO_TOTAL_OUTBOUND_BYTE:
 		{
 			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
@@ -1230,7 +1220,6 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			*outbound_byte = __get_stream_opt_traffic('l', 'o', (struct streaminfo_private *)pstream);
 		}	
 		break;
-
 		case MSO_TOTAL_OUTBOUND_BYTE_RAW:
 		{
 			if(STREAM_TYPE_TCP == pstream->type){
@@ -1250,12 +1239,10 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				ret = -1;
 				break;
 			}
-
 			unsigned long long *outbound_byte = (unsigned long long *)opt_val;
 			*outbound_byte = __get_stream_opt_traffic_raw('l', 'o', (struct streaminfo_private *)pstream);
 		}
 		break;
-		
 		case MSO_STREAM_CREATE_TIMESTAMP_MS:
 		{
 			if ((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type))

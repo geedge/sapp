@@ -1,4 +1,4 @@
-#include "sapp_api.h"
+ï»¿#include "sapp_api.h"
 #include "sapp_private_api.h"
 
 #ifdef __cplusplus
@@ -39,7 +39,7 @@ void phony_protocol_get_plugid(unsigned short plugid)
 	phony_protocol_plugid= plugid;
 }
 
-/* Ä£Äâ½âÎö²ã, ¿¿ÅäÖÃÎÄ¼şPLUGNAME=xxxÊ¶±ğ */
+/* æ¨¡æ‹Ÿè§£æå±‚, é é…ç½®æ–‡ä»¶PLUGNAME=xxxè¯†åˆ« */
 char phony_protocol_test(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
 	stSessionInfo stinfo;
@@ -187,7 +187,7 @@ char test_get_pkt_tcp_opts_ext(struct streaminfo *a_tcp,  void **pme, int thread
 
 	return APP_STATE_GIVEME;
 }
-/* ²âÊÔµ¥ÏòÁ÷Í³¼Æ */
+/* æµ‹è¯•å•å‘æµç»Ÿè®¡ */
 char test_tcp_uni_stream_stats(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
 	struct tcpdetail *raw_pdetail;
@@ -202,7 +202,7 @@ char test_tcp_uni_stream_stats(struct streaminfo *a_tcp,  void **pme, int thread
 	
 	if(OP_STATE_CLOSE == a_tcp->opstate){
 		if(DIR_DOUBLE == a_tcp->dir){
-			/* Ö»¿´µ¥ÏòÁ÷ */
+			/* åªçœ‹å•å‘æµ */
 			return APP_STATE_DROPME;
 		}
 
@@ -287,10 +287,10 @@ char test_set_stream_timeout(struct streaminfo *pstream,  void **pme, int thread
 	if(pstream->opstate== OP_STATE_PENDING){
 		/* 
 			for test, port 11111=timeout=11s, port 22222=timeout=22s, 
-			²âÊÔÓÃnc²úÉú3¸öudpÁ÷Á¿, ¶Ë¿Ú·Ö±ğÎª11111, 22222, 33333,
-			µÈ11sÖ®ºó, 11111Ó¦¸Ã½áÊø,
-			22sÖ®ºó, 22222Ó¦¸Ã½áÊø,
-			33333°´ÕÕÄ¬ÈÏÈ«¾Ö³¬Ê±ÌÔÌ­Ê±¼ä, Èç¹û²»ÉèÈ«¾Ö³¬Ê±ÌÔÌ­, Ó¦¸Ã²»»á½áÊø(dumpfileÄ£Ê½³ıÍâ).
+			æµ‹è¯•ç”¨ncäº§ç”Ÿ3ä¸ªudpæµé‡, ç«¯å£åˆ†åˆ«ä¸º11111, 22222, 33333,
+			ç­‰11sä¹‹å, 11111åº”è¯¥ç»“æŸ,
+			22sä¹‹å, 22222åº”è¯¥ç»“æŸ,
+			33333æŒ‰ç…§é»˜è®¤å…¨å±€è¶…æ—¶æ·˜æ±°æ—¶é—´, å¦‚æœä¸è®¾å…¨å±€è¶…æ—¶æ·˜æ±°, åº”è¯¥ä¸ä¼šç»“æŸ(dumpfileæ¨¡å¼é™¤å¤–).
 		*/
 		if((pstream->addr.tuple4_v4->source == ntohs(11111))
 		|| (pstream->addr.tuple4_v4->dest == ntohs(11111))){
@@ -367,6 +367,7 @@ char test_sapp_get_platform_opt(struct streaminfo *pstream,  void **pme, int thr
 }
 
 
+
 char test_get_stream_in_out_bound(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
 {
 	int ret;
@@ -399,7 +400,6 @@ char test_get_stream_in_out_bound(struct streaminfo *pstream,  void **pme, int t
 	
 	return APP_STATE_GIVEME;	
 }
-
 
 char test_stream_with_platform_in_out_traffic(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
 {
@@ -443,8 +443,6 @@ char test_stream_with_platform_in_out_traffic(struct streaminfo *pstream,  void 
 
 	return APP_STATE_GIVEME;	
 }
-
-
 int test_sapp_get_device_opt(const char *device)
 {
 	int ret;
@@ -862,7 +860,7 @@ struct __inline_vxlan_hdr{
 #if 0	
 	unsigned char reserved[3];
 #else
-	unsigned char nat_type; /* å¤ç”¨ä¸€ä¸ªä¿ç•™å­—æ®µ, è¡¨ç¤ºNATç±»å‹ */
+	unsigned char nat_type;  
 	unsigned char reserved[2];
 #endif
 	/*--------int delim -------*/
@@ -1214,7 +1212,7 @@ static void print_tuple4(struct streaminfo *stream)
 
 }
 
-/* ·µ»ØÖµ 1:ÊÇ×Ô¼ºµÄ°ü  0:²»ÊÇ×Ô¼ºµÄ°ü  -1:ÊäÈëÊı¾İ´íÎó */
+/* è¿”å›å€¼ 1:æ˜¯è‡ªå·±çš„åŒ…  0:ä¸æ˜¯è‡ªå·±çš„åŒ…  -1:è¾“å…¥æ•°æ®é”™è¯¯ */
 static int check_rst_ip_new (unsigned int dip_net_order,unsigned short dport_net_order, unsigned short ipid_host_order, 
 					unsigned short win_host_order, int iMaxRandVal, int iRandKey)
 {
@@ -1230,7 +1228,7 @@ static int check_rst_ip_new (unsigned int dip_net_order,unsigned short dport_net
 	return 1;
 }
 
-/* ·µ»ØÖµ 1:ÊÇ×Ô¼ºµÄ°ü  0:²»ÊÇ×Ô¼ºµÄ°ü  -1:ÊäÈëÊı¾İ´íÎó */
+/* è¿”å›å€¼ 1:æ˜¯è‡ªå·±çš„åŒ…  0:ä¸æ˜¯è‡ªå·±çš„åŒ…  -1:è¾“å…¥æ•°æ®é”™è¯¯ */
 static int check_rst_ip_old (unsigned int sip_net_order, unsigned int dip_net_order, unsigned short ipid, 
 					unsigned short window, int iMaxRandVal, int iRandKey)
 {
@@ -1247,7 +1245,7 @@ static int check_rst_ip_old (unsigned int sip_net_order, unsigned int dip_net_or
         if (window == 0)
                 return 0;
 
-        if ((iMaxRandVal - ipid + sip_net_order%window)%iRandKey != 0) // ±ØĞëÕû³ı²ÅĞĞ
+        if ((iMaxRandVal - ipid + sip_net_order%window)%iRandKey != 0) // å¿…é¡»æ•´é™¤æ‰è¡Œ
                 return 0;
         int val = (iMaxRandVal - ipid + sip_net_order%window)/iRandKey;
         window_compute = (unsigned short)(val+dip_net_order%iRandKey);
@@ -1257,7 +1255,7 @@ static int check_rst_ip_old (unsigned int sip_net_order, unsigned int dip_net_or
                 if (window_compute == 0 || window_compute == 1 )
                         return 1;
         }
-        if (window == window_compute) { // ÈôÏàµÈ£¬Ôò±íÃ÷¿ÉÄÜÊÇ×Ô¼º²úÉúµÄ
+        if (window == window_compute) { // è‹¥ç›¸ç­‰ï¼Œåˆ™è¡¨æ˜å¯èƒ½æ˜¯è‡ªå·±äº§ç”Ÿçš„
                 return 1;
         }
         return 0;
@@ -1488,7 +1486,7 @@ char test_kill_connection( struct streaminfo *stream,void **pme, int thread_seq,
 	char ip1[16], ip2[16];
 	struct stream_tuple4_v4 *tuple_v4;
 
-	if(OP_STATE_DATA != stream->opstate){ /* Ö»ÔÚDATA×´Ì¬µ÷ÓÃKILL */
+	if(OP_STATE_DATA != stream->opstate){ /* åªåœ¨DATAçŠ¶æ€è°ƒç”¨KILL */
 		return APP_STATE_GIVEME;
 	}
 
@@ -1629,7 +1627,7 @@ static void test_inject_tcp_pkt_with_this_hdr(struct streaminfo *stream,void **p
 	raw_thdr = (struct mesa_tcp_hdr *)((char *)raw_ihdr + raw_ihdr->ip_hl*4);
 	raw_tcp_payload_len = ntohs(raw_ihdr->ip_len) - raw_ihdr->ip_hl*4 - raw_thdr->th_off * 4;
 
-	/* å½“å‰åŒ…æ˜¯C2Sæ–¹å‘çš„GET, éœ€è¦å›å¤ä¸€ä¸ªè™šå‡çš„S2Cæ–¹å‘çš„RESPONSE */
+	/* è¤°æ’³å¢ é–å‘®æ§¸C2Sé‚ç‘°æ‚œé¨å‡£ET, é—‡â‚¬ç‘•ä½¸æ´–æ¾¶å¶„ç«´æ¶“î‡æ«„é‹å›©æ®‘S2Cé‚ç‘°æ‚œé¨å‡´ESPONSE */
 	send_ihdr = (struct mesa_ip4_hdr *)pkt_header_payload;
 	send_thdr = (struct mesa_tcp_hdr *)((char *)send_ihdr + sizeof(struct mesa_ip4_hdr));
 
@@ -1697,7 +1695,7 @@ char test_inject_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,co
 	return plug_ret;
 }
 
-/* Ê¹ÓÃĞÂµÄ·¢°ü½Ó¿Ú  sapp_inject_pkt()·¢ËÍÎ±Ôì°ü */
+/* ä½¿ç”¨æ–°çš„å‘åŒ…æ¥å£  sapp_inject_pkt()å‘é€ä¼ªé€ åŒ… */
 static int send_by_sapp_inject_pkt(struct streaminfo *a_tcp, const struct mesa_ip4_hdr *raw_ip4hdr)
 {
 #define HIJACK_RESPONSE_HDR "HTTP/1.1 200 OK\r\nServer: hijack.com\r\nContent-Length:%d\r\nContent-Type: text/html; charset=UTF-8\r\nConnection: close\r\n\r\n"
@@ -1820,7 +1818,7 @@ char test_sapp_inject_pkt(struct streaminfo *stream,void **pme, int thread_seq,c
 static struct streaminfo *g_polling_stream = NULL;
 char polling_inject_tcpall_entry(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
-	/* polling_inject_tcp_entryÔÚpollingÉÏÏÂÎÄ, ÄÃ²»µ½stream, ¿¿tcpall_entry¸üĞÂÈ«¾Ö±äÁ¿g_polling_stream,ÒÔ»ñÈ¡Ä³¸öÁ÷ÉÏÏÂÎÄ */
+	/* polling_inject_tcp_entryåœ¨pollingä¸Šä¸‹æ–‡, æ‹¿ä¸åˆ°stream, é tcpall_entryæ›´æ–°å…¨å±€å˜é‡g_polling_stream,ä»¥è·å–æŸä¸ªæµä¸Šä¸‹æ–‡ */
 
 	if((OP_STATE_DATA == stream->pktstate) && (stream->addr.tuple4_v4->dest == htons(22))){
 		printf("update polling stream %p: %s \n", stream, printaddr(&stream->addr, thread_seq));
@@ -2307,7 +2305,7 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 	int tot_len = -1, this_layer_remain_len = -1;
 	int ret;
 
-	if((OP_STATE_DATA != f_stream->opstate) && (OP_STATE_DATA != f_stream->pktstate)){ /* ¿ÉÍ¬Ê±¹ÒÔØµ½tcp,tcpall */
+	if((OP_STATE_DATA != f_stream->opstate) && (OP_STATE_DATA != f_stream->pktstate)){ /* å¯åŒæ—¶æŒ‚è½½åˆ°tcp,tcpall */
 		return APP_STATE_GIVEME;
 	}
 
@@ -2490,20 +2488,20 @@ char TEST_TCP_LOST(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 	if(a_tcp->ptcpdetail->datalen > 0){
 		ipv4_hdr = (const struct mesa_ip4_hdr *)a_packet;
 		tcp_hdr = (const struct mesa_tcp_hdr *)((char *)ipv4_hdr + ipv4_hdr->ip_hl * 4);
-		pkt_raw_data = (char *)tcp_hdr + tcp_hdr->th_off * 4; /* Êı¾İ°üÔ­Ê¼Êı¾İÖ¸Õë */
-		/* ÓÉÓÚÖØ´«×·¼ÓÊı¾İµÈÔ­Òò, Æ½Ì¨¸ø²å¼şµÄÊı¾İa_tcp->ptcpdetail->pdata²¢²»Ò»¶¨µÈÓÚpkt_raw_data, ¿ÉÄÜÏòºóÆ«ÒÆÁË */
+		pkt_raw_data = (char *)tcp_hdr + tcp_hdr->th_off * 4; /* æ•°æ®åŒ…åŸå§‹æ•°æ®æŒ‡é’ˆ */
+		/* ç”±äºé‡ä¼ è¿½åŠ æ•°æ®ç­‰åŸå› , å¹³å°ç»™æ’ä»¶çš„æ•°æ®a_tcp->ptcpdetail->pdataå¹¶ä¸ä¸€å®šç­‰äºpkt_raw_data, å¯èƒ½å‘ååç§»äº† */
 		actual_data_seq = ntohl(tcp_hdr->th_seq) + ((char *)a_tcp->ptcpdetail->pdata - pkt_raw_data);
 
 		printf("stream:%s, dir:%d, pkt-seq:%u, actual-data-seq:%u\n", printaddr(&a_tcp->addr, a_tcp->threadnum),a_tcp->curdir, ntohl(tcp_hdr->th_seq),  actual_data_seq);
 		
 		if(DIR_C2S == a_tcp->curdir){
-			/* ±¾´ÎÊµ¼ÊĞòºÅ == ÓÉÉÏ´Î¼ÆËãµÃ³öµÄÀíÂÛÓ¦¸Ãµ½´ïĞòºÅ + ±¾´Î¼ÆËãµÃ³öµÄ¶ª°ü³¤¶È */
+			/* æœ¬æ¬¡å®é™…åºå· == ç”±ä¸Šæ¬¡è®¡ç®—å¾—å‡ºçš„ç†è®ºåº”è¯¥åˆ°è¾¾åºå· + æœ¬æ¬¡è®¡ç®—å¾—å‡ºçš„ä¸¢åŒ…é•¿åº¦ */
 			if(actual_data_seq != tcp_status->seq_next_c2s + a_tcp->ptcpdetail->lostlen){
 				printf("\033[41mstream:%s,  seq check fail!\033[0m\n", printaddr(&a_tcp->addr, a_tcp->threadnum));
 				//assert(0);
 				goto err_exit;
 			}
-			/* ÏÂÒ»¸öÆÚ´ıµÄĞòºÅÊÇ: µ±Ç°Êµ¼ÊĞòºÅ + Êµ¼ÊÊı¾İ³¤¶È */
+			/* ä¸‹ä¸€ä¸ªæœŸå¾…çš„åºå·æ˜¯: å½“å‰å®é™…åºå· + å®é™…æ•°æ®é•¿åº¦ */
 			tcp_status->seq_next_c2s = actual_data_seq + a_tcp->ptcpdetail->datalen;
 		}else{
 			if(actual_data_seq  != tcp_status->seq_next_s2c + a_tcp->ptcpdetail->lostlen){
@@ -2511,7 +2509,7 @@ char TEST_TCP_LOST(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 				//assert(0);
 				goto err_exit;
 			}
-			/* ÏÂÒ»¸öÆÚ´ıµÄĞòºÅÊÇ: µ±Ç°Êµ¼ÊĞòºÅ + Êµ¼ÊÊı¾İ³¤¶È */
+			/* ä¸‹ä¸€ä¸ªæœŸå¾…çš„åºå·æ˜¯: å½“å‰å®é™…åºå· + å®é™…æ•°æ®é•¿åº¦ */
 			tcp_status->seq_next_s2c = actual_data_seq + a_tcp->ptcpdetail->datalen;
 		}
 	}
@@ -2892,8 +2890,8 @@ int CHAR_INIT()
 	
 	int demo_plugid = 51;
 
-//  º¯ÊıÊµÏÖ×Ô¶¨Òå
-//  Ö»ÒªÇóº¯Êı·µ»ØÖµÎª²å¼şID£»
+//  å‡½æ•°å®ç°è‡ªå®šä¹‰
+//  åªè¦æ±‚å‡½æ•°è¿”å›å€¼ä¸ºæ’ä»¶IDï¼›
 
 	stream_register_arp((SAPP_PKT_CB_FUN_T)arp_plug_entry);
 	
@@ -2929,5 +2927,3 @@ void test_destroy(void)
 #ifdef __cplusplus
 }
 #endif
-
-
