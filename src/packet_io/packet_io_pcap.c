@@ -1123,6 +1123,7 @@ retry:
 }
 
 extern void packet_io_exit(void);
+extern volatile int update_packet_io_status_sw ;
 static void wait_all_work_thread(void)
 {
 	//pkt_queue_t pkt_queue_node;
@@ -1150,6 +1151,11 @@ static void wait_all_work_thread(void)
 #endif
 		}
 	}while(tot_empty_num != g_pcap_work_thread_num);
+
+	if(1 == update_packet_io_status_sw){
+		sysinfo_output(); /* 最后一次写统计信息, 关闭标志位, 因为流表将被清空, 再写就没意义了 */
+		update_packet_io_status_sw = 0;
+	}
 
 	printf("[Info]clear all context success.\n");
 

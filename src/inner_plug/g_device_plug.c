@@ -726,8 +726,9 @@ int gdev_keepalive_plug_init(void)
 
 	gdev_kp_log_handle = MESA_create_runtime_log_handle("./log/gdev_keeplive.log", 10);
 
+#ifdef GIT_VERSION
 	MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]", "g_device_plug version: %s\n", g_device_plug_git_ver);	
-
+#endif
 
 #if IOMODE_MARSIO	
 	gdev_plug_extern_marsio4_instance = sapp_get_marsio_instance();

@@ -18,7 +18,7 @@ extern "C" {
 #endif
 
 #ifndef MTU_MAX
-#define MTU_MAX 					1514
+#define MTU_MAX 					2000  /* 因各种vlan, mpls等层,通常包大小会超过1514, 设成2000 */
 #endif
 
 

@@ -285,12 +285,12 @@ void sysinfo_output(void)
 	if((cur_length[SAPP_STAT_RCV_TCP] > 0) && (cur_length[SAPP_STAT_TCP_LOST_PKT] > 0)){
 		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "bytes", cur_length[SAPP_STAT_RCV_TCP], cur_length[SAPP_STAT_TCP_LOST_PKT], (double)cur_length[SAPP_STAT_TCP_LOST_PKT]/(double)cur_length[SAPP_STAT_RCV_TCP]);
 	}else{
-		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "bytes", cur_length[SAPP_STAT_RCV_TCP], cur_length[SAPP_STAT_TCP_LOST_PKT], 0);
+		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "bytes", cur_length[SAPP_STAT_RCV_TCP], cur_length[SAPP_STAT_TCP_LOST_PKT], 0.00);
 	}
 	if((cur_count[SAPP_STAT_TCP_STREAM_NEW] > 0) && (cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM] > 0)){
 		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "stream", cur_count[SAPP_STAT_TCP_STREAM_NEW], cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM], (double)cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM]/(double)cur_count[SAPP_STAT_TCP_STREAM_NEW]);
 	}else{
-		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "stream", cur_count[SAPP_STAT_TCP_STREAM_NEW], cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM], 0);
+		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "stream", cur_count[SAPP_STAT_TCP_STREAM_NEW], cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM], 0.00);
 	}
 	
 	fprintf(fp,"-----------------------------------------------------------------\n");
