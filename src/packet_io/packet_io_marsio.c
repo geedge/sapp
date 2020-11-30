@@ -84,7 +84,7 @@ static int (*ptr_marsio_thread_init)(struct mr_instance * instance);
 static int (*ptr_marsio_recv_burst)(struct mr_vdev * vdev, queue_id_t qid, marsio_buff_t * mbufs[], int nr_mbufs);
 int (*ptr_marsio_send_burst)(struct mr_sendpath * sendpath,  queue_id_t qid, marsio_buff_t * mbufs[], int nr_mbufs);
 static int (*ptr_marsio_send_burst_with_options)(struct mr_sendpath * sendpath, queue_id_t sid, marsio_buff_t * mbufs[], int nr_mbufs, uint16_t options);
-static void (*ptr_marsio_buff_free)(struct mr_instance * instance, marsio_buff_t *marsio_buff[],unsigned int nr_mbufs, int socket_id, int thread_id);
+void (*ptr_marsio_buff_free)(struct mr_instance * instance, marsio_buff_t *marsio_buff[],unsigned int nr_mbufs, int socket_id, int thread_id);
 int (*ptr_marsio_buff_malloc_global)(struct mr_instance * instance, marsio_buff_t *marsio_buff[], unsigned int nr_mbufs, int socket_id, int thread_id);
 char * (*ptr_marsio_buff_append)(marsio_buff_t *m, uint16_t len);
 void * (*ptr_marsio_buff_ctrlzone)(marsio_buff_t *m, uint8_t id);
@@ -358,9 +358,10 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	struct mr_tunnat_ctrlzone mr_ctrlzone = {};
 
 	ret = ptr_marsio_buff_malloc_global(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
-	if(ret < 0){
+	if((ret < 0) || (NULL == send_mbuf[0])){
 		return -1;
-	}	
+	}
+	
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
 	real_buf = ptr_marsio_buff_append(send_mbuf[0], datalen);
@@ -378,7 +379,8 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 
 	ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, MARSIO_SEND_OPT_FAST|MARSIO_SEND_OPT_REHASH);
 	if(ret < 0){
-		ptr_marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
+		//发送失败marsio自动free
+		//ptr_marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
 		return -1;
 	}
 

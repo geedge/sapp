@@ -23,6 +23,7 @@ static struct mr_instance * gdev_plug_extern_marsio4_instance; /* dlopen dynamic
 extern int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath, queue_id_t sid, marsio_buff_t * mbufs[], int nr_mbufs, uint16_t options);
 extern int (*ptr_marsio_buff_malloc_global)(struct mr_instance * instance, marsio_buff_t *marsio_buff[], unsigned int nr_mbufs, int socket_id, int thread_id);
 extern char * (*ptr_marsio_buff_append)(marsio_buff_t *m, uint16_t len);
+extern void (*ptr_marsio_buff_free)(struct mr_instance * instance, marsio_buff_t *marsio_buff[],unsigned int nr_mbufs, int socket_id, int thread_id);
 #endif
 
 #ifdef GIT_VERSION
@@ -306,6 +307,10 @@ static int gdev_keepalive_plug(const raw_pkt_t *raw_pkt, int thread_id, unsigned
 
 	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
 	real_buf = ptr_marsio_buff_append(send_mbuf[0], send_len + 14);
+	if(NULL == real_buf){
+		ptr_marsio_buff_free(gdev_plug_extern_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_id);
+		goto err;
+	}
 	
 	memcpy(real_buf, snd_handle->send_buf, send_len + 14); /* send_len没包括mac地址 */
 
@@ -724,8 +729,9 @@ int gdev_keepalive_plug_init(void)
 
 	gdev_kp_log_handle = MESA_create_runtime_log_handle("./log/gdev_keeplive.log", 10);
 
+#ifdef GIT_VERSION
 	MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]", "g_device_plug version: %s\n", g_device_plug_git_ver);	
-
+#endif
 
 #if IOMODE_MARSIO	
 	gdev_plug_extern_marsio4_instance = sapp_get_marsio_instance();

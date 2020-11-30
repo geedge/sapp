@@ -806,11 +806,6 @@ extern volatile int update_packet_io_status_sw;
 void packet_io_clean_thread_context(int thread_seq)
 {
 	free_thread_stream(thread_seq);
-	if(1 == update_packet_io_status_sw){
-		sysinfo_output(); /* 最后一次写统计信息, 关闭标志位, 因为流表将被清空, 再写就没意义了 */
-		update_packet_io_status_sw = 0;
-	}
-	
 
 	ipv4_frag_per_thread_exit(thread_seq);
 	ipv6_frag_per_thread_exit(thread_seq);
@@ -1191,6 +1186,9 @@ int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_t
 										dir,
 										thread_num,
 										raw_pkt);
+		if(ret < 0){
+			sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+		}										
 	}
 
 	return ret;
@@ -1354,6 +1352,10 @@ int packet_io_send_raw(int thread_num, char *data, int datalen,unsigned int targ
 									thread_num,
 									0, /* 此处是直接构造全部包头, 并指定发包网卡, 发包方向无意义 */
 									sapp_global_val->mthread_volatile[thread_num]->raw_pkt);
+	if(ret < 0){
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+	}
+									
 	return ret;
 }
 
