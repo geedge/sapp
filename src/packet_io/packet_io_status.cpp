@@ -16,7 +16,7 @@ static unsigned long long sysinfo_old[COUNTER_NUM] = {0};
 static const unsigned long long TO_KB = 1024;
 static const unsigned long long TO_MB = 0x100000ULL;
 static const unsigned long long TO_GB = 0x40000000ULL;
-static const unsigned long long TO_TB = 0x1000000000ULL;
+static const unsigned long long TO_TB = 0x10000000000ULL;
 
 static unsigned long long cur_count[SAPP_STAT_NUM_MAX] = {0};
 static unsigned long long cur_length[SAPP_STAT_NUM_MAX] = {0};
