@@ -980,7 +980,7 @@ static int sapp_fs2_init(void)
 
 	pfs_para->fs_id_count_array[SAPP_STAT_RCV_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Pkt");
 	pfs_para->fs_id_length_array[SAPP_STAT_RCV_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bit");
-    pfs_para->fs_id_count_array[SAPP_STAT_TCP_LOST_PKT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Lost_Bit");	
+    pfs_para->fs_id_length_array[SAPP_STAT_TCP_LOST_PKT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Lost_Bit");	
 
 	pfs_para->fs_id_count_array[SAPP_STAT_RCV_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Pkt");
 	pfs_para->fs_id_length_array[SAPP_STAT_RCV_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bit");
