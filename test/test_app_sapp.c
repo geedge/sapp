@@ -978,7 +978,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 
 
 /* 关于网络相关字段, 均为网络�? network order */
-struct __inline_vxlan_hdr{
+struct __test_inline_vxlan_hdr{
 	unsigned char flags;
 
 	/*------------byte delim -------*/
@@ -1005,7 +1005,7 @@ struct __inline_vxlan_hdr{
 	unsigned int r1 : 1;
 	unsigned int r0 : 1;
 }__attribute__((packed));
-typedef struct __inline_vxlan_hdr test_inline_vxlan_hdr_t;
+typedef struct __test_inline_vxlan_hdr test_inline_vxlan_hdr_t;
 
 
 char tcpentry_vlink_info(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)

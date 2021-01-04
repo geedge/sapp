@@ -42,7 +42,7 @@ extern "C" {
 #endif
 int set_transport_addr(struct streaminfo *pfstream, UINT16 sport, UINT16 dport);
 extern void free_heap_stream_info(struct streaminfo *heap_stream, int layer);
-struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream_pr, int reverse);		
+extern struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream_pr, int reverse);		
 
 struct streaminfo *skip_proxy_phony_stream(struct streaminfo *a_tcp);
 static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const void *this_iphdr, 
@@ -51,7 +51,7 @@ static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const v
 static void tcp_free_unorder_pkt(int threadnum, struct buf_unorder *uo_packet);	
 static int get_ip_pkt_tot_len(struct streaminfo *ipinfo, const void *this_iphdr);
 static inline void update_stream_list_raw_pkt_pointer(struct streaminfo_private *a_tcp_pr, const raw_pkt_t *raw_pkt);
-void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrlen);
+void addr_reverse_memcpy(const struct streaminfo_private *stack_pr,void *daddr, const void *saddr, int addrtype, int addrlen);
 int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *pstream_stack, int reverse);
 void iterate_stream_list(const struct streaminfo *stream);
 int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index);

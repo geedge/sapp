@@ -53,6 +53,8 @@ extern int symbol_check(void);
 extern int timestamp_record_init(void);
 extern  int sapp_global_val_init(void);
 extern int sapp_assistant_init(void);
+extern char gdev_keepalive_ip_entry(const struct streaminfo *pstream,unsigned char routedir,int thread_seq, const struct mesa_ip4_hdr *ipv4_hdr);
+extern char gdev_keepalive_udp_entry(const struct streaminfo *a_udp,  void **pme, int thread_seq, const void *ip_hdr);
 
 static void forbid_call_exit_in_running_state(void)
 {
@@ -130,94 +132,11 @@ int MESA_platform_init(int argc, char *argv[])
 	//MESA_load_profile_int_def("conf/main.conf","Module", "dictator_switch", &G_DICTATOR_SW, 1);	
 	sapp_dictator_init();
 
-	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"ShowStatInfo", (char *)"platform_log_level", &g_sapp_log_level, 10);
-	//g_sapp_log_handle = MESA_create_runtime_log_handle("./log/runtimelog", g_sapp_log_level);
-	//if(NULL == g_sapp_log_handle)
-	//{
-		//printf("MESA_create_runtime_log_handle() error!\n");
-		//return -1;
-	//}
-	
-	//if(MESA_load_profile_int_def("conf/main.conf", "Module", "capdatamodlel", &cap_mode, 2) < 0){
-		//printf("read conf 'capdatamodlel' error!\n");
-		//exit(1);
-	//}
-
-	//if(MESA_load_profile_int_def("conf/main.conf", "Module", "threadnum", &threadnum, 1) < 0){
-		//printf("read conf 'threadnum' error!\n");
-		//exit(1);
-	//}	
-	//g_iThreadNum = threadnum;
-
-	//MESA_load_profile_int_def("conf/main.conf","Module", "MaxUdpStreams",&max_udp_stream_num , 65536);
-#if HIGH_PERF
-	//if(number_is_2powerN(max_udp_stream_num) == 0){
-		//printf("\033[41m in high-mode '%s' must be power of 2! such as 32768,65536,131072...\033[0m\n", "MaxUdpStreams");
-		//exit(1);		
-	//}
-#endif
-
-	//MESA_load_profile_int_def("conf/main.conf","Module", "MaxTcpStreams",&max_tcp_stream_num, 65536);
-#if HIGH_PERF
-	//if(number_is_2powerN(max_tcp_stream_num) == 0){
-		//printf("\033[41m in high-mode '%s' must be power of 2! such as 32768,65536,131072...\033[0m\n", "MaxTcpStreams");
-		//exit(1);		
-	//}
-#endif
-
-  	//MESA_load_profile_int_def("conf/main.conf","Module", "CreatLinkMode", &create_link_mode, TCP_CTEAT_LINK_BYSYN);
-  	
-	//MESA_load_profile_int_def("conf/main.conf","Module", "TcpAllEnable", &TcpAllEnable, 1);
-	//tcp_set_support_tcpall_model(TcpAllEnable);
-
-#if (0 == HIGH_PERF)
-	//MESA_load_profile_int_def("conf/main.conf","Module", "discard_ack",&g_discard_ack_sw, 0);
-#else
-	//g_discard_ack_sw = 1;
-	//printf("\033[33m in high-perf mode, 'discard_ack' is auto enable!\n");
-#endif
-	//MESA_load_profile_int_def("conf/main.conf","Module", "kill_tcp_remedy",&g_kill_tcp_remedy_sw, 0);
-	
-	//MESA_load_profile_int_def("conf/main.conf","Module", "maxrandval", &maxrandval, 65535);
-	//set_rst_max_rnd_val(maxrandval);
-	//MESA_load_profile_int_def("conf/main.conf","Module", "randkeyval", &randkeyval, 13);
-  	//set_rst_rand_key(randkeyval);
-
-	//MESA_load_profile_int_def("conf/main.conf","Module", "kill_tcp_rst_pkt_num", &sapp_global_single.cfg_kill_tcp_rst_num, 3);
-	//if(sapp_global_single.cfg_kill_tcp_rst_num <= 0 || sapp_global_single.cfg_kill_tcp_rst_num > 3){
-		//printf("\033[41mWarning! '%s' is %d, invalid, must in range [0,3], set it to 1!\033[0m\n", "kill_tcp_rst_pkt_num");
-		//sleep(1);	
-	//}
-	
-	//MESA_load_profile_int_def("conf/main.conf","Module", "kill_tcp_rst_signature", &sapp_global_single.cfg_kill_tcp_rst_signature,1);
 
 	ipv4_frag_init(g_iThreadNum, 1024 * 512);
-	//MESA_load_profile_int_def("conf/main.conf","Module", "IPv6_module_enable", &ipv6_switch, 1);
-	//packet_io_set_ipv6_module_enable(1);
-	//MESA_load_profile_int_def("conf/main.conf","Module", "IPv6_raw_socket", &ipv6_switch, 0); /* 为了便于部署, 此项默认关闭 */
-	//packet_io_set_ipv6_raw_socket_enable(1);	
 	ipv6_frag_init(g_iThreadNum, 1024 * 256);
-
-	//tcp_set_creatlink_model(create_link_mode);
-	//MESA_load_profile_short_def("conf/main.conf","Module", "MaxUnorderNum",(short *)&max_unorder_num, 5);
-	//tcp_set_default_unorder_num(max_unorder_num);
-	
 	tcp_set_stream_num(max_tcp_stream_num*3,max_tcp_stream_num,max_tcp_stream_num*2);
-
-	//MESA_load_profile_short_def("conf/main.conf","Module", "LinkTimeout", (short *)&link_timeout, 600);
-	//stream_set_default_nopkt_time(link_timeout);
-	
-	//MESA_load_profile_short_def("conf/main.conf","Module", "UdpResetTime", (short *)&udp_stream_timeout, 300);
-	//udp_set_stream_timeout(udp_stream_timeout);
-	
 	udp_set_stream_num(max_udp_stream_num*3,max_udp_stream_num,max_udp_stream_num*2);
-#if 0
-	MESA_load_profile_int_def("conf/main.conf","Module", "skip_not_ip_layer", &G_SKIP_NOT_IP_LAYER, 0);
-	if(G_SKIP_NOT_IP_LAYER != 0){
-		printf("\033[41mWarning!  '%s' is enable!\033[0m\n", "skip_not_ip_layer");
-		sleep(1);		
-	}
-#endif
 
 	//MESA_load_profile_int_def("conf/main.conf","Module", "timestamp_record", &g_timestamp_record_sw, 0);	
 	MESA_load_profile_int_def("conf/main.conf","Module", "timedelay_threshold", &int_tmp, 10000000);
@@ -294,53 +213,22 @@ int MESA_platform_init(int argc, char *argv[])
 			exit(1);
 	}
 
-	//if(MESA_load_profile_string_def("conf/main.conf", "Module", "pcapdevice", pcap_dev1, 128, "eth0") < 0){
-		//printf("read conf 'pcapdevice' error!\n");
-		//exit(1);
-	//}
+
 	packet_io_set_capdev_parallel(sapp_global_val->config.packet_io.internal.interface.name);
 	
 	if(DEPOLYMENT_MODE_TRANSPARENT == g_topology_mode_raw){
-		//if(MESA_load_profile_string_def("conf/main.conf", "Module", "pcapdevice2", pcap_dev2, 128, "eth1")  < 0){
-			//printf("read main.conf  'pcapdevice2' error!\n");
-			//exit(1);
-		//}
 		packet_io_set_capdev_serial(sapp_global_val->config.packet_io.internal.interface.name, 
 									sapp_global_val->config.packet_io.external.interface.name);
 	}	
 
-	//if(MESA_load_profile_int_def("conf/main.conf", "Module", "net_connection_mode", &top_mode, 1) < 0){
-		//printf("read conf 'net_connection_mode' error!\n");
-		//exit(1);
-	//}
 	packet_io_set_topology_mode(sapp_global_val->config.packet_io.depolyment_mode_bin);
-	
-	//if(MESA_load_profile_string_def("conf/main.conf", "Module", "pcapfilter", cap_filter, 1024, "") < 0){
-		//printf("read conf 'pcapfilter' error!\n");
-		//exit(1);
-	//}
 	
 	if(sapp_global_val->config.packet_io.input_bpf_filter != NULL){
 		printf("\033[33m[Warning] pcap filter is '%s'.\033[0m\n", sapp_global_val->config.packet_io.input_bpf_filter);
 		packet_io_set_capture_filter(sapp_global_val->config.packet_io.input_bpf_filter);
 	}
 
-	//if(MESA_load_profile_int_def("conf/main.conf", "Module", "queue_max_num", &queue_max_num, 2000) < 0){
-		//printf("read conf  'queue_max_num' error!\n");
-		//exit(1);
-	//}
 	packet_io_set_cap_buf_queue(10000);
-	
-	//if(MESA_load_profile_string_nodef("conf/main.conf", "Module", "gateway_mac", gateway_mac, 32) < 0){
-		//printf("read conf  'gateway_mac' error!\n");
-	//}
-	//packet_io_set_gateway_mac(gateway_mac); /*读取配置文件 */
-
-	//if(MESA_load_profile_string_nodef("conf/main.conf", "Module", "senddevice", snd_dev, 128) < 0){
-		//printf("read conf  'senddevice' error!\n");
-		//exit(1);
-	//}	
-	//packet_io_set_send_dev(snd_dev);
 
 	MESA_load_profile_int_def("conf/main.conf", "Module", "signal_take_over_switch", &sapp_global_single.signal_take_over_sw, 0);
 	MESA_load_profile_int_def("conf/main.conf", "Module", "ipentry_priority_over_ipfrag", &sapp_global_single.ipentry_priority_over_ipfrag, 0);
@@ -348,13 +236,6 @@ int MESA_platform_init(int argc, char *argv[])
 #endif
 
 	init_stream_manage(g_iThreadNum);	
-
-#if 0
-	MESA_load_profile_int_def("conf/main.conf", "Module", "iknow_switch", &int_tmp, 1);
-	if(int_tmp != 0){
-		iknow_info_init();
-	}
-#endif
 	timestamp_record_init();
 
 	/* timer must before packet_io and plug_proc() */
@@ -385,14 +266,16 @@ int MESA_platform_init(int argc, char *argv[])
 	stream_register_udp_raw(udp_teredo_identify_entry);
 	stream_register_udp_raw(udp_gtp_identify_entry);
 
-#if 0
-	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"kill_tcp_with_gdev", &sapp_global_single.kill_tcp_with_gdev, 0);
-	if(sapp_global_single.kill_tcp_with_gdev != 0){
-		if(gdev_block_init() < 0){
-			printf("\n\033[33m[Warning]gdev_block_init error!\033[0m\n");
+	/* 2020-12-23 lijia add, vxlan保活插件内置 */
+	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
+		stream_register_overlay_ip(gdev_keepalive_ip_entry);
+		stream_register_overlay_udp(gdev_keepalive_udp_entry);
+
+		if(gdev_keepalive_plug_init() < 0){
+			printf("\033[1;31;40m[Error]gdev_keepalive_plug_init() error!\033[0m\n");
+			return -1;
 		}
 	}
-#endif	
 
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"symbol_conflict_check", &int_tmp,0);
 	if(int_tmp != 0){
@@ -406,9 +289,6 @@ int MESA_platform_init(int argc, char *argv[])
 		usleep(10000);
 	}
 
-	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_mode",  &sapp_global_single.send_fake_pkt_mode, 0);
-	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_fake_pkt_gdev_sport",  &sapp_global_single.send_fake_pkt_gdev_sport, 15);
-	
 	sapp_assistant_init();
 
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_tcp_offload", &sapp_global_single.cfg_send_tcp_offload_sw, 0);

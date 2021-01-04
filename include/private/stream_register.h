@@ -31,7 +31,7 @@ enum fun_type_t{
 
 typedef struct _stFunArray
 {
-	int funtype;
+	int funtype; /* 从ip头开始, or 真正的原始包 */
 	union
 	{
 		SAPP_STREAM_FUN_T sapp_stream_fun;

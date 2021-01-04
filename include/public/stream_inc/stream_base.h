@@ -72,7 +72,8 @@ enum addr_type_t{
 	ADDR_TYPE_PPTP,			/* 15 */
 	ADDR_TYPE_MAC_IN_MAC,		/* 16 */
 	ADDR_TYPE_GPRS_TUNNEL,      /* 17 */
-	__ADDR_TYPE_MAX,			/* 18 */
+	ADDR_TYPE_VXLAN,			/* 18 */
+	__ADDR_TYPE_MAX,			/* 19 */
 };
 
 #define TCP_TAKEOVER_STATE_FLAG_OFF	0
@@ -329,6 +330,15 @@ struct layer_addr_mac_in_mac
 	UCHAR inner_src_mac[MAC_ADDR_LEN]; /* ÄÚ²ãmacµØÖ·, network order */
 };
 
+struct layer_addr_vxlan
+{
+	UINT16 vlan_id;
+	UCHAR dir;
+	UCHAR link_id;
+	UCHAR link_type;
+};
+
+
 struct layer_addr
 {
 	UCHAR addrtype; /*  definition in enum addr_type_t */
@@ -354,7 +364,7 @@ struct layer_addr
 		struct layer_addr_mac_in_mac *mimac;
         struct layer_addr_gtp *gtp;
         struct layer_addr_mpls *mpls;
-
+		struct layer_addr_vxlan *vxlan;
         void 					*paddr;
 	};
 

@@ -808,6 +808,35 @@ struct packet_io_mac_addr{
 	char __pad__;	 /* 整体结构8字节对齐 */
 };
 
+/* 关于网络相关字段, 均为网络序, network order */
+#define VXLAN_KEEPALIVE_PKT_PORT	(3784)
+#define VXLAN_OVERLAY_PKT_PORT		(4789)
+
+struct __inline_vxlan_hdr{
+	unsigned char flags;
+	unsigned char reserved[3];
+	/*--------int delim -------*/
+	unsigned char vlan_id_half_high;
+	unsigned char link_layer_type : 4; /* 二层报文封装格式 */
+	unsigned char vlan_id_half_low : 4;
+	
+	unsigned int dir : 1;
+	unsigned int link_id : 6;
+	unsigned int online_test : 1;
+
+	unsigned int r7 : 1;
+	unsigned int r6 : 1;
+	unsigned int r5 : 1;
+	unsigned int r4 : 1;
+	unsigned int vni_flag : 1;
+	unsigned int r2 : 1;
+	unsigned int r1 : 1;
+	unsigned int r0 : 1;
+}__attribute__((packed));
+typedef struct __inline_vxlan_hdr inline_vxlan_hdr_t;
+
+
+
 unsigned char net_layer_to_ipv4_protocol(int addr_type);
 unsigned char net_layer_to_ipv6_protocol(int addr_type);
 unsigned short net_layer_to_ethernet_protocol(int addr_type);

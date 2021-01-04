@@ -19,7 +19,7 @@ extern "C" {
 
 extern unsigned int marsio_get_vlan_id_from_mbuff(void *pkt_reference);
 extern int marsio_set_vlan_id_to_mbuff(void *pkt_reference, unsigned int vlan_id_host_order);
-
+extern int vxlan_packet_is_myself(const raw_pkt_t *rawpkt);
 #if 0
 static const sapp_vlan_flipping_map_t *vlan_flipping_get_opposite(int cori, unsigned short vlan_id)
 {
@@ -75,8 +75,40 @@ static int packet_io_hook_output_vlan_flipping(raw_pkt_t *raw_pkt, unsigned char
 
 static int packet_io_hook_output_vxlan(raw_pkt_t *raw_pkt, void *raw_pkt_data, unsigned char route_dir)
 {
-	//to do, 翻转最外层mac, 外层ip, 
-	//看情况是否需要设置route_dir标志, 同向不变, 反向异或
+	const struct mesa_ethernet_hdr *raw_ethh = (struct mesa_ethernet_hdr *)(raw_pkt->raw_pkt_data);
+	struct mesa_ethernet_hdr *send_ethh = (struct mesa_ethernet_hdr *)(raw_pkt_data);
+	const struct mesa_ip4_hdr *raw_ip4h = (struct mesa_ip4_hdr *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr));
+	struct mesa_ip4_hdr *send_ip4h = (struct mesa_ip4_hdr *)((char *)raw_pkt_data + sizeof(struct mesa_ethernet_hdr));
+	/* vxlan udp层不用翻转, checksum设为0即可 */
+	struct mesa_udp_hdr *send_outer_udp_hdr = (struct mesa_udp_hdr *)((char *)raw_pkt_data + sizeof(struct mesa_ethernet_hdr)+sizeof(struct mesa_ip4_hdr));
+	const inline_vxlan_hdr_t *raw_vxlan_hdr = (inline_vxlan_hdr_t *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_udp_hdr));
+	inline_vxlan_hdr_t *send_vxlan_hdr = (inline_vxlan_hdr_t *)((char *)raw_pkt_data + sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_udp_hdr));
+	unsigned char tmp_mac_addr[ETH_ALEN];
+	unsigned int tmp_ip_addr;
+	/* 注意, 在forward时,raw_pkt->raw_pkt_data和raw_pkt_data实际上是一个地址, 需要暂存一下,不能直接像下面这样copy:  */
+#if 0
+	memcpy((void *)send_ethh->ether_shost, raw_ethh->ether_dhost, ETH_ALEN);
+	memcpy((void *)send_ethh->ether_dhost, raw_ethh->ether_shost, ETH_ALEN);
+#else
+	memcpy(tmp_mac_addr, raw_ethh->ether_shost, ETH_ALEN);
+	memcpy((void *)send_ethh->ether_shost, raw_ethh->ether_dhost, ETH_ALEN);
+	memcpy((void *)send_ethh->ether_dhost, tmp_mac_addr, ETH_ALEN);
+#endif
+
+	/* 注意, 在forward时,raw_pkt->raw_pkt_data和raw_pkt_data实际上是一个地址, 需要暂存一下,不能直接像下面这样copy:  */
+#if 0	
+	send_ip4h->ip_src.s_addr = raw_ip4h->ip_dst.s_addr;
+	send_ip4h->ip_dst.s_addr = raw_ip4h->ip_src.s_addr;
+#else
+	tmp_ip_addr = raw_ip4h->ip_src.s_addr;
+	send_ip4h->ip_src.s_addr = raw_ip4h->ip_dst.s_addr;
+	send_ip4h->ip_dst.s_addr = tmp_ip_addr;
+#endif
+
+	send_outer_udp_hdr->uh_sum = 0;
+
+	send_vxlan_hdr->dir = route_dir;
+
 	return 0;
 }
 
@@ -117,7 +149,7 @@ static int packet_io_hook_input_vlan_flipping(raw_pkt_t *raw_pkt, unsigned char 
 	unsigned short vlan_id = 1;
 	const sapp_vlan_flipping_map_t *vlan_map = sapp_global_val->config.packet_io.packet_io_tunnel.vlan_flipping_map_array;
 	
-	int ret;
+	int ret = 0;
 
 	vlan_id = marsio_get_vlan_id_from_mbuff((void *)raw_pkt->io_lib_pkt_reference);
 	if((vlan_id > 1) && (vlan_map[vlan_id].couple_vlan_id > 1)){ /* vlan_id 不在vlan flipping表中, 不算作overlay packet */
@@ -138,9 +170,33 @@ static int packet_io_hook_input_vlan_flipping(raw_pkt_t *raw_pkt, unsigned char 
 
 static int packet_io_hook_input_vxlan(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
 {
-	//to do, 根据vxlan dir方向设置route_dir
+	int ret = 0;
+	const struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr));
+	const struct mesa_udp_hdr *carry_vxlan_udp_hdr;
+	const inline_vxlan_hdr_t *vxlan_hdr;
+
+	if(ip4hdr->ip_p != IPPROTO_UDP){
+		sapp_runtime_log(RLOG_LV_INFO, "packet_io_hook_input_vxlan: recv not udp packet, IPPROTO:%d", ip4hdr->ip_p);
+		return -1;
+	}
 	
-	return 0;
+	carry_vxlan_udp_hdr = (struct mesa_udp_hdr *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr));
+	if(carry_vxlan_udp_hdr->uh_dport != htons(VXLAN_KEEPALIVE_PKT_PORT)
+	  && carry_vxlan_udp_hdr->uh_dport != htons(VXLAN_OVERLAY_PKT_PORT)){
+	  	sapp_runtime_log(RLOG_LV_INFO, "packet_io_hook_input_vxlan: recv dst udp port:%u, not %u and not %u in vxlan mode\n", 
+	  					ntohs(carry_vxlan_udp_hdr->uh_dport), VXLAN_KEEPALIVE_PKT_PORT, VXLAN_OVERLAY_PKT_PORT);
+		return -1;
+	}
+	
+	if(vxlan_packet_is_myself(raw_pkt) != 0){
+		vxlan_hdr = (inline_vxlan_hdr_t *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_udp_hdr));
+		raw_pkt->is_overlay_pkt = 1; /* vxlan */
+		raw_pkt->route_dir = vxlan_hdr->dir;
+	}else{
+		ret = -1;
+	}
+	
+	return ret;
 }
 
 

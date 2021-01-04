@@ -49,6 +49,13 @@ static stFunArray g_PollingFun[MAX_FUN_NUM];
 static int g_ArpFunNum=0;
 static stFunArray g_ArpFun[MAX_FUN_NUM];
 
+static int g_OverlayIpv4FunNum=0;
+static stFunArray g_OverlayIpv4Fun[MAX_FUN_NUM];
+
+
+static int g_OverlayUdpFunNum=0;
+static stFunArray g_OverlayUdpFun[MAX_FUN_NUM];
+
 
 typedef struct _stStreamFunInfo
 {
@@ -243,6 +250,16 @@ int stream_register_tcp_takeover (STREAM_CB_FUN_T x)
 int stream_register_arp(SAPP_PKT_CB_FUN_T x)
 {
 	return stream_register_funtoArray(FUN_TYPE_ARP,(char (*)())x, g_ArpFun, &g_ArpFunNum);
+}
+
+int stream_register_overlay_ip(IPv4_CB_FUN_T x)
+{
+	return stream_register_funtoArray(FUN_TYPE_IPV4,(char (*)())x,g_OverlayIpv4Fun,&g_OverlayIpv4FunNum);
+}
+
+int stream_register_overlay_udp(STREAM_CB_FUN_T x)
+{
+	return stream_register_funtoArray(FUN_TYPE_UDP,(char (*)())x,g_OverlayUdpFun,&g_OverlayUdpFunNum);
 }
 
 
@@ -821,6 +838,23 @@ int stream_process_udp(struct streaminfo *a_udp, const void *this_iphdr, const v
 	return ret;
 }
 
+
+
+int stream_process_overlay_udp(struct streaminfo *a_udp, const void *this_iphdr, const void *transport_hdr, 
+						const raw_pkt_t * raw_pkt,void **apme,unsigned char *popstate)
+{
+	int ret;
+	struct streaminfo_private *a_udp_pr = (struct streaminfo_private *)a_udp;
+
+
+	a_udp_pr->packet_io_context = 1;
+	ret = stream_process(a_udp, this_iphdr, transport_hdr,raw_pkt,g_OverlayUdpFunNum, g_OverlayUdpFun,apme,popstate);
+	a_udp_pr->packet_io_context = 0;
+	
+	return ret;
+}
+
+
 /*
 	lijia 2015-01-12 modify, add this_iphdr, 
 	如果是IP分片重组的包, 必须显式的传递IP包头, 否则只传raw_hdr, 无法获取重组后的IP包头.
@@ -897,6 +931,43 @@ int stream_process_ipv4(struct streaminfo *pfstream, const struct ip* this_layer
 		{
 //			appret=g_Ipv4Fun[i].sapp_pkt_fun(pfstream,this_layer_hdr,raw_pkt);
 			appret= plugin_call_ipentry(CALL_FUN_TYPE_NORAW,NULL,g_Ipv4Fun[i].sapp_pkt_fun,pfstream,this_layer_hdr,thread_num,routedir, raw_pkt);
+
+		}
+
+		/* 2019-11-15 lijia add for plug kill other */
+		if(appret & APP_STATE_KILL_OTHER){
+			sapp_runtime_log(20, "not support APP_STATE_KILL_OTHER in ip entry!");
+		}
+
+		if(unlikely(appret&APP_STATE_DROPPKT))
+		{
+			return DROP;
+		}	
+
+		if(appret & APP_STATE_KILL_FOLLOW){
+			break;
+		}
+	}
+	
+	return platform_ret;
+}
+
+int stream_process_overlay_ipv4(struct streaminfo *pfstream, const struct ip* this_layer_hdr,
+				int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt)
+{
+	int i;
+	int platform_ret = PASS;
+	int appret;
+	
+	for(i=0;i<g_OverlayIpv4FunNum;i++)
+	{
+		if(g_OverlayIpv4Fun[i].funtype==FUN_TYPE_IPV4)
+		{
+			appret= plugin_call_ipentry(CALL_FUN_TYPE_RAW,g_OverlayIpv4Fun[i].stream_ipv4_fun,NULL,pfstream,this_layer_hdr,thread_num,routedir, raw_pkt);
+		}
+		else
+		{
+			appret= plugin_call_ipentry(CALL_FUN_TYPE_NORAW,NULL,g_OverlayIpv4Fun[i].sapp_pkt_fun,pfstream,this_layer_hdr,thread_num,routedir, raw_pkt);
 
 		}
 

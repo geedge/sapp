@@ -28,7 +28,9 @@ extern "C" {
 
 static struct frag_manage *g_ipv4_frag_manage;
 static unsigned int FRAG_IP4_RANDOM;
-//extern int g_packet_io_thread_num;
+extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   
+extern int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_iphdr,
+		int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr);
 extern void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq);
 int update_global_ip_frag_list(raw_ipfrag_list_t *list_head, int thread_num, int type);
 extern void raw_frags_list_free_one(int thread_seq, void *project_req_value);
@@ -665,6 +667,18 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	pstream->type=STREAM_TYPE_NON;
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
+
+	/* 2020-12-23 lijia add, 无mrtunnat模式, 如果是overlay层, 不调用普通插件 */
+	if(sapp_is_overlay_layer(pstream_pr, raw_pkt) != 0){
+		ret = stream_process_overlay_ipv4(pstream, (const struct ip *)this_layer_data, thread_num, routedir, raw_pkt);
+		if(DROP == ret){
+			return DROP;
+		}
+		int next_layer_offest = offset_to_raw_pkt_hdr + (a_packet->ip_hl << 2);
+		/* 如果是VXLAN模式的overlay层, 不做ip分片还原,直接跳转到udp_entry */
+		ret=dealipv4udppkt(ptmp,a_packet,thread_num,routedir,raw_pkt, next_layer_offest);
+		return ret;
+	}
 	
 	/*See, is this a fragment*/
 	offset = ntohs(a_packet->ip_off);

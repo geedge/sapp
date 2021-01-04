@@ -138,6 +138,8 @@ static void field_stat2_update_metrics(void)
 
 	sapp_fs2_update_count(SAPP_STAT_RCV_TCP, cur_count[SAPP_STAT_RCV_TCP]);
 	sapp_fs2_update_length(SAPP_STAT_RCV_TCP, 8 *(cur_length[SAPP_STAT_RCV_TCP]));
+
+	sapp_fs2_update_length(SAPP_STAT_TCP_LOST_PKT, 8 *(cur_length[SAPP_STAT_TCP_LOST_PKT]));
 	
 	sapp_fs2_update_count(SAPP_STAT_RCV_UDP, cur_count[SAPP_STAT_RCV_UDP]);	
 	sapp_fs2_update_length(SAPP_STAT_RCV_UDP, 8 *(cur_length[SAPP_STAT_RCV_UDP]));
@@ -150,9 +152,25 @@ static void field_stat2_update_metrics(void)
 	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_C2S, cur_count[SAPP_STAT_TCP_STREAM_C2S]);
 	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_S2C, cur_count[SAPP_STAT_TCP_STREAM_S2C]);
 
+	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE,cur_count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE]);
+	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_TOTAL_C2S, cur_count[SAPP_STAT_TCP_STREAM_TOTAL_C2S]);
+	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_TOTAL_S2C, cur_count[SAPP_STAT_TCP_STREAM_TOTAL_S2C]);
+	
+
+	sapp_fs2_update_count(SAPP_STAT_UDP_STREAM_DOUBLE,cur_count[SAPP_STAT_UDP_STREAM_DOUBLE]);
+	sapp_fs2_update_count(SAPP_STAT_UDP_STREAM_C2S, cur_count[SAPP_STAT_UDP_STREAM_C2S]);
+	sapp_fs2_update_count(SAPP_STAT_UDP_STREAM_S2C, cur_count[SAPP_STAT_UDP_STREAM_S2C]);
+
+	sapp_fs2_update_count(SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE,cur_count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE]);
+	sapp_fs2_update_count(SAPP_STAT_UDP_STREAM_TOTAL_C2S, cur_count[SAPP_STAT_UDP_STREAM_TOTAL_C2S]);
+	sapp_fs2_update_count(SAPP_STAT_UDP_STREAM_TOTAL_S2C, cur_count[SAPP_STAT_UDP_STREAM_TOTAL_S2C]);
+	
 	sapp_fs2_update_count(SAPP_STAT_SND_TCP_RST,  cur_count[SAPP_STAT_SND_TCP_RST]);
 	sapp_fs2_update_count(SAPP_STAT_SND_TCP_SYNACK,  cur_count[SAPP_STAT_SND_TCP_SYNACK]);
 	sapp_fs2_update_count(SAPP_STAT_SND_UDP,  cur_count[SAPP_STAT_SND_UDP]);
+
+
+	
 }
 
 void sysinfo_output(void)
@@ -281,7 +299,7 @@ void sysinfo_output(void)
 	fprintf(fp,"Network Link Quality:\n");	
 	fprintf(fp,"%-12s %12s %12s %12s \n","LOST_STAT", "total", "lost", "percent");
 	if((cur_length[SAPP_STAT_RCV_TCP] > 0) && (cur_length[SAPP_STAT_TCP_LOST_PKT] > 0)){
-		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "bytes", cur_length[SAPP_STAT_RCV_TCP], cur_length[SAPP_STAT_TCP_LOST_PKT], (double)cur_length[SAPP_STAT_TCP_LOST_PKT]/(double)cur_length[SAPP_STAT_RCV_TCP]);
+		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "bytes", cur_length[SAPP_STAT_RCV_TCP], cur_length[SAPP_STAT_TCP_LOST_PKT], (double)cur_length[SAPP_STAT_TCP_LOST_PKT]/(double)(cur_length[SAPP_STAT_RCV_TCP]+cur_length[SAPP_STAT_TCP_LOST_PKT]));
 	}else{
 		fprintf(fp,"%-12s %12llu %12llu %2.10f\n", "bytes", cur_length[SAPP_STAT_RCV_TCP], cur_length[SAPP_STAT_TCP_LOST_PKT], 0.0);
 	}

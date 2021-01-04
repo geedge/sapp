@@ -20,4 +20,4 @@ deal_arp.c       deal_ipv6.c        deal_ppp.c    deal_teredo.c  ip_reassembly.c
 deal_ethernet.c  deal_pppoe.c  deal_udp.c     stream_manage.c
 deal_gre.c       deal_l2tp.c        deal_pptp.c   deal_vlan.c      synflood_detect.c
 deal_icmp.c      deal_mac_in_mac.c  deal_proxy.c  g_device.c      
-deal_gprs_tunnel.c)
+deal_gprs_tunnel.c deal_vxlan.c)

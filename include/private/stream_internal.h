@@ -355,7 +355,7 @@ struct sapp_global_mthread_t{
 
 extern struct sapp_global_single_t sapp_global_single;
 extern struct sapp_global_mthread_t sapp_global_mthread[MAX_THREAD_NUM];
-
+extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX]; 
 int MESA_kill_tcp_remedy(struct streaminfo *stream, const void *ext_raw_pkt);
 
 long long sapp_get_cpu_cycle(void);

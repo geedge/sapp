@@ -592,7 +592,10 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	sapp_global_val->mthread_volatile[thread_num]->raw_pkt = p_raw_pkt;
 	
 	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
-		packet_io_hook_input((raw_pkt_t *)p_raw_pkt, dir, thread_num);
+		ret = packet_io_hook_input((raw_pkt_t *)p_raw_pkt, dir, thread_num);
+		if(ret < 0){
+			return DROP;
+		}
 	}
 
 	if (p_raw_pkt->route_dir == sapp_global_val->config.packet_io.inbound_route_dir)

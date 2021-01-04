@@ -94,16 +94,37 @@ int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt
 		return 0;
 	}
 
-	if(memcmp(G_BROADCAST_ADDR, p_eth_hdr->ether_dhost, 6) == 0){
+	if(memcmp(G_BROADCAST_ADDR, p_eth_hdr->ether_dhost, ETH_ALEN) == 0){
 		/* G串联模式下，非ARP协议的广播包，直接丢弃! 防止再回注到网络中, 造成广播风暴等网络问题 */
 		if(eth_type != ETH_P_ARP){
 			return 1;
 		}
 	}else{
-		/* 2017-10-10 lijia add, 组播MAC地址, 通常为局域网内控制类数据包, 如LLMNR, STP等协议, 一般无需处理 */
-		if((p_eth_hdr->ether_dhost[0] & 0x01) == 0x01){
+		/* 2017-10-10 lijia add, 组播MAC地址, 通常为局域网内控制类数据包, 如LLMNR, STP等协议, 一般无需处理 
+			参考:https://en.wikipedia.org/wiki/Multicast_address 
+		*/
+		if((p_eth_hdr->ether_dhost[0]  == 0x01)
+		  &&(p_eth_hdr->ether_dhost[1] == 0x00)
+		  &&(p_eth_hdr->ether_dhost[2] == 0x0C)
+		  &&(p_eth_hdr->ether_dhost[3] == 0xCC)){
 			return 1;
-		}
+		}else if((p_eth_hdr->ether_dhost[0]  == 0x01)
+		  &&(p_eth_hdr->ether_dhost[1] == 0x80)
+		  &&(p_eth_hdr->ether_dhost[2] == 0xC2)
+		  &&(p_eth_hdr->ether_dhost[3] == 0x00)){
+			return 1;
+		  }else if((p_eth_hdr->ether_dhost[0]  == 0x01)
+		  &&(p_eth_hdr->ether_dhost[1] == 0x00)
+		  &&(p_eth_hdr->ether_dhost[2] == 0x5E)){
+			return 1;
+		  }else if((p_eth_hdr->ether_dhost[0]  == 0x33)
+		  &&(p_eth_hdr->ether_dhost[1] == 0x33)){
+			return 1;
+		  }else if((p_eth_hdr->ether_dhost[0]  == 0x01)
+		  &&(p_eth_hdr->ether_dhost[1] == 0x0C)
+		  &&(p_eth_hdr->ether_dhost[2] == 0xCD)){
+			return 1;
+		  }
 	}
 
 	return 0;
@@ -980,6 +1001,7 @@ static int sapp_fs2_init(void)
 
 	pfs_para->fs_id_count_array[SAPP_STAT_RCV_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Pkt");
 	pfs_para->fs_id_length_array[SAPP_STAT_RCV_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bit");
+    pfs_para->fs_id_length_array[SAPP_STAT_TCP_LOST_PKT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Lost_Bit");	
 
 	pfs_para->fs_id_count_array[SAPP_STAT_RCV_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Pkt");
 	pfs_para->fs_id_length_array[SAPP_STAT_RCV_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bit");
@@ -995,10 +1017,25 @@ static int sapp_fs2_init(void)
     pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_C2S");
     pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_S2C");
 
+    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE] = FS_register(fs2_handle, FS_STYLE_STATUS,FS_CALC_CURRENT, "Tcp_Link_Double_ALL");
+    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_TOTAL_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_C2S_ALL");
+    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_TOTAL_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_S2C_ALL");
+ 
+
+    pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_DOUBLE] = FS_register(fs2_handle, FS_STYLE_STATUS,FS_CALC_CURRENT, "Udp_Link_Double");
+    pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Link_C2S");
+    pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Link_S2C");
+
+    pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE] = FS_register(fs2_handle, FS_STYLE_STATUS,FS_CALC_CURRENT, "Udp_Link_Double_ALL");
+    pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_TOTAL_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Link_C2S_ALL");
+    pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_TOTAL_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Link_S2C_ALL");
+
 
     pfs_para->fs_id_count_array[SAPP_STAT_SND_TCP_RST] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Tcp_Rst");
 	pfs_para->fs_id_count_array[SAPP_STAT_SND_TCP_SYNACK] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Tcp_S/A");
 	pfs_para->fs_id_count_array[SAPP_STAT_SND_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Udp");
+
+	
 	
 	if(unlikely(g_timestamp_record_sw))
 	{
