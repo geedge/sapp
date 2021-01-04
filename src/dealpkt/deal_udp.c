@@ -18,6 +18,8 @@ extern void free_heap_stream_info(struct streaminfo *heap_stream, int layer);
 extern void reverse_addr(void *addr, int addrtype);
 int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *pstream_stack, int reverse);
 extern int guess_if_teredo(const struct streaminfo *pstream, struct mesa_udp_hdr *udphdr);
+extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   
+
 int G_UDP_FLOW_STAT_PROJECT_ID = -1;
 int G_UDP_TEREDO_IDENTIFY_PROJECT_ID = -1;
 
@@ -416,7 +418,7 @@ static int set_addr_recur(struct streaminfo *this_stream, int reverse)
 }
 
 
-static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_iphdr,
+int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_iphdr,
 		int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
 	struct mesa_udp_hdr *udph;
@@ -442,12 +444,6 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 	hlen=4 * this_iphdr->ip_hl;
 	next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct mesa_udp_hdr);
 
-#if 0	 /* 由插件实现 */
-	if(unlikely(gdev_keepalive(raw_pkt, thread_num, GDEV_KEEPALIVE_TYPE_BFD, routedir) > 0)){
-		return DROP;
-	}
-#endif	
-
 	udph = (struct mesa_udp_hdr *) ((char*)this_iphdr +hlen );
 	ulen = ntohs (udph->uh_ulen);
 	/* 2015-12-29 lijia modify, 某些UDP包没有负载数据, 没有意义, 直接丢弃 */
@@ -456,10 +452,6 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 	}
 	datalen =ulen - sizeof (struct mesa_udp_hdr);
 
-	/* IP, UDP层合并后, 不再更新UDP层的offset_to_raw_pkt_hdr */
-#if 0	
-	ptmp->stream.offset_to_raw_pkt_hdr = (char *)udph - (char *)raw_pkt->raw_pkt_data;
-#endif
 	pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
 	pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 	//set_stream_addr(pfstream, udph->uh_sport, udph->uh_dport, &ptmp->stream.addr);
@@ -573,17 +565,23 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 		update_polling_inject_context(pstream_pr, raw_pkt);
 		
 		udp_change_stream_state(a_index,udph, raw_pkt);
-		//udp stream 回调
 
-	/* IP, UDP层合并后, 不再更新UDP层的offset_to_raw_pkt_hdr */
-#if 0	
-		pstream_pr->stream.offset_to_raw_pkt_hdr = (char *)udph - (char *)raw_pkt->raw_pkt_data;
-#endif
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
-		
-		ret=stream_process_udp(pstream,(const void *)this_iphdr, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));  
-		udp_cleardata(pstream);
+
+		if(sapp_is_overlay_layer(pstream_pr, raw_pkt) != 0){
+			ret = stream_process_overlay_udp(pstream,(const void *)this_iphdr, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
+			if(DROP == ret){
+				return DROP;
+			}
+			ret = vxlan_entry(stack_stream_pr, (char *)udph+sizeof(struct mesa_udp_hdr), thread_num, routedir, raw_pkt, next_layer_offset);
+			udp_cleardata(pstream);
+			/* overlay UDP层不再继续后续的隧道检测 */
+			return ret;
+		}else{		
+			ret=stream_process_udp(pstream,(const void *)this_iphdr, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate)); 
+			udp_cleardata(pstream);
+		}
      }
      
 #if (COMPAT_PAPP_FOR_BENCHMARK == 0)
@@ -591,35 +589,17 @@ static int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr 
 		return DROP;
 	}
 	
-//	if(likely(udp_stream_table_size > 0)){ /* 单包处理 */
-		/*
-			Attention, 特别注意:
-			判断stream_carry_up_layer_tunnel_type时, 是从heap内存中的pstream_pr判断,
-			因为此值是靠udp层插件udp_teredo_identify_entry()设置的,
+	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_TEREDO){
+		ret = teredo_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);		
+	}
+	
+	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_L2TP){
+		ret = l2tpv2_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);	
+	}
+	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNEL_GPRS_TUNNEL){
+		ret = gtp_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
+	}
 
-			但如果判断是隧道需要继续解析的话, 传递给上层的用stack中的临时变量,
-			在上层创建流时, 会再调用copy_stream_info_to_heap()真正copy到heap中!
-		*/
-		if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_TEREDO){
-			ret = teredo_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);		
-		}
-
-		if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_L2TP){
-			ret = l2tpv2_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);	
-		}
-		if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNEL_GPRS_TUNNEL){
-			ret = gtp_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
-		}
-//	}else{
-		/* 单包处理 */
-//		if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_TEREDO){
-//			ret = teredo_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
-//		}
-
-//		if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_L2TP){
-//			ret = l2tpv2_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
-//		}
-//	}
 #endif
 
 	if(DROP == ret){

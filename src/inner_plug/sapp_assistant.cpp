@@ -94,16 +94,37 @@ int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt
 		return 0;
 	}
 
-	if(memcmp(G_BROADCAST_ADDR, p_eth_hdr->ether_dhost, 6) == 0){
+	if(memcmp(G_BROADCAST_ADDR, p_eth_hdr->ether_dhost, ETH_ALEN) == 0){
 		/* G串联模式下，非ARP协议的广播包，直接丢弃! 防止再回注到网络中, 造成广播风暴等网络问题 */
 		if(eth_type != ETH_P_ARP){
 			return 1;
 		}
 	}else{
-		/* 2017-10-10 lijia add, 组播MAC地址, 通常为局域网内控制类数据包, 如LLMNR, STP等协议, 一般无需处理 */
-		if((p_eth_hdr->ether_dhost[0] & 0x01) == 0x01){
+		/* 2017-10-10 lijia add, 组播MAC地址, 通常为局域网内控制类数据包, 如LLMNR, STP等协议, 一般无需处理 
+			参考:https://en.wikipedia.org/wiki/Multicast_address 
+		*/
+		if((p_eth_hdr->ether_dhost[0]  == 0x01)
+		  &&(p_eth_hdr->ether_dhost[1] == 0x00)
+		  &&(p_eth_hdr->ether_dhost[2] == 0x0C)
+		  &&(p_eth_hdr->ether_dhost[3] == 0xCC)){
 			return 1;
-		}
+		}else if((p_eth_hdr->ether_dhost[0]  == 0x01)
+		  &&(p_eth_hdr->ether_dhost[1] == 0x80)
+		  &&(p_eth_hdr->ether_dhost[2] == 0xC2)
+		  &&(p_eth_hdr->ether_dhost[3] == 0x00)){
+			return 1;
+		  }else if((p_eth_hdr->ether_dhost[0]  == 0x01)
+		  &&(p_eth_hdr->ether_dhost[1] == 0x00)
+		  &&(p_eth_hdr->ether_dhost[2] == 0x5E)){
+			return 1;
+		  }else if((p_eth_hdr->ether_dhost[0]  == 0x33)
+		  &&(p_eth_hdr->ether_dhost[1] == 0x33)){
+			return 1;
+		  }else if((p_eth_hdr->ether_dhost[0]  == 0x01)
+		  &&(p_eth_hdr->ether_dhost[1] == 0x0C)
+		  &&(p_eth_hdr->ether_dhost[2] == 0xCD)){
+			return 1;
+		  }
 	}
 
 	return 0;

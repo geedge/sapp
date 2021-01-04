@@ -662,6 +662,8 @@ int pcap_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 	/* delete by lijia 2014-12-10, datalen已经包含了mac地址长度 */
 	//datalen += sizeof(struct mesa_ethernet_hdr); 
 
+	packet_io_hook_sendto(raw_pkt, dir, data, NULL);
+
 send_again:
 	ret = sendto(send_handle->raw_eth_fd, data, datalen, 0, (struct sockaddr *)snd_addr, sizeof(struct sockaddr));
 	if(ret < 0){
@@ -713,7 +715,9 @@ static int pcap_forward_pkt(int thread_num, const unsigned char *data,int data_l
 	if(NET_CONN_SERIAL_GDEV == g_pcap_topology_mode){
 		/* 特种设备模式, 收发使用同一块网卡 */
 		sock_addr = &work_thread_pool[thread_num].sock_addr_up;
+#if 0	//2020-12-25 , v4.2版本在	packet_io_hook_output_vxlan()函数已经修改了各层地址, 此处直接转发即可.
 		net_common_adjust_forward_mac((struct mesa_ethernet_hdr *)data, g_pcap_topology_mode);
+#endif		
 	}else{	
 		if((DIR_ROUTE_DOWN & dir) == DIR_ROUTE_DOWN){
 			sock_addr = &work_thread_pool[thread_num].sock_addr_up; /* the opposite device */

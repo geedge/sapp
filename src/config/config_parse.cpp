@@ -9,6 +9,9 @@ extern "C" {
 #include "support/tomlc99_wrap.h"
 #include "field_stat2.h"
 
+extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   
+
+
 /* 静态只读全局变量可以放在代码段, 无需在sapp_global_val里 */
 static const char *default_config_file = "./etc/sapp.toml";
 
@@ -688,6 +691,14 @@ static int parse_stream_compare_layer_config(void)
 	return 0;
 }
 
+static void update_overlay_layer_set(void)
+{
+	g_overlay_layer_set[ADDR_TYPE_MAC][0] = 1;	
+	g_overlay_layer_set[ADDR_TYPE_IPV4][1] = 1;	
+	g_overlay_layer_set[__ADDR_TYPE_IP_PAIR_V4][1] = 1;	
+	g_overlay_layer_set[ADDR_TYPE_UDP][1] = 1;	/* IP和udp合并算为一层, 所以此处还是用1 */
+	g_overlay_layer_set[ADDR_TYPE_VXLAN][2] = 1;	
+}
 
 /* 配置格式转换, 如字符串类型转为int类型,便于程序处理 */
 static int config_expression_convert(void)
@@ -742,6 +753,10 @@ static int config_expression_convert(void)
 		return -1;
 	}
 
+	if((pconfig->packet_io.depolyment_mode_bin == DEPOLYMENT_MODE_INLINE)
+	&& (OVERLAY_MODE_VXLAN == pconfig->packet_io.packet_io_tunnel.overlay_mode_bin)){
+		update_overlay_layer_set();
+	}
 
 	ret = parse_vlan_flipping_map_config();
 	if(ret < 0){
@@ -852,13 +867,15 @@ static int config_expression_convert(void)
 	}
 
 	/******************************  TOOLS   *******************************/
-	if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "storage" ,strlen("storage")) == 0){
-		pconfig->tools.pkt_dump.mode_bin = PKT_DUMP_LOCAL_FILE;
-	}else if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "udp_socket" ,strlen("udp_socket")) == 0){
-		pconfig->tools.pkt_dump.mode_bin = PKT_DUMP_UDP_SOCKET;
-	}else{
-		sapp_log(30, ~0, ~0, "[Error]TOOLS.PKT_DUMP.mode only support [storage, udp_socket]!");
-		return -1;
+	if(pconfig->tools.pkt_dump.enabled != 0){
+		if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "storage" ,strlen("storage")) == 0){
+			pconfig->tools.pkt_dump.mode_bin = PKT_DUMP_LOCAL_FILE;
+		}else if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "udp_socket" ,strlen("udp_socket")) == 0){
+			pconfig->tools.pkt_dump.mode_bin = PKT_DUMP_UDP_SOCKET;
+		}else{
+			sapp_log(30, ~0, ~0, "[Error]TOOLS.PKT_DUMP.mode only support [storage, udp_socket]!");
+			return -1;
+		}
 	}
 
 	if(pkt_dump_thread_id_convert() < 0){
@@ -993,23 +1010,25 @@ static int config_sanity_check(void)
 	
 
 	/*******************************  PKT_DUMP  ******************************/
-	if(pconfig->tools.pkt_dump.dump_thread_id_array_num > pconfig->cpu.worker_threads){
-		sapp_log(30, ~0, ~0, "[Error] TOOLS.PKT_DUMP.dump_thread_id_array items more than CPU.worker_threads!");
-		return -1;
-	}
-
-	if((strncasecmp(pconfig->tools.pkt_dump.mode_str, "storage" ,strlen("storage")) != 0)
-     && (strncasecmp(pconfig->tools.pkt_dump.mode_str, "udp_socket" ,strlen("udp_socket")) != 0)){
-		sapp_log(30, ~0, ~0, "[Error]TOOLS.PKT_DUMP.mode only support [storage, udp_socket]!");
-		return -1;
-	}
-
-	if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "udp_socket" ,strlen("udp_socket")) == 0){
-		if(pconfig->tools.pkt_dump.command_port <=0 || pconfig->tools.pkt_dump.command_port > 65535){
-			sapp_log(30, ~0, ~0, "[Error] TOOLS.PKT_DUMP.command_port: %u invalid!", pconfig->tools.pkt_dump.command_port);
+	if(pconfig->tools.pkt_dump.enabled != 0){
+		if(pconfig->tools.pkt_dump.dump_thread_id_array_num > pconfig->cpu.worker_threads){
+			sapp_log(30, ~0, ~0, "[Error] TOOLS.PKT_DUMP.dump_thread_id_array items more than CPU.worker_threads!");
 			return -1;
 		}
-	}	
+
+		if((strncasecmp(pconfig->tools.pkt_dump.mode_str, "storage" ,strlen("storage")) != 0)
+	     && (strncasecmp(pconfig->tools.pkt_dump.mode_str, "udp_socket" ,strlen("udp_socket")) != 0)){
+			sapp_log(30, ~0, ~0, "[Error]TOOLS.PKT_DUMP.mode only support [storage, udp_socket]!");
+			return -1;
+		}
+
+		if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "udp_socket" ,strlen("udp_socket")) == 0){
+			if(pconfig->tools.pkt_dump.command_port <=0 || pconfig->tools.pkt_dump.command_port > 65535){
+				sapp_log(30, ~0, ~0, "[Error] TOOLS.PKT_DUMP.command_port: %u invalid!", pconfig->tools.pkt_dump.command_port);
+				return -1;
+			}
+		}	
+	}
 
 	old_config_file_detect("./conf/main.conf", "./etc/sapp.toml");
 

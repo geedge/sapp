@@ -120,10 +120,10 @@ static void gdev_keepalive_stat_update(int tid, unsigned int gip_net, int type, 
 static int gdev_keepalive_bfd_plug(const raw_pkt_t *raw_pkt, int thread_id, unsigned char dir, unsigned char *send_buf)
 {
 	char payload_buf[1472];
-	struct mesa_ethernet_hdr *eth_hdr = (struct mesa_ethernet_hdr *)raw_pkt->raw_pkt_data;
-	struct mesa_ip4_hdr *ip_hdr = (struct mesa_ip4_hdr *)((char *)eth_hdr+ SENDPACKET_ETH_H);
-	struct mesa_udp_hdr *udp_hdr = (struct mesa_udp_hdr *)((char *)eth_hdr + SENDPACKET_ETH_H + ip_hdr->ip_hl*4);
-	bfd_header_t *bfd_net_hdr = (bfd_header_t *)((char *)eth_hdr + SENDPACKET_ETH_H + ip_hdr->ip_hl*4 + SENDPACKET_UDP_H);
+	struct mesa_ethernet_hdr *raw_eth_hdr = (struct mesa_ethernet_hdr *)raw_pkt->raw_pkt_data;
+	struct mesa_ip4_hdr *ip_hdr = (struct mesa_ip4_hdr *)((char *)raw_eth_hdr+ SENDPACKET_ETH_H);
+	struct mesa_udp_hdr *udp_hdr = (struct mesa_udp_hdr *)((char *)raw_eth_hdr + SENDPACKET_ETH_H + ip_hdr->ip_hl*4);
+	bfd_header_t *bfd_net_hdr = (bfd_header_t *)((char *)raw_eth_hdr + SENDPACKET_ETH_H + ip_hdr->ip_hl*4 + SENDPACKET_UDP_H);
 	bfd_header_t *bfd_send_hdr = (bfd_header_t *)payload_buf;
 	char bfd_buf[4];
 	int payload_len = ntohs(udp_hdr->uh_ulen) - SENDPACKET_UDP_H;
@@ -177,6 +177,8 @@ static int gdev_keepalive_bfd_plug(const raw_pkt_t *raw_pkt, int thread_id, unsi
 	memcpy(bfd_send_hdr->my_discriminator, bfd_send_hdr->your_discriminator, 4);
 	memcpy(bfd_send_hdr->your_discriminator, bfd_buf, 4);
 
+	sendpacket_build_ethernet(raw_eth_hdr->ether_shost, raw_eth_hdr->ether_dhost, ETH_P_IP, NULL, 0, send_buf);
+
 	sendpacket_build_udp_dual_stack(ntohs(udp_hdr->uh_sport), /* BFD协议不交换源和目的端口 */
 						 ntohs(udp_hdr->uh_dport),
 						 (char *)bfd_send_hdr,
@@ -204,15 +206,15 @@ static int gdev_keepalive_bfd_plug(const raw_pkt_t *raw_pkt, int thread_id, unsi
     					   payload_len + SENDPACKET_UDP_H);
 
 
-	return SENDPACKET_IP_H + SENDPACKET_UDP_H+sizeof(bfd_header_t);	
+	return SENDPACKET_IP_H + SENDPACKET_UDP_H+sizeof(bfd_header_t) + sizeof(struct mesa_ethernet_hdr);	
 }
 
 /* 特殊设备保活函数，BFD协议 */
 static int gdev_keepalive_icmp_plug(const raw_pkt_t *raw_pkt, int thread_id, unsigned char dir, unsigned char *send_buf)
 {
-	struct mesa_ethernet_hdr *eth_hdr = (struct mesa_ethernet_hdr *)raw_pkt->raw_pkt_data;
-	struct mesa_ip4_hdr *ip_hdr = (struct mesa_ip4_hdr *)((char *)eth_hdr + SENDPACKET_ETH_H);
-	struct mesa_icmp_echo_hdr *icmp_hdr = (struct mesa_icmp_echo_hdr *)((char *)eth_hdr + SENDPACKET_ETH_H + ip_hdr->ip_hl*4);
+	struct mesa_ethernet_hdr *raw_eth_hdr = (struct mesa_ethernet_hdr *)raw_pkt->raw_pkt_data;
+	struct mesa_ip4_hdr *ip_hdr = (struct mesa_ip4_hdr *)((char *)raw_eth_hdr + SENDPACKET_ETH_H);
+	struct mesa_icmp_echo_hdr *icmp_hdr = (struct mesa_icmp_echo_hdr *)((char *)raw_eth_hdr + SENDPACKET_ETH_H + ip_hdr->ip_hl*4);
 	unsigned char *icmp_payload;
 	int icmp_payload_len;
 
@@ -221,6 +223,7 @@ static int gdev_keepalive_icmp_plug(const raw_pkt_t *raw_pkt, int thread_id, uns
 	icmp_payload = (unsigned char *)icmp_hdr + sizeof(struct mesa_icmp_echo_hdr);
 	icmp_payload_len = ntohs(ip_hdr->ip_len) - ip_hdr->ip_hl*4 - sizeof(struct mesa_icmp_echo_hdr);
 
+	sendpacket_build_ethernet(raw_eth_hdr->ether_shost, raw_eth_hdr->ether_dhost, ETH_P_IP, NULL, 0, send_buf);
 
 	sendpacket_build_icmpv4_echo(ICMP_ECHOREPLY, 0, 0, 
                                  ntohs(icmp_hdr->icd_id),
@@ -248,7 +251,7 @@ static int gdev_keepalive_icmp_plug(const raw_pkt_t *raw_pkt, int thread_id, uns
     					   IPPROTO_ICMP, 
     					   icmp_payload_len + sizeof(struct mesa_icmp_echo_hdr));
 
-	return ntohs(ip_hdr->ip_len);	
+	return ntohs(ip_hdr->ip_len) + sizeof(struct mesa_ethernet_hdr);	
 }
 
 
@@ -289,7 +292,7 @@ static int gdev_keepalive_plug(const raw_pkt_t *raw_pkt, int thread_id, unsigned
 			return -1;
 	}
 
-#if IOMODE_MARSIO
+#if 0
 	snd_eth_hdr = 	(struct mesa_ethernet_hdr *)snd_handle->send_buf;
 	memcpy(snd_eth_hdr->ether_shost, raw_eth_hdr->ether_dhost, ETHER_ADDR_LEN);
 	memcpy(snd_eth_hdr->ether_dhost, raw_eth_hdr->ether_shost, ETHER_ADDR_LEN);
@@ -720,6 +723,18 @@ unsigned char vxlan_id_map_to_service_id(int vxlan_id)
 	return (unsigned char)(vxlan_id - 100);
 }
 
+/* 用来检测vxlan模式下, 数据包是否给本机的 */
+int vxlan_packet_is_myself(const raw_pkt_t *rawpkt)
+{
+	struct mesa_ip4_hdr *ip4h = (struct mesa_ip4_hdr *)((char *)rawpkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr));
+
+	if(sendto_gdev_card_ip == ip4h->ip_dst.s_addr){
+		return 1;
+	}
+
+	return 0;
+}
+
 int gdev_keepalive_plug_init(void)
 {
 	char tmp_ip_buf[16];
@@ -731,13 +746,6 @@ int gdev_keepalive_plug_init(void)
 
 #ifdef GIT_VERSION
 	MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]", "g_device_plug version: %s\n", g_device_plug_git_ver);	
-#endif
-
-#if IOMODE_MARSIO	
-	gdev_plug_extern_marsio4_instance = sapp_get_marsio_instance();
-	if(NULL == gdev_plug_extern_marsio4_instance){
-		return -1;
-	}
 #endif
 
 	assert(sizeof(gdev_keepalive_status_t) % 64 == 0);

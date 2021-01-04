@@ -69,22 +69,15 @@ static inline void __do_streamleavlist(struct streamindex *pindex,struct stream_
 
 int tcp_stream_table_size=0;
 int udp_stream_table_size=0;
-//add by lqy 
-//unsigned short udp_reset_time=0;
-//unsigned short link_default_nopkt_time=0;
 int tcpstate_num[MAX_TCP_STATE]={8000,2000,4000};
 int udpstate_num[MAX_UDP_STATE]={2000,2000,2000};
-
-//int tcp_default_unorder=5;
-//int tcp_creatlink_model=TCP_CTEAT_LINK_BYSYN;
 int tcp_flood_detect_model=TCP_FLOOD_DETECT_OFF;
 int tcp_support_all=TCP_SUPPORT_ENTRYALL_ON;
 int tcp_dataflood_pktlen=5;
-//extern int g_packet_io_thread_num;
-
 struct global_stream **G_MESA_GLOBAL_STREAM;
 
-//static struct stream_status stream_info[MAX_THREAD_NUM];
+extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX]; 
+
 
 static int init_stream_detail(struct global_stream *g_stream)
 {
@@ -2264,7 +2257,7 @@ void reverse_addr(void *addr, int addrtype)
 }
 
 /* 反向地址copy */
-void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrlen)
+void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void *daddr, const void *saddr, int addrtype, int addrlen)
 {
 	switch(addrtype){
 		case ADDR_TYPE_IPV4:
@@ -2291,15 +2284,18 @@ void addr_reverse_memcpy(void *daddr, const void *saddr, int addrtype, int addrl
 
 		case ADDR_TYPE_MAC: /* 2015-06-15 lijia add, 木马检测设备需求 */
 		{
-			if (1 == sapp_global_val->config.protocol_feature.reverse_ethernet_addr_enabled) //2018-12-07 yw add, mac地址中包含信息时无需翻转
-			{
-				const struct layer_addr_mac *cur_stack_mac_saddr = (const struct layer_addr_mac *) saddr;
-				struct layer_addr_mac *heap_stream_mac_daddr = (struct layer_addr_mac *) daddr;
+			unsigned char tmp_mac_addr[ETH_ALEN];
+			const struct layer_addr_mac *cur_stack_mac_saddr = (const struct layer_addr_mac *) saddr;
+			struct layer_addr_mac *heap_stream_mac_daddr = (struct layer_addr_mac *) daddr;
+				
+			//if (1 == sapp_global_val->config.protocol_feature.reverse_ethernet_addr_enabled) //2018-12-07 yw add, mac地址中包含信息时无需翻转
+			if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MAC][stack_stream_pr->layer_index] == 0){
+				/* 不开启非对称地址特性时, ethernet和ip,tcp一样, 颠倒源和目的地址即可,双向地址都存储于src_addr */
+				memcpy(heap_stream_mac_daddr->src_addr.h_source, cur_stack_mac_saddr->src_addr.h_dest, ETH_ALEN);
+				memcpy(heap_stream_mac_daddr->src_addr.h_dest, cur_stack_mac_saddr->src_addr.h_source, ETH_ALEN);
+			}else{
+				/* 开启非对称地址特性时,两个方向各有四个mac地址,此时要整体copy 14个字节, 将栈中的src_addr存于heap的dst_addr中, 对于struct ethhdr中的地址方向不能变 */
 				memcpy(&heap_stream_mac_daddr->dst_addr, &cur_stack_mac_saddr->src_addr, sizeof(struct ethhdr));
-			}
-			else
-			{
-				memcpy(daddr, saddr, addrlen);
 			}
 		}
 		break;
@@ -2398,7 +2394,7 @@ int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *p
 	if(0 == reverse){
 		memcpy(pstream_heap->addr.paddr, pstream_stack->addr.paddr, pstream_stack->addr.addrlen);
 	}else{
-		addr_reverse_memcpy(pstream_heap->addr.paddr, pstream_stack->addr.paddr, pstream_stack->addr.addrtype, pstream_stack->addr.addrlen);
+		addr_reverse_memcpy((const struct streaminfo_private *)pstream_stack, pstream_heap->addr.paddr, pstream_stack->addr.paddr, pstream_stack->addr.addrtype, pstream_stack->addr.addrlen);
 	}
 	
 	return 0;
@@ -2757,24 +2753,26 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 			break;
 
 			case ADDR_TYPE_MAC:
-				if(ADDR_TYPE_MAC == pstream_pr->stream_public.addr.addrtype){
-					if(cur_dir == DIR_C2S){
-						memcpy(&pstream_pr->stream_public.addr.mac->src_addr,
-						        &p_stack->stream_public.addr.mac->src_addr,
-						        sizeof(struct ethhdr));
+				if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MAC][p_stack->layer_index] != 0){
+					if(ADDR_TYPE_MAC == pstream_pr->stream_public.addr.addrtype){
+						if(cur_dir == DIR_C2S){
+							memcpy(&pstream_pr->stream_public.addr.mac->src_addr,
+							        &p_stack->stream_public.addr.mac->src_addr,
+							        sizeof(struct ethhdr));
+						}
+						else{
+		                    memcpy(&pstream_pr->stream_public.addr.mac->dst_addr,
+		                           &p_stack->stream_public.addr.mac->src_addr,  //注意, 这里固定用src方向!!
+		                           sizeof(struct ethhdr));
+						}
+					}else{
+						sapp_runtime_log(RLOG_LV_INFO, "update_opposite_addr_info() error, current addrtype is ethernet, but pstream->addrtype is not ethernet!");
 					}
-					else{
-	                    memcpy(&pstream_pr->stream_public.addr.mac->dst_addr,
-	                           &p_stack->stream_public.addr.mac->src_addr,  //注意, 这里固定用src方向!!
-	                           sizeof(struct ethhdr));
-					}
-				}else{
-					sapp_runtime_log(RLOG_LV_INFO, "update_opposite_addr_info() error, current addrtype is ethernet, but pstream->addrtype is not ethernet!");
 				}
-
 			break;
 			
-			default:		
+			default:	
+				/* 其他协议层不涉及C2S, S2C两个方向地址非对称问题 */
 				break;
 		}
 	}
@@ -2925,14 +2923,15 @@ struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_priv
 
 	heap_addr = dictator_malloc(stack_stream->threadnum, stack_stream->addr.addrlen);
 	memset(heap_addr, 0, stack_stream->addr.addrlen);
-		
+
+	/* 上层地址翻转, 且不是overlay层,才能反向copy地址    	   */	
 	if(reverse){
 		heap_stream_pr->dirreverse=1;
 		heap_stream_pr->stream_dir = 1 ^ heap_stream_pr->layer_dir; /* lijia comment, 与"src>=dst"默认规则不一致 */
 		heap_stream_pr->stream_c2s_route_dir = 1 ^ heap_stream_pr->stream_c2s_route_dir; 
 		//reverse_addr_new(heap_addr, heap_stream->addr.addrtype);
 		/* 地址COPY时, 如果需要反转, 直接反向COPY, 不要先memcpy, 再交换地址源、目的的顺序 */
-		addr_reverse_memcpy(heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrtype, stack_stream->addr.addrlen);
+		addr_reverse_memcpy(stack_stream_pr, heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrtype, stack_stream->addr.addrlen);
 	}else{
 		heap_stream_pr->stream_dir = heap_stream_pr->layer_dir;
 		memcpy(heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrlen);
@@ -2945,6 +2944,26 @@ struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_priv
 	return (struct streaminfo_private *)heap_stream;
 }
 
+int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_pkt_t *rawpkt)
+{
+	if(DEPOLYMENT_MODE_INLINE != sapp_global_val->config.packet_io.depolyment_mode_bin){
+		return 0;
+	}
+
+	if((rawpkt->vlan_flipping_couple[0] && rawpkt->vlan_flipping_couple[1]) != 0){
+		/* vlan flipping是ADC自检及Alot设备特有的一种模式,  不属于overlay层 */
+		return 0;
+	}
+	
+	if((g_overlay_layer_set[stream_pr->stream_public.addr.addrtype][stream_pr->layer_index] != 0)
+	 && (OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)){
+		return 1;	
+	}
+
+	/* 目前暂时只有vxlan一种overlay模式,不符合的都不算overlay */
+
+	return 0;
+}
 
 #ifdef __cplusplus
 }
