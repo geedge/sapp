@@ -42,6 +42,7 @@ static int __addr_socks_n2p_fun(const struct layer_addr *paddr, char *buf, int b
 static int __addr_openvpn_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
 static int __addr_mac_in_mac_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
 static int __addr_gtp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
+static int __addr_vxlan_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len);
 
 
 static int __addr_ipv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
@@ -66,6 +67,7 @@ static int __addr_openvpn_pton(char *addr_str, addr_continuous_bin_t *addr_bin_v
 static int __addr_mac_in_mac_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 static const char *__layer_addr_ntop (const struct streaminfo *stream, int thread_index);
 static int __addr_gtp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
+static int __addr_vxlan_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 
 
 
@@ -102,6 +104,7 @@ static const addr_convert_t G_ADDR_CONVERT_HANDLE[] =
 	{ADDR_TYPE_IPV4,			STREAM_TYPE_OPENVPN,"ADDR_TYPE_OPENVPN",	"OpenVPN",	"OpenVPN<",__addr_openvpn_n2p_fun,__addr_openvpn_pton, "openvpn"},/* 2017-02-10 lijia add */
 	{ADDR_TYPE_IPV6,			STREAM_TYPE_OPENVPN,"ADDR_TYPE_OPENVPN",	"OpenVPN",	"OpenVPN<",__addr_openvpn_n2p_fun,__addr_openvpn_pton, "openvpn"},/* 2017-02-10 lijia add */
     {ADDR_TYPE_GPRS_TUNNEL,		STREAM_TYPE_NON,"ADDR_TYPE_GTP",			"GTP",		"GTP<",__addr_gtp_n2p_fun,__addr_gtp_pton, "gtp"},	/*  */
+    {ADDR_TYPE_VXLAN,			STREAM_TYPE_NON,"ADDR_TYPE_VXLAN",		"VXLAN",		"VXLAN<", __addr_vxlan_n2p_fun,__addr_vxlan_pton, "vxlan"},  
     {__ADDR_TYPE_MAX,			STREAM_TYPE_NON,NULL, 	NULL,	NULL,	NULL, NULL} /* EOF */
 };
 
@@ -793,6 +796,46 @@ static int __addr_gtp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
     return 0;
 }
 
+/* vxlan地址格式:  vlan_id-dir-link_id-link_type*/
+static int __addr_vxlan_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
+{
+	char *vxlan_struct_item;
+	const char *delim = "-";
+	char *save_ptr;
+	struct layer_addr_vxlan *vxlan_bin_addr = (struct layer_addr_vxlan *)addr_bin_val->addr_value;
+	addr_bin_val->stream.addr.addrtype = ADDR_TYPE_VXLAN;
+	addr_bin_val->stream.type = STREAM_TYPE_NON;
+	addr_bin_val->stream.addr.addrlen = sizeof(struct layer_addr_vxlan);	
+	addr_bin_val->stream.addr.paddr = addr_bin_val->addr_value;
+
+	vxlan_struct_item = strtok_r(addr_str, delim, &save_ptr);
+	if(NULL == vxlan_struct_item){
+		return -1;
+	}
+	vxlan_bin_addr->vlan_id = atoi(vxlan_struct_item);
+
+	vxlan_struct_item = strtok_r(NULL, delim, &save_ptr);
+	if(NULL == vxlan_struct_item){
+		return -1;
+	}
+	vxlan_bin_addr->dir = atoi(vxlan_struct_item);
+
+
+	vxlan_struct_item = strtok_r(NULL, delim, &save_ptr);
+	if(NULL == vxlan_struct_item){
+		return -1;
+	}
+	vxlan_bin_addr->link_id = atoi(vxlan_struct_item);
+
+	vxlan_struct_item = strtok_r(NULL, delim, &save_ptr);
+	if(NULL == vxlan_struct_item){
+		return -1;
+	}
+	vxlan_bin_addr->link_type = atoi(vxlan_struct_item);
+
+
+	return 0;
+}
 static int __addr_sockv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 {
 	char *save_ptr;
@@ -1603,6 +1646,19 @@ static int __addr_openvpn_n2p_fun(const struct layer_addr *paddr, char *buf, int
 	return strlen(buf) + 1;
 }
 
+
+static int __addr_vxlan_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
+{
+	const struct layer_addr_vxlan *vxlan_addr = paddr->vxlan;
+	int addr_len;
+
+	/* 按vxlan结构体顺序排列 */
+	snprintf(buf, buf_len, "%u-%u-%u-%u", vxlan_addr->vlan_id, vxlan_addr->dir, vxlan_addr->link_id, vxlan_addr->link_type);
+
+	addr_len = strlen(buf) + 1; //add EOF
+
+	return addr_len;
+}
 static const char *addr_and_stream_type_to_prefix(UCHAR stream_type, enum addr_type_t layer_type)
 {
 	int i;
