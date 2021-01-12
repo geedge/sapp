@@ -592,6 +592,8 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	struct streaminfo_private *pstream_pr;
 	struct streaminfo *pstream;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	/* 注意, 此处获取当前层长度用ip头部字段计算得出, 而不是this_layer_data- raw_pkt->raw_pkt_data, 因为某些不足64字节的小包后面会有triler, 导致两者计算不一致 */
+	int this_layer_len = ntohs(a_packet->ip_len);
 
 #if DEBUG
 	//timestamp_record(TS_LEVEL_IP_ENTRY, raw_pkt, thread_num);
@@ -603,7 +605,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	 */
 	if(unlikely(checkipv4pkt(a_packet, raw_pkt) < 0)){
 		local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
-		local_sys_stat->length[SAPP_STAT_DROP_IPV4]+=raw_pkt->raw_pkt_len;
+		local_sys_stat->length[SAPP_STAT_DROP_IPV4]+=this_layer_len;
 		((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
 		return PASS;
 	}
@@ -620,7 +622,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 */
 		if(is_multicast_addr_v4(ntohl(a_packet->ip_dst.s_addr))){
 			local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
-			local_sys_stat->length[SAPP_STAT_DROP_IPV4]+=raw_pkt->raw_pkt_len;
+			local_sys_stat->length[SAPP_STAT_DROP_IPV4]+=this_layer_len;
 			return DROP;
 		}	
 	}
@@ -663,7 +665,13 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 		pstream->curdir = DIR_S2C;
 	}
 
-	pstream->pfather=pfstream;
+	if((pfstream_pr != NULL)
+	  && (g_overlay_layer_set[pfstream_pr->stream_public.addr.addrtype][pfstream_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay层的pfather设为NULL, 插件不可见 */
+		pstream->pfather = NULL;
+	}else{
+		pstream->pfather=pfstream;
+	}
+	pstream_pr->pfather_pr = pfstream_pr;
 	pstream->type=STREAM_TYPE_NON;
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
@@ -712,6 +720,26 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	    	
   	}
 
+	if(need_free){
+		local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;
+		local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG] += this_layer_len;
+	}else{
+		if(g_overlay_layer_set[__ADDR_TYPE_IP_PAIR_V4][pstream_pr->layer_index] == 0){ /* 非overlay层才累加相关层计数 */
+			local_sys_stat->count[SAPP_STAT_RCV_IPV4]++;
+			local_sys_stat->length[SAPP_STAT_RCV_IPV4] += this_layer_len;
+			if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
+			{
+				local_sys_stat->count[SAPP_STAT_IPV4_INBOUND]++;
+				local_sys_stat->length[SAPP_STAT_IPV4_INBOUND] += (unsigned long long)this_layer_len;
+			}
+			else
+			{
+				local_sys_stat->count[SAPP_STAT_IPV4_OUTBOUND]++;
+				local_sys_stat->length[SAPP_STAT_IPV4_OUTBOUND] += (unsigned long long)this_layer_len;
+			}
+		}
+	}
+
 	/* 2017-05-11 lijia add, 
 	   判断IP和IPFRAG层谁被优先调用,
 	   在主从模式下, "扣留"最后一个IP分片包, 达到丢弃整个原始IP包的目的!
@@ -733,23 +761,6 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 		}
   	}
 
-	if(need_free){
-		local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;
-		local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG] += ntohs(a_packet->ip_len);
-	}else{
-		local_sys_stat->count[SAPP_STAT_RCV_IPV4]++;
-		local_sys_stat->length[SAPP_STAT_RCV_IPV4] += ntohs(a_packet->ip_len);
-		if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
-		{
-			local_sys_stat->count[SAPP_STAT_IPV4_INBOUND]++;
-			local_sys_stat->length[SAPP_STAT_IPV4_INBOUND] += (unsigned long long)raw_pkt->raw_pkt_len;
-		}
-		else
-		{
-			local_sys_stat->count[SAPP_STAT_IPV4_OUTBOUND]++;
-			local_sys_stat->length[SAPP_STAT_IPV4_OUTBOUND] += (unsigned long long)raw_pkt->raw_pkt_len;
-		}
-	}
 
 	if(unlikely(need_free)){
 #if (0 == HIGH_PERF)	

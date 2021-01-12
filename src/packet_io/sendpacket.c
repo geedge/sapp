@@ -1066,8 +1066,8 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 	if(stream->pfather && (ADDR_TYPE_MAC == stream->pfather->addr.addrtype)){
 #else
 	if(CAP_LEVEL_MAC == g_packet_io_cap_level) {
-		if(stream->pfather 
-		 && ((ADDR_TYPE_MAC_IN_MAC == stream->pfather->addr.addrtype) || (ADDR_TYPE_MAC == stream->pfather->addr.addrtype))){
+		if(stream_pr->pfather_pr 
+		 && ((ADDR_TYPE_MAC_IN_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype) || (ADDR_TYPE_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype))){
 			/* 记录MAC层之上的协议地址类型, 用于填充Ethernet->type字段, 对于MAC-in-MAC的inner_eth, 记录上层协议类型 */
 			*net_layer_type = (int)stream->addr.addrtype;
 		}
@@ -1075,7 +1075,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 		/* to do:
 			如果捕包库自动屏蔽了ethernet层, 甚至剥掉了vlan等层而且还要发包怎么办?
 		*/
-		if(NULL == stream->pfather){
+		if(NULL == stream_pr->pfather_pr){
 			if(g_packet_io_cap_level == stream->addr.addrtype){
 				*net_layer_type = (int)stream->addr.addrtype;
 			}
@@ -1089,7 +1089,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 
 	
 done:
-	pfather_hdr_len = calc_reserved_hdr_len(stream->pfather, net_layer_type, send_stream_dir);
+	pfather_hdr_len = calc_reserved_hdr_len((struct streaminfo *)stream_pr->pfather_pr, net_layer_type, send_stream_dir);
 	if(pfather_hdr_len < 0){
 		return -1;
 	}
@@ -1347,9 +1347,9 @@ static int build_net_layer_ipv4(struct streaminfo_private *stream_pr, int carry_
 							NULL,
 							0, 
 							(unsigned char *)buf);
-		if(stream_pr->stream_public.pfather != NULL &&
-			stream_pr->stream_public.pfather->addr.addrtype == ADDR_TYPE_GPRS_TUNNEL &&
-			g_gtp_info_hash[threadnum] != NULL)
+		if((stream_pr->pfather_pr != NULL) 
+		 && (stream_pr->pfather_pr->stream_public.addr.addrtype == ADDR_TYPE_GPRS_TUNNEL)
+		 && (g_gtp_info_hash[threadnum] != NULL))
 		{
 			g_addr_register_for_gtp_cache[threadnum].addr_type = ADDR_TYPE_IPV4;
 			g_addr_register_for_gtp_cache[threadnum].v4[0] = raw_ip4_hdr->ip_dst.s_addr;
@@ -1399,9 +1399,9 @@ static int build_net_layer_ipv6(struct streaminfo_private *stream_pr, int carry_
 							NULL,
 							0,
 							(unsigned char *)buf);
-		if(stream_pr->stream_public.pfather != NULL &&
-		   stream_pr->stream_public.pfather->addr.addrtype == ADDR_TYPE_GPRS_TUNNEL &&
-		   g_gtp_info_hash[threadnum] != NULL)
+		if((stream_pr->pfather_pr != NULL) 
+		&& (stream_pr->pfather_pr->stream_public.addr.addrtype == ADDR_TYPE_GPRS_TUNNEL)
+		&& (g_gtp_info_hash[threadnum] != NULL))
 		{
 			g_addr_register_for_gtp_cache[threadnum].addr_type = ADDR_TYPE_IPV6;
 			memcpy(g_addr_register_for_gtp_cache[threadnum].v6, &raw_ip6_hdr->ip6_dst, sizeof(struct in6_addr));
@@ -2141,7 +2141,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 	}
 
 done:	
-	return build_net_layer_pkt(top_stream, carry_layer_stream, (struct streaminfo_private *)stream->pfather,carry_layer_type, 
+	return build_net_layer_pkt(top_stream, carry_layer_stream, (struct streaminfo_private *)stream_pr->pfather_pr,carry_layer_type, 
 							this_layer_len+carry_layer_len, buf, reverse, raw_pkt, send_stream_dir);
 
 err:
@@ -2982,15 +2982,16 @@ static int skip_asymmetric_presence_layer(const struct streaminfo *stream, UCHAR
 static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream_dir)
 {
 	int ret = stream->addr.addrtype;
+	struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
 
-	while(stream && stream->pfather){
+	while(stream_pr && stream_pr->pfather_pr){
 		if(skip_asymmetric_presence_layer(stream, send_stream_dir)){
-			stream = stream->pfather;
+			stream_pr = stream_pr->pfather_pr;
 			continue;
 		}
 		if(CAP_LEVEL_MAC == g_packet_io_cap_level) {
-			if(stream->pfather 
-			 && ((ADDR_TYPE_MAC_IN_MAC == stream->pfather->addr.addrtype) || (ADDR_TYPE_MAC == stream->pfather->addr.addrtype))){
+			if(stream_pr->pfather_pr 
+			 && ((ADDR_TYPE_MAC_IN_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype) || (ADDR_TYPE_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype))){
 				/* 记录MAC层之上的协议地址类型, 用于填充Ethernet->type字段, 对于MAC-in-MAC的inner_eth, 记录上层协议类型 */
 				ret = (int)stream->addr.addrtype;
 			}
@@ -2998,7 +2999,7 @@ static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream
 			/* to do:
 				如果捕包库自动屏蔽了ethernet层, 甚至剥掉了vlan等层而且还要发包怎么办?
 			*/
-			if(NULL == stream->pfather){
+			if(NULL == stream_pr->pfather_pr){
 				if(g_packet_io_cap_level == stream->addr.addrtype){
 					ret = (int)stream->addr.addrtype;
 				}
@@ -3010,7 +3011,7 @@ static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream
 		}
 
 		ret = stream->addr.addrtype;	
-		stream = stream->pfather;
+		stream_pr = stream_pr->pfather_pr;
 	}
 
 	return ret;

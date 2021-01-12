@@ -1483,6 +1483,33 @@ enum sapp_state_t sapp_get_current_state(void)
 	return (enum sapp_state_t)sapp_global_val->individual_volatile->current_state;
 }
 
+int sapp_size_of_sapp_global(void)
+{
+	return sizeof(sapp_global_t);
+}
+
+
+int sapp_size_of_streaminfo_private(void)
+{
+	return sizeof(struct streaminfo_private);
+}
+
+int sapp_size_of_tcpdetail_private(void)
+{
+	return sizeof(struct tcpdetail_private);
+}
+
+int sapp_size_of_udpdetail_private(void)
+{
+	return sizeof(struct udpdetail_private);
+}
+
+int sapp_size_of_raw_pkt_t(void)
+{
+	return sizeof(raw_pkt_t);
+}
+
+
 
 #ifdef __cplusplus
 }

@@ -155,6 +155,7 @@ static int packet_io_hook_input_vlan_flipping(raw_pkt_t *raw_pkt, unsigned char 
 	if((vlan_id > 1) && (vlan_map[vlan_id].couple_vlan_id > 1)){ /* vlan_id 不在vlan flipping表中, 不算作overlay packet */
 		packet_io_hook_update_vlan_couple(raw_pkt, vlan_id);
 		ret=  0;
+		raw_pkt->overlay_layer_bytes = 0;
 	}else{
 		vlan_id = get_vlan_id_from_rawpkt(raw_pkt);
 		if((vlan_id > 1) && (vlan_map[vlan_id].couple_vlan_id > 1)){ /* vlan_id 不在vlan flipping表中, 不算作overlay packet */
@@ -192,6 +193,7 @@ static int packet_io_hook_input_vxlan(raw_pkt_t *raw_pkt, unsigned char dir, int
 		vxlan_hdr = (inline_vxlan_hdr_t *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_udp_hdr));
 		raw_pkt->is_overlay_pkt = 1; /* vxlan */
 		raw_pkt->route_dir = vxlan_hdr->dir;
+		raw_pkt->overlay_layer_bytes = VXLAN_HDR_RESERVED_LEN;
 	}else{
 		ret = -1;
 	}

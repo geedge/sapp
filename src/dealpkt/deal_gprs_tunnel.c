@@ -101,6 +101,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     pstream_pr->layer_index = pfstream_pr->layer_index + 1;
 
     pstream->pfather=&pfstream_pr->stream_public;
+    pstream_pr->pfather_pr=pfstream_pr;
     pstream->type=STREAM_TYPE_NON;
     pstream->routedir=routedir;
     pstream->threadnum=(UCHAR)thread_num;

@@ -1335,8 +1335,8 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 	/* 2014-04-01 lijia add, 本层无需比较, 直接跳过 */
 	if((0 == pheap_stream_pr->addr_use_as_hash) && (0 == pstack_stream_pr->addr_use_as_hash)){
 		pheap_stream_pr->offset_to_raw_pkt_hdr = pstack_stream_pr->offset_to_raw_pkt_hdr;
-		return checkstreamorder((struct streaminfo_private *)(pheap_stream->pfather), 
-								(struct streaminfo_private *)(pstack_stream->pfather),
+		return checkstreamorder((struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
+								(struct streaminfo_private *)(pstack_stream_pr->pfather_pr),
 								hash_elem_count);
 	}
 
@@ -1348,8 +1348,8 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 		pheap_stream_pr->stream_public.addr.pktipfragtype = pstack_stream_pr->stream_public.addr.pktipfragtype;
 	}
 	
-	ret=checkstreamorder((struct streaminfo_private *)(pheap_stream->pfather), 
-						 (struct streaminfo_private *)(pstack_stream->pfather),
+	ret=checkstreamorder((struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
+						 (struct streaminfo_private *)(pstack_stream_pr->pfather_pr),
 						 hash_elem_count);
 	if(ret != 0)
 	{
@@ -2504,14 +2504,15 @@ void free_thread_stream(int thread_seq)
 /* 2014-04-08 LiJia add */
 void free_heap_stream_info(struct streaminfo *heap_stream, int layer)
 {
-	struct streaminfo *pfather;
+	struct streaminfo_private *heap_stream_pr = (struct streaminfo_private *)(heap_stream);
+	struct streaminfo_private *pfather_pr;
 	struct layer_addr *addr;
 
 	if(NULL == heap_stream){
 		return;
 	}
 
-	pfather = heap_stream->pfather;
+	pfather_pr = heap_stream_pr->pfather_pr;
 	addr = &heap_stream->addr;
 
 	/* 为了节省空间, 地址类型ADDR_TYPE_IPV4/6实际存储在下一层的IP层, 无需free */
@@ -2527,7 +2528,7 @@ void free_heap_stream_info(struct streaminfo *heap_stream, int layer)
 		*/
 		dictator_free(heap_stream->threadnum, heap_stream);	
 	}
-	return free_heap_stream_info(pfather, layer+1);
+	return free_heap_stream_info((struct streaminfo *)pfather_pr, layer+1);
 }
 
 /* 2014-12-03 lijia add for sysinfo.log 
@@ -2670,6 +2671,7 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
 			break;
 	}
 
+	/* 2021-01-11, 此处可以不关心vxlan等封装层, 直接用pfather */
 	return get_stream_carry_tunnel_type(pfather, this_stream, tunnel_type);
 }
 
@@ -2777,8 +2779,8 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 		}
 	}
 	
-	return update_opposite_addr_info((struct streaminfo_private *) pstream_pr->stream_public.pfather,
-								 (struct streaminfo_private *) p_stack->stream_public.pfather, cur_dir);	
+	return update_opposite_addr_info((struct streaminfo_private *) pstream_pr->pfather_pr,
+								 (struct streaminfo_private *) p_stack->pfather_pr, cur_dir);	
 }
 
 
@@ -2908,6 +2910,7 @@ struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_priv
 	void *heap_addr;
 	struct streaminfo *heap_stream;
 	const struct streaminfo *stack_stream;
+	struct streaminfo_private *pfather_pr;
 
 	if(NULL == stack_stream_pr){
 		return NULL;
@@ -2919,8 +2922,15 @@ struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_priv
 	memcpy(heap_stream_pr, stack_stream_pr, sizeof(struct streaminfo_private));
 	heap_stream = &(heap_stream_pr->stream_public);
 
-	heap_stream->pfather = (struct streaminfo *)copy_stream_info_to_heap((const struct streaminfo_private *)stack_stream->pfather, reverse);
-
+	heap_stream_pr->pfather_pr = copy_stream_info_to_heap((const struct streaminfo_private *)stack_stream_pr->pfather_pr, reverse);
+	pfather_pr = stack_stream_pr->pfather_pr;
+	if((pfather_pr != NULL)
+	  && (g_overlay_layer_set[pfather_pr->stream_public.addr.addrtype][pfather_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay层的pfather设为NULL, 插件不可见 */
+		heap_stream->pfather = NULL;
+	}else{
+		heap_stream->pfather = (struct streaminfo *)heap_stream_pr->pfather_pr;
+	}
+			
 	heap_addr = dictator_malloc(stack_stream->threadnum, stack_stream->addr.addrlen);
 	memset(heap_addr, 0, stack_stream->addr.addrlen);
 

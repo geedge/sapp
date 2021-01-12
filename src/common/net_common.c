@@ -1028,7 +1028,7 @@ void MESA_stream_list_free(struct streaminfo_private *pstream_pr)
 		return;
 	}
 	/* 先将pfather保存到临时变量 */
-	pfather_pr = (struct streaminfo_private *)pstream_pr->stream_public.pfather;
+	pfather_pr = (struct streaminfo_private *)pstream_pr->stream_public.pfather; /* 2021-01-11, 仅用于ip分片确定地址, 此处使用内存四元组,使用pfather而不是pfather_pr */
 
 	dictator_free(pstream->threadnum, pstream->addr.paddr);
 	dictator_free(pstream->threadnum, pstream_pr);
@@ -1066,6 +1066,7 @@ struct streaminfo_private *MESA_stream_list_dup(struct streaminfo_private *stack
 	heap_stream->addr.paddr = heap_addr;
 	heap_stream->addr.addrlen = stack_stream->addr.addrlen;
 
+	/* 2021-01-11, 仅用于ip分片确定地址, 此处使用内存四元组,使用pfather而不是pfather_pr */
 	heap_stream->pfather = (struct streaminfo *)MESA_stream_list_dup((struct streaminfo_private *)(stack_stream->pfather), reverse);
 
 	return (struct streaminfo_private *)heap_stream;

@@ -586,8 +586,8 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	long long timecost;
 	struct timespec start, end;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
-	local_sys_stat->count[SAPP_STAT_RCV_RAW]++;
-	local_sys_stat->length[SAPP_STAT_RCV_RAW] += p_raw_pkt->raw_pkt_len;	
+	local_sys_stat->count[SAPP_STAT_RCV_LINE]++;
+	local_sys_stat->length[SAPP_STAT_RCV_LINE] += p_raw_pkt->raw_pkt_len;	
 
 	sapp_global_val->mthread_volatile[thread_num]->raw_pkt = p_raw_pkt;
 	
@@ -601,12 +601,12 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	if (p_raw_pkt->route_dir == sapp_global_val->config.packet_io.inbound_route_dir)
 	{
 		local_sys_stat->count[SAPP_STAT_RAW_INBOUND]++;
-		local_sys_stat->length[SAPP_STAT_RAW_INBOUND] += (unsigned long long)p_raw_pkt->raw_pkt_len;
+		local_sys_stat->length[SAPP_STAT_RAW_INBOUND] += ((unsigned long long)p_raw_pkt->raw_pkt_len - p_raw_pkt->overlay_layer_bytes);
 	}
 	else
 	{
 		local_sys_stat->count[SAPP_STAT_RAW_OUTBOUND]++;
-		local_sys_stat->length[SAPP_STAT_RAW_OUTBOUND] += (unsigned long long)p_raw_pkt->raw_pkt_len;
+		local_sys_stat->length[SAPP_STAT_RAW_OUTBOUND] += ((unsigned long long)p_raw_pkt->raw_pkt_len - p_raw_pkt->overlay_layer_bytes);
 	}
 
 	if(unlikely(g_timestamp_record_sw))

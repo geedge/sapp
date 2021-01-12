@@ -731,7 +731,14 @@ static void set_ipv6_stream(struct streaminfo_private *pfstream_pr, struct strea
 	pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 	pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 
-	pstream->pfather=&pfstream_pr->stream_public;
+	if((pfstream_pr != NULL)
+	  && (g_overlay_layer_set[pfstream_pr->stream_public.addr.addrtype][pfstream_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay层的pfather设为NULL, 插件不可见 */
+		pstream->pfather = NULL;
+	}else{
+		pstream->pfather=&pfstream_pr->stream_public;
+	}
+	pstream_pr->pfather_pr = pfstream_pr;
+	
 	pstream->type=STREAM_TYPE_NON;
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;

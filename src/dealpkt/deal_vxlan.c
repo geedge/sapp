@@ -51,6 +51,7 @@ int vxlan_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_hd
 	pstream_pr->raw_pkt = raw_pkt;
 	
 	pstream->pfather=&pfstream_pr->stream_public;
+	pstream_pr->pfather_pr = pfstream_pr;
 	pstream->type=STREAM_TYPE_NON;
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;

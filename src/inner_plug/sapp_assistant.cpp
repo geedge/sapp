@@ -981,6 +981,9 @@ static int sapp_fs2_init(void)
 		fs2_opt = 1;
 		FS_set_para(fs2_handle, OUTPUT_PROMETHEUS, &fs2_opt, sizeof(int));
 	}
+
+	pfs_para->fs_id_count_array[SAPP_STAT_RCV_LINE] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Line_Pkt");
+	pfs_para->fs_id_length_array[SAPP_STAT_RCV_LINE] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Line_Bit");
 	
 	pfs_para->fs_id_count_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Eth_Pkt");
 	pfs_para->fs_id_length_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Eth_Bit");

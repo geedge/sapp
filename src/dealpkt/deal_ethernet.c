@@ -55,11 +55,12 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 	struct streaminfo_private *pstream_pr;
 	struct streaminfo *pstream;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	int this_layer_len = raw_pkt->raw_pkt_len - ((char *)this_layer_hdr - (char *)raw_pkt->raw_pkt_data);
 
 	if(NET_CONN_SERIAL_GDEV == g_topology_mode){
 		if(unlikely(sapp_identify_broad_multicast_pkt(this_layer_hdr, raw_pkt) != 0)){
 			local_sys_stat->count[SAPP_STAT_DROP_ETHERNET]++;
-			local_sys_stat->length[SAPP_STAT_DROP_ETHERNET]+=raw_pkt->raw_pkt_len;
+			local_sys_stat->length[SAPP_STAT_DROP_ETHERNET]+=this_layer_len;
 			return DROP;
 		}
 	}
@@ -81,7 +82,13 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 
-		pstream->pfather = (struct streaminfo *)fstream_pr;
+		if((fstream_pr != NULL)
+		  && (g_overlay_layer_set[fstream_pr->stream_public.addr.addrtype][fstream_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay层的pfather设为NULL, 插件不可见 */
+			pstream->pfather = NULL;
+		}else{
+			pstream->pfather = (struct streaminfo *)fstream_pr;
+		}
+		pstream_pr->pfather_pr = fstream_pr;
 		pstream->type = STREAM_TYPE_NON;
 		pstream->routedir = dir;
 		pstream->threadnum = thread_num;
@@ -94,14 +101,16 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			pstream->curdir = DIR_S2C;
 		}		
 
-		local_sys_stat->count[SAPP_STAT_RCV_ETHERNET]++;
-		local_sys_stat->length[SAPP_STAT_RCV_ETHERNET] += (unsigned long long)raw_pkt->raw_pkt_len;
-		if(dir == sapp_global_val->config.packet_io.inbound_route_dir){
-			local_sys_stat->count[SAPP_STAT_ETH_INBOUND]++;
-			local_sys_stat->length[SAPP_STAT_ETH_INBOUND] += (unsigned long long)raw_pkt->raw_pkt_len;
-		}else{
-			local_sys_stat->count[SAPP_STAT_ETH_OUTBOUND]++;
-			local_sys_stat->length[SAPP_STAT_ETH_OUTBOUND] += (unsigned long long)raw_pkt->raw_pkt_len;
+		if(g_overlay_layer_set[ADDR_TYPE_MAC][pstream_pr->layer_index] == 0){ /* 非overlay层才累加相关层计数 */
+			local_sys_stat->count[SAPP_STAT_RCV_ETHERNET]++;
+			local_sys_stat->length[SAPP_STAT_RCV_ETHERNET] += (unsigned long long)this_layer_len;
+			if(dir == sapp_global_val->config.packet_io.inbound_route_dir){
+				local_sys_stat->count[SAPP_STAT_ETH_INBOUND]++;
+				local_sys_stat->length[SAPP_STAT_ETH_INBOUND] += (unsigned long long)this_layer_len;
+			}else{
+				local_sys_stat->count[SAPP_STAT_ETH_OUTBOUND]++;
+				local_sys_stat->length[SAPP_STAT_ETH_OUTBOUND] += (unsigned long long)this_layer_len;
+			}
 		}
 
 		if(NULL == fstream_pr){
@@ -194,7 +203,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 						sapp_runtime_log(RLOG_LV_DEBUG, "is not raw inline ethernet pkt, type is:0x%x, drop it.", eth_type); 
 					}
 				}
-				sapp_runtime_log(20, "eth_entry() recv unknown pkt, protocol is:0x%04x, pkt seq:%llu", eth_type, local_sys_stat->count[SAPP_STAT_RCV_RAW]);
+				sapp_runtime_log(20, "eth_entry() recv unknown pkt, protocol is:0x%04x, pkt seq:%llu", eth_type, local_sys_stat->count[SAPP_STAT_RCV_LINE]);
 			break;
 		}
 	}

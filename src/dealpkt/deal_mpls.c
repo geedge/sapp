@@ -141,6 +141,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		pstream_pr->raw_pkt = raw_pkt;
 		
 		pstream->pfather=&pfstream_pr->stream_public;
+		pstream_pr->pfather_pr=pfstream_pr;
 		pstream->type=STREAM_TYPE_NON;
 		pstream->routedir=routedir;
 		pstream->threadnum=thread_num;
@@ -223,7 +224,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 				 local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	 
 				 ((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
 
-				 sapp_runtime_log(20, "MPLS next layer type: 0x%x, but left len only:%d, pkt seq:%llu\n", *next_layer_hdr,left_pkt_len, local_sys_stat->count[SAPP_STAT_RCV_RAW]);
+				 sapp_runtime_log(20, "MPLS next layer type: 0x%x, but left len only:%d, pkt seq:%llu\n", *next_layer_hdr,left_pkt_len, local_sys_stat->count[SAPP_STAT_RCV_LINE]);
 				 return PASS;
 			 }
 
@@ -264,6 +265,7 @@ int mpls_empty_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 		pstream_pr->raw_pkt = raw_pkt;
 		pstream->pfather=&pfstream_pr->stream_public;
+		pstream_pr->pfather_pr=pfstream_pr;
 		pstream->type=STREAM_TYPE_NON;
 		pstream->routedir=routedir;
 		pstream->threadnum=thread_num;

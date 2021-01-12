@@ -1115,6 +1115,7 @@ retry:
 	pkt_queue_node.raw_pkt.hd_hash = 0; /* 2016-05-05 lijia add, pcap模式不支持硬件HASH */
 	pkt_queue_node.raw_pkt.io_lib_pkt_reference = pkt_queue_node.raw_pkt.__lib_raw_pkt_data; /* 兼容dpdk模式, 将此变量赋值 */
 	pkt_queue_node.raw_pkt.diagnose_error_to_dump = 0;
+	pkt_queue_node.raw_pkt.overlay_layer_bytes = 0;
 
 	if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
 		/* 读包模式下本来没有routedir的概念, 为了便于测试上层业务, 使用最底层地址比较算出一个routedir */

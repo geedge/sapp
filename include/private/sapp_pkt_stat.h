@@ -8,6 +8,13 @@
 */
 
 typedef enum __sapp_sys_stat_type{
+	/* 
+		包括overlay的流量, 以下不带LINE的都是网络中的真实通信双方的流量, 不含vxlan等封装层字节数,
+		比如一个vxlan包总长度是1000字节, vxlan overlay层包括ethernet,ipv4,udp,vxlan, 总长度是50字节,
+		则SAPP_STAT_RCV_LINE是1000字节, SAPP_STAT_RCV_RAW是950字节.
+	*/
+	SAPP_STAT_RCV_LINE, 
+	
 	/*************  receive packet  ****************/
 	SAPP_STAT_RCV_RAW, /* 收到的真实原始包数量, ethernet由于mac-in-mac, vpls等原因也可能会重复计算 */
 	

@@ -117,6 +117,9 @@ static void field_stat2_update_metrics(void)
     /* 2018-08-29 lijia add field statsd */
 	sapp_fs2_update_count(SAPP_STAT_RCV_UNKNOWN, cur_count[SAPP_STAT_RCV_UNKNOWN]);
 	sapp_fs2_update_length(SAPP_STAT_RCV_UNKNOWN, 8 *( cur_length[SAPP_STAT_RCV_UNKNOWN])); /* to bps, bit per second */
+
+	sapp_fs2_update_count(SAPP_STAT_RCV_LINE, cur_count[SAPP_STAT_RCV_LINE]);
+	sapp_fs2_update_length(SAPP_STAT_RCV_LINE, 8 *( cur_length[SAPP_STAT_RCV_LINE])); /* to bps, bit per second */
 	
 	sapp_fs2_update_count(SAPP_STAT_RCV_ETHERNET, cur_count[SAPP_STAT_RCV_ETHERNET]);
 	sapp_fs2_update_length(SAPP_STAT_RCV_ETHERNET, 8 *( cur_length[SAPP_STAT_RCV_ETHERNET])); /* to bps, bit per second */
@@ -214,6 +217,8 @@ void sysinfo_output(void)
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_work", 0,0,(cur_count[SAPP_POLLING_WORK]-history_count[SAPP_POLLING_WORK]),0);
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_idle", 0,0,(cur_count[SAPP_POLLING_IDLE]-history_count[SAPP_POLLING_IDLE]),0);
 
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Line", cur_count[SAPP_STAT_RCV_LINE],cur_length[SAPP_STAT_RCV_LINE],(cur_count[SAPP_STAT_RCV_LINE]-history_count[SAPP_STAT_RCV_LINE]),(cur_length[SAPP_STAT_RCV_LINE]-history_length[SAPP_STAT_RCV_LINE]));
+
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Raw", cur_count[SAPP_STAT_RCV_RAW],cur_length[SAPP_STAT_RCV_RAW],(cur_count[SAPP_STAT_RCV_RAW]-history_count[SAPP_STAT_RCV_RAW]),(cur_length[SAPP_STAT_RCV_RAW]-history_length[SAPP_STAT_RCV_RAW]));
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Ethernet", cur_count[SAPP_STAT_RCV_ETHERNET],cur_length[SAPP_STAT_RCV_ETHERNET],(cur_count[SAPP_STAT_RCV_ETHERNET]-history_count[SAPP_STAT_RCV_ETHERNET]),(cur_length[SAPP_STAT_RCV_ETHERNET]-history_length[SAPP_STAT_RCV_ETHERNET]));
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "IPv4", cur_count[SAPP_STAT_RCV_IPV4],cur_length[SAPP_STAT_RCV_IPV4],(cur_count[SAPP_STAT_RCV_IPV4]-history_count[SAPP_STAT_RCV_IPV4]),(cur_length[SAPP_STAT_RCV_IPV4]-history_length[SAPP_STAT_RCV_IPV4]));
@@ -287,6 +292,9 @@ void sysinfo_output(void)
 	fprintf(fp,"%-12s %12s %12s %12s %12s\n", "RCV-PKT", "total_pkt", "total_len","pps", "bps");
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_work", 0,0,(cur_count[SAPP_POLLING_WORK]-history_count[SAPP_POLLING_WORK]),0);
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_idle", 0,0,(cur_count[SAPP_POLLING_IDLE]-history_count[SAPP_POLLING_IDLE]),0);
+	
+	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n","Line",cur_count[SAPP_STAT_RCV_LINE],byte_convert_human(cur_length[SAPP_STAT_RCV_LINE],1 ,1,s1),(cur_count[SAPP_STAT_RCV_LINE]-history_count[SAPP_STAT_RCV_LINE]),byte_convert_human((cur_length[SAPP_STAT_RCV_LINE]-history_length[SAPP_STAT_RCV_LINE]),1,8,s2));	
+	
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n","Raw",cur_count[SAPP_STAT_RCV_RAW],byte_convert_human(cur_length[SAPP_STAT_RCV_RAW],1 ,1,s1),(cur_count[SAPP_STAT_RCV_RAW]-history_count[SAPP_STAT_RCV_RAW]),byte_convert_human((cur_length[SAPP_STAT_RCV_RAW]-history_length[SAPP_STAT_RCV_RAW]),1,8,s2));	
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n","Ethernet",cur_count[SAPP_STAT_RCV_ETHERNET],byte_convert_human(cur_length[SAPP_STAT_RCV_ETHERNET],1 ,1,s1),(cur_count[SAPP_STAT_RCV_ETHERNET]-history_count[SAPP_STAT_RCV_ETHERNET]),byte_convert_human((cur_length[SAPP_STAT_RCV_ETHERNET]-history_length[SAPP_STAT_RCV_ETHERNET]),1,8,s2));
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n","IPv4",cur_count[SAPP_STAT_RCV_IPV4],byte_convert_human(cur_length[SAPP_STAT_RCV_IPV4],1 ,1,s1),(cur_count[SAPP_STAT_RCV_IPV4]-history_count[SAPP_STAT_RCV_IPV4]),byte_convert_human((cur_length[SAPP_STAT_RCV_IPV4]-history_length[SAPP_STAT_RCV_IPV4]),1,8,s2));

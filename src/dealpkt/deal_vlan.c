@@ -72,6 +72,7 @@ int IEEE_8021_entry(struct streaminfo_private *pfstream_pr,const void *this_laye
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 		
 		pstream->pfather=&pfstream_pr->stream_public;
+		pstream_pr->pfather_pr = pfstream_pr;
 		pstream->type=STREAM_TYPE_NON;
 		pstream->routedir=routedir;
 		pstream->threadnum=thread_num;
@@ -129,7 +130,7 @@ int IEEE_8021_entry(struct streaminfo_private *pfstream_pr,const void *this_laye
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;
 
-			sapp_runtime_log(20, "VLAN unknown protocol: 0x%x, pkt seq:%llu\n", next_layer_type, local_sys_stat->count[SAPP_STAT_RCV_RAW]);
+			sapp_runtime_log(20, "VLAN unknown protocol: 0x%x, pkt seq:%llu\n", next_layer_type, local_sys_stat->count[SAPP_STAT_RCV_LINE]);
 			
 			if(NET_CONN_SERIAL_GDEV == g_topology_mode){
 				if(sapp_identify_tunnel_inner_pkt(raw_pkt) != 0){

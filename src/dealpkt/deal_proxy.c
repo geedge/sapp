@@ -182,7 +182,8 @@ int deal_tcp_in_proxy_stream(struct streaminfo *stream,void * a_packet,struct st
 	
 	//更新链接对应关系，使得新伪造的链接生效
 	pProxy->pfather=stream->pfather;
-	stream->pfather=pProxy;
+	stream->pfather=pProxy;    
+	
 
 	//add by lqy 2 0150123
 	addrtype=stream->addr.addrtype;

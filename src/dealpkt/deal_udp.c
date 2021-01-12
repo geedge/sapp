@@ -154,8 +154,9 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
  	pstream_udp->stream_state=UDP_ONE_STATE;
 
  	copy_ipport_union_addr(pstream_udp, &pindex->stream.stream_public, pstream_udp_pr->layer_dir ^1);
- 	
- 	pstream_udp->pfather = (struct streaminfo *)copy_stream_info_to_heap((const struct streaminfo_private *)(pindex->stream.stream_public.pfather),  pstream_udp_pr->layer_dir ^1);
+
+ 	pstream_udp_pr->pfather_pr = copy_stream_info_to_heap((const struct streaminfo_private *)(pindex->stream.pfather_pr),  pstream_udp_pr->layer_dir ^1);
+ 	pstream_udp->pfather = (struct streaminfo *)pstream_udp_pr->pfather_pr;
 
 #if SAPP_INSECTICIDE
 	iterate_stream_list(pstream_udp);
@@ -460,17 +461,19 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
 
-	local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
-	local_sys_stat->length[SAPP_STAT_RCV_UDP]+=ulen;
-	if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
-	{
-		local_sys_stat->count[SAPP_STAT_UDP_INBOUND]++;
-		local_sys_stat->length[SAPP_STAT_UDP_INBOUND] += ulen;
-	}
-	else
-	{
-		local_sys_stat->count[SAPP_STAT_UDP_OUTBOUND]++;
-		local_sys_stat->length[SAPP_STAT_UDP_OUTBOUND] += ulen;
+	if(g_overlay_layer_set[__ADDR_TYPE_IP_PAIR_V4][pstream_pr->layer_index] == 0){ /* 非overlay层才累加相关层计数 */
+		local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
+		local_sys_stat->length[SAPP_STAT_RCV_UDP]+=ulen;
+		if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
+		{
+			local_sys_stat->count[SAPP_STAT_UDP_INBOUND]++;
+			local_sys_stat->length[SAPP_STAT_UDP_INBOUND] += ulen;
+		}
+		else
+		{
+			local_sys_stat->count[SAPP_STAT_UDP_OUTBOUND]++;
+			local_sys_stat->length[SAPP_STAT_UDP_OUTBOUND] += ulen;
+		}
 	}
 
 	//add by lqy 20130530 
@@ -558,8 +561,8 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			}
 		}
 		if(try_to_update_addr_info == 1){
-			update_opposite_addr_info((struct streaminfo_private *)(pstream->pfather),
-					(struct streaminfo_private *)(pindex->stream.stream_public.pfather), pstream->curdir);
+			update_opposite_addr_info((struct streaminfo_private *)(pstream_pr->pfather_pr),
+					(struct streaminfo_private *)(pindex->stream.pfather_pr), pstream->curdir);
 		}
 		
 		update_polling_inject_context(pstream_pr, raw_pkt);
@@ -742,8 +745,8 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			}
 		}
 		if(try_to_update_addr_info == 1){
-			update_opposite_addr_info((struct streaminfo_private *)(pstream->pfather),
-					(struct streaminfo_private *)(pindex->stream.stream_public.pfather), pstream->curdir);
+			update_opposite_addr_info((struct streaminfo_private *)(pstream_pr->pfather_pr),
+					(struct streaminfo_private *)(pindex->stream.pfather_pr), pstream->curdir);
 		}
 		
 		udp_change_stream_state(a_index,udph, raw_pkt);
@@ -867,7 +870,7 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 			/* unknown protocol */	
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;		
-			sapp_runtime_log(RLOG_LV_INFO, "unsupport Ipv4 protocol:%u, pkt seq:%llu\n", a_packet->ip_p,local_sys_stat->count[SAPP_STAT_RCV_RAW]);
+			sapp_runtime_log(RLOG_LV_INFO, "unsupport Ipv4 protocol:%u, pkt seq:%llu\n", a_packet->ip_p,local_sys_stat->count[SAPP_STAT_RCV_LINE]);
 		break;
 	}
 	

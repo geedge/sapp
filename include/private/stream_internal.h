@@ -76,6 +76,7 @@ typedef struct {
 	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, in host order, vlan flipping for adev, index0表示收到当前包的vlan_id, index1表示原包转发的vlan_id */
 	unsigned char mac_flipping_enable;
 	char diagnose_error_to_dump; /* 是某种错误数据包, 期望pkt_dump存储或udp socket发送给tcpdump_mesa */
+	unsigned char overlay_layer_bytes; /* 串联封装层长度, 比如vxlan模式下是50字节 */
 }raw_pkt_t;
 
 
@@ -134,6 +135,7 @@ struct streaminfo_private
 {
 	/* 对外结构放置在结构体最前, 指针地址可以互相强转 */
 	struct streaminfo stream_public;
+	struct streaminfo_private *pfather_pr; /* 真实流量的上层流指针, 包括了vxlan等封装层, stream_public.pfather是给业务插件看的,不包括vxlan层的 */
 	/* 以下变量为平台内部私有, 对外不可见 */
 	void   *pproject;		//每个工程可以自定义使用；
 

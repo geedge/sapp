@@ -620,8 +620,9 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 
 		hash_add_stream(pindex_tcp);
 
-		pstream->pfather = (struct streaminfo *)copy_stream_info_to_heap((struct streaminfo_private *)pindex->stream.stream_public.pfather, need_reverse);	   
-
+		pstream_pr->pfather_pr = copy_stream_info_to_heap((struct streaminfo_private *)pindex->stream.pfather_pr, need_reverse);	   
+		pstream->pfather = (struct streaminfo *)pstream_pr->pfather_pr;
+		
 #if SAPP_INSECTICIDE
 		iterate_stream_list(pstream);
 #endif
@@ -821,7 +822,8 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 
  		copy_ipport_union_addr(pstream, &pindex->stream.stream_public, pstream_pr->layer_dir ^1);
  		
- 		pstream->pfather = (struct streaminfo *)copy_stream_info_to_heap((struct streaminfo_private *)(pindex->stream.stream_public.pfather),  pstream_pr->layer_dir ^1);
+ 		pstream_pr->pfather_pr = copy_stream_info_to_heap((struct streaminfo_private *)(pindex->stream.pfather_pr),  pstream_pr->layer_dir ^1);
+ 		pstream->pfather = (struct streaminfo *)pstream_pr->pfather_pr;
 
 #if SAPP_INSECTICIDE
 		iterate_stream_list(pstream);
@@ -2653,8 +2655,8 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 
 	if(try_to_update_addr_info == 1)
 	{
-		update_opposite_addr_info((struct streaminfo_private *)(pstream->pfather),
-				(struct streaminfo_private *)(pindex->stream.stream_public.pfather), pstream->curdir);
+		update_opposite_addr_info((struct streaminfo_private *)(pstream_pr->pfather_pr),
+				(struct streaminfo_private *)(pindex->stream.pfather_pr), pstream->curdir);
 	}
 
 	/* flow_stat是全包无状态记录, 不关心重传、乱序问题 */
