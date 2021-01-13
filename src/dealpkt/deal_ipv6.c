@@ -777,6 +777,10 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 	static unsigned int ipv6_frag_reassemble_num = 0;
 #endif
 
+	local_sys_stat->count_per_layer[__ADDR_TYPE_IP_PAIR_V6][pfstream_pr->layer_index + 1]++;
+	local_sys_stat->length_per_layer[__ADDR_TYPE_IP_PAIR_V6][pfstream_pr->layer_index + 1] += payload_len+sizeof(struct mesa_ip6_hdr);
+
+
 	if(unlikely(0 == g_ipv6_decapsulation_enabled)){
 		sapp_runtime_log(20, "recv a IPv6 packet, but IPv6 decapsulation is not enable!\n");
 		return PASS;

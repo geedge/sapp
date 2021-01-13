@@ -32,13 +32,16 @@ int vxlan_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_hd
 	struct streaminfo_private *pstream_pr = &ptmp->stream;
 	struct streaminfo *pstream = &pstream_pr->stream_public;	
 	struct layer_addr_vxlan addr;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+
+	local_sys_stat->count_per_layer[ADDR_TYPE_VXLAN][pfstream_pr->layer_index+1]++; 
+	local_sys_stat->length_per_layer[ADDR_TYPE_VXLAN][pfstream_pr->layer_index+1] += raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr;
 
 	memset(ptmp,0,sizeof(struct streamindex));
 	
 	next_layer_data = (const unsigned char *)this_layer_hdr + sizeof(inline_vxlan_hdr_t);
 	next_layer_offset = offset_to_raw_pkt_hdr + sizeof(inline_vxlan_hdr_t);
 	
-
 	set_vxlan_addr(this_layer_hdr, &addr);
 
 	pstream->addr.paddr=&addr;

@@ -56,6 +56,15 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 	struct streaminfo *pstream;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	int this_layer_len = raw_pkt->raw_pkt_len - ((char *)this_layer_hdr - (char *)raw_pkt->raw_pkt_data);
+	int this_layer_is_overlay = 0;
+
+	if(NULL == fstream_pr){
+		local_sys_stat->count_per_layer[ADDR_TYPE_MAC][0]++;
+		local_sys_stat->length_per_layer[ADDR_TYPE_MAC][0] += this_layer_len;	
+	}else{
+		local_sys_stat->count_per_layer[ADDR_TYPE_MAC][fstream_pr->layer_index + 1]++;
+		local_sys_stat->length_per_layer[ADDR_TYPE_MAC][fstream_pr->layer_index + 1] += this_layer_len;
+	}
 
 	if(NET_CONN_SERIAL_GDEV == g_topology_mode){
 		if(unlikely(sapp_identify_broad_multicast_pkt(this_layer_hdr, raw_pkt) != 0)){
@@ -101,18 +110,6 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			pstream->curdir = DIR_S2C;
 		}		
 
-		if(g_overlay_layer_set[ADDR_TYPE_MAC][pstream_pr->layer_index] == 0){ /* 非overlay层才累加相关层计数 */
-			local_sys_stat->count[SAPP_STAT_RCV_ETHERNET]++;
-			local_sys_stat->length[SAPP_STAT_RCV_ETHERNET] += (unsigned long long)this_layer_len;
-			if(dir == sapp_global_val->config.packet_io.inbound_route_dir){
-				local_sys_stat->count[SAPP_STAT_ETH_INBOUND]++;
-				local_sys_stat->length[SAPP_STAT_ETH_INBOUND] += (unsigned long long)this_layer_len;
-			}else{
-				local_sys_stat->count[SAPP_STAT_ETH_OUTBOUND]++;
-				local_sys_stat->length[SAPP_STAT_ETH_OUTBOUND] += (unsigned long long)this_layer_len;
-			}
-		}
-
 		if(NULL == fstream_pr){
 			pstream_pr->layer_index = 0; /* first layer, index start from 0 */
 		}else{
@@ -137,9 +134,21 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			((raw_pkt_t *)raw_pkt)->raw_pkt_len = raw_pkt->__lib_raw_pkt_len - sizeof(struct mesa_ethernet_hdr);
 		}
 	}
-	
-	if((g_overlay_layer_set[ADDR_TYPE_MAC][pstream_pr->layer_index] == 0) /* 如果是overlay层则不创建mpls空层 */
-	&& (should_create_empty_mpls_layer_for_symmetric(pstream, eth_type) != 0)){
+
+	this_layer_is_overlay = sapp_is_overlay_layer(pstream_pr, raw_pkt);
+	if(0 == this_layer_is_overlay){ /* 非overlay层才累加相关层计数 */
+		local_sys_stat->count[SAPP_STAT_RCV_ETHERNET]++;
+		local_sys_stat->length[SAPP_STAT_RCV_ETHERNET] += (unsigned long long)this_layer_len;
+		if(dir == sapp_global_val->config.packet_io.inbound_route_dir){
+			local_sys_stat->count[SAPP_STAT_ETH_INBOUND]++;
+			local_sys_stat->length[SAPP_STAT_ETH_INBOUND] += (unsigned long long)this_layer_len;
+		}else{
+			local_sys_stat->count[SAPP_STAT_ETH_OUTBOUND]++;
+			local_sys_stat->length[SAPP_STAT_ETH_OUTBOUND] += (unsigned long long)this_layer_len;
+		}
+	}
+		
+	if(should_create_empty_mpls_layer_for_symmetric(pstream, eth_type) != 0){
 		((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
 		ret = mpls_empty_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
 		return ret;

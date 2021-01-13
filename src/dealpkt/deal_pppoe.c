@@ -25,7 +25,7 @@ int pppoe_session_entry(struct streaminfo_private *pfstream_pr,const void *this_
 	return PASS;
 #endif
 	int ret = PASS;
-	sapp_gval_mthread_sys_stat_t *local_sys_stat;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	struct streamindex tmp_index;
 	struct streamindex *ptmp=&tmp_index;
@@ -35,6 +35,9 @@ int pppoe_session_entry(struct streaminfo_private *pfstream_pr,const void *this_
 	struct layer_addr_pppoe_session addr;
 	char *up_layer_data = (char *)this_layer_hdr+PPPOE_HDR_LEN;
 	int next_layer_offset = offset_to_raw_pkt_hdr + PPPOE_HDR_LEN;
+
+	local_sys_stat->count_per_layer[ADDR_TYPE_PPPOE_SES][pfstream_pr->layer_index+1]++; 
+	local_sys_stat->length_per_layer[ADDR_TYPE_PPPOE_SES][pfstream_pr->layer_index+1] += raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr;
 
 	if(0 == G_SKIP_NOT_IP_LAYER){ 
 		memset(ptmp,0,sizeof(struct streamindex));

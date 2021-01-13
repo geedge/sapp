@@ -594,9 +594,13 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
 		ret = packet_io_hook_input((raw_pkt_t *)p_raw_pkt, dir, thread_num);
 		if(ret < 0){
+			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
 			return DROP;
 		}
 	}
+
+	local_sys_stat->count[SAPP_STAT_RCV_RAW]++;
+	local_sys_stat->length[SAPP_STAT_RCV_RAW] += ((unsigned long long)p_raw_pkt->raw_pkt_len - p_raw_pkt->overlay_layer_bytes);
 
 	if (p_raw_pkt->route_dir == sapp_global_val->config.packet_io.inbound_route_dir)
 	{

@@ -257,6 +257,10 @@ int pptp_entry(struct streamindex *pindex, const void *this_layer_data,int threa
 	int next_layer_offset; 	
 	unsigned short ppp_next_layer_pro;
 	int ppp_hdr_len;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+
+	local_sys_stat->count_per_layer[ADDR_TYPE_PPTP][pfstream_pr->layer_index+1]++; 
+	local_sys_stat->length_per_layer[ADDR_TYPE_PPTP][pfstream_pr->layer_index+1] += raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr;		
 
 	/* 更新PPTP层地址类型 */
 	pstream->addr.addrtype = ADDR_TYPE_PPTP;

@@ -281,6 +281,10 @@ int l2tpv2_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_d
 	const struct mesa_ppp_hdr *ppp_net_addr;
 	int next_layer_offset;
 	struct l2tp_info_pri *l2tp_pri;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+
+	local_sys_stat->count_per_layer[ADDR_TYPE_L2TP][pfstream_pr->layer_index+1]++; 
+	local_sys_stat->length_per_layer[ADDR_TYPE_L2TP][pfstream_pr->layer_index+1] += raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr;		
 	
 	/* 之前已经通过协议识别插件guess_if_l2tpv2()识别过, 所以在l2tpv2_entry()里不用再次判断 */
 	pl2tphdrv2 = (const struct l2tp_hdr_v2 *)((char *)this_layer_data + sizeof(struct mesa_udp_hdr));

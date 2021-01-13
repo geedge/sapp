@@ -176,6 +176,66 @@ static void field_stat2_update_metrics(void)
 	
 }
 
+static void sysinfo_output_per_layer_stat(FILE *fp)
+{
+	int i, j, k, layer_num;
+	int layer_type;
+	sapp_gval_mthread_t **mstat = sapp_global_val->mthread_volatile;
+	unsigned long long stat_sum;
+	unsigned long long sum_count_per_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX] = {0};
+	unsigned long long sum_length_per_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX] = {0};
+	char layer_length_human_str[SAPP_SUPPORT_LAYER_NUM_MAX][STATS_STR_LEN];
+
+	for(i=0;i<g_packet_io_thread_num;i++){
+		for(j = 0; j < __ADDR_TYPE_MAX; j++){
+			for(k = 0; k < SAPP_SUPPORT_LAYER_NUM_MAX; k++){
+				sum_count_per_layer[j][k] +=  mstat[i]->sys_stat.count_per_layer[j][k];
+				sum_length_per_layer[j][k] +=  mstat[i]->sys_stat.length_per_layer[j][k];
+			}
+		}
+	}
+
+	fprintf(fp,"******************************************************************************************************************\n");
+	fprintf(fp,"*************** protocol count statistics matrix ****************\n");
+	fprintf(fp,"%-10s %12s %12s %12s %12s %12s %12s %12s %12s\n","PROTO", "Layer0", "Layer1","Layer2", "Layer3","Layer4","Layer5","Layer6","Layer7");
+	
+
+	for(layer_type = 1; layer_type < (int)__ADDR_TYPE_MAX; layer_type++){
+		stat_sum = 0;
+		for(layer_num = 0; layer_num < SAPP_SUPPORT_LAYER_NUM_MAX; layer_num++){
+			stat_sum += sum_count_per_layer[layer_type][layer_num];
+		}
+		if(0 == stat_sum){
+			continue; /* 计数全是0的层就不显示了 */
+		}
+			
+		fprintf(fp,"%-10s %12llu %12llu %12llu %12llu %12llu %12llu %12llu %12llu\n",  addr_type_abbreviation_ntop((enum addr_type_t)layer_type), 
+				sum_count_per_layer[layer_type][0], sum_count_per_layer[layer_type][1], sum_count_per_layer[layer_type][2], sum_count_per_layer[layer_type][3],
+				sum_count_per_layer[layer_type][4], sum_count_per_layer[layer_type][5], sum_count_per_layer[layer_type][6], sum_count_per_layer[layer_type][7]);		
+	}
+
+	fprintf(fp,"\n************** protocol length statistics matrix ****************\n");
+	fprintf(fp,"%-10s %12s %12s %12s %12s %12s %12s %12s %12s\n","PROTO", "Layer0", "Layer1","Layer2", "Layer3","Layer4","Layer5","Layer6","Layer7");
+	for(layer_type = 1; layer_type < (int)__ADDR_TYPE_MAX; layer_type++){
+		stat_sum = 0;
+		for(layer_num = 0; layer_num < SAPP_SUPPORT_LAYER_NUM_MAX; layer_num++){
+			stat_sum += sum_length_per_layer[layer_type][layer_num];
+			byte_convert_human(sum_length_per_layer[layer_type][layer_num], 1, 8, layer_length_human_str[layer_num]);
+		}
+		if(0 == stat_sum){
+			continue; /* 计数全是0的层就不显示了 */
+		}
+			
+		fprintf(fp,"%-10s %12s %12s %12s %12s %12s %12s %12s %12s\n",  addr_type_abbreviation_ntop((enum addr_type_t)layer_type),
+				layer_length_human_str[0], layer_length_human_str[1], layer_length_human_str[2], layer_length_human_str[3],
+				layer_length_human_str[4], layer_length_human_str[5], layer_length_human_str[6], layer_length_human_str[7]);		
+	}		
+
+	fprintf(fp,"******************************************************************************************************************\n\n");
+
+	return;
+}
+
 void sysinfo_output(void)
 {
 	int i, j;
@@ -286,6 +346,8 @@ void sysinfo_output(void)
 				mstat[i]->sys_stat.count[SAPP_STAT_UDP_STREAM_RESET],
 				sapp_global_mthread[i].udp_stream_special_timeout_num);
 	}
+
+	sysinfo_output_per_layer_stat(fp);
 	
 	fprintf(fp,"*****************************************************************\n\n");
 	fprintf(fp,"################# \033[41m%s\033[0m --- is same as above! #########\n", "sysinfo humanly");

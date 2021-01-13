@@ -16,7 +16,7 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_RCV_LINE, 
 	
 	/*************  receive packet  ****************/
-	SAPP_STAT_RCV_RAW, /* 收到的真实原始包数量, ethernet由于mac-in-mac, vpls等原因也可能会重复计算 */
+	SAPP_STAT_RCV_RAW, /* 收到的真实原始包数量, 不一定等于ethernet, ethernet由于mac-in-mac, vpls等原因也可能会重复计算 */
 	
 	SAPP_STAT_RCV_ETHERNET,
 	SAPP_STAT_RCV_IPV4,		 /* 不包括SAPP_STAT_RCV_IPV4_FRAG */

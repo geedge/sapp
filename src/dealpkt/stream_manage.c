@@ -2961,7 +2961,7 @@ int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_
 	}
 
 	if((rawpkt->vlan_flipping_couple[0] && rawpkt->vlan_flipping_couple[1]) != 0){
-		/* vlan flipping是ADC自检及Alot设备特有的一种模式,  不属于overlay层 */
+		/* vlan flipping是ADC自检及A串联设备特有的一种模式,  不属于overlay层 */
 		return 0;
 	}
 	
@@ -2970,7 +2970,7 @@ int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_
 		return 1;	
 	}
 
-	/* 目前暂时只有vxlan一种overlay模式,不符合的都不算overlay */
+	/* TODO, 目前暂时只有vxlan一种overlay模式,其他不符合的都不算overlay */
 
 	return 0;
 }

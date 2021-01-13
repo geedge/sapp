@@ -54,6 +54,10 @@ int IEEE_8021_entry(struct streaminfo_private *pfstream_pr,const void *this_laye
 	int vlan_layer_len;
 	const struct mesa_vlan_hdr *vhdr;
 
+	local_sys_stat->count_per_layer[ADDR_TYPE_VLAN][pfstream_pr->layer_index+1]++; 
+	local_sys_stat->length_per_layer[ADDR_TYPE_VLAN][pfstream_pr->layer_index+1] += raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr;
+
+
 	if(likely(0 == G_SKIP_NOT_IP_LAYER)){
 		memset(ptmp,0,sizeof(struct streamindex));
 		vlan_layer_len = set_vlan_addr(&addr, (unsigned char *)this_layer_data);

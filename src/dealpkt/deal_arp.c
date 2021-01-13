@@ -9,7 +9,11 @@ extern "C" {
  		int thread_num, unsigned char dir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
 	const struct mesa_arp_hdr *aph = (struct mesa_arp_hdr *)this_layer_hdr;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
+	local_sys_stat->count_per_layer[ADDR_TYPE_ARP][pfstream_pr->layer_index+1]++; 
+	local_sys_stat->length_per_layer[ADDR_TYPE_ARP][pfstream_pr->layer_index+1] += raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr;
+	
 	if((ntohs(aph->ar_op) == ARPOP_REPLY) && (ETH_P_IP == ntohs(aph->ar_pro))){
 		stream_process_arp(NULL, (struct mesa_arp_hdr *)this_layer_hdr, thread_num, dir, raw_pkt);
 	}

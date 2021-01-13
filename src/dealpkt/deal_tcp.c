@@ -2824,6 +2824,9 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 	pstream->type=STREAM_TYPE_TCP;
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
+
+	local_sys_stat->count_per_layer[ADDR_TYPE_TCP][pstream_pr->layer_index]++; /* tcp和ip算作一层 */
+	local_sys_stat->length_per_layer[ADDR_TYPE_TCP][pstream_pr->layer_index] += tcpdatalen + this_tcphdr->th_off*4; /* tcp和ip算作一层 */
 	
 	//return deal_tcp_stream(ptmp,this_tcphdr,tcpdatalen,raw_packet,raw_len);
 	return deal_tcp_stream(pfindex,this_iphdr, this_tcphdr,tcpdatalen, raw_packet, offset_to_raw_pkt_hdr);

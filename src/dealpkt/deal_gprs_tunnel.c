@@ -34,6 +34,10 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     unsigned int cur_seq = 0, seq_offset = 0;
     sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
+	local_sys_stat->count_per_layer[ADDR_TYPE_GPRS_TUNNEL][pfstream_pr->layer_index+1]++; 
+	local_sys_stat->length_per_layer[ADDR_TYPE_GPRS_TUNNEL][pfstream_pr->layer_index+1] += raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr;
+	
+
     //针对同一会话GTP网关源端口变化的情况，强制将栈上的streaminfo中，地址全部设置为0
     pfstream_pr->stream_public.addr.tuple4_v4->source = 0;
     pfstream_pr->stream_public.addr.tuple4_v4->dest = 0;

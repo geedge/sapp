@@ -111,6 +111,9 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 	int inject_to_eth_flag = 0;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
+	local_sys_stat->count_per_layer[ADDR_TYPE_MPLS][pfstream_pr->layer_index+1]++; 
+	local_sys_stat->length_per_layer[ADDR_TYPE_MPLS][pfstream_pr->layer_index+1] += raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr;
+
 	if(set_mpls_addr(&addr, (unsigned char *)this_layer_data) < 0){
 		local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 		local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len; 	

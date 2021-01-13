@@ -224,7 +224,11 @@ int gre_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_data
 	int gre_hdr_len = 0; /* GRE地址的实际长度, 可变 */
 	char *next_layer_hdr; 
 	int next_layer_offset; 
-	 
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+
+	local_sys_stat->count_per_layer[ADDR_TYPE_GRE][pfstream_pr->layer_index+1]++; 
+	local_sys_stat->length_per_layer[ADDR_TYPE_GRE][pfstream_pr->layer_index+1] += raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr;
+	
 	memset(ptmp,0,sizeof(struct streamindex));
 	//set_gre_id(&addr, (unsigned short *)this_layer_data);
 	gre_hdr_len = set_gre_hdr(&gre_addr, this_layer_data);

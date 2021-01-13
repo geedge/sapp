@@ -447,6 +447,10 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 
 	udph = (struct mesa_udp_hdr *) ((char*)this_iphdr +hlen );
 	ulen = ntohs (udph->uh_ulen);
+
+	local_sys_stat->count_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index]++; /* udp和ip算作一层 */
+	local_sys_stat->length_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index] += ulen; /* udp和ip算作一层 */
+	
 	/* 2015-12-29 lijia modify, 某些UDP包没有负载数据, 没有意义, 直接丢弃 */
 	if(unlikely(iplen - hlen < ulen || ulen <= (int)sizeof (struct mesa_udp_hdr))){
 			return PASS;
@@ -628,6 +632,9 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 
 	iplen = ntohs (a_packet->ip6_payload_len);
 	ulen = ntohs (udph->uh_ulen);
+
+	local_sys_stat->count_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index]++; /* udp和ip算作一层 */
+	local_sys_stat->length_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index] += ulen; /* udp和ip算作一层 */
 	
 	if(unlikely(iplen < ulen || ulen <= (int)sizeof (struct mesa_udp_hdr))){
 		return PASS;

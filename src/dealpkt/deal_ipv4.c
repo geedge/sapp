@@ -594,10 +594,15 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	/* 注意, 此处获取当前层长度用ip头部字段计算得出, 而不是this_layer_data- raw_pkt->raw_pkt_data, 因为某些不足64字节的小包后面会有triler, 导致两者计算不一致 */
 	int this_layer_len = ntohs(a_packet->ip_len);
+	int this_layer_is_overlay = 0;
 
 #if DEBUG
 	//timestamp_record(TS_LEVEL_IP_ENTRY, raw_pkt, thread_num);
 #endif
+
+	local_sys_stat->count_per_layer[__ADDR_TYPE_IP_PAIR_V4][pfstream_pr->layer_index + 1]++;
+	local_sys_stat->length_per_layer[__ADDR_TYPE_IP_PAIR_V4][pfstream_pr->layer_index + 1] += this_layer_len;
+
 
 	/* NOTE, 注意, 切记: 
 	   在线环境下曾发现莫名其妙的IPv4包, 头部字段不合法,
@@ -677,7 +682,8 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	pstream->threadnum=thread_num;
 
 	/* 2020-12-23 lijia add, 无mrtunnat模式, 如果是overlay层, 不调用普通插件 */
-	if(sapp_is_overlay_layer(pstream_pr, raw_pkt) != 0){
+	this_layer_is_overlay = sapp_is_overlay_layer(pstream_pr, raw_pkt);
+	if(this_layer_is_overlay != 0){
 		ret = stream_process_overlay_ipv4(pstream, (const struct ip *)this_layer_data, thread_num, routedir, raw_pkt);
 		if(DROP == ret){
 			return DROP;
@@ -724,7 +730,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 		local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;
 		local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG] += this_layer_len;
 	}else{
-		if(g_overlay_layer_set[__ADDR_TYPE_IP_PAIR_V4][pstream_pr->layer_index] == 0){ /* 非overlay层才累加相关层计数 */
+		if(0 == this_layer_is_overlay){ /* 非overlay层才累加相关层计数 */
 			local_sys_stat->count[SAPP_STAT_RCV_IPV4]++;
 			local_sys_stat->length[SAPP_STAT_RCV_IPV4] += this_layer_len;
 			if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
