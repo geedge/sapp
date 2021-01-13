@@ -196,7 +196,7 @@ static void sysinfo_output_per_layer_stat(FILE *fp)
 	}
 
 	fprintf(fp,"******************************************************************************************************************\n");
-	fprintf(fp,"*************** protocol count statistics matrix ****************\n");
+	fprintf(fp,"************* protocol count statistics matrix (number) *************\n");
 	fprintf(fp,"%-10s %12s %12s %12s %12s %12s %12s %12s %12s\n","PROTO", "Layer0", "Layer1","Layer2", "Layer3","Layer4","Layer5","Layer6","Layer7");
 	
 
@@ -214,13 +214,13 @@ static void sysinfo_output_per_layer_stat(FILE *fp)
 				sum_count_per_layer[layer_type][4], sum_count_per_layer[layer_type][5], sum_count_per_layer[layer_type][6], sum_count_per_layer[layer_type][7]);		
 	}
 
-	fprintf(fp,"\n************** protocol length statistics matrix ****************\n");
+	fprintf(fp,"\n*********** protocol length statistics matrix (bytes) *************\n");
 	fprintf(fp,"%-10s %12s %12s %12s %12s %12s %12s %12s %12s\n","PROTO", "Layer0", "Layer1","Layer2", "Layer3","Layer4","Layer5","Layer6","Layer7");
 	for(layer_type = 1; layer_type < (int)__ADDR_TYPE_MAX; layer_type++){
 		stat_sum = 0;
 		for(layer_num = 0; layer_num < SAPP_SUPPORT_LAYER_NUM_MAX; layer_num++){
 			stat_sum += sum_length_per_layer[layer_type][layer_num];
-			byte_convert_human(sum_length_per_layer[layer_type][layer_num], 1, 8, layer_length_human_str[layer_num]);
+			byte_convert_human(sum_length_per_layer[layer_type][layer_num], 1, 1, layer_length_human_str[layer_num]); /* 总计字节数, 此处并不是网络流量, 不能乘以8 */
 		}
 		if(0 == stat_sum){
 			continue; /* 计数全是0的层就不显示了 */
