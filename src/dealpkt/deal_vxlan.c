@@ -16,7 +16,7 @@ static int set_vxlan_addr(const void *this_layer_hdr, struct layer_addr_vxlan *a
 	addr->link_type = vxlan_hdr->link_layer_type;
 	vlan_id_high = vxlan_hdr->vlan_id_half_high;
 	vlan_id_low = vxlan_hdr->vlan_id_half_low;
-	addr->vlan_id = (vlan_id_high<<8) | vlan_id_low;
+	addr->vlan_id = htons((vlan_id_high<<4) | vlan_id_low);
 
 	return 0;
 }

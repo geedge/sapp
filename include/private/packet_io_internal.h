@@ -68,31 +68,6 @@ typedef struct{
 
 #define VXLAN_HDR_RESERVED_LEN	(14+8+8+20) /* 发送vxlan数据包预留的头部空间, 使用ip_socket发送, 不含最外层的mac, 即inner_eth+vxlan+outer_udp+outer_ip */
 
-typedef struct 
-{
-	unsigned char flags;
-
-	/*------------byte delim -------*/
-	unsigned char reserved[3];
-
-	/*--------int delim -------*/
-	unsigned char vlan_id_half_high;
-	unsigned char link_layer_type : 4; /* 二层报文封装格式 */
-	unsigned char vlan_id_half_low : 4;
-	unsigned int online_test : 1;
-	unsigned int link_id : 6;
-	unsigned int dir : 1;
-
-	unsigned int r7 : 1;
-	unsigned int r6 : 1;
-	unsigned int r5 : 1;
-	unsigned int r4 : 1;
-	unsigned int vni_flag : 1;
-	unsigned int r2 : 1;
-	unsigned int r1 : 1;
-	unsigned int r0 : 1;
-}vxlan_header_t;  /* 在线GDEV标准 */
-
 struct sendpacket_mac_table{
 	unsigned char src_mac[6];
 	unsigned char rcv_dir;

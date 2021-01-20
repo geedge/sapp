@@ -1316,7 +1316,8 @@ int sapp_parse_config(void)
 void sapp_init_breakpad_mini(void)
 {
 #ifdef GIT_VERSION
-	__attribute__((__used__)) const char *sapp_git_ver = GIT_VERSION;
+	//__attribute__((__used__)) const char *sapp_git_ver = GIT_VERSION;
+	const char *sapp_git_ver = GIT_VERSION;
 #else
 	 const char * sapp_git_ver = "sapp_version_unkonw";
 #endif

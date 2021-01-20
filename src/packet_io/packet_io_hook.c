@@ -257,6 +257,8 @@ int packet_io_hook_sendto(const raw_pkt_t *raw_pkt, unsigned char route_dir, cha
 
 	if(OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
 		ret = packet_io_hook_output_vxlan((raw_pkt_t *)raw_pkt, (void *)send_pkt_data, route_dir);
+	}else if(OVERLAY_MODE_NONE == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
+		ret = 0;
 	}else{
 		sapp_runtime_log(20, "packet_io_hook_sendto() error, unsupport overlay_mode:%d\n", sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin);
 	}

@@ -1872,7 +1872,6 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 	switch(stream->addr.addrtype){
 		case ADDR_TYPE_IPV4:
 		{
-			const struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)buf;
 			/* 2015-12-30 lijia modify, IP和端口存储于一个结构, 先构造TCP/UDP层 */
 			if(STREAM_TYPE_TCP == stream->type){
 				transport_layer_len = sizeof(struct mesa_tcp_hdr);
@@ -1894,8 +1893,8 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			/* TCP层校验和需要IP地址信息, 所以要在构造完IP层信息后, 再计算checksum */
 			checksum_for_carry_layer(buf, __ADDR_TYPE_IP_PAIR_V4, carry_layer_type, carry_layer_len+transport_layer_len);
 			carry_layer_type = __ADDR_TYPE_IP_PAIR_V4;
-
-			sapp_runtime_log(RLOG_LV_DEBUG, "build_net_layer_pkt()->IPV4, %s, send_dir:%d, ipid:%u, ip_checksum:0x%x", 
+			const struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)buf;
+			sapp_runtime_log(RLOG_LV_DEBUG, "build_net_layer_pkt()->IPV4, %s, send_stream_dir:%d, ipid:%u, ip_checksum:0x%x", 
 							sapp_raw_ipv4_ntop(ip4hdr, debug_print_buf, sizeof(debug_print_buf)), send_stream_dir,
 							ntohs(ip4hdr->ip_id), ntohs(ip4hdr->ip_sum));
 		}	
@@ -2237,7 +2236,7 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 			goto fun_exit;
 		}		
 		if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){ /* gdev注入模式时预留底层封装vxlan包的空间, 避免再二次copy */
-			reserved_hdr_len += sizeof(vxlan_header_t);
+			reserved_hdr_len += sizeof(inline_vxlan_hdr_t);
 		}
 	
 		send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
@@ -2282,7 +2281,7 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 			 goto fun_exit;
 		 }
 		 if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){ /* gdev注入模式时预留底层封装vxlan包的空间, 避免再二次copy */
-			 reserved_hdr_len += sizeof(vxlan_header_t);
+			 reserved_hdr_len += sizeof(inline_vxlan_hdr_t);
 		 }
 		 low_net_layer_type = get_eth_carry_layer_type(stream, stream_pr->stream_public.curdir ^ DIR_DOUBLE);
 		 if(low_net_layer_type < 0){

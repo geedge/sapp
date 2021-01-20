@@ -274,7 +274,7 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 	//const struct streaminfo_private *pstrem_pr =  (const struct streaminfo_private *)send_handle->user_arg;
 	const struct streaminfo *pstream = (const struct streaminfo *)send_handle->user_arg;
     const struct streaminfo *tmpstream = pstream;
-	vxlan_header_t *vxlan_hdr;
+	inline_vxlan_hdr_t *vxlan_hdr;
 	struct vxlan_info mim_mem_hdr;
 	struct mesa_ethernet_hdr *inner_eth_hdr;
 	//struct mesa_udp_hdr *udp_hdr;
@@ -298,8 +298,8 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 		sapp_runtime_log(20, "packet_io_send_fake_pkt_by_gdev(): get vxlan info error!\n");
 		return -1;
 	}
-    data += sizeof(vxlan_header_t);/*跳过预留的vxlan头部*/
-    datalen -=  sizeof(vxlan_header_t);
+    data += sizeof(inline_vxlan_hdr_t);/*跳过预留的vxlan头部*/
+    datalen -=  sizeof(inline_vxlan_hdr_t);
 
 	data += sizeof(struct mesa_ethernet_hdr);/*跳过mim的外层MAC*/
 	datalen -= sizeof(struct mesa_ethernet_hdr);
@@ -323,12 +323,12 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 		return -1;
 	}
 	
-	data -= sizeof(vxlan_header_t);
-	datalen +=  sizeof(vxlan_header_t);
+	data -= sizeof(inline_vxlan_hdr_t);
+	datalen +=  sizeof(inline_vxlan_hdr_t);
 
-	vxlan_hdr = (vxlan_header_t *)data;
+	vxlan_hdr = (inline_vxlan_hdr_t *)data;
 
-	memset(vxlan_hdr, 0, sizeof(vxlan_header_t));
+	memset(vxlan_hdr, 0, sizeof(inline_vxlan_hdr_t));
 
 	vxlan_hdr->link_id = mim_mem_hdr.link_id;
 	vxlan_hdr->link_layer_type = mim_mem_hdr.encap_type;
@@ -346,7 +346,7 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 
 	udp_hdr->uh_sport = htons((unsigned short)sapp_global_single.send_fake_pkt_gdev_sport); /* 根据配置文件填写vxlan源端口 */
 	udp_hdr->uh_dport = htons(4789); 
-	udp_hdr->uh_ulen = htons(datalen + sizeof(vxlan_header_t) + sizeof(struct mesa_udp_hdr));
+	udp_hdr->uh_ulen = htons(datalen + sizeof(inline_vxlan_hdr_t) + sizeof(struct mesa_udp_hdr));
 	udp_hdr->uh_sum = 0;
 
 	data -= sizeof(struct mesa_ip4_hdr);
@@ -355,7 +355,7 @@ int packet_io_send_fake_pkt_by_gdev(MESA_send_handle *send_handle, enum addr_typ
 	ip4_hdr->ip_v = 4;
 	ip4_hdr->ip_hl = 5;
 	ip4_hdr->ip_tos = 0;
-	ip4_hdr->ip_len = htons(datalen + sizeof(vxlan_header_t) + sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip4_hdr));
+	ip4_hdr->ip_len = htons(datalen + sizeof(inline_vxlan_hdr_t) + sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip4_hdr));
 	ip4_hdr->ip_off = 0;
 	ip4_hdr->ip_id = MESA_rand_range(10000, 60000);
 	ip4_hdr->ip_ttl = MESA_rand_range(64, 128);

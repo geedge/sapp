@@ -1042,7 +1042,7 @@ static int gen_route_dir_for_dumpfile_mode(const u_char *data)
 
 static void __pcap_pkt_handle(u_char *user, const struct pcap_pkthdr *hdr, const u_char *data)
 {
-	pkt_queue_t pkt_queue_node;
+	pkt_queue_t pkt_queue_node = {};
 	int thread_num, ret;
 
 	if(CAP_MODEL_PCAP_ONLINE == g_pcap_cap_mode){
@@ -1114,6 +1114,9 @@ retry:
 	pkt_queue_node.raw_pkt.magic_num = RAW_PKT_MAGIC_NUM; /* 2014-12-11 lijia add */
 	pkt_queue_node.raw_pkt.hd_hash = 0; /* 2016-05-05 lijia add, pcap模式不支持硬件HASH */
 	pkt_queue_node.raw_pkt.io_lib_pkt_reference = pkt_queue_node.raw_pkt.__lib_raw_pkt_data; /* 兼容dpdk模式, 将此变量赋值 */
+	pkt_queue_node.raw_pkt.vlan_flipping_couple[0] = 0;
+	pkt_queue_node.raw_pkt.vlan_flipping_couple[1] = 0;
+	pkt_queue_node.raw_pkt.mac_flipping_enable = 0;
 	pkt_queue_node.raw_pkt.diagnose_error_to_dump = 0;
 	pkt_queue_node.raw_pkt.overlay_layer_bytes = 0;
 

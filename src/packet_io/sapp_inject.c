@@ -51,7 +51,7 @@ int sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const v
 							stream_pr->stream_c2s_route_dir, snd_routedir, send_stream_dir,
 							ip4hdr->ip_ttl, ntohs(ip4hdr->ip_id), ntohs(ip4hdr->ip_sum));			
 		}else{
-			//todo;
+			//todo ipv6;
 		}
 	}
 

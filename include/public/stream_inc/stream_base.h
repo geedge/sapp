@@ -332,7 +332,7 @@ struct layer_addr_mac_in_mac
 
 struct layer_addr_vxlan
 {
-	UINT16 vlan_id;
+	UINT16 vlan_id; /* network order */
 	UCHAR dir;
 	UCHAR link_id;
 	UCHAR link_type;
