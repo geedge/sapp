@@ -40,7 +40,7 @@ typedef struct{
 	unsigned long long discard_pkt_bytes;
 	char __pad__[32]; /* 64字节cache对齐 */
 }pkt_dump_status_t;
-static pkt_dump_status_t PKT_DISCARD_STAT[MAX_THREAD_NUM];
+static pkt_dump_status_t PKT_DISCARD_STAT[MAX_THREAD_NUM+INDEPENDENT_SEND_QUEUE_MAX_NUM]; /* 独立发包线程, tcpdump_mesa模式为INJECT时也要捕包 */
 
 #endif
 
@@ -56,21 +56,21 @@ static char G_PKT_DUMP_ROOT_DIR[PATH_MAX]; /* 可以指定为/dev/shm, 速度快 */
 static long G_PKT_DUMP_FILE_SIZE = 104857600; /* 默认100MB, 单线程 */
 int G_PKT_DUMP_SW = 0; /* 默认关闭 */
 int G_PKT_DUMP_MODE = PKT_DUMP_LOCAL_FILE; /* 默认是写到本地文件 */
-static int G_PKT_DUMP_PER_THREAD_SW[MAX_THREAD_NUM];
+static int G_PKT_DUMP_PER_THREAD_SW[MAX_THREAD_NUM+INDEPENDENT_SEND_QUEUE_MAX_NUM];
 
 static int pkt_dump_thread_num = 1;
 
-static FILE *G_PKT_DUMP_FP[MAX_THREAD_NUM];
-static int G_FILENAME_INDEX[MAX_THREAD_NUM];
-static long G_PCAP_SIZE[MAX_THREAD_NUM];
+static FILE *G_PKT_DUMP_FP[MAX_THREAD_NUM+INDEPENDENT_SEND_QUEUE_MAX_NUM];
+static int G_FILENAME_INDEX[MAX_THREAD_NUM+INDEPENDENT_SEND_QUEUE_MAX_NUM];
+static long G_PCAP_SIZE[MAX_THREAD_NUM+INDEPENDENT_SEND_QUEUE_MAX_NUM];
 static char G_PKT_DUMP_FILTER_STR[PATH_MAX];
 
-static struct bpf_program G_PKT_DUMP_BPF_FILTER[MAX_THREAD_NUM];
+static struct bpf_program G_PKT_DUMP_BPF_FILTER[MAX_THREAD_NUM+INDEPENDENT_SEND_QUEUE_MAX_NUM];
 static unsigned short pkt_dump_data_offset = 0; /* 捕包时可指定偏移量, 用于vxlan环境下捕获内层数据包 */
 static unsigned short pkt_dump_tcp_bind_port = 12345; /* 默认TCP监听端口, 用于接收外部tcpdump命令 */
 static int pkt_dump_tcp_cmd_sd = -1;/* TCP fd,  用于接收外部tcpdump命令 */
 static volatile int pkt_dump_udp_socket_peer_alive = 0; /* 外部tcpdump是否存活 */
-static int pkt_dump_udp_pkt_sd[MAX_THREAD_NUM]; /* UDP发送数据包fd */
+static int pkt_dump_udp_pkt_sd[MAX_THREAD_NUM+INDEPENDENT_SEND_QUEUE_MAX_NUM]; /* UDP发送数据包fd */
 static struct sockaddr_in udp_recv_addr;
 static int tcpdump_perceptive_flag = 0; /* 明察秋毫模式, 可以发现丢包数量 */	
 static int greedy_seek_flag = 0; /* 偏移到最内层IP, 便于隧道模式下查找BUG */
@@ -92,7 +92,7 @@ typedef struct{
 	char __cache_alignment[56];
 }pkt_dump_mthread_t;
 
-static pkt_dump_mthread_t pkt_dump_mthread_info[MAX_THREAD_NUM];
+static pkt_dump_mthread_t pkt_dump_mthread_info[MAX_THREAD_NUM+INDEPENDENT_SEND_QUEUE_MAX_NUM];
 
 static int raw_cfg_pkt_dump_ratio = 30; /* 全局默认捕包采样率, 表示每隔N个包捕获一次, 防止大流量下tcpdump_mesa导致平台丢包 */
 static int cur_conn_pkt_dump_ratio = 30; /* 当前连接的捕包采样率, 如果设置了host, port等bpf参数, 则为全捕包模式, debug排错用 */
@@ -363,7 +363,7 @@ static int cycle_pkt_dump_seek_to_inner_ip(char *pkt_buf, int pktlen, int thread
 	       如果没有过滤条件, 即全捕包模式, 为了尽量不影响包处理线程, 根据采样率只捕一部分包.
 		*/
 		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
-			bpf_match_ipv4 == bpf_filter(G_PKT_DUMP_BPF_FILTER[thread_seq].bf_insns, 
+			bpf_match_ipv4 = bpf_filter(G_PKT_DUMP_BPF_FILTER[thread_seq].bf_insns, 
 						    (const unsigned char *)pkt_buf, (unsigned int)bpf_match_pkt_len, (unsigned int)bpf_match_pkt_len);
 		}
 	}else{
@@ -395,7 +395,7 @@ static int cycle_pkt_dump_seek_to_inner_ip(char *pkt_buf, int pktlen, int thread
 	       如果没有过滤条件, 即全捕包模式, 为了尽量不影响包处理线程, 根据采样率只捕一部分包.
 		*/
 		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
-			bpf_match_ipv6 == bpf_filter(G_PKT_DUMP_BPF_FILTER[thread_seq].bf_insns, 
+			bpf_match_ipv6 = bpf_filter(G_PKT_DUMP_BPF_FILTER[thread_seq].bf_insns, 
 						    (const unsigned char *)pkt_buf, (unsigned int)bpf_match_pkt_len, (unsigned int)bpf_match_pkt_len);
 		}
 		
@@ -780,7 +780,7 @@ static int cycle_pkt_dump_child_init(void)
 #endif
 
 
-#if DEBUG
+#if 0
 static long ifuncb_show_pktdump_summary(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg, const char *cmd_args)
 {
 	int i;
@@ -1235,7 +1235,7 @@ static void cycle_pkt_dump_command_parse(int connfd)
 	}
 	int pcap_link_type = DLT_EN10MB;
 	if(greedy_seek_flag == 1)pcap_link_type = DLT_RAW;
-	for(i = 0; i < (unsigned int )g_packet_io_thread_num; i++){
+	for(i = 0; i < (unsigned int )g_packet_io_thread_num + sapp_global_val->config.cpu.send_only_threads_max_num; i++){
 
 		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){ /* 允许没有filter, 即全捕包 */
 			if(pcap_compile_nopcap(65535, pcap_link_type, &G_PKT_DUMP_BPF_FILTER[i], G_PKT_DUMP_FILTER_STR, 100, 0) < 0){                
@@ -1282,7 +1282,7 @@ err_exit:
 	/* 可单独按线程指定捕包, 每次恢复默认值 */
 	memset(G_PKT_DUMP_PER_THREAD_SW, 0,  sizeof(G_PKT_DUMP_PER_THREAD_SW));
 	usleep(1000 * 500); /* 延时释放, 避免有线程正在使用BPF过滤器 */
-	for(i = 0; i <  (unsigned int )g_packet_io_thread_num; i++){
+	for(i = 0; i <  (unsigned int )g_packet_io_thread_num + sapp_global_val->config.cpu.send_only_threads_max_num; i++){
 		pcap_freecode(&G_PKT_DUMP_BPF_FILTER[i]);
 		pkt_dump_mthread_info[i].sample_pkt_num = 0;
 		pkt_dump_mthread_info[i].perceptive_mode_pkt_seq = 0;
@@ -1338,7 +1338,7 @@ static int cycle_pkt_dump_socket_init(void)
 	}
 	listen(pkt_dump_tcp_cmd_sd,  1); /* 不支持并发, 暂时只支持一个客户端捕包 */
 
-	for(i = 0; i < g_packet_io_thread_num; i++){
+	for(i = 0; i < g_packet_io_thread_num + sapp_global_val->config.cpu.send_only_threads_max_num; i++){
 		pkt_dump_udp_pkt_sd[i] = socket(AF_INET, SOCK_DGRAM, 0);
 	}
 	
@@ -1373,10 +1373,10 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 		strncpy(G_PKT_DUMP_FILTER_STR, pktdump_cfg->bpf_filter, sizeof(G_PKT_DUMP_FILTER_STR)-1);
 	}
 	if(PKT_DUMP_LOCAL_FILE == G_PKT_DUMP_MODE){
-		cycle_pkt_dump_set_thread_num(g_packet_io_thread_num);
+		cycle_pkt_dump_set_thread_num(g_packet_io_thread_num + sapp_global_val->config.cpu.send_only_threads_max_num);
 
 		if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
-			for(i = 0; i < g_packet_io_thread_num; i++){
+			for(i = 0; i < g_packet_io_thread_num + sapp_global_val->config.cpu.send_only_threads_max_num; i++){
 				if(pcap_compile_nopcap(65535,DLT_EN10MB, &G_PKT_DUMP_BPF_FILTER[i], G_PKT_DUMP_FILTER_STR, 100, 0) < 0){                
 					sapp_log(30, 1, 1, "Compile pcap filter '%s' error\n", pktdump_cfg->bpf_filter);                
 					return -1;        

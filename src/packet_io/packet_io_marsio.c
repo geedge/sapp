@@ -356,6 +356,7 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	marsio_buff_t *send_mbuf[1];
 	char *real_buf;
 	struct mr_tunnat_ctrlzone mr_ctrlzone = {};
+	uint16_t send_option = 0;
 
 	ret = ptr_marsio_buff_malloc_global(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
 	if((ret < 0) || (NULL == send_mbuf[0])){
@@ -372,12 +373,22 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	
 	memcpy(real_buf, data, datalen);
 
-	mr_ctrlzone.action = TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
-	packet_io_hook_sendto(raw_pkt, route_dir, real_buf, (void *)send_mbuf[0]);
+	if(0 == sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support){
+		mr_ctrlzone.action = TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
+		send_option = MARSIO_SEND_OPT_FAST|MARSIO_SEND_OPT_REHASH;
+	}else{
+		/* v4.2之后, sapp无需mrtunnat支持, 直接发送原始包, 不需要驱动封装底层链路信息 */
+		mr_ctrlzone.action = TUNNAT_CZ_ACTION_ENCAP_NO_SESSION;
+		send_option = MARSIO_SEND_OPT_FAST;
+	}
+	
+	if(raw_pkt){
+		packet_io_hook_sendto(raw_pkt, route_dir, real_buf, (void *)send_mbuf[0]);
+	}
 
 	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 
-	ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, MARSIO_SEND_OPT_FAST|MARSIO_SEND_OPT_REHASH);
+	ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, send_option);
 	if(ret < 0){
 		//发送失败marsio自动free
 		//ptr_marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
