@@ -1118,6 +1118,14 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		}
 		break;
 
+		case MSO_STREAM_UP_LAYER_TUNNEL_TYPE:
+		{
+			const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
+			unsigned short *out_val = (unsigned short *)opt_val;
+			*out_val = pstream_pr->stream_carry_up_layer_tunnel_type;
+			ret = 0;
+		}
+
 		case MSO_STREAM_CLOSE_REASON:
 		{
 			UCHAR *close_reason = (UCHAR *)opt_val;
