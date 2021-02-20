@@ -5,6 +5,13 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
+/*
+	²Î¿¼×ÊÁÏ:
+		https://en.wikipedia.org/wiki/GPRS_Tunnelling_Protocol
+		https://portal.3gpp.org/desktopmodules/Specifications/SpecificationDetails.aspx?specificationId=1595
+		
+*/
+
 #define GPRS_TUNNEL_PORT (2152)
 
 

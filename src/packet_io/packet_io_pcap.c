@@ -1220,6 +1220,54 @@ static void wait_all_work_thread(void)
 	return;
 }
 
+
+static pcap_t *pcap_open_dumpfile_mode(const char *filename)
+{
+	char pcap_errbuf[PCAP_ERRBUF_SIZE];
+	pcap_t *pcap_handle;
+
+	if((pcap_handle = pcap_open_offline(filename, pcap_errbuf)) == NULL)
+	{
+		printf("\033[1;31;40m[Error]Can't open file:'%s', %s\033[0m\n", filename, pcap_errbuf);
+		return NULL;
+	}
+
+	pcap_set_filter(pcap_handle, g_pcap_cap_filter);
+
+	return pcap_handle;
+}
+
+
+static void pcap_io_dumpfile_list(void)
+{
+	pcap_t *pcap_handle;
+	int pcap_file_num = 0;
+	unsigned char route_dir = DIR_ROUTE_UP;
+	struct timeval start_time, end_time;
+	
+	while(sapp_global_val->cla.dumpfie_list_array[pcap_file_num] != NULL){
+		pcap_handle = pcap_open_dumpfile_mode(sapp_global_val->cla.dumpfie_list_array[pcap_file_num]);
+		if(pcap_handle){
+			gettimeofday(&start_time, NULL);
+			pcap_loop(pcap_handle, -1, __pcap_pkt_handle, (unsigned char *)&route_dir);
+			gettimeofday(&end_time, NULL);
+
+			sapp_log(20, 1, 1, "pcap file '%s' processing finished, takes time: %ldus", 
+					sapp_global_val->cla.dumpfie_list_array[pcap_file_num],
+					(end_time.tv_sec-start_time.tv_sec)*1000*1000 + (end_time.tv_usec-start_time.tv_usec));
+			pcap_close(pcap_handle);	
+
+			dumpfile_timestamp_diff_with_start = 0; /* 每个pcap包的时间戳都不一样, 处理完后重置相对时间戳 */
+		}
+		pcap_file_num++;
+	}
+
+	__pcap_nodify_work_thread(PCAP_OP_FLAG_EOF);
+	wait_all_work_thread();
+
+	return;
+}
+
 static void *pcap_io_thread(void *arg)
 {
 	long route_dir_arg = (long)arg; /* 逃过编译器precision检查 */
@@ -1227,12 +1275,18 @@ static void *pcap_io_thread(void *arg)
 	pcap_t *handle;
 	int pcap_ret;
 	char pcap_errbuf[PCAP_ERRBUF_SIZE];
+	char *no_use;
 
 #if(__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__ >= 480) /* 版本判断, 很多旧系统无法编译 */
 #ifdef _GNU_SOURCE
 	pthread_setname_np(pthread_self(), "sapp");
 #endif
 #endif
+
+	if(sapp_get_cla_raw("dumpfile-list", &no_use) >= 0){
+		pcap_io_dumpfile_list();
+		exit(0);
+	}
 
 	if(0 == (DIR_ROUTE_DOWN & route_dir)){
 		handle = pcap_up_handle;
@@ -1274,6 +1328,7 @@ static void *pcap_io_thread(void *arg)
 
 	return NULL;
 }
+
 
 
 

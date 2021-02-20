@@ -344,6 +344,7 @@ typedef struct __sapp_gval_individual_volatile sapp_gval_individual_volatile_t;
 typedef struct{
 	sapp_cmd_args_val_t **cmd_args_array;
 	int cmd_args_num;
+	char **dumpfie_list_array; /* 参数--dumpfile-list命令执行后, 得到的文件列表, 字符串指针数组 */
 }sapp_cla_t;
 
 

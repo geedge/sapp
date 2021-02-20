@@ -25,21 +25,98 @@ static inline int dumpfile_speed_check(const char *opt_name, const char *opt_arg
 	return ret;
 }
 
+
+static char *popen_result_store(FILE *fp)
+{
+	int chr;
+	char *exec_result;
+	int exec_result_size = 0;
+	char line_buf[PATH_MAX];
+
+	exec_result = (char *)malloc(1);
+	
+	while((chr = fgetc(fp)) != EOF){
+		exec_result = realloc(exec_result, exec_result_size + 2);
+		exec_result[exec_result_size] = (char)chr;
+		exec_result_size++;
+	}
+
+	exec_result[exec_result_size] = '\0';
+
+	if(exec_result_size <= 0){
+		free(exec_result);
+		return NULL;
+	}
+
+	return exec_result;
+}
+
+
+static int get_dumpfile_list_array(const char *opt_arg)
+{
+	FILE *fp;
+	char *exec_result, *tobe_free_result;
+
+	/* 先执行一遍, 看命令是否成功 */
+	sapp_log(10, ~0, ~0, "Executing command --dumpfile-file '%s' ... ", opt_arg);
+	if(system(opt_arg) != 0){
+		sapp_log(30, ~0, ~0, "Execute command --dumpfile-file '%s' error!", opt_arg);
+		exit(1);		
+	}
+
+	fp = popen(opt_arg, "r");
+	if(NULL == fp){
+		sapp_log(30, ~0, ~0, "Execute command --dumpfile-file '%s' error!", opt_arg);
+		exit(1);
+	}
+
+	exec_result = popen_result_store(fp);
+	if(NULL == exec_result){
+		sapp_log(30, ~0, ~0, "Execute command --dumpfile-file '%s', but no valid result!", opt_arg);
+		exit(1);
+	}
+
+	const char *delim = "\n\r";
+	char *ptr_cont;
+	int line_num = 0;
+
+	tobe_free_result = exec_result;
+	sapp_global_val->cla.dumpfie_list_array = NULL;
+	
+	while(ptr_cont = strtok(exec_result, delim)){
+		sapp_global_val->cla.dumpfie_list_array = (char **)realloc(sapp_global_val->cla.dumpfie_list_array, sizeof(void *) * (line_num + 2));//当前要存储的指针再加上EOF
+		sapp_global_val->cla.dumpfie_list_array[line_num] = strdup(ptr_cont);;
+		
+		//printf("#### %d: result_content:%s\n", line_num, sapp_global_val->cla.dumpfie_list_array[line_num]);
+		line_num++;
+		exec_result = NULL;
+	}
+
+	sapp_global_val->cla.dumpfie_list_array[line_num] = NULL; //EOF
+
+	free(tobe_free_result);
+	fclose(fp);
+
+	return 0;
+}
+
+
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const sapp_cmd_args_usage_t cmd_args_usage[] = 
 {
-	{"-h", "help", 	NULL,	"show help message"},
-	{"-v", "version", NULL,	"show platform version"},
-	{"-g", "coredump", NULL,	"generate coredump for test"},
+	{"-h", "help", 		NULL,	"show help message"},
+	{"-v", "version", 	NULL,	"show platform version"},
+	{"-g", "coredump", 	NULL,	"generate coredump for test"},
 	{"-c", "sample-config", NULL, "generate sample config file->sapp.toml"},
-	{"-d", "dumpfile", NULL,	"running as pcap dumpfile mode"},
+	{"-d", "dumpfile", 	NULL,	"running as pcap offline mode, default pcap file is './dumpfile'"},
 	{"-r", "dumpfile-file", NULL,	"read packets from which pcap file"},
-	{" ",  "dumpfile-speed",	dumpfile_speed_check, "\n  \t\ttop-speed\tprocess packets as fast as possible, this is default behavior\n  \t\ttimestamp\tprocess packets as pcap file timestamp interval"},
+	{"-f", "dumpfile-list", NULL, "get the list of pcap files by command, example: 'ls files/*.pcap', 'find /home/files -name *.pcap'"},
+	{"-p",  "dumpfile-speed",	dumpfile_speed_check, "\n  \t\ttop-speed\tprocess packets as fast as possible, this is default behavior\n  \t\ttimestamp\tprocess packets as pcap file timestamp interval"},
 	{NULL,	NULL, 		NULL}
 };
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
-static const char *sapp_cla_short_options = "cdhr:vg";
+static const char *sapp_cla_short_options = "cdhr:p:f:vg";
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const struct option sapp_cla_long_options[] = 
@@ -48,7 +125,8 @@ static const struct option sapp_cla_long_options[] =
 	{"version",			no_argument,      	NULL,      'v'},
 	{"dumpfile",		no_argument,      	NULL,      'd'},
 	{"dumpfile-file",	required_argument,  NULL,      'r'},
-	{"dumpfile-speed",	required_argument,  NULL,      0},
+	{"dumpfile-list",	required_argument,  NULL,      'f'},
+	{"dumpfile-speed",	required_argument,  NULL,      'p'},
 	{"sample-config", 	no_argument,      	NULL,      'c'},
 	{"coredump", 		no_argument,      	NULL,      'g'},
 	{NULL,          	0,      			NULL,      0}
@@ -84,22 +162,13 @@ static int check_args_sanity(void)
 		dumpfile_mode_enabled = 1;
 	}
 
-#if 0	
-	if((sapp_get_cla_raw("dumpfile-file", &no_use) >= 0) && (0 == dumpfile_mode_enabled)){
-		sapp_log(30, ~0, ~0, "args --dumpfile-file must used with --dumpfile!");
-		exit(1);
-	}
-
 	if((sapp_get_cla_raw("dumpfile-speed", &no_use) >= 0) && (0 == dumpfile_mode_enabled)){
-		sapp_log(30, ~0, ~0, "args --dumpfile-speed must used with --dumpfile!");
+		sapp_log(30, ~0, ~0, "args --dumpfile-speed must used with --dumpfile,--dumpfile-file or --dumpfile-list!");
 		exit(1);
 	}
-#endif
 
 	return 0;
 }
-
-
 
 
 static void usage(void)
@@ -254,6 +323,18 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 			case 'r':
 				store_cmd_args("dumpfile", NULL);
 				store_cmd_args("dumpfile-file", optarg);
+				continue;
+			break;
+
+			case 'p':
+				store_cmd_args("dumpfile-speed", optarg);
+				continue;
+			break;
+
+			case 'f':
+				store_cmd_args("dumpfile", NULL);
+				store_cmd_args("dumpfile-list", optarg);
+				get_dumpfile_list_array(optarg);
 				continue;
 			break;
 
