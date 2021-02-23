@@ -45,12 +45,13 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
 	local_sys_stat->length_per_layer[ADDR_TYPE_GPRS_TUNNEL][pfstream_pr->layer_index+1] += raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr;
 	
 
+#if 0
     //针对同一会话GTP网关源端口变化的情况，强制将栈上的streaminfo中，地址全部设置为0
     pfstream_pr->stream_public.addr.tuple4_v4->source = 0;
     pfstream_pr->stream_public.addr.tuple4_v4->dest = 0;
     pfstream_pr->stream_public.addr.tuple4_v4->saddr = 0;
     pfstream_pr->stream_public.addr.tuple4_v4->daddr = 0;
-#if 0
+
     if(pfstream_pr->stream_public.curdir == DIR_C2S)
     {
         pfstream_pr->stream_public.addr.tuple4_v4->source = 0;
@@ -65,6 +66,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
         pfstream_pr->stream_public.addr.tuple4_v4->saddr = 0;
     }
 #endif
+
     /* 之前已经通过协议识别插件识别过, 所以在entry()里不用再次判断 */
     p_gtd_hdr = (const struct gtp_hdr *)((char *)this_layer_data + sizeof(struct mesa_udp_hdr));
 
@@ -93,16 +95,16 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     /* GTP地址C2S, S2C方向独立, 无法靠当前包地址区分dir, 每次栈里的变量都存储于source方向, 即C2S方向,  
        创建流时, 如果需要reverse拷贝, 则将source, dest颠倒, 否则直接memcpy到堆里的addr.
      */
-    memcpy(&gtpaddr.source, p_gtd_hdr, sizeof(struct gtp_hdr));
-    gtpaddr.src_seq = cur_seq;
+    //memcpy(&gtpaddr.source, p_gtd_hdr, sizeof(struct gtp_hdr));
+    //gtpaddr.src_seq = cur_seq;
+    gtpaddr.teid_c2s = p_gtd_hdr->teid;
     pstream->curdir = DIR_C2S;
 
-    
     pstream->addr.paddr = &gtpaddr;
     pstream->addr.addrtype = ADDR_TYPE_GPRS_TUNNEL;
-    pstream->addr.addrlen = sizeof(struct layer_addr_gtp); /* 此处使用结构体长度 */
+    pstream->addr.addrlen = sizeof(struct layer_addr_gtp); /* 此处使用内存结构体长度, 而非网络头部struct gtp_hdr */
 
-    pstream_pr->addr_use_as_hash = 0;//地址不参与hash比对，仅算层数
+    pstream_pr->addr_use_as_hash = 0; /* gtp层的TEID也会变化, 不能精确比较地址 */
     pstream_pr->need_update_opposite_addr = 1;//需要更新对侧信息
 
     pstream_pr->offset_to_raw_pkt_hdr = (unsigned short)offset_to_raw_pkt_hdr;
@@ -120,27 +122,35 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     next_layer_hdr = (char *)p_gtd_hdr + sizeof(struct gtp_hdr) + seq_offset;
     next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct gtp_hdr) + seq_offset;
 
+	int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
     if((*next_layer_hdr & 0xF0) == 0x40)
     {
-        int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
-        struct iphdr  *ip4_hdr = (struct iphdr *)next_layer_hdr;
+        const struct iphdr  *ip4_hdr = (struct iphdr *)next_layer_hdr;
         if(left_pkt_len < 20 || ntohs(ip4_hdr->tot_len) > left_pkt_len)
         {
             local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	
 			((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
-            sapp_runtime_log(20, "illegal left Ipv4 len %d, total len %d!\n", left_pkt_len, ntohs(ip4_hdr->tot_len));
-            return DROP;
+            sapp_runtime_log(20, "GTP entry: illegal left Ipv4 len %d, expect total len %d!\n", left_pkt_len, ntohs(ip4_hdr->tot_len));
+            return PASS;
         }
         ret = ipv4_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
     }
     else if((*next_layer_hdr & 0xF0) == 0x60)
     {
+    	const struct mesa_ip6_hdr  *ip6_hdr = (struct mesa_ip6_hdr *)next_layer_hdr;
+    	if(left_pkt_len < sizeof(struct mesa_ip6_hdr) || ntohs(ip6_hdr->ip6_payload_len) > left_pkt_len){
+            local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	
+			((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
+            sapp_runtime_log(20, "GTP entry: illegal left Ipv6 len %d, expect total len %d!\n", left_pkt_len, ntohs(ip6_hdr->ip6_payload_len));
+			return PASS;
+    	}
         ret = ipv6_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
     }
     else
     {
-        sapp_runtime_log(20, "GTP next layer not IPv4 or IPv6, drop pkt !\n");
+        sapp_runtime_log(20, "GTP next layer not IPv4 or IPv6, ignore this pkt!\n");
         return PASS;
     }
     return ret;

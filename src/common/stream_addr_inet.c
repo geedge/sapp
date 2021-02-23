@@ -789,11 +789,34 @@ static int __addr_l2tp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 
 static int __addr_gtp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 {
+	struct layer_addr_gtp *gtpaddr = (struct layer_addr_gtp *)&addr_bin_val->addr_value[0];
+	char *save_ptr;
+	char *item;
+	int temp;
+
+	item = strtok_r(addr_str, "-", &save_ptr);
+	if(NULL == item){
+		goto err;
+	}
+	temp = atoi(item);
+	gtpaddr->teid_c2s = htonl(temp);
+
+	item = strtok_r(NULL, "-", &save_ptr);
+	if(NULL == item){
+		goto err;
+	}
+	temp = atoi(item);
+	gtpaddr->teid_s2c = htonl(temp);	
+
     addr_bin_val->stream.addr.addrtype = ADDR_TYPE_GPRS_TUNNEL;
     addr_bin_val->stream.type = STREAM_TYPE_NON;
     addr_bin_val->stream.addr.paddr = addr_bin_val->addr_value;
 
     return 0;
+
+err:
+	while(strtok_r(NULL, "-", &save_ptr)); /* clear buf */ 
+	return -1;    
 }
 
 /* vxlan地址格式:  vlan_id-dir-link_id-link_type*/
@@ -1432,6 +1455,13 @@ static int __addr_gre_n2p_fun(const struct layer_addr *paddr, char *buf, int buf
 	return addr_len + 1;
 }
 
+/*
+	格式说明:
+		每层mpls地址使用src-dst表示, 多层之间的mpls使用,分割, 
+		例如:
+		<1-2>
+		<1-2,3-4,5-6>
+*/
 static int __addr_mpls_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
 	const struct layer_addr_mpls *mpls_addr = paddr->mpls;
@@ -1506,10 +1536,10 @@ static int __addr_l2tp_n2p_fun(const struct layer_addr *paddr, char *buf, int bu
 static int __addr_gtp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
 	int addr_len;
-	const struct gtp_hdr *src_net_hdr = (struct gtp_hdr *)&paddr->gtp->source;
-	const struct gtp_hdr *dst_net_hdr = (struct gtp_hdr *)&paddr->gtp->dest;
+	//const struct gtp_hdr *src_net_hdr = (struct gtp_hdr *)&paddr->gtp->source;
+	//const struct gtp_hdr *dst_net_hdr = (struct gtp_hdr *)&paddr->gtp->dest;
 	
-	addr_len = snprintf(buf, buf_len, "%u-%u", ntohl(src_net_hdr->teid), ntohl(dst_net_hdr->teid));
+	addr_len = snprintf(buf, buf_len, "%u-%u", ntohl(paddr->gtp->teid_c2s), ntohl(paddr->gtp->teid_s2c));
 
 	return addr_len + 1;
 }

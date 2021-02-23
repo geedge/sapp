@@ -774,10 +774,14 @@ int packet_io_init(int argc, char *argv[])
 		dl_io_fun_list.dl_io_register_exit_cb(packet_io_exit);
 	}
 
-    parse_send_gdev_ip_conf("conf/send_gdev.conf");
+	if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){
+    	parse_send_gdev_ip_conf("conf/send_gdev.conf");
+    }
 
-	parse_send_route_conf("conf/send_route.conf");
-
+	if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE){
+		parse_send_route_conf("conf/send_route.conf");
+	}
+	
 	packet_io_device_alias_init();
 
 	packet_io_status_init();

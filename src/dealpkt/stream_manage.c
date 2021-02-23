@@ -967,6 +967,27 @@ static int cmpaddr_mpls(const struct layer_addr_mpls *addr_heap, const struct la
 	return ret;
 }
 
+static int cmpaddr_gtp(const struct layer_addr_gtp *addr_heap, const struct layer_addr_gtp  *addr_stack)
+{
+	/* stack 的地址固定存储于c2s方向
+		gtp地址比较时, 不分方向, 有任意方向的teid能相同, 就认为是一个隧道，
+		之前的pcap包有发现外层地址和某一侧的teid都变化的情况.
+	*/
+	if(0 != addr_heap->teid_c2s){
+		if(addr_heap->teid_c2s == addr_stack->teid_c2s){
+			return 0 ;
+		}
+	}
+
+	if(addr_heap->teid_s2c != 0){
+		if(addr_heap->teid_s2c == addr_stack->teid_c2s){
+			return 0 ;
+		}
+	}
+
+	return -1;
+}
+
 static int  cmpaddr_positive(void *addr_heap, void *addr_stack, UCHAR addrtype, UCHAR addrlen)
 {
 	int ret;
@@ -1056,6 +1077,10 @@ static int  cmpaddr_positive(void *addr_heap, void *addr_stack, UCHAR addrtype, 
 
 		case ADDR_TYPE_MPLS:
 			ret = cmpaddr_mpls((struct layer_addr_mpls *)addr_heap, (struct layer_addr_mpls *)addr_stack);
+		break;
+
+		case ADDR_TYPE_GPRS_TUNNEL:
+			ret = cmpaddr_gtp((struct layer_addr_gtp *)addr_heap, (struct layer_addr_gtp *)addr_stack);
 		break;
 		
 		default:
@@ -1154,6 +1179,10 @@ static int  cmpaddr_reverse(void *addr_heap, void *addr_stack, UCHAR addrtype, U
 
 		case ADDR_TYPE_MPLS:
 			ret = cmpaddr_mpls((struct layer_addr_mpls *)addr_heap, (struct layer_addr_mpls *)addr_stack);
+		break;		
+
+		case ADDR_TYPE_GPRS_TUNNEL:
+			ret = cmpaddr_gtp((struct layer_addr_gtp *)addr_heap, (struct layer_addr_gtp *)addr_stack);
 		break;		
 		
 		default:
@@ -1271,6 +1300,49 @@ static int cmpaddr_new(struct streaminfo_private *pheap_stream_pr,
 
 #endif
 
+/*
+	GTP隧道的外层IP四元组, 因基站的迁移, 外层IP可能变化.
+*/
+static int checkstreamorder_for_gtp_tunnel(struct streaminfo_private *pheap_stream_pr,
+										struct streaminfo_private *pstack_stream_pr, unsigned short hash_elem_count)
+{
+	int ret;
+	const struct streaminfo * pheap_stream = &pheap_stream_pr->stream_public;
+	const struct streaminfo * pstack_stream = &pstack_stream_pr->stream_public;
+	
+	if(pheap_stream_pr==NULL){
+		if(unlikely(pstack_stream_pr!=NULL)){		
+			return -1;
+		}else{	
+			return 0;
+		}
+	}else{
+		if(unlikely(pstack_stream_pr==NULL)){			
+			return 1;
+		}	
+	}	
+	
+	/* 外层地址有任意方向地址相同, 即可认为是来自同一个GTP隧道 */
+	if(pheap_stream->addr.tuple4_v4->saddr == pstack_stream->addr.tuple4_v4->saddr){
+		return 0;
+	}
+
+	if(pheap_stream->addr.tuple4_v4->daddr == pstack_stream->addr.tuple4_v4->saddr){
+		return 0;
+	}
+
+	if(pheap_stream->addr.tuple4_v4->daddr == pstack_stream->addr.tuple4_v4->daddr){
+		return 0;
+	}	
+
+	if(pheap_stream->addr.tuple4_v4->saddr == pstack_stream->addr.tuple4_v4->daddr){
+		return 0;
+	}	
+	
+
+	return -1;
+}
+
 /*比较两个流结构体大小 */
 //adjust 20140324 比较两个流结构是否相同，必须pfather 内的完全相同,
 //递归比较两个流的父流的情况
@@ -1332,6 +1404,17 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 	   return ret;
 	}
 
+	switch(pstack_stream->addr.addrtype){
+		case ADDR_TYPE_GPRS_TUNNEL:
+			return checkstreamorder_for_gtp_tunnel((struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
+								(struct streaminfo_private *)(pstack_stream_pr->pfather_pr), hash_elem_count);
+		break;
+
+		default:
+		break;
+	}
+	
+
 	/* 2014-04-01 lijia add, 本层无需比较, 直接跳过 */
 	if((0 == pheap_stream_pr->addr_use_as_hash) && (0 == pstack_stream_pr->addr_use_as_hash)){
 		pheap_stream_pr->offset_to_raw_pkt_hdr = pstack_stream_pr->offset_to_raw_pkt_hdr;
@@ -1358,53 +1441,6 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 	
 	return ret;
 }
-
-#if 0
-static struct streamindex * findandsethashindex_20141217(struct streamindex *plinkhead,
-			struct streamindex *pinsert, int hash_elem_count)
-{
-	struct streamindex *phead=plinkhead;
-	struct streamindex  *res = NULL;
-	struct streaminfo_private *pshead_pr=NULL;
-	struct streaminfo_private *psinsert_pr=&(pinsert->stream);
-	int result;
-	unsigned long hash_list_num = 0;
-	UCHAR threadnum = psinsert_pr->stream_public.threadnum;
-
-	while(phead!=NULL)
-	{  
-		pshead_pr=&(phead->stream);	
-#if USE_LINUX_KERNEL_HASH_ALGO	
-		/* 2015-12-14 lijia add, 先通过第二个HASH值快速判断是否相等, 如果HASH不同, 地址肯定不同 */
-		if(pshead_pr->hash_slave != psinsert_pr->hash_slave){
-			phead=phead->phashnext;
-			hash_list_num++;
-			continue;
-		}
-#endif
-		result=checkstreamorder(pshead_pr,psinsert_pr, hash_elem_count);
-		if(result==0){
-			//找到相同节点
-			res = phead;
-			break;
-		}
-		//prev=phead;
-
-		phead=phead->phashnext;
-		hash_list_num++;
-	}
-
-	if(unlikely(hash_list_num > g_SysInputInfo[threadnum][SYS_HASH_LIST_MAX])){
-		g_SysInputInfo[threadnum][SYS_HASH_LIST_MAX] = hash_list_num;
-	}
-
-#if DEBUG
-	packet_io_status_stream_hash_update(threadnum, hash_list_num+1);
-#endif
-
-	return res;
-}
-#endif
 
 static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhead,
 			struct streamindex *pinsert, unsigned short hash_elem_count)
@@ -2340,11 +2376,12 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
 		{
 			const struct layer_addr_gtp *src_gtp = (const struct layer_addr_gtp *)saddr;
 			struct layer_addr_gtp *dst_gtp = (struct layer_addr_gtp *)daddr;
-
+#if 0
 			dst_gtp->source = src_gtp->dest;
 			dst_gtp->dest = src_gtp->source;
 			dst_gtp->src_seq = src_gtp->dest_seq;
 			dst_gtp->dest_seq = src_gtp->src_seq;
+#endif			
 		}
 		break;
 
@@ -2693,12 +2730,14 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 				       此函数是更新的对端缺失的地址, 仅靠最内层的cur_dir表示需要更新哪个方向的地址, 固定从当前包p_stack的source拷贝. 
 				     */
 				if(cur_dir == DIR_C2S){
-                    pstream_pr->stream_public.addr.gtp->source = p_stack->stream_public.addr.gtp->source;
-                    pstream_pr->stream_public.addr.gtp->src_seq = p_stack->stream_public.addr.gtp->src_seq;
+                    //pstream_pr->stream_public.addr.gtp->source = p_stack->stream_public.addr.gtp->source;
+                    //pstream_pr->stream_public.addr.gtp->src_seq = p_stack->stream_public.addr.gtp->src_seq;
+                    pstream_pr->stream_public.addr.gtp->teid_c2s = p_stack->stream_public.addr.gtp->teid_c2s;
 				}
 				else{
-                    pstream_pr->stream_public.addr.gtp->dest = p_stack->stream_public.addr.gtp->source;
-                    pstream_pr->stream_public.addr.gtp->dest_seq = p_stack->stream_public.addr.gtp->src_seq;
+                    //pstream_pr->stream_public.addr.gtp->dest = p_stack->stream_public.addr.gtp->source;
+                    //pstream_pr->stream_public.addr.gtp->dest_seq = p_stack->stream_public.addr.gtp->src_seq;
+                    pstream_pr->stream_public.addr.gtp->teid_s2c = p_stack->stream_public.addr.gtp->teid_c2s;
 				}
 				break;
 				

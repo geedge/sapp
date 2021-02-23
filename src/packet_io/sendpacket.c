@@ -1692,6 +1692,7 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
             layer_len+=sizeof(unsigned int);
 		}
 	} else{
+#if 0	/* 2021-02-20, 临时关闭根据内层ip地址缓存单向流gtp地址功能 */
 		if(stream_pr->stream_public.addr.gtp->source == 0 || stream_pr->stream_public.addr.gtp->dest == 0)
 		{
 			if(g_gtp_info_hash[stream_pr->stream_public.threadnum])
@@ -1710,8 +1711,12 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
 			}
 		}
 		else
+#endif	
+
+#if 0	/* 2021-02-20, 临时关闭反向发送gtp功能 */
+
 		{
-			if(0 == memcmp(raw_hdr, &stream_pr->stream_public.addr.gtp->source, sizeof(struct gtp_hdr))) {
+			if(raw_hdr->teid == stream_pr->stream_public.addr.gtp->teid_c2s) {
 				memcpy(buf, &stream_pr->stream_public.addr.gtp->dest, sizeof(struct gtp_hdr));
 				if (raw_hdr->flags & 0x02) {
 					*(unsigned int *)(buf+sizeof(struct gtp_hdr)) = htonl(stream_pr->stream_public.addr.gtp->dest_seq + 1);
@@ -1726,6 +1731,7 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
 				}
 			}
 		}
+#endif		
 	}
 	return layer_len;
 }

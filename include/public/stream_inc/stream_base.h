@@ -315,10 +315,15 @@ struct layer_addr_pptp
 
 struct layer_addr_gtp
 {
+#if 0
     unsigned long long source;  /* From Client */
     unsigned int src_seq;
     unsigned long long dest;	/* From Server */
     unsigned int dest_seq;
+#else
+	unsigned int teid_c2s; /* network order */
+	unsigned int teid_s2c; /* network order */
+#endif
 }__attribute__ ((aligned (1)));
 
 #define MAC_IN_MAC_HDR_LEN	(sizeof(struct mesa_ethernet_hdr) +  sizeof(struct mesa_ethernet_hdr))
