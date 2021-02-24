@@ -925,6 +925,67 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
 	return 0;
 }
 
+/*
+	根据插件入口函数和类型, 获取插件的私有存储空间指针pme.
+*/
+static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_val, int *opt_val_len)
+{
+	int ret = 0;
+	struct mso_plug_pme *in_arg;
+	const struct streaminfo_private *stream_pr;
+	struct tcpdetail_private *ptcp_detail_pr;
+	struct udpdetail_private *pudp_detail_pr;
+	const StreamFunInfo *plug_pme_head;
+	
+	if((NULL == opt_val) || (NULL == opt_val_len)){
+		return -1;
+	}
+
+	if(*opt_val_len != sizeof(struct mso_plug_pme)){
+		return -1;
+	}
+
+	in_arg = (struct mso_plug_pme *)opt_val;
+	stream_pr = (struct streaminfo_private *)pstream;
+	
+
+	switch(in_arg->plug_entry_type){
+		case PLUG_ENTRY_TCP:
+			ptcp_detail_pr=(struct tcpdetail_private *)(pstream->pdetail);
+			plug_pme_head = ptcp_detail_pr->apme;
+		break;
+
+		case PLUG_ENTRY_TCPALL:
+			ptcp_detail_pr=(struct tcpdetail_private *)(pstream->pdetail);
+			plug_pme_head = ptcp_detail_pr->pAllpktpme;
+		break;
+
+		case PLUG_ENTRY_UDP:
+			pudp_detail_pr = (struct udpdetail_private *)(pstream->pdetail);
+			plug_pme_head = pudp_detail_pr->apme;
+		break;
+
+		default:
+			ret = -1;
+		break;
+	}
+
+	while(plug_pme_head){
+		if(plug_pme_head->pfun == in_arg->plug_entry_fun_addr){
+			in_arg->plug_pme = plug_pme_head->pAppInfo;
+			ret = 0;
+			break;
+		}
+		plug_pme_head = plug_pme_head->next;
+	}
+
+	if(NULL == in_arg->plug_pme){
+		return -1;
+	}
+
+	return ret;
+}
+
 int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt opt, void *opt_val, int *opt_val_len)
 {
 	int ret = 0;
@@ -1286,6 +1347,11 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			*timestamp_ms = ((struct streaminfo_private *)pstream)->stream_create_timestamp_ms;
 		}
 		break;
+
+		case MSO_STREAM_PLUG_PME:
+			ret = MESA_get_stream_plug_pme(pstream, opt_val, opt_val_len);
+		break;
+		
 		default:
 			sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n", opt);
 			ret = -1;

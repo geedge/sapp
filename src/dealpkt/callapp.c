@@ -57,15 +57,6 @@ static int g_OverlayUdpFunNum=0;
 static stFunArray g_OverlayUdpFun[MAX_FUN_NUM];
 
 
-typedef struct _stStreamFunInfo
-{
-	char appState;
-	int funtype;/* 2014-12-31 lqy add */
-	char (*pfun)(void);
-	void *pAppInfo;
-	struct _stStreamFunInfo *next;
-}StreamFunInfo;
-
 static inline int is_raw_cb(int cb_type);
 
 extern int G_TCP_FLOW_STAT_PROJECT_ID;

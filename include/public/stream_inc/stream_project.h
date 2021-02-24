@@ -7,24 +7,24 @@
 extern "C" {
 #endif
 
-#define STREAM_PROJECT_H_VERSION			(20201117)
+#define STREAM_PROJECT_H_VERSION			(20210224)
 
 #define PROJECT_REQ_NAME_MAX_LEN			(64)
 
 typedef void (project_req_free_t)(int thread_seq, void *project_req_value);
 
-#define PROJECT_VAL_TYPE_CHAR				"char"
+#define PROJECT_VAL_TYPE_CHAR			"char"
 #define PROJECT_VAL_TYPE_SHORT			"short"
-#define PROJECT_VAL_TYPE_INT				"int"
-#define PROJECT_VAL_TYPE_LONG				"long"
+#define PROJECT_VAL_TYPE_INT			"int"
+#define PROJECT_VAL_TYPE_LONG			"long"
 #define PROJECT_VAL_TYPE_STRUCT			"struct"
 
 /* 
 	CHN : 用于存储全部IP分片原始包 
 	ENG : for store all ip frag packet in non-ip-frag entry.
 */
-#define PROJECT_REQ_IPV4_FRAG_LIST			"ipv4_frag_list"
-#define PROJECT_REQ_IPV6_FRAG_LIST			"ipv6_frag_list"
+#define PROJECT_REQ_IPV4_FRAG_LIST		"ipv4_frag_list"
+#define PROJECT_REQ_IPV6_FRAG_LIST		"ipv6_frag_list"
 
 
 /* 
@@ -32,7 +32,7 @@ typedef void (project_req_free_t)(int thread_seq, void *project_req_value);
 	ENG : this MARCO is use for tcp flow statistics, should enable this in project_list.conf. 		
 	project_customer_register(PROJECT_REQ_TCP_FLOW, "struct");
 */
-#define PROJECT_REQ_TCP_FLOW				"tcp_flow_stat"
+#define PROJECT_REQ_TCP_FLOW			"tcp_flow_stat"
 
 
 #define PROJECT_REQ_TCP_DEDUCE_FLOW		"tcp_deduce_flow_stat"
@@ -42,7 +42,7 @@ typedef void (project_req_free_t)(int thread_seq, void *project_req_value);
 	ENG : this MARCO is use for tcp flow statistics, it's always enable.
 		project_customer_register(PROJECT_REQ_UDP_FLOW, "struct");
 */	
-#define PROJECT_REQ_UDP_FLOW				"udp_flow_stat"
+#define PROJECT_REQ_UDP_FLOW			"udp_flow_stat"
 
 /* 
 	CHN : 将包数,字节数统计值从pdetail中移动到project,字节数扩展为64bit. 
@@ -94,6 +94,12 @@ int project_producer_register(const char *project_req_name, const char *project_
 
 /* args and return value same with project_producer_register() */
 int project_customer_register(const char *project_req_name, const char *project_req_val_type);
+
+
+typedef int project_notify_cb_t(const struct streaminfo *stream, int project_req_id, void *a_packet, void *user_arg);
+int project_customer_register_with_notify(const char *project_req_name, const char *project_req_val_type, project_notify_cb_t callback, void *user_arg);
+int project_producer_notify(const struct streaminfo *stream, int project_req_id, void *a_packet);
+
 
 /*	
 	Function project_req_add_struct(): 'project_req_value' must be a pointer to heap memory(obtain by malloc).

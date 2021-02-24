@@ -113,6 +113,16 @@ struct global_stream
 	struct stream_list freeList;
 };
 
+typedef struct _stStreamFunInfo
+{
+	char appState;
+	int funtype;/* 2014-12-31 lqy add */
+	char (*pfun)(void);
+	void *pAppInfo;
+	struct _stStreamFunInfo *next;
+}StreamFunInfo;
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
