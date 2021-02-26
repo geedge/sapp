@@ -589,7 +589,7 @@ int process_conf_entryname()
 /****************************************************************************
 函数名:process_confelem_plugname()
 功能：处理插件配置文件的插件名字段
-输入：filename:插件配置文件名[IN]
+输入：filename:插件配置文件名[IN], ./plug/business/example/example.inf
 		  plugtype:插件类型，解析层插件需要检查文件名，业务层不需要
 		   plugname:从配置文件读取插件名，存储到此变量中[OUT]
 输出：0:sucess
@@ -617,6 +617,10 @@ int process_confelem_plugname(char* filename,int plugtype,char** plugname)
 			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[1;31;40m%s's\033[0m plugname is %s,not in the entrylist.conf",filename,buf_plugname);
 			return -1;
 		}
+	}
+
+	if(plugin_load_new_plug(buf_plugname, filename) < 0){
+		exit(1);
 	}
 
 	len = strlen(buf_plugname);
@@ -708,14 +712,18 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	long time_cost_us = 0;
 	record_time_start(&start);
 	rec = fun_init();
-	time_cost_us = record_time_elapse_us(&start);
 	if(rec < 0)
 	{
+		if(plugin_is_necessary(filename)){
+			sapp_log(RLOG_LV_FATAL, 1, 1, "%s init error, but this plug is necessary, exit!", buf_sofilename);
+			exit(1);
+		}
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[1;31;40m%s\033[0m init error,don't load it",buf_sofilename);
 		return -1;
 	}
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[32m%s\033[0m init succ, using [\033[32m%lld\033[0m] us",buf_sofilename,time_cost_us);
 
+	time_cost_us = record_time_elapse_us(&start);
+	MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[32m%s\033[0m init succ, using [\033[32m%lld\033[0m] us",buf_sofilename,time_cost_us);
 
 	//load FUNNAME_DESTROY
 	memset(buf_funname,0,PLUGIN_MAX_CONFLEN);
@@ -909,6 +917,7 @@ int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname)
 			}
 			else
 			{
+				plugin_load_new_plug_entry(plugname, g_plugin_entryname[i], (void *)fun_pointer);
 				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s stream_register %s entry succ!",filename,g_plugin_entryname[i]);
 			}
 			
@@ -1205,6 +1214,7 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 	
 		entryname = g_entryname_info->entryname[i].name;
 
+		/* 从插件的.inf配置文件中, 读取是否有挂载到当前entry名字的入口 */
 		MESA_load_profile_string_nodef(filename,entryname,KEYWORD_FUNFLAG,buf_funflag,PLUGIN_MAX_CONFLEN);
 		if(buf_funflag[0] != '\0')  
 		{
@@ -1246,7 +1256,8 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's %s stream_register_app() error!",pluginfo_bus->plugname,buf_funname);
 				continue;
 			}
-
+			plugin_load_new_plug_entry(pluginfo_bus->plugname, entryname, (void *)appentry);
+			
 			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s entry succ!",filename,entryname);
 
 		}
@@ -1282,7 +1293,9 @@ static int fetch_section_name(char *filename, char *section_name)
 	return 0;
 }
 
-
+/*
+	filename : ./plug/conflist.inf
+*/
 static int process_conflist_single(char* filename, int plug_type, char *wanted_section_name)
 {
 	int rec = 0;

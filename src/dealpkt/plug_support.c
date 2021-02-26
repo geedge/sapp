@@ -925,6 +925,22 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
 	return 0;
 }
 
+
+static void *MESA_get_stream_plug_pme_from_platform_entry(const StreamFunInfo *plug_pme_head, const void *this_plug_entry)
+{
+	void *this_plug_pme = NULL;
+	
+	while(plug_pme_head){
+		if(plug_pme_head->pfun == this_plug_entry){
+			this_plug_pme = plug_pme_head->pAppInfo;
+			break;
+		}
+		plug_pme_head = plug_pme_head->next;
+	}	
+
+	return this_plug_pme;
+}
+
 /*
 	根据插件入口函数和类型, 获取插件的私有存储空间指针pme.
 */
@@ -935,7 +951,9 @@ static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_
 	const struct streaminfo_private *stream_pr;
 	struct tcpdetail_private *ptcp_detail_pr;
 	struct udpdetail_private *pudp_detail_pr;
-	const StreamFunInfo *plug_pme_head;
+	
+	const void *this_plug_entry;
+	void *plug_pme;
 	
 	if((NULL == opt_val) || (NULL == opt_val_len)){
 		return -1;
@@ -947,42 +965,44 @@ static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_
 
 	in_arg = (struct mso_plug_pme *)opt_val;
 	stream_pr = (struct streaminfo_private *)pstream;
-	
+	in_arg->plug_pme = NULL;
 
-	switch(in_arg->plug_entry_type){
-		case PLUG_ENTRY_TCP:
-			ptcp_detail_pr=(struct tcpdetail_private *)(pstream->pdetail);
-			plug_pme_head = ptcp_detail_pr->apme;
-		break;
-
-		case PLUG_ENTRY_TCPALL:
-			ptcp_detail_pr=(struct tcpdetail_private *)(pstream->pdetail);
-			plug_pme_head = ptcp_detail_pr->pAllpktpme;
-		break;
-
-		case PLUG_ENTRY_UDP:
-			pudp_detail_pr = (struct udpdetail_private *)(pstream->pdetail);
-			plug_pme_head = pudp_detail_pr->apme;
-		break;
-
-		default:
-			ret = -1;
-		break;
-	}
-
-	while(plug_pme_head){
-		if(plug_pme_head->pfun == in_arg->plug_entry_fun_addr){
-			in_arg->plug_pme = plug_pme_head->pAppInfo;
-			ret = 0;
-			break;
-		}
-		plug_pme_head = plug_pme_head->next;
-	}
-
-	if(NULL == in_arg->plug_pme){
+	this_plug_entry = plugin_get_plug_entry(in_arg->plug_name, in_arg->plug_entry_type);
+	if(NULL == this_plug_entry){
+		sapp_runtime_log(30, "MESA_get_stream_opt->MSO_STREAM_PLUG_PME error, can't get plug:%s entry:%s address", in_arg->plug_name, in_arg->plug_entry_type); 
 		return -1;
 	}
 
+	if(STREAM_TYPE_TCP == pstream->type){
+		ptcp_detail_pr=(struct tcpdetail_private *)(pstream->pdetail);
+		plug_pme = MESA_get_stream_plug_pme_from_platform_entry(ptcp_detail_pr->apme, this_plug_entry);
+		if(plug_pme != NULL){
+			in_arg->plug_pme = plug_pme;
+			goto bingo;
+		}
+		plug_pme = MESA_get_stream_plug_pme_from_platform_entry(ptcp_detail_pr->pAllpktpme, this_plug_entry);
+		if(plug_pme != NULL){
+			in_arg->plug_pme = plug_pme;
+			goto bingo;
+		}		
+	}else if(STREAM_TYPE_UDP == pstream->type){
+		pudp_detail_pr = (struct udpdetail_private *)(pstream->pdetail);
+		plug_pme = MESA_get_stream_plug_pme_from_platform_entry(pudp_detail_pr->apme, this_plug_entry);
+		if(plug_pme != NULL){
+			in_arg->plug_pme = plug_pme;
+			goto bingo;
+		}		
+	}else{
+		sapp_runtime_log(30, "MESA_get_stream_opt->MSO_STREAM_PLUG_PME error, not support stream type:%d", pstream->type); 
+		return -1;
+	}
+
+	if(NULL == in_arg->plug_pme){
+		ret = -1;
+	}
+
+bingo:
+	
 	return ret;
 }
 

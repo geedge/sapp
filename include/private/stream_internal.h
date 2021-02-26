@@ -387,6 +387,8 @@ enum addr_type_t addr_type_abbreviation_pton(const char *addr_type_abbreviation)
 const char *addr_type_abbreviation_ntop(enum addr_type_t addrtype);
 int sapp_identify_broad_multicast_init(void);
 
+int plugin_manage_init(void);
+void  *plugin_get_plug_entry(const char *plug_name, const char *plug_entry_type);
 
 #ifdef __cplusplus
 }

@@ -70,6 +70,7 @@ set(CPACK_RPM_EXECUTABLE_USER_FILELIST "%config(noreplace) ${CMAKE_INSTALL_PREFI
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/asymmetric_presence_layer.conf"
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/vlan_flipping_map.conf"
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/stream_compare_layer.conf"
+				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/necessary_plug_list.conf"
 				)
 
 # Must uninstall the debug package before install release package

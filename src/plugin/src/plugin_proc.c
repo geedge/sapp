@@ -85,14 +85,13 @@ char process_pkt_return(int net_conn_mode, char plug_action)
 int plugctrl_proc()
 {
 	int rec;
-
 	int logger_level;
 	char logger_filepath[PLUGIN_FILENAME_MAXLEN]={0};
-
-
 	char filename_platform[PLUGIN_FILENAME_MAXLEN] = {0};
 	char filename_protocol[PLUGIN_FILENAME_MAXLEN] = {0};
 	char filename_business[PLUGIN_FILENAME_MAXLEN] = {0};
+
+	plugin_manage_init();
 
 	rec = plugin_readconf(filename_platform,filename_protocol,filename_business,logger_filepath,(unsigned int*)&logger_level);
 	if(rec < 0)

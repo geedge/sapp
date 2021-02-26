@@ -212,6 +212,8 @@ install(FILES bin/etc/asymmetric_addr_layer.conf DESTINATION etc COMPONENT PROFI
 install(FILES bin/etc/asymmetric_presence_layer.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/vlan_flipping_map.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/stream_compare_layer.conf DESTINATION etc COMPONENT PROFILE)
+install(FILES bin/etc/necessary_plug_list.conf DESTINATION etc COMPONENT PROFILE)
+
 
 if(NOT ENABLE_STATIC_LINK)
 

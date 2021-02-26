@@ -267,6 +267,7 @@ typedef struct{
 	const char *entrylist_path;
 	const char *send_raw_pkt_path;
 	const char *vxlan_sport_service_map_path;
+	const char *necessary_plug_list_path; /* 必要插件列表, 如果加载失败sapp就退出 */
 }sapp_config_special_link_t;
 
 typedef struct{

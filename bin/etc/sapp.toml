@@ -194,6 +194,7 @@ dictator_enable=1
     entrylist_path="./etc/entrylist.conf"
     send_raw_pkt_path="./etc/send_raw_pkt.conf"
     vxlan_sport_service_map_path="./etc/vxlan_sport_service_map.conf"
+    necessary_plug_list_path="./etc/necessary_plug_list.conf"
 
 [breakpad]
     disable_coredump=0

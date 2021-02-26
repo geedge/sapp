@@ -1560,6 +1560,11 @@ int sapp_parse_config(void)
 		pconfig->special_conf_link.vxlan_sport_service_map_path = strdup(str_tmp);
 	}
 
+	tomlc99_wrap_load_string_def(default_config_file, (char *)"SPECIAL_CONFIG_LINK", (char *)"necessary_plug_list_path", str_tmp, ARG_MAX, "./etc/necessary_plug_list.conf");
+	if(str_tmp[0] != '\0'){
+		pconfig->special_conf_link.necessary_plug_list_path = strdup(str_tmp);
+	}
+
 	log_handle_init();
 
 	if(config_sanity_check() < 0){

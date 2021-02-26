@@ -43,7 +43,7 @@ enum MESA_stream_opt{
 	MSO_TOTAL_OUTBOUND_BYTE_RAW,/* outbound packet byte of this stream, raw packet len, include ip hdr, ethernet hdr... opt_val type must be unsigned long long  */
 	MSO_STREAM_UP_LAYER_TUNNEL_TYPE,  /* opt_val must be unsigned short, refer to enum stream_carry_tunnel_t */
 
-	MSO_STREAM_PLUG_PME, /* opt_val type must be struct mso_plug_pme, this is a value-result argument, the caller should set plug_entry_type and plug_entry_fun_addr */
+	MSO_STREAM_PLUG_PME, /* opt_val type must be struct mso_plug_pme, this is a value-result argument, the caller should set plug_name and plug_entry_type, only support: TCP, TCP_ALL, UDP */
 	__MSO_MAX,
 };
 
@@ -204,16 +204,11 @@ enum sapp_state_t{
 	SAPP_STATE_READY_TO_EXIT, /* pcap dumpfile mode, or recv custom signal */
 };
 
-enum plug_entry_t{
-	PLUG_ENTRY_TCP,
-	PLUG_ENTRY_TCPALL,
-	PLUG_ENTRY_UDP,
-};
 
 struct mso_plug_pme{
-	enum plug_entry_t plug_entry_type; 	/* argument: IN, refer to enum plug_entry_t  */
-	void *plug_entry_fun_addr;		/* argument: IN, plug entry function address */
-	void *plug_pme;					/* argument: OUT */
+	const char *plug_name;			/* argument: IN, comes from plug.inf-->[PLUGINFO]-->PLUGNAME */
+	const char *plug_entry_type; 	/* argument: IN, only support: TCP, TCP_ALL, UDP.  */
+	void *plug_pme;					/* argument: OUT, plug private memory address */
 };
 
 
