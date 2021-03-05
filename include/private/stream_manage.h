@@ -164,6 +164,7 @@ void udp_free_stream(struct streamindex *pstream);
 int tcp_free_stream(struct streamindex *pstream, const void*, const void *,const raw_pkt_t *raw_pkt);
 void update_opposite_addr_info(struct streaminfo_private *pstream_pr, 
 	struct streaminfo_private *p_stack, unsigned char cur_dir);
+int polling_stream_timeout(int tid);
 
 #ifdef __cplusplus
 }

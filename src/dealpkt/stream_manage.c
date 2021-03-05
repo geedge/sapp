@@ -3014,6 +3014,42 @@ int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_
 	return 0;
 }
 
+
+/* 
+   底层驱动无数据包时, 调用这些淘汰函数, 两个目的:
+   1) 实现无包超时淘汰功能, 更精确;
+   2) 无数据包时提前将之前的旧流结束, 而不是靠新数据包到达时再淘汰旧流, 可以提升一些处理性能和降低包处理延时.
+*/
+int polling_stream_timeout(int tid)
+{
+	struct stream_list *plist=NULL;
+	int i, ret, has_work = 0;
+
+	for(i = UDP_ONE_STATE; i < MAX_UDP_STATE; i++){
+		plist=&(G_MESA_GLOBAL_STREAM[tid]->udpList[i]);
+		if(plist->head){ /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
+			ret = del_stream_by_time(plist, NULL);
+			if(ret > 0){
+				has_work = POLLING_STATE_WORK;
+			}
+		}
+	}
+
+	for(i = TCP_SYN_STATE; i < MAX_TCP_STATE; i++){
+		plist=&(G_MESA_GLOBAL_STREAM[tid]->tcpList[i]);
+		if(plist->head){ /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
+			ret = del_stream_by_time(plist, NULL);
+			if(ret > 0){
+				has_work = POLLING_STATE_WORK;
+			}
+		}
+	}
+
+	return has_work;
+}
+
+
+
 #ifdef __cplusplus
 }
 #endif

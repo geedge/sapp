@@ -840,6 +840,9 @@ static void *marsio4_worker(void *arg)
 			if((stream_process_polling(tid) & POLLING_STATE_WORK) != 0){
 				polling_work_times++;
 			}
+			if(polling_stream_timeout(tid) & POLLING_STATE_WORK){
+				polling_work_times++;
+			}
 		}
 
 		total_call_times++;

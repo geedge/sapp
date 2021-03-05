@@ -764,6 +764,9 @@ static void *__pcap_work_thread(void *arg)
 			if(stream_process_polling(thread_num) != 0){
 				polling_work_times++;
 			}
+			if(polling_stream_timeout(thread_num) != 0){
+				polling_work_times++;
+			}
 			total_call_times++;
 
 			if(total_call_times >= 100){
@@ -798,6 +801,7 @@ static void *__pcap_work_thread(void *arg)
 
 		if(PCAP_OP_FLAG_IDLE_POLLING == pkt_queue_node.op_flag){
 			idle_polling_call(thread_num);
+			polling_stream_timeout(thread_num);		
 			continue;
 		}else if(PCAP_OP_FLAG_EOF == pkt_queue_node.op_flag){
 			packet_io_clean_thread_context(thread_num);
