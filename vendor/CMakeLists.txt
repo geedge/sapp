@@ -36,7 +36,7 @@ set_property(TARGET libevent-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INS
 ## dabloom
 ExternalProject_Add(libdabloom PREFIX libdabloom
         URL ${CMAKE_CURRENT_SOURCE_DIR}/dablooms-v1.0.1.tar.gz
-        URL_MD5 d5fe4df3533c21c55db961d525aead33
+        URL_MD5 d18efc5e34bad9f96abd7104e6c0913f
         CONFIGURE_COMMAND cd .
         BUILD_COMMAND make
 		BUILD_IN_SOURCE 1
