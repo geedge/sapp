@@ -1417,6 +1417,15 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.polling", (char *)"enabled", &pconfig->packet_io.polling_enabled, 1);
 	tomlc99_wrap_load_int_def(default_config_file, (char *)"packet_io.polling", (char *)"polling_priority", &pconfig->packet_io.polling_priority, 100);
 
+	/**  duplicate packet config **/
+	tomlc99_wrap_load_int_def(default_config_file, (char *)"DUPLICATE_PKT", (char *)"duplicate_pkt_distinguish", &pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_enable, 0);
+	if(pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0){
+		tomlc99_wrap_load_int_def(default_config_file, (char *)"DUPLICATE_PKT", (char *)"bloom_capacity", &pconfig->packet_io.dup_pkt_para.bloom_capacity, 1000000);
+		tomlc99_wrap_load_int_def(default_config_file, (char *)"DUPLICATE_PKT", (char *)"bloom_timeout", &pconfig->packet_io.dup_pkt_para.bloom_timeout, 10);
+		tomlc99_wrap_load_string_def(default_config_file, (char *)"DUPLICATE_PKT", (char *)"bloom_error_rate", str_tmp, sizeof(str_tmp), "0.00001");
+		pconfig->packet_io.dup_pkt_para.bloom_error_rate = strtod(str_tmp, NULL);
+	}
+
 	/*******************************  STREAM ******************************/
 	tomlc99_wrap_load_string_def(default_config_file, (char *)"STREAM", (char *)"stream_id_base_time", pconfig->stream.stream_id_base_time_str, 32, "");
 

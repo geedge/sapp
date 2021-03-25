@@ -16,7 +16,7 @@ set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib64/libgte
 set_property(TARGET gtest PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
 set_property(TARGET gtest PROPERTY INTERFACE_LINK_LIBRARIES pthread)
 
-
+#libevent
 ExternalProject_Add(libevent PREFIX libevent
         URL ${CMAKE_CURRENT_SOURCE_DIR}/libevent-2.1.10-stable.tar.gz
         URL_MD5 999caf86f52943af2363bc8077f00167
@@ -32,5 +32,23 @@ add_dependencies(libevent-static libevent)
 set_property(TARGET libevent-static PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/libevent.a)
 set_property(TARGET libevent-static PROPERTY IMPORTED_INTERFACE_LINK_LIBRARIES pthread crypto)
 set_property(TARGET libevent-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
+
+## dabloom
+ExternalProject_Add(libdabloom PREFIX libdabloom
+        URL ${CMAKE_CURRENT_SOURCE_DIR}/dablooms-v1.0.1.tar.gz
+        URL_MD5 d5fe4df3533c21c55db961d525aead33
+        CONFIGURE_COMMAND cd .
+        BUILD_COMMAND make
+		BUILD_IN_SOURCE 1
+        INSTALL_COMMAND make install prefix=<INSTALL_DIR>)
+
+ExternalProject_Get_Property(libdabloom INSTALL_DIR)
+file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
+
+add_library(libdabloom-static STATIC IMPORTED GLOBAL)
+add_dependencies(libdabloom-static libdabloom)
+set_property(TARGET libdabloom-static PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/libdablooms.a)
+set_property(TARGET libdabloom-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
+
 
 

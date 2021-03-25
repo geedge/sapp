@@ -31,7 +31,7 @@ target_include_directories(sapp PRIVATE ${SYSTEMD_INCLUDE_DIRS})
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)  
 
 
-set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap libevent-static gdev_assistant inner_plug)
+set(SAPP_MODULES iknow timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap libevent-static gdev_assistant inner_plug libdabloom-static)
 
 if(MEM_POOL MATCHES "DICTATOR_DEBUG")
    set(SAPP_MODULES ${SAPP_MODULES} dictator2_debug)

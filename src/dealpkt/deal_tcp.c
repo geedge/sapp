@@ -2510,10 +2510,16 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	struct streaminfo_private *pstream_pr = &pindex->stream;
 	struct streaminfo *pstream = &pstream_pr->stream_public;
 	int try_to_update_addr_info = 0;
-	int call_tcpall_after_reset = 0; /* 2019-10-18 lijia modify, 当前流被reset之后,保证先调用tcpall,再调用tcp */
-	
+	int call_tcpall_after_reset = 0; /* 2019-10-18 lijia modify, 当前流被reset之后,保证先调用tcpall,再调用tcp */	
+	sapp_gval_mthread_sys_stat_t *local_sys_stat;
+
 	pindex_tcp = findstreamindex (pindex, raw_pkt);
 	if(unlikely(!pindex_tcp)){
+		/* 每个流的首包无需检测是否重复, 但要加入bloom filter */
+		if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0){
+			sapp_dup_pkt_mark_tcp(pstream->threadnum,pstream, this_iphdr, this_tcphdr);
+		}
+
 		if(this_tcphdr->th_flags & TH_SYN)
 		{
 			//add by yw to detect synflood attack
@@ -2632,6 +2638,14 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, has been set drop flag, curdir:%d, return DROP.", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 		return DROP;
+	}
+
+	if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
+	  && (sapp_dup_pkt_identify_tcp(pstream->threadnum, pstream_pr, pdetail->clientpktnum+pdetail->serverpktnum, this_iphdr, this_tcphdr) != 0)){
+		local_sys_stat = &sapp_global_val->mthread_volatile[pstream->threadnum]->sys_stat;
+		local_sys_stat->count[SAPP_STAT_RCV_DUP_TCP]++;
+		local_sys_stat->length[SAPP_STAT_RCV_DUP_TCP] += tcplen;			  
+		return PASS;
 	}
 
 	if(pstream->curdir==DIR_S2C)

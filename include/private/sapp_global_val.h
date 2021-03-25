@@ -237,6 +237,13 @@ typedef struct{
 
 
 typedef struct{
+	int dup_pkt_distinguish_enable;
+ 	int bloom_capacity;
+	double bloom_error_rate;
+	int bloom_timeout;
+}sapp_dup_pkt_t;
+
+typedef struct{
 	sapp_config_packet_io_tunnel_t packet_io_tunnel;
 	const char *input_bpf_filter;
 	char depolyment_mode_str[NAME_MAX]; /* [mirror, inline, transparent, dumpfile] */
@@ -259,6 +266,7 @@ typedef struct{
 	char inject_mode_single_gateway_dst_mac[6]; /* gateway的MAC */
 	char inject_mode_single_gateway_src_mac[6]; /* inject_mode_single_gateway_device网卡的MAC */
 	int dumpfile_sleep_time_before_exit; /* 读包模式退出之前, 为了某些线程能还写日志, 异步发送数据等操作, 再sleep一会 */
+	sapp_dup_pkt_t dup_pkt_para; /* 重复流量识别 */
 }sapp_config_packet_io_t;
 
 typedef struct{
@@ -330,6 +338,7 @@ struct __sapp_gval_mthread{
 	sapp_gval_mthread_sys_stat_t sys_stat;
 	unsigned short stream_seq_per_thread; /* 用于计算全局流ID */
 	const raw_pkt_t *raw_pkt; /* 因为MESA_fakepacket_send_xxx系列函数没有raw_pkt参数, 也没有stream_info, 为了向前兼容, 不好修改接口, 增加全局变量用于存储当前包 */
+	void *dup_pkt_distinguish_handle; /* 重复流量识别 */
 }__attribute__ ((aligned (64))); /* for multi-thread, must 64byte alignment */
 typedef struct __sapp_gval_mthread sapp_gval_mthread_t; 
 

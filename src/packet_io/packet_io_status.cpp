@@ -142,11 +142,17 @@ static void field_stat2_update_metrics(void)
 	sapp_fs2_update_count(SAPP_STAT_RCV_TCP, cur_count[SAPP_STAT_RCV_TCP]);
 	sapp_fs2_update_length(SAPP_STAT_RCV_TCP, 8 *(cur_length[SAPP_STAT_RCV_TCP]));
 
+	sapp_fs2_update_count(SAPP_STAT_RCV_DUP_TCP, cur_count[SAPP_STAT_RCV_DUP_TCP]);
+	sapp_fs2_update_length(SAPP_STAT_RCV_DUP_TCP, 8 *(cur_length[SAPP_STAT_RCV_DUP_TCP]));
+	
 	sapp_fs2_update_length(SAPP_STAT_TCP_LOST_PKT, 8 *(cur_length[SAPP_STAT_TCP_LOST_PKT]));
 	sapp_fs2_update_count(SAPP_STAT_TCP_LOST_PKT_STREAM_NUM, cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM]);
 	
 	sapp_fs2_update_count(SAPP_STAT_RCV_UDP, cur_count[SAPP_STAT_RCV_UDP]);	
 	sapp_fs2_update_length(SAPP_STAT_RCV_UDP, 8 *(cur_length[SAPP_STAT_RCV_UDP]));
+
+	sapp_fs2_update_count(SAPP_STAT_RCV_DUP_UDP, cur_count[SAPP_STAT_RCV_DUP_UDP]);	
+	sapp_fs2_update_length(SAPP_STAT_RCV_DUP_UDP, 8 *(cur_length[SAPP_STAT_RCV_DUP_UDP]));
 	
 	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_NEW,cur_count[SAPP_STAT_TCP_STREAM_NEW]);
 	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_DEL, cur_count[SAPP_STAT_TCP_STREAM_DEL]);

@@ -158,7 +158,6 @@ struct streaminfo_private
 	unsigned int hash_slave; /* 2015-12-14 lijia add, 使用linux_jhash计算时, 可以同时得到两个以上的HASH值, 主HASH用于确定在HASH表的SLOT位置, slave_HASH用于快速比较地址是否相等 */
 	unsigned char hash_not_head_times;/* 2015-12-15 lijia add, 当前index不在HASH SLOT的第一位的次数 */
 	unsigned char cur_layer_raw_hdr_len; /* 2017-10-31 lijia add, 当前层的原始包地址长度, 因ppp头部压缩, 原来版本无法保存这个状态, 发包时也无法得知地址如何填充 */
-	//char __pad:4;
 	char __pad:3;
 	char packet_io_context:1; /* 2019-09-07 lijia add, for polling entry send packet */
 	unsigned char stream_close_reason:4; /* 2019-02-14 lijia add, 对于TCP使用tcpdetail_private的link_state变量, 对于UDP之前没有, 拆分pad新增此变量 */
@@ -188,7 +187,8 @@ struct streaminfo_private
 	unsigned char layer_index:4; /* 表示当前层的计数, 从最底层开始,一般是ethernet开始, 从0开始计数, 4bit最多支持15层嵌套, 也能防止隧道嵌套攻击(目前还没捕到过包) */
 	//char fake_layer_dir_for_asymmetric_cmp:2; /*因某些层两侧不对称, 尤其是还有一边有, 另一侧不存在的流, 此变量使用DIR_C2S, DIR_S2C表示哪个方向是虚拟构建的层, 解析时不作为地址比较, 发包时也要跳过 */ 
 	char __pad2:4;
-	char __pad3[7];
+	char has_duplicate_pkt; /* 当前流曾经有过重复数据包, 后续的流量应该每个都检测 */
+	char __pad3[6];
 	/* ===8 bytes=== */
 };
 

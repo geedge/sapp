@@ -320,6 +320,8 @@ int MESA_platform_init(int argc, char *argv[])
 	}
 #endif	
 
+	sapp_dup_pkt_init();
+
 	sapp_set_current_state(SAPP_STATE_PLUG_INITING);
 	plugctrl_proc();
 

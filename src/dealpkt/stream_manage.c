@@ -3049,6 +3049,153 @@ int polling_stream_timeout(int tid)
 }
 
 
+static inline void sapp_get_dup_pkt_key_tcp_v4(const struct mesa_ip4_hdr *ip4hdr, const struct mesa_tcp_hdr *thdr, sapp_dup_pkt_key_v4_t *key)
+{
+	key->ip_addr.sip = ip4hdr->ip_src.s_addr;
+	key->ip_addr.dip = ip4hdr->ip_dst.s_addr;
+	key->tcp_seq = thdr->th_seq;
+	key->tcp_ack = thdr->th_ack;
+	key->sport = thdr->th_sport;
+	key->dport = thdr->th_dport;
+	key->ip_id = ip4hdr->ip_id;
+	key->checksum = thdr->th_sum;
+	
+	return;
+}
+
+static inline void sapp_get_dup_pkt_key_udp_v4(const struct mesa_ip4_hdr *ip4hdr, const struct mesa_udp_hdr *uhdr, sapp_dup_pkt_key_v4_t *key)
+{
+	key->ip_addr.sip = ip4hdr->ip_src.s_addr;
+	key->ip_addr.dip = ip4hdr->ip_dst.s_addr;
+	key->tcp_seq = 0x5A5A5A5A; /* udp没有, 但设成0可能对某些hash函数不友好, 此处设个固定值 */
+	key->tcp_ack = 0xA5A5A5A5; /* udp没有, 但设成0可能对某些hash函数不友好, 此处设个固定值 */
+	key->sport = uhdr->uh_sport;
+	key->dport = uhdr->uh_dport;
+	key->ip_id = ip4hdr->ip_id;
+	key->checksum = uhdr->uh_sum;
+	
+	return;
+}
+
+static inline void sapp_get_dup_pkt_key_tcp_v6(const struct mesa_ip6_hdr *ip6hdr, const struct mesa_tcp_hdr *thdr, sapp_dup_pkt_key_v6_t *key)
+{
+	memcpy(&key->ip_addr.sip, &ip6hdr->ip6_src, sizeof(struct in6_addr));
+	memcpy(&key->ip_addr.dip, &ip6hdr->ip6_dst, sizeof(struct in6_addr));
+	key->tcp_seq = thdr->th_seq;
+	key->tcp_ack = thdr->th_ack;
+	key->sport = thdr->th_sport;
+	key->dport = thdr->th_dport;
+	key->checksum = thdr->th_sum;
+	
+	return;
+}
+
+
+static inline void sapp_get_dup_pkt_key_udp_v6(const struct mesa_ip6_hdr *ip6hdr, const struct mesa_udp_hdr *uhdr, sapp_dup_pkt_key_v6_t *key)
+{
+	memcpy(&key->ip_addr.sip, &ip6hdr->ip6_src, sizeof(struct in6_addr));
+	memcpy(&key->ip_addr.dip, &ip6hdr->ip6_dst, sizeof(struct in6_addr));
+	key->tcp_seq = 0x5A5A5A5A; /* udp没有, 但设成0可能对某些hash函数不友好, 此处设个固定值 */
+	key->tcp_ack = 0xA5A5A5A5; /* udp没有, 但设成0可能对某些hash函数不友好, 此处设个固定值 */
+	key->sport = uhdr->uh_sport;
+	key->dport = uhdr->uh_dport;
+	key->checksum = uhdr->uh_sum;
+	
+	return;
+}
+
+
+int sapp_dup_pkt_identify_udp_v4(int tid, struct streaminfo_private *pstream_pr, int tot_pkt, 
+		const struct mesa_ip4_hdr *ipv4_hdr, const struct mesa_udp_hdr *udp_h)
+{
+	int is_dup_pkt = 0;
+	sapp_dup_pkt_key_v4_t dup_bloom_key;
+
+	if((0 == pstream_pr->has_duplicate_pkt) && (tot_pkt >= 3)){ //TODO, 只判断前N个包, 此处是否要通过配置文件指定？
+		return 0;
+	}
+	
+	sapp_get_dup_pkt_key_udp_v4(ipv4_hdr, udp_h, &dup_bloom_key);			
+	is_dup_pkt = sapp_dup_pkt_identify_v4(tid, &dup_bloom_key);
+	if(is_dup_pkt != 0){
+		pstream_pr->has_duplicate_pkt = 1;
+	}else{
+		sapp_dup_pkt_mark_v4(tid, &dup_bloom_key);
+	}
+
+	return is_dup_pkt;
+}
+
+int sapp_dup_pkt_identify_udp_v6(int tid, struct streaminfo_private *pstream_pr, int tot_pkt, 
+		const struct mesa_ip6_hdr *ipv6_hdr, const struct mesa_udp_hdr *udp_h)
+{
+	int is_dup_pkt = 0;
+	sapp_dup_pkt_key_v6_t dup_bloom_key;
+
+	if((0 == pstream_pr->has_duplicate_pkt) && (tot_pkt >= 3)){ //TODO, 只判断前N个包, 此处是否要通过配置文件指定？
+		return 0;
+	}
+	
+	sapp_get_dup_pkt_key_udp_v6(ipv6_hdr, udp_h, &dup_bloom_key); 		
+	is_dup_pkt = sapp_dup_pkt_identify_v6(tid, &dup_bloom_key);
+	if(is_dup_pkt != 0){
+		pstream_pr->has_duplicate_pkt = 1;
+	}else{
+		sapp_dup_pkt_mark_v6(tid, &dup_bloom_key);
+	}
+
+	return is_dup_pkt;
+}
+
+void sapp_dup_pkt_mark_tcp(int tid, const struct streaminfo *pstream, const void *ip_hdr, const struct mesa_tcp_hdr *tcp_h)
+{
+	sapp_dup_pkt_key_v4_t dup_bloom_key_v4;
+	sapp_dup_pkt_key_v6_t dup_bloom_key_v6;
+
+	if(ADDR_TYPE_IPV4 == pstream->addr.addrtype){
+		sapp_get_dup_pkt_key_tcp_v4((struct mesa_ip4_hdr *)ip_hdr, tcp_h, &dup_bloom_key_v4);		
+		sapp_dup_pkt_mark_v4(tid, &dup_bloom_key_v4);
+	}else{
+		sapp_get_dup_pkt_key_tcp_v6((struct mesa_ip6_hdr *)ip_hdr, tcp_h, &dup_bloom_key_v6);		
+		sapp_dup_pkt_mark_v6(tid, &dup_bloom_key_v6);		
+	}
+
+	return;
+}
+		
+
+int sapp_dup_pkt_identify_tcp(int tid, struct streaminfo_private *pstream_pr, int tot_pkt, 
+		const void *ip_hdr, const struct mesa_tcp_hdr *tcp_h)
+{
+	int is_dup_pkt = 0;
+	sapp_dup_pkt_key_v4_t dup_bloom_key_v4;
+	sapp_dup_pkt_key_v6_t dup_bloom_key_v6;
+
+	if((0 == pstream_pr->has_duplicate_pkt) && (tot_pkt >= 3)){ //TODO, 只判断前N个包, 此处是否要通过配置文件指定？
+		return 0;
+	}
+
+	if(ADDR_TYPE_IPV4 == pstream_pr->stream_public.addr.addrtype){
+		sapp_get_dup_pkt_key_tcp_v4((struct mesa_ip4_hdr *)ip_hdr, tcp_h, &dup_bloom_key_v4);		
+		is_dup_pkt = sapp_dup_pkt_identify_v4(tid, &dup_bloom_key_v4);
+		if(is_dup_pkt != 0){
+			pstream_pr->has_duplicate_pkt = 1;
+		}else{
+			sapp_dup_pkt_mark_v4(tid, &dup_bloom_key_v4);
+		}
+	}else{
+		sapp_get_dup_pkt_key_tcp_v6((struct mesa_ip6_hdr *)ip_hdr, tcp_h, &dup_bloom_key_v6);		
+		is_dup_pkt = sapp_dup_pkt_identify_v6(tid, &dup_bloom_key_v6);
+		if(is_dup_pkt != 0){
+			pstream_pr->has_duplicate_pkt = 1;
+		}else{
+			sapp_dup_pkt_mark_v6(tid, &dup_bloom_key_v6);
+		}		
+	}
+
+	return is_dup_pkt;
+}
+
 
 #ifdef __cplusplus
 }

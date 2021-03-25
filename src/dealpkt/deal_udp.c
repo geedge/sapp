@@ -440,6 +440,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	int ret=PASS;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	int try_to_update_addr_info = 0;
+	int is_overlay_udp_layer = 0;
 
 	iplen = ntohs (this_iphdr->ip_len);
 	hlen=4 * this_iphdr->ip_hl;
@@ -465,7 +466,9 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
 
-	if(g_overlay_layer_set[__ADDR_TYPE_IP_PAIR_V4][pstream_pr->layer_index] == 0){ /* 非overlay层才累加相关层计数 */
+	is_overlay_udp_layer = sapp_is_overlay_layer(pstream_pr, raw_pkt);
+
+	if(0 == is_overlay_udp_layer){ /* 非overlay层才累加相关层计数 */
 		local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
 		local_sys_stat->length[SAPP_STAT_RCV_UDP]+=ulen;
 		if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
@@ -479,7 +482,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			local_sys_stat->length[SAPP_STAT_UDP_OUTBOUND] += ulen;
 		}
 	}
-
+	
 	//add by lqy 20130530 
 	// udp有不开启流还原的功能需求，直接按单包单流处理
 	if(unlikely(0 ==udp_stream_table_size))
@@ -540,17 +543,24 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			lrustream(a_index);
 		}	
 
-		/* 2014-11-15 lijia add, for udp serial kill udp */
-		if(unlikely(a_index->stream.stream_killed_flag != 0)){
-			return DROP;
-		}
-
 		/* NOTE: 更新pstream指针, 指向堆中存储的内存 */
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);		
 		//pstream->addr.pktipfragtype = pstream->stream_public.addr.pktipfragtype; /* 2015-11-04 lijia add, IP分片类型更新 */
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
-		
+
+		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
+		  && (sapp_dup_pkt_identify_udp_v4(thread_num, pstream_pr, pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum, this_iphdr, udph) != 0)){
+			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
+			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;			  
+			return PASS;
+		}
+
+		/* 2014-11-15 lijia add, for udp serial kill udp */
+		if(unlikely(a_index->stream.stream_killed_flag != 0)){
+			return DROP;
+		}
+
 		if(unlikely(pdetail_pr->drop_stream_flag != 0)){ /* 2020-06-02 lijia add */
 			return DROP;
 		}
@@ -576,7 +586,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 
-		if(sapp_is_overlay_layer(pstream_pr, raw_pkt) != 0){
+		if(is_overlay_udp_layer != 0){
 			ret = stream_process_overlay_udp(pstream,(const void *)this_iphdr, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
 			if(DROP == ret){
 				return DROP;
@@ -629,6 +639,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	int ret=PASS;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	int try_to_update_addr_info = 0;
+	sapp_dup_pkt_key_v6_t dup_bloom_key;
 
 	iplen = ntohs (a_packet->ip6_payload_len);
 	ulen = ntohs (udph->uh_ulen);
@@ -652,7 +663,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		local_sys_stat->count[SAPP_STAT_UDP_OUTBOUND]++;
 		local_sys_stat->length[SAPP_STAT_UDP_OUTBOUND] += ulen;
 	}
-
+	
 	pstream->addr.addrlen=sizeof(struct layer_addr_udp);
 	pstream_pr->addr_use_as_hash = 0;
 	//ptmp->stream.p_layer_header = udph;
@@ -731,16 +742,27 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		{
 			lrustream(a_index);			
 		}	
+
+		/* NOTE: 更新pstream指针, 指向堆中存储的内存 */
+		pstream_pr=&(a_index->stream);
+		pstream=&(pstream_pr->stream_public);		
+		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
+
+		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
+		  && (sapp_dup_pkt_identify_udp_v6(thread_num, pstream_pr, pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum, a_packet, udph) != 0)){
+			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
+			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;			  
+			return PASS;
+		}
 		
 		/* 2014-11-15 lijia add, for udp serial kill udp */
 		if(unlikely(a_index->stream.stream_killed_flag != 0)){
 			return DROP;
 		}
 
-		/* NOTE: 更新pstream指针, 指向堆中存储的内存 */
-		pstream_pr=&(a_index->stream);
-		pstream=&(pstream_pr->stream_public);		
-		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
+		if(unlikely(pdetail_pr->drop_stream_flag != 0)){ /* 2020-06-02 lijia add */
+			return DROP;
+		}
 
 		if(pstream->curdir==DIR_S2C){
 			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* 当前方向的第一个包, 尝试更新底层隧道的单向地址信息(如MPLS, GTP) */
