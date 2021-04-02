@@ -1339,19 +1339,19 @@ static int __addr_vlan_n2p_fun(const struct layer_addr *paddr, char *buf, int bu
 	char vlan_addr_string[128] = {};
 	
 	/* 注意: 可能有非对称vlan的情况 */
-	int max_layer_num = vlan_addr->src_vlan_layer_num > vlan_addr->dst_vlan_layer_num ? vlan_addr->src_vlan_layer_num:vlan_addr->dst_vlan_layer_num;
+	int max_layer_num = vlan_addr->c2s_layer_num > vlan_addr->s2c_layer_num ? vlan_addr->c2s_layer_num:vlan_addr->s2c_layer_num;
 
 	for(i = 0; i < max_layer_num; i++){
-		if(vlan_addr->src_vlan_layer_num >= i+1){
-			vhdr = (struct mesa_vlan_hdr *)&vlan_addr->src_vlan_pkt[i];
+		if(vlan_addr->c2s_layer_num >= i+1){
+			vhdr = (struct mesa_vlan_hdr *)&vlan_addr->c2s_addr_array[i];
 			vlan_id = ntohs(vhdr->pri_cfi_id) & VLAN_ID_MASK;
 			snprintf(tmp_buf, 32, "%d", vlan_id);
 			strcat(vlan_addr_string, tmp_buf);
 		}else{
 			strcat(vlan_addr_string, "N/A");
 		}
-		if(vlan_addr->dst_vlan_layer_num >= i+1){
-			vhdr = (struct mesa_vlan_hdr *)&vlan_addr->dst_vlan_pkt[i];
+		if(vlan_addr->s2c_layer_num >= i+1){
+			vhdr = (struct mesa_vlan_hdr *)&vlan_addr->s2c_addr_array[i];
 			vlan_id = ntohs(vhdr->pri_cfi_id) & VLAN_ID_MASK;
 			snprintf(tmp_buf, 32, "%d", vlan_id);
 			strcat(vlan_addr_string, tmp_buf);
@@ -1470,25 +1470,25 @@ static int __addr_mpls_n2p_fun(const struct layer_addr *paddr, char *buf, int bu
 	int mpls_label;
 	char tmp_buf[32];
 	/* 注意有非对称mpls的情况 */
-	int max_layer_num = mpls_addr->src_mpls_layer_num > mpls_addr->dest_mpls_layer_num ? mpls_addr->src_mpls_layer_num:mpls_addr->dest_mpls_layer_num;
+	int max_layer_num = mpls_addr->c2s_layer_num > mpls_addr->s2c_layer_num ? mpls_addr->c2s_layer_num:mpls_addr->s2c_layer_num;
 
 	char mpls_addr_string[128] = {};
 
 	for(i = 0; i < max_layer_num; i++){
-		if(mpls_addr->src_mpls_layer_num >= i+1){
-			mpls_label = 0;
-			net_mpls_hdr = (struct mesa_mpls_hdr *)&mpls_addr->src_mpls_pkt[i];
-			mpls_label = (net_mpls_hdr->mpls_label_low<<12) | (net_mpls_hdr->mpls_label_mid<<4) | net_mpls_hdr->mpls_label_high; /* network order */
-			snprintf(tmp_buf, 32, "%d", mpls_label);
+		if(mpls_addr->c2s_layer_num >= i+1){
+			//mpls_label = 0;
+			//net_mpls_hdr = (struct mesa_mpls_hdr *)&mpls_addr->src_mpls_pkt[i];
+			//mpls_label = (net_mpls_hdr->mpls_label_low<<12) | (net_mpls_hdr->mpls_label_mid<<4) | net_mpls_hdr->mpls_label_high; /* network order */
+			snprintf(tmp_buf, 32, "%d", ntohl(mpls_addr->c2s_addr_array[i].label));
 			strcat(mpls_addr_string, tmp_buf);
 		}else{
 			strcat(mpls_addr_string, "N/A");
 		}
-		if(mpls_addr->dest_mpls_layer_num >= i+1){
-			mpls_label = 0;
-			net_mpls_hdr = (struct mesa_mpls_hdr *)&mpls_addr->dest_mpls_pkt[i];
-			mpls_label = (net_mpls_hdr->mpls_label_low<<12) | (net_mpls_hdr->mpls_label_mid<<4) | net_mpls_hdr->mpls_label_high; /* network order */
-			snprintf(tmp_buf, 32, "-%d", mpls_label);
+		if(mpls_addr->s2c_layer_num >= i+1){
+			//mpls_label = 0;
+			//net_mpls_hdr = (struct mesa_mpls_hdr *)&mpls_addr->dest_mpls_pkt[i];
+			//mpls_label = (net_mpls_hdr->mpls_label_low<<12) | (net_mpls_hdr->mpls_label_mid<<4) | net_mpls_hdr->mpls_label_high; /* network order */
+			snprintf(tmp_buf, 32, "-%d", ntohl(mpls_addr->s2c_addr_array[i].label));
 			strcat(mpls_addr_string, tmp_buf);
 		}else{
 			strcat(mpls_addr_string, "-N/A");

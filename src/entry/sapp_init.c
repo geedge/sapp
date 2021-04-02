@@ -161,7 +161,6 @@ int MESA_platform_init(int argc, char *argv[])
 		return -1;
 	}
 	
-#if (0 == SAPP_AS_TARGET_SO) /* 做为.so模式, 无需dlopen相关io.so */
 	if(packet_io_lib_load(ABBR_INTERFACE_TYPE) < 0){
 		return -1;
 	}
@@ -233,7 +232,6 @@ int MESA_platform_init(int argc, char *argv[])
 	MESA_load_profile_int_def("conf/main.conf", "Module", "signal_take_over_switch", &sapp_global_single.signal_take_over_sw, 0);
 	MESA_load_profile_int_def("conf/main.conf", "Module", "ipentry_priority_over_ipfrag", &sapp_global_single.ipentry_priority_over_ipfrag, 0);
 	//MESA_load_profile_int_def("conf/main.conf", "Module", "tuple4_reuse_time_interval", &sapp_global_single.tuple4_reuse_time_interval, 3);
-#endif
 
 	init_stream_manage(g_iThreadNum);	
 	timestamp_record_init();
@@ -314,11 +312,10 @@ int MESA_platform_init(int argc, char *argv[])
 
 
 	sapp_set_current_state(SAPP_STATE_PKT_IO_INITING);
-#if (0 == SAPP_AS_TARGET_SO) /* 做为.so模式, 无需初始化packet_io */	
+
 	if(packet_io_init(argc, argv) < 0){
 		return -1;
 	}
-#endif	
 
 	sapp_dup_pkt_init();
 
@@ -360,13 +357,6 @@ void MESA_platform_run(void)
 		sd_notify(0, "READY=1");
 		sleep(1);
 	}
-
-
-#if (0 == SAPP_AS_TARGET_SO)	
-	while(1){
-		pause();
-	}
-#endif	
 
 }
 

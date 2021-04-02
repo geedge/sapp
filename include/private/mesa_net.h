@@ -513,9 +513,10 @@ struct mesa_vlan_hdr{
 };
 
 struct mesa_vlan_detail_hdr{
-	unsigned int priority:3;
-	unsigned int del_flag:1;
-	unsigned int vlan_id:12;
+	unsigned char vlan_id_high:4;
+	unsigned char del_flag:1;
+	unsigned char priority:3;
+	unsigned char vlan_id_low;
 	unsigned short type;
 };
 

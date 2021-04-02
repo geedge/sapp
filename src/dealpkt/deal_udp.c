@@ -552,7 +552,8 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
 		  && (sapp_dup_pkt_identify_udp_v4(thread_num, pstream_pr, pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum, this_iphdr, udph) != 0)){
 			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
-			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;			  
+			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
+			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
 			return PASS;
 		}
 
@@ -751,7 +752,8 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
 		  && (sapp_dup_pkt_identify_udp_v6(thread_num, pstream_pr, pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum, a_packet, udph) != 0)){
 			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
-			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;			  
+			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
+			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
 			return PASS;
 		}
 		

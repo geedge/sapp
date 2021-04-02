@@ -14,6 +14,7 @@ extern int ipv6_entry(struct streaminfo_private *pfstream, const void *this_laye
 
 extern int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,int thread_num,
 					 unsigned char dir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr);
+extern int mpls_addr_net_to_mem(const struct mesa_mpls_hdr *net_mpls_hdr, struct single_layer_mpls_addr *mem_mpls_hdr);
 
 static int guess_mpls_with_control_word(const unsigned char *maybe_eth_hdr)
 {
@@ -21,7 +22,11 @@ static int guess_mpls_with_control_word(const unsigned char *maybe_eth_hdr)
 
 	/* 
 	    MPLS没有字段表示承载的协议类型, 靠猜!!
-	    RFC4623, or https://wiki.mikrotik.com/wiki/Manual:VPLS_Control_Word
+	    
+	    https://tools.ietf.org/html/rfc4623
+	    https://wiki.mikrotik.com/wiki/Manual:VPLS_Control_Word
+	    https://www.ciscopress.com/articles/article.asp?p=386788&seqNum=2
+	    
 	    除标准的ipv4, ipv6之外, 还有可能是ethernet, 还有可能是带PW Ethernet Control Word的, 格式如下:
 	    
         0               1               2                 3
@@ -67,8 +72,10 @@ int set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mpls_pk
 	for(i = 0; i < MAX_MPLS_ADDR_LAYER; i++)
 	{
 		this_mpls_hdr = (const struct mesa_mpls_hdr *)raw_mpls_pkt_data;
-		memcpy(&addr->src_mpls_pkt[i], raw_mpls_pkt_data,  sizeof(struct mesa_mpls_hdr));
-		addr->src_mpls_layer_num += 1;
+		//memcpy(&addr->src_mpls_pkt[i], raw_mpls_pkt_data,  sizeof(struct mesa_mpls_hdr));
+		mpls_addr_net_to_mem(this_mpls_hdr, &addr->c2s_addr_array[i]); /* 函数栈里的地址, 每次暂存在c2s方向, TCP/UDP层再根据流方向翻转 */
+		
+		addr->c2s_layer_num += 1;
 		if(1 == this_mpls_hdr->mpls_bls){
 			raw_mpls_pkt_data += sizeof(struct mesa_mpls_hdr); /* 为了后面方便判断是否还有ctrl word */
 			break;
@@ -78,14 +85,14 @@ int set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mpls_pk
 
 	if(1 != this_mpls_hdr->mpls_bls) /* 超过MAX_MPLS_ADDR_LAYER, MPLS还没有结束 */
 	{
-		sapp_runtime_log(30, "MPLS layer number over load, only support %d\n", MAX_MPLS_ADDR_LAYER);
+		sapp_runtime_log(RLOG_LV_FATAL, "MPLS layer number over load, only support %d\n", MAX_MPLS_ADDR_LAYER);
 		return -1;
 	}
 
 	if(((*raw_mpls_pkt_data & 0xF0) != 0x40) && ((*raw_mpls_pkt_data & 0xF0) != 0x60)){ //VPLS, MPLS with Control Word
 		if(guess_mpls_with_control_word(raw_mpls_pkt_data) > 0){
-			memcpy(&addr->src_mpls_ctrl_word, raw_mpls_pkt_data,  sizeof(int));
-			addr->src_has_ctrl_word = 1;
+			memcpy(&addr->c2s_mpls_ctrl_word, raw_mpls_pkt_data,  sizeof(int));
+			addr->c2s_has_ctrl_word = 1;
 		}
 	}
 
@@ -121,8 +128,8 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		return PASS;
 	}
 
-    next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct mesa_mpls_hdr)*addr.src_mpls_layer_num;
-    next_layer_hdr = (char *)this_layer_data+ sizeof(struct mesa_mpls_hdr)*addr.src_mpls_layer_num;
+    next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct mesa_mpls_hdr)*addr.c2s_layer_num;
+    next_layer_hdr = (char *)this_layer_data+ sizeof(struct mesa_mpls_hdr)*addr.c2s_layer_num;
 
 #if 0	
 	this_mpls_hdr.mpls_label = (ntohl(*mpls_pkt_data) & MPLS_LABEL_MASK) >> 12;
@@ -218,7 +225,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
     }
 
     if(inject_to_eth_flag != 0){
-    	if(addr.src_has_ctrl_word != 0){
+    	if(addr.c2s_has_ctrl_word != 0){
 			ret = eth_entry(pstream_pr,next_layer_hdr+4,thread_num,routedir,raw_pkt, next_layer_offset+4);
     	}else{
 			 int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;

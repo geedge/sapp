@@ -1,7 +1,7 @@
 #ifndef _APP_STREAM_BASE_H_
 #define _APP_STREAM_BASE_H_ 
 
-#define STREAM_BASE_H_VERSION		(20201009)
+#define STREAM_BASE_H_VERSION		(20210331)
 
 #include <sys/types.h>
 #include <netinet/in.h>            
@@ -24,7 +24,7 @@ typedef unsigned short		UINT16;
 #endif
 
 #ifndef UINT32
-typedef unsigned int			UINT32;
+typedef unsigned int		UINT32;
 #endif
 #ifndef UINT64
 typedef unsigned long long	UINT64;
@@ -192,16 +192,36 @@ struct layer_addr_gre
 
 #define VLAN_ID_MASK		(0x0FFF)
 #define VLAN_TAG_LEN 		(4)
-#define MAX_VLAN_ADDR_LAYER (3)
+#define MAX_VLAN_ADDR_LAYER (2)
 
+
+struct single_layer_vlan_addr{     /* refer to https://en.wikipedia.org/wiki/IEEE_802.1Q */
+	unsigned short TPID; /* Tag protocol identifier, network order */
+	unsigned char PCP; /* Priority code point */
+	unsigned char DEI; /* Drop eligible indicator  */
+	unsigned short VID;  /* VLAN identifier, network order */
+};
+
+#if 0
 struct layer_addr_vlan
 {
 	UINT16 vlan_id;	/* network order, old value, to be obsoleted */
-	UCHAR src_vlan_layer_num;
-	UCHAR dst_vlan_layer_num;
-	UINT32 src_vlan_pkt[MAX_VLAN_ADDR_LAYER]; /* network order */
-	UINT32 dst_vlan_pkt[MAX_VLAN_ADDR_LAYER]; /* network order */
+	UCHAR c2s_layer_num;
+	UCHAR s2c_layer_num;
+	UINT32 c2s_addr_array[MAX_VLAN_ADDR_LAYER]; /* network order */
+	UINT32 s2c_addr_array[MAX_VLAN_ADDR_LAYER]; /* network order */
 };
+#else
+struct layer_addr_vlan
+{
+	struct single_layer_vlan_addr c2s_addr_array[MAX_VLAN_ADDR_LAYER];
+	struct single_layer_vlan_addr s2c_addr_array[MAX_VLAN_ADDR_LAYER];
+	UCHAR c2s_layer_num;
+	UCHAR s2c_layer_num;
+};
+
+
+#endif
 
 struct layer_addr_pppoe_session
 {
@@ -295,6 +315,7 @@ struct layer_addr_l2tp
 };
 
 #define MAX_MPLS_ADDR_LAYER 4
+#if 0
 struct layer_addr_mpls
 {
 	unsigned int src_mpls_pkt[MAX_MPLS_ADDR_LAYER];
@@ -306,6 +327,32 @@ struct layer_addr_mpls
     unsigned int src_mpls_ctrl_word; /* refer to RFC4623 */
     unsigned int dst_mpls_ctrl_word; /* refer to RFC4623 */
 };
+#else
+
+struct single_layer_mpls_addr{ /* refer to RFC3032 */
+	unsigned int label; /* network order */
+	unsigned char experimental;
+	unsigned char bottom;
+	unsigned char ttl;
+};
+
+/* 
+    MPLS有可能是多层嵌套, sapp把多层合并处理, 目前最大支持4层, 层次序号由外到内排列, 0表示最外层, 3表示最内层 
+    对于一个内层TCP/UDP流来说, 底层MPLS两个方向的地址可能不一样, 分别记为cs2_addr, s2c_addr.
+*/
+struct layer_addr_mpls
+{
+	struct single_layer_mpls_addr c2s_addr_array[MAX_MPLS_ADDR_LAYER]; 
+	struct single_layer_mpls_addr s2c_addr_array[MAX_MPLS_ADDR_LAYER]; 
+    char c2s_layer_num; /* 实际mpls层数 */
+    char s2c_layer_num; /* 实际mpls层数 */
+	char c2s_has_ctrl_word;
+	char s2c_has_ctrl_word;
+    unsigned int c2s_mpls_ctrl_word; /* refer to RFC4623 */
+    unsigned int s2c_mpls_ctrl_word; /* refer to RFC4623 */
+};
+
+#endif
 
 struct layer_addr_pptp
 {

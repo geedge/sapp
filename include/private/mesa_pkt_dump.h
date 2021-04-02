@@ -1,7 +1,7 @@
 #ifndef _MESA_PKT_DUMP_H_
 #define _MESA_PKT_DUMP_H_ 1
 
-#define MESA_PKT_DUM_H_VER (20201102)
+#define MESA_PKT_DUM_H_VER (20210330)
 
 /* 
 	用于DPDK-3.0, PFRING模式下, 驱动独占网卡时, 通过平台实时捕包.
@@ -16,6 +16,7 @@ enum _pkt_classify{
 	PKT_CLASSIFY_INJECT		= 0x04,  /* DMAC ascii码值: J */
 	PKT_CLASSIFY_DROP		= 0x08,  /* DMAC ascii码值: D */
 	PKT_CLASSIFY_ERROR		= 0x10,  /* DMAC ascii码值: E */
+	PKT_CLASSIFY_REPEAT		= 0x20,  /* DMAC ascii码值: R */
 };
 
 enum pkt_dump_opt_t{

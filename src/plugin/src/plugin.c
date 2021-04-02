@@ -695,9 +695,9 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 
 	fun_init = (int (*)())(dlsym(filepoint,buf_funname));
 	//add by yw 20150318, reset cwd after init plugin
-#if (0 == SAPP_AS_TARGET_SO)
+
 	reset_cwd();
-#endif	
+
 	if(fun_init == NULL)
 	{
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no function %s error!",buf_sofilename,buf_funname);

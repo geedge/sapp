@@ -389,6 +389,7 @@ int sapp_identify_broad_multicast_init(void);
 
 int plugin_manage_init(void);
 void  *plugin_get_plug_entry(const char *plug_name, const char *plug_entry_type);
+int libsapp_setup_env(int argc, char *argv[]);
 
 #ifdef __cplusplus
 }

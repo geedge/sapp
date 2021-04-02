@@ -5,6 +5,8 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
+extern int vlan_addr_net_to_mem(const struct mesa_vlan_detail_hdr *net_vlan_hdr, struct single_layer_vlan_addr *mem_vlan_hdr);
+
 #define VLAN_ID_MAX		(4096) /* vlan id is 12bit, max is 4096 */
 
 #if DEBUG
@@ -14,20 +16,20 @@ static inline void packet_io_vlan_status_update(int thread_seq, const struct lay
 int set_vlan_addr(struct layer_addr_vlan *addr, const unsigned char *vlan_tag)
 {
 	int i;
-	const struct mesa_vlan_hdr *vhdr;
+	const struct mesa_vlan_detail_hdr *net_vhdr;
 	int vlan_layer_len = 0;
 
 	memset(addr, 0, sizeof(struct layer_addr_vlan));
 
-	addr->vlan_id = ntohs(*(unsigned short *)vlan_tag) & VLAN_ID_MASK; //compat old value
-
 	for(i = 0; i < MAX_VLAN_ADDR_LAYER; i++){
-		vhdr = (struct mesa_vlan_hdr *)vlan_tag;
-		memcpy(&addr->src_vlan_pkt[i], vlan_tag, sizeof(struct mesa_vlan_hdr));
-		vlan_tag += sizeof(struct mesa_vlan_hdr);
-		addr->src_vlan_layer_num++;
-		vlan_layer_len += sizeof(struct mesa_vlan_hdr);
-		if(ETH_P_8021Q != ntohs(vhdr->type)){
+		net_vhdr = (struct mesa_vlan_detail_hdr *)vlan_tag;
+		//memcpy(&addr->c2s_addr_array[i], vlan_tag, sizeof(struct mesa_vlan_hdr));
+
+		vlan_addr_net_to_mem(net_vhdr, &addr->c2s_addr_array[i]);
+		vlan_tag += sizeof(struct mesa_vlan_detail_hdr);
+		vlan_layer_len += sizeof(struct mesa_vlan_detail_hdr);
+		addr->c2s_layer_num++;
+		if(ETH_P_8021Q != ntohs(net_vhdr->type)){
 			break;
 		}
 	}
@@ -93,8 +95,8 @@ int IEEE_8021_entry(struct streaminfo_private *pfstream_pr,const void *this_laye
 		pstream_pr = pfstream_pr; /* 2015-07-03 lijia add, skip this layer */
 	}
 
-	vhdr = (struct mesa_vlan_hdr *)&addr.src_vlan_pkt[addr.src_vlan_layer_num-1];
-	next_layer_type = ntohs(vhdr->type);
+	//vhdr = (struct mesa_vlan_hdr *)&addr.c2s_addr_array[addr.c2s_layer_num-1];
+	next_layer_type = ntohs(addr.c2s_addr_array[addr.c2s_layer_num-1].TPID); //取最后一层的TPID
 
 	next_layer_hdr = (char *)this_layer_data + vlan_layer_len;
 	next_layer_offset = offset_to_raw_pkt_hdr + vlan_layer_len;

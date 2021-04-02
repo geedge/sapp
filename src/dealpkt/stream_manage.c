@@ -923,11 +923,11 @@ static int cmpaddr_mpls(const struct layer_addr_mpls *addr_heap, const struct la
 	int i, ret = 0;
 	int same_dir_diff = 0, reverse_dir_diff = 0;
 	
-	if(0 == addr_stack->src_mpls_layer_num){
+	if(0 == addr_stack->c2s_layer_num){
 		return 0; /* 新来的包mpls是空层, 不用比较 */
 	}
 
-	if((addr_heap->src_mpls_layer_num == 0) || (addr_heap->dest_mpls_layer_num == 0)){
+	if((addr_heap->c2s_layer_num == 0) || (addr_heap->s2c_layer_num == 0)){
 		/* 如果堆里的地址某一侧是0, 也许是单向流, 即还没收到过对侧流量;
 		   也许是某一侧是空层, 根本就没有mpls, 
 		   此时没法判断是一个流对侧数据包首次到达, 还是根本不是一个隧道的另一个新流首次到达,
@@ -937,11 +937,11 @@ static int cmpaddr_mpls(const struct layer_addr_mpls *addr_heap, const struct la
 	}
 
 	/* 正向比较地址 */
-	if(addr_heap->src_mpls_layer_num != addr_stack->src_mpls_layer_num){
+	if(addr_heap->c2s_layer_num != addr_stack->c2s_layer_num){
 		same_dir_diff = 1;
 	}else{
-		for(i = 0; i < addr_heap->src_mpls_layer_num; i++){
-			if(addr_heap->src_mpls_pkt[i] != addr_stack->src_mpls_pkt[i]){
+		for(i = 0; i < addr_heap->c2s_layer_num; i++){
+			if(addr_heap->c2s_addr_array[i].label != addr_stack->c2s_addr_array[i].label){
 				same_dir_diff = 1;
 				break;
 			}
@@ -949,11 +949,11 @@ static int cmpaddr_mpls(const struct layer_addr_mpls *addr_heap, const struct la
 	}
 
 	/* 反向比较地址 */
-	if(addr_heap->dest_mpls_layer_num != addr_stack->src_mpls_layer_num){
+	if(addr_heap->s2c_layer_num != addr_stack->c2s_layer_num){
 		reverse_dir_diff = 1;
 	}else{
-		for(i = 0; i < addr_heap->dest_mpls_layer_num; i++){
-			if(addr_heap->dest_mpls_pkt[i] != addr_stack->src_mpls_pkt[i]){
+		for(i = 0; i < addr_heap->s2c_layer_num; i++){
+			if(addr_heap->s2c_addr_array[i].label != addr_stack->s2c_addr_array[i].label){
 				reverse_dir_diff = 1;
 				break;
 			}
@@ -2367,8 +2367,8 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
 
             memset(dst_vlan, 0, sizeof(struct layer_addr_vlan));
 			/* 当前stack里的包地址信息固定存储于src方向, 反向copy是将stack地址拷贝到堆里的地址 */
-            memcpy(dst_vlan->dst_vlan_pkt, src_vlan->src_vlan_pkt, sizeof(src_vlan->src_vlan_pkt));
-            dst_vlan->dst_vlan_layer_num = src_vlan->src_vlan_layer_num;
+            memcpy(dst_vlan->s2c_addr_array, src_vlan->c2s_addr_array, sizeof(src_vlan->c2s_addr_array));
+            dst_vlan->s2c_layer_num = src_vlan->c2s_layer_num;
         }
         break;
 
@@ -2392,11 +2392,11 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
 
             memset(dst_mpls, 0, sizeof(struct layer_addr_mpls));
 			/* 当前stack里的包地址信息固定存储于src方向, 反向copy是将stack地址拷贝到堆里的地址 */
-            memcpy(dst_mpls->dest_mpls_pkt, current_stack_addr->src_mpls_pkt, sizeof(current_stack_addr->src_mpls_pkt));
-            dst_mpls->dest_mpls_layer_num = current_stack_addr->src_mpls_layer_num;
-            if(current_stack_addr->src_has_ctrl_word){
-            	dst_mpls->dst_mpls_ctrl_word = current_stack_addr->src_mpls_ctrl_word;
-				dst_mpls->dst_has_ctrl_word = 1;
+            memcpy(dst_mpls->s2c_addr_array, current_stack_addr->c2s_addr_array, sizeof(current_stack_addr->c2s_addr_array));
+            dst_mpls->s2c_layer_num = current_stack_addr->c2s_layer_num;
+            if(current_stack_addr->c2s_has_ctrl_word){
+            	dst_mpls->s2c_mpls_ctrl_word = current_stack_addr->c2s_mpls_ctrl_word;
+				dst_mpls->s2c_has_ctrl_word = 1;
             }
         }
         break;
@@ -2744,26 +2744,26 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 			case ADDR_TYPE_MPLS:
 				if(ADDR_TYPE_MPLS == pstream_pr->stream_public.addr.addrtype){
 					if(cur_dir == DIR_C2S){
-						memcpy(pstream_pr->stream_public.addr.mpls->src_mpls_pkt,
-						        p_stack->stream_public.addr.mpls->src_mpls_pkt,
-						        sizeof(p_stack->stream_public.addr.mpls->src_mpls_pkt));
-	                    pstream_pr->stream_public.addr.mpls->src_mpls_layer_num = p_stack->stream_public.addr.mpls->src_mpls_layer_num;
-	                    if(p_stack->stream_public.addr.mpls->src_has_ctrl_word){//注意, 这里固定判断src方向!!
-							pstream_pr->stream_public.addr.mpls->src_mpls_ctrl_word = p_stack->stream_public.addr.mpls->src_mpls_ctrl_word;
-							pstream_pr->stream_public.addr.mpls->src_has_ctrl_word = 1;
+						memcpy(pstream_pr->stream_public.addr.mpls->c2s_addr_array,
+						        p_stack->stream_public.addr.mpls->c2s_addr_array,
+						        sizeof(p_stack->stream_public.addr.mpls->c2s_addr_array));
+	                    pstream_pr->stream_public.addr.mpls->c2s_layer_num = p_stack->stream_public.addr.mpls->c2s_layer_num;
+	                    if(p_stack->stream_public.addr.mpls->c2s_has_ctrl_word){//注意, 这里固定判断src方向!!
+							pstream_pr->stream_public.addr.mpls->c2s_mpls_ctrl_word = p_stack->stream_public.addr.mpls->c2s_mpls_ctrl_word;
+							pstream_pr->stream_public.addr.mpls->c2s_has_ctrl_word = 1;
 	                    }
 	                    //if(p_stack->fake_layer_dir_for_asymmetric_cmp != 0){
 						//	pstream_pr->fake_layer_dir_for_asymmetric_cmp |= DIR_C2S;
 	                    //}
 					}
 					else{
-	                    memcpy(pstream_pr->stream_public.addr.mpls->dest_mpls_pkt,
-	                           p_stack->stream_public.addr.mpls->src_mpls_pkt,
-	                           sizeof(p_stack->stream_public.addr.mpls->src_mpls_pkt));
-	                    pstream_pr->stream_public.addr.mpls->dest_mpls_layer_num = p_stack->stream_public.addr.mpls->src_mpls_layer_num;
-	                    if(p_stack->stream_public.addr.mpls->src_has_ctrl_word){ //注意, 这里固定判断src方向!!
-							pstream_pr->stream_public.addr.mpls->dst_mpls_ctrl_word = p_stack->stream_public.addr.mpls->src_mpls_ctrl_word;
-							pstream_pr->stream_public.addr.mpls->dst_has_ctrl_word = 1;
+	                    memcpy(pstream_pr->stream_public.addr.mpls->s2c_addr_array,
+	                           p_stack->stream_public.addr.mpls->c2s_addr_array,
+	                           sizeof(p_stack->stream_public.addr.mpls->c2s_addr_array));
+	                    pstream_pr->stream_public.addr.mpls->s2c_layer_num = p_stack->stream_public.addr.mpls->c2s_layer_num;
+	                    if(p_stack->stream_public.addr.mpls->c2s_has_ctrl_word){ //注意, 这里固定判断src方向!!
+							pstream_pr->stream_public.addr.mpls->s2c_mpls_ctrl_word = p_stack->stream_public.addr.mpls->c2s_mpls_ctrl_word;
+							pstream_pr->stream_public.addr.mpls->s2c_has_ctrl_word = 1;
 	                    }	 
 	                    //if(p_stack->fake_layer_dir_for_asymmetric_cmp != 0){
 						//	pstream_pr->fake_layer_dir_for_asymmetric_cmp |= DIR_S2C;
@@ -2777,16 +2777,16 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 			case ADDR_TYPE_VLAN:
 				if(ADDR_TYPE_VLAN == pstream_pr->stream_public.addr.addrtype){
 					if(cur_dir == DIR_C2S){
-						memcpy(pstream_pr->stream_public.addr.vlan->src_vlan_pkt,
-						        p_stack->stream_public.addr.vlan->src_vlan_pkt,
-						        sizeof(p_stack->stream_public.addr.vlan->src_vlan_pkt));
-	                    pstream_pr->stream_public.addr.vlan->src_vlan_layer_num = p_stack->stream_public.addr.vlan->src_vlan_layer_num;
+						memcpy(pstream_pr->stream_public.addr.vlan->c2s_addr_array,
+						        p_stack->stream_public.addr.vlan->c2s_addr_array,
+						        sizeof(p_stack->stream_public.addr.vlan->c2s_addr_array));
+	                    pstream_pr->stream_public.addr.vlan->c2s_layer_num = p_stack->stream_public.addr.vlan->c2s_layer_num;
 					}
 					else{
-	                    memcpy(pstream_pr->stream_public.addr.vlan->dst_vlan_pkt,
-	                           p_stack->stream_public.addr.vlan->src_vlan_pkt,  //注意, 这里固定用src方向!!
-	                           sizeof(p_stack->stream_public.addr.vlan->dst_vlan_pkt));
-	                    pstream_pr->stream_public.addr.vlan->dst_vlan_layer_num = p_stack->stream_public.addr.vlan->src_vlan_layer_num;    //注意, 这里固定用src方向!!                 
+	                    memcpy(pstream_pr->stream_public.addr.vlan->s2c_addr_array,
+	                           p_stack->stream_public.addr.vlan->c2s_addr_array,  //注意, 这里固定用src方向!!
+	                           sizeof(p_stack->stream_public.addr.vlan->s2c_addr_array));
+	                    pstream_pr->stream_public.addr.vlan->s2c_layer_num = p_stack->stream_public.addr.vlan->c2s_layer_num;    //注意, 这里固定用src方向!!                 
 					}
 				}else{
 					sapp_runtime_log(RLOG_LV_INFO, "update_opposite_addr_info() error, current addrtype is vlan, but pstream->addrtype is not vlan!");
@@ -3147,12 +3147,12 @@ int sapp_dup_pkt_identify_udp_v6(int tid, struct streaminfo_private *pstream_pr,
 	return is_dup_pkt;
 }
 
-void sapp_dup_pkt_mark_tcp(int tid, const struct streaminfo *pstream, const void *ip_hdr, const struct mesa_tcp_hdr *tcp_h)
+void sapp_dup_pkt_mark_tcp(int tid, unsigned char addrtype, const void *ip_hdr, const struct mesa_tcp_hdr *tcp_h)
 {
 	sapp_dup_pkt_key_v4_t dup_bloom_key_v4;
 	sapp_dup_pkt_key_v6_t dup_bloom_key_v6;
 
-	if(ADDR_TYPE_IPV4 == pstream->addr.addrtype){
+	if(ADDR_TYPE_IPV4 == addrtype){
 		sapp_get_dup_pkt_key_tcp_v4((struct mesa_ip4_hdr *)ip_hdr, tcp_h, &dup_bloom_key_v4);		
 		sapp_dup_pkt_mark_v4(tid, &dup_bloom_key_v4);
 	}else{
@@ -3162,7 +3162,23 @@ void sapp_dup_pkt_mark_tcp(int tid, const struct streaminfo *pstream, const void
 
 	return;
 }
-		
+
+void sapp_dup_pkt_mark_udp(int tid, unsigned char addrtype, const void *ip_hdr, const struct mesa_udp_hdr *udp_h)
+{
+	sapp_dup_pkt_key_v4_t dup_bloom_key_v4;
+	sapp_dup_pkt_key_v6_t dup_bloom_key_v6;
+
+	if(ADDR_TYPE_IPV4 == addrtype){
+		sapp_get_dup_pkt_key_udp_v4((struct mesa_ip4_hdr *)ip_hdr, udp_h, &dup_bloom_key_v4);		
+		sapp_dup_pkt_mark_v4(tid, &dup_bloom_key_v4);
+	}else{
+		sapp_get_dup_pkt_key_udp_v6((struct mesa_ip6_hdr *)ip_hdr, udp_h, &dup_bloom_key_v6);		
+		sapp_dup_pkt_mark_v6(tid, &dup_bloom_key_v6);		
+	}
+
+	return;
+}
+
 
 int sapp_dup_pkt_identify_tcp(int tid, struct streaminfo_private *pstream_pr, int tot_pkt, 
 		const void *ip_hdr, const struct mesa_tcp_hdr *tcp_h)
@@ -3171,7 +3187,7 @@ int sapp_dup_pkt_identify_tcp(int tid, struct streaminfo_private *pstream_pr, in
 	sapp_dup_pkt_key_v4_t dup_bloom_key_v4;
 	sapp_dup_pkt_key_v6_t dup_bloom_key_v6;
 
-	if((0 == pstream_pr->has_duplicate_pkt) && (tot_pkt >= 3)){ //TODO, 只判断前N个包, 此处是否要通过配置文件指定？
+	if((0 == pstream_pr->has_duplicate_pkt) && (tot_pkt >= SAPP_DUP_FIRST_PKT_NUM)){ //TODO, 只判断前N个包, 此处是否要通过配置文件指定？
 		return 0;
 	}
 
@@ -3181,7 +3197,7 @@ int sapp_dup_pkt_identify_tcp(int tid, struct streaminfo_private *pstream_pr, in
 		if(is_dup_pkt != 0){
 			pstream_pr->has_duplicate_pkt = 1;
 		}else{
-			sapp_dup_pkt_mark_v4(tid, &dup_bloom_key_v4);
+			sapp_dup_pkt_mark_v4(tid, &dup_bloom_key_v4); /* 如果不是重复包,加入bloom filter */
 		}
 	}else{
 		sapp_get_dup_pkt_key_tcp_v6((struct mesa_ip6_hdr *)ip_hdr, tcp_h, &dup_bloom_key_v6);		
@@ -3189,7 +3205,7 @@ int sapp_dup_pkt_identify_tcp(int tid, struct streaminfo_private *pstream_pr, in
 		if(is_dup_pkt != 0){
 			pstream_pr->has_duplicate_pkt = 1;
 		}else{
-			sapp_dup_pkt_mark_v6(tid, &dup_bloom_key_v6);
+			sapp_dup_pkt_mark_v6(tid, &dup_bloom_key_v6); /* 如果不是重复包,加入bloom filter */
 		}		
 	}
 

@@ -401,8 +401,8 @@ static int mpls_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 	}
 
 	set_mpls_addr(&mpls_addr, (unsigned char *)raw_data);
-	mpls_layer_len = mpls_addr.src_mpls_layer_num * sizeof(int);
-	if(mpls_addr.src_has_ctrl_word){
+	mpls_layer_len = mpls_addr.c2s_layer_num * sizeof(struct mesa_mpls_hdr);
+	if(mpls_addr.c2s_has_ctrl_word){
 		mpls_layer_len += sizeof(int);
 	}
 
@@ -499,10 +499,10 @@ static int vlan8021q_jump_to_layer(const char *raw_data,  int raw_layer_type, in
 	}
 
 	set_vlan_addr(&vlan_addr, (const unsigned char *)raw_data);
-	vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr.src_vlan_layer_num;
+	vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr.c2s_layer_num;
 	next_layer_data = raw_data + vlan_layer_len;
-	vhdr = (struct mesa_vlan_hdr *)&vlan_addr.src_vlan_pkt[vlan_addr.src_vlan_layer_num-1];
-	next_layer_type = ntohs(vhdr->type);
+	//vhdr = (struct mesa_vlan_hdr *)&vlan_addr.c2s_addr_array[vlan_addr.c2s_layer_num-1];
+	next_layer_type = ntohs(vlan_addr.c2s_addr_array[vlan_addr.c2s_layer_num-1].TPID);
 	
 	switch(next_layer_type){
 		case ETH_P_ARP:

@@ -2517,7 +2517,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	if(unlikely(!pindex_tcp)){
 		/* 每个流的首包无需检测是否重复, 但要加入bloom filter */
 		if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0){
-			sapp_dup_pkt_mark_tcp(pstream->threadnum,pstream, this_iphdr, this_tcphdr);
+			sapp_dup_pkt_mark_tcp(pstream->threadnum,pstream->addr.addrtype, this_iphdr, this_tcphdr);
 		}
 
 		if(this_tcphdr->th_flags & TH_SYN)
@@ -2644,7 +2644,8 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	  && (sapp_dup_pkt_identify_tcp(pstream->threadnum, pstream_pr, pdetail->clientpktnum+pdetail->serverpktnum, this_iphdr, this_tcphdr) != 0)){
 		local_sys_stat = &sapp_global_val->mthread_volatile[pstream->threadnum]->sys_stat;
 		local_sys_stat->count[SAPP_STAT_RCV_DUP_TCP]++;
-		local_sys_stat->length[SAPP_STAT_RCV_DUP_TCP] += tcplen;			  
+		local_sys_stat->length[SAPP_STAT_RCV_DUP_TCP] += tcplen;	
+		cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
 		return PASS;
 	}
 

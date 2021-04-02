@@ -450,14 +450,18 @@ static void pkt_dump_with_watermark(int tid, const void *rawpkt, int pktlen, enu
 		case PKT_CLASSIFY_DROP:
 			watermaker = 'D';
 		break;		
+		
 		case PKT_CLASSIFY_ERROR:
 			watermaker = 'E';
-		break;			
+		break;		
+		
+		case PKT_CLASSIFY_REPEAT:
+			watermaker = 'R';
+		break;		
 	}
 
 	memset(ehdr->ether_shost, watermaker, ETH_ALEN);
 	memset(ehdr->ether_dhost, watermaker, ETH_ALEN);
-
 
 	/* bingo, match filter, sendto */
 	ret = sendto(pkt_dump_udp_pkt_sd[tid], 

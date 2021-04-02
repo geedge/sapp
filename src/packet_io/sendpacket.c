@@ -827,39 +827,39 @@ static int calc_mpls_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_s
 
 	if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index] != 0){
 		if(send_stream_dir == DIR_C2S){
-			mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
-			if(mpls_addr->src_has_ctrl_word){
+			mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->c2s_layer_num;
+			if(mpls_addr->c2s_has_ctrl_word){
 				mpls_layer_len += sizeof(int);
 			}
 		}else{
-			mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
-			if(mpls_addr->dst_has_ctrl_word){
+			mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->s2c_layer_num;
+			if(mpls_addr->s2c_has_ctrl_word){
 				mpls_layer_len += sizeof(int);
 			}		
 		}
 	}else{
 		/* 如果不强制要求非对称地址, 如果本侧没有地址, 先使用对侧地址信息 */
 		if(send_stream_dir == DIR_C2S){
-			if(mpls_addr->src_mpls_layer_num > 0){
-				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
-				if(mpls_addr->src_has_ctrl_word){
+			if(mpls_addr->c2s_layer_num > 0){
+				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->c2s_layer_num;
+				if(mpls_addr->c2s_has_ctrl_word){
 					mpls_layer_len += sizeof(int);
 				}
 			}else{
-				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
-				if(mpls_addr->dst_has_ctrl_word){
+				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->s2c_layer_num;
+				if(mpls_addr->s2c_has_ctrl_word){
 					mpls_layer_len += sizeof(int);
 				}
 			}
 		}else{
-			if(mpls_addr->dest_mpls_layer_num > 0){
-				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->dest_mpls_layer_num;
-				if(mpls_addr->dst_has_ctrl_word){
+			if(mpls_addr->s2c_layer_num > 0){
+				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->s2c_layer_num;
+				if(mpls_addr->s2c_has_ctrl_word){
 					mpls_layer_len += sizeof(int);
 				}		
 			}else{
-				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->src_mpls_layer_num;
-				if(mpls_addr->src_has_ctrl_word){
+				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->c2s_layer_num;
+				if(mpls_addr->c2s_has_ctrl_word){
 					mpls_layer_len += sizeof(int);
 				}	
 			}
@@ -876,23 +876,23 @@ static int calc_vlan_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_s
 
 	if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
 		if(send_stream_dir == DIR_C2S){
-			vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->src_vlan_layer_num;
+			vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->c2s_layer_num;
 		}else{
-			vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;		
+			vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->s2c_layer_num;		
 		}
 	}else{
 		/* 如果不强制要求非对称地址, 如果本侧没有, 先使用对侧地址信息 */
 		if(send_stream_dir == DIR_C2S){
-			if(vlan_addr->src_vlan_layer_num != 0){
-				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->src_vlan_layer_num;
+			if(vlan_addr->c2s_layer_num != 0){
+				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->c2s_layer_num;
 			}else{
-				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;
+				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->s2c_layer_num;
 			}
 		}else{
-			if(vlan_addr->dst_vlan_layer_num != 0){
-				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->dst_vlan_layer_num;
+			if(vlan_addr->s2c_layer_num != 0){
+				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->s2c_layer_num;
 			}else{
-				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->src_vlan_layer_num;
+				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->c2s_layer_num;
 			}	
 		}			
 	}
@@ -1444,6 +1444,43 @@ static int build_net_layer_pppoe_ses(struct streaminfo_private *stream_pr, int c
 	return sizeof(struct mesa_pppoe_session_hdr);
 }
 
+/* 把网络传输的地址转换为内存结构, 方便业务插件处理 */
+int vlan_addr_net_to_mem(const struct mesa_vlan_detail_hdr *net_vlan_hdr, struct single_layer_vlan_addr *mem_vlan_hdr)
+{
+	mem_vlan_hdr->VID = htons(net_vlan_hdr->vlan_id_high << 8 | net_vlan_hdr->vlan_id_low);
+	mem_vlan_hdr->TPID = net_vlan_hdr->type;
+	mem_vlan_hdr->PCP = net_vlan_hdr->priority;
+	mem_vlan_hdr->DEI = net_vlan_hdr->del_flag;
+
+	return 0;
+}
+
+/* 把内存地址结构转换为RFC标准头部格式, 发送到网络中 */
+int vlan_addr_mem_to_net(const struct single_layer_vlan_addr *mem_vlan_hdr, struct mesa_vlan_detail_hdr *net_vlan_hdr)
+{
+	net_vlan_hdr->vlan_id_high = (ntohs(mem_vlan_hdr->VID) & 0xF00) >> 8;
+	net_vlan_hdr->vlan_id_low = (ntohs(mem_vlan_hdr->VID) & 0xFF);
+	net_vlan_hdr->type = mem_vlan_hdr->TPID;
+	net_vlan_hdr->priority = mem_vlan_hdr->PCP;
+	net_vlan_hdr->del_flag = mem_vlan_hdr->DEI;
+
+	return 0;
+}
+
+
+static int build_net_multilayer_vlan(const struct single_layer_vlan_addr *layer_array, int layer_num, struct mesa_vlan_detail_hdr *net_vlan_hdr)
+{
+	int i;
+	
+	for( i = 0; i < layer_num; i++){
+		vlan_addr_mem_to_net(&layer_array[i], net_vlan_hdr);
+		net_vlan_hdr++;
+	}
+
+	return 0;
+}
+
+
 static int build_net_layer_vlan(struct streaminfo_private *stream_pr, int carry_layer_type,
 			int carry_layer_len, unsigned char *buf, UCHAR send_stream_dir, const raw_pkt_t *raw_pkt)
 {
@@ -1453,25 +1490,35 @@ static int build_net_layer_vlan(struct streaminfo_private *stream_pr, int carry_
 	in_stream_addr = (struct layer_addr_vlan *)(stream_pr->stream_public.addr.vlan);
 
 	if(DIR_C2S == send_stream_dir){
-		if(in_stream_addr->src_vlan_layer_num > 0){
-			layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->src_vlan_layer_num;
-			memcpy(buf, in_stream_addr->src_vlan_pkt, layer_len);
+		if(in_stream_addr->c2s_layer_num > 0){
+			layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->c2s_layer_num;
+			//memcpy(buf, in_stream_addr->c2s_addr_array, layer_len);
+			build_net_multilayer_vlan(in_stream_addr->c2s_addr_array, in_stream_addr->c2s_layer_num, (struct mesa_vlan_detail_hdr *)buf);
 		}else{ 
 			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
 			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index]){
-				layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->dst_vlan_layer_num;
-				memcpy(buf, in_stream_addr->dst_vlan_pkt, layer_len);
+				layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->s2c_layer_num;
+				build_net_multilayer_vlan(in_stream_addr->s2c_addr_array, in_stream_addr->s2c_layer_num, (struct mesa_vlan_detail_hdr *)buf);
+				///memcpy(buf, in_stream_addr->s2c_addr_array, layer_len);
+			}else{
+				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_vlan() error, no c2s vlan addr, but asymmetric_addr_layer is set!\n");
+				return -1;
 			}
 		}
 	}else{
-		if(in_stream_addr->dst_vlan_layer_num > 0){
-			layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->dst_vlan_layer_num;
-			memcpy(buf, in_stream_addr->dst_vlan_pkt, layer_len);
+		if(in_stream_addr->s2c_layer_num > 0){
+			layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->s2c_layer_num;
+			//memcpy(buf, in_stream_addr->s2c_addr_array, layer_len);
+			build_net_multilayer_vlan(in_stream_addr->s2c_addr_array, in_stream_addr->s2c_layer_num, (struct mesa_vlan_detail_hdr *)buf);
 		}else{
 			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
 			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index]){
-				layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->src_vlan_layer_num;
-				memcpy(buf, in_stream_addr->src_vlan_pkt, layer_len);
+				layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->c2s_layer_num;
+				//memcpy(buf, in_stream_addr->c2s_addr_array, layer_len);
+				build_net_multilayer_vlan(in_stream_addr->c2s_addr_array, in_stream_addr->c2s_layer_num, (struct mesa_vlan_detail_hdr *)buf);
+			}else{
+				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_vlan() error, no s2c vlan addr, but asymmetric_addr_layer is set!\n");
+				return -1;
 			}
 		}
 	}
@@ -1622,6 +1669,46 @@ static int build_net_layer_gre(struct streaminfo_private *stream_pr, int carry_l
 	return gre_hdr_len;
 }
 
+/* 把网络传输的地址转换为内存结构, 方便业务插件处理 */
+int mpls_addr_net_to_mem(const struct mesa_mpls_hdr *net_mpls_hdr, struct single_layer_mpls_addr *mem_mpls_hdr)
+{
+	memset(mem_mpls_hdr, 0, sizeof(struct single_layer_mpls_addr));
+
+	mem_mpls_hdr->label = htonl( (net_mpls_hdr->mpls_label_low<<12) | (net_mpls_hdr->mpls_label_mid<<4) | net_mpls_hdr->mpls_label_high ); /* network order */
+	mem_mpls_hdr->experimental = net_mpls_hdr->mpls_exp;
+	mem_mpls_hdr->bottom = net_mpls_hdr->mpls_bls;
+	mem_mpls_hdr->ttl = net_mpls_hdr->mpls_ttl;
+
+	return 0;
+}
+
+/* 把内存地址结构转换为RFC标准头部格式, 发送到网络中 */
+int mpls_addr_mem_to_net(const struct single_layer_mpls_addr *mem_mpls_hdr, struct mesa_mpls_hdr *net_mpls_hdr)
+{
+	memset(net_mpls_hdr, 0, sizeof(struct mesa_mpls_hdr));
+
+	net_mpls_hdr->mpls_label_low = (ntohl(mem_mpls_hdr->label) & 0xFF000) >> 12;  
+	net_mpls_hdr->mpls_label_mid = (ntohl(mem_mpls_hdr->label) & 0xFF0) >> 4;
+	net_mpls_hdr->mpls_label_high = ntohl(mem_mpls_hdr->label) & 0xF;
+	net_mpls_hdr->mpls_exp = mem_mpls_hdr->experimental;
+	net_mpls_hdr->mpls_bls = mem_mpls_hdr->bottom;
+	net_mpls_hdr->mpls_ttl = mem_mpls_hdr->ttl;
+
+	return 0;
+}
+
+
+static int build_net_multilayer_mpls(const struct single_layer_mpls_addr *layer_array, int layer_num, struct mesa_mpls_hdr *net_mpls_hdr)
+{
+	int i;
+	
+	for( i = 0; i < layer_num; i++){
+		mpls_addr_mem_to_net(&layer_array[i], net_mpls_hdr);
+		net_mpls_hdr++;
+	}
+
+	return 0;
+}
 
 
 static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_layer_type,
@@ -1633,41 +1720,52 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 	in_stream_addr = (struct layer_addr_mpls *)(stream_pr->stream_public.addr.mpls);
 
 	if(DIR_C2S == send_stream_dir){
-		if(in_stream_addr->src_mpls_layer_num > 0){
-			layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->src_mpls_layer_num;
-			memcpy(buf, in_stream_addr->src_mpls_pkt, layer_len);
-			if(in_stream_addr->src_has_ctrl_word){
-				memcpy(buf + layer_len, &in_stream_addr->src_mpls_ctrl_word, sizeof(int));
+		if(in_stream_addr->c2s_layer_num > 0){
+			layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->c2s_layer_num;
+			//memcpy(buf, in_stream_addr->src_mpls_pkt, layer_len);
+			build_net_multilayer_mpls(in_stream_addr->c2s_addr_array, in_stream_addr->c2s_layer_num, (struct mesa_mpls_hdr *)buf);
+			
+			if(in_stream_addr->c2s_has_ctrl_word){
+				memcpy(buf + layer_len, &in_stream_addr->c2s_mpls_ctrl_word, sizeof(int));
 				layer_len += sizeof(int);
 			}
 		}else{
 			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
 			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index]){
-				layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->dest_mpls_layer_num;
-				memcpy(buf, in_stream_addr->dest_mpls_pkt, layer_len);
-				if(in_stream_addr->dst_has_ctrl_word){
-					memcpy(buf + layer_len, &in_stream_addr->dst_mpls_ctrl_word, sizeof(int));
+				layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->s2c_layer_num;
+				//memcpy(buf, in_stream_addr->dest_mpls_pkt, layer_len);
+				build_net_multilayer_mpls(in_stream_addr->s2c_addr_array, in_stream_addr->s2c_layer_num, (struct mesa_mpls_hdr *)buf);
+				if(in_stream_addr->s2c_has_ctrl_word){
+					memcpy(buf + layer_len, &in_stream_addr->s2c_mpls_ctrl_word, sizeof(int));
 					layer_len += sizeof(int);
 				}				
+			}else{
+				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_mpls() error, no c2s mpls addr, but asymmetric_addr_layer is set!\n");
+				return -1;
 			}
 		}
 	}else{
-		if(in_stream_addr->dest_mpls_layer_num > 0){
-			layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->dest_mpls_layer_num;
-			memcpy(buf, in_stream_addr->dest_mpls_pkt, layer_len);
-			if(in_stream_addr->dst_has_ctrl_word){
-				memcpy(buf + layer_len, &in_stream_addr->dst_mpls_ctrl_word, sizeof(int));
+		if(in_stream_addr->s2c_layer_num > 0){
+			layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->s2c_layer_num;
+			//memcpy(buf, in_stream_addr->dest_mpls_pkt, layer_len);
+			build_net_multilayer_mpls(in_stream_addr->s2c_addr_array, in_stream_addr->s2c_layer_num, (struct mesa_mpls_hdr *)buf);
+			if(in_stream_addr->s2c_has_ctrl_word){
+				memcpy(buf + layer_len, &in_stream_addr->s2c_mpls_ctrl_word, sizeof(int));
 				layer_len += sizeof(int);
 			}
 		}else{
 			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
 			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index]){
-				layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->src_mpls_layer_num;
-				memcpy(buf, in_stream_addr->src_mpls_pkt, layer_len);
-				if(in_stream_addr->src_has_ctrl_word){
-					memcpy(buf + layer_len, &in_stream_addr->src_mpls_ctrl_word, sizeof(int));
+				layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->c2s_layer_num;
+				//memcpy(buf, in_stream_addr->src_mpls_pkt, layer_len);
+				build_net_multilayer_mpls(in_stream_addr->c2s_addr_array, in_stream_addr->c2s_layer_num, (struct mesa_mpls_hdr *)buf);
+				if(in_stream_addr->c2s_has_ctrl_word){
+					memcpy(buf + layer_len, &in_stream_addr->c2s_mpls_ctrl_word, sizeof(int));
 					layer_len += sizeof(int);
 				}
+			}else{
+				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_mpls() error, no s2c mpls addr, but asymmetric_addr_layer is set!\n");
+				return -1;
 			}
 		}
 	}	
@@ -1845,6 +1943,59 @@ static int build_net_layer_l2tp(struct streaminfo_private *stream_pr, int carry_
 	return l2tp_raw_hdr_len;
 }
 
+
+/* 如果之前发现有重复流量, 或者每个流的前N个包必须要加入bloom filter */
+static void sendpkt_dup_pkt_mark(const struct streaminfo *top_stream, unsigned char addrtype, const char *this_iphdr, const char *this_transport_hdr)
+{
+	const struct streaminfo_private *top_stream_pr;
+	int need_process_dup_pkt_flag = 0;
+
+	top_stream_pr = (struct streaminfo_private *)top_stream;
+	if(top_stream_pr->has_duplicate_pkt){
+		need_process_dup_pkt_flag = 1;
+	}else{
+		if(STREAM_TYPE_TCP == top_stream->type){
+			if(top_stream->ptcpdetail->clientpktnum + top_stream->ptcpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){
+				need_process_dup_pkt_flag = 1;
+			}
+		}else{
+			if(top_stream->pudpdetail->clientpktnum + top_stream->pudpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){
+				need_process_dup_pkt_flag = 1;
+			}
+		}
+	}
+
+	if(need_process_dup_pkt_flag != 0){
+		if(STREAM_TYPE_TCP == top_stream->type){
+			sapp_dup_pkt_mark_tcp(top_stream->threadnum, addrtype, this_iphdr, (const struct mesa_tcp_hdr *)(this_transport_hdr));
+		}else{
+			sapp_dup_pkt_mark_udp(top_stream->threadnum, addrtype, this_iphdr, (const struct mesa_udp_hdr *)(this_transport_hdr));
+		}
+	}
+
+	return;
+}
+
+void sendpkt_dup_pkt_mark_stream(const struct streaminfo *top_stream, const char *ip_hdr)
+{
+	const struct mesa_ip4_hdr *ip4hdr;
+	const struct mesa_ip6_hdr *ip6hdr;
+	sapp_dup_pkt_key_v4_t dup_bloom_key_v4;
+	sapp_dup_pkt_key_v6_t dup_bloom_key_v6;	
+	const char *transport_layer_hdr;
+	
+	if(ADDR_TYPE_IPV4 == top_stream->addr.addrtype){
+		ip4hdr = (struct mesa_ip4_hdr *)ip_hdr;
+		transport_layer_hdr = ip_hdr + ip4hdr->ip_hl * 4;
+		sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV4, ip_hdr, transport_layer_hdr);
+	}else{
+		ip6hdr = (struct mesa_ip6_hdr *)ip_hdr;
+		transport_layer_hdr = ip_hdr + sizeof(struct mesa_ip6_hdr);	
+		sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV6, ip_hdr, transport_layer_hdr);
+	}
+}
+
+
 /* 
 	buf: 执向应用层负载地址, skip hdr.
 	reverse: 从应用层的角度区别dir, 表示与当前raw_pkt包相比, 方向是否一致, 对于有方向性的地址, 需反向造包.
@@ -1862,6 +2013,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 	struct streaminfo *stream;
 	char debug_print_buf[256];
 	const struct streaminfo *carry_layer_stream;
+	
 	
 	if(NULL == stream_pr){
 		return carry_layer_len;
@@ -1903,6 +2055,11 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			sapp_runtime_log(RLOG_LV_DEBUG, "build_net_layer_pkt()->IPV4, %s, send_stream_dir:%d, ipid:%u, ip_checksum:0x%x", 
 							sapp_raw_ipv4_ntop(ip4hdr, debug_print_buf, sizeof(debug_print_buf)), send_stream_dir,
 							ntohs(ip4hdr->ip_id), ntohs(ip4hdr->ip_sum));
+
+			/* 重复流量识别, 加到这里是因为如果有隧道, 可能会有多层, 且不用再经过jump_layer跳转到内部udp/tcp层了 */
+			if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0){
+				sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV4, (char *)buf, buf+sizeof(struct mesa_ip4_hdr));
+			}
 		}	
 		break;
 		
@@ -1928,6 +2085,11 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			/* TCP层校验和需要IP地址信息, 所以要在构造完IP层信息后, 再计算checksum */
 			checksum_for_carry_layer(buf, __ADDR_TYPE_IP_PAIR_V6, carry_layer_type, carry_layer_len+transport_layer_len);
 			carry_layer_type = __ADDR_TYPE_IP_PAIR_V6;
+
+			/* 重复流量识别, 加到这里是因为如果有隧道, 可能会有多层, 且不用再经过jump_layer跳转到内部udp/tcp层了 */
+			if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0){
+				sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV6, (char *)buf, buf+sizeof(struct mesa_ip6_hdr));
+			}			
 		break;
 		
 		case __ADDR_TYPE_IP_PAIR_V4:
@@ -1956,7 +2118,11 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 					/* 复用反向地址, 从新计算长度, 构造vlan地址 */
 					this_layer_len = calc_vlan_hdr_len(stream_pr, send_stream_dir ^ DIR_DOUBLE);
 					buf -= this_layer_len;
-					build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir ^ DIR_DOUBLE, raw_pkt);
+					ret = build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir ^ DIR_DOUBLE, raw_pkt);
+					if(ret < 0){
+						sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_vlan() error!\n");
+						return -1;
+					}	
 					carry_layer_type = ADDR_TYPE_VLAN;					
 					sapp_runtime_log(10, "build_net_layer_vlan() build vlan layer, but no addr of dir:%d, use opposite_addr.\n", send_stream_dir);
 				}else{
@@ -1965,7 +2131,11 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 				}
 			}else{
 				buf -= this_layer_len;
-				build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
+				ret = build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
+				if(ret < 0){
+					sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_vlan() error!\n");
+					return -1;
+				}					
 				carry_layer_type = ADDR_TYPE_VLAN;
 			}
 		break;
@@ -2019,7 +2189,11 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 				break;
 			}else{
 				buf -= this_layer_len;
-				build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
+				ret = build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
+				if(ret < 0){
+					sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_mpls() error!\n");
+					return -1;
+				}				
 				carry_layer_type = ADDR_TYPE_MPLS;
 			}
 
@@ -2939,14 +3113,14 @@ static int skip_asymmetric_presence_layer(const struct streaminfo *stream, UCHAR
 
 			/* 如果不是生造出来的虚拟空层, 还有可能是单向流, 还要看实际有没有地址 */
 			if(DIR_C2S == send_stream_dir){
-				if(0 == vaddr->src_vlan_layer_num){
+				if(0 == vaddr->c2s_layer_num){
 					/* 如果本侧没有地址, 看是否强制要求非对称原则, 如果是, 其实都走不到这里,构造包时就失败了; 如果不是可以复用对侧地址 */
 					if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
 						need_skip = 1;
 					}
 				}
 			}else{
-				if(0 == vaddr->dst_vlan_layer_num){
+				if(0 == vaddr->s2c_layer_num){
 					/* 如果本侧没有地址, 看是否强制要求非对称原则, 如果是, 其实都走不到这里,构造包时就失败了; 如果不是可以复用对侧地址 */
 					if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
 						need_skip = 1;
@@ -2961,14 +3135,14 @@ static int skip_asymmetric_presence_layer(const struct streaminfo *stream, UCHAR
 			const struct layer_addr_mpls *maddr = stream->addr.mpls;
 
 			if(DIR_C2S == send_stream_dir){
-				if(0 == maddr->src_mpls_layer_num){
+				if(0 == maddr->c2s_layer_num){
 					/* 如果本侧没有地址, 看是否强制要求非对称原则, 如果是, 其实都走不到这里,构造包时就失败了; 如果不是可以复用对侧地址 */
 					if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index] != 0){
 						need_skip = 1;
 					}
 				}
 			}else{
-				if(0 == maddr->dest_mpls_layer_num){
+				if(0 == maddr->s2c_layer_num){
 					if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index] != 0){
 						need_skip = 1;
 					}
@@ -3055,6 +3229,11 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 		/* 跳过当前层 */
 		inject_stream = raw_stream->pfather;
 		inject_stream_pr = (struct streaminfo_private *)inject_stream;
+		/* 如果插件发包时指定了SIO_EXCLUDE_THIS_LAYER_HDR, 说明内层四元组是由插件构造的, 
+		   一般不会再走到build_pkt的函数中, 此处需要解析ip包并加入bloom filter */
+		if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0){
+			sendpkt_dup_pkt_mark_stream(raw_stream, (char *)payload);
+		}
 	}else{
 		if((ADDR_TYPE_IPV4 == inject_stream->addr.addrtype)
 		 || (ADDR_TYPE_TCP == inject_stream->addr.addrtype)){
@@ -3230,13 +3409,12 @@ static int send_handle_init(int tot_thread_num)
 		}
 		g_send_handle[i].threadnum = i;
 
-#if (0 == SAPP_AS_TARGET_SO)
 		g_send_handle[i].low_level_send_handle = dl_io_fun_list.dl_io_get_send_handle(i);
 		if(NULL == g_send_handle[i].low_level_send_handle){
 			printf("dl_io_get_send_handle error !\n");
 			return -1;
 		}
-#endif
+
 		g_packet_dl_send_handle[i] = g_send_handle[i].low_level_send_handle; /* 20161117 lijia move from packet_io_init() */
 	}
 

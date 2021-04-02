@@ -739,8 +739,7 @@ int packet_io_init(int argc, char *argv[])
 			return -1;
 		}
 	}
-	
-#if (0 == SAPP_AS_TARGET_SO)		
+		
 	if(0 == use_custom_pkt_cb){
 		packet_io_register_cb(mesa_default_pkt_cb);	
 	}
@@ -753,7 +752,6 @@ int packet_io_init(int argc, char *argv[])
 	if(dl_io_fun_list.dl_io_init(argc, argv) < 0){
 		return -1;
 	}
-#endif
 
 	for(i = 0; i < MAX_THREAD_NUM; i++){
 		g_send_buf_pool[i] = (UINT8 *)malloc(SENDPACKET_BUF_LEN);
@@ -796,21 +794,18 @@ extern  int app_function_rationality_check(void);
 void packet_io_run(void)
 {
 	pthread_t pid;
-#if (0 == SAPP_AS_TARGET_SO)		
+		
 	if(NULL == dl_io_fun_list.dl_io_run){
 		printf("Error, packet io library must support 'dl_io_run' !\n");
 		sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: Error, packet io library must support 'dl_io_run' !\n", __FILE__, __LINE__);
 		assert(0);
 	}
-#endif
 
 	app_function_rationality_check();
 	
 	pthread_create(&pid, NULL, sapp_time_event_thread ,NULL);
 	
-#if (0 == SAPP_AS_TARGET_SO)	
 	dl_io_fun_list.dl_io_run();
-#endif	
 }
 
 extern volatile int update_packet_io_status_sw;
