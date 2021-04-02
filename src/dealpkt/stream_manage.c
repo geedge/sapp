@@ -1300,6 +1300,10 @@ static int cmpaddr_new(struct streaminfo_private *pheap_stream_pr,
 
 #endif
 
+
+int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
+		struct streaminfo_private *pstack_stream_pr, unsigned short hash_elem_count);
+
 /*
 	GTP隧道的外层IP四元组, 因基站的迁移, 外层IP可能变化.
 */
@@ -1309,6 +1313,7 @@ static int checkstreamorder_for_gtp_tunnel(struct streaminfo_private *pheap_stre
 	int ret;
 	const struct streaminfo * pheap_stream = &pheap_stream_pr->stream_public;
 	const struct streaminfo * pstack_stream = &pstack_stream_pr->stream_public;
+	int this_layer_is_same = 0;
 	
 	if(pheap_stream_pr==NULL){
 		if(unlikely(pstack_stream_pr!=NULL)){		
@@ -1322,25 +1327,33 @@ static int checkstreamorder_for_gtp_tunnel(struct streaminfo_private *pheap_stre
 		}	
 	}	
 	
-	/* 外层地址有任意方向地址相同, 即可认为是来自同一个GTP隧道 */
+	/* 外层ip地址会变化, 但四个ip不可能都不一样, 有任意方向地址相同, 即可认为是来自同一个GTP隧道 */
 	if(pheap_stream->addr.tuple4_v4->saddr == pstack_stream->addr.tuple4_v4->saddr){
-		return 0;
+		this_layer_is_same = 1;
 	}
 
 	if(pheap_stream->addr.tuple4_v4->daddr == pstack_stream->addr.tuple4_v4->saddr){
-		return 0;
+		this_layer_is_same = 1;
 	}
 
 	if(pheap_stream->addr.tuple4_v4->daddr == pstack_stream->addr.tuple4_v4->daddr){
-		return 0;
+		this_layer_is_same = 1;
 	}	
 
 	if(pheap_stream->addr.tuple4_v4->saddr == pstack_stream->addr.tuple4_v4->daddr){
-		return 0;
+		this_layer_is_same = 1;
 	}	
-	
 
-	return -1;
+	if(0 == this_layer_is_same){ /* 本层地址不一样, 直接返回错误 */
+		return -1;
+	}
+
+	/* 继续比较下一层地址 */
+	ret=checkstreamorder((struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
+						 (struct streaminfo_private *)(pstack_stream_pr->pfather_pr),
+						 hash_elem_count);
+
+	return ret;
 }
 
 /*比较两个流结构体大小 */
@@ -1404,6 +1417,10 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 	   return ret;
 	}
 
+	
+	/* GTP的addr_use_as_hash=0, 所以会跳过gtp而比较下层的ip/udp, 但是ip和端口可能会漂移, 不能按常规方式比较,
+		所以此处加一个特殊处理.
+	*/
 	switch(pstack_stream->addr.addrtype){
 		case ADDR_TYPE_GPRS_TUNNEL:
 			return checkstreamorder_for_gtp_tunnel((struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
