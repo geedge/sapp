@@ -1206,6 +1206,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			*out_val = pstream_pr->stream_carry_up_layer_tunnel_type;
 			ret = 0;
 		}
+		break;
 
 		case MSO_STREAM_CLOSE_REASON:
 		{
