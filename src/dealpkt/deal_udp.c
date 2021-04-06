@@ -549,14 +549,6 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		//pstream->addr.pktipfragtype = pstream->stream_public.addr.pktipfragtype; /* 2015-11-04 lijia add, IP分片类型更新 */
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 
-		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
-		  && (sapp_dup_pkt_identify_udp_v4(thread_num, pstream_pr, pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum, this_iphdr, udph) != 0)){
-			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
-			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
-			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
-			return PASS;
-		}
-
 		/* 2014-11-15 lijia add, for udp serial kill udp */
 		if(unlikely(a_index->stream.stream_killed_flag != 0)){
 			return DROP;
@@ -564,6 +556,14 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 
 		if(unlikely(pdetail_pr->drop_stream_flag != 0)){ /* 2020-06-02 lijia add */
 			return DROP;
+		}
+
+		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
+		  && (sapp_dup_pkt_identify_udp_v4(thread_num, pstream_pr, pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum, this_iphdr, udph) != 0)){
+			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
+			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
+			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
+			return PASS;
 		}
 
 		if(pstream->curdir==DIR_S2C){
@@ -749,14 +749,6 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		pstream=&(pstream_pr->stream_public);		
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 
-		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
-		  && (sapp_dup_pkt_identify_udp_v6(thread_num, pstream_pr, pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum, a_packet, udph) != 0)){
-			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
-			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
-			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
-			return PASS;
-		}
-		
 		/* 2014-11-15 lijia add, for udp serial kill udp */
 		if(unlikely(a_index->stream.stream_killed_flag != 0)){
 			return DROP;
@@ -766,6 +758,14 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			return DROP;
 		}
 
+		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
+		  && (sapp_dup_pkt_identify_udp_v6(thread_num, pstream_pr, pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum, a_packet, udph) != 0)){
+			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
+			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
+			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
+			return PASS;
+		}
+		
 		if(pstream->curdir==DIR_S2C){
 			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* 当前方向的第一个包, 尝试更新底层隧道的单向地址信息(如MPLS, GTP) */
 				try_to_update_addr_info = 1;
