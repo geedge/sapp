@@ -648,13 +648,18 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	}
 	set_ipv4_addr(&addr, (struct mesa_ip4_hdr *)a_packet);
 	pstream->addr.paddr = &addr;
-
 	/* 在IP层先设置为__ADDR_TYPE_IP_PAIR_V4, 如果上层是TCP/UDP, 会重新设置为ADDR_TYPE_IPV4, 如果是Ipv6_over_ipv4隧道, 则保留纯IP层地址特性 */
 	pstream->addr.addrtype = __ADDR_TYPE_IP_PAIR_V4;
 	pstream->addr.addrlen = sizeof(struct stream_tuple4_v4); /* 地址长度固定使用四元组格式的, 如果是隧道, 则浪费两个端口,4字节空间 */
 	pstream->addr.pkttype = PKT_TYPE_NORMAL;
 	pstream->addr.pktipfragtype = PKT_TYPE_NORMAL; /* 2014-12-25 lijia add */
-	pstream_pr->addr_use_as_hash = 1;	
+	this_layer_is_overlay = sapp_is_overlay_layer(pstream_pr, raw_pkt);
+	
+	if(this_layer_is_overlay != 0){
+		pstream_pr->addr_use_as_hash = 0;	
+	}else{
+		pstream_pr->addr_use_as_hash = 1;	
+	}
 	//ptmp->stream.p_layer_header = a_packet;
 	//ptmp->stream.offset_to_raw_pkt_hdr = (char *)a_packet - (char *)raw_pkt->raw_pkt_data;
 	pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
@@ -682,7 +687,6 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	pstream->threadnum=thread_num;
 
 	/* 2020-12-23 lijia add, 无mrtunnat模式, 如果是overlay层, 不调用普通插件 */
-	this_layer_is_overlay = sapp_is_overlay_layer(pstream_pr, raw_pkt);
 	if(this_layer_is_overlay != 0){
 		ret = stream_process_overlay_ipv4(pstream, (const struct ip *)this_layer_data, thread_num, routedir, raw_pkt);
 		if(DROP == ret){
