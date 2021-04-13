@@ -1188,6 +1188,17 @@ static int build_net_layer_ethernet(const struct streaminfo *top_stream, struct 
 	in_stream_addr = (struct layer_addr_mac *)(stream_pr->stream_public.addr.mac);
 	struct mesa_ethernet_hdr *send_hdr = (struct mesa_ethernet_hdr *)buf;
 
+	send_hdr->ether_type = htons(eth_type_host);
+
+	/* 并联且注入包模式为sys_route时, 实际靠系统路由发送IP包, 最底层无需构建ethernet地址,
+	   此时也不关心配置文件etc/asymmetric_addr_layer.conf的ethernet[0]是否开启,而导致单向流的反向发包无效.
+	*/
+	if((NULL == stream_pr->pfather_pr)  
+	 && (DEPOLYMENT_MODE_MIRROR == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	 && (SEND_PKT_MODE_STACK_3_LAYER == sapp_global_val->config.packet_io.inject_pkt_mode)){
+		return sizeof(struct mesa_ethernet_hdr);
+	}
+
 	if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MAC][stream_pr->layer_index] == 0){
 		if(DIR_C2S == send_stream_dir){
 			memcpy(send_hdr->ether_shost, in_stream_addr->src_addr.h_source, ETHER_ADDR_LEN);
@@ -1209,8 +1220,6 @@ static int build_net_layer_ethernet(const struct streaminfo *top_stream, struct 
 			memcpy(send_hdr->ether_dhost, in_stream_addr->dst_addr.h_dest, ETHER_ADDR_LEN);
 		}
 	}
-
-	send_hdr->ether_type = htons(eth_type_host);
 
 	return sizeof(struct mesa_ethernet_hdr);
 }
