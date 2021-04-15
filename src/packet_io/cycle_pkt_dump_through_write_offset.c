@@ -488,7 +488,7 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 	struct perceptive_info *pperceptive_info;
 	const sapp_config_tools_pktdump_t *pktdump_cfg = &sapp_global_val->config.tools.pkt_dump;
 
-	if(0 == pkt_dump_udp_socket_peer_alive){	
+	if(likely(0 == pkt_dump_udp_socket_peer_alive)){	
 		return;
 	}
 	if(0 == G_PKT_DUMP_PER_THREAD_SW[thread_seq]){
@@ -716,7 +716,7 @@ void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 
 void cycle_pkt_dump_by_classify(int thread_seq, const raw_pkt_t *p_raw_pkt, enum _pkt_classify class_val)
 {
-	if(likely(0 == G_PKT_DUMP_SW)){
+	if(0 == G_PKT_DUMP_SW){
 		return;
 	}
 

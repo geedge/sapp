@@ -874,9 +874,11 @@ static int packet_io_calc_ethernet_offset_to_ip(const unsigned char *sendbuf)
 }
 
 /*
-	has_layer2_hdr: 是否包括ethernet头部, 如果没有, 需要临时copy一份并补充一个虚假mac头, 否则外部tcpdump_mesa会解析失败.
+	输入原始包指针, 需要转换成raw_pkt结构, 传递给cycle_pkt_dump模块.
+	has_layer2_hdr: 是否包括ethernet头部, 
+	                如果没有, 比如sys_route发包模式, 需要临时copy一份并补充一个虚假mac头, 否则外部tcpdump_mesa会解析失败.
 */
-static inline void pkt_dump_for_mirror_mode(int tid, const void *pkt, int pkt_len, int has_layer2_hdr, unsigned short eth_pro_host_order)
+void sapp_pkt_dump_by_raw_pkt(int tid, const void *pkt, int pkt_len, int has_layer2_hdr, unsigned short eth_pro_host_order, enum _pkt_classify class_val)
 {
 	raw_pkt_t raw_pkt;
 	char temp_dump_buff[MTU_MAX];
@@ -885,7 +887,7 @@ static inline void pkt_dump_for_mirror_mode(int tid, const void *pkt, int pkt_le
 	struct mesa_ethernet_hdr *ehdr;
 	static const unsigned char uknown_mac_acsii[6] = {0x75, 0x6b, 0x6e, 0x6f, 0x77, 0x6e};
 
-	if(likely(0 == G_PKT_DUMP_SW)){
+	if(0 == G_PKT_DUMP_SW){
 		return;
 	}	
 
@@ -914,15 +916,15 @@ static inline void pkt_dump_for_mirror_mode(int tid, const void *pkt, int pkt_le
 		to_tcpdump_len = pkt_len;
 	}
 
-	memset(&raw_pkt, 0, sizeof(raw_pkt_t));
-	raw_pkt.magic_num = RAW_PKT_MAGIC_NUM;
+	//memset(&raw_pkt, 0, sizeof(raw_pkt_t));
+	//raw_pkt.magic_num = RAW_PKT_MAGIC_NUM;
 	raw_pkt.low_layer_type = ADDR_TYPE_MAC;
 	raw_pkt.raw_pkt_data = to_tcpdump_buff;
 	raw_pkt.raw_pkt_len = to_tcpdump_len;
-	raw_pkt.__lib_raw_pkt_data = to_tcpdump_buff;
-	raw_pkt.__lib_raw_pkt_len = to_tcpdump_len;
+	//raw_pkt.__lib_raw_pkt_data = to_tcpdump_buff;
+	//raw_pkt.__lib_raw_pkt_len = to_tcpdump_len;
 
-	cycle_pkt_dump_by_classify(tid, &raw_pkt, PKT_CLASSIFY_INJECT);
+	cycle_pkt_dump_by_classify(tid, &raw_pkt, class_val);
 
 	return;
 }
@@ -964,8 +966,6 @@ static int packet_io_send_by_sys_routev4(MESA_send_handle *send_handle,int datal
 	//						actual_data_ptr+VXLAN_HDR_RESERVED_LEN, datalen, dir,
 	//						feedback_buf, feedback_buf_len);
 	//}
-
-	pkt_dump_for_mirror_mode(send_handle->threadnum, actual_data_ptr, datalen, 0, ETH_P_IP);
 	
 retry:
 	ret = sendto(send_handle->raw_ipv4_fd, actual_data_ptr, datalen, 0,
@@ -979,6 +979,8 @@ retry:
 			return ret;
 		}
 	}
+
+	sapp_pkt_dump_by_raw_pkt(send_handle->threadnum, actual_data_ptr, datalen, 0, ETH_P_IP, PKT_CLASSIFY_INJECT);
 
 	/* 是否需要将Inject包回馈给调用者 */
 	if(feedback_buf != KILL_TCP_PHONY_POINTER){
@@ -1033,8 +1035,6 @@ static int packet_io_send_by_sys_routev6(MESA_send_handle *send_handle,int datal
 	sock_addr_v6.sin6_family = AF_INET6;
 	memcpy(sock_addr_v6.sin6_addr.s6_addr, ip6_hdr->ip6_dst.s6_addr, IPV6_ADDR_LEN);
 
-	pkt_dump_for_mirror_mode(send_handle->threadnum,actual_data_ptr, datalen, 0, ETH_P_IPV6);
-	
 retry:	
 	ret = sendto(send_handle->raw_ipv6_fd, actual_data_ptr, datalen, 0,
 				(struct sockaddr *)&sock_addr_v6, sizeof(struct sockaddr_in6));
@@ -1047,6 +1047,8 @@ retry:
 			return ret;
 		}
 	}
+
+	sapp_pkt_dump_by_raw_pkt(send_handle->threadnum,actual_data_ptr, datalen, 0, ETH_P_IPV6,PKT_CLASSIFY_INJECT);
 
 	if(feedback_buf != KILL_TCP_PHONY_POINTER){
 		if(*feedback_buf_len < ret + (int)sizeof(struct mesa_ethernet_hdr)){
@@ -1119,8 +1121,7 @@ static int packet_io_send_by_manual_conf(MESA_send_handle *send_handle,int datal
     }
     sendpacket_build_ethernet(p_dst_mac, sapp_global_val->config.packet_io.inject_mode_single_gateway_src_mac, ether_type, NULL, 0, send_handle->send_buf);
 
-	pkt_dump_for_mirror_mode(send_handle->threadnum, send_handle->send_buf, datalen, 1, 0);
-	
+
 send_again:
 	ret = sendto(send_handle->raw_eth_fd, send_handle->send_buf, datalen, 0, 
 				(struct sockaddr *)&send_handle->saddr_raw_eth, sizeof(struct sockaddr));
@@ -1131,6 +1132,8 @@ send_again:
 			return -1;
 		}
 	}	
+
+	sapp_pkt_dump_by_raw_pkt(send_handle->threadnum, send_handle->send_buf, datalen, 1, 0, PKT_CLASSIFY_INJECT);
 	
 	return ret;
 }
@@ -1338,7 +1341,6 @@ int parse_send_route_conf(const char *profile_path)
 int packet_io_send_raw(int thread_num, char *data, int datalen,unsigned int target_id)
 {
 	MESA_send_handle *snd_handle;
-	//send_raw_pkt_info_t *send_info;
 	int ret;
 
 	snd_handle = packet_io_get_send_handle(thread_num);
@@ -1346,18 +1348,16 @@ int packet_io_send_raw(int thread_num, char *data, int datalen,unsigned int targ
 		return -1;
 	}
 
-	//send_info = get_raw_pkt_conf_by_id(target_id);
-	//if(NULL == send_info){
-		//return -1;
-	//}
-
+	/* 
+	  在polling模式下, 借用全局变量暂存的"当前包raw_pkt"已经不对了, 因为当前包跟从polling entry收到的包可能完全是两个流的数据包 
+	*/
 	ret = dl_io_fun_list.dl_io_raw_pkt_send(snd_handle->low_level_send_handle,
 									(unsigned char *)data,
 									datalen,
 									g_packet_device_alias[target_id].dl_io_param,
 									thread_num,
 									0, /* 此处是直接构造全部包头, 并指定发包网卡, 发包方向无意义 */
-									sapp_global_val->mthread_volatile[thread_num]->raw_pkt);
+									NULL);
 	if(ret < 0){
 		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
 	}

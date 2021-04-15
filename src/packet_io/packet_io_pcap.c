@@ -625,6 +625,8 @@ send_again:
 		}
 	}	
 
+	sapp_pkt_dump_by_raw_pkt(thread_num, data, datalen, 1, 0, PKT_CLASSIFY_INJECT);
+
 	return ret;
 }
 
@@ -673,6 +675,8 @@ send_again:
 			return -1;
 		}
 	}	
+
+	sapp_pkt_dump_by_raw_pkt(thread_num, data, datalen, 1, 0, PKT_CLASSIFY_INJECT);
 
 	return ret;
 }

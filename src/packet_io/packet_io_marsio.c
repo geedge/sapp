@@ -333,16 +333,16 @@ static void marsio_pkt_dump(int thread_seq, const marsio_buff_t *send_mbuf, enum
 {
 	raw_pkt_t to_tcpdump_mesa;
 
-	if(likely(0 == G_PKT_DUMP_SW)){
+	if(0 == G_PKT_DUMP_SW){
 		return;
 	}	
 	
-	to_tcpdump_mesa.magic_num = RAW_PKT_MAGIC_NUM;
+	//to_tcpdump_mesa.magic_num = RAW_PKT_MAGIC_NUM;
 	to_tcpdump_mesa.low_layer_type = ADDR_TYPE_MAC;
 	to_tcpdump_mesa.raw_pkt_data = ptr_marsio_buff_mtod((marsio_buff_t *)send_mbuf);
 	to_tcpdump_mesa.raw_pkt_len = ptr_marsio_buff_buflen((marsio_buff_t *)send_mbuf);
-	to_tcpdump_mesa.__lib_raw_pkt_data = to_tcpdump_mesa.raw_pkt_data;
-	to_tcpdump_mesa.__lib_raw_pkt_len = to_tcpdump_mesa.raw_pkt_len;
+	//to_tcpdump_mesa.__lib_raw_pkt_data = to_tcpdump_mesa.raw_pkt_data;
+	//to_tcpdump_mesa.__lib_raw_pkt_len = to_tcpdump_mesa.raw_pkt_len;
 
 	cycle_pkt_dump_by_classify(thread_seq, &to_tcpdump_mesa, PKT_CLASSIFY_INJECT);
 

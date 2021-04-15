@@ -1190,12 +1190,12 @@ static int build_net_layer_ethernet(const struct streaminfo *top_stream, struct 
 
 	send_hdr->ether_type = htons(eth_type_host);
 
-	/* 并联且注入包模式为sys_route时, 实际靠系统路由发送IP包, 最底层无需构建ethernet地址,
-	   此时也不关心配置文件etc/asymmetric_addr_layer.conf的ethernet[0]是否开启,而导致单向流的反向发包无效.
+	/* 并联模式下,最底层无需构建ethernet地址,
+	   无论inject_pkt_mode是什么模式, sys_route还是raw_ethernet_single_gateway等等, 最外层mac实际都不是原始包中的mac地址,
+	   此时也不关心配置文件etc/asymmetric_addr_layer.conf的ethernet[0]是否开启, 从而导致单向流的反向发包无效.
 	*/
 	if((NULL == stream_pr->pfather_pr)  
-	 && (DEPOLYMENT_MODE_MIRROR == sapp_global_val->config.packet_io.depolyment_mode_bin)
-	 && (SEND_PKT_MODE_STACK_3_LAYER == sapp_global_val->config.packet_io.inject_pkt_mode)){
+	 && (DEPOLYMENT_MODE_MIRROR == sapp_global_val->config.packet_io.depolyment_mode_bin)){
 		return sizeof(struct mesa_ethernet_hdr);
 	}
 
