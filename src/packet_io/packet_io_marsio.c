@@ -608,9 +608,6 @@ static int marsio4_pkt_forward(int tid, struct mr_sendpath * sendpath, marsio_bu
 static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *raw_pkt, unsigned char dir)
 {
 	int ret;
-
-
-
 	struct mr_tunnat_ctrlzone *mr_ctrlzone = (struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone(rx_buff, 0); /* index */
 
 	raw_pkt->__lib_raw_pkt_data = ptr_marsio_buff_mtod(rx_buff);
@@ -642,6 +639,7 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->vlan_flipping_couple[0] = 0;
 	raw_pkt->vlan_flipping_couple[1] = 0;
 	raw_pkt->overlay_layer_bytes = 0;
+	raw_pkt->drop_current_pkt_flag = 0;
 
 	ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, mr_ctrlzone->route_dir, tid);
 	

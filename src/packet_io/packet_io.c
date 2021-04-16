@@ -690,6 +690,11 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_ERROR);
 	}
 
+	/* drop_current_pkt_flag优先级高于函数返回值 */
+	if(p_raw_pkt->drop_current_pkt_flag != 0){
+		ret = DROP;
+	}
+
 	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){ 
 		if((p_raw_pkt->is_overlay_pkt)&& (PASS == ret)){
 			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_FORWARD);

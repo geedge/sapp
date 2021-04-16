@@ -794,9 +794,23 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			ret = 0;
 		}
 		break;
+
+		case MSO_DROP_CURRENT_PKT:
+		{
+			struct streaminfo_private *pstream_pr = (struct streaminfo_private *)pstream;
+			raw_pkt_t *raw_pkt = (raw_pkt_t *)pstream_pr->raw_pkt;
+			int drop_value = *((int *)opt_val);
+			if(raw_pkt){
+				raw_pkt->drop_current_pkt_flag = drop_value;
+			}else{
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() MSO_DROP_CURRENT_PKT error: current pkt is NULL!\n");
+				ret = -1;
+			}
+		}
+		break;
 		
 		default:
-			sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error: unsupport MESA_stream_opt type!\n");
+			sapp_runtime_log(RLOG_LV_INFO, "MESA_set_stream_opt() error: unsupport MESA_stream_opt type:%d!\n", (int)opt);
 			ret = -1;
 			break;
 	}

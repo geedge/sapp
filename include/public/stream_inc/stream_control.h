@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define STREAM_CONTROL_H_VERSION		(20210218)
+#define STREAM_CONTROL_H_VERSION		(20210416)
 
 #define TCP_CTEAT_LINK_BYSYN   			0x01  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
 #define TCP_CTEAT_LINK_BYDATA 			0x02  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
@@ -32,7 +32,7 @@ enum MESA_stream_opt{
 	MSO_STREAM_VXLAN_INFO, /* opt_val type must be struct vxlan_info */
 	MSO_TCPALL_VALID_AFTER_KILL, /* opt_val type must be unsigned char, value only be [0,1]; Warning, this option is obsolete, use MESA_rst_tcp() instead */
 	MSO_GLOBAL_STREAM_ID, /* opt_val type must be unsigned long long, is value-result argument, IN: device_id, value range[0, 4095]; OUT:global stream id */
-	MSO_DROP_STREAM, /* opt_val type must be int, value only be [0,1]; similar to DROPPKT, but effective scope is stream. */
+	MSO_DROP_STREAM, /* opt_val type must be int, value only be [0,1]; similar to DROPPKT, but effective scope is all subsequent packets of this stream. */
 	MSO_TCP_RST_REMEDY, /* opt_val type must be int, value only be [0,1]; if not set this, default is disable. */
 	MSO_TOTAL_INBOUND_PKT,  /* inbound packet number of this stream, opt_val type must be unsigned long long  */
 	MSO_TOTAL_INBOUND_BYTE, /* inbound packet byte of this stream, opt_val type must be unsigned long long  */
@@ -42,8 +42,8 @@ enum MESA_stream_opt{
 	MSO_TOTAL_INBOUND_BYTE_RAW, /* inbound packet byte of this stream, raw packet len, include ip hdr, ethernet hdr... opt_val type must be unsigned long long  */
 	MSO_TOTAL_OUTBOUND_BYTE_RAW,/* outbound packet byte of this stream, raw packet len, include ip hdr, ethernet hdr... opt_val type must be unsigned long long  */
 	MSO_STREAM_UP_LAYER_TUNNEL_TYPE,  /* opt_val must be unsigned short, refer to enum stream_carry_tunnel_t */
-
 	MSO_STREAM_PLUG_PME, /* opt_val type must be struct mso_plug_pme, this is a value-result argument, the caller should set plug_name and plug_entry_type, only support: TCP, TCP_ALL, UDP */
+	MSO_DROP_CURRENT_PKT,  /* opt_val type must be int, value only be [0,1], notice the difference between MSO_DROP_CURRENT_PKT and MSO_DROP_STREAM, MSO_DROP_CURRENT_PKT only discard current packet, but MSO_DROP_STREAM discard all subsequent packets of stream  */
 	__MSO_MAX,
 };
 
@@ -208,7 +208,7 @@ enum sapp_state_t{
 struct mso_plug_pme{
 	const char *plug_name;			/* argument: IN, comes from plug.inf-->[PLUGINFO]-->PLUGNAME */
 	const char *plug_entry_type; 	/* argument: IN, only support: TCP, TCP_ALL, UDP.  */
-	void *plug_pme;					/* argument: OUT, plug private memory address */
+	void *plug_pme;					/* argument: OUT, plug private memory address of current stream */
 };
 
 

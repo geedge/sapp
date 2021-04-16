@@ -77,6 +77,7 @@ typedef struct {
 	unsigned char mac_flipping_enable;
 	char diagnose_error_to_dump; /* 是某种错误数据包, 期望pkt_dump存储或udp socket发送给tcpdump_mesa */
 	unsigned char overlay_layer_bytes; /* 串联封装层长度, 比如vxlan模式下是50字节 */
+	char drop_current_pkt_flag; /* 插件调用MSO_DROP_CURRENT_PKT设置丢弃当前包, 每次处理完要清空 */
 }raw_pkt_t;
 
 

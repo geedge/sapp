@@ -1127,6 +1127,7 @@ retry:
 	pkt_queue_node.raw_pkt.mac_flipping_enable = 0;
 	pkt_queue_node.raw_pkt.diagnose_error_to_dump = 0;
 	pkt_queue_node.raw_pkt.overlay_layer_bytes = 0;
+	pkt_queue_node.raw_pkt.drop_current_pkt_flag = 0;
 
 	if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
 		/* 读包模式下本来没有routedir的概念, 为了便于测试上层业务, 使用最底层地址比较算出一个routedir */
