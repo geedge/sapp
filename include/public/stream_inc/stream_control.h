@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define STREAM_CONTROL_H_VERSION		(20210416)
+#define STREAM_CONTROL_H_VERSION		(20210419)
 
 #define TCP_CTEAT_LINK_BYSYN   			0x01  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
 #define TCP_CTEAT_LINK_BYDATA 			0x02  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
@@ -44,6 +44,7 @@ enum MESA_stream_opt{
 	MSO_STREAM_UP_LAYER_TUNNEL_TYPE,  /* opt_val must be unsigned short, refer to enum stream_carry_tunnel_t */
 	MSO_STREAM_PLUG_PME, /* opt_val type must be struct mso_plug_pme, this is a value-result argument, the caller should set plug_name and plug_entry_type, only support: TCP, TCP_ALL, UDP */
 	MSO_DROP_CURRENT_PKT,  /* opt_val type must be int, value only be [0,1], notice the difference between MSO_DROP_CURRENT_PKT and MSO_DROP_STREAM, MSO_DROP_CURRENT_PKT only discard current packet, but MSO_DROP_STREAM discard all subsequent packets of stream  */
+	MSO_HAVE_DUP_PKT,  /* opt_val type must be int, value only be [0,1], if the current stream found duplicate packets ? */
 	__MSO_MAX,
 };
 

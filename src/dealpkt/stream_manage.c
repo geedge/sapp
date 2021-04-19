@@ -1301,59 +1301,159 @@ static int cmpaddr_new(struct streaminfo_private *pheap_stream_pr,
 #endif
 
 
-int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
+int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct streaminfo_private *pheap_stream_pr,
 		struct streaminfo_private *pstack_stream_pr, unsigned short hash_elem_count);
+
+
+/*
+	GTP的端口可能两侧都不一样, 即asymmetric addr,
+	此处更新端口以最后一次ip或teid改变的包为准.
+*/
+static void update_outer_addr_for_gtp_tunnel(const struct streaminfo_private *top_stream_pr, 
+	struct streaminfo_private *pheap_gtp_stream_pr, struct streaminfo_private *pstack_gtp_stream_pr,
+	struct streaminfo_private *pheap_ip_stream_pr, struct streaminfo_private *pstack_ip_stream_pr, unsigned char cur_pkt_dir)
+{
+	int ret;
+	int addr_has_changed = 0;
+	const struct stream_tuple4_v4 *stack_tuple4addr = pstack_ip_stream_pr->stream_public.addr.tuple4_v4;
+	struct stream_tuple4_v4 *heap_tuple4addr = pheap_ip_stream_pr->stream_public.addr.tuple4_v4;
+	
+	if(DIR_C2S == cur_pkt_dir){
+		if(heap_tuple4addr->saddr != stack_tuple4addr->saddr){
+			addr_has_changed = 1;
+		}
+		if(heap_tuple4addr->daddr != stack_tuple4addr->daddr){
+			addr_has_changed = 1;
+		}
+		if(pheap_gtp_stream_pr->stream_public.addr.gtp->teid_c2s != pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s){
+			addr_has_changed = 1;
+		}
+	}else{
+		if(heap_tuple4addr->saddr != stack_tuple4addr->daddr){
+			addr_has_changed = 1;
+		}
+		if(heap_tuple4addr->daddr != stack_tuple4addr->saddr){
+			addr_has_changed = 1;
+		}		
+		if(pheap_gtp_stream_pr->stream_public.addr.gtp->teid_s2c != pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s){
+			addr_has_changed = 1;
+		}		
+	}	
+
+	if(likely(0 == addr_has_changed)){
+		return;
+	}
+
+	/******** for debug log, 要放在地址更新的前面, 否则原始信息就被覆盖了 ********/
+	if(ABBR_SAPP_LOG_LEVEL <= RLOG_LV_DEBUG){
+		char ip_before_src_str[INET_ADDRSTRLEN], ip_before_dst_str[INET_ADDRSTRLEN];
+		char ip_after_src_str[INET_ADDRSTRLEN], ip_after_dst_str[INET_ADDRSTRLEN];
+		unsigned int before_teid_c2s, before_teid_s2c, after_teid_c2s, after_teid_s2c;
+		
+		if(addr_has_changed){
+			before_teid_c2s = ntohl(pheap_gtp_stream_pr->stream_public.addr.gtp->teid_c2s);
+			before_teid_s2c = ntohl(pheap_gtp_stream_pr->stream_public.addr.gtp->teid_s2c);
+		
+			if(DIR_C2S == cur_pkt_dir){
+				after_teid_c2s = ntohl(pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s);
+				after_teid_s2c = before_teid_s2c;
+			}else{
+				after_teid_s2c = ntohl(pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s); /* 此处不是笔误!! stack是临时栈空间, teid固定放在c2s变量中 */
+				after_teid_c2s = before_teid_c2s;	
+			}
+		
+			inet_ntop(AF_INET, &heap_tuple4addr->saddr, ip_before_src_str, sizeof(ip_before_src_str));
+			inet_ntop(AF_INET, &heap_tuple4addr->daddr, ip_before_dst_str, sizeof(ip_before_dst_str));
+			inet_ntop(AF_INET, &stack_tuple4addr->saddr, ip_after_src_str, sizeof(ip_after_src_str));
+			inet_ntop(AF_INET, &stack_tuple4addr->daddr, ip_after_dst_str, sizeof(ip_after_dst_str));			
+			sapp_runtime_log(RLOG_LV_DEBUG, "stream:%s, curdir:%d, for GTP tunnel, outer tuple4 addr has changed, before IP:%s->%s, after IP:%s->%s, before TEID:%u->%u, after TEID:%u->%u,",
+							printaddr(&top_stream_pr->stream_public.addr, top_stream_pr->stream_public.threadnum), cur_pkt_dir,
+							ip_before_src_str, ip_before_dst_str, ip_after_src_str, ip_after_dst_str,
+							before_teid_c2s, before_teid_s2c, after_teid_c2s, after_teid_s2c);
+		}
+	}
+
+	if(DIR_C2S == cur_pkt_dir){
+		heap_tuple4addr->saddr = stack_tuple4addr->saddr;
+		heap_tuple4addr->daddr = stack_tuple4addr->daddr;
+		heap_tuple4addr->source = stack_tuple4addr->source;
+		heap_tuple4addr->dest = stack_tuple4addr->dest;		
+		pheap_gtp_stream_pr->stream_public.addr.gtp->teid_c2s = pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s;
+
+	}else{
+		heap_tuple4addr->saddr = stack_tuple4addr->daddr;
+		heap_tuple4addr->daddr = stack_tuple4addr->saddr;
+		heap_tuple4addr->source = stack_tuple4addr->dest;
+		heap_tuple4addr->dest = stack_tuple4addr->source;	
+		pheap_gtp_stream_pr->stream_public.addr.gtp->teid_s2c = pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s; /* 此处不是笔误!! stack是临时栈空间, teid固定放在c2s变量中 */
+	}	
+
+	return;
+}
+
 
 /*
 	GTP隧道的外层IP四元组, 因基站的迁移, 外层IP可能变化.
+
+	pheap_stream_pr, pstack_stream_pr指向GTP下一层的ip/udp层.
 */
-static int checkstreamorder_for_gtp_tunnel(struct streaminfo_private *pheap_stream_pr,
-										struct streaminfo_private *pstack_stream_pr, unsigned short hash_elem_count)
+static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_stream_pr, 
+	struct streaminfo_private *pheap_gtp_stream_pr, struct streaminfo_private *pstack_gtp_stream_pr,
+	struct streaminfo_private *pheap_ip_stream_pr, struct streaminfo_private *pstack_ip_stream_pr, unsigned short hash_elem_count)
 {
 	int ret;
-	const struct streaminfo * pheap_stream = &pheap_stream_pr->stream_public;
-	const struct streaminfo * pstack_stream = &pstack_stream_pr->stream_public;
+	const struct streaminfo * pheap_stream = &pheap_ip_stream_pr->stream_public;
+	const struct streaminfo * pstack_stream = &pstack_ip_stream_pr->stream_public;
 	int this_layer_is_same = 0;
+	unsigned char cur_pkt_dir;
 	
-	if(pheap_stream_pr==NULL){
-		if(unlikely(pstack_stream_pr!=NULL)){		
+	if(pheap_ip_stream_pr==NULL){
+		if(unlikely(pstack_ip_stream_pr!=NULL)){		
 			return -1;
 		}else{	
 			return 0;
 		}
 	}else{
-		if(unlikely(pstack_stream_pr==NULL)){			
+		if(unlikely(pstack_ip_stream_pr==NULL)){			
 			return 1;
 		}	
 	}	
 	
-	/* 外层ip地址会变化, 但四个ip不可能都不一样, 有任意方向地址相同, 即可认为是来自同一个GTP隧道 */
+	/* 外层ip地址会变化, 但四个ip不可能都不一样, 有任意方向地址相同, 即可认为是来自同一个GTP隧道
+		TODO, 此处需要同GTP-C联动 ??
+	*/
 	if(pheap_stream->addr.tuple4_v4->saddr == pstack_stream->addr.tuple4_v4->saddr){
 		this_layer_is_same = 1;
-	}
-
-	if(pheap_stream->addr.tuple4_v4->daddr == pstack_stream->addr.tuple4_v4->saddr){
+		cur_pkt_dir = DIR_C2S;
+	}else if(pheap_stream->addr.tuple4_v4->daddr == pstack_stream->addr.tuple4_v4->daddr){
 		this_layer_is_same = 1;
-	}
-
-	if(pheap_stream->addr.tuple4_v4->daddr == pstack_stream->addr.tuple4_v4->daddr){
+		cur_pkt_dir = DIR_C2S;
+	}else if(pheap_stream->addr.tuple4_v4->saddr == pstack_stream->addr.tuple4_v4->daddr){
 		this_layer_is_same = 1;
+		cur_pkt_dir = DIR_S2C;
+	}else if(pheap_stream->addr.tuple4_v4->daddr == pstack_stream->addr.tuple4_v4->saddr){
+		this_layer_is_same = 1;
+		cur_pkt_dir = DIR_S2C;
 	}	
 
-	if(pheap_stream->addr.tuple4_v4->saddr == pstack_stream->addr.tuple4_v4->daddr){
-		this_layer_is_same = 1;
-	}	
-
-	if(0 == this_layer_is_same){ /* 本层地址不一样, 直接返回错误 */
+	if(0 == this_layer_is_same){ /* 本层地址全不一样, 认为不是来自一个隧道, 直接返回错误 */
 		return -1;
 	}
 
 	/* 继续比较下一层地址 */
-	ret=checkstreamorder((struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
-						 (struct streaminfo_private *)(pstack_stream_pr->pfather_pr),
+	ret=checkstreamorder(top_stream_pr, (struct streaminfo_private *)(pheap_ip_stream_pr->pfather_pr), 
+						 (struct streaminfo_private *)(pstack_ip_stream_pr->pfather_pr),
 						 hash_elem_count);
 
+	if(0 == ret){
+		/* 执行到此, 所有地址都相同, 或者是不用于地址比较, 说明当前流pheap_stream_pr,pstack_stream_pr是同属于一个上层TCP/UDP流,
+			尝试更新外层的ipv4/udp流信息.
+		*/
+		update_outer_addr_for_gtp_tunnel(top_stream_pr, pheap_gtp_stream_pr, pstack_gtp_stream_pr, pheap_ip_stream_pr, pstack_ip_stream_pr, cur_pkt_dir);
+	}
+
 	return ret;
+
 }
 
 /*比较两个流结构体大小 */
@@ -1369,7 +1469,7 @@ static int checkstreamorder_for_gtp_tunnel(struct streaminfo_private *pheap_stre
 		1 : pst1 > pst2;
 		-1: pst1 < pst2
 */
-int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
+int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct streaminfo_private *pheap_stream_pr,
 		struct streaminfo_private *pstack_stream_pr, unsigned short hash_elem_count)
 {
 	int ret;
@@ -1418,12 +1518,14 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 	}
 
 	
-	/* GTP的addr_use_as_hash=0, 所以会跳过gtp而比较下层的ip/udp, 但是ip和端口可能会漂移, 不能按常规方式比较,
+	/*  GTP的TEID会变化, 不能简单的比较, 所以本层addr_use_as_hash=0,
+	    所以会跳过gtp而比较下层的ip/udp, 但是外层的ip和端口可能会漂移, 也不能按常规方式比较,
 		所以此处加一个特殊处理.
 	*/
 	switch(pstack_stream->addr.addrtype){
 		case ADDR_TYPE_GPRS_TUNNEL:
-			return checkstreamorder_for_gtp_tunnel((struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
+			return checkstreamorder_for_gtp_tunnel(top_stream_pr, pheap_stream_pr, pstack_stream_pr,
+								(struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
 								(struct streaminfo_private *)(pstack_stream_pr->pfather_pr), hash_elem_count);
 		break;
 
@@ -1435,7 +1537,8 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 	/* 2014-04-01 lijia add, 本层无需比较, 直接跳过 */
 	if((0 == pheap_stream_pr->addr_use_as_hash) && (0 == pstack_stream_pr->addr_use_as_hash)){
 		pheap_stream_pr->offset_to_raw_pkt_hdr = pstack_stream_pr->offset_to_raw_pkt_hdr;
-		return checkstreamorder((struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
+		return checkstreamorder(top_stream_pr,
+								(struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
 								(struct streaminfo_private *)(pstack_stream_pr->pfather_pr),
 								hash_elem_count);
 	}
@@ -1448,7 +1551,7 @@ int checkstreamorder(struct streaminfo_private *pheap_stream_pr,
 		pheap_stream_pr->stream_public.addr.pktipfragtype = pstack_stream_pr->stream_public.addr.pktipfragtype;
 	}
 	
-	ret=checkstreamorder((struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
+	ret=checkstreamorder(top_stream_pr, (struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
 						 (struct streaminfo_private *)(pstack_stream_pr->pfather_pr),
 						 hash_elem_count);
 	if(ret != 0)
@@ -1482,7 +1585,7 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 			continue;
 		}
 #endif
-		result=checkstreamorder(pshead_pr,psinsert_pr, hash_elem_count);
+		result=checkstreamorder(&plinkhead->stream, pshead_pr,psinsert_pr, hash_elem_count);
 		if(result==0){
 			res = phead;
 			break;

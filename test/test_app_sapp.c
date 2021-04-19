@@ -2017,10 +2017,11 @@ char test_sapp_inject_http(stSessionInfo* session_info, void **param, int thread
 #endif
 
 
-char test_sapp_inject_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+static char test_sapp_inject_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt, unsigned char send_route_dir)
 {
-	char MESA_inject_pkt_payload[] = "send by MESA_inject_pkt    ";
-	char sapp_inject_pkt_def_payload[] = "send by sapp_inject_pkt def";
+	char MESA_inject_pkt_payload[] = "send by MESA_inject_pkt() ";
+	char sapp_inject_pkt_def_payload[] = "send by sapp_inject_pkt default ";
+	char sapp_inject_pkt_exclude_payload[] = "send by sapp_inject_pkt SIO_EXCLUDE_THIS_LAYER_HDR ";
 	char sapp_inject_pkt_no_hdr_payload[256];
 	struct stream_tuple4_v4 *tuple_v4;
 
@@ -2030,8 +2031,8 @@ char test_sapp_inject_pkt(struct streaminfo *stream,void **pme, int thread_seq,c
 
 	tuple_v4 = (struct stream_tuple4_v4 *)(stream->addr.paddr);
 
-	MESA_inject_pkt(stream, MESA_inject_pkt_payload, strlen("send by MESA_inject_pkt    "), raw_pkt, stream->routedir);
-	sapp_inject_pkt(stream, SIO_DEFAULT, sapp_inject_pkt_def_payload, strlen("send by sapp_inject_pkt def"), stream->routedir);
+	MESA_inject_pkt(stream, MESA_inject_pkt_payload, strlen(MESA_inject_pkt_payload), raw_pkt, send_route_dir);
+	sapp_inject_pkt(stream, SIO_DEFAULT, sapp_inject_pkt_def_payload, strlen(sapp_inject_pkt_def_payload), send_route_dir);
 
 	struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)sapp_inject_pkt_no_hdr_payload;
 	struct mesa_tcp_hdr *thdr = (struct mesa_tcp_hdr *)((char *)ip4hdr + sizeof(struct mesa_ip4_hdr)); //no options
@@ -2046,7 +2047,7 @@ char test_sapp_inject_pkt(struct streaminfo *stream,void **pme, int thread_seq,c
 
 	ip4hdr->ip_v = 4;
 	ip4hdr->ip_hl = 5;
-	ip4hdr->ip_len = htons(sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr) + strlen("send by sapp_inject_pkt hdr"));
+	ip4hdr->ip_len = htons(sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr) + strlen(sapp_inject_pkt_exclude_payload));
 	ip4hdr->ip_id = 0x3333;
 	ip4hdr->ip_off = 0;
 	ip4hdr->ip_ttl = 128;
@@ -2055,12 +2056,24 @@ char test_sapp_inject_pkt(struct streaminfo *stream,void **pme, int thread_seq,c
 	ip4hdr->ip_src.s_addr = tuple_v4->saddr;
 	ip4hdr->ip_dst.s_addr = tuple_v4->daddr;
 	
-	strcpy(sapp_inject_pkt_no_hdr_payload + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), "send by sapp_inject_pkt hdr");
+	strcpy(sapp_inject_pkt_no_hdr_payload + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), sapp_inject_pkt_exclude_payload);
 
-	sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, sapp_inject_pkt_no_hdr_payload, ntohs(ip4hdr->ip_len), stream->routedir);
+	sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, sapp_inject_pkt_no_hdr_payload, ntohs(ip4hdr->ip_len), send_route_dir);
 	
 	return APP_STATE_GIVEME;
 }
+
+char test_sapp_inject_pkt_same_dir(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+{
+	return test_sapp_inject_pkt(stream, pme, thread_seq, raw_pkt, stream->routedir);
+}
+
+
+char test_sapp_inject_pkt_reverse_dir(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
+{
+	return test_sapp_inject_pkt(stream, pme, thread_seq, raw_pkt, MESA_dir_reverse( stream->routedir));
+}
+
 
 
 static struct streaminfo *g_polling_stream = NULL;
