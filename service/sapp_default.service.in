@@ -15,6 +15,7 @@ LimitCORE=infinity
 TasksMax=infinity
 Delegate=yes
 KillMode=processs
+WatchdogSec=10s
 
 [Install]
 WantedBy=multi-user.target

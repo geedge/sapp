@@ -346,7 +346,7 @@ typedef struct __sapp_gval_mthread sapp_gval_mthread_t;
 struct __sapp_gval_individual_volatile{
 	volatile time_t current_time;
 	volatile long long current_time_ms;
-	volatile int current_state;
+	volatile int current_state; /* refer to enum sapp_state_t  */
 }__attribute__ ((aligned (64)));
 typedef struct __sapp_gval_individual_volatile sapp_gval_individual_volatile_t;
 

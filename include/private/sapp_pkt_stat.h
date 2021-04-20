@@ -8,8 +8,10 @@
 */
 
 typedef enum __sapp_sys_stat_type{
+	SAPP_STAT_FETCH_PKT,  /* sapp尝试从pcap, marsio获取数据包的次数, 不关心结果, 主要用于死锁监测 */
+	
 	/* 
-		包括overlay的流量, 以下不带LINE的都是网络中的真实通信双方的流量, 不含vxlan等封装层字节数,
+		LINE包括overlay的流量, 以下不带LINE的都是网络中的真实通信双方的流量, 不含vxlan等封装层字节数,
 		比如一个vxlan包总长度是1000字节, vxlan overlay层包括ethernet,ipv4,udp,vxlan, 总长度是50字节,
 		则SAPP_STAT_RCV_LINE是1000字节, SAPP_STAT_RCV_RAW是950字节.
 	*/

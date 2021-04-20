@@ -983,7 +983,8 @@ static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_
 
 	this_plug_entry = plugin_get_plug_entry(in_arg->plug_name, in_arg->plug_entry_type);
 	if(NULL == this_plug_entry){
-		sapp_runtime_log(RLOG_LV_FATAL, "MESA_get_stream_opt() MSO_STREAM_PLUG_PME error, can't get plug:%s entry:%s address", in_arg->plug_name, in_arg->plug_entry_type); 
+		sapp_runtime_log(RLOG_LV_FATAL, "%s,MESA_get_stream_opt() MSO_STREAM_PLUG_PME error, can't get plug:%s entry:%s address", 
+						printaddr(&pstream->addr, pstream->threadnum), in_arg->plug_name, in_arg->plug_entry_type); 
 		return -1;
 	}
 
@@ -1007,7 +1008,7 @@ static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_
 			goto bingo;
 		}		
 	}else{
-		sapp_runtime_log(RLOG_LV_FATAL, "MESA_get_stream_opt() MSO_STREAM_PLUG_PME error, not support stream type:%d", pstream->type); 
+		sapp_runtime_log(RLOG_LV_FATAL, "%s, MESA_get_stream_opt() MSO_STREAM_PLUG_PME error, not support stream type:%d", printaddr(&pstream->addr, pstream->threadnum),pstream->type); 
 		return -1;
 	}
 
@@ -1017,6 +1018,48 @@ static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_
 
 bingo:
 	
+	return ret;
+}
+
+
+static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *opt_val, int *opt_val_len)
+{
+	const struct streaminfo_private *pstream_pr = (struct streaminfo_private *)pstream;
+	int *res_val = (int *)opt_val;
+	int ret = 0;
+
+	if(0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable){
+		sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT error,  config duplicate_pkt_distinguish is not enable", 
+						 printaddr(&pstream->addr, pstream->threadnum)); 
+		*res_val = -2;
+		return 0;
+	}
+
+	if(pstream_pr->has_duplicate_pkt != 0){
+		*res_val = 1;
+		return 0;
+	}
+
+	/* 开启了重复包检测功能,但还没发现有重复包   */
+	if(STREAM_TYPE_TCP == pstream->type){
+		if((pstream->ptcpdetail->clientpktnum <= SAPP_DUP_FIRST_PKT_NUM) && (pstream->ptcpdetail->serverpktnum <= SAPP_DUP_FIRST_PKT_NUM)){ /* 包太少, 不足以判断有没有重复包 */
+			*res_val = -2;
+		}else{
+			*res_val = 0;
+		}
+	}else if(STREAM_TYPE_UDP == pstream->type){
+		if((pstream->pudpdetail->clientpktnum <= SAPP_DUP_FIRST_PKT_NUM) && (pstream->pudpdetail->serverpktnum <= SAPP_DUP_FIRST_PKT_NUM)){ /* 包太少, 不足以判断有没有重复包 */
+			*res_val = -2;
+		}else{
+			*res_val = 0;
+		}
+	}else{
+		sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT error,  not support stream type:%d", 
+						 printaddr(&pstream->addr, pstream->threadnum), pstream->type); 	
+		*res_val = -2;				 
+		ret = -1;
+	}
+
 	return ret;
 }
 
@@ -1032,12 +1075,12 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_MAX_UNORDER:
 		{
 			if(STREAM_TYPE_TCP != pstream->type){
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_MAX_UNORDER error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_MAX_UNORDER error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}		
 			if(*opt_val_len < (int)sizeof(struct max_unorder_opt)){
-				sapp_runtime_log(RLOG_LV_INFO,"MESA_get_stream_opt() MSO_MAX_UNORDER error:opt_val_len invalid, must be sizeof(struct max_unorder_opt)\n");
+				sapp_runtime_log(RLOG_LV_INFO,"%s, MESA_get_stream_opt() MSO_MAX_UNORDER error:opt_val_len invalid, must be sizeof(struct max_unorder_opt)\n", printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
@@ -1049,7 +1092,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_NEED_ACK:
 		{
 			if(STREAM_TYPE_TCP != pstream->type){
-				sapp_runtime_log(RLOG_LV_INFO,"MESA_get_stream_opt() MSO_NEED_ACK error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO,"%s, MESA_get_stream_opt() MSO_NEED_ACK error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
@@ -1067,7 +1110,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			if(STREAM_TYPE_TCP != pstream->type){
-				sapp_runtime_log(RLOG_LV_INFO,"MESA_get_stream_opt() MSO_TAKEOVER error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO,"%s, MESA_get_stream_opt() MSO_TAKEOVER error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
@@ -1081,7 +1124,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_TIMEOUT:
 		{
 			if(sizeof(short) != *opt_val_len){
-				sapp_runtime_log(RLOG_LV_INFO,"MESA_get_stream_opt() MSO_TIMEOUT error:opt_val_len invalid, must be sizeof(short)\n");
+				sapp_runtime_log(RLOG_LV_INFO,"%s, MESA_get_stream_opt() MSO_TIMEOUT error:opt_val_len invalid, must be sizeof(short)\n",printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
@@ -1095,7 +1138,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case (int)MSO_IGNORE_RST_FIN:
 		{
 			if(STREAM_TYPE_TCP != pstream->type){
-				sapp_runtime_log(RLOG_LV_INFO,"MESA_get_stream_opt() MSO_IGNORE_RST_FIN error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO,"%s, MESA_get_stream_opt() MSO_IGNORE_RST_FIN error:stream type is not tcp!\n",printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
@@ -1111,7 +1154,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			UCHAR *out_val = (UCHAR *)opt_val;
 			if(STREAM_TYPE_TCP != pstream->type){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO,"MESA_get_stream_opt() MSO_TCP_CREATE_LINK_MODE error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO,"%s, MESA_get_stream_opt() MSO_TCP_CREATE_LINK_MODE error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
 				break;
 			}
 			
@@ -1127,19 +1170,19 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			UINT32 *out_val = (UINT32 *)opt_val;
 			if(STREAM_TYPE_TCP != pstream->type){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TCP_ISN_C2S error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_TCP_ISN_C2S error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
 				break;
 			}
  
 			pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
 			if(pdetail_pr->creat_mod != TCP_CTEAT_LINK_BYSYN){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TCP_ISN_C2S error: stream create mode is not by SYN!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_TCP_ISN_C2S error: stream create mode is not by SYN!\n", printaddr(&pstream->addr, pstream->threadnum));
 				break;
 			}
 			if(0 == pdetail_pr->iserverseq){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TCP_ISN_C2S error: can't get SYN seq!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_TCP_ISN_C2S error: can't get SYN seq!\n", printaddr(&pstream->addr, pstream->threadnum));
 				break;
 			}
 			
@@ -1155,19 +1198,19 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			UINT32 *out_val = (UINT32 *)opt_val;
 			if(STREAM_TYPE_TCP != pstream->type){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TCP_ISN_S2C error:stream type is not tcp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_ISN_S2C error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
 				break;
 			}
 			pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
 			if(pdetail_pr->creat_mod != TCP_CTEAT_LINK_BYSYN){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TCP_ISN_S2C error: stream create mode is not by SYN!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_ISN_S2C error: stream create mode is not by SYN!\n",printaddr(&pstream->addr, pstream->threadnum));
 				break;
 			}
 
 			if(0 == pdetail_pr->iclientseq){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TCP_ISN_S2C error: can't get SYN/ACK seq!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_ISN_S2C error: can't get SYN/ACK seq!\n",printaddr(&pstream->addr, pstream->threadnum));
 				break;
 			}
 
@@ -1228,7 +1271,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			
 			if(pstream->opstate != OP_STATE_CLOSE){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_DEBUG, "MESA_get_stream_opt() MSO_STREAM_CLOSE_REASON error: stream %p has not closed!\n", pstream);
+				sapp_runtime_log(RLOG_LV_DEBUG, "%s,MESA_get_stream_opt() MSO_STREAM_CLOSE_REASON error:has not closed!\n",printaddr(&pstream->addr, pstream->threadnum));
 				break;				
 			}
 			if(STREAM_TYPE_TCP == pstream->type){
@@ -1239,7 +1282,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				*close_reason = pstream_pr->stream_close_reason;
 			}else{
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_STREAM_CLOSE_REASON error:unsupport stream type:%d!\n", pstream->type);
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_STREAM_CLOSE_REASON error:unsupport stream type:%d!\n",printaddr(&pstream->addr, pstream->threadnum), pstream->type);
 			}
 		}
 		break;
@@ -1261,7 +1304,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			unsigned long long *out_args = (unsigned long long *)opt_val;
 			unsigned long long dev_id = *out_args;
 			if(dev_id < 0 || dev_id > 4095){
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_GLOBAL_STREAM_ID error:invalid dev_id:%llu!\n", dev_id);
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_GLOBAL_STREAM_ID error:invalid dev_id:%llu!\n", printaddr(&pstream->addr, pstream->threadnum), dev_id);
 				return -1;
 			}
 			unsigned long long local_global_id = pstream_pr->global_stream_id;
@@ -1274,7 +1317,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case MSO_TOTAL_INBOUND_PKT:
 		{
 			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_INBOUND_PKT error: stream type is not tcp or udp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TOTAL_INBOUND_PKT error: stream type is not tcp or udp!\n",printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
@@ -1286,7 +1329,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case MSO_TOTAL_OUTBOUND_PKT:
 		{
 			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_OUTBOUND_PKT error: stream type is not tcp or udp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TOTAL_OUTBOUND_PKT error: stream type is not tcp or udp!\n",printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
@@ -1298,7 +1341,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case MSO_TOTAL_INBOUND_BYTE:
 		{
 			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE error: stream type is not tcp or udp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE error: stream type is not tcp or udp!\n",printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
@@ -1312,17 +1355,17 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			if(STREAM_TYPE_TCP == pstream->type){
 				if(G_TCP_FLOW_STAT_PROJECT_ID == -1){
 					ret = -1;
-					sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE_RAW error: project tcp_flow_stat is not enable!\n");
+					sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE_RAW error: project tcp_flow_stat is not enable!\n",printaddr(&pstream->addr, pstream->threadnum));
 					break;
 				}
 			}else if(STREAM_TYPE_UDP == pstream->type){
 				if(G_UDP_FLOW_STAT_PROJECT_ID == -1){
 					ret = -1;
-					sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE_RAW error: project udp_flow_stat is not enable!\n");
+					sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE_RAW error: project udp_flow_stat is not enable!\n",printaddr(&pstream->addr, pstream->threadnum));
 					break;
 				}
 			}else{
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE error: stream type is not tcp or udp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE error: stream type is not tcp or udp!\n",printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
@@ -1336,7 +1379,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case MSO_TOTAL_OUTBOUND_BYTE:
 		{
 			if((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type)){
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_OUTBOUND_BYTE error: stream type is not tcp or udp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TOTAL_OUTBOUND_BYTE error: stream type is not tcp or udp!\n",printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
@@ -1350,17 +1393,17 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			if(STREAM_TYPE_TCP == pstream->type){
 				if(G_TCP_FLOW_STAT_PROJECT_ID == -1){
 					ret = -1;
-					sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE_RAW error: project tcp_flow_stat is not enable!\n");
+					sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE_RAW error: project tcp_flow_stat is not enable!\n",printaddr(&pstream->addr, pstream->threadnum));
 					break;
 				}
 			}else if(STREAM_TYPE_UDP == pstream->type){
 				if(G_UDP_FLOW_STAT_PROJECT_ID == -1){
 					ret = -1;
-					sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE_RAW error: project udp_flow_stat is not enable!\n");
+					sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE_RAW error: project udp_flow_stat is not enable!\n",printaddr(&pstream->addr, pstream->threadnum));
 					break;
 				}
 			}else{
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE error: stream type is not tcp or udp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TOTAL_INBOUND_BYTE error: stream type is not tcp or udp!\n",printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
@@ -1374,7 +1417,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		{
 			if ((STREAM_TYPE_TCP != pstream->type) && (STREAM_TYPE_UDP != pstream->type))
 			{
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() MSO_STREAM_CREATE_TIMESTAMP_MS error: stream type is not tcp or udp!\n");
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_STREAM_CREATE_TIMESTAMP_MS error: stream type is not tcp or udp!\n",printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
@@ -1386,9 +1429,13 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case MSO_STREAM_PLUG_PME:
 			ret = MESA_get_stream_plug_pme(pstream, opt_val, opt_val_len);
 		break;
+
+		case MSO_HAVE_DUP_PKT:
+			ret = MESA_get_stream_dup_pkt_stat(pstream, opt_val, opt_val_len);
+		break;
 		
 		default:
-			sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n", (int)opt);
+			sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n",printaddr(&pstream->addr, pstream->threadnum), (int)opt);
 			ret = -1;
 			break;		
 	}

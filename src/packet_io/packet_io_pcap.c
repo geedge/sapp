@@ -764,6 +764,8 @@ static void *__pcap_work_thread(void *arg)
 	}
 
 	while(1){
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_FETCH_PKT]++;
+		
 		if(0 == MESA_lqueue_get_count(work_thread_pool[thread_num].pkt_queue)){
 			if(stream_process_polling(thread_num) != 0){
 				polling_work_times++;

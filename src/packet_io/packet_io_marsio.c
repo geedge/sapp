@@ -843,6 +843,7 @@ static void *marsio4_worker(void *arg)
 			}
 		}
 
+		sapp_global_val->mthread_volatile[tid]->sys_stat.count[SAPP_STAT_FETCH_PKT]++;
 		total_call_times++;
 
 		if((rcv_pkt_tims % sapp_global_val->config.packet_io.polling_priority) == 0){
