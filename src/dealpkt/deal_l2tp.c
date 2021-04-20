@@ -321,6 +321,7 @@ int l2tpv2_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_d
 	pstream_pr->layer_dir = pfstream_pr->layer_dir; /* L2TP层不能对本层做出方向性判断, 使用父层的方向值, L2TP只能是UDP或IP承载 */
 	
 	pstream->pfather=&pfstream_pr->stream_public;
+	pstream_pr->pfather_pr = pfstream_pr;
 	pstream->type=STREAM_TYPE_L2TP;
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;

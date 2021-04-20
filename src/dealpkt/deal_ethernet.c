@@ -59,7 +59,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 	int this_layer_is_overlay = 0;
 
 	if(NULL == fstream_pr){
-		local_sys_stat->count_per_layer[ADDR_TYPE_MAC][0]++;
+		local_sys_stat->count_per_layer[ADDR_TYPE_MAC][0]++; /* 父流为NULL, 说明此层是最底层 */
 		local_sys_stat->length_per_layer[ADDR_TYPE_MAC][0] += this_layer_len;	
 	}else{
 		local_sys_stat->count_per_layer[ADDR_TYPE_MAC][fstream_pr->layer_index + 1]++;
@@ -92,7 +92,8 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 
 		if((fstream_pr != NULL)
-		  && (g_overlay_layer_set[fstream_pr->stream_public.addr.addrtype][fstream_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay层的pfather设为NULL, 插件不可见 */
+		  && (DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+		  && (g_overlay_layer_set[fstream_pr->stream_public.addr.addrtype][fstream_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, 当前ethernet的pfather不为NULL, 非常可能下面层是overlay层, 将pfather设为NULL, 插件打印日志时不可见, sapp靠pfather_pr维持层次关系 */
 			pstream->pfather = NULL;
 		}else{
 			pstream->pfather = (struct streaminfo *)fstream_pr;

@@ -3084,6 +3084,7 @@ struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_priv
 	heap_stream_pr->pfather_pr = copy_stream_info_to_heap((const struct streaminfo_private *)stack_stream_pr->pfather_pr, reverse);
 	pfather_pr = stack_stream_pr->pfather_pr;
 	if((pfather_pr != NULL)
+	  && (DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
 	  && (g_overlay_layer_set[pfather_pr->stream_public.addr.addrtype][pfather_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay层的pfather设为NULL, 插件不可见 */
 		heap_stream->pfather = NULL;
 	}else{
@@ -3122,7 +3123,7 @@ int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_
 	if((rawpkt->vlan_flipping_couple[0] && rawpkt->vlan_flipping_couple[1]) != 0){
 		/* vlan flipping是ADC自检及A串联设备特有的一种模式,  不属于overlay层 */
 		return 0;
-	}
+	} 
 	
 	if((g_overlay_layer_set[stream_pr->stream_public.addr.addrtype][stream_pr->layer_index] != 0)
 	 && (OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)){

@@ -954,7 +954,7 @@ static int parse_stream_compare_layer_config(void)
 	return 0;
 }
 
-static void update_overlay_layer_set(void)
+static void update_overlay_vxlan_layer_set(void)
 {
 	g_overlay_layer_set[ADDR_TYPE_MAC][0] = 1;	
 	g_overlay_layer_set[ADDR_TYPE_IPV4][1] = 1;	
@@ -1018,7 +1018,7 @@ static int config_expression_convert(void)
 
 	if((pconfig->packet_io.depolyment_mode_bin == DEPOLYMENT_MODE_INLINE)
 	&& (OVERLAY_MODE_VXLAN == pconfig->packet_io.packet_io_tunnel.overlay_mode_bin)){
-		update_overlay_layer_set();
+		update_overlay_vxlan_layer_set();
 	}
 
 	ret = parse_vlan_flipping_map_config();
