@@ -517,6 +517,10 @@ int init_stream_manage(int threadcount)
 	//add 20140626 	初始化procject接口
 	project_requirement_global_init();
 
+	if(stream_bridge_init() < 0){
+		exit(1);
+	}
+
 	return 0;   
 }
 

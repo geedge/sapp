@@ -9,10 +9,6 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
-
-#define RAW_FRAG_V4_MODULE_NAME		"ipv4_frag_list"
-#define RAW_FRAG_V6_MODULE_NAME		"ipv6_frag_list"
-
 //extern int g_packet_io_thread_num;
 
 static int g_raw_ip_frag_list_v4_plugid = -1;

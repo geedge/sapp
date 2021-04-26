@@ -204,6 +204,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 
 	/* 2014-03-26 LiJia add, 某些项目特殊应用初始化, 如标签、原始IP分片列表等 */
 	pstream_udp_pr->pproject = project_requirement_create(threadnum);
+	pstream_udp_pr->stream_bridge = stream_bridge_create_per_stream(threadnum);
 
 	/* 2016-07-14 lijia add */
 	if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
@@ -264,6 +265,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex, struct
 	pstream_udp->dir=createdir;
 
 	pstream_udp_pr->pproject = project_requirement_create(pstream_udp->threadnum);
+	pstream_udp_pr->stream_bridge = stream_bridge_create_per_stream(threadnum);
 	
 	return a_udp;	
 }
@@ -307,6 +309,10 @@ void udp_free_stream(struct streamindex *pindex)
 
 	project_requirement_destroy(threadnum, pstream_pr->pproject);
 	pstream_pr->pproject = NULL;
+
+
+	stream_bridge_destroy_per_stream(pstream, pstream_pr->stream_bridge);
+	pstream_pr->stream_bridge = NULL;
 
 	if(pstream_pr->timeout > udp_reset_time){ /* 链接独有超时时间, 减少计数 */
 		sapp_global_mthread[threadnum].udp_stream_special_timeout_num--;
@@ -359,7 +365,10 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 		stream_process_udp(pstream,NULL,NULL,NULL,&(pdetail_pr->apme),&(pstream->opstate));  
 
 		project_requirement_destroy(threadnum, pstream_pr->pproject);
+		stream_bridge_destroy_per_stream(pstream, pstream_pr->stream_bridge);
+
 		pstream_pr->pproject = project_requirement_create(threadnum);
+		pstream_pr->stream_bridge = stream_bridge_create_per_stream(threadnum);
 
 		/* 2015-12-28 lijia add, 流重置, 从新申请内存 */
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
@@ -517,6 +526,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		pstream->pdetail=(void *)pdetail;
 
 		pstream_pr->pproject = project_requirement_create(thread_num);
+		pstream_pr->stream_bridge = stream_bridge_create_per_stream(thread_num);
 
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
 			pdetail_pr.flow_stat = (struct udp_flow_stat *)dictator_malloc(thread_num, sizeof(struct udp_flow_stat));
@@ -527,6 +537,9 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		ret=stream_process_udp(pstream, (const void *)this_iphdr, (const void *)udph, raw_pkt,&tmpme,&(pstream->opstate));  
 		project_requirement_destroy(thread_num, pstream_pr->pproject);
 		pstream_pr->pproject = NULL;
+
+		stream_bridge_destroy_per_stream(pstream, pstream_pr->stream_bridge);	
+		pstream_pr->stream_bridge = NULL;
 	}
 	else	
 	{
@@ -701,6 +714,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)a_packet;
 	
 		pstream_pr->pproject = project_requirement_create(thread_num);
+		pstream_pr->stream_bridge = stream_bridge_create_per_stream(thread_num);
 
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
 			pdetail_pr->flow_stat = (struct udp_flow_stat *)dictator_malloc(thread_num, sizeof(struct udp_flow_stat));
@@ -711,6 +725,8 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		ret=stream_process_udp(pstream, (const void *)a_packet, (const void *)udph, raw_pkt,&tmpme, &pstream->opstate);  
 		project_requirement_destroy(thread_num, pstream_pr->pproject);
 		pstream_pr->pproject = NULL;
+		stream_bridge_destroy_per_stream(pstream, pstream_pr->stream_bridge);	
+		pstream_pr->stream_bridge = NULL;		
 	}
 	else	
 	{

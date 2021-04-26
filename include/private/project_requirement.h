@@ -10,6 +10,10 @@
 extern "C" {
 #endif
 
+#define RAW_FRAG_V4_MODULE_NAME		"ipv4_frag_list"
+#define RAW_FRAG_V6_MODULE_NAME		"ipv6_frag_list"
+
+
 void *project_requirement_create(int thread_num);
 void project_requirement_destroy(int thread_num, void *pproject);
 int raw_ip_frag_list_stream_attach(struct streaminfo *stream);

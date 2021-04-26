@@ -10,4 +10,4 @@ include_directories(${MESA_SDK_PREFIX}/include)
 include_directories(${MESA_SDK_PREFIX}/include/MESA)
 
 
-add_library(project STATIC project_requirement.c raw_ip_frag_list.c )
+add_library(project STATIC project_requirement.c raw_ip_frag_list.c stream_bridge.c )

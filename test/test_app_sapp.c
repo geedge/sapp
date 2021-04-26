@@ -945,8 +945,8 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 	{	
 		printf("%17s: %s, ","tcpstream-plug", printaddr(&(pstream->addr),	pstream->threadnum));
 		//printf("%17s: %s, ","tcpstream-plug", printaddr_r(&(pstream->addr),	addr_str_buf, 1024));
-		printf("opstate=%d, server pkt=%d, count=%d, client pkt=%d, count=%d\n",
-			pstream->opstate,
+		printf("final_dir=%d, server pkt=%d, count=%d, client pkt=%d, count=%d\n",
+			pstream->dir,
 			raw_pdetail->serverpktnum,   raw_pdetail->serverbytes,
 			raw_pdetail->clientpktnum,    raw_pdetail->clientbytes);
 		free(plug_stat);
@@ -1120,8 +1120,8 @@ char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq,voi
 	{	
 		printf("%20s: %s, ", "tcpallstream-plug", printaddr(&(pstream->addr),	pstream->threadnum));
 		//printf("index=%d,state=%d ",*(int*)((char *)(pstream)-8),*(char *)((char *)(pstream)-4));
-		printf("out:%d, pktstate=%d, opstate=%d, server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, ",
-		pdetail_pr->link_state,pstream->pktstate,pstream->opstate,
+		printf("out:%d, final_dir=%d server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, ",
+		pdetail_pr->link_state, pstream->dir,
 		tcpallflow->C2S_all_pkt, tcpallflow->C2S_all_byte,
 		tcpallflow->S2C_all_pkt, tcpallflow->S2C_all_byte);
 		printf("total-pkt=%u, ", tcpallflow->C2S_all_pkt + tcpallflow->S2C_all_pkt);

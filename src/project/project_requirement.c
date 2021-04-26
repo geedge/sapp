@@ -31,18 +31,12 @@ struct pro_req_type{
 	char *type_str;
 };
 
-typedef struct{
-	project_notify_cb_t *callback_fun;
-	void *notify_callback_user_arg;
-}project_callback_para_t;
-
 
 typedef struct project_req_m{
 	int project_req_id;
 	char project_req_name[PROJECT_REQ_NAME_MAX_LEN];
 	project_req_free_t *free_cb;
 	int project_req_type;
-	MESA_list_t nofity_callback_fun_list;
 }project_req_manage_t;
 
 struct project_req_info{
@@ -172,57 +166,6 @@ int project_customer_register(const char *project_req_name, const char *project_
 	return __project_find_id_by_name(project_req_name, project_req_val_type);
 }
 
-int project_customer_register_with_notify(const char *project_req_name, const char *project_req_val_type, project_notify_cb_t callback_fun, void *user_arg)
-{
-	int project_id;
-	struct MESA_list *new_list_node;
-	project_callback_para_t *new_callback;
-
-	if(NULL == callback_fun){
-		return -1;
-	}
-
-	project_id = project_customer_register(project_req_name, project_req_val_type);
-	if(project_id < 0){
-		return -1;
-	}
-
-	new_list_node = (struct MESA_list *)malloc(sizeof(struct MESA_list));
-	new_callback = (project_callback_para_t *)malloc(sizeof(project_callback_para_t));
-	new_callback->callback_fun = callback_fun;
-	new_callback->notify_callback_user_arg = user_arg;
-
-	new_list_node->quiddity = new_callback;
-	
-	MESA_list_add(&G_PROJECT_REQ_MANAGE[project_id].nofity_callback_fun_list, new_list_node);
-
-	return project_id;
-}
-
-
-int project_producer_notify(const struct streaminfo *stream, int project_req_id, void *a_packet)
-{
-	MESA_list_t *list_node;
-	project_callback_para_t *callback_para;
-	
-	if((project_req_id < 0) || (project_req_id >= PROJECT_REQ_MAX_PLUG_NUM)){
-		sapp_runtime_log(30, "project_producer_notify() error, invalid project_id:%d", project_req_id);
-		return -1;
-	}
-
-	list_node = G_PROJECT_REQ_MANAGE[project_req_id].nofity_callback_fun_list.nextele;
-	while(list_node != &G_PROJECT_REQ_MANAGE[project_req_id].nofity_callback_fun_list){
-		callback_para = (project_callback_para_t *)list_node->quiddity;
-		if(callback_para->callback_fun){
-			callback_para->callback_fun(stream, project_req_id, a_packet, callback_para->notify_callback_user_arg);
-		}
-		list_node = list_node->nextele;
-	}
-
-	return 0;
-}
-
-
 
 int parse_project_req_conf(void)
 {
@@ -286,6 +229,48 @@ int parse_project_req_conf(void)
 	fclose(fp);
 	return 0;
 }
+
+
+static int project_req_conf_is_exist(const char *check_name)
+{
+	char *save_ptr;
+	const char *delim = "\t ";
+	char line_buf[1024];
+	FILE *fp;
+	char *preq_name;
+	int line_num = 0;
+
+	fp = fopen(ABBR_PROJECT_LIST_CONF_FILE, "r");
+	if(NULL == fp){
+		sapp_log(RLOG_LV_DEBUG, 1, 1, "Open '%s' error: %s", ABBR_PROJECT_LIST_CONF_FILE, strerror(errno));
+		return 0;
+	}
+
+	while(fgets(line_buf, 1024, fp) != NULL){
+		if('#' == line_buf[0] || ' ' == line_buf[0] || '\r' == line_buf[0] || '\n' == line_buf[0]){
+			line_num++;
+			continue;
+		}
+		del_last_rn(line_buf, 1024);
+		
+		preq_name = strtok_r(line_buf, delim, &save_ptr);
+		if(NULL == preq_name){
+			printf("invalid conf in %s, line %d\n", ABBR_PROJECT_LIST_CONF_FILE, line_num);
+			return 0;
+		}
+
+		if(strncasecmp(preq_name, check_name, strlen(preq_name)) == 0){
+			return 1;
+		}
+
+		while(strtok_r(NULL, delim, &save_ptr));
+		line_num++;
+	}
+
+	fclose(fp);
+	return 0;
+}
+
 
 static int __project_req_add(struct streaminfo *stream, int project_req_id, long long project_req_value, int pro_req_type)
 {
@@ -578,10 +563,6 @@ static void project_env_init()
 			MESA_htable_destroy(G_PROJECT_NAME_HASH, NULL);
 		}
 	}
-
-	for(i = 0; i < PROJECT_REQ_MAX_PLUG_NUM; i++){
-		MESA_list_init_head(&G_PROJECT_REQ_MANAGE[i].nofity_callback_fun_list);
-	}
 	
 	return;
 }
@@ -595,10 +576,17 @@ int project_requirement_global_init(void)
 	//parse_project_req_conf();
 	
 	/* 平台内置project模块初始化, 功能是否启用取决于配置文件开关 */
-	project_req_terminal_tag_init();
-	raw_ip_frag_list_v4_init();
-	raw_ip_frag_list_v6_init();
+	//project_req_terminal_tag_init();
 
+	/* project注册改为动态, 不靠project_list.conf控制了,
+	   但是下面这些内置功能为了向前兼容,还是检查一下project_list.conf是否存在, 不存在则不开启 */
+	if(project_req_conf_is_exist(RAW_FRAG_V4_MODULE_NAME)){   
+		raw_ip_frag_list_v4_init();
+	}
+	if(project_req_conf_is_exist(RAW_FRAG_V6_MODULE_NAME)){   
+		raw_ip_frag_list_v6_init();
+	}
+	
 	tcp_flow_stat_init();
 	udp_flow_stat_init();
 

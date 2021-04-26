@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define STREAM_PROJECT_H_VERSION			(20210224)
+#define STREAM_PROJECT_H_VERSION			(20210422)
 
 #define PROJECT_REQ_NAME_MAX_LEN			(64)
 
@@ -96,11 +96,6 @@ int project_producer_register(const char *project_req_name, const char *project_
 int project_customer_register(const char *project_req_name, const char *project_req_val_type);
 
 
-typedef int project_notify_cb_t(const struct streaminfo *stream, int project_req_id, void *a_packet, void *user_arg);
-int project_customer_register_with_notify(const char *project_req_name, const char *project_req_val_type, project_notify_cb_t callback, void *user_arg);
-int project_producer_notify(const struct streaminfo *stream, int project_req_id, void *a_packet);
-
-
 /*	
 	Function project_req_add_struct(): 'project_req_value' must be a pointer to heap memory(obtain by malloc).
 	
@@ -155,6 +150,7 @@ unsigned long project_req_get_ulong(const struct streaminfo *stream, int project
 		others: success.    
 */
 const void *project_req_get_struct(const struct streaminfo *stream, int project_req_id);
+
 
 #ifdef __cplusplus
 }

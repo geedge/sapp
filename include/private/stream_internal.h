@@ -191,6 +191,8 @@ struct streaminfo_private
 	char has_duplicate_pkt; /* 当前流曾经有过重复数据包, 后续的流量应该每个都检测 */
 	char __pad3[6];
 	/* ===8 bytes=== */
+	
+	void   *stream_bridge;	/* 20210425 lijia add, 类似project功能, 支持同步和异步两种模式, 原有project类似异步模式 */
 };
 
 struct tcpdetail_private
@@ -391,6 +393,9 @@ int sapp_identify_broad_multicast_init(void);
 int plugin_manage_init(void);
 void  *plugin_get_plug_entry(const char *plug_name, const char *plug_entry_type);
 int libsapp_setup_env(int argc, char *argv[]);
+void *stream_bridge_create_per_stream(int thread_num);
+void stream_bridge_destroy_per_stream(const struct streaminfo *stream, void *pbridge);
+
 
 #ifdef __cplusplus
 }

@@ -4,6 +4,7 @@
 #include "stream_inc/stream_base.h"
 #include "stream_inc/stream_proxy.h"
 #include "stream_inc/stream_project.h"
+#include "stream_inc/stream_bridge.h"
 #include "stream_inc/stream_inject.h"
 #include "stream_inc/stream_control.h"
 #include "stream_inc/stream_entry.h"
@@ -12,7 +13,7 @@
 #include "stream_inc/sapp_inject.h"
 
 
-#define STREAM_H_VERSION		(20191118)
+#define STREAM_H_VERSION		(20210425)
 
 #endif
 

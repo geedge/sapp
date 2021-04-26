@@ -733,6 +733,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 
 	/* LiJia add, 某些项目特殊应用初始化, 如标签、原始IP分片列表等 */
 	pstream_pr->pproject = project_requirement_create(pstream->threadnum);
+	pstream_pr->stream_bridge = stream_bridge_create_per_stream(pstream->threadnum);
 
 	/* 2015-12-28 lijia add */
 	if(G_TCP_FLOW_STAT_PROJECT_ID != -1){
@@ -982,6 +983,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 
 	/* 2014-03-26 LiJia add, 某些项目特殊应用初始化, 如标签、原始IP分片列表等 */
 	pstream_pr->pproject = project_requirement_create(threadnum);
+	pstream_pr->stream_bridge = stream_bridge_create_per_stream(pstream->threadnum);
 
 	/* 2016-07-14 lijia add */
 	if(G_TCP_FLOW_STAT_PROJECT_ID != -1){
@@ -1272,6 +1274,8 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 
 	project_requirement_destroy(threadnum, pstream_pr->pproject);
 	pstream_pr->pproject = NULL;
+	stream_bridge_destroy_per_stream(pstream, pstream_pr->stream_bridge);
+	pstream_pr->stream_bridge = NULL;
 
 	if(pstream_pr->timeout > link_default_nopkt_time){ /* 链接独有超时时间, 减少计数 */
 		sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
@@ -1405,6 +1409,9 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	
 	project_requirement_destroy(threadnum, pstream_pr->pproject);
 	pstream_pr->pproject = NULL;
+
+	stream_bridge_destroy_per_stream(pstream, pstream_pr->stream_bridge);
+	pstream_pr->stream_bridge = NULL;
 
 	/* 恢复之前存储的raw_pkt */
 	pstream_pr->raw_pkt = saved_raw_pkt;
