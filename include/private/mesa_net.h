@@ -532,6 +532,12 @@ struct mesa_mac_in_mac_net_hdr{
 	unsigned int __pad3:8;
 };
 
+
+#define GRE_PRO_IPV4	(0x0800)
+#define GRE_PRO_IPV6	(0x86DD)
+#define GRE_PRO_ARP		(0x0806)
+#define GRE_PRO_PPP		(0x880B)
+
 struct mesa_gre_base_hdr_v0{
 #if __BYTE_ORDER == __LITTLE_ENDIAN 
 	unsigned char recur:3;

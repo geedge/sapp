@@ -13,10 +13,7 @@ extern "C" {
 #else
 #define GRE_PRINT(fmt, args...) 
 #endif
-#define GRE_PRO_IPV4	(0x0800)
-#define GRE_PRO_IPV6	(0x86DD)
-#define GRE_PRO_ARP	(0x0806)
-#define GRE_PRO_PPP	(0x880B)
+
 
 extern int pptp_entry(struct streamindex *pindex, const void *this_layer_data, int thread_num, 
 			unsigned char routedir, const raw_pkt_t *raw_pkt, int, const struct mesa_gre_hdr *, int gre_hdr_len);	

@@ -901,15 +901,43 @@ static int calc_vlan_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_s
 }
 
 
-static int calc_gtp_hdr_len(const struct gtp_hdr *gtp_hdr)
+static int calc_gtp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_stream_dir)
 {
 	int hdr_len = sizeof(struct gtp_hdr);
-
-	if(gtp_hdr->flags&0x02)
+	const struct layer_addr_gtp *p_gtp_layer_addr = stream_pr->stream_public.addr.gtp;
+	const struct gtp_hdr *raw_net_gtp_hdr;
+	 
+	raw_net_gtp_hdr = (const struct gtp_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr);
+	/* 
+	    暂不支持带序号的GTP隧道, 
+		一个GTP隧道可能承载多个内部四元组, 按内层二元组分流还不一定分到同一个线程上, 
+		怎么保证多个内层TCP/UDP连接之间的GTP序号同步??
+	    太复杂了!  
+	    TODO吧!!
+	*/
+	if(raw_net_gtp_hdr->flags & 0x02)
 	{
-		hdr_len += sizeof(unsigned int);
-        sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: MESA_kill_tcp() calc_gtp_hdr_len include GTP not support correct SEQ!", __FILE__, __LINE__);
+        sapp_runtime_log(RLOG_LV_FATAL, "%s, calc_gtp_hdr_len error, inject GTP pkt not support SEQ!", printaddr(&stream_pr->stream_public.addr, stream_pr->stream_public.threadnum));
+        return -1;
     }
+
+	if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_GPRS_TUNNEL][stream_pr->layer_index] != 0){
+		/* 如果GTP设置了非对称标记, 必须保证当前注入方向之前曾经有数据包 */
+		if(send_stream_dir == DIR_C2S){
+			if(0 == p_gtp_layer_addr->teid_c2s){
+				 sapp_runtime_log(RLOG_LV_FATAL, "inject dir:%d packet error, GTP addr is asymmetric, but stream dir is:%d", send_stream_dir, stream_pr->stream_public.dir);
+				 return -1;
+			}
+		}else{
+			if(0 == p_gtp_layer_addr->teid_s2c){
+				 sapp_runtime_log(RLOG_LV_FATAL, "inject dir:%d packet error, GTP addr is asymmetric, but stream dir is:%d", send_stream_dir, stream_pr->stream_public.dir);
+				 return -1;
+			}		
+		}
+	}else{
+		/* 不强制GTP地址非对称, sapp发包肯定是可以的, 但是可能对端不接受 */
+	}
+	
 	return hdr_len;
 }
 
@@ -1008,18 +1036,15 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 
 		case ADDR_TYPE_L2TP:
 		{
-			stream_pr = (struct streaminfo_private *)stream;
 			reserved_hdr_len = calc_l2tp_hdr_len(
 						   (const struct l2tp_hdr_v2 *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
 		}
 		break;
 		case ADDR_TYPE_GPRS_TUNNEL:
 		{
-			stream_pr = (struct streaminfo_private *)stream;
-			reserved_hdr_len = calc_gtp_hdr_len(
-					(const struct gtp_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
+			reserved_hdr_len = calc_gtp_hdr_len(stream_pr, send_stream_dir);
 		}
-			break;
+		break;
 
 		case __ADDR_TYPE_IP_PAIR_V4:
 			/* to do, 如果构造带选项的包, 怎么计算? */
@@ -1783,64 +1808,49 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 }
 
 static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_layer_type,
-								int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt)
+								int carry_layer_len, unsigned char *buf, UCHAR send_stream_dir, const raw_pkt_t *raw_pkt)
 {
-	struct gtp_hdr *raw_hdr;
-	int layer_len = sizeof(struct gtp_hdr);
-	raw_hdr = (struct gtp_hdr *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
+	const struct gtp_hdr *raw_hdr;
+	struct gtp_hdr *gtp_send_hdr;
+	int gtp_net_layer_len = sizeof(struct gtp_hdr);
 	void *gtp_hash_key;
 	int gtp_hash_key_len;
-	if(reverse == 0){
-		memcpy(buf, raw_hdr, sizeof(struct gtp_hdr));
-		if(raw_hdr->flags&0x02){
-			//TODO: 目前不支持带序号的GTP发包，seq未更新
-		    memcpy(buf+sizeof(struct gtp_hdr), raw_hdr+1, sizeof(unsigned int));
-            *(unsigned int *)(buf+sizeof(struct gtp_hdr)) = htonl(ntohl(*(unsigned int *)(raw_hdr+1)) + 1);
-            layer_len+=sizeof(unsigned int);
-		}
-	} else{
-#if 0	/* 2021-02-20, 临时关闭根据内层ip地址缓存单向流gtp地址功能 */
-		if(stream_pr->stream_public.addr.gtp->source == 0 || stream_pr->stream_public.addr.gtp->dest == 0)
-		{
-			if(g_gtp_info_hash[stream_pr->stream_public.threadnum])
-			{
-				gtp_hash_key = (g_addr_register_for_gtp_cache[stream_pr->stream_public.threadnum].addr_type == ADDR_TYPE_IPV4)?g_addr_register_for_gtp_cache[stream_pr->stream_public.threadnum].v4:g_addr_register_for_gtp_cache[stream_pr->stream_public.threadnum].v6;
-				gtp_hash_key_len = (g_addr_register_for_gtp_cache[stream_pr->stream_public.threadnum].addr_type == ADDR_TYPE_IPV4)?sizeof(g_addr_register_for_gtp_cache[stream_pr->stream_public.threadnum].v4):sizeof(g_addr_register_for_gtp_cache[stream_pr->stream_public.threadnum].v6);
-				raw_hdr = (struct gtp_hdr *)MESA_htable_search(g_gtp_info_hash[stream_pr->stream_public.threadnum], (unsigned char*)gtp_hash_key, gtp_hash_key_len);
-				if(raw_hdr == NULL)
-				{
-					layer_len = 0;
-				}
-				else
-				{
-					memcpy(buf, raw_hdr, sizeof(struct gtp_hdr));
-				}
-			}
-		}
-		else
-#endif	
+	const struct layer_addr_gtp *p_gtp_layer_addr = stream_pr->stream_public.addr.gtp;
+	unsigned int this_pkt_teid;
+	
+	raw_hdr = (const struct gtp_hdr *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
+	gtp_send_hdr  = (struct gtp_hdr *)buf;
 
-#if 0	/* 2021-02-20, 临时关闭反向发送gtp功能 */
-
-		{
-			if(raw_hdr->teid == stream_pr->stream_public.addr.gtp->teid_c2s) {
-				memcpy(buf, &stream_pr->stream_public.addr.gtp->dest, sizeof(struct gtp_hdr));
-				if (raw_hdr->flags & 0x02) {
-					*(unsigned int *)(buf+sizeof(struct gtp_hdr)) = htonl(stream_pr->stream_public.addr.gtp->dest_seq + 1);
-					layer_len+=sizeof(unsigned int);
-				}
+	if(DIR_C2S == send_stream_dir){
+		if(0 == p_gtp_layer_addr->teid_c2s){
+			if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_GPRS_TUNNEL][stream_pr->layer_index] != 0){
+				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_gtp() error, no c2s gtp addr, but asymmetric_addr_layer is set!\n");
+				return -1;				
+			}else{
+				p_gtp_layer_addr->teid_s2c;
 			}
-			else{
-				memcpy(buf, &stream_pr->stream_public.addr.gtp->source, sizeof(struct gtp_hdr));
-				if (raw_hdr->flags & 0x02) {
-					*(unsigned int *)(buf+sizeof(struct gtp_hdr)) = htonl(stream_pr->stream_public.addr.gtp->src_seq + 1);
-					layer_len+=sizeof(unsigned int);
-				}
-			}
+		}else{
+			this_pkt_teid = p_gtp_layer_addr->teid_c2s;
 		}
-#endif		
+	}else{
+		if(0 == p_gtp_layer_addr->teid_s2c){
+			if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_GPRS_TUNNEL][stream_pr->layer_index] != 0){
+				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_gtp() error, no s2c gtp addr, but asymmetric_addr_layer is set!\n");
+				return -1;				
+			}else{
+				p_gtp_layer_addr->teid_c2s;
+			}
+		}else{
+			this_pkt_teid = p_gtp_layer_addr->teid_s2c;
+		}
 	}
-	return layer_len;
+
+	gtp_send_hdr->flags = 0x30; /* 暂时只支持v1版本, 不含seq */
+	gtp_send_hdr->msg_type = 0xFF; /* T-PDU */
+	gtp_send_hdr->len = htons(carry_layer_len);
+	gtp_send_hdr->teid = this_pkt_teid;
+	
+	return gtp_net_layer_len;
 }
 
 static void checksum_for_carry_layer(unsigned char *buf, int this_layer_type, int carry_layer_type, int payload_len)
@@ -2129,11 +2139,11 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 					buf -= this_layer_len;
 					ret = build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir ^ DIR_DOUBLE, raw_pkt);
 					if(ret < 0){
-						sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_vlan() error!\n");
+						sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_vlan() error!\n", printaddr(&stream->addr, stream->threadnum));
 						return -1;
 					}	
 					carry_layer_type = ADDR_TYPE_VLAN;					
-					sapp_runtime_log(10, "build_net_layer_vlan() build vlan layer, but no addr of dir:%d, use opposite_addr.\n", send_stream_dir);
+					sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_vlan() build vlan layer, but no addr of dir:%d, use opposite_addr.\n", send_stream_dir);
 				}else{
 					sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_vlan() error, send streamdir:%d, layer len is 0, but create_vlan_anyway is disable!\n", send_stream_dir);
 					return -1;
@@ -2142,7 +2152,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 				buf -= this_layer_len;
 				ret = build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
 				if(ret < 0){
-					sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_vlan() error!\n");
+					sapp_runtime_log(RLOG_LV_FATAL, "%s,build_net_layer_vlan() error!\n", printaddr(&stream->addr, stream->threadnum));
 					return -1;
 				}					
 				carry_layer_type = ADDR_TYPE_VLAN;
@@ -2157,12 +2167,12 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			*/
 			unsigned short eth_type_host = net_layer_to_ethernet_protocol_by_stream(up_stream);
 			if((unsigned short)-1 == eth_type_host){
-				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_pkt()-->ADDR_TYPE_MAC, unsupport carry_layer_type:0x%x!\n", carry_layer_type);
+				sapp_runtime_log(RLOG_LV_FATAL, "%s,build_net_layer_mac() error, unsupport carry_layer_type:0x%x!\n", printaddr(&stream->addr, stream->threadnum), carry_layer_type);
 				return -1;
 			}
 
 			if(build_net_layer_ethernet(top_stream, stream_pr, eth_type_host, carry_layer_len, buf, send_stream_dir, raw_pkt) < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_pkt()-->ADDR_TYPE_MAC error!");
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_mac() error!", printaddr(&stream->addr, stream->threadnum));
 				return -1;
 			}
 
@@ -2170,8 +2180,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			carry_layer_type = ADDR_TYPE_MAC;
 			//ethernet不一定是最后一层, 因为有MAC-in-MAC, 本函数递归结束靠判断NULL == fstream_pr条件.
 			//return carry_layer_len;
-
-			sapp_runtime_log(RLOG_LV_DEBUG, "build_net_layer_pkt()-->ADDR_TYPE_MAC, buf start addr:%p, this_layer_len:%d\n", buf, this_layer_len);
+			//sapp_runtime_log(RLOG_LV_DEBUG, "build_net_layer_pkt()-->ADDR_TYPE_MAC, buf start addr:%p, this_layer_len:%d\n", buf, this_layer_len);
 		}
 		break;
 
@@ -2182,7 +2191,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			buf -= this_layer_len;
 			ret = build_net_layer_gre(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
 			if(ret < 0){
-				sapp_runtime_log(20, "build_net_layer_gre() error!\n");
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_gre() error!\n", printaddr(&stream->addr, stream->threadnum));
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_GRE;
@@ -2193,30 +2202,38 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			this_layer_len = calc_mpls_hdr_len(stream_pr, send_stream_dir);
 			if(0 == this_layer_len){
 				/* 非对称MPLS, 为了流对齐生造出来的一层, 不构造实际包头 */
-				sapp_runtime_log(10, "build_net_layer_mpls() send streamdir:%d, skip fake mpls layer.\n", send_stream_dir);
+				sapp_runtime_log(RLOG_LV_DEBUG, "%s, build_net_layer_mpls() send streamdir:%d, skip fake mpls layer.\n", printaddr(&stream->addr, stream->threadnum), send_stream_dir);
 				carry_layer_stream = up_stream;
 				break;
 			}else{
 				buf -= this_layer_len;
 				ret = build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
 				if(ret < 0){
-					sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_mpls() error!\n");
+					sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_mpls() error!\n", printaddr(&stream->addr, stream->threadnum));
 					return -1;
 				}				
 				carry_layer_type = ADDR_TYPE_MPLS;
 			}
 
-			sapp_runtime_log(10, "build_net_layer_pkt()-->ADDR_TYPE_MPLS, buf start addr:%p, this_layer_len:%d", buf, this_layer_len);
+			///sapp_runtime_log(RLOG_LV_DEBUG, "build_net_layer_pkt()-->ADDR_TYPE_MPLS, buf start addr:%p, this_layer_len:%d", buf, this_layer_len);
 		}	
 		break;
 
 		case ADDR_TYPE_GPRS_TUNNEL:
-			this_layer_len = calc_gtp_hdr_len((const struct gtp_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
+			this_layer_len = calc_gtp_hdr_len(stream_pr, send_stream_dir);
+			if(this_layer_len < 0){
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, calc_gtp_hdr_len() error!\n", printaddr(&stream->addr, stream->threadnum));
+				return -1;
+			}	
 			buf -= this_layer_len;
-			build_net_layer_gtp(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
+			ret = build_net_layer_gtp(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
+			if(ret < 0){
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_gtp() error!\n", printaddr(&stream->addr, stream->threadnum));
+				return -1;
+			}
 			carry_layer_type = ADDR_TYPE_GPRS_TUNNEL;
 
-			sapp_runtime_log(10, "build_net_layer_pkt()-->ADDR_TYPE_GPRS_TUNNEL, buf start addr:%p, this_layer_len:%d", buf, this_layer_len);
+			///sapp_runtime_log(10, "build_net_layer_pkt()-->ADDR_TYPE_GPRS_TUNNEL, buf start addr:%p, this_layer_len:%d", buf, this_layer_len);
 			break;
 
 		case ADDR_TYPE_PPPOE_SES:
@@ -2245,13 +2262,13 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			this_layer_len = calc_l2tp_hdr_len(
 						 (const struct l2tp_hdr_v2 *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
 			if(this_layer_len < 0){
-				sapp_runtime_log(20, "calc_l2tp_hdr_len() error!\n");
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, calc_l2tp_hdr_len() error!\n", printaddr(&stream->addr, stream->threadnum));
 				return -1;
 			}
 			buf -= this_layer_len;
 			ret = build_net_layer_l2tp(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt, this_layer_len);
 			if(ret < 0){
-				sapp_runtime_log(20, "build_net_layer_l2tp() error!\n");
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_l2tp() error!\n", printaddr(&stream->addr, stream->threadnum));
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_L2TP;
@@ -2259,10 +2276,6 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 
 		case ADDR_TYPE_PPP:
 			assert(0); /* PPTP隧道将gre和ppp合并为一层, 代码不会再执行到此处 */
-			//this_layer_len = sizeof(struct mesa_ppp_hdr);
-			//buf -= sizeof(struct mesa_ppp_hdr);
-			//build_net_layer_ppp(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt, 0);
-			//carry_layer_type = ADDR_TYPE_PPP;		
 		break;
 		
 		case ADDR_TYPE_PPTP:
@@ -2273,7 +2286,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			gre_layer_len = calc_gre_hdr_len(
 						 (const struct mesa_gre_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
 			if(gre_layer_len < 0){
-				sapp_runtime_log(20, "calc_gre_hdr_len() error!\n");
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, pptp calc_gre_hdr_len() error!\n", printaddr(&stream->addr, stream->threadnum));
 				return -1;
 			}						 
 			ppp_hdr_len = stream_pr->cur_layer_raw_hdr_len - gre_layer_len;
@@ -2290,7 +2303,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			buf -= gre_layer_len;
 			ret = build_net_layer_gre(stream_pr, ADDR_TYPE_PPP, carry_layer_len, buf, reverse, raw_pkt);
 			if(ret < 0){ 
-				sapp_runtime_log(20, "build_net_layer_gre() error!\n");
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, pptp build_net_layer_gre() error!\n", printaddr(&stream->addr, stream->threadnum));
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_GRE;
@@ -2323,7 +2336,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 		break;
 		
 		default:
-			sapp_runtime_log(30, "build_net_layer_pkt(): unsupport addr type:%d!\n", stream->addr.addrtype);
+			sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_pkt(): unsupport addr type:%d!\n", printaddr(&stream->addr, stream->threadnum), stream->addr.addrtype);
 			goto err;
 			break;
 	}
@@ -3161,7 +3174,7 @@ static int skip_asymmetric_presence_layer(const struct streaminfo *stream, UCHAR
 		break;
 
 		default:
-			sapp_runtime_log(10, "skip_asymmetric_presence_layer(): not asymmetric addr type:%d", stream->addr.addrtype);
+			sapp_runtime_log(RLOG_LV_DEBUG, "skip_asymmetric_presence_layer(): not asymmetric addr index:%d, addrtype:%d", stream_pr->layer_index, stream->addr.addrtype);
 	}
 
 	return need_skip;
