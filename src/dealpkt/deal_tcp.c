@@ -2027,25 +2027,29 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 #endif
 				if(pakiet->tcpdatalen >0)
 				{
+					/* 2021-04-29 lijia add, 插件调用了Kill_tcp,或者设置了MSO_DROP_STREAM, 即便是暂存的乱序包, 也不再调用插件 */
+					if((0 == a_tcp_pr->stream_killed_flag) && (0 == pdetail_pr->drop_stream_flag)){
 #if (0 == HIGH_PERF)  				
-					update_stream_ip_frag_list(a_tcp, pakiet->ipfrag_list);
-					pakiet->ipfrag_list = NULL;
+						update_stream_ip_frag_list(a_tcp, pakiet->ipfrag_list);
+						pakiet->ipfrag_list = NULL;
 #endif					
-					tmpktype=a_tcp->addr.pkttype;
-					//a_tcp->addr.pkttype=tmpktype|PKT_TYPE_TCPUNORDER|a_tcp->pfather->addr.pkttype;	
-					a_tcp->addr.pkttype=PKT_TYPE_TCPREORDER;
-					//ret=stream_process_tcp(a_tcp,pakiet->data,&(pdetail->apme),&(a_tcp->opstate));
-					ret=stream_process_tcp(a_tcp,pakiet->this_ip_hdr,pakiet->this_tcp_hdr,&(pakiet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
-					a_tcp->addr.pkttype=tmpktype;	
-#if (0 == HIGH_PERF)						
-					raw_frags_list_free_stream(a_tcp->threadnum, a_tcp);
+						tmpktype=a_tcp->addr.pkttype;
+						//a_tcp->addr.pkttype=tmpktype|PKT_TYPE_TCPUNORDER|a_tcp->pfather->addr.pkttype;	
+						a_tcp->addr.pkttype=PKT_TYPE_TCPREORDER;
+						//ret=stream_process_tcp(a_tcp,pakiet->data,&(pdetail->apme),&(a_tcp->opstate));
+						ret=stream_process_tcp(a_tcp,pakiet->this_ip_hdr,pakiet->this_tcp_hdr,&(pakiet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
+						a_tcp->addr.pkttype=tmpktype;	
+#if (0 == HIGH_PERF)
+						raw_frags_list_free_stream(a_tcp->threadnum, a_tcp);
 #endif					
-					tcp_clear_newdata(a_tcp,rcv);
+						tcp_clear_newdata(a_tcp,rcv);
+					}
+					
 					//发现到信息，立即返回
 					//if(ret!=PASS)
 					/* 2015-01-16 lijia modify, 并联模式下, 插件调用了Kill_tcp(), 但不会返回DROP, 为了让其他插件仍可以看到此包 */
 					//if((ret!=PASS) || (a_tcp_pr->stream_killed_flag != 0)) 
-					if(a_tcp_pr->stream_killed_flag != 0)  /* 2015-11-02 lqy modify, 乱序包处理不判断返回值 */
+					if((a_tcp_pr->stream_killed_flag != 0) || (pdetail_pr->drop_stream_flag != 0))  /* 2015-11-02 lqy modify, 乱序包处理不判断返回值 */
 					{
 						/* 因为调用了update_stream_list_raw_pkt_pointer, 此处不能返回, 先恢复原始包指针 */
 						goto done;
@@ -2638,7 +2642,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);
 		}
 #endif		
-		//return DROP; /* 2019-11-20 lijia modify, kill_tcp后默认行为不是DROP, 取决于drop_stream_flag */
+		//return DROP; /* 2019-11-20 lijia modify, kill_tcp后默认行为不是DROP, 只发送rst包, 是否丢包取决于drop_stream_flag */
 	}
 
 	if(unlikely(pdetail_pr->drop_stream_flag != 0)){
