@@ -90,6 +90,8 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 		}
 	}
     eth_type = ntohs(inner_ether_hdr->ether_type);
+    
+#if 0 /* 2021-05-06 lijia close, 非对称mpls改成动态插入streaminfo的方式解决. */		
 	if(should_create_empty_mpls_layer_for_symmetric(pstream, eth_type) != 0){
 		if(eth_type == ETHERTYPE_IP || eth_type == ETHERTYPE_IPv6)
 		{
@@ -99,6 +101,7 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 		}
 	}
 	//else
+#endif	
 	{
 		switch(eth_type){
 			case ETHERTYPE_IP:

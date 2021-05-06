@@ -1029,7 +1029,7 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 	int ret = 0;
 
 	if(0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable){
-		sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT error,  config duplicate_pkt_distinguish is not enable", 
+		sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT error, config duplicate_pkt_distinguish is not enable", 
 						 printaddr(&pstream->addr, pstream->threadnum)); 
 		*res_val = -2;
 		return 0;
@@ -1042,13 +1042,17 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 
 	/* 开启了重复包检测功能,但还没发现有重复包   */
 	if(STREAM_TYPE_TCP == pstream->type){
-		if((pstream->ptcpdetail->clientpktnum <= SAPP_DUP_FIRST_PKT_NUM) && (pstream->ptcpdetail->serverpktnum <= SAPP_DUP_FIRST_PKT_NUM)){ /* 包太少, 不足以判断有没有重复包 */
+		if(pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){ /* 包太少, 不足以判断有没有重复包 */
 			*res_val = -2;
+			sapp_runtime_log(RLOG_LV_DEBUG, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT, duplicate pkt state is pending, because has only recv %d pkt", 
+						 printaddr(&pstream->addr, pstream->threadnum), pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum); 			
 		}else{
 			*res_val = 0;
 		}
 	}else if(STREAM_TYPE_UDP == pstream->type){
-		if((pstream->pudpdetail->clientpktnum <= SAPP_DUP_FIRST_PKT_NUM) && (pstream->pudpdetail->serverpktnum <= SAPP_DUP_FIRST_PKT_NUM)){ /* 包太少, 不足以判断有没有重复包 */
+		if(pstream->pudpdetail->clientpktnum  + pstream->pudpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){ /* 包太少, 不足以判断有没有重复包 */
+			sapp_runtime_log(RLOG_LV_DEBUG, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT, duplicate pkt state is pending, because has only recv %d pkt", 
+						 printaddr(&pstream->addr, pstream->threadnum), pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum); 		
 			*res_val = -2;
 		}else{
 			*res_val = 0;

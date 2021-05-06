@@ -165,6 +165,10 @@ int tcp_free_stream(struct streamindex *pstream, const void*, const void *,const
 void update_opposite_addr_info(struct streaminfo_private *pstream_pr, 
 	struct streaminfo_private *p_stack, unsigned char cur_dir);
 int polling_stream_timeout(int tid);
+int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct streaminfo_private *pheap_stream_pr,
+		struct streaminfo_private *pstack_stream_pr, int *heap_streaminfo_skip_layer_num, int *stack_streaminfo_skip_layer_num);
+struct streaminfo_private *copy_stream_info_to_heap_single_layer(const struct streaminfo_private *stack_stream_pr, int reverse);
+
 
 #ifdef __cplusplus
 }

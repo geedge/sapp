@@ -1,20 +1,18 @@
 # CMakeFiles for 3rd vendor library
 
 include(ExternalProject)
-#### GoogleTest
-ExternalProject_Add(GoogleTest PREFIX GoogleTest
-        URL ${CMAKE_SOURCE_DIR}/vendor/googletest-release-1.8.1.tar.gz
-        URL_MD5 2e6fbeb6a91310a16efe181886c59596
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
-
-ExternalProject_Get_Property(GoogleTest INSTALL_DIR)
-file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
-
-add_library(gtest STATIC IMPORTED GLOBAL)
-add_dependencies(gtest GoogleTest)
-set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib64/libgtest.a)
-set_property(TARGET gtest PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
-set_property(TARGET gtest PROPERTY INTERFACE_LINK_LIBRARIES pthread)
+# GoogleTest
+#ExternalProject_Add(GoogleTest PREFIX GoogleTest
+#        URL ${CMAKE_SOURCE_DIR}/vendor/googletest-release-1.8.1.tar.gz
+#        URL_MD5 2e6fbeb6a91310a16efe181886c59596
+#        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
+#ExternalProject_Get_Property(GoogleTest INSTALL_DIR)
+#file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
+#add_library(gtest STATIC IMPORTED GLOBAL)
+#add_dependencies(gtest GoogleTest)
+#set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib64/libgtest.a)
+#set_property(TARGET gtest PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
+#set_property(TARGET gtest PROPERTY INTERFACE_LINK_LIBRARIES pthread)
 
 #libevent
 ExternalProject_Add(libevent PREFIX libevent

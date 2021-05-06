@@ -1275,12 +1275,10 @@ done:
 	pstack_stream_pr: new element recv from network;
 */
 static int cmpaddr_new(struct streaminfo_private *pheap_stream_pr, 
-					struct streaminfo_private *pstack_stream_pr, unsigned short hash_elem_count)
+					struct streaminfo_private *pstack_stream_pr)
 {
 	int ret;
 	struct layer_addr *heap_addr, *stack_addr;
-
-	(void)hash_elem_count;
 
 	heap_addr = &pheap_stream_pr->stream_public.addr;
 	stack_addr = &pstack_stream_pr->stream_public.addr;
@@ -1304,9 +1302,6 @@ static int cmpaddr_new(struct streaminfo_private *pheap_stream_pr,
 
 #endif
 
-
-int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct streaminfo_private *pheap_stream_pr,
-		struct streaminfo_private *pstack_stream_pr, unsigned short hash_elem_count);
 
 
 /*
@@ -1403,7 +1398,8 @@ static void update_outer_addr_for_gtp_tunnel(const struct streaminfo_private *to
 */
 static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_stream_pr, 
 	struct streaminfo_private *pheap_gtp_stream_pr, struct streaminfo_private *pstack_gtp_stream_pr,
-	struct streaminfo_private *pheap_ip_stream_pr, struct streaminfo_private *pstack_ip_stream_pr, unsigned short hash_elem_count)
+	struct streaminfo_private *pheap_ip_stream_pr, struct streaminfo_private *pstack_ip_stream_pr, 
+	int *heap_streaminfo_skip_layer_num, int *stack_streaminfo_skip_layer_num)
 {
 	int ret;
 	const struct streaminfo * pheap_stream = &pheap_ip_stream_pr->stream_public;
@@ -1447,7 +1443,7 @@ static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_
 	/* 继续比较下一层地址 */
 	ret=checkstreamorder(top_stream_pr, (struct streaminfo_private *)(pheap_ip_stream_pr->pfather_pr), 
 						 (struct streaminfo_private *)(pstack_ip_stream_pr->pfather_pr),
-						 hash_elem_count);
+						 heap_streaminfo_skip_layer_num, stack_streaminfo_skip_layer_num);
 
 	if(0 == ret){
 		/* 执行到此, 所有地址都相同, 或者是不用于地址比较, 说明当前流pheap_stream_pr,pstack_stream_pr是同属于一个上层TCP/UDP流,
@@ -1463,33 +1459,30 @@ static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_
 /*比较两个流结构体大小 */
 //adjust 20140324 比较两个流结构是否相同，必须pfather 内的完全相同,
 //递归比较两个流的父流的情况
-
-/* lijia comment:
-	pst1: in htable.
-	pst2: new element;
-	
+/*
 	return value:
 		0 : found, success;
 		1 : pst1 > pst2;
 		-1: pst1 < pst2
 */
 int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct streaminfo_private *pheap_stream_pr,
-		struct streaminfo_private *pstack_stream_pr, unsigned short hash_elem_count)
+		struct streaminfo_private *pstack_stream_pr, int *heap_streaminfo_skip_layer_num, int *stack_streaminfo_skip_layer_num)
 {
 	int ret;
 	struct streaminfo *pheap_stream;
 	struct streaminfo *pstack_stream;
 
-#if 0  //stream_pr->addr_skip_for_layer_cmp标志已经将层数对齐了, 此处不用跳过, addr_use_as_hash设为0, 肯定不比较地址
-	while(pheap_stream_pr!= NULL && pheap_stream_pr->addr_skip_for_layer_cmp == 1)
+	while((pheap_stream_pr != NULL) && (0 == pheap_stream_pr->addr_use_as_hash))
 	{
-		pheap_stream_pr = (struct streaminfo_private *)pheap_stream_pr->stream_public.pfather;
-	}
-	while(pstack_stream_pr != NULL && pstack_stream_pr->addr_skip_for_layer_cmp == 1)
+		pheap_stream_pr = pheap_stream_pr->pfather_pr;
+		*heap_streaminfo_skip_layer_num += 1;
+	}	
+
+	while((pstack_stream_pr != NULL) && (0 == pstack_stream_pr->addr_use_as_hash))
 	{
-		pstack_stream_pr = (struct streaminfo_private *)pstack_stream_pr->stream_public.pfather;
-	}
-#endif
+		pstack_stream_pr = pstack_stream_pr->pfather_pr;
+		*stack_streaminfo_skip_layer_num += 1;
+	}		
 
 	if(pheap_stream_pr==NULL)
 	{
@@ -1508,6 +1501,24 @@ int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct stre
 
 	pheap_stream = &pheap_stream_pr->stream_public;
 	pstack_stream = &pstack_stream_pr->stream_public;
+
+
+	/*  GTP的TEID会变化, 不能简单的比较addr内容, 所以本层addr_use_as_hash=0,
+	    所以会跳过gtp而比较下层的ip/udp, 但是外层的ip和端口可能会漂移, 也不能按常规方式比较ip和port,
+		所以GTP加一个特殊处理.
+	*/
+	switch(pstack_stream->addr.addrtype){
+		case ADDR_TYPE_GPRS_TUNNEL:
+			return checkstreamorder_for_gtp_tunnel(top_stream_pr, pheap_stream_pr, pstack_stream_pr,
+								(struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
+								(struct streaminfo_private *)(pstack_stream_pr->pfather_pr),
+								heap_streaminfo_skip_layer_num, stack_streaminfo_skip_layer_num);
+		break;
+
+		default:
+		break;
+	}
+
 	
 	ret = (int)(pheap_stream->type - pstack_stream->type);
 	if(ret != 0)
@@ -1521,33 +1532,7 @@ int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct stre
 	   return ret;
 	}
 
-	
-	/*  GTP的TEID会变化, 不能简单的比较, 所以本层addr_use_as_hash=0,
-	    所以会跳过gtp而比较下层的ip/udp, 但是外层的ip和端口可能会漂移, 也不能按常规方式比较,
-		所以此处加一个特殊处理.
-	*/
-	switch(pstack_stream->addr.addrtype){
-		case ADDR_TYPE_GPRS_TUNNEL:
-			return checkstreamorder_for_gtp_tunnel(top_stream_pr, pheap_stream_pr, pstack_stream_pr,
-								(struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
-								(struct streaminfo_private *)(pstack_stream_pr->pfather_pr), hash_elem_count);
-		break;
-
-		default:
-		break;
-	}
-	
-
-	/* 2014-04-01 lijia add, 本层无需比较, 直接跳过 */
-	if((0 == pheap_stream_pr->addr_use_as_hash) && (0 == pstack_stream_pr->addr_use_as_hash)){
-		pheap_stream_pr->offset_to_raw_pkt_hdr = pstack_stream_pr->offset_to_raw_pkt_hdr;
-		return checkstreamorder(top_stream_pr,
-								(struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
-								(struct streaminfo_private *)(pstack_stream_pr->pfather_pr),
-								hash_elem_count);
-	}
-
-	ret = cmpaddr_new(pheap_stream_pr, pstack_stream_pr, hash_elem_count);
+	ret = cmpaddr_new(pheap_stream_pr, pstack_stream_pr);
 	if(0 != ret){
 		return ret;
 	}else{
@@ -1557,17 +1542,62 @@ int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct stre
 	
 	ret=checkstreamorder(top_stream_pr, (struct streaminfo_private *)(pheap_stream_pr->pfather_pr), 
 						 (struct streaminfo_private *)(pstack_stream_pr->pfather_pr),
-						 hash_elem_count);
+						 heap_streaminfo_skip_layer_num, stack_streaminfo_skip_layer_num);
 	if(ret != 0)
 	{
 	   return ret;
 	}
+	pheap_stream_pr->offset_to_raw_pkt_hdr = pstack_stream_pr->offset_to_raw_pkt_hdr;
 	
 	return ret;
 }
 
-static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhead,
-			struct streamindex *pinsert, unsigned short hash_elem_count)
+/*
+	用于非对称协议层数的对准.
+
+	例如:
+		heap stream : tuple4->eth,
+		stack stream: tuple4->mpls->eth,
+		这种情况下, 可以认为内层tcp是同属于一个流.
+
+	对准之后:
+	    heap stream : tuple4->mpls->eth
+*/
+static void streaminfo_layer_alignment(const struct streaminfo *top_stream, struct streaminfo_private *heap_stream_pr, struct streaminfo_private *stack_stream_pr)
+{
+	struct streaminfo_private *new_heap_tmp = NULL;
+	
+	if((NULL == heap_stream_pr) || (NULL == stack_stream_pr)){
+		return;
+	}
+
+	if((NULL == heap_stream_pr->pfather_pr) || (NULL == stack_stream_pr->pfather_pr)){
+		return;
+	}
+
+	if(heap_stream_pr->pfather_pr->stream_public.addr.addrtype != stack_stream_pr->pfather_pr->stream_public.addr.addrtype){
+		/*
+			new_heap_tmp此时执向mpls层
+		*/
+		new_heap_tmp = copy_stream_info_to_heap_single_layer(stack_stream_pr->pfather_pr, 1); /* 流对准时, 肯定是对侧来包, 反向copy, 因为同向就不存在层数不一致了, reverse固定为1 */
+
+		new_heap_tmp->pfather_pr = heap_stream_pr->pfather_pr;
+		new_heap_tmp->stream_public.pfather = &heap_stream_pr->pfather_pr->stream_public;
+		heap_stream_pr->pfather_pr = new_heap_tmp;
+		heap_stream_pr->stream_public.pfather = &new_heap_tmp->stream_public;
+
+		sapp_runtime_log(RLOG_LV_DEBUG, "stream:%s, insert new asymmetric layer, addrtype:%d\n", 
+						printaddr(&top_stream->addr, top_stream->threadnum), new_heap_tmp->stream_public.addr.addrtype);
+	}
+
+	streaminfo_layer_alignment(top_stream, heap_stream_pr->pfather_pr, stack_stream_pr->pfather_pr);
+}
+
+/*
+	plinkhead: 已创建的流在htable中某个slot的第一个节点;
+	pinsert  : 当前来包的临时栈空间流地址.
+*/
+static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhead, struct streamindex *pinsert)
 {
 	struct streamindex *phead=plinkhead;
 	struct streamindex  *res = NULL;
@@ -1577,6 +1607,8 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 	unsigned long hash_list_num = 0;
 	UCHAR threadnum = psinsert_pr->stream_public.threadnum;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
+	int stack_streaminfo_skip_layer_num = 0, heap_streaminfo_skip_layer_num = 0; /* 不需要地址比较层的数量 */
+	char cur_stack_streaminfo_more_array[__ADDR_TYPE_MAX] = {}; /* 栈里的流地址比堆里流地址层数多的地址类型标记 */
 
 	while(phead!=NULL)
 	{  
@@ -1589,12 +1621,11 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 			continue;
 		}
 #endif
-		result=checkstreamorder(&plinkhead->stream, pshead_pr,psinsert_pr, hash_elem_count);
+		result=checkstreamorder(&plinkhead->stream, pshead_pr,psinsert_pr, &heap_streaminfo_skip_layer_num, &stack_streaminfo_skip_layer_num);
 		if(result==0){
 			res = phead;
 			break;
 		}
-		//prev=phead;
 
 		phead=phead->phashnext;
 		hash_list_num++;
@@ -1604,123 +1635,14 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 		local_sys_stat->count[SAPP_STAT_HASH_LIST_MAX] = hash_list_num;
 	}
 
+	if((res != NULL) && (stack_streaminfo_skip_layer_num > heap_streaminfo_skip_layer_num)){
+		streaminfo_layer_alignment(&res->stream.stream_public, &res->stream, &pinsert->stream);
+	}
+
 	return res;
 }
 
-#if 0
-/*判断链表中是否有相应的链接信息
-  如果没有，对可能的插入位置进行预设*/
-struct streamindex * findandsethashindex(struct streamindex *plinkhead,struct streamindex *pinsert, int hash_elem_count)
-{
-    struct streamindex *phead=plinkhead;
-    struct streamindex *prev=NULL;
-    struct streaminfo_private *pshead=NULL;
-	struct streaminfo_private *psinsert=&(pinsert->stream);
-    int result;
-    while(phead!=NULL)
-    {
-        pshead=&(phead->stream);
-	result=checkstreamorder(pshead,psinsert,hash_elem_count);
-	if(result>0)
-	 {
-	 	//在该节点前插入
-	 	pinsert->phashprev=phead->phashprev;
-		pinsert->phashnext=phead;
-	 	return NULL;
-	 }
-	else if(result==0)
-	{
-		//找到相同节点
-		return phead;
-	}
-	prev=phead;
-	phead=phead->phashnext;
-    }
-    if(phead==NULL)
-    {
-       //在末尾插入
-    	if(prev!=NULL)
-    	{
-    	    pinsert->phashprev=prev;
-	    pinsert->phashnext=NULL;
-    	}
-    }
-    return NULL;
-}
-#endif
 
-#if 0
-struct streamindex * findandsethashindex_binsearch(int elementcount,struct streamindex *plinkhead,
-		struct streamindex *pinsert)
-{
-    struct streamindex *ptag=plinkhead;
-    struct streaminfo_private *pshead=NULL;
-    struct streaminfo_private *psinsert=&(pinsert->stream);
-    int result=0;
-
-    int high=elementcount-1;
-    int low=0;
-    int mid=0,i=0,itag=0;
-   //空链表
-   if(ptag==NULL){
-   	return NULL;
-   }
-   //assert(plinkhead->hash_index==pinsert->hash_index);
-   while(low<=high)
-   {
-       mid=low+(high-low)/2;
-	 if(mid>=itag)
-	    for(i=0;i<(mid-itag);i++) ptag=ptag->phashnext;
-	else 
-	   for(i=0;i<(itag-mid);i++) ptag=ptag->phashprev;
-	itag=mid;
-	
-	//compare
-	 pshead=&(ptag->stream);
-#if 1 //2014-12-15 lqy modify
-   	result=checkstreamorder(pshead,psinsert,elementcount);
-#else
-   	result=checkstreamorder(psinsert, pshead);
-#endif
-   	if(result==0) 		//找到相同节点
-   	{
-   		return ptag;
-   	}
-   
-	if(result>0)
-	  high=mid-1;
-	else
-	  low=mid+1;
-   }
-
-  if(low>high) //查找失败
-  {
-  	if(result>0)
-  	{
- 		//在该节点前插入
-		pinsert->phashprev=ptag->phashprev;
-		pinsert->phashnext=ptag;
-  	}
-	else
-	{
-		//在该节点后插入
-		pinsert->phashprev=ptag;
-		pinsert->phashnext=ptag->phashnext;
-	}
-  }
-  /*
-  if(pinsert->phashprev!=NULL)
-   {
-	assert(pinsert->phashprev->hash_index==pinsert->hash_index);
-   }	
-  if(pinsert->phashnext!=NULL)
-   {
-	assert(pinsert->phashnext->hash_index==pinsert->hash_index);
-   }	
-  */
-  return NULL;
-}
-#endif
 
 #if USE_LINUX_KERNEL_HASH_ALGO
 extern int stream_make_hash(struct streaminfo_private *stream_pr, unsigned int maxsize);
@@ -1926,7 +1848,7 @@ struct streamindex *findstreamindex(struct streamindex *pindex, const raw_pkt_t 
 #elif 0
 	a_index= findandsethashindex_20141217(phashstream[hash_index],pindex, elemcount);
 #else
-	a_index = findandsethashindex_lru(phashstream[hash_index],pindex, elemcount);
+	a_index = findandsethashindex_lru(phashstream[hash_index],pindex);
 #endif
 
 	if (likely(a_index!=NULL)){
@@ -3057,6 +2979,52 @@ unsigned long long get_global_stream_id(unsigned long long thread_seq)
 
 	return glo_sid;
 }
+
+struct streaminfo_private *copy_stream_info_to_heap_single_layer(const struct streaminfo_private *stack_stream_pr, int reverse)
+{
+	struct streaminfo_private *heap_stream_pr = NULL;
+	void *heap_addr;
+	struct streaminfo *heap_stream;
+	const struct streaminfo *stack_stream;
+	struct streaminfo_private *pfather_pr;
+
+	if(NULL == stack_stream_pr){
+		return NULL;
+	}
+
+	stack_stream = &(stack_stream_pr->stream_public);
+
+	heap_stream_pr = (struct streaminfo_private *)dictator_malloc(stack_stream->threadnum, sizeof(struct streaminfo_private));
+	memcpy(heap_stream_pr, stack_stream_pr, sizeof(struct streaminfo_private));
+	heap_stream = &(heap_stream_pr->stream_public);
+
+	/* 单层streaminfo, pfather应该在外部调用者处理, 此处先设为NULL   */
+	heap_stream_pr->pfather_pr = NULL;
+	heap_stream_pr->stream_public.pfather = NULL;
+			
+	heap_addr = dictator_malloc(stack_stream->threadnum, stack_stream->addr.addrlen);
+	memset(heap_addr, 0, stack_stream->addr.addrlen);
+
+	/* 上层地址翻转, 且不是overlay层,才能反向copy地址    	   */	
+	if(reverse){
+		heap_stream_pr->dirreverse=1;
+		heap_stream_pr->stream_dir = 1 ^ heap_stream_pr->layer_dir; /* lijia comment, 与"src>=dst"默认规则不一致 */
+		heap_stream_pr->stream_c2s_route_dir = 1 ^ heap_stream_pr->stream_c2s_route_dir; 
+		//reverse_addr_new(heap_addr, heap_stream->addr.addrtype);
+		/* 地址COPY时, 如果需要反转, 直接反向COPY, 不要先memcpy, 再交换地址源、目的的顺序 */
+		addr_reverse_memcpy(stack_stream_pr, heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrtype, stack_stream->addr.addrlen);
+	}else{
+		heap_stream_pr->stream_dir = heap_stream_pr->layer_dir;
+		memcpy(heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrlen);
+	}
+	
+	heap_stream->addr.paddr = heap_addr;
+	heap_stream->addr.addrlen = stack_stream->addr.addrlen;
+	heap_stream->addr.addrtype = stack_stream->addr.addrtype;
+	
+	return (struct streaminfo_private *)heap_stream;
+}
+
 
 /* 
    2014-04-08 LiJia add,

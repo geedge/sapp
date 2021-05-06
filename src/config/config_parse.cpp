@@ -1032,11 +1032,14 @@ static int config_expression_convert(void)
 		sapp_log(30, ~0, ~0, "[Error]%s parse error", sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_addr_layer_cfg_file); 
 		return- 1;
 	}
+
+#if 0 /* 2021-05-06 lijia close, 非对称mpls改成动态插入streaminfo的方式解决. */			
 	ret = parse_asymmetric_presence_layer_config();
 	if(ret < 0){
 		sapp_log(30, ~0, ~0, "[Error]%s parse error", sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file); 
 		return- 1;
 	}	
+#endif
 
 	ret = parse_stream_compare_layer_config();
 	if(ret < 0){

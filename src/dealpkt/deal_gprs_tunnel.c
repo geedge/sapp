@@ -45,28 +45,6 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
 	local_sys_stat->length_per_layer[ADDR_TYPE_GPRS_TUNNEL][pfstream_pr->layer_index+1] += raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr;
 	
 
-#if 0
-    //针对同一会话GTP网关源端口变化的情况，强制将栈上的streaminfo中，地址全部设置为0
-    pfstream_pr->stream_public.addr.tuple4_v4->source = 0;
-    pfstream_pr->stream_public.addr.tuple4_v4->dest = 0;
-    pfstream_pr->stream_public.addr.tuple4_v4->saddr = 0;
-    pfstream_pr->stream_public.addr.tuple4_v4->daddr = 0;
-
-    if(pfstream_pr->stream_public.curdir == DIR_C2S)
-    {
-        pfstream_pr->stream_public.addr.tuple4_v4->source = 0;
-        pfstream_pr->stream_public.addr.tuple4_v4->dest = 0;
-        pfstream_pr->stream_public.addr.tuple4_v4->saddr = 0;
-        pfstream_pr->stream_public.addr.tuple4_v4->daddr = 0;
-    }
-    if(pfstream_pr->stream_public.curdir == DIR_S2C)
-    {
-        pfstream_pr->stream_public.addr.tuple4_v4->dest = 0;
-        pfstream_pr->stream_public.addr.tuple4_v4->daddr = 0;
-        pfstream_pr->stream_public.addr.tuple4_v4->saddr = 0;
-    }
-#endif
-
     /* 之前已经通过协议识别插件识别过, 所以在entry()里不用再次判断 */
     p_gtd_hdr = (const struct gtp_hdr *)((char *)this_layer_data + sizeof(struct mesa_udp_hdr));
 
@@ -104,7 +82,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     pstream->addr.addrtype = ADDR_TYPE_GPRS_TUNNEL;
     pstream->addr.addrlen = sizeof(struct layer_addr_gtp); /* 此处使用内存结构体长度, 而非网络头部struct gtp_hdr */
 
-    pstream_pr->addr_use_as_hash = 0; /* gtp层的TEID也会变化, 不能精确比较地址 */
+    pstream_pr->addr_use_as_hash = 1; /* gtp层的TEID和外层ip,port可能会变化, 靠特殊函数checkstreamorder_for_gtp_tunnel()比较 */
     pstream_pr->need_update_opposite_addr = 1;//需要更新对侧信息
 
     pstream_pr->offset_to_raw_pkt_hdr = (unsigned short)offset_to_raw_pkt_hdr;
