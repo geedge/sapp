@@ -3035,6 +3035,7 @@ struct streaminfo_private *copy_stream_info_to_heap_single_layer(const struct st
    因为之前的reverse的定义其实有局限性, 表示当前层地址跟'大地址是客户端'规则是否一致, 是否需要翻转,
    但是mpls, gtp等协议地址是单向的, reverse的规则不好使.
  */
+#if 0
 struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream_pr, int reverse)
 {
 	struct streaminfo_private *heap_stream_pr = NULL;
@@ -3085,6 +3086,33 @@ struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_priv
 	
 	return (struct streaminfo_private *)heap_stream;
 }
+#else
+struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream_pr, int reverse)
+{
+	struct streaminfo_private *heap_stream_pr;
+	struct streaminfo *heap_stream;
+	struct streaminfo_private *pfather_pr;
+
+	if(NULL == stack_stream_pr){
+		return NULL;
+	}
+
+	heap_stream_pr = copy_stream_info_to_heap_single_layer(stack_stream_pr, reverse);
+	heap_stream = &heap_stream_pr->stream_public;
+
+	heap_stream_pr->pfather_pr = copy_stream_info_to_heap(stack_stream_pr->pfather_pr, reverse);
+	pfather_pr = stack_stream_pr->pfather_pr;
+	if((pfather_pr != NULL)
+	  && (DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	  && (g_overlay_layer_set[pfather_pr->stream_public.addr.addrtype][pfather_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay层的pfather设为NULL, 插件不可见 */
+		heap_stream->pfather = NULL;
+	}else{
+		heap_stream->pfather = (struct streaminfo *)heap_stream_pr->pfather_pr;
+	}
+	
+	return heap_stream_pr;
+}
+#endif
 
 int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_pkt_t *rawpkt)
 {
