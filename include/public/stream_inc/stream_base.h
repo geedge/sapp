@@ -1,7 +1,7 @@
 #ifndef _APP_STREAM_BASE_H_
 #define _APP_STREAM_BASE_H_ 
 
-#define STREAM_BASE_H_VERSION		(20210331)
+#define STREAM_BASE_H_VERSION		(20210508)
 
 #include <sys/types.h>
 #include <netinet/in.h>            
@@ -612,6 +612,17 @@ const raw_ipfrag_list_t *get_raw_frag_list(const struct streaminfo *stream);
 	IP插件模式下, 获取当前IP包的原始分片包.
 */
 const raw_ipfrag_list_t *ip_plug_get_raw_ipfrag_list(int thread_num, enum addr_type_t addr_type);
+
+
+/*
+	注意:
+		(1)此接口仅适用于不含隧道嵌套层的纯IPv4, IPv6地址;
+		(2)四元组参数的源、目的地址顺序无要求, C2S, S2c方向均可;
+
+	ip_protocol: IPPROTO_TCP or IPPROTO_UDP;
+*/
+struct streaminfo * find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *tuplev4, unsigned char ip_protocol);
+struct streaminfo * find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *tuplev6, unsigned char ip_protocol);
 
 
 #ifdef __cplusplus

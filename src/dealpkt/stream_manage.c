@@ -1824,7 +1824,6 @@ struct streamindex *findstreamindex(struct streamindex *pindex, const raw_pkt_t 
 #endif	
 	}
 
-
 	if(STREAM_TYPE_UDP==stream_type)
 	{
 		elemcount=this_thread_stream->udp_stream_talbe_hash_count[hash_index];
@@ -3333,6 +3332,161 @@ int sapp_dup_pkt_identify_tcp(int tid, struct streaminfo_private *pstream_pr, in
 	return is_dup_pkt;
 }
 
+/*
+	用于插件通过四元组找到当前线程的streaminfo结构, 此接口仅适用于不含隧道嵌套层的纯IPv4, IPv6地址!
+*/
+struct streaminfo * find_streaminfo_by_addrv4(int thread_num, const struct stream_tuple4_v4 *tuplev4, unsigned char ip_protocol)
+{
+	const struct global_stream *this_thread_stream = G_MESA_GLOBAL_STREAM[thread_num];
+	struct streamindex **phashstream=NULL;
+	unsigned int hash_index, hash_max, no_use_slave_hash;
+	unsigned int a,b,c,d;
+	struct streamindex *stream_hash_head = NULL;
+	struct streaminfo *found_stream = NULL;
+	int ret, match_layer_dir; /* 输入的四元组与大端口做为源的规则一致 */
+	
+	if (IPPROTO_TCP == ip_protocol)
+	{
+		phashstream=this_thread_stream->tcp_stream_table;
+		hash_max=tcp_stream_table_size;
+	}	
+	else if(IPPROTO_UDP == ip_protocol)
+	{
+		phashstream=this_thread_stream->udp_stream_table;
+		hash_max=udp_stream_table_size;
+	}else{
+		sapp_runtime_log(RLOG_LV_INFO, "find_streaminfo_by_addrv4() error, not support ip protocol:%u", ip_protocol);
+		return NULL;
+	}
+
+	/* 此处参考函数: set_transport_addr() 	  ,大端口作为客户端 */
+	if(ntohs(tuplev4->source) > ntohs(tuplev4->dest)){
+		a = tuplev4->saddr;
+		b = tuplev4->daddr;
+		c = tuplev4->source;
+		d =  tuplev4->dest;
+		match_layer_dir = 1;
+	}else{
+		if(unlikely(tuplev4->source == tuplev4->dest)){
+			if(ntohl(tuplev4->saddr) > ntohl(tuplev4->daddr)){
+				a = tuplev4->saddr;
+				b = tuplev4->daddr;
+				c = tuplev4->source;
+				d = tuplev4->dest;
+				match_layer_dir = 1;
+			}else{
+				a = tuplev4->daddr;
+				b = tuplev4->saddr;
+				c = tuplev4->dest;
+				d = tuplev4->source;
+				match_layer_dir = 0;
+			}
+		}else{
+			a = tuplev4->daddr;
+			b = tuplev4->saddr;
+			c = tuplev4->dest;
+			d = tuplev4->source;
+			match_layer_dir = 0;
+		}
+	}
+	
+	hash_index = sapp_jhash_4words(a,b,c,d, &no_use_slave_hash) % hash_max;
+	stream_hash_head = phashstream[hash_index];
+
+	while(stream_hash_head != NULL){
+		if(1 == match_layer_dir){
+			ret = cmpaddr_positive(stream_hash_head->stream.stream_public.addr.tuple4_v4, (void *)tuplev4, ADDR_TYPE_IPV4, sizeof(struct stream_tuple4_v4));
+		}else{
+			ret = cmpaddr_reverse(stream_hash_head->stream.stream_public.addr.tuple4_v4, (void *)tuplev4, ADDR_TYPE_IPV4, sizeof(struct stream_tuple4_v4));
+		}
+
+		if(0 == ret){
+			found_stream = &stream_hash_head->stream.stream_public;
+			break;
+		}
+		stream_hash_head = stream_hash_head->phashnext;
+	}
+
+	return found_stream;
+}
+
+struct streaminfo * find_streaminfo_by_addrv6(int thread_num, const struct stream_tuple4_v6 *tuple4_v6, unsigned char ip_protocol)
+{
+	const struct global_stream *this_thread_stream = G_MESA_GLOBAL_STREAM[thread_num];
+	struct streamindex **phashstream=NULL;
+	unsigned int hash_index, hash_max, no_use_slave_hash;
+	unsigned int a,b,c,d;
+	struct streamindex *stream_hash_head = NULL;
+	struct streaminfo *found_stream = NULL;
+	int ret, match_layer_dir; /* 输入的四元组与大端口做为源的规则一致 */
+	
+	if (IPPROTO_TCP == ip_protocol)
+	{
+		phashstream=this_thread_stream->tcp_stream_table;
+		hash_max=tcp_stream_table_size;
+	}	
+	else if(IPPROTO_UDP == ip_protocol)
+	{
+		phashstream=this_thread_stream->udp_stream_table;
+		hash_max=udp_stream_table_size;
+	}else{
+		sapp_runtime_log(RLOG_LV_INFO, "find_streaminfo_by_addrv6() error, not support ip protocol:%u", ip_protocol);
+		return NULL;
+	}
+
+	/* 此处参考函数: set_transport_addr() 	  ,大端口作为客户端 */
+	if(ntohs(tuple4_v6->source) > ntohs(tuple4_v6->dest)){
+		memcpy(&a, &tuple4_v6->saddr[12], sizeof(int));
+		memcpy(&b, &tuple4_v6->daddr[12], sizeof(int));
+		c = tuple4_v6->source;
+		d = tuple4_v6->dest;
+		match_layer_dir = 1;
+	}else{
+		if(unlikely(tuple4_v6->source == tuple4_v6->dest)){
+			if(memcmp(tuple4_v6->saddr, tuple4_v6->daddr, IPV6_ADDR_LEN) >= 0){
+				memcpy(&a, &tuple4_v6->saddr[12], sizeof(int));
+				memcpy(&b, &tuple4_v6->daddr[12], sizeof(int));
+				c = tuple4_v6->source;
+				d = tuple4_v6->dest;
+				match_layer_dir = 1;
+			}else{
+				memcpy(&a, &tuple4_v6->daddr[12], sizeof(int));
+				memcpy(&b, &tuple4_v6->saddr[12], sizeof(int));
+				c = tuple4_v6->dest;
+				d = tuple4_v6->source;
+				match_layer_dir = 0;
+			}
+		}else{
+			memcpy(&a, &tuple4_v6->daddr[12], sizeof(int));
+			memcpy(&b, &tuple4_v6->saddr[12], sizeof(int));
+			c = tuple4_v6->dest;
+			d = tuple4_v6->source;
+			match_layer_dir = 0;
+		}
+	}
+	
+	hash_index = sapp_jhash_4words(a,b,c,d, &no_use_slave_hash) % hash_max;
+	stream_hash_head = phashstream[hash_index];
+
+
+	while(stream_hash_head != NULL){
+		if(1 == match_layer_dir){
+			ret = cmpaddr_positive(stream_hash_head->stream.stream_public.addr.tuple4_v6, (void *)tuple4_v6, ADDR_TYPE_IPV6, sizeof(struct stream_tuple4_v6));
+		}else{
+			ret = cmpaddr_reverse(stream_hash_head->stream.stream_public.addr.tuple4_v6, (void *)tuple4_v6, ADDR_TYPE_IPV6, sizeof(struct stream_tuple4_v6));
+		}
+
+		if(0 == ret){
+			found_stream = &stream_hash_head->stream.stream_public;
+			break;
+		}
+		stream_hash_head = stream_hash_head->phashnext;
+	}
+
+	return found_stream;
+}
+
+		
 
 #ifdef __cplusplus
 }

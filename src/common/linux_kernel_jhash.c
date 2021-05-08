@@ -172,7 +172,7 @@ static inline u32 jhash_1word(u32 a, u32 initval)
 }
 
 
-static inline u32 jhash_4words(u32 a, u32 b, u32 c, u32 initval, u32 *out_val)
+u32 sapp_jhash_4words(u32 a, u32 b, u32 c, u32 initval, u32 *out_val)
 {
 	a += JHASH_INITVAL;
 	b += JHASH_INITVAL;
@@ -241,8 +241,7 @@ int stream_make_hash(struct streaminfo_private *stream_pr, unsigned int maxsize)
 		abort();
 	}
 
-	//hash_val = jhash_3words(a, b, c, d);	
-	hash_val = jhash_4words(a, b, c, d, &stream_pr->hash_slave);	
+	hash_val = sapp_jhash_4words(a, b, c, d, &stream_pr->hash_slave);	
 
 #if HIGH_PERF
 	return hash_val & (maxsize - 1);
@@ -251,6 +250,8 @@ int stream_make_hash(struct streaminfo_private *stream_pr, unsigned int maxsize)
 #endif	
 }
 #endif
+
+
 
 #ifdef __cplusplus
 }
