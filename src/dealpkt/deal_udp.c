@@ -383,6 +383,10 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 		pstream->opstate=OP_STATE_PENDING;
 		pstream->pktstate=OP_STATE_PENDING;
 
+		pstream_pr->has_duplicate_pkt = 0;
+		pstream_pr->stream_killed_flag = 0;
+		pdetail_pr->drop_stream_flag = 0;
+
 		pdetail->createtime=g_CurrentTime;
 		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 		plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[UDP_ONE_STATE]);

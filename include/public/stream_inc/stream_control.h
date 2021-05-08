@@ -38,7 +38,7 @@ enum MESA_stream_opt{
 	MSO_TOTAL_INBOUND_BYTE, /* inbound packet byte of this stream, opt_val type must be unsigned long long  */
 	MSO_TOTAL_OUTBOUND_PKT, /* outbound packet pkt of this stream, opt_val type must be unsigned long long  */
 	MSO_TOTAL_OUTBOUND_BYTE,/* outbound packet byte of this stream, opt_val type must be unsigned long long  */
-	MSO_STREAM_CREATE_TIMESTAMP_MS,/* first c2s pkt arrive timestamp of this stream, opt_val type must be unsigned long long  */
+	MSO_STREAM_CREATE_TIMESTAMP_MS,/* first pkt arrive timestamp of this stream, opt_val type must be unsigned long long  */
 	MSO_TOTAL_INBOUND_BYTE_RAW, /* inbound packet byte of this stream, raw packet len, include ip hdr, ethernet hdr... opt_val type must be unsigned long long  */
 	MSO_TOTAL_OUTBOUND_BYTE_RAW,/* outbound packet byte of this stream, raw packet len, include ip hdr, ethernet hdr... opt_val type must be unsigned long long  */
 	MSO_STREAM_UP_LAYER_TUNNEL_TYPE,  /* opt_val must be unsigned short, refer to enum stream_carry_tunnel_t */

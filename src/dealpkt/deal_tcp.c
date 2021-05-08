@@ -682,8 +682,13 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 			pdetail->serverbytes=datalen;
 		}	   
 		pstream_pr->stream_killed_flag = 0;
+		pstream_pr->has_duplicate_pkt = 0;
+		pdetail_pr->drop_stream_flag = 0;
+		
 		/* 链接复用, 重新生成一个新的streamid */
 		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);				
+		pdetail->createtime=g_CurrentTime;
+		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;		
 	}
 
 	/* 2014-07-31 LiJia add, for set one stream unorder number */
