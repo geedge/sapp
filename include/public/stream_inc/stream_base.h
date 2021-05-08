@@ -615,14 +615,28 @@ const raw_ipfrag_list_t *ip_plug_get_raw_ipfrag_list(int thread_num, enum addr_t
 
 
 /*
-	注意:
-		(1)此接口仅适用于不含隧道嵌套层的纯IPv4, IPv6地址;
-		(2)四元组参数的源、目的地址顺序无要求, C2S, S2c方向均可;
+	因为隧道、嵌套协议等原因, 输入一个纯四元组, 实际有可能查询到多个streaminfo,
+	比如以下两个流:
+		(1) tuple4->gtp->ip->udp->ethernet;
+		(2) tuple4->l2tp->ip->udp->ethernet;
+	如果隧道内层使用私有地址, 在一些极端凑巧的情况下, 流1和流2的内层tuple4可能是一样的, 但sapp会创建两个不同的streaminfo.
 
-	ip_protocol: IPPROTO_TCP or IPPROTO_UDP;
+	输入参数:
+		thread_index: 线程id;
+		tuple4v4 or tuple4v6: 四元组地址, 源、目的地址顺序无要求, C2S, S2c方向均可;
+		streamtype: 只支持两种类型, STREAM_TYPE_TCP or STREAM_TYPE_UDP;
+		array_max_num: 数组streaminfo_array的最大元素个数.
+
+	输出参数: 
+		streaminfo_array: 查询到的符合输入四元组地址的streaminfo结构体指针.
+
+	返回值:
+	    -1: error;
+		 0: 没有对应的streaminfo结构;
+		>0: 实际找到streaminfo结构的数量;
 */
-struct streaminfo * find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *tuplev4, unsigned char ip_protocol);
-struct streaminfo * find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *tuplev6, unsigned char ip_protocol);
+int find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *tuplev4, enum stream_type_t streamtype, struct streaminfo *streaminfo_array[], int array_max_num);
+int find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *tuplev6, enum stream_type_t streamtype, struct streaminfo *streaminfo_array[], int array_max_num);
 
 
 #ifdef __cplusplus

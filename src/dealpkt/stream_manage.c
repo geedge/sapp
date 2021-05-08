@@ -3335,28 +3335,32 @@ int sapp_dup_pkt_identify_tcp(int tid, struct streaminfo_private *pstream_pr, in
 /*
 	用于插件通过四元组找到当前线程的streaminfo结构, 此接口仅适用于不含隧道嵌套层的纯IPv4, IPv6地址!
 */
-struct streaminfo * find_streaminfo_by_addrv4(int thread_num, const struct stream_tuple4_v4 *tuplev4, unsigned char ip_protocol)
+int find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *tuplev4, enum stream_type_t streamtype, struct streaminfo *streaminfo_array[], int array_max_num)
 {
-	const struct global_stream *this_thread_stream = G_MESA_GLOBAL_STREAM[thread_num];
+	const struct global_stream *this_thread_stream = G_MESA_GLOBAL_STREAM[thread_index];
 	struct streamindex **phashstream=NULL;
 	unsigned int hash_index, hash_max, no_use_slave_hash;
 	unsigned int a,b,c,d;
 	struct streamindex *stream_hash_head = NULL;
-	struct streaminfo *found_stream = NULL;
 	int ret, match_layer_dir; /* 输入的四元组与大端口做为源的规则一致 */
+	int tot_found_stream_num = 0;
+
+	if((NULL == streaminfo_array) || (array_max_num <= 0)){
+		return -1;
+	}
 	
-	if (IPPROTO_TCP == ip_protocol)
+	if (STREAM_TYPE_TCP == streamtype)
 	{
 		phashstream=this_thread_stream->tcp_stream_table;
 		hash_max=tcp_stream_table_size;
 	}	
-	else if(IPPROTO_UDP == ip_protocol)
+	else if(STREAM_TYPE_UDP == streamtype)
 	{
 		phashstream=this_thread_stream->udp_stream_table;
 		hash_max=udp_stream_table_size;
 	}else{
-		sapp_runtime_log(RLOG_LV_INFO, "find_streaminfo_by_addrv4() error, not support ip protocol:%u", ip_protocol);
-		return NULL;
+		sapp_runtime_log(RLOG_LV_INFO, "find_streaminfo_by_addrv4() error, not support stream type:%d", (int)streamtype);
+		return -1;
 	}
 
 	/* 此处参考函数: set_transport_addr() 	  ,大端口作为客户端 */
@@ -3401,37 +3405,41 @@ struct streaminfo * find_streaminfo_by_addrv4(int thread_num, const struct strea
 		}
 
 		if(0 == ret){
-			found_stream = &stream_hash_head->stream.stream_public;
-			break;
+			streaminfo_array[tot_found_stream_num] = &stream_hash_head->stream.stream_public;
+			tot_found_stream_num++;
+			if(tot_found_stream_num >= array_max_num){
+				break;
+			}
 		}
 		stream_hash_head = stream_hash_head->phashnext;
 	}
 
-	return found_stream;
+	return tot_found_stream_num;
 }
 
-struct streaminfo * find_streaminfo_by_addrv6(int thread_num, const struct stream_tuple4_v6 *tuple4_v6, unsigned char ip_protocol)
+
+int find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *tuple4_v6, enum stream_type_t streamtype, struct streaminfo *streaminfo_array[], int array_max_num)
 {
-	const struct global_stream *this_thread_stream = G_MESA_GLOBAL_STREAM[thread_num];
+	const struct global_stream *this_thread_stream = G_MESA_GLOBAL_STREAM[thread_index];
 	struct streamindex **phashstream=NULL;
 	unsigned int hash_index, hash_max, no_use_slave_hash;
 	unsigned int a,b,c,d;
 	struct streamindex *stream_hash_head = NULL;
-	struct streaminfo *found_stream = NULL;
 	int ret, match_layer_dir; /* 输入的四元组与大端口做为源的规则一致 */
+	int tot_found_stream_num = 0;
 	
-	if (IPPROTO_TCP == ip_protocol)
+	if (STREAM_TYPE_TCP == streamtype)
 	{
 		phashstream=this_thread_stream->tcp_stream_table;
 		hash_max=tcp_stream_table_size;
 	}	
-	else if(IPPROTO_UDP == ip_protocol)
+	else if(STREAM_TYPE_UDP == streamtype)
 	{
 		phashstream=this_thread_stream->udp_stream_table;
 		hash_max=udp_stream_table_size;
 	}else{
-		sapp_runtime_log(RLOG_LV_INFO, "find_streaminfo_by_addrv6() error, not support ip protocol:%u", ip_protocol);
-		return NULL;
+		sapp_runtime_log(RLOG_LV_INFO, "find_streaminfo_by_addrv6() error, not support streamtype:%u", (int)streamtype);
+		return -1;
 	}
 
 	/* 此处参考函数: set_transport_addr() 	  ,大端口作为客户端 */
@@ -3477,13 +3485,16 @@ struct streaminfo * find_streaminfo_by_addrv6(int thread_num, const struct strea
 		}
 
 		if(0 == ret){
-			found_stream = &stream_hash_head->stream.stream_public;
-			break;
+			streaminfo_array[tot_found_stream_num] = &stream_hash_head->stream.stream_public;
+			tot_found_stream_num++;
+			if(tot_found_stream_num >= array_max_num){
+				break;
+			}			
 		}
 		stream_hash_head = stream_hash_head->phashnext;
 	}
 
-	return found_stream;
+	return tot_found_stream_num;
 }
 
 		
