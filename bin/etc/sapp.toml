@@ -27,7 +27,6 @@ dictator_enable=1
     overlay_mode=none
     stream_compare_layer_cfg_file="etc/stream_compare_layer.conf"
     vlan_flipping_cfg_file="etc/vlan_flipping_map.conf"
-    asymmetric_presence_layer_cfg_file="etc/asymmetric_presence_layer.conf"
     asymmetric_addr_layer_cfg_file="etc/asymmetric_addr_layer.conf"
     prune_inject_layer_cfg_file="etc/prune_inject_layer.conf"
 	
@@ -100,7 +99,7 @@ dictator_enable=1
 	
 [STREAM]
 ### note, stream_id_base_time format is "%Y-%m-%d %H:%M:%S" 
-    stream_id_base_time="2018-08-08 08:00:00"
+    stream_id_base_time="2021-01-01 00:00:00"
     [stream.tcp]
     max=10000
     timeout=60

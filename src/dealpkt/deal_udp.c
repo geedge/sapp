@@ -576,7 +576,8 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		}
 
 		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
-		  && (0 == is_overlay_udp_layer) /* vxlan层的保活信息不用识别重复包, 因为实测inline device发出的保活包全是一样的, ipid都不变 */
+		  && (0 == is_overlay_udp_layer) /* vxlan层的保活信息不用识别重复包, 因为实测某些inline device或交换板发出的保活包全是一样的, udp checksum是0, ipid也不变 */
+		  && (STREAM_TUNNLE_NON == pstream_pr->stream_carry_up_layer_tunnel_type) /* 隧道协议的外层不识别重复流量 */
 		  && (sapp_dup_pkt_identify_udp_v4(thread_num, pstream_pr, pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum, this_iphdr, udph) != 0)){
 			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
 			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	

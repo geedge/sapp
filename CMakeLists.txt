@@ -191,12 +191,10 @@ set(CMAKE_INSTALL_FULL_SHAREDSTATEDIR ${CMAKE_INSTALL_PREFIX}/etc)
 set(CMAKE_INSTALL_FULL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX}/plug)
 set(CMAKE_INSTALL_FULL_SYSCONFDIR /usr/lib/systemd/system)
 
-#install(PROGRAMS ${CMAKE_BINARY_DIR}/src/entry/sapp DESTINATION . COMPONENT EXECUTABLE)
 install(PROGRAMS ${CMAKE_BINARY_DIR}/src/entry/sapp DESTINATION . COMPONENT EXECUTABLE)
 
 install(PROGRAMS bin/r2 DESTINATION . COMPONENT EXECUTABLE)
 install(PROGRAMS bin/r3 DESTINATION . COMPONENT EXECUTABLE)
-
 
 install(FILES bin/etc/sapp.toml DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/send_raw_pkt.conf DESTINATION etc COMPONENT PROFILE)
@@ -210,7 +208,6 @@ install(FILES bin/etc/send_gdev.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/send_route.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/sapp_log.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/asymmetric_addr_layer.conf DESTINATION etc COMPONENT PROFILE)
-install(FILES bin/etc/asymmetric_presence_layer.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/vlan_flipping_map.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/stream_compare_layer.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/necessary_plug_list.conf DESTINATION etc COMPONENT PROFILE)

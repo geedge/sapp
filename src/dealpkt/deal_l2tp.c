@@ -259,6 +259,87 @@ static void l2tp_chap_pkt_parse(const struct mesa_ppp_chap_hdr *chap_hdr, struct
 	return;
 }
 
+static int guess_if_l2tpv2(const struct streaminfo *a_udp, const struct mesa_udp_hdr *udph)
+{
+	const struct l2tp_hdr_v2 *pl2tphdrv2;
+	unsigned short *l2tp_len;
+
+	if(STREAM_TYPE_UDP != a_udp->type){
+		return 0;
+	}
+
+	if((NULL == a_udp->pudpdetail->pdata)
+	 ||(a_udp->pudpdetail->datalen <= sizeof(struct l2tp_hdr_v2))){
+		return 0;
+	}	
+	
+	if((ntohs(udph->uh_sport) != L2TP_REGISTERED_PORT)
+	 &&  (ntohs(udph->uh_dport) != L2TP_REGISTERED_PORT)){
+		return 0; /* 非L2TP包 */
+	} 
+
+#if 0 /* 控制包长度不一定要计算ppp_hdr和ipv4_hdr */
+	if(ntohs(udph->uh_ulen) - sizeof(struct mesa_udp_hdr) < sizeof(struct l2tp_hdr_v2) +  sizeof(struct mesa_ppp_hdr) + sizeof(struct mesa_ip4_hdr)){
+		return 0; /* 数据小于最小可解析长度, 非L2TP包 */
+	}
+#endif	
+
+	pl2tphdrv2 = (const struct l2tp_hdr_v2 *)((char *)udph + sizeof(struct mesa_udp_hdr));
+
+	/* TODO 2, 暂时只处理L2TPv2版本, L2TPv3待添加 */
+	if(2 != pl2tphdrv2->version){
+		if(3 == pl2tphdrv2->version){
+			sapp_runtime_log(20, "recv l2tp version3 packet, but not support yet, TODO!\n");
+		}
+		return 0;
+	}
+	
+	if(1 == pl2tphdrv2->type){ /* control message valid check */
+		if(0 == pl2tphdrv2->length_present){
+			return 0; /* control mesage length must be set to 1, refer to RFC2661 page10. */
+		}
+
+		if(0 == pl2tphdrv2->seq_present){
+			return 0; /* control mesage seq must be set to 1, refer to RFC2661 page10. */
+		}
+
+		if(1 == pl2tphdrv2->offset_present){
+			return 0; /* control mesage offset must be set to 0, refer to RFC2661 page10. */
+		}
+
+		if(1 == pl2tphdrv2->priority){
+			return 0; /* control mesage priority must be set to 0, refer to RFC2661 page10. */
+		}		
+	}
+	if(pl2tphdrv2->length_present){
+		l2tp_len = (unsigned short *)((char *)pl2tphdrv2 + sizeof(struct l2tp_hdr_v2));
+
+		if(ntohs(*l2tp_len) != ntohs(udph->uh_ulen)-8){
+			return 0; /* 长度不匹配, 不是L2TP, 也许是其他协议复用了UDP 1701端口, 凑巧而已 */
+		}
+	}
+
+	return 1;
+}
+
+
+char udp_l2tp_identify_entry(const struct streaminfo *a_udp,void **pme, int thread_seq,void *a_packet)
+{
+	struct streaminfo_private *a_udp_pr;
+	const struct mesa_udp_hdr *udph;
+	const struct mesa_ip4_hdr *ip4hdr = (const struct mesa_ip4_hdr *)a_packet;	
+	udph = (const struct mesa_udp_hdr *)((char *)a_packet + ip4hdr->ip_hl * 4);
+	
+	if(guess_if_l2tpv2(a_udp, udph) != 0){
+		a_udp_pr = (struct streaminfo_private *)a_udp;
+		a_udp_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNLE_L2TP;		
+	}
+
+	/* 此插件仅用于识别l2tp隧道, 然后会在udp streaminfo上设置标记, 后续的包无需再处理 */
+	return APP_STATE_DROPME;
+}
+
+
 /*
 	NOTE: 本层的参数this_layer_data->指向承载的UDP层, 因为要判断是否为L2TP协议.
 */

@@ -45,7 +45,7 @@ extern const struct streaminfo *stream_addr_list_pton_inward(const char *addr_li
 extern int cycle_pkt_dump_init(int argc, char *argv[]);
 extern char udp_teredo_identify_entry(const struct streaminfo *pstream, const void *this_hdr, const void *raw_pkt, void **pme);
 extern char udp_gtp_identify_entry(const struct streaminfo *pstream, const void *this_hdr, const void *raw_pkt, void **pme);
-
+extern char udp_l2tp_identify_entry(const struct streaminfo *a_udp,void **pme, int thread_seq, const void *a_packet);
 extern char isakmp_protocol_entry(const struct streaminfo *a_udp,  void **pme, int thread_seq,const void *ip_hdr);
 extern int stream_register_udp_raw(SAPP_STREAM_FUN_T x);
 extern int number_is_2powerN(uint n);
@@ -263,6 +263,7 @@ int MESA_platform_init(int argc, char *argv[])
 	/* 平台内置固定开启的插件 */
 	stream_register_udp_raw(udp_teredo_identify_entry);
 	stream_register_udp_raw(udp_gtp_identify_entry);
+	stream_register_udp(udp_l2tp_identify_entry);
 
 	/* 2020-12-23 lijia add, vxlan保活插件内置 */
 	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
