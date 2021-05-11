@@ -259,10 +259,13 @@ void sysinfo_output(void)
 	if(0 == update_packet_io_status_sw){
 		return;
 	}
-	fp = fopen("./sysinfo.log","w+");
+
+	MESA_mkdir_p(sapp_global_val->config.cfg_file_path.cfg_files_root_dir, 0755);
+	
+	fp = fopen(ABBR_SYSINFO_LOG_DATA_FILE,"w+");
 	if(fp == NULL)
 	{
-		//runtime_log(RLOG_LV_FATAL,(char *)"test_dealpkt",(char *)"sysinfo.log fopen error!\n");
+		printf("\033[1;31;40mopen local sysinfo.log error, %s\033[0m\n", strerror(errno));
 		return;
 	}
 

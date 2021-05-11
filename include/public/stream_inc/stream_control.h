@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define STREAM_CONTROL_H_VERSION		(20210419)
+#define STREAM_CONTROL_H_VERSION		(20210511)
 
 #define TCP_CTEAT_LINK_BYSYN   			0x01  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
 #define TCP_CTEAT_LINK_BYDATA 			0x02  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
@@ -106,6 +106,9 @@ enum sapp_platform_opt{
 	SPO_TOTAL_RCV_OUTBOUND_UDP_BYTE,		/* total recv udp packet bytes, opt_val type must be unsigned long long */
 	SPO_CURTIME_TIMET_MS,		/* current time in millisecond, opt_val type must be long long */
 	SPO_CURRENT_STATE,			/* running stage of sapp, opt_val type is enum sapp_state_t */
+
+	SPO_CONFIG_ROOT_DIR,		/* config file root directory, opt_val type must be char[], opt_val_len is value-result argument */
+	SPO_DATA_ROOT_DIR,			/* data or state file root directory, opt_val type must be char[], opt_val_len is value-result argument */
 };
 
 

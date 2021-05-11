@@ -506,10 +506,11 @@ int process_conf_entryname()
 {
 	int rec;
 	int len;
-	char filename[PLUGIN_FILENAME_MAXLEN] = {0};
+	//char filename[PLUGIN_FILENAME_MAXLEN] = {0};
 	char buf_entryname[PLUGIN_MAX_CONFLEN] = {0};
 	FILE* fp;
 
+#if 0
 	//get entrylist's full name from in plugin.conf
 	rec = MESA_load_profile_string_def(PLUGIN_CONFNAME,PLUGIN_CONFMODULE,
 									"entrylist_config",filename,PLUGIN_FILENAME_MAXLEN,FILENAME_CONFLIST_DEF);
@@ -519,13 +520,14 @@ int process_conf_entryname()
 		return -1;
 
 	}
+#endif
 
 	//process entrylist conf
-	fp = fopen(filename,"r");
+	fp = fopen(ABBR_PLUG_ENTRY_LIST_CONF_FILE,"r");
 	if(fp == NULL)
 	{
 		//MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"fopen %s error!\n",filename);
-		sapp_log(30, ~0, ~0, "open %s error!", filename);
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "open entry_list cfg file: '%s' error!", ABBR_PLUG_ENTRY_LIST_CONF_FILE);
 		//return -1;
 		exit(1);
 	}
@@ -1371,7 +1373,7 @@ static void confilist_file_check(void)
 Êä³ö£º0:sucess
 		   -1:error
 *****************************************************************************/
-int process_conflist(char* filename,int plug_type)
+int process_conflist(int plug_type)
 {
 	int rec;
 	int len;

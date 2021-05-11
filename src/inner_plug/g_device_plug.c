@@ -458,9 +458,11 @@ static void *gdev_keepalive_log_thread(void *arg)
 	time_t last_op_time;
 
 	last_op_time = time(NULL);
+
+	MESA_mkdir_p(sapp_global_val->config.data_file_path.data_files_root_dir, 0755);
 	
 	while(1){
-		gdev_status_fp = fopen("log/gdev_keeplive_status.log", "w+");
+		gdev_status_fp = fopen(ABBR_INLINE_KEEPALIVE_LOG_DATA_FILE, "w+");
 		if(NULL == gdev_status_fp){
 			sleep(1);
 			continue;
@@ -644,9 +646,9 @@ static int vxlan_sport_service_map_init(void)
 	char *section;
 	unsigned short begin_sport, end_sport;
 
-	fp = fopen(ABBR_VXLAN_SPOER_CONF_FILE, "r");
+	fp = fopen(ABBR_VXLAN_SPORT_MAP_CONF_FILE, "r");
 	if(NULL == fp){
-		MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "open file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
+		MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "open vxlan sport map file %s error!\n", ABBR_VXLAN_SPORT_MAP_CONF_FILE);
 		return -1;
 	}
 
@@ -659,7 +661,7 @@ static int vxlan_sport_service_map_init(void)
 		/* service-id */
 		section = strtok_r(line_buf, delim, &save_ptr);
 		if(NULL == section){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPORT_MAP_CONF_FILE);
 			goto done;
 		}
 		tmp_service_id = atoi(section);
@@ -667,19 +669,19 @@ static int vxlan_sport_service_map_init(void)
 		/* VPN-id, 暂时不用转换, 直接减100即是业务号 */
 		section = strtok_r(NULL, delim, &save_ptr);
 		if(NULL == section){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPORT_MAP_CONF_FILE);
 			goto done;
 		}
 
 		/* begin-port */
 		section = strtok_r(NULL, delim, &save_ptr);
 		if(NULL == section){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPORT_MAP_CONF_FILE);
 			goto done;
 		}
 		tmp_int = atoi(section);
 		if(tmp_int <= 0 || tmp_int > 65535){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPORT_MAP_CONF_FILE);
 			goto done;
 		}
 		begin_sport = (unsigned short)tmp_int;
@@ -687,18 +689,18 @@ static int vxlan_sport_service_map_init(void)
 		/* end-port */
 		section = strtok_r(NULL, delim, &save_ptr);
 		if(NULL == section){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPORT_MAP_CONF_FILE);
 			goto done;
 		}	
 		tmp_int = atoi(section);
 		if(tmp_int <= 0 || tmp_int > 65535){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPORT_MAP_CONF_FILE);
 			goto done;
 		}	
 		end_sport = (unsigned short)tmp_int;
 
 		if(end_sport < begin_sport){
-			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPOER_CONF_FILE);
+			MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "parse file %s error!\n", ABBR_VXLAN_SPORT_MAP_CONF_FILE);
 			goto done;
 		}
 
@@ -765,7 +767,7 @@ int gdev_keepalive_plug_init(void)
 	memset(g_vxlan_sport_to_service_id, 0, sizeof(g_vxlan_sport_to_service_id));
 
 	memset(tmp_ip_buf, 0, 16);
-	MESA_load_profile_string_nodef((char *)"./etc/gdev.conf", (char *)"Module", (char *)"sendto_gdev_ip", tmp_ip_buf, 16);
+	MESA_load_profile_string_nodef((char *)ABBR_INLINE_DEV_CONF_FILE, (char *)"Module", (char *)"sendto_gdev_ip", tmp_ip_buf, 16);
 	if(tmp_ip_buf[0] == '\0'){
 		MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]","can't get 'sendto_gdev_ip'");
 		return -1;
@@ -773,8 +775,8 @@ int gdev_keepalive_plug_init(void)
 
 	inet_pton(AF_INET, tmp_ip_buf, &sendto_gdev_card_ip);
 
-	MESA_load_profile_int_def((char *)"./etc/gdev.conf", (char *)"Module", (char *)"default_keepalive_action", &g_dev_keepalive_default_action, 1);
-	MESA_load_profile_int_def((char *)"./etc/gdev.conf", (char *)"Module", (char *)"gdev_status_switch", &GDEV_KEEPALIVE_LOG_SWITCH, 1);
+	MESA_load_profile_int_def((char *)ABBR_INLINE_DEV_CONF_FILE, (char *)"Module", (char *)"default_keepalive_action", &g_dev_keepalive_default_action, 1);
+	MESA_load_profile_int_def((char *)ABBR_INLINE_DEV_CONF_FILE, (char *)"Module", (char *)"gdev_status_switch", &GDEV_KEEPALIVE_LOG_SWITCH, 1);
 
 
 	for(i = 0; i <  MAX_VXLAN_SERVICE_NUM; i++){

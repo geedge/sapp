@@ -50,11 +50,11 @@ static void plugin_protocol_info_convert(void)
 输出：0:sucess
 		   -1:error
 *****************************************************************************/
-int plugin_load_protocol(char* conflist_filename)
+int plugin_load_protocol(void)
 {
 	int rec;
 
-	rec = process_conflist(conflist_filename,PLUGTYPE_PROTOCOL);
+	rec = process_conflist(PLUGTYPE_PROTOCOL);
 #if 0	/* 此处错误继续执行plugin_protocol_info_convert(), 不能因某个protocol层插件挂载失败直接返回 */
 	if(rec < 0)
 	{

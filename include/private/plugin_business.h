@@ -21,7 +21,7 @@ typedef struct _plugin_business_plug_info
 
 void init_pluginfo_elem_bus(stBusinessPlugInfo** business_plug_info);
 void destroy_pluginfo_elem_bus(stBusinessPlugInfo* plug_info);
-int plugin_load_business(char* filename);
+int plugin_load_business(void);
 int process_confelem_business(char* confelem_filename);
 
 #ifdef __cplusplus

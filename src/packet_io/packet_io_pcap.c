@@ -221,6 +221,7 @@ static void process_bar_print(int len)
 	int index;
 	double bytes_per_sec, remain_time;
 	FILE *fp;
+	char dumpfile_proc_log_absolute[PATH_MAX];
 
 	if(CAP_MODEL_PCAP_DUMPFILE != g_pcap_cap_mode){
 		return;
@@ -229,7 +230,8 @@ static void process_bar_print(int len)
 	
 	//if((dump_times % (dumpfile_total_size/10000)) == 0){
 	if(dump_times > PKTps){
-		fp = fopen("./read_dumpfile_progress.log", "w+");
+		snprintf(dumpfile_proc_log_absolute, PATH_MAX, "%s/%s", sapp_global_val->config.data_file_path.data_files_root_dir, "dumpfile_progress.log");
+		fp = fopen(dumpfile_proc_log_absolute, "w+");
 		
 		if(dumpfile_read_size < dumpfile_total_size){
 			percent = ((double)dumpfile_read_size/(double)dumpfile_total_size) * 100;

@@ -395,6 +395,11 @@ void  *plugin_get_plug_entry(const char *plug_name, const char *plug_entry_type)
 int libsapp_setup_env(int argc, char *argv[]);
 void *stream_bridge_create_per_stream(int thread_num);
 void stream_bridge_destroy_per_stream(const struct streaminfo *stream, void *pbridge);
+char *sapp_strdup(const char *raw_s);
+int MESA_mkdir_p(const char *pathname, mode_t mode);
+int sapp_get_secondary_file_path(void);
+void sapp_update_config_root_dir(const char *cfg_root_dir);
+void sapp_update_data_root_dir(const char *data_root_dir);
 
 
 #ifdef __cplusplus

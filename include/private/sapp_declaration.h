@@ -18,9 +18,24 @@ extern "C" {
 #define ABBR_INJECT_RST_NUM 	sapp_global_val->config.stream.tcp.inject.rst_num
 #define ABBR_INJECT_RST_SIGN 	sapp_global_val->config.stream.tcp.inject.rst_signature_enable
 #define ABBR_INTERFACE_TYPE		sapp_global_val->config.packet_io.internal.interface.type_bin
-#define ABBR_PROJECT_LIST_CONF_FILE  	sapp_global_val->config.special_conf_link.project_list_path
-#define ABBR_SEND_RAW_PKT_CONF_FILE  	sapp_global_val->config.special_conf_link.send_raw_pkt_path
-#define ABBR_VXLAN_SPOER_CONF_FILE		sapp_global_val->config.special_conf_link.vxlan_sport_service_map_path
+
+#define ABBR_CFG_FILE_MAIN_ENTRY  		sapp_global_val->config.cfg_file_path.cfg_main_entry_absolute
+#define ABBR_SAPP_LOG_CONF_FILE  		sapp_global_val->config.cfg_file_path.cfg_sapp_log_absolute
+#define ABBR_PROJECT_LIST_CONF_FILE  	sapp_global_val->config.cfg_file_path.cfg_project_list_absolute
+#define ABBR_PLUG_ENTRY_LIST_CONF_FILE  sapp_global_val->config.cfg_file_path.cfg_entry_list_absolute
+#define ABBR_SEND_RAW_PKT_CONF_FILE  	sapp_global_val->config.cfg_file_path.cfg_file_send_raw_pkt_absolute
+#define ABBR_VXLAN_SPORT_MAP_CONF_FILE	sapp_global_val->config.cfg_file_path.cfg_file_vxlan_sport_map_absolute
+#define ABBR_INLINE_DEV_CONF_FILE		sapp_global_val->config.cfg_file_path.cfg_file_inline_dev_absolute
+#define ABBR_NECESSARY_PLUG_CONF_FILE	sapp_global_val->config.cfg_file_path.cfg_file_necessary_plug_absolute
+#define ABBR_STREAM_CMP_LAYER_CONF_FILE	sapp_global_val->config.cfg_file_path.cfg_file_stream_compare_layer_absolute
+#define ABBR_VLAN_FLIPPING_CONF_FILE	sapp_global_val->config.cfg_file_path.cfg_file_vlan_flipping_absolute
+#define ABBR_ASYM_LAYER_ADDR_CONF_FILE	sapp_global_val->config.cfg_file_path.cfg_file_asymmetric_addr_layer_absolute
+
+
+#define ABBR_SYSINFO_LOG_DATA_FILE		sapp_global_val->config.data_file_path.data_sapp_sysinfo_log_absolute
+#define ABBR_FS2_LOG_DATA_FILE			sapp_global_val->config.data_file_path.data_sapp_fs2_log_absolute
+#define ABBR_INLINE_KEEPALIVE_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_inline_keepalive_log_absolute
+
 
 extern sapp_global_t *sapp_global_val;
 
@@ -58,7 +73,7 @@ int sapp_parse_cmd_args(int argc, char *argv[]);
 int sapp_parse_config(void);
 void sapp_init_breakpad_mini(void);
 void sapp_segv_generate(void);
-void sapp_generate_sample_config(void);
+void sapp_generate_example_config(const char *filename);
 void sapp_cla_override_cfg_file(void);
 void sapp_global_val_sanity_check(void);
 void *sapp_time_event_thread(void *arg);

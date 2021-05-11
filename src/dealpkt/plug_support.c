@@ -1670,6 +1670,15 @@ int sapp_size_of_raw_pkt_t(void)
 }
 
 
+char *sapp_strdup(const char *raw_s)
+{
+	int buflen = strlen(raw_s) + 1; //add EOF
+	char *new_s = (char *)calloc(1, buflen);
+	memcpy(new_s, raw_s, buflen);
+
+	return new_s;
+}
+
 
 #ifdef __cplusplus
 }

@@ -6,12 +6,15 @@
 ###################################################################################################
 
 [SYSTEM]
-instance_name = "sapp_v4.0"
+instance_name = "sapp_v4.2"
 
 [CPU]
 worker_threads=1
 send_only_threads_max=1
 ### note, bind_mask, if you do not want to bind thread to special CPU core, keep it empty as []
+### there are two different grammars:
+### standard C array format: bind_mask=[1,2,3,4,5,11,12,13,14,15]
+### MESA_load_profile range format: bind_mask="1-5,11-15"
 bind_mask=[]
 
 [MEM]
@@ -25,10 +28,6 @@ dictator_enable=1
 
 ### note, optional value is [none, vxlan]
     overlay_mode=none
-    stream_compare_layer_cfg_file="etc/stream_compare_layer.conf"
-    vlan_flipping_cfg_file="etc/vlan_flipping_map.conf"
-    asymmetric_addr_layer_cfg_file="etc/asymmetric_addr_layer.conf"
-    prune_inject_layer_cfg_file="etc/prune_inject_layer.conf"
 	
     [packet_io.feature]
 ### note, used to represent inbound or outbound direction value,
@@ -104,7 +103,7 @@ dictator_enable=1
     max=10000
     timeout=60
     syn_mandatory=1
-    reorder_pkt_max=5
+    reorder_pkt_max=32
     analyse_option_enabled=1
     tuple4_reuse_time_interval=30
 
@@ -147,8 +146,6 @@ dictator_enable=1
         enabled=1
 ### note, if "file_truncate_open_enabled=1", file will be truncated, otherwise open the file for appending.	 
         file_truncate_enabled = 1
-        log_file_name = "fs2_sysinfo.log"
-        log_conf_name = "etc/sapp_log.conf"
      
         [profiling.log.remote]
         enabled=1
@@ -190,20 +187,34 @@ dictator_enable=1
 ### note, file size unit: MB
         file_size_max_per_thread=10000 
 
-### note:
-### These configurations format is complex and difficult to describe with toml grammar,
-### so, create a Independent config file to description specific information.
-[SPECIAL_CONFIG_LINK]	 
-    project_list_path="./etc/project_list.conf"
-    plugin_path="./etc/plugin.conf"
-    entrylist_path="./etc/entrylist.conf"
-    send_raw_pkt_path="./etc/send_raw_pkt.conf"
-    vxlan_sport_service_map_path="./etc/vxlan_sport_service_map.conf"
-    necessary_plug_list_path="./etc/necessary_plug_list.conf"
-
 [breakpad]
     disable_coredump=0
     enable_breakpad=0
     breakpad_minidump_dir="/tmp/crashreport"
     enable_breakpad_upload=0
     breakpad_upload_url="http://127.0.0.1/"
+
+
+### note:
+### These configurations format is complex and difficult to describe with toml grammar,
+### so, create a independent secondary config file to description specific information.
+### relative path, will add prefix with cmd args --config-root-dir, use default ./etc/ without --config-root-dir args.
+
+[SECONDARY_CONFIG_LINK]	 
+	cfg_file_sapp_log="sapp_log.conf"
+	cfg_file_plug_list="conflist.inf"
+	cfg_file_project_list="project_list.conf"
+	cfg_file_entrylist="entrylist.conf"
+	cfg_file_send_raw_pkt="send_raw_pkt.conf"
+	cfg_file_vxlan_sport_map="vxlan_sport_service_map.conf"
+	cfg_file_inline_device="gdev.conf"
+	cfg_file_necessary_plug_list="necessary_plug_list.conf"
+	cfg_file_stream_compare_layer="stream_compare_layer.conf"
+	cfg_file_vlan_flipping="vlan_flipping_map.conf"
+	cfg_file_asymmetric_addr_layer="asymmetric_addr_layer.conf"
+
+[SECONDARY_DATA_LINK]	 
+    data_file_sysinfo_log="sysinfo.log"
+    data_file_field_stat_log="fs2_sysinfo.log"
+    data_file_inline_keepalive_log="gdev_keeplive_status.log"
+

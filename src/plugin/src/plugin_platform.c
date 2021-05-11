@@ -18,56 +18,16 @@ extern int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugn
 
 /****************************************************************************
 函数名:plugin_load_platform()
-功能：处理解析层插件加载配置文件，即静态加载插件过程
-输入：解析层插件配置文件全路径名
-输出：0:sucess
-		   -1:error
-*****************************************************************************/
-/*
-int plugin_load_platform(char* filename)
-{
-	char buf_filename[PLUGIN_MAX_CONFLEN]={0};
-
-	void* fp_dlopen;
-	void (*steward_init)() = NULL;
-	
-	MESA_load_profile_string_def(PLUGIN_CONFNAME,PLUGIN_CONFMODULE,"steward_path",buf_filename,PLUGIN_FILENAME_MAXLEN,FILENAME_STEWARD);
-
-	fp_dlopen = dlopen(buf_filename,RTLD_LAZY|RTLD_GLOBAL);
-	if(fp_dlopen == NULL)
-	{
-		runtime_log(RLOG_LV_FATAL, PLUGIN_LOGNAME,"dlopen %s error:%s\n",buf_filename,dlerror());
-		return -1;
-
-	}
-
-	steward_init = dlsym(fp_dlopen,"STEWARD_INIT");
-	if(steward_init == NULL)
-	{
-		runtime_log(RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s hash no STEWARD_INIT!\n",buf_filename);
-		return -1;
-	}
-
-	steward_init();
-
-	return 0;
-
-}
-*/
-
-
-/****************************************************************************
-函数名:plugin_load_platform()
 功能：处理解析层插件配置文件列表
 输入：解析层插件配置文件列表全路径名
 输出：0:sucess
 		   -1:error
 *****************************************************************************/
-int plugin_load_platform(char* conflist_filename)
+int plugin_load_platform(void)
 {
 	int rec;
 
-	rec = process_conflist(conflist_filename,PLUGTYPE_PLATFORM);
+	rec = process_conflist(PLUGTYPE_PLATFORM);
 	if(rec < 0)
 	{
 		return -1;

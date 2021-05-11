@@ -695,6 +695,26 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			enum sapp_state_t *cur_stage = (enum sapp_state_t *)opt_val;
 			*cur_stage = (enum sapp_state_t)sapp_global_val->individual_volatile->current_state;
 		}
+
+		case SPO_CONFIG_ROOT_DIR:
+		{
+			if(*opt_val_len <= strlen(sapp_global_val->config.cfg_file_path.cfg_files_root_dir)){
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_CONFIG_ROOT_DIR error:opt_val_len:%d is smaller than root dir string len!\n", *opt_val_len);
+				ret = -1;
+			}
+			strncpy((char *)opt_val, sapp_global_val->config.cfg_file_path.cfg_files_root_dir, *opt_val_len);
+		}
+		break;
+
+		case SPO_DATA_ROOT_DIR:
+		{
+			if(*opt_val_len <= strlen(sapp_global_val->config.data_file_path.data_files_root_dir)){
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_DATA_ROOT_DIR error:opt_val_len:%d is smaller than root dir string len!\n", *opt_val_len);
+				ret = -1;
+			}
+			strncpy((char *)opt_val, sapp_global_val->config.data_file_path.data_files_root_dir, *opt_val_len);
+		}
+		break;
 		
 		default:
 			
@@ -962,7 +982,7 @@ static int sapp_fs2_init(void)
     FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &fs2_opt, sizeof(int));
 
 	if(fs2_local_enabled){
-    	FS_set_para(fs2_handle, OUTPUT_DEVICE, sapp_global_val->config.profiling.log.local.log_file_name, strlen(sapp_global_val->config.profiling.log.local.log_file_name)+1);
+    	FS_set_para(fs2_handle, OUTPUT_DEVICE, ABBR_FS2_LOG_DATA_FILE, strlen(ABBR_FS2_LOG_DATA_FILE)+1);
 	}else{
 		sapp_log(RLOG_LV_INFO, 10, 10, "profiling.log.local.enabled is 0, not save local stat log file.\n");
 		FS_set_para(fs2_handle, OUTPUT_DEVICE, "/dev/null", strlen("/dev/null") + 1);

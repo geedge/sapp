@@ -62,7 +62,7 @@ static int parse_send_raw_pkt_conf(void)
 
 	fp = fopen(ABBR_SEND_RAW_PKT_CONF_FILE, "r");
 	if(NULL == fp){
-		printf("\033[41m[Error]open file '%s' error!\033[0m\n", ABBR_SEND_RAW_PKT_CONF_FILE);
+		printf("\033[41m[Error]open send raw pkt config file '%s' error!\033[0m\n", ABBR_SEND_RAW_PKT_CONF_FILE);
 		return -1;
 	}
 

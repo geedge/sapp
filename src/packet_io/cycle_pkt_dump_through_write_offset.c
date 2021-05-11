@@ -652,7 +652,7 @@ static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt, enum
 				pktdump_cfg->storge_path, getpid(), thread_seq, G_FILENAME_INDEX[thread_seq]);
 		G_PKT_DUMP_FP[thread_seq] = fopen(dump_file_name, "wb+"); 		
 		if(NULL == G_PKT_DUMP_FP[thread_seq]){
-			printf("fopen %s error!\n", dump_file_name);
+			printf("open dump file:%s error!\n", dump_file_name);
 			return;
 		}
 		/* pcap file header, first time */
@@ -693,7 +693,7 @@ static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt, enum
 				G_PKT_DUMP_ROOT_DIR, getpid(), thread_seq, G_FILENAME_INDEX[thread_seq]);
 		G_PKT_DUMP_FP[thread_seq] = fopen(dump_file_name, "wb+"); 		
 		if(NULL == G_PKT_DUMP_FP[thread_seq]){
-			printf("fopen %s error!\n", dump_file_name);
+			printf("open dumpfile: %s error!\n", dump_file_name);
 			return;
 		}
 		/* pcap file header, first time */

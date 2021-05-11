@@ -1268,7 +1268,7 @@ int parse_send_gdev_ip_conf(const char *profile_path)
     int ret = 0;
     fp = fopen(profile_path, "r");
     if(NULL == fp){
-        printf("open %s error!\n", profile_path);
+        printf("open send_gdev config file: %s error!\n", profile_path);
         return -1;
     }
 
@@ -1310,7 +1310,7 @@ int parse_send_route_conf(const char *profile_path)
 	int ret = 0;
 	fp = fopen(profile_path, "r");
 	if(NULL == fp){
-		printf("open %s error!\n", profile_path);
+		printf("open send route config file: %s error!\n", profile_path);
 		return -1;
 	}
 

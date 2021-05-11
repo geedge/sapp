@@ -8,6 +8,10 @@
 #include "stream_inc/stream_base.h"
 
 
+#define SAPP_CFG_SECONDARY_DIR  "sapp" /* 命令行参数-d指定配置文件根目录, 但是还有很多插件, 所以平台追加二级目录sapp, 避免大量文件都存储在一个目录太混乱 */
+#define SAPP_DATA_SECONDARY_DIR  SAPP_CFG_SECONDARY_DIR
+
+
 enum pkt_dump_mode{
 	PKT_DUMP_LOCAL_FILE		=	1, 
 	PKT_DUMP_UDP_SOCKET		=	2, 
@@ -128,8 +132,6 @@ typedef struct{
 typedef struct{
 	int enabled;
 	int file_truncate_enabled; /* append or truncate */
-	char log_file_name[PATH_MAX];
-	char log_conf_name[PATH_MAX];
 }sapp_config_profiling_log_local_t;
 
 
@@ -225,11 +227,6 @@ typedef struct{
 typedef struct{
 	char overlay_mode_string[NAME_MAX];
 	enum overlay_mode_config overlay_mode_bin;
-	char vlan_flipping_cfg_file[PATH_MAX];
-	char asymmetric_addr_layer_cfg_file[PATH_MAX];
-	char asymmetric_presence_layer_cfg_file[PATH_MAX];
-	char prune_inject_layer_cfg_file[PATH_MAX];
-	char stream_compare_layer_cfg_file[PATH_MAX];
 	int l2_l3_tunnel_support;
 	int vlan_flipping_map_num;
 	sapp_vlan_flipping_map_t vlan_flipping_map_array[MAX_VLAN_FLIPPING_MAP_NUM];
@@ -269,14 +266,61 @@ typedef struct{
 	sapp_dup_pkt_t dup_pkt_para; /* 重复流量识别 */
 }sapp_config_packet_io_t;
 
+
+
 typedef struct{
-	const char *project_list_path;
-	const char *plugin_path;
-	const char *entrylist_path;
-	const char *send_raw_pkt_path;
-	const char *vxlan_sport_service_map_path;
-	const char *necessary_plug_list_path; /* 必要插件列表, 如果加载失败sapp就退出 */
-}sapp_config_special_link_t;
+	const char *cfg_files_root_dir;
+	
+	const char *cfg_main_entry_relative; /* 主配置文件, 固定是sapp.toml, 路径可以靠-c参数指定 */
+	const char *cfg_main_entry_absolute; /* /home/project_xxx/sapp/sapp.toml */
+
+	const char *cfg_sapp_log_relative;
+	const char *cfg_sapp_log_absolute;
+
+	const char *cfg_plug_list_relative;
+	const char *cfg_plug_list_absolute;
+	
+	const char *cfg_project_list_relative;
+	const char *cfg_project_list_absolute;
+	
+	const char *cfg_entry_list_relative;
+	const char *cfg_entry_list_absolute;
+
+	const char *cfg_file_send_raw_pkt_relative;
+	const char *cfg_file_send_raw_pkt_absolute;
+	
+	const char *cfg_file_vxlan_sport_map_relative;
+	const char *cfg_file_vxlan_sport_map_absolute;
+
+	const char *cfg_file_inline_dev_relative;
+	const char *cfg_file_inline_dev_absolute;
+
+	const char *cfg_file_necessary_plug_relative;  /* 必要插件列表, 如果加载失败sapp就退出 */
+	const char *cfg_file_necessary_plug_absolute;
+
+	const char *cfg_file_stream_compare_layer_relative;
+	const char *cfg_file_stream_compare_layer_absolute;	
+
+	const char *cfg_file_vlan_flipping_relative;
+	const char *cfg_file_vlan_flipping_absolute;		
+
+	const char *cfg_file_asymmetric_addr_layer_relative;
+	const char *cfg_file_asymmetric_addr_layer_absolute;		
+}sapp_config_file_link_t;
+
+
+typedef struct{
+	const char *data_files_root_dir;
+	
+	const char *data_sapp_sysinfo_log_relative;
+	const char *data_sapp_sysinfo_log_absolute;
+
+	const char *data_sapp_fs2_log_relative;
+	const char *data_sapp_fs2_log_absolute;
+
+	const char *data_inline_keepalive_log_relative;
+	const char *data_inline_keepalive_log_absolute;	
+}sapp_data_file_link_t;
 
 typedef struct{
 	int ipv6_decapsulation_enabled; /* 是否解析ipv6数据包 */
@@ -297,7 +341,8 @@ typedef struct{
 	sapp_config_profiling_t profiling;
 	sapp_config_packet_io_t packet_io;
 	sapp_protocol_feature_t protocol_feature;
-	sapp_config_special_link_t special_conf_link;
+	sapp_config_file_link_t cfg_file_path;
+	sapp_data_file_link_t data_file_path;
 }sapp_config_t;
 
 

@@ -14,7 +14,6 @@ extern void del_last_rn(char *data, int max_len);
 extern int tcp_flow_stat_init(void);
 extern int G_UDP_FLOW_STAT_PROJECT_ID;
 
-//#define ABBR_PROJECT_LIST_CONF_FILE				"conf/project_list.conf"
 #define PROJECT_REQ_MAX_PLUG_NUM			(128)
 
 enum pro_type_list{
@@ -167,6 +166,7 @@ int project_customer_register(const char *project_req_name, const char *project_
 }
 
 
+#if 0 /* 采用动态注册, 不再需要project_list.conf文件 */
 int parse_project_req_conf(void)
 {
 	char *save_ptr;
@@ -229,6 +229,7 @@ int parse_project_req_conf(void)
 	fclose(fp);
 	return 0;
 }
+#endif
 
 
 static int project_req_conf_is_exist(const char *check_name)
@@ -242,7 +243,7 @@ static int project_req_conf_is_exist(const char *check_name)
 
 	fp = fopen(ABBR_PROJECT_LIST_CONF_FILE, "r");
 	if(NULL == fp){
-		sapp_log(RLOG_LV_DEBUG, 1, 1, "Open '%s' error: %s", ABBR_PROJECT_LIST_CONF_FILE, strerror(errno));
+		sapp_log(RLOG_LV_DEBUG, 1, 1, "Open project list config: '%s' error: %s", ABBR_PROJECT_LIST_CONF_FILE, strerror(errno));
 		return 0;
 	}
 

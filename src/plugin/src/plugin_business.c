@@ -133,11 +133,11 @@ int process_confelem_business(char* confelem_filename)
 输出：0:sucess
 		   -1:error
 *****************************************************************************/
-int plugin_load_business(char* conflist_filename)
+int plugin_load_business(void)
 {
 	//int rec;
 
-	process_conflist(conflist_filename,PLUGTYPE_BUSENISS);
+	process_conflist(PLUGTYPE_BUSENISS);
 
 	/* 2020-04-18 lijia modify, 
 	   此处不用判断process_conflist()的返回值, 

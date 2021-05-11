@@ -41,7 +41,7 @@ typedef struct _plugin_protocol_plug_info
 }stProtocolPlugInfo;
 
 
-int plugin_load_protocol(char* conflist_filename);
+int plugin_load_protocol(void);
 int process_confelem_protocol(char* confelem_filename);
 
 #ifdef __cplusplus

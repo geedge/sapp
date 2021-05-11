@@ -8,6 +8,7 @@ extern stPlugRuntimeInfo plugctrl_runtime_info;
 
 extern int platform_register_action_judge(char (*action_cb_fun)(int net_conn_mode, char plug_action));
 
+#if 0
 /****************************************************************************
 函数名:plugin_readconf()
 功能：读配置文件，获得三类插件配置文件列表全路径名
@@ -62,6 +63,7 @@ int plugin_readconf(char* filename_platform,char* filename_protocol,char* filena
 	return 0;
 
 }
+#endif
 
 
 char process_pkt_return(int net_conn_mode, char plug_action)
@@ -85,26 +87,27 @@ char process_pkt_return(int net_conn_mode, char plug_action)
 int plugctrl_proc()
 {
 	int rec;
-	int logger_level;
-	char logger_filepath[PLUGIN_FILENAME_MAXLEN]={0};
-	char filename_platform[PLUGIN_FILENAME_MAXLEN] = {0};
-	char filename_protocol[PLUGIN_FILENAME_MAXLEN] = {0};
-	char filename_business[PLUGIN_FILENAME_MAXLEN] = {0};
+	//int logger_level;
+	//char logger_filepath[PLUGIN_FILENAME_MAXLEN]={0};
+	//char filename_platform[PLUGIN_FILENAME_MAXLEN] = {0};
+	//char filename_protocol[PLUGIN_FILENAME_MAXLEN] = {0};
+	//char filename_business[PLUGIN_FILENAME_MAXLEN] = {0};
 
 	plugin_manage_init();
 
+#if 0
 	rec = plugin_readconf(filename_platform,filename_protocol,filename_business,logger_filepath,(unsigned int*)&logger_level);
 	if(rec < 0)
 	{
 		printf("plugin_readconf error!\n");
 		return -1;
 	}
+#endif
 
-	 	//MESA_handle_logger init
-	g_plugin_runtime_handle = MESA_create_runtime_log_handle(logger_filepath, logger_level);
+	g_plugin_runtime_handle = MESA_create_runtime_log_handle("./log/runtimelog_plugin", RLOG_LV_DEBUG);
 	if(g_plugin_runtime_handle == NULL)
 	{
-		printf("rawdata MESA_create_runtime_log_handle() error!\n");
+		printf("plugctrl_proc MESA_create_runtime_log_handle() error!\n");
 		return -1;
 	}
 
@@ -116,9 +119,9 @@ int plugctrl_proc()
 		return -1;
 	}
 
-	rec = plugin_load_platform(filename_platform);
-	rec = plugin_load_protocol(filename_protocol);
-	rec = plugin_load_business(filename_business);
+	rec = plugin_load_platform();
+	rec = plugin_load_protocol();
+	rec = plugin_load_business();
 
 	platform_register_action_judge(process_pkt_return);
 

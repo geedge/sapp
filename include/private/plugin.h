@@ -107,7 +107,7 @@ extern int stream_register_fun(int funtype,char (*x)(void));
 void plugin_call_flagstate();
 int process_conf_entryname();
 int process_confelem_plugname(char* filename,int plugtype,char** plugname);
-int process_conflist(char* filename,int plug_type);
+int process_conflist(int plug_type);
 
 #ifdef __cplusplus
 }
