@@ -54,7 +54,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
         sapp_runtime_log(10, "GTP layer msg_type not T_PDU, %x !\n", p_gtd_hdr->msg_type);
         return PASS;
     }
-    if(p_gtd_hdr->flags != 0x30 && p_gtd_hdr->flags != 0x32)
+    if(p_gtd_hdr->flags != 0x30 && p_gtd_hdr->flags != 0x32) /* 不存在GTPv2-U协议, 在LTE中的GTP-U仍使用GTPv1-U */
     {
         sapp_runtime_log(20, "GTP layer flag not 0x30, %x !\n", p_gtd_hdr->flags);
         return PASS;

@@ -5,6 +5,7 @@
 void* g_plugin_runtime_handle;
 extern int g_business_plug_type;
 extern stPlugRuntimeInfo plugctrl_runtime_info;
+void sapp_plugin_load_state_output(void);
 
 extern int platform_register_action_judge(char (*action_cb_fun)(int net_conn_mode, char plug_action));
 
@@ -122,6 +123,8 @@ int plugctrl_proc()
 	rec = plugin_load_platform();
 	rec = plugin_load_protocol();
 	rec = plugin_load_business();
+
+	sapp_plugin_load_state_output();
 
 	platform_register_action_judge(process_pkt_return);
 

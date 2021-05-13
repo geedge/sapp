@@ -139,6 +139,92 @@ char* g_plugin_entryname[PLUGIN_MAX_ENTRYNUM] =
 
 int g_plugin_version_VERSION_20170511;
 
+
+typedef struct{
+	time_t init_time;
+	int init_state; /* <0: error; >= 0: succ */
+	long long time_spent_in_us;
+	const char *plug_path;
+}plugin_load_state_t;
+
+
+static plugin_load_state_t g_plugin_load_state[128];
+static int plugin_load_state_num = 0;
+
+
+static void plugin_load_state_update(int init_state, long long time_spent_in_us, const char *plug_path)
+{
+	if(plugin_load_state_num >= 128){
+		return;
+	}
+
+	g_plugin_load_state[plugin_load_state_num].init_time = time(NULL);
+	g_plugin_load_state[plugin_load_state_num].init_state = init_state;
+	if(init_state < 0){
+		g_plugin_load_state[plugin_load_state_num].time_spent_in_us = 0; /* 初始化失败记为0 */
+	}else{
+		g_plugin_load_state[plugin_load_state_num].time_spent_in_us = time_spent_in_us;
+	}
+	g_plugin_load_state[plugin_load_state_num].plug_path = sapp_strdup(plug_path);
+	
+	plugin_load_state_num++;
+}
+
+/* 对于qsort来说, item1,item2是每个数组成员的地址, 对于本例来说, 即指针的指针, 所以是plugin_load_state_t ** */
+static int qsort_compare_time_spent_cb(const void *item1, const void *item2)
+{
+	const plugin_load_state_t **load_state1 = (plugin_load_state_t **)item1;
+	const plugin_load_state_t **load_state2 = (plugin_load_state_t **)item2;
+	
+	return (int)((*load_state1)->time_spent_in_us - (*load_state2)->time_spent_in_us);
+}
+
+void sapp_plugin_load_state_output(void)
+{
+	int i;
+	plugin_load_state_t *ptr_plugin_load_state[128] = {};
+	char time_str[64];
+	char state_log_file_name[PATH_MAX];
+	FILE *fp;
+
+	if((strncasecmp(sapp_global_val->config.data_file_path.data_files_root_dir, "./", 2) == 0)
+	&& (strlen(sapp_global_val->config.data_file_path.data_files_root_dir) == 2)){
+		snprintf(state_log_file_name, PATH_MAX, "%s", "load_plugin_stat.log");
+	}else{
+		snprintf(state_log_file_name, PATH_MAX, "%s/sapp/%s", sapp_global_val->config.data_file_path.data_files_root_dir, "load_plugin_stat.log");
+	}
+	
+	fp = fopen(state_log_file_name, "w+");
+	if(NULL == fp){
+		return;
+	}
+
+	for(i = 0; i < plugin_load_state_num; i++){
+		ptr_plugin_load_state[i] = &g_plugin_load_state[i];
+	}
+
+	qsort(ptr_plugin_load_state, plugin_load_state_num, sizeof(void *), qsort_compare_time_spent_cb);
+
+	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
+	fprintf(fp, "sapp load plugins statistics:\n");
+	fprintf(fp, "%20s %5s %13s %6s\n", "start_time", "state", "time_spent_us", "plugin_path");
+
+	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
+	for(i = 0; i < plugin_load_state_num; i++){
+		timet_to_str(ptr_plugin_load_state[i]->init_time, time_str, sizeof(time_str));
+		fprintf(fp, "%20s %5s %13lld %6s\n", time_str, 
+				(ptr_plugin_load_state[i]->init_state < 0) ? "\033[1;31;40mFAIL\033[0m":"\033[32mSUCC\033[0m", 
+				ptr_plugin_load_state[i]->time_spent_in_us, 
+				ptr_plugin_load_state[i]->plug_path);				
+	}	
+	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
+
+	if(fp){
+		fclose(fp);
+	}
+}
+
+
 static void record_time_start(struct timespec *start)
 {
     clock_gettime(CLOCK_MONOTONIC, start);
@@ -720,11 +806,13 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 			sapp_log(RLOG_LV_FATAL, 1, 1, "%s init error, but this plug is necessary, exit!", buf_sofilename);
 			exit(1);
 		}
+		plugin_load_state_update(-1, 0, buf_sofilename);
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[1;31;40m%s\033[0m init error,don't load it",buf_sofilename);
 		return -1;
 	}
 
 	time_cost_us = record_time_elapse_us(&start);
+	plugin_load_state_update(rec, time_cost_us, buf_sofilename);
 	MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[32m%s\033[0m init succ, using [\033[32m%lld\033[0m] us",buf_sofilename,time_cost_us);
 
 	//load FUNNAME_DESTROY
@@ -1556,7 +1644,7 @@ char plugin_process_pending(stProtocolFunInfo* funlist_pro,stSessionInfo* sessio
 	
 }
 
-char plugin_porcess_data(stSessionInfo* session_info,void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet)
+char plugin_process_data(stSessionInfo* session_info,void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet)
 {
 	char ret = PROT_STATE_GIVEME;
 	long long prot_flag=session_info->prot_flag;
@@ -1666,7 +1754,7 @@ char plugin_porcess_data(stSessionInfo* session_info,void **pme, int thread_seq,
 }
 
 #if 0
-char plugin_porcess_close(int callbake_flag,stSessionInfo* session_info,void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet)
+char plugin_process_close(int callbake_flag,stSessionInfo* session_info,void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet)
 {
 	char ret = PROT_STATE_DROPME;
 	long long prot_flag=session_info->prot_flag;
@@ -1755,7 +1843,7 @@ char plugin_porcess_close(int callbake_flag,stSessionInfo* session_info,void **p
 	
 }
 #else
-char plugin_porcess_close(int callbake_flag,stSessionInfo* session_info,void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet)
+char plugin_process_close(int callbake_flag,stSessionInfo* session_info,void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet)
 {
 	char ret = PROT_STATE_DROPME;
 	long long prot_flag=session_info->prot_flag;
@@ -1801,6 +1889,31 @@ char plugin_porcess_close(int callbake_flag,stSessionInfo* session_info,void **p
 }
 #endif
 
+/*
+	多个session_state状态同时输出时, 比如: SESSION_STATE_PENDING|SESSION_STATE_DATA|SESSION_STATE_CLOSE
+
+	只free相关stSessionFunInfo结构, 不再调用业务插件.
+*/
+static char session_multi_state_context_free(stSessionInfo* session_info,void **pme)
+{
+	stSessionFunInfo* funlist=(stSessionFunInfo*)(*pme);
+	stSessionFunInfo* funelem=funlist;
+	stSessionFunInfo* next=NULL;
+	
+	while(funelem)
+	{
+		next=funelem->next;
+		free(funelem);
+		funelem=next;	
+	}
+
+	*pme=NULL;
+
+	return 0;
+}
+
+
+
 char PROT_PROCESS(stSessionInfo* session_info, void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet)
 {
 	char ret1=PROT_STATE_DROPME;
@@ -1841,25 +1954,13 @@ char PROT_PROCESS(stSessionInfo* session_info, void **pme, int thread_seq,struct
 	{
 		ret1=plugin_process_pending(funlist_pro,session_info,pme,thread_seq,a_stream,a_packet);
 
+        /* 2021-05-12 lijia modify, close状态已经输出过一次了, 不再重复调用业务插件 */
 		if(session_state&SESSION_STATE_CLOSE)
 		{
-			ret2 = plugin_porcess_close(0,session_info,pme,thread_seq,a_stream,a_packet);
-		}
-		else
-		{
-			ret2 =ret1;
+			session_multi_state_context_free(session_info, pme);
 		}
 
-		if(ret1&PROT_STATE_DROPPKT)
-		{
-			return ret2|PROT_STATE_DROPPKT;
-		}
-		else
-		{
-			return ret2;
-		}
-
-		
+		return ret1;
 	}
 
 	if(session_state&SESSION_STATE_DATA)
@@ -1868,30 +1969,20 @@ char PROT_PROCESS(stSessionInfo* session_info, void **pme, int thread_seq,struct
 		{
 			return ret1;
 		}
-		ret1 = plugin_porcess_data(session_info,pme,thread_seq,a_stream,a_packet);
+		ret1 = plugin_process_data(session_info,pme,thread_seq,a_stream,a_packet);
 
+        /* 2021-05-12 lijia modify, close状态已经输出过一次了, 不再重复调用业务插件 */
 		if(session_state&SESSION_STATE_CLOSE)
 		{
-			ret2 = plugin_porcess_close(0,session_info,pme,thread_seq,a_stream,a_packet);
-		}
-		else
-		{
-			ret2=ret1;
+			session_multi_state_context_free(session_info, pme);
 		}
 
-		if(ret1&PROT_STATE_DROPPKT)
-		{
-			return ret2|PROT_STATE_DROPPKT;
-		}
-		else
-		{
-			return ret2;
-		}
+		return ret1;
 	}
 
 	if(session_state&SESSION_STATE_CLOSE)
 	{
-		ret1 = plugin_porcess_close(1,session_info,pme,thread_seq,a_stream,a_packet);
+		ret1 = plugin_process_close(1,session_info,pme,thread_seq,a_stream,a_packet);
 	}
 
 	return ret1;

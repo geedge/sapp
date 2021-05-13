@@ -234,7 +234,7 @@ int marsio_dl_io_set_capture_filter(const char *filter_rule)
 {
 	memset(&g_marsio_bpf_counter, 0, sizeof(g_marsio_bpf_counter));
 	g_marsio_have_bpf=0;
-	(void)filter_rule; /* marsio模式不支持过滤规则 */
+
 	if(strlen(filter_rule) <= 0)return -1;
 	int i,j;
 

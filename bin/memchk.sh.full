@@ -1,2 +1,3 @@
 #!/bin/sh
-valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --leak-resolution=high --error-limit=no --undef-value-errors=yes --track-origins=yes  --show-reachable=yes --log-file=valgrind.log --max-stackframe=7418264 --valgrind-stacksize=1048576 --malloc-fill=AA --free-fill=FE ./sapp
+sed 's/^[ \t]*dictator_enable=.*/dictator_enable=0/g' -i etc/sapp.toml
+valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --leak-resolution=high --error-limit=no --undef-value-errors=yes --track-origins=yes  --show-reachable=yes --log-file=valgrind.log --max-stackframe=7418264 --valgrind-stacksize=1048576 --malloc-fill=AA --free-fill=FE  $@
