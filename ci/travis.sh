@@ -21,6 +21,8 @@ if [ $NPROCESSORS -gt 4 ] ; then
 	NPROCESSORS=4
 fi
 
+NPROCESSORS=1
+
 # Tell make to use the processors. No preceding '-' required.
 MAKEFLAGS="j${NPROCESSORS}"
 export MAKEFLAGS
