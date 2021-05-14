@@ -35,8 +35,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DHIGH_PERF=0")
 
 set(CMAKE_INSTALL_PREFIX /home/mesasoft/sapp_run)
 
-set(PLATFORM_MODE "MIRROR" CACHE STRING
-    " set platform mode chosen by the user, using mirror as default")
+set(PLATFORM_MODE "INLINE" CACHE STRING
+    " set platform mode chosen by the user, using INLINE as default")
 set_property(CACHE PLATFORM_MODE PROPERTY STRINGS MIRROR INLINE)
 message(STATUS "PLATFORM_MODE='${PLATFORM_MODE}'")
 
@@ -86,8 +86,8 @@ endif()
 # MESA SDK Root
 set(MESA_SDK_PREFIX "/opt/MESA/" CACHE STRING "MESA Framework Prefix")
 # Capture Mode
-set(CAPTURE_MODE "PCAP" CACHE STRING
-    "CAPTURE_MODE set Capture network traffic chosen by the user, using PCAP as default")
+set(CAPTURE_MODE "MARSIO" CACHE STRING
+    "CAPTURE_MODE set Capture network traffic chosen by the user, using MARSIO as default")
 
 set_property(CACHE CAPTURE_MODE PROPERTY STRINGS PCAP MARSIO PAG TUN)
 
@@ -115,8 +115,8 @@ if(CAPTURE_MODE MATCHES "TUN")
 endif()
 
 # Memory Allocator
-set(MEM_POOL "OFF" CACHE STRING
-    " set mem alloc chosen by the user, using off as default")
+set(MEM_POOL "DICTATOR" CACHE STRING
+    " set mem alloc chosen by the user, using DICTATOR as default")
 set_property(CACHE MEM_POOL PROPERTY STRINGS OFF DICTATOR DICTATOR_DEBUG
     TCMALLOC TCMALLOC_MINI JEMALLOC)
 message(STATUS "MEM_POOL='${MEM_POOL}'")
@@ -267,7 +267,7 @@ install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_tunnel.h DE
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/sapp_inject.h DESTINATION  /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_bridge.h DESTINATION  /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
 
-install(FILES ${CMAKE_BINARY_DIR}/src/entry/libsapp_dev.a DESTINATION . COMPONENT HEADER)
+install(FILES ${CMAKE_BINARY_DIR}/test/libsapp_devel.a DESTINATION . COMPONENT HEADER)
 
 install(FILES ${CMAKE_BINARY_DIR}/service/sapp.service DESTINATION /usr/lib/systemd/system/ COMPONENT PROFILE)
 

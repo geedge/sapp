@@ -3145,6 +3145,10 @@ int polling_stream_timeout(int tid)
 	struct stream_list *plist=NULL;
 	int i, ret, has_work = 0;
 
+	if(0 == sapp_global_val->config.packet_io.polling_enabled){
+		return POLLING_STATE_IDLE;
+	}
+
 	for(i = UDP_ONE_STATE; i < MAX_UDP_STATE; i++){
 		plist=&(G_MESA_GLOBAL_STREAM[tid]->udpList[i]);
 		if(plist->head){ /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
