@@ -1028,8 +1028,10 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 	int *res_val = (int *)opt_val;
 	int ret = 0;
 
-	if(0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable){
-		sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT error, config duplicate_pkt_distinguish is not enable", 
+	if((0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject)
+		  && (0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp)
+		  && (0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp)){
+		sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT error, config DUPLICATE_PKT is not enable", 
 						 printaddr(&pstream->addr, pstream->threadnum)); 
 		*res_val = -2;
 		return 0;

@@ -90,7 +90,17 @@ dictator_enable=1
     reverse_ethernet_addr=1
 
 [DUPLICATE_PKT]
-    duplicate_pkt_distinguish=1
+[dup_pkt.traffic.original]
+    original_ipv4_tcp_enabled=1
+    original_ipv4_udp_enabled=0
+### note, can't distinguish between duplicate traffic and application retransmit traffic for IPv6 packets,
+###       so not support IPv6 original duplicate traffic check.
+
+[dup_pkt.traffic.inject]
+	inject_all_enabled=1
+	
+[dup_pkt.parameters]
+    ### duplicate_pkt_distinguish=1
     bloom_capacity=1000000
     bloom_error_rate=0.00001
     bloom_timeout=10

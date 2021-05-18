@@ -52,11 +52,11 @@ void sapp_dup_pkt_mark_udp(int tid, unsigned char addrtype, const void *ip_hdr, 
 void sendpkt_dup_pkt_mark_stream(const struct streaminfo *top_stream, const char *ip_hdr);
 
 
-int sapp_dup_pkt_identify_tcp(int tid, struct streaminfo_private *pstream_pr, int tot_pkt, 
-		const void *ip_hdr, const struct mesa_tcp_hdr *tcp_h);
-int sapp_dup_pkt_identify_udp_v4(int tid, struct streaminfo_private *pstream_pr, int tot_pkt, 
-		const struct mesa_ip4_hdr *ipv4_hdr, const struct mesa_udp_hdr *udp_h);		
-int sapp_dup_pkt_identify_udp_v6(int tid, struct streaminfo_private *pstream_pr, int tot_pkt, 
+int sapp_dup_pkt_identify_tcp(int tid, struct streaminfo_private *pstream_pr, 
+		const void *ip_hdr, const struct mesa_tcp_hdr *tcp_h, int add_filter);
+int sapp_dup_pkt_identify_udp_v4(int tid, struct streaminfo_private *pstream_pr,  
+		const struct mesa_ip4_hdr *ipv4_hdr, const struct mesa_udp_hdr *udp_h, int add_filter);		
+int sapp_dup_pkt_identify_udp_v6(int tid, struct streaminfo_private *pstream_pr,  
 		const struct mesa_ip6_hdr *ipv6_hdr, const struct mesa_udp_hdr *udp_h);
 
 

@@ -234,7 +234,10 @@ typedef struct{
 
 
 typedef struct{
-	int dup_pkt_distinguish_enable;
+	//int dup_pkt_distinguish_enable;
+	int dup_pkt_distinguish_all_inject;
+	int dup_pkt_distinguish_ipv4_tcp;
+	int dup_pkt_distinguish_ipv4_udp;
  	int bloom_capacity;
 	double bloom_error_rate;
 	int bloom_timeout;
@@ -378,12 +381,11 @@ typedef struct{
 }sapp_gval_mthread_sys_stat_t;
 
 
-
 struct __sapp_gval_mthread{
 	sapp_gval_mthread_sys_stat_t sys_stat;
 	unsigned short stream_seq_per_thread; /* 用于计算全局流ID */
 	const raw_pkt_t *raw_pkt; /* 因为MESA_fakepacket_send_xxx系列函数没有raw_pkt参数, 也没有stream_info, 为了向前兼容, 不好修改接口, 增加全局变量用于存储当前包 */
-	void *dup_pkt_distinguish_handle; /* 重复流量识别 */
+	void *dup_pkt_distinguish_handle; /* 三个流量入口开关, inject, ipv4_tcp, ipv4_udp, 共同使用一个bloom句柄 */
 }__attribute__ ((aligned (64))); /* for multi-thread, must 64byte alignment */
 typedef struct __sapp_gval_mthread sapp_gval_mthread_t; 
 

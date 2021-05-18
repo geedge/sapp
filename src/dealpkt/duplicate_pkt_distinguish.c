@@ -13,74 +13,55 @@ extern "C" {
 	ip层的ttl, hop不能算为key, 因为经过了几跳路由器又回绕了, ttl肯定会变化, 而上层的数据包确实是重复的.
 */
 
-static const unsigned int sapp_dabloom_capacity = 1000000;
-static const double sapp_dabloom_err_rate = 0.00001;
-static const int sapp_dabloom_timeout = 10;
+/* 
+    2021-05-18 lijia close ipv6 protocol:
 
-#if 0
-void sapp_get_dup_pkt_key_tcp_v4(const struct mesa_ip4_hdr *ip4hdr, const struct mesa_tcp_hdr *thdr, sapp_dup_pkt_key_v4_t *key)
-{
-	key->ip_addr.sip = ip4hdr->ip_src.s_addr;
-	key->ip_addr.dip = ip4hdr->ip_dst.s_addr;
-	key->tcp_seq = thdr->th_seq;
-	key->tcp_ack = thdr->th_ack;
-	key->sport = thdr->th_sport;
-	key->dport = thdr->th_dport;
-	key->ip_id = ip4hdr->ip_id;
-	key->checksum = thdr->th_sum;
-	
-	return;
-}
+    重复流量识别bloom filter句柄, 根据流量方向和协议的不同, 功能分为三类,  
+    IPv6因为没有Ipid字段, 无法区别真正的应用层重传和重复流量, 开启了会导致断网或者CT, 所以不支持!!!
 
-void sapp_get_dup_pkt_key_udp_v4(const struct mesa_ip4_hdr *ip4hdr, const struct mesa_udp_hdr *uhdr, sapp_dup_pkt_key_v4_t *key)
-{
-	key->ip_addr.sip = ip4hdr->ip_src.s_addr;
-	key->ip_addr.dip = ip4hdr->ip_dst.s_addr;
-	key->tcp_seq = 0x5A5A5A5A; /* udp没有, 但设成0可能对某些hash函数不友好, 此处设个固定值 */
-	key->tcp_ack = 0xA5A5A5A5; /* udp没有, 但设成0可能对某些hash函数不友好, 此处设个固定值 */
-	key->sport = uhdr->uh_sport;
-	key->dport = uhdr->uh_dport;
-	key->ip_id = ip4hdr->ip_id;
-	key->checksum = uhdr->uh_sum;
-	
-	return;
-}
+	对于IPv6的两种情况:
+       1)如果开启了代理策略, 重传包被识别成了重复包的话, sapp就直接PASS了, 实际那个包是真实通信双方发的, 没有经过tfe处理, 可能就断网了.
+       2)如果开启了firewall的drop策略, 第一次drop成功了, 但应用层会重传, 重传包被识别成了重复包的话, sapp就直接PASS了, 导致CT.
+*/
 
-void sapp_get_dup_pkt_key_tcp_v6(const struct mesa_ip6_hdr *ip6hdr, const struct mesa_tcp_hdr *thdr, sapp_dup_pkt_key_v6_t *key)
+static const char *dup_pkt_key_ntop_v4(const sapp_dup_pkt_key_v4_t *key, char *strbuf, int buflen)
 {
-	memcpy(&key->ip_addr.sip, &ip6hdr->ip6_src, sizeof(struct in6_addr));
-	memcpy(&key->ip_addr.dip, &ip6hdr->ip6_dst, sizeof(struct in6_addr));
-	key->tcp_seq = thdr->th_seq;
-	key->tcp_ack = thdr->th_ack;
-	key->sport = thdr->th_sport;
-	key->dport = thdr->th_dport;
-	key->checksum = thdr->th_sum;
+	char sip_str[INET_ADDRSTRLEN], dip_str[INET_ADDRSTRLEN];
 	
-	return;
+	inet_ntop(AF_INET, &key->ip_addr.sip, sip_str, INET_ADDRSTRLEN);
+	inet_ntop(AF_INET, &key->ip_addr.dip, dip_str, INET_ADDRSTRLEN);
+
+	snprintf(strbuf, buflen, "%s:%u-->%s:%u, ipv4_id:%u, checksum:%u, seq:%u, ack:%u", 
+			sip_str, ntohs(key->sport), dip_str, ntohs(key->dport), ntohs(key->ip_id), ntohs(key->checksum), ntohl(key->tcp_seq), ntohl(key->tcp_ack) );
+
+	return strbuf;
 }
 
 
-void sapp_get_dup_pkt_key_udp_v6(const struct mesa_ip6_hdr *ip6hdr, const struct mesa_udp_hdr *uhdr, sapp_dup_pkt_key_v6_t *key)
+static const char *dup_pkt_key_ntop_v6(const sapp_dup_pkt_key_v6_t *key, char *strbuf, int buflen)
 {
-	memcpy(&key->ip_addr.sip, &ip6hdr->ip6_src, sizeof(struct in6_addr));
-	memcpy(&key->ip_addr.dip, &ip6hdr->ip6_dst, sizeof(struct in6_addr));
-	key->tcp_seq = 0x5A5A5A5A; /* udp没有, 但设成0可能对某些hash函数不友好, 此处设个固定值 */
-	key->tcp_ack = 0xA5A5A5A5; /* udp没有, 但设成0可能对某些hash函数不友好, 此处设个固定值 */
-	key->sport = uhdr->uh_sport;
-	key->dport = uhdr->uh_dport;
-	key->checksum = uhdr->uh_sum;
+	char sip_str[INET6_ADDRSTRLEN], dip_str[INET6_ADDRSTRLEN];
 	
-	return;
+	inet_ntop(AF_INET6, &key->ip_addr.sip, sip_str, INET6_ADDRSTRLEN);
+	inet_ntop(AF_INET6, &key->ip_addr.dip, dip_str, INET6_ADDRSTRLEN);
+
+	snprintf(strbuf, buflen, "%s:%u-->%s:%u, checksum:%u, seq:%u, ack:%u", 
+			sip_str, ntohs(key->sport), dip_str, ntohs(key->dport), ntohs(key->checksum), ntohl(key->tcp_seq), ntohl(key->tcp_ack) );
+
+	return strbuf;
 }
-#endif
+
 
 int sapp_dup_pkt_mark_v4(int tid, const sapp_dup_pkt_key_v4_t *key)
 {
 	int ret;
+	char ntop_buf[1024];
 
 	ret = expiry_dablooms_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v4_t));
 	if(ret < 0){
-		sapp_runtime_log(RLOG_LV_FATAL, "sapp duplicate ipv4 pkt add bloom key error");
+		sapp_runtime_log(RLOG_LV_FATAL, "sapp dup distinguish ipv4 pkt add bloom key error, %s", dup_pkt_key_ntop_v4(key,ntop_buf,sizeof(ntop_buf)));
+	}else{
+		sapp_runtime_log(RLOG_LV_DEBUG, "sapp dup distinguish ipv4 pkt add bloom key succ, %s", dup_pkt_key_ntop_v4(key,ntop_buf,sizeof(ntop_buf)));
 	}
 
 	return ret;
@@ -89,10 +70,13 @@ int sapp_dup_pkt_mark_v4(int tid, const sapp_dup_pkt_key_v4_t *key)
 int sapp_dup_pkt_mark_v6(int tid, const sapp_dup_pkt_key_v6_t *key)
 {
 	int ret;
+	char ntop_buf[1024];
 
 	ret = expiry_dablooms_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v6_t));
 	if(ret < 0){
-		sapp_runtime_log(RLOG_LV_FATAL, "sapp duplicate ipv6 pkt add bloom key error");
+		sapp_runtime_log(RLOG_LV_FATAL, "sapp dup distinguish ipv6 pkt add bloom key error, %s", dup_pkt_key_ntop_v6(key,ntop_buf,sizeof(ntop_buf)));
+	}else{
+		sapp_runtime_log(RLOG_LV_DEBUG, "sapp dup distinguish ipv6 pkt add bloom key succ, %s", dup_pkt_key_ntop_v6(key,ntop_buf,sizeof(ntop_buf)));
 	}
 
 	return ret;
@@ -121,14 +105,19 @@ int sapp_dup_pkt_identify_v6(int tid, const sapp_dup_pkt_key_v6_t *key)
 int sapp_dup_pkt_init(void)
 {
 	int i;
+	const sapp_dup_pkt_t *p_dup_conf = &sapp_global_val->config.packet_io.dup_pkt_para;
 	
-	if(0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable){
+	if((0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject)
+	  && (0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp)
+	  && (0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp)){
 		return 0;
 	}
 
+	/* 流量入口有三个开关, 识别句柄只有一个, 
+	   拆分句柄多耗费内存, 且判断时每个包需要扫描多个句柄, 
+	   可能好处只是准确率高了一点点而已 */
 	for(i = 0; i < sapp_global_val->config.cpu.worker_threads; i++){
-		/* TODO: 这些参数是否需要通过配置文件? */
-		sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle = (void *)expiry_dablooms_init(sapp_dabloom_capacity, sapp_dabloom_err_rate, sapp_dabloom_timeout);
+		sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle = (void *)expiry_dablooms_init(p_dup_conf->bloom_capacity, p_dup_conf->bloom_error_rate, p_dup_conf->bloom_timeout);
 		if(NULL == sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle){
 			sapp_log(RLOG_LV_FATAL, 1, 1, "dup_pkt_distinguish init error!");
 			return -1;
@@ -136,7 +125,7 @@ int sapp_dup_pkt_init(void)
 	}
 
 	sapp_log(RLOG_LV_DEBUG, 1, 1, "dup_pkt_distinguish init success");
-	
+
 	return 0;
 }
 

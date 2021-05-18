@@ -2513,6 +2513,41 @@ static char tcp_process_newstreambydata(struct streamindex *pindex_tcp,const voi
 }
 
 
+static int deal_tcp_stream_dup_pkt_check(int tid, struct streaminfo_private *pstream_pr, struct tcpdetail_private *ptcpdetail_pr,
+										   const struct mesa_ip4_hdr * this_iphdr, struct mesa_tcp_hdr *this_tcphdr)
+{
+	int is_dup_pkt = 0;
+	int need_add_bloom_filter = 0;
+	int dup_check_enabled = 0;
+	
+	if((ADDR_TYPE_IPV4 == pstream_pr->stream_public.addr.addrtype)
+	 && sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp){
+		// 对于原始输入包, 只判断前N个包, 如果没发现重复流量, 就认为以后的都不是重复包!
+		// todo: 此处是否要通过配置文件指定？
+		if((0 == pstream_pr->has_duplicate_pkt) 
+		  && (ptcpdetail_pr->tcpdetail_public.clientpktnum+ptcpdetail_pr->tcpdetail_public.serverpktnum >= SAPP_DUP_FIRST_PKT_NUM)){ 
+			dup_check_enabled = 0;
+			need_add_bloom_filter = 0;
+		}else{	
+			dup_check_enabled = 1;
+			need_add_bloom_filter = 1;
+		}
+	}
+	
+	if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject){
+		/* 对于注入包查询来说, 此处只查询但不加入bloom filter, 发包时已经加过一次了 */
+		dup_check_enabled = 1;
+	}
+	
+	if(dup_check_enabled != 0){
+		is_dup_pkt = sapp_dup_pkt_identify_tcp(tid, pstream_pr, this_iphdr, this_tcphdr, need_add_bloom_filter);
+	}
+	
+	return is_dup_pkt; 
+
+}
+
+
 /* LiJia comment: pstream指向栈里的内存 */
 //int deal_tcp_stream(struct streamindex *pstream,struct mesa_tcp_hdr *this_tcphdr,int tcplen,const void *rawippkt,int iplen)
 static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, struct mesa_tcp_hdr *this_tcphdr,
@@ -2531,8 +2566,8 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 
 	pindex_tcp = findstreamindex (pindex, raw_pkt);
 	if(unlikely(!pindex_tcp)){
-		/* 每个流的首包无需检测是否重复, 但要加入bloom filter */
-		if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0){
+		/* 每个流的首包无需检测, 也无法得知是否重复, 但要加入bloom filter */
+		if((ADDR_TYPE_IPV4 == pstream->addr.addrtype) && sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp){
 			sapp_dup_pkt_mark_tcp(pstream->threadnum,pstream->addr.addrtype, this_iphdr, this_tcphdr);
 		}
 
@@ -2656,8 +2691,15 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		return DROP;
 	}
 
-	if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
-	  && (sapp_dup_pkt_identify_tcp(pstream->threadnum, pstream_pr, pdetail->clientpktnum+pdetail->serverpktnum, this_iphdr, this_tcphdr) != 0)){
+	/* 
+		2021-05-18 lijia close ipv6 dup pkt check:
+		IPv6因为没有Ipid字段, 无法区别真正的应用层重传和重复流量, 开启了会导致断网或者CT, 所以不支持!!!
+	
+		对于IPv6的两种情况:
+		   1)如果开启了代理策略, 重传包被识别成了重复包的话, sapp就直接PASS了, 实际那个包是真实通信双方发的, 没有经过tfe处理, 可能就断网了.
+		   2)如果开启了firewall的drop策略, 第一次drop成功了, 但应用层会重传, 重传包被识别成了重复包的话, sapp就直接PASS了, 导致CT.
+	*/
+	if(deal_tcp_stream_dup_pkt_check(pstream->threadnum, pstream_pr, pdetail_pr, this_iphdr, this_tcphdr) != 0){
 		local_sys_stat = &sapp_global_val->mthread_volatile[pstream->threadnum]->sys_stat;
 		local_sys_stat->count[SAPP_STAT_RCV_DUP_TCP]++;
 		local_sys_stat->length[SAPP_STAT_RCV_DUP_TCP] += tcplen;	

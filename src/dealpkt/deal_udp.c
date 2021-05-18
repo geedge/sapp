@@ -432,6 +432,49 @@ static int set_addr_recur(struct streaminfo *this_stream, int reverse)
 }
 
 
+static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_pr, struct udpdetail_private *pdetail_pr, int is_overlay_udp_layer, 
+                                           const struct mesa_ip4_hdr * this_iphdr, struct mesa_udp_hdr *udph)
+{
+	int is_dup_pkt = 0;
+	int need_add_bloom_filter = 0;
+	int dup_check_enabled = 0;
+
+	/* vxlan层的保活信息不用识别重复包, 因为实测某些inline device或交换板发出的保活包全是一样的, udp checksum是0, ipid也不变 */	
+	if(is_overlay_udp_layer){
+		return 0;
+	}
+
+	/* 隧道协议的外层UDP不识别重复流量 */
+	if(STREAM_TUNNLE_NON != pstream_pr->stream_carry_up_layer_tunnel_type){
+		return 0;
+	}
+
+	if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp)
+	{
+		// 对于原始输入包, 只判断前N个包, 如果没发现重复流量, 就认为以后的都不是重复包!
+		// todo: 此处是否要通过配置文件指定？
+		if((0 == pstream_pr->has_duplicate_pkt) 
+		  && (pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum >= SAPP_DUP_FIRST_PKT_NUM)){ 
+			dup_check_enabled = 0;
+			need_add_bloom_filter = 0;
+		}else{	
+			dup_check_enabled = 1;
+			need_add_bloom_filter = 1;
+		}
+	}
+
+	if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject){
+		/* 对于注入包查询来说, 只查询但不加入bloom filter, 发包时已经加过一次了 */
+		dup_check_enabled = 1;
+	}
+	
+	if(dup_check_enabled != 0){
+	    is_dup_pkt = sapp_dup_pkt_identify_udp_v4(tid, pstream_pr, this_iphdr, udph, need_add_bloom_filter);
+	}
+	
+	return is_dup_pkt; 
+}
+
 int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_iphdr,
 		int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
@@ -575,10 +618,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			return DROP;
 		}
 
-		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
-		  && (0 == is_overlay_udp_layer) /* vxlan层的保活信息不用识别重复包, 因为实测某些inline device或交换板发出的保活包全是一样的, udp checksum是0, ipid也不变 */
-		  && (STREAM_TUNNLE_NON == pstream_pr->stream_carry_up_layer_tunnel_type) /* 隧道协议的外层不识别重复流量 */
-		  && (sapp_dup_pkt_identify_udp_v4(thread_num, pstream_pr, pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum, this_iphdr, udph) != 0)){
+		if(dealipv4udppkt_dup_check(pstream->threadnum, pstream_pr, pdetail_pr, is_overlay_udp_layer, this_iphdr, udph) != 0){
 			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
 			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
 			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
@@ -780,14 +820,24 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			return DROP;
 		}
 
-		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0)
-		  && (sapp_dup_pkt_identify_udp_v6(thread_num, pstream_pr, pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum, a_packet, udph) != 0)){
+/* 
+	2021-05-18 lijia close ipv6 original dup pkt check:
+	IPv6因为没有Ipid字段, 无法区别真正的应用层重传和重复流量, 开启了会导致断网或者CT, 所以不支持原始流量识别!
+
+	对于IPv6的两种情况:
+	   1)如果开启了代理策略, 重传包被识别成了重复包的话, sapp就直接PASS了, 实际那个包是真实通信双方发的, 没有经过tfe处理, 可能就断网了.
+	   2)如果开启了firewall的drop策略, 第一次drop成功了, 但应用层会重传, 重传包被识别成了重复包的话, sapp就直接PASS了, 导致CT.
+
+	但是, 要支持注入流量识别!!  
+*/
+		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
+		  && (sapp_dup_pkt_identify_udp_v6(thread_num, pstream_pr, a_packet, udph) != 0)){
 			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
 			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
 			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
 			return PASS;
 		}
-		
+
 		if(pstream->curdir==DIR_S2C){
 			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* 当前方向的第一个包, 尝试更新底层隧道的单向地址信息(如MPLS, GTP) */
 				try_to_update_addr_info = 1;

@@ -1963,33 +1963,15 @@ static int build_net_layer_l2tp(struct streaminfo_private *stream_pr, int carry_
 }
 
 
-/* 如果之前发现有重复流量, 或者每个流的前N个包必须要加入bloom filter */
+/* 
+    此函数内部不用再判断是否需要加入bloom filter, 在函数外部已经判断.
+*/
 static void sendpkt_dup_pkt_mark(const struct streaminfo *top_stream, unsigned char addrtype, const char *this_iphdr, const char *this_transport_hdr)
 {
-	const struct streaminfo_private *top_stream_pr;
-	int need_process_dup_pkt_flag = 0;
-
-	top_stream_pr = (struct streaminfo_private *)top_stream;
-	if(top_stream_pr->has_duplicate_pkt){
-		need_process_dup_pkt_flag = 1;
+	if(STREAM_TYPE_TCP == top_stream->type){
+		sapp_dup_pkt_mark_tcp(top_stream->threadnum, addrtype, this_iphdr, (const struct mesa_tcp_hdr *)(this_transport_hdr));
 	}else{
-		if(STREAM_TYPE_TCP == top_stream->type){
-			if(top_stream->ptcpdetail->clientpktnum + top_stream->ptcpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){
-				need_process_dup_pkt_flag = 1;
-			}
-		}else{
-			if(top_stream->pudpdetail->clientpktnum + top_stream->pudpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){
-				need_process_dup_pkt_flag = 1;
-			}
-		}
-	}
-
-	if(need_process_dup_pkt_flag != 0){
-		if(STREAM_TYPE_TCP == top_stream->type){
-			sapp_dup_pkt_mark_tcp(top_stream->threadnum, addrtype, this_iphdr, (const struct mesa_tcp_hdr *)(this_transport_hdr));
-		}else{
-			sapp_dup_pkt_mark_udp(top_stream->threadnum, addrtype, this_iphdr, (const struct mesa_udp_hdr *)(this_transport_hdr));
-		}
+		sapp_dup_pkt_mark_udp(top_stream->threadnum, addrtype, this_iphdr, (const struct mesa_udp_hdr *)(this_transport_hdr));
 	}
 
 	return;
@@ -2075,8 +2057,11 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 							sapp_raw_ipv4_ntop(ip4hdr, debug_print_buf, sizeof(debug_print_buf)), send_stream_dir,
 							ntohs(ip4hdr->ip_id), ntohs(ip4hdr->ip_sum));
 
-			/* 重复流量识别, 加到这里是因为如果有隧道, 可能会有多层, 且不用再经过jump_layer跳转到内部udp/tcp层了 */
-			if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0){
+			/* 重复流量注入包识别, 加到这里是因为如果有隧道, 可能会有多层, 且不用再经过jump_layer跳转到内部udp/tcp层了 
+               vxlan模式底层udp没必要频繁加入bloom filter, 先调用sapp_is_overlay_layer()识别一下.
+			*/
+			if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
+			 && (sapp_is_overlay_layer(stream_pr, raw_pkt) == 0)){
 				sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV4, (char *)buf, buf+sizeof(struct mesa_ip4_hdr));
 			}
 		}	
@@ -2106,7 +2091,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			carry_layer_type = __ADDR_TYPE_IP_PAIR_V6;
 
 			/* 重复流量识别, 加到这里是因为如果有隧道, 可能会有多层, 且不用再经过jump_layer跳转到内部udp/tcp层了 */
-			if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0){
+			if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0){
 				sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV6, (char *)buf, buf+sizeof(struct mesa_ip6_hdr));
 			}			
 		break;
@@ -3251,9 +3236,9 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 		/* 跳过当前层 */
 		inject_stream = raw_stream->pfather;
 		inject_stream_pr = (struct streaminfo_private *)inject_stream;
-		/* 如果插件发包时指定了SIO_EXCLUDE_THIS_LAYER_HDR, 说明内层四元组是由插件构造的, 
+		/* 如果插件发包时指定了SIO_EXCLUDE_THIS_LAYER_HDR, 说明内层四元组是由插件构造的, 比如kni, 
 		   一般不会再走到build_pkt的函数中, 此处需要解析ip包并加入bloom filter */
-		if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_enable != 0){
+		if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0){
 			sendpkt_dup_pkt_mark_stream(raw_stream, (char *)payload);
 		}
 	}else{
