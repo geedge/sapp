@@ -66,8 +66,6 @@ extern "C" {
 #define KEYWORD_FUNFLAG		"FUNC_FLAG"
 #define KEYWORD_FUNNAME		"FUNC_NAME"
 
-#define PLUG_CONTROL_INF	"plug/conflist.inf"
-
 #define FUNFLAG_ALL_B			"ALL"
 #define FUNFLAG_ALL_S			"all"
 

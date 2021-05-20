@@ -10,7 +10,7 @@ instance_name = "sapp_v4.2"
 
 [CPU]
 worker_threads=1
-send_only_threads_max=1
+send_only_threads_max=0
 ### note, bind_mask, if you do not want to bind thread to special CPU core, keep it empty as []
 ### there are two different grammars:
 ### standard C array format: bind_mask=[1,2,3,4,5,11,12,13,14,15]
@@ -41,7 +41,6 @@ dictator_enable=1
 
 ### note, same as tcpdump -Q/-P arg, possible values are `in', `out' and `inout', default is "in"
     pcap_capture_direction="in"
-
 
 ### note, depolyment.mode options: [sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]
 ### sys_route: send ip(ipv6) packet by system route table, this is default mode in mirror mode;
@@ -97,7 +96,7 @@ dictator_enable=1
 ###       so not support IPv6 original duplicate traffic check.
 
 [dup_pkt.traffic.inject]
-	inject_all_enabled=1
+    inject_all_enabled=1
 	
 [dup_pkt.parameters]
     ### duplicate_pkt_distinguish=1
@@ -124,8 +123,8 @@ dictator_enable=1
         link_mss=1460
 	  
         [stream.tcp.inject.rst]
-        auto_remedy=0
-        number=3
+        auto_remedy=1
+        number=1
         signature_enabled=1
         signature_seed1=65535
         signature_seed2=13
@@ -136,7 +135,6 @@ dictator_enable=1
     timeout=60
     meaningful_statistics_minimum_pkt=3
     meaningful_statistics_minimum_byte=5
-    
 
 [PROFILING]
 [profiling.pkt_latency]

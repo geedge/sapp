@@ -105,21 +105,22 @@ static int get_dumpfile_list_array(const char *opt_arg)
 static const sapp_cmd_args_usage_t cmd_args_usage[] = 
 {
 	/* 按字母顺序排列输出: */
-	{"-c", "config-root-dir", 	NULL,	"specifies the root directory of the config files, will append the subdirectory sapp\n  \t\t\t\tfor example: ./sapp -c /home/config, sapp actually uses the dir: /home/config/sapp/"},
-	{"-d", "dumpfile", 	NULL,	"running as pcap offline mode, default pcap file is './dumpfile'"},
-	{"-D", "data-root-dir",		NULL,	"specifies the root directory of the local data and state files, will append the subdirectory sapp\n\t\t\t\tfor example: ./sapp -D /home/data, sapp actually uses the dir: /home/data/sapp/"},	
-	{"-e", "example-config", NULL, "generate example main config file sapp.toml"},
-	{"-f", "dumpfile-list", NULL, "read many pcap files at one time without exiting, get the list of pcap files by command, \n\t\t\t\tfor example: ./sapp -f 'ls files/*.pcap', ./sapp -f 'find /home/files -name *.pcap'"},
-	{"-g", "coredump", 	NULL,	"generate coredump for test"},
-	{"-h", "help",		NULL,	"show help message"},
-	{"-p",  "dumpfile-speed",	dumpfile_speed_check, "\n  \t\ttop-speed\tprocess packets as fast as possible, this is default behavior\n\t\ttimestamp\tprocess packets as pcap embedded timestamp interval"},
-	{"-r", "dumpfile-file", NULL,	"read packets from which pcap file"},
-	{"-v", "version", 	NULL,	"show platform version"},
+	{"-c", "config-root-dir", 	"required", NULL,	"specifies the root directory of the config files, will append the subdirectory sapp\n  \t\t\t\t\t\tfor example: ./sapp -c /home/config, sapp actually uses the dir: /home/config/sapp/"},
+	{"-d", "dumpfile", 	"no", NULL,	"running as pcap offline mode, default pcap file is './dumpfile'"},
+	{"-D", "data-root-dir",		"required",NULL,	"specifies the root directory of the local data and state files, will append the subdirectory sapp\n\t\t\t\t\t\tfor example: ./sapp -D /home/data, sapp actually uses the dir: /home/data/sapp/"},	
+	{"-e", "example-config", "required",NULL, "generate example main config file sapp.toml"},
+	{"-f", "dumpfile-list", "required",NULL, "read many pcap files at one time without exiting, get the list of pcap files by command, \n\t\t\t\t\t\tfor example: ./sapp -f 'ls files/*.pcap', ./sapp -f 'find /home/files -name *.pcap'"},
+	{"-g", "coredump", 	"no",NULL,	"generate coredump for test"},
+	{"-h", "help",		"no",NULL,	"show help message"},
+	{"-p",  "dumpfile-speed",	"required",dumpfile_speed_check, "\n  \t\ttop-speed\tprocess packets as fast as possible, this is default behavior\n\t\ttimestamp\tprocess packets as pcap embedded timestamp interval"},
+	{"-r", "dumpfile-file", "required",NULL,	"read packets from which pcap file"},
+	{"-t", "test-config", "optional",NULL,	"check validity of the configuration file, support level t1,t2,t3"},
+	{"-v", "version", 	"no",NULL,	"show platform version"},
 	{NULL,	NULL, 		NULL}
 };
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
-static const char *sapp_cla_short_options = "dhgvc:D:e:r:p:f:";
+static const char *sapp_cla_short_options = "dhgvc:D:e:r:p:f:t::";
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const struct option sapp_cla_long_options[] = 
@@ -134,6 +135,7 @@ static const struct option sapp_cla_long_options[] =
 	{"dumpfile-speed",	required_argument,  NULL,      'p'},
 	{"example-config", 	required_argument,  NULL,      'e'},
 	{"coredump", 		no_argument,      	NULL,      'g'},
+	{"test-config",		optional_argument,  NULL,      't'},
 	{NULL,          	0,      			NULL,      0}
 };
 
@@ -197,9 +199,9 @@ static void usage(void)
 	int index = 0;
 
 	printf("\033[32mUsage:\033[0m\n");
-	printf("\033[32m%10s %-15s\t%-15s\033[0m\n", "short-arg", "long-arg", "description");
+	printf("\033[32m%10s %-15s \t%-8s \t%-15s\033[0m\n", "short-arg", "long-arg", "argument", "description");
 	while(cmd_args_usage[index].long_opt_name != NULL){
-		printf("%10s --%-15s\t%s\n", cmd_args_usage[index].short_opt_name, cmd_args_usage[index].long_opt_name, cmd_args_usage[index].usage);
+		printf("%10s --%-15s \t%-8s \t%s\n", cmd_args_usage[index].short_opt_name, cmd_args_usage[index].long_opt_name, cmd_args_usage[index].need_args, cmd_args_usage[index].usage);
 		index++;
 	}
 	exit(1);
@@ -401,6 +403,9 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 	int data_root_dir_changed = 0;
 	int option_array_index;
 
+	int test_config_flag = 0;
+	char *test_config_option_value = NULL;
+
 	while(1){
 		c = getopt_long(argc, argv, sapp_cla_short_options, sapp_cla_long_options, &opt_index);
 		if(c == -1){
@@ -465,6 +470,21 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 				continue;
 			break;
 
+			case 't':
+				test_config_flag = 1;
+				if(optarg != NULL){
+					if((strcmp(optarg, "1") != 0)
+					&& (strcmp(optarg, "2") != 0)
+					&& (strcmp(optarg, "3") != 0)){
+						printf("option -t --test-config only support level [t1,t2,t3]\n");
+						exit(1);
+					}
+					test_config_option_value = sapp_strdup(optarg);
+				}else{
+					test_config_option_value = sapp_strdup("1"); //default is t1
+				}
+				continue;
+
 			case '?': /* invalid or unknown option */
 				ret = -1;
 				return ret;
@@ -490,11 +510,19 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 		return -1;
 	}
 
+	/* 没有指定-c路径, 使用默认./rtc */
 	if(0 == cfg_root_dir_changed){
 		sapp_update_config_root_dir(NULL);
 	}
+
+	/* 没有指定-D路径, 使用默认./rtc */
 	if(0 == data_root_dir_changed){
 		sapp_update_data_root_dir(NULL);
+	}
+
+	if(test_config_flag != 0){
+		ret = sapp_config_check(atoi(test_config_option_value));
+		exit(ret);
 	}
 
 	return ret;

@@ -1350,6 +1350,36 @@ void del_last_rn(char *data, int max_len)
     return;
 }
 
+int sapp_del_last_char(char *data, int max_len, char del_char)
+{
+    int i, actual_len = 0;
+
+	actual_len = strlen(data);
+	
+    for(i = actual_len-1; i >= 0; i--){
+        if(del_char == data[i]){
+            data[i] = '\0';
+        }else{
+			return 0;
+        }
+    }
+
+    return 0;
+}
+
+
+/* 跳过配置文件前面的空格 \t符号, 方便解析, 但是不处理字符串中间的空格\t */
+char *sapp_memmove_for_blank_table(char *data, int max_len)
+{
+	if(NULL == data){
+		return NULL;
+	}
+	
+	while(('\t' == data[0]) || (' ' ==data[0])){
+		memmove(data, data+1, max_len-1);
+	}
+}
+
 /*	
 	返回值:
 		ethernet长度, 包括eth头部.

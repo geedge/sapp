@@ -8,6 +8,15 @@ extern "C" {
 #include "sapp_private_api.h"
 
 
+#ifndef SAPP_MAX
+#define SAPP_MAX(a, b)  	(((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef SAPP_MIN
+#define SAPP_MIN(a, b)       (((a) < (b)) ? (a) : (b))
+#endif
+
+
 /* ÒòÇ¶Ì×²ã´ÎÌ«¶à, Ê¹ÓÃ¼ò³ÆÃèÊö */
 #define ABBR_SAPP_LOG_LEVEL 	sapp_global_val->config.profiling.log.level
 #define ABBR_SAPP_LOG_HANDLE 	sapp_global_val->individual_fixed.log_handle
@@ -20,6 +29,7 @@ extern "C" {
 #define ABBR_INTERFACE_TYPE		sapp_global_val->config.packet_io.internal.interface.type_bin
 
 #define ABBR_CFG_FILE_MAIN_ENTRY  		sapp_global_val->config.cfg_file_path.cfg_main_entry_absolute
+#define ABBR_PLUG_LIST_CONF_FILE  		sapp_global_val->config.cfg_file_path.cfg_plug_list_absolute
 #define ABBR_SAPP_LOG_CONF_FILE  		sapp_global_val->config.cfg_file_path.cfg_sapp_log_absolute
 #define ABBR_PROJECT_LIST_CONF_FILE  	sapp_global_val->config.cfg_file_path.cfg_project_list_absolute
 #define ABBR_PLUG_ENTRY_LIST_CONF_FILE  sapp_global_val->config.cfg_file_path.cfg_entry_list_absolute
