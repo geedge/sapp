@@ -2220,6 +2220,42 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 	return ret;
 } 
 
+/*
+	2017-10-16 lijia add,
+	判断NOUSE状态下, 收到SYN, SYN/ACK是真的四元组重用, 还是乱序重传, 或分流汇聚导致的时序错乱.
+	TODO:
+	    增加超时判断, 在线统计发现, 真正的四元组重用通常都在30秒以上.
+*/
+static inline int tcp_tuple4_reuse(const struct streaminfo *pstream, const struct tcpdetail_private *pdetail_pr, const struct mesa_tcp_hdr *this_tcphdr)
+{
+	int is_reuse = 0;
+	unsigned int cur_seq = ntohl(this_tcphdr->th_seq);
+
+	if(DIR_C2S == pstream->curdir){
+		if((pdetail_pr->iserverseq != 0) && (cur_seq != pdetail_pr->iserverseq-1)){
+			is_reuse = 1;
+		 }else{
+			is_reuse = 0;
+		 }
+	}else{
+		if((pdetail_pr->iclientseq != 0) && (cur_seq != pdetail_pr->iclientseq-1)){
+			is_reuse = 1;
+		 }else{
+			is_reuse = 0;
+		 }
+	}
+
+	/* lijia 2017-12-06 add */  
+	if((1 == is_reuse) && (sapp_global_val->config.stream.tcp.tuple4_reuse_time_interval > 0)){
+		if(pdetail_pr->tcpdetail_public.createtime + sapp_global_val->config.stream.tcp.tuple4_reuse_time_interval >= (UINT64)g_CurrentTime){
+			is_reuse = 0; /* 四元组相同, 但序号不同的两个流间隔时间太短, 一般30秒以上, 疑似攻击或逃逸 */
+		}
+	}
+
+	return is_reuse;
+}
+
+
 #if 0
 static int tcp_deal_data_stream(struct streamindex *pindex,const raw_pkt_t *raw_pkt,struct mesa_tcp_hdr *this_tcphdr,int datalen)
 #else
@@ -2328,7 +2364,8 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 				
 				根据在线统计值, 四元组重用两个连接的时间间隔一般在分钟级.
 			*/
-			if(pdetail->lastmtime + 3 > (UINT64)g_CurrentTime){
+			if(tcp_tuple4_reuse(pstream, pdetail_pr, this_tcphdr) == 0){
+//			if(pdetail->lastmtime + 3 > (UINT64)g_CurrentTime){
 				//printf("###### recv syn, but not tcp reuse, close return PASS for test!!\n");
 				return PASS;
 			}
@@ -2438,40 +2475,6 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 	return ret;
 }
 
-/*
-	2017-10-16 lijia add,
-	判断NOUSE状态下, 收到SYN, SYN/ACK是真的四元组重用, 还是乱序重传, 或分流汇聚导致的时序错乱.
-	TODO:
-	    增加超时判断, 在线统计发现, 真正的四元组重用通常都在30秒以上.
-*/
-static inline int tcp_tuple4_reuse(const struct streaminfo *pstream, const struct tcpdetail_private *pdetail_pr, const struct mesa_tcp_hdr *this_tcphdr)
-{
-	int is_reuse = 0;
-	unsigned int cur_seq = ntohl(this_tcphdr->th_seq);
-
-	if(DIR_C2S == pstream->curdir){
-		if((pdetail_pr->iserverseq != 0) && (cur_seq != pdetail_pr->iserverseq-1)){
-			is_reuse = 1;
-		 }else{
-			is_reuse = 0;
-		 }
-	}else{
-		if((pdetail_pr->iclientseq != 0) && (cur_seq != pdetail_pr->iclientseq-1)){
-			is_reuse = 1;
-		 }else{
-			is_reuse = 0;
-		 }
-	}
-
-	/* lijia 2017-12-06 add */  
-	if((1 == is_reuse) && (sapp_global_val->config.stream.tcp.tuple4_reuse_time_interval > 0)){
-		if(pdetail_pr->tcpdetail_public.createtime + sapp_global_val->config.stream.tcp.tuple4_reuse_time_interval >= (UINT64)g_CurrentTime){
-			is_reuse = 0; /* 四元组相同, 但序号不同的两个流间隔时间太短, 一般30秒以上, 疑似攻击或逃逸 */
-		}
-	}
-
-	return is_reuse;
-}
 
 static int tcp_deal_nouse_stream(struct streamindex *pindex,const void *this_iphdr,const raw_pkt_t *raw_pkt,struct mesa_tcp_hdr *this_tcphdr,int datalen)
 {
