@@ -156,6 +156,19 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_BYTES,	/* 全部UDP流统计 */	
 
 	SAPP_STAT_HASH_LIST_MAX,
+
+	SAPP_STAT_TCP_CLOSE_BY_FIN,     /* 如果挂载了TCP_ALL插件, 其实没这个状态, 不是超时就是被强制踢出 */
+	SAPP_STAT_TCP_CLOSE_BY_RST,     /* 如果挂载了TCP_ALL插件, 其实没这个状态, 不是超时就是被强制踢出 */
+	SAPP_STAT_TCP_CLOSE_BY_TIMEOUT, /* 因超时被淘汰 */
+	SAPP_STAT_TCP_CLOSE_BY_KICKOUT, /* 因流表满被淘汰 */
+	SAPP_STAT_TCP_CLOSE_BY_REUSE,   /* 因四元组重用被淘汰 */
+	SAPP_STAT_TCP_CLOSE_BY_DUMPFILE_END, /* 仅pcap dumpfile模式有效, 其实正常情况下还没有结束, 读pcap包结束后强制清空所有的流而退出 */
+	SAPP_STAT_TCP_SHOULD_CLOSE_BUT_TCPALL, /* 正常情况下tcp层面已经结束了, 但因为有TCP_ALL插件, 所以实际还不能free, 这种流最终会以TIMEOUT或KICKOUT结束 */
+	
+	SAPP_STAT_UDP_CLOSE_BY_TIMEOUT,
+	SAPP_STAT_UDP_CLOSE_BY_KICKOUT,
+	SAPP_STAT_UDP_CLOSE_BY_DUMPFILE_END,
+
 	
 	/*************  memory stat  *******************/
 

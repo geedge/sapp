@@ -58,6 +58,7 @@ enum stream_close_reason_t{
 	STREAM_CLOSE_REASON_TIMEOUT		= 5, /* timeout */
 	STREAM_CLOSE_REASON_LRUOUT		= 6, /* stream table full, kick out */
 	STREAM_CLOSE_REASON_DEPRIVE		= 7, /* deprive by some plug who return KILL_FOLLOW or KILL_OTHER */
+	STREAM_CLOSE_REASON_DUMPFILE	= 8, /* only for pcap dumpfile mode */
 };
 
 

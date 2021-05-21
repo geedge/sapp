@@ -281,6 +281,33 @@ static inline void udp_cleardata(struct streaminfo *a_udp)
 	return;
 }
 
+static void udp_update_close_reason_stat(int tid, const struct streaminfo_private *pstream_pr)
+{
+	sapp_gval_mthread_sys_stat_t *local_sys_stat;
+	
+	local_sys_stat = &sapp_global_val->mthread_volatile[tid]->sys_stat;
+	
+	switch(pstream_pr->stream_close_reason){
+		case STREAM_CLOSE_REASON_TIMEOUT:
+			local_sys_stat->count[SAPP_STAT_UDP_CLOSE_BY_TIMEOUT]++;
+		break;
+
+		case STREAM_CLOSE_REASON_LRUOUT:
+			local_sys_stat->count[SAPP_STAT_UDP_CLOSE_BY_KICKOUT]++;
+		break;
+
+		case STREAM_CLOSE_BY_DUMPFILE_END:
+			local_sys_stat->count[SAPP_STAT_UDP_CLOSE_BY_DUMPFILE_END]++;
+		break;
+
+		default:
+		break;
+	}
+
+	return;
+}
+
+
 void udp_free_stream(struct streamindex *pindex)
 {	
 	struct stream_list *plist=NULL;
@@ -288,6 +315,8 @@ void udp_free_stream(struct streamindex *pindex)
 	struct streaminfo *pstream=&(pstream_pr->stream_public);	
 	struct udpdetail_private *pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 	UCHAR threadnum = pstream->threadnum;
+
+	udp_update_close_reason_stat(threadnum, pstream_pr);
 
 	pstream_pr->raw_pkt = NULL; /* 2015-02-04 lijia add, 不能因此调用而触发MESA_kill_xxx */
 
@@ -361,6 +390,8 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 		pstream->pktstate=OP_STATE_CLOSE;  // add by lijia 20141202
 
 		pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_TIMEOUT;
+
+		udp_update_close_reason_stat(threadnum, pstream_pr);
 		
 		stream_process_udp(pstream,NULL,NULL,NULL,&(pdetail_pr->apme),&(pstream->opstate));  
 

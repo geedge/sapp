@@ -863,7 +863,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		pstream_pr->layer_dir = 1;
 #endif
 
-		hash_add_stream(pindex_tcp);
+		hash_add_stream(pindex_tcp); /* 如果resetflag=1, 说明是连接复用, tcp_reset_stream()没有从hash表里删除, 也就不用重复添加了 */
 	}else{
 		pindex_tcp=pindex;
 		pstream_pr=&(pindex_tcp->stream);
@@ -1185,6 +1185,54 @@ static void tcp_change_stream_tonouse(struct streamindex *pindex)
 }
 
 
+/* 正常情况下tcp层面已经结束了, 但因为有TCP_ALL插件, 所以实际还不能free, 这种流最终会以TIMEOUT或KICKOUT结束 */
+static inline void tcp_update_should_close_reason_stat(int tid)
+{
+	sapp_gval_mthread_sys_stat_t *local_sys_stat;
+	
+	local_sys_stat = &sapp_global_val->mthread_volatile[tid]->sys_stat;
+	
+	local_sys_stat->count[SAPP_STAT_TCP_SHOULD_CLOSE_BUT_TCPALL]++;
+
+	return;
+}
+
+
+static inline void tcp_update_close_reason_stat(int tid, const struct tcpdetail_private *pdetail_pr)
+{
+	sapp_gval_mthread_sys_stat_t *local_sys_stat;
+	
+	local_sys_stat = &sapp_global_val->mthread_volatile[tid]->sys_stat;
+	
+	switch(pdetail_pr->link_state){
+		case STREAM_LINK_CLOSE:
+			local_sys_stat->count[SAPP_STAT_TCP_CLOSE_BY_FIN]++;
+		break;
+
+		case STREAM_LINK_RESET:
+			local_sys_stat->count[SAPP_STAT_TCP_CLOSE_BY_RST]++;
+		break;
+
+		case STREAM_LINK_TIMEOUT:
+			local_sys_stat->count[SAPP_STAT_TCP_CLOSE_BY_TIMEOUT]++;
+		break;
+
+		case STREAM_LINK_LRU_OUT:
+			local_sys_stat->count[SAPP_STAT_TCP_CLOSE_BY_KICKOUT]++;
+		break;
+
+		case STREAM_CLOSE_BY_DUMPFILE_END:
+			local_sys_stat->count[SAPP_STAT_TCP_CLOSE_BY_DUMPFILE_END]++;
+		break;
+
+		default:
+		break;
+	}
+
+	return;
+}
+
+
 //void tcp_free_stream(struct streamindex *pindex)
 //add raw_pkt by lqy 2015-01-07
 /* 2017-07-14 lijia add return value, for WY master and slave mode, last packet also need assign forward action */
@@ -1200,6 +1248,8 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 	pstream->addr.pkttype = PKT_TYPE_NORMAL;
 	UCHAR threadnum = pstream->threadnum;
 	int pkt_ret = PASS;
+
+	tcp_update_close_reason_stat(threadnum, pdetail_pr);
 	
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]);
 
@@ -2001,6 +2051,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 #endif		
 				/* 2016-05-12 lijia add, 解决因乱序包导致unorder_list超长BUG, 此处应将流置于nouse状态 */
 				if(STREAM_LINK_DATA == last_link_state){
+				    tcp_update_should_close_reason_stat(a_tcp->threadnum);
 					tcp_change_stream_tonouse(pindex);
 					return DROP;
 				}
@@ -2245,6 +2296,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 				ret=stream_process_tcp(pstream,this_iphdr, this_tcphdr, raw_pkt, &(pdetail_pr->apme),&(pstream->opstate));
 				//pstream->apme=NULL;//modify by lijia 20140516
 				pdetail_pr->apme=NULL;
+				tcp_update_should_close_reason_stat(pstream->threadnum);
 				tcp_change_stream_tonouse(pindex);
 			}										
 			else
@@ -2277,6 +2329,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 				根据在线统计值, 四元组重用两个连接的时间间隔一般在分钟级.
 			*/
 			if(pdetail->lastmtime + 3 > (UINT64)g_CurrentTime){
+				//printf("###### recv syn, but not tcp reuse, close return PASS for test!!\n");
 				return PASS;
 			}
 	   }
@@ -2372,6 +2425,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		//adjust by lqy 如果有全包接收的函数挂载时
 		if(pstream->pktstate!=OP_STATE_CLOSE)
 		{
+			tcp_update_should_close_reason_stat(pstream->threadnum);
 			tcp_change_stream_tonouse(pindex);
 		}
 		else

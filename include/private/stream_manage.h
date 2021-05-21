@@ -56,6 +56,8 @@ extern int tcp_support_all;
 #define STREAM_LINK_TIMEOUT 5
 #define STREAM_LINK_LRU_OUT	6
 #define STREAM_FAKE_CLOSE_BY_DEPRIVE 7 /* 其他插件返回KILL_FOLLOW, KILL_OTHER后, 被强制CLOSE的插件状态 */
+#define STREAM_CLOSE_BY_DUMPFILE_END 8  /* 2021-05-20 lijia add, for pcap dumpfile mode */
+
 
 #define SINGLE_ACK_RECEVED_NO  0
 #define SINGLE_ACK_RECEVED        1
@@ -150,7 +152,7 @@ int stream_process_ipv6_frag(struct streaminfo *pfstream,const struct ip6_hdr *a
 int stream_process_polling(int thread_seq);
 int stream_process_arp(struct streaminfo *pfstream, const struct mesa_arp_hdr * this_layer_hdr, int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt);
 
-void freeall_stream(int threadcount);
+//void freeall_stream(int threadcount);
 void free_thread_stream(int thread_seq);
 int dealipv4tcppkt(struct streamindex *pfstream,const struct mesa_ip4_hdr * a_packet,int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt,int);
 

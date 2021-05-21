@@ -524,19 +524,24 @@ int init_stream_manage(int threadcount)
 	return 0;   
 }
 
-static struct streaminfo *del_stream(struct streamindex *pindex)
+static struct streaminfo *del_stream(struct streamindex *pindex, unsigned char close_cause)
 {
 	struct streaminfo_private *pstream_pr=&(pindex->stream);
 	struct streaminfo *pstream=&(pstream_pr->stream_public);
+
+	pstream_pr->stream_close_reason = close_cause;
 	
 	if(STREAM_TYPE_UDP==pstream->type)
 	{
-		pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_LRUOUT;
 		udp_free_stream(pindex);
 	}
 	else if (STREAM_TYPE_TCP==pstream->type)
 	{
-		((struct tcpdetail_private*)(pstream->pdetail))->link_state=STREAM_LINK_LRU_OUT;
+		if(STREAM_CLOSE_REASON_DUMPFILE == close_cause){
+			((struct tcpdetail_private*)(pstream->pdetail))->link_state=STREAM_CLOSE_BY_DUMPFILE_END;
+		}else{
+			((struct tcpdetail_private*)(pstream->pdetail))->link_state=STREAM_LINK_LRU_OUT;
+		}
 		tcp_free_stream(pindex, NULL,NULL,NULL);
 	}
 
@@ -615,7 +620,7 @@ printf("###### %s timeout is %d, remain %lld, can't be free!\n", printaddr(&tmps
 */			
 					tmpstream = tmpstream->next;
 				 }else{
-					del_stream(tmpstream);
+					del_stream(tmpstream, STREAM_CLOSE_REASON_LRUOUT);
 					break;
 				 }	
 			}else{
@@ -623,7 +628,7 @@ printf("###### %s timeout is %d, remain %lld, can't be free!\n", printaddr(&tmps
 				 && (g_CurrentTime - tmpstream->stream.stream_public.pudpdetail->lastmtime < tmpstream->stream.timeout)){
 					tmpstream = tmpstream->next;
 				 }else{
-					del_stream(tmpstream);
+					del_stream(tmpstream, STREAM_CLOSE_REASON_LRUOUT);
 					break;
 				 }	
 			}
@@ -2129,6 +2134,7 @@ void hash_del_stream(struct streamindex *pindex)
 
 #endif
 
+#if 0
 void freeall_stream(int threadcount)
 {
 	struct global_stream *g_stream;
@@ -2163,7 +2169,7 @@ void freeall_stream(int threadcount)
 	printf("All stream has been freed!\n");
 //_exit(0);
 }
-
+#endif
 
 
 int show_stream_state(int threadcount)
@@ -2559,7 +2565,7 @@ void free_thread_stream(int thread_seq)
 		while(plist->cnt>0)
 		{
 			pindex = plist->head;
-			del_stream(pindex);
+			del_stream(pindex, STREAM_CLOSE_REASON_DUMPFILE);
 		}
 	  }	
   	  for(j=0;j<MAX_UDP_STATE;j++)
@@ -2568,7 +2574,7 @@ void free_thread_stream(int thread_seq)
 		while(plist->cnt>0)
 		{
 			pindex = plist->head;
-			del_stream(pindex);
+			del_stream(pindex, STREAM_CLOSE_REASON_DUMPFILE);
 		}
 	  }
 

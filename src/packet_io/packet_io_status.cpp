@@ -147,12 +147,18 @@ static void field_stat2_update_metrics(void)
 	
 	sapp_fs2_update_length(SAPP_STAT_TCP_LOST_PKT, 8 *(cur_length[SAPP_STAT_TCP_LOST_PKT]));
 	sapp_fs2_update_count(SAPP_STAT_TCP_LOST_PKT_STREAM_NUM, cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM]);
+
+	sapp_fs2_update_count(SAPP_STAT_TCP_CLOSE_BY_TIMEOUT, cur_count[SAPP_STAT_TCP_CLOSE_BY_TIMEOUT]);
+	sapp_fs2_update_count(SAPP_STAT_TCP_CLOSE_BY_KICKOUT, cur_count[SAPP_STAT_TCP_CLOSE_BY_KICKOUT]);
 	
 	sapp_fs2_update_count(SAPP_STAT_RCV_UDP, cur_count[SAPP_STAT_RCV_UDP]);	
 	sapp_fs2_update_length(SAPP_STAT_RCV_UDP, 8 *(cur_length[SAPP_STAT_RCV_UDP]));
 
 	sapp_fs2_update_count(SAPP_STAT_RCV_DUP_UDP, cur_count[SAPP_STAT_RCV_DUP_UDP]);	
 	sapp_fs2_update_length(SAPP_STAT_RCV_DUP_UDP, 8 *(cur_length[SAPP_STAT_RCV_DUP_UDP]));
+
+	sapp_fs2_update_count(SAPP_STAT_UDP_CLOSE_BY_TIMEOUT, cur_count[SAPP_STAT_UDP_CLOSE_BY_TIMEOUT]);
+	sapp_fs2_update_count(SAPP_STAT_UDP_CLOSE_BY_KICKOUT, cur_count[SAPP_STAT_UDP_CLOSE_BY_KICKOUT]);
 	
 	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_NEW,cur_count[SAPP_STAT_TCP_STREAM_NEW]);
 	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_DEL, cur_count[SAPP_STAT_TCP_STREAM_DEL]);
@@ -388,6 +394,13 @@ void sysinfo_output(void)
 	}else{
 		fprintf(fp,"%-12s %12llu %12llu %2.3f%%\n", "stream", cur_count[SAPP_STAT_TCP_STREAM_NEW], cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM], 0.0);
 	}
+	fprintf(fp,"-----------------------------------------------------------------\n");
+
+	fprintf(fp,"Stream Close Cause Statistics:\n");	
+	///fprintf(fp,"Note: If there are any TCP_ALL plugins, after receiving two-way fin or rst packets,\n      the TCP plugins will close immediately, but TCP_ALL plugins will wait until timeout or kicked out.\n\n");	
+	fprintf(fp,"%-12s %12s %12s %12s %12s %12s %12s %12s\n", "STREAM_TYPE",  "TIMEOUT", "KICKOUT", "DUMPFILE", "BY_FIN", "BY_RST", "PORT_REUSE", "SHOULD_CLOSE");
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu %12llu %12llu %12llu\n", "TCP",  cur_count[SAPP_STAT_TCP_CLOSE_BY_TIMEOUT], cur_count[SAPP_STAT_TCP_CLOSE_BY_KICKOUT], cur_count[SAPP_STAT_TCP_CLOSE_BY_DUMPFILE_END], cur_count[SAPP_STAT_TCP_CLOSE_BY_FIN], cur_count[SAPP_STAT_TCP_CLOSE_BY_RST], cur_count[SAPP_STAT_TCP_CLOSE_BY_REUSE], cur_count[SAPP_STAT_TCP_SHOULD_CLOSE_BUT_TCPALL]);
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12s %12s %12s %12s\n", "UDP",  cur_count[SAPP_STAT_UDP_CLOSE_BY_TIMEOUT], cur_count[SAPP_STAT_UDP_CLOSE_BY_KICKOUT], cur_count[SAPP_STAT_UDP_CLOSE_BY_DUMPFILE_END], "N/A","N/A","N/A","N/A");
 	
 	fprintf(fp,"-----------------------------------------------------------------\n");
 	fprintf(fp,"%-12s %12s %12s %12s %12s\n","STREAM_TYPE", "total_stream", "link_del/s", "total_pkts", "total_len");
@@ -452,11 +465,11 @@ void sysinfo_output(void)
 			byte_convert_human(cur_count[SAPP_STAT_UDP_STREAM_S2C_BYTES],1,1,s1));
 
 	fprintf(fp,"#################################################################\n");
-	fprintf(fp,"%-10s %12s %12s %12s %12s\n","SND-PKT", "total_pkt", "total_len","pps", "bps");
-	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "TCP_RST", cur_count[SAPP_STAT_SND_TCP_RST], byte_convert_human(cur_length[SAPP_STAT_SND_TCP_RST], 1, 1, s1),(cur_count[SAPP_STAT_SND_TCP_RST]-history_count[SAPP_STAT_SND_TCP_RST]), byte_convert_human((cur_length[SAPP_STAT_SND_TCP_RST]-history_length[SAPP_STAT_SND_TCP_RST]), 1,8,s2));
-	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "TCP_S/A", cur_count[SAPP_STAT_SND_TCP_SYNACK], byte_convert_human(cur_length[SAPP_STAT_SND_TCP_SYNACK], 1, 1, s1),(cur_count[SAPP_STAT_SND_TCP_SYNACK]-history_count[SAPP_STAT_SND_TCP_SYNACK]), byte_convert_human((cur_length[SAPP_STAT_SND_TCP_SYNACK]-history_length[SAPP_STAT_SND_TCP_SYNACK]),1,8,s2));
-	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "UDP", cur_count[SAPP_STAT_SND_UDP], byte_convert_human(cur_length[SAPP_STAT_SND_UDP],1,1,s1),(cur_count[SAPP_STAT_SND_UDP]-history_count[SAPP_STAT_SND_UDP]), byte_convert_human((cur_length[SAPP_STAT_SND_UDP]-history_length[SAPP_STAT_SND_UDP]),1,8,s2));
-	fprintf(fp,"%-10s %12llu %12s %12llu %12s\n", "SEND-ERR", cur_count[SAPP_STAT_SND_ERROR], byte_convert_human(cur_length[SAPP_STAT_SND_ERROR],1,1,s1),(cur_count[SAPP_STAT_SND_ERROR]-history_count[SAPP_STAT_SND_ERROR]), byte_convert_human((cur_length[SAPP_STAT_SND_ERROR]-history_length[SAPP_STAT_SND_ERROR]),1,8,s2));
+	fprintf(fp,"%-12s %12s %12s %12s %12s\n","SND-PKT", "total_pkt", "total_len","pps", "bps");
+	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "TCP_RST", cur_count[SAPP_STAT_SND_TCP_RST], byte_convert_human(cur_length[SAPP_STAT_SND_TCP_RST], 1, 1, s1),(cur_count[SAPP_STAT_SND_TCP_RST]-history_count[SAPP_STAT_SND_TCP_RST]), byte_convert_human((cur_length[SAPP_STAT_SND_TCP_RST]-history_length[SAPP_STAT_SND_TCP_RST]), 1,8,s2));
+	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "TCP_S/A", cur_count[SAPP_STAT_SND_TCP_SYNACK], byte_convert_human(cur_length[SAPP_STAT_SND_TCP_SYNACK], 1, 1, s1),(cur_count[SAPP_STAT_SND_TCP_SYNACK]-history_count[SAPP_STAT_SND_TCP_SYNACK]), byte_convert_human((cur_length[SAPP_STAT_SND_TCP_SYNACK]-history_length[SAPP_STAT_SND_TCP_SYNACK]),1,8,s2));
+	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "UDP", cur_count[SAPP_STAT_SND_UDP], byte_convert_human(cur_length[SAPP_STAT_SND_UDP],1,1,s1),(cur_count[SAPP_STAT_SND_UDP]-history_count[SAPP_STAT_SND_UDP]), byte_convert_human((cur_length[SAPP_STAT_SND_UDP]-history_length[SAPP_STAT_SND_UDP]),1,8,s2));
+	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "SEND-ERR", cur_count[SAPP_STAT_SND_ERROR], byte_convert_human(cur_length[SAPP_STAT_SND_ERROR],1,1,s1),(cur_count[SAPP_STAT_SND_ERROR]-history_count[SAPP_STAT_SND_ERROR]), byte_convert_human((cur_length[SAPP_STAT_SND_ERROR]-history_length[SAPP_STAT_SND_ERROR]),1,8,s2));
 
     fprintf(fp,"#################################################################\n\n");
 
