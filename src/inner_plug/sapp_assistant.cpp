@@ -698,7 +698,12 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 
 		case SPO_CONFIG_ROOT_DIR:
 		{
-			if(*opt_val_len <= strlen(sapp_global_val->config.cfg_file_path.cfg_files_root_dir)){
+			if(NULL == sapp_global_val->config.cfg_file_path.cfg_files_root_dir){
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_CONFIG_ROOT_DIR error: no config root dir cmd args!\n");
+				ret = -1;
+				break;
+			}
+			if(*opt_val_len <= strlen(sapp_global_val->config.cfg_file_path.cfg_files_root_dir)+1){
 				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_CONFIG_ROOT_DIR error:opt_val_len:%d is smaller than root dir string len!\n", *opt_val_len);
 				ret = -1;
 			}
@@ -708,7 +713,12 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 
 		case SPO_DATA_ROOT_DIR:
 		{
-			if(*opt_val_len <= strlen(sapp_global_val->config.data_file_path.data_files_root_dir)){
+			if(NULL == sapp_global_val->config.data_file_path.data_files_root_dir){
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_CONFIG_ROOT_DIR error: no data root dir cmd args!\n");
+				ret = -1;
+				break;
+			}		
+			if(*opt_val_len <= strlen(sapp_global_val->config.data_file_path.data_files_root_dir)+1){
 				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_DATA_ROOT_DIR error:opt_val_len:%d is smaller than root dir string len!\n", *opt_val_len);
 				ret = -1;
 			}

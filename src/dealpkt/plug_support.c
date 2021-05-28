@@ -1681,6 +1681,15 @@ char *sapp_strdup(const char *raw_s)
 	return new_s;
 }
 
+int sapp_is_absolute_path(const char *filename)
+{
+	if('/' == filename[0]){
+		return 1;
+	}
+
+	return 0;
+}
+
 
 #ifdef __cplusplus
 }

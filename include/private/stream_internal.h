@@ -400,6 +400,7 @@ int MESA_mkdir_p(const char *pathname, mode_t mode);
 int sapp_get_secondary_file_path(void);
 void sapp_update_config_root_dir(const char *cfg_root_dir);
 void sapp_update_data_root_dir(const char *data_root_dir);
+int sapp_is_absolute_path(const char *filename);
 
 
 #ifdef __cplusplus

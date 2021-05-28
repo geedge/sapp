@@ -75,8 +75,6 @@ int libsapp_setup_env(int argc, char *argv[])
 	sapp_gval_init();
 	sapp_set_current_state(SAPP_STATE_JUST_START);
 	sapp_set_current_state(SAPP_STATE_CONFIG_PARSE);
-
-	sapp_get_secondary_file_path(); /* 命令行参数解析前, 先获取默认二级配置文件路径 */
 	
 	if(argc >= 2){
 		/* 如果有命令行参数, 先解析cla, 因为可能使用-h, -v等帮助信息		 */
@@ -86,6 +84,9 @@ int libsapp_setup_env(int argc, char *argv[])
 
 		ret = sapp_parse_config();
 	}else{
+		/* 没有命令行参数, 使用默认值初始化相关路径 */
+		sapp_update_main_config_file(NULL);
+		sapp_get_secondary_file_path();
 		sapp_update_config_root_dir(NULL);
 		sapp_update_data_root_dir(NULL);
 		ret = sapp_parse_config();

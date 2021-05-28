@@ -4,7 +4,6 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
-
 #ifdef GIT_VERSION
  __attribute__((__used__)) const char *sapp_git_ver = GIT_VERSION;
 #endif
@@ -105,29 +104,37 @@ static int get_dumpfile_list_array(const char *opt_arg)
 static const sapp_cmd_args_usage_t cmd_args_usage[] = 
 {
 	/* 按字母顺序排列输出: */
-	{"-c", "config-root-dir", 	"required", NULL,	"specifies the root directory of the config files, will append the subdirectory sapp\n  \t\t\t\t\t\tfor example: ./sapp -c /home/config, sapp actually uses the dir: /home/config/sapp/"},
+	{"-c", "main-config-file", 	"required", NULL,	"specifies sapp main configuration file, default is './etc/sapp.toml', for example:\n \
+						./sapp -c /opt/MESA/config/sapp.toml"},
+	{"-C", "config-root-dir", 	"required", NULL,	"specifies the configuration root directory for plugins, \n \
+						plugin should call sapp_get_platform_opt->SPO_CONFIG_ROOT_DIR to get this value, for example:\n \
+						./sapp -C /opt/MESA/config"},
 	{"-d", "dumpfile", 	"no", NULL,	"running as pcap offline mode, default pcap file is './dumpfile'"},
-	{"-D", "data-root-dir",		"required",NULL,	"specifies the root directory of the local data and state files, will append the subdirectory sapp\n\t\t\t\t\t\tfor example: ./sapp -D /home/data, sapp actually uses the dir: /home/data/sapp/"},	
+	{"-D", "data-root-dir",		"required",NULL,	"specifies the root directory of the local data,log or state files,\n \
+						plugin should call sapp_get_platform_opt->SPO_DATA_ROOT_DIR to get this value, for example: \n \
+						./sapp -D /tmp/MESA/log"},	
 	{"-e", "example-config", "required",NULL, "generate example main config file sapp.toml"},
-	{"-f", "dumpfile-list", "required",NULL, "read many pcap files at one time without exiting, get the list of pcap files by command, \n\t\t\t\t\t\tfor example: ./sapp -f 'ls files/*.pcap', ./sapp -f 'find /home/files -name *.pcap'"},
+	{"-f", "dumpfile-list", "required",NULL, "read many pcap files at one time without exiting, get the list of pcap files by command, for example: \n \
+						./sapp -f 'ls files/*.pcap', ./sapp -f 'find /home/files -name *.pcap'"},
 	{"-g", "coredump", 	"no",NULL,	"generate coredump for test"},
 	{"-h", "help",		"no",NULL,	"show help message"},
 	{"-p",  "dumpfile-speed",	"required",dumpfile_speed_check, "\n  \t\ttop-speed\tprocess packets as fast as possible, this is default behavior\n\t\ttimestamp\tprocess packets as pcap embedded timestamp interval"},
 	{"-r", "dumpfile-file", "required",NULL,	"read packets from which pcap file"},
 	{"-t", "test-config", "optional",NULL,	"check validity of the configuration file, support level t1,t2,t3"},
 	{"-v", "version", 	"no",NULL,	"show platform version"},
-	{NULL,	NULL, 		NULL}
+	{NULL,	NULL, NULL,NULL,NULL}
 };
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
-static const char *sapp_cla_short_options = "dhgvc:D:e:r:p:f:t::";
+static const char *sapp_cla_short_options = "dhgvc:C:D:e:r:p:f:t::";
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const struct option sapp_cla_long_options[] = 
 {
 	{"help",			no_argument,      	NULL,      'h'},
 	{"version",			no_argument,      	NULL,      'v'},
-	{"config-root-dir", required_argument,	NULL,	   'c'},
+	{"main-config-file", required_argument,	NULL,	   'c'},
+	{"config-root-dir", required_argument,	NULL,	   'C'},
 	{"data-root-dir", 	required_argument,	NULL,	   'D'},
 	{"dumpfile",		no_argument,      	NULL,      'd'},
 	{"dumpfile-file",	required_argument,  NULL,      'r'},
@@ -194,7 +201,7 @@ static int check_args_sanity(void)
 }
 
 
-static void usage(void)
+static void sapp_cmd_usage(void)
 {
 	int index = 0;
 
@@ -300,70 +307,99 @@ static int store_cmd_args(const char *opt_name, const char *opt_arg)
 	return 0;
 }
 
-
-
 /*
-	根据-c参数指定的根目录, 将配置文件的相对路径转为绝对路径, 
-	如果没有-c参数, 默认路径是./etc/
+	将相对文件路径转换为绝对路径, 受命令行参数-c和配置文件是否使用绝对路径影响.
 */
+static void sapp_convert_relative_to_absolute(const char *raw_relative_path, char **absolute_path, const char *cmd_arg_root_dir)
+{
+	int cfg_is_absolute_path;
+	char sapp_cfg_filename[PATH_MAX];
+
+	cfg_is_absolute_path = sapp_is_absolute_path(raw_relative_path);
+
+	if(cmd_arg_root_dir){
+		if(cfg_is_absolute_path){
+			/* 如果指定了-c命令行参数, 且配置文件使用了绝对路径, 这是矛盾的, 仅使用绝对路径最后的文件名 */
+			snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s/%s", cmd_arg_root_dir, SAPP_CFG_SECONDARY_DIR, basename(raw_relative_path));
+			*absolute_path = sapp_strdup(sapp_cfg_filename);
+		}else{
+			snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s/%s", cmd_arg_root_dir, SAPP_CFG_SECONDARY_DIR, raw_relative_path);
+			*absolute_path = sapp_strdup(sapp_cfg_filename);
+		}
+	}else{
+		/* 没有-c参数, 直接复制sapp.toml原始的relative_path */
+		*absolute_path = sapp_strdup(raw_relative_path);	
+	}
+
+	return;
+}
+
+
+void sapp_update_main_config_file(const char *main_entry_cfg)
+{
+	sapp_config_file_link_t * pconfig = &sapp_global_val->config.cfg_file_path;
+
+	if(main_entry_cfg){
+		pconfig->cfg_main_entry_absolute = sapp_strdup(main_entry_cfg);
+	}else{
+		pconfig->cfg_main_entry_absolute = sapp_strdup("./etc/sapp.toml");
+	}
+
+	/* 因为sapp.toml可能不是默认值了, 再重新获取一遍配置文件相对路径 */
+	sapp_get_secondary_file_path();
+
+	/* sapp的二级配置文件路径从sapp.toml获取, 不受命令参数控制, -C,-D仅用于插件 */
+#if 0
+	sapp_convert_relative_to_absolute(pconfig->cfg_sapp_log_relative, (char **)&pconfig->cfg_sapp_log_absolute, cfg_root_dir);
+	sapp_convert_relative_to_absolute(pconfig->cfg_plug_list_relative, (char **)&pconfig->cfg_plug_list_absolute, cfg_root_dir);
+	sapp_convert_relative_to_absolute(pconfig->cfg_project_list_relative, (char **)&pconfig->cfg_project_list_absolute, cfg_root_dir);	
+	sapp_convert_relative_to_absolute(pconfig->cfg_entry_list_relative, (char **)&pconfig->cfg_entry_list_absolute, cfg_root_dir);
+	sapp_convert_relative_to_absolute(pconfig->cfg_file_send_raw_pkt_relative, (char **)&pconfig->cfg_file_send_raw_pkt_absolute, cfg_root_dir);
+	sapp_convert_relative_to_absolute(pconfig->cfg_file_vxlan_sport_map_relative, (char **)&pconfig->cfg_file_vxlan_sport_map_absolute, cfg_root_dir);
+	sapp_convert_relative_to_absolute(pconfig->cfg_file_inline_dev_relative, (char **)&pconfig->cfg_file_inline_dev_absolute, cfg_root_dir);
+	sapp_convert_relative_to_absolute(pconfig->cfg_file_necessary_plug_relative, (char **)&pconfig->cfg_file_necessary_plug_absolute, cfg_root_dir);
+	sapp_convert_relative_to_absolute(pconfig->cfg_file_stream_compare_layer_relative, (char **)&pconfig->cfg_file_stream_compare_layer_absolute, cfg_root_dir);
+	sapp_convert_relative_to_absolute(pconfig->cfg_file_vlan_flipping_relative, (char **)&pconfig->cfg_file_vlan_flipping_absolute, cfg_root_dir);
+	sapp_convert_relative_to_absolute(pconfig->cfg_file_asymmetric_addr_layer_relative, (char **)&pconfig->cfg_file_asymmetric_addr_layer_absolute, cfg_root_dir);	
+#else
+	pconfig->cfg_sapp_log_absolute = sapp_strdup(pconfig->cfg_sapp_log_relative);
+	pconfig->cfg_plug_list_absolute = sapp_strdup(pconfig->cfg_plug_list_relative);
+	pconfig->cfg_project_list_absolute = sapp_strdup(pconfig->cfg_project_list_relative);
+	pconfig->cfg_entry_list_absolute = sapp_strdup(pconfig->cfg_entry_list_relative);
+	pconfig->cfg_file_send_raw_pkt_absolute = sapp_strdup(pconfig->cfg_file_send_raw_pkt_relative);
+	pconfig->cfg_file_vxlan_sport_map_absolute = sapp_strdup(pconfig->cfg_file_vxlan_sport_map_relative);
+	pconfig->cfg_file_inline_dev_absolute = sapp_strdup(pconfig->cfg_file_inline_dev_relative);
+	pconfig->cfg_file_necessary_plug_absolute = sapp_strdup(pconfig->cfg_file_necessary_plug_relative);
+	pconfig->cfg_file_stream_compare_layer_absolute = sapp_strdup(pconfig->cfg_file_stream_compare_layer_relative);
+	pconfig->cfg_file_vlan_flipping_absolute = sapp_strdup(pconfig->cfg_file_vlan_flipping_relative);
+	pconfig->cfg_file_asymmetric_addr_layer_absolute = sapp_strdup(pconfig->cfg_file_asymmetric_addr_layer_relative);
+#endif
+
+}
+
 void sapp_update_config_root_dir(const char *cfg_root_dir)
 {
-	char sapp_secondary_dir[PATH_MAX];
 	char sapp_cfg_filename[PATH_MAX];
 	sapp_config_file_link_t *pconfig;
 
 	pconfig = &sapp_global_val->config.cfg_file_path;
 	
-	if(NULL == cfg_root_dir){ //no cmd args, use default ./etc/
-		snprintf(sapp_secondary_dir, PATH_MAX, "%s", "./etc");
-		pconfig->cfg_files_root_dir = sapp_strdup("./etc");
-	}else{
+	if(cfg_root_dir != NULL){ 
+		struct stat dir_fstat;
+		if(stat(cfg_root_dir, &dir_fstat) < 0){
+			printf("\033[1;31;40mconfig-root-dir '%s' is not exist!\033[0m\n", cfg_root_dir);
+			exit(1);
+		}
+		
+		if(S_ISDIR(dir_fstat.st_mode) == 0){
+			printf("\033[1;31;40mconfig-root-dir '%s' is not directory!\033[0m\n", cfg_root_dir);
+			exit(1);
+		}	
 		pconfig->cfg_files_root_dir = sapp_strdup(cfg_root_dir);
-		snprintf(sapp_secondary_dir, PATH_MAX, "%s/%s", cfg_root_dir, SAPP_CFG_SECONDARY_DIR);
-	}
-
-	pconfig->cfg_main_entry_relative = sapp_strdup("sapp.toml");
-	snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, "sapp.toml");
-	pconfig->cfg_main_entry_absolute = sapp_strdup(sapp_cfg_filename);
-
-	snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pconfig->cfg_sapp_log_relative);
-	pconfig->cfg_sapp_log_absolute = sapp_strdup(sapp_cfg_filename);
-
-	 /* 为了向前兼容, 没有-c参数时, 插件配置文件默认是./plug/conflist.inf */
-	if(NULL == cfg_root_dir){ 
-		pconfig->cfg_plug_list_absolute = sapp_strdup("./plug/conflist.inf");	
 	}else{
-		snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pconfig->cfg_plug_list_relative);
-		pconfig->cfg_plug_list_absolute = sapp_strdup(sapp_cfg_filename);
+		pconfig->cfg_files_root_dir = sapp_strdup("./etc");
 	}
-	
-	snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pconfig->cfg_project_list_relative);
-	pconfig->cfg_project_list_absolute = sapp_strdup(sapp_cfg_filename);
 
-	snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pconfig->cfg_entry_list_relative);
-	pconfig->cfg_entry_list_absolute = sapp_strdup(sapp_cfg_filename);	
-
-	snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pconfig->cfg_file_send_raw_pkt_relative);
-	pconfig->cfg_file_send_raw_pkt_absolute = sapp_strdup(sapp_cfg_filename);	
-	
-	snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pconfig->cfg_file_vxlan_sport_map_relative);
-	pconfig->cfg_file_vxlan_sport_map_absolute = sapp_strdup(sapp_cfg_filename);	
-
-	snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pconfig->cfg_file_inline_dev_relative);
-	pconfig->cfg_file_inline_dev_absolute = sapp_strdup(sapp_cfg_filename);		
-
-	snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pconfig->cfg_file_necessary_plug_relative);
-	pconfig->cfg_file_necessary_plug_absolute = sapp_strdup(sapp_cfg_filename);		
-	
-
-	snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pconfig->cfg_file_stream_compare_layer_relative);
-	pconfig->cfg_file_stream_compare_layer_absolute = sapp_strdup(sapp_cfg_filename);	
-
-	snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pconfig->cfg_file_vlan_flipping_relative);
-	pconfig->cfg_file_vlan_flipping_absolute = sapp_strdup(sapp_cfg_filename);		
-
-	snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pconfig->cfg_file_asymmetric_addr_layer_relative);
-	pconfig->cfg_file_asymmetric_addr_layer_absolute = sapp_strdup(sapp_cfg_filename);		
 }
 
 void sapp_update_data_root_dir(const char *data_root_dir)
@@ -371,26 +407,33 @@ void sapp_update_data_root_dir(const char *data_root_dir)
 	char sapp_secondary_dir[PATH_MAX];
 	char sapp_data_filename[PATH_MAX];
 	sapp_data_file_link_t *pdata;
-
-	pdata = &sapp_global_val->config.data_file_path;
 	
-	if(NULL == data_root_dir){ //no cmd args, use default ./
-		snprintf(sapp_secondary_dir, PATH_MAX, "%s", "./");
-		pdata->data_files_root_dir = sapp_strdup("./");
-	}else{
+	pdata = &sapp_global_val->config.data_file_path;
+
+	if(data_root_dir != NULL){
+		/* 数据目录不用事先检查有没有, 因为写日志可以动态创建目录和文件, 刚启动时可能确实不存在, 但是如果存在必须是目录 */
+		struct stat dir_fstat;
+		if((stat(data_root_dir, &dir_fstat) >= 0) && (S_ISDIR(dir_fstat.st_mode) == 0)){
+			printf("\033[1;31;40mdata-root-dir '%s' already exist, but is not directory\033[0m\n", data_root_dir);
+			exit(1);
+		}
+			
 		pdata->data_files_root_dir = sapp_strdup(data_root_dir);
 		snprintf(sapp_secondary_dir, PATH_MAX, "%s/%s", data_root_dir, SAPP_DATA_SECONDARY_DIR);
-		MESA_mkdir_p(sapp_secondary_dir, 0755);
-	}
-	
-	snprintf(sapp_data_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pdata->data_sapp_sysinfo_log_relative);
-	pdata->data_sapp_sysinfo_log_absolute = sapp_strdup(sapp_data_filename);
+		MESA_mkdir_p(sapp_secondary_dir, 0755);		
+	}else{
+		pdata->data_files_root_dir = sapp_strdup("./");
+	}	
 
-	snprintf(sapp_data_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pdata->data_sapp_fs2_log_relative);
-	pdata->data_sapp_fs2_log_absolute = sapp_strdup(sapp_data_filename);	
-
-	snprintf(sapp_data_filename, PATH_MAX, "%s/%s", sapp_secondary_dir, pdata->data_inline_keepalive_log_relative);
-	pdata->data_inline_keepalive_log_absolute = sapp_strdup(sapp_data_filename);		
+#if 0 /* sapp的二级日志文件路径从sapp.toml获取, 不受命令参数控制, -C,-D仅用于插件 */
+	sapp_convert_relative_to_absolute(pdata->data_sapp_sysinfo_log_relative, (char **)&pdata->data_sapp_sysinfo_log_absolute, data_root_dir);
+	sapp_convert_relative_to_absolute(pdata->data_sapp_fs2_log_relative, (char **)&pdata->data_sapp_fs2_log_absolute, data_root_dir);
+	sapp_convert_relative_to_absolute(pdata->data_inline_keepalive_log_relative, (char **)&pdata->data_inline_keepalive_log_absolute, data_root_dir);	
+#else
+	pdata->data_sapp_sysinfo_log_absolute = sapp_strdup(pdata->data_sapp_sysinfo_log_relative);
+	pdata->data_sapp_fs2_log_absolute = sapp_strdup(pdata->data_sapp_fs2_log_relative);
+	pdata->data_inline_keepalive_log_absolute = sapp_strdup(pdata->data_inline_keepalive_log_relative);
+#endif
 }
 
 
@@ -400,7 +443,11 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 	int c;
 	int opt_index;
 	int cfg_root_dir_changed = 0;
+	const char *cmd_arg_cfg_root_dir;
 	int data_root_dir_changed = 0;
+	const char *cmd_arg_data_root_dir;
+	int cfg_main_entry_changed = 0;
+	const char *cmd_arg_cfg_main_entry;	
 	int option_array_index;
 
 	int test_config_flag = 0;
@@ -415,7 +462,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 
 		switch(c){
 			case 'h':
-				usage();
+				sapp_cmd_usage();
 			break;
 
 			case 'v':
@@ -427,13 +474,22 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 			break;
 
 			case 'c':
-				cfg_root_dir_changed = 1;
-				sapp_update_config_root_dir(optarg);
+				cfg_main_entry_changed = 1;
+				cmd_arg_cfg_main_entry = sapp_strdup(optarg);
+				/* cmd args没有先后顺序, 此处先不要直接调用 sapp_update_config_root_dir() */
 			break;
+
+			case 'C':
+				cfg_root_dir_changed = 1;
+				cmd_arg_cfg_root_dir = sapp_strdup(optarg);
+				/* cmd args没有先后顺序, 此处先不要直接调用 sapp_update_main_config_file() */
+			break;
+			
 
 			case 'D':
 				data_root_dir_changed = 1;
-				sapp_update_data_root_dir(optarg);
+				cmd_arg_data_root_dir = sapp_strdup(optarg);
+				/* cmd args没有先后顺序, 此处先不要直接调用 sapp_update_data_root_dir() */
 			break;
 
 			case 'e':
@@ -510,14 +566,27 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 		return -1;
 	}
 
-	/* 没有指定-c路径, 使用默认./rtc */
-	if(0 == cfg_root_dir_changed){
-		sapp_update_config_root_dir(NULL);
+	/* cmd args没有顺序, 如果先指定了-D 后面加了-c参数, 也要优先解析-c */
+	if(0 == cfg_main_entry_changed){
+		sapp_update_main_config_file(NULL);
+	}else{
+		sapp_update_main_config_file(cmd_arg_cfg_main_entry);
 	}
 
-	/* 没有指定-D路径, 使用默认./rtc */
+	/* cmd args没有顺序, 如果先指定了-D 后面加了-c参数, 也要优先解析-c */
+	if(0 == cfg_root_dir_changed){
+		sapp_update_config_root_dir(NULL);
+	}else{
+		sapp_update_config_root_dir(cmd_arg_cfg_root_dir);
+		free((void *)cmd_arg_cfg_root_dir);
+	}
+
+	/* cmd args没有顺序, 如果先指定了-D 后面加了-c参数, 也要优先解析-c */
 	if(0 == data_root_dir_changed){
 		sapp_update_data_root_dir(NULL);
+	}else{
+		sapp_update_data_root_dir(cmd_arg_data_root_dir);
+		free((void *)cmd_arg_data_root_dir);
 	}
 
 	if(test_config_flag != 0){
