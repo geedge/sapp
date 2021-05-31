@@ -49,7 +49,7 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
 			pdetail_pr->flow_stat->C2S_pkt++;
 			pdetail_pr->flow_stat->C2S_byte += datalen;
-			pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len;
+			pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
 		}
 	}	
 	else
@@ -63,7 +63,7 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
 			pdetail_pr->flow_stat->S2C_pkt++;
 			pdetail_pr->flow_stat->S2C_byte += datalen;
-			pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len;
+			pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
 		}
 			
 	}

@@ -750,21 +750,21 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 			if(DIR_C2S == pstream->curdir){
 				pdetail_pr->flow_stat->C2S_all_pkt++;
 				pdetail_pr->flow_stat->C2S_all_byte += datalen;
-				pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len;
+				pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
 			}else{
 				pdetail_pr->flow_stat->S2C_all_pkt++;
 				pdetail_pr->flow_stat->S2C_all_byte += datalen;
-				pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len;
+				pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len- raw_pkt->overlay_layer_bytes;
 			}
 		}else{
 			if(DIR_C2S == pstream->curdir){
 				pdetail_pr->flow_stat->C2S_all_pkt = 1;
 				pdetail_pr->flow_stat->C2S_all_byte = datalen;
-				pdetail_pr->flow_stat->C2S_all_byte_raw = raw_pkt->raw_pkt_len;
+				pdetail_pr->flow_stat->C2S_all_byte_raw = raw_pkt->raw_pkt_len- raw_pkt->overlay_layer_bytes;
 			}else{
 				pdetail_pr->flow_stat->S2C_all_pkt = 1;
 				pdetail_pr->flow_stat->S2C_all_byte = datalen;
-				pdetail_pr->flow_stat->S2C_all_byte_raw = raw_pkt->raw_pkt_len;
+				pdetail_pr->flow_stat->S2C_all_byte_raw = raw_pkt->raw_pkt_len- raw_pkt->overlay_layer_bytes;
 			}
 		}
 	}
@@ -1000,11 +1000,11 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 			if(pstream->curdir == DIR_C2S){
 				pdetail_pr->flow_stat->C2S_all_pkt = 1;
 				pdetail_pr->flow_stat->C2S_all_byte = datalen;
-				pdetail_pr->flow_stat->C2S_all_byte_raw = raw_pkt->raw_pkt_len;
+				pdetail_pr->flow_stat->C2S_all_byte_raw = raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
 			}else{
 				pdetail_pr->flow_stat->S2C_all_pkt = 1;
 				pdetail_pr->flow_stat->S2C_all_byte = datalen;	
-				pdetail_pr->flow_stat->S2C_all_byte_raw = raw_pkt->raw_pkt_len;
+				pdetail_pr->flow_stat->S2C_all_byte_raw = raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;;
 			}
 		}
 		/* NOTE, tcp_data计数在stream_process_tcp()中累计 */
@@ -1393,7 +1393,7 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 		}else{
 			pdetail_pr->flow_stat->S2C_all_pkt--;
 			pdetail_pr->flow_stat->S2C_all_byte -= datalen;
-			pdetail_pr->flow_stat->S2C_all_byte_raw -= raw_pkt->raw_pkt_len;
+			pdetail_pr->flow_stat->S2C_all_byte_raw -= raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
 		}
 	}
 
@@ -1403,7 +1403,7 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 			pdetail_pr->deduce_flow_stat->C2S_all_byte -= datalen;
 		}else{
 			pdetail_pr->deduce_flow_stat->S2C_all_pkt--;
-			pdetail_pr->deduce_flow_stat->S2C_all_byte -= datalen;
+			pdetail_pr->deduce_flow_stat->S2C_all_byte -= datalen - raw_pkt->overlay_layer_bytes;
 		}
 	}
 	
@@ -2539,11 +2539,11 @@ static char tcp_process_newstreambydata(struct streamindex *pindex_tcp,const voi
 		if(DIR_S2C == pstream->curdir){
 			pdetail_pr->flow_stat->S2C_all_pkt++;
 			pdetail_pr->flow_stat->S2C_all_byte += tcplen;
-			pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len;
+			pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
 		}else{
 			pdetail_pr->flow_stat->C2S_all_pkt++;
 			pdetail_pr->flow_stat->C2S_all_byte += tcplen;
-			pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len;
+			pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
 		}
 	}
 	
@@ -2794,11 +2794,11 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		if(DIR_C2S == pstream->curdir){
 			pdetail_pr->flow_stat->C2S_all_pkt++;
 			pdetail_pr->flow_stat->C2S_all_byte += tcplen;
-			pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len;
+			pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
 		}else{
 			pdetail_pr->flow_stat->S2C_all_pkt++;
 			pdetail_pr->flow_stat->S2C_all_byte += tcplen;
-			pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len;
+			pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
 		}
 	}
 
