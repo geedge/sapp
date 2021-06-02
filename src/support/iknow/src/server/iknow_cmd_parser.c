@@ -748,7 +748,7 @@ iknow_handle iknow_create(const iknow_create_args_t *args, int args_len)
 		return NULL;
 	}
 	
-	listenfd = socket(AF_INET, SOCK_STREAM, 0);
+	listenfd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
 
 	bzero(&listen_addr, sizeof(listen_addr));
 	listen_addr.sin_family = AF_INET;

@@ -1326,7 +1326,7 @@ static int cycle_pkt_dump_socket_init(void)
 	int i, opt;
 	struct sockaddr_in sockadd;
 	
-	pkt_dump_tcp_cmd_sd = socket(AF_INET, SOCK_STREAM, 0);
+	pkt_dump_tcp_cmd_sd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
 
 	opt = 1;
 	setsockopt(pkt_dump_tcp_cmd_sd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));

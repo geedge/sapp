@@ -3371,7 +3371,7 @@ static int send_handle_init(int tot_thread_num)
 			sapp_log(30, ~0, ~0, "socket v4 error, %s\n", strerror(errno));
 			return -1;
 		}
-		g_send_handle[i].raw_udp_fd = socket(AF_INET, SOCK_DGRAM, 0);
+		g_send_handle[i].raw_udp_fd = socket(AF_INET, SOCK_DGRAM|SOCK_CLOEXEC, 0);
 		if(g_send_handle[i].raw_udp_fd < 0){
 			sapp_log(30, ~0, ~0, "socket udp error, %s\n", strerror(errno));
 			return -1;
