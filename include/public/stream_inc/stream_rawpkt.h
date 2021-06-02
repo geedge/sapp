@@ -89,8 +89,8 @@ const void *get_this_layer_header(const struct streaminfo *pstream);
 
 	参数:
 		raw_data: 当前层的头部指针;
-		raw_layer_type: 当前层的地址类型;
-		expect_layer_type: 期望跳转到的地址类型;
+		raw_layer_type: 当前层的地址类型, 详见: enum addr_type_t ;
+		expect_layer_type: 期望跳转到的地址类型, 详见:  enum addr_type_t ;
 
 	返回值:
 		NULL: 无此地址;

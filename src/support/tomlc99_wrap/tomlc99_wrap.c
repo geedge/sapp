@@ -176,6 +176,7 @@ int tomlc99_wrap_load_int_array(
 	int cfg_array_num;
 	const char* raw_str;
 	int *int_val;
+	long long tmp_long_val;
 	int ret = TOMLC99_RET_PARSE_ERROR;
 
 	if(tmlc99_is_file_exist(file) == 0){
@@ -206,11 +207,12 @@ int tomlc99_wrap_load_int_array(
 	int_val = (int *)malloc(sizeof(int));
 	
 	for (cfg_array_num = 0; NULL != (raw_str = toml_raw_at(cfg_array, cfg_array_num)); cfg_array_num++){
-		if(toml_rtoi(raw_str, (int64_t *)&int_val[cfg_array_num]) < 0){
+		if(toml_rtoi(raw_str, (int64_t *)&tmp_long_val) < 0){ /* 2021-06-02 lijia fix memory overflow bug */
 			ret = TOMLC99_RET_PARSE_ERROR;
 			goto err_2;
 		}
 
+		int_val[cfg_array_num] = (int)tmp_long_val;
 		int_val = (int *)realloc(int_val, sizeof(int) * (cfg_array_num + 2));
 	}
 

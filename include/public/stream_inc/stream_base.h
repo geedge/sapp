@@ -135,7 +135,7 @@ enum stream_carry_tunnel_t{
 };
 
 typedef struct raw_ipfrag_list{
-    void *frag_packet;
+    void *frag_packet; /* 非ip包头, 从底层网卡获取的原始包头 */
     int pkt_len;
     int type; /* IPv4 or IPv6 */
     struct raw_ipfrag_list *next;

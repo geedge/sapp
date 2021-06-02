@@ -762,6 +762,16 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 		return NULL;
 	}
 
+	if(ADDR_TYPE_IPV4 == raw_layer_type){
+		/* 转成纯IPv4地址类型 */
+		raw_layer_type = __ADDR_TYPE_IP_PAIR_V4;
+	}
+
+	if(ADDR_TYPE_IPV6 == raw_layer_type){
+		/* 转成纯IPv6地址类型 */
+		raw_layer_type = __ADDR_TYPE_IP_PAIR_V6;
+	}
+
 	if(ADDR_TYPE_IPV4 == expect_layer_type){
 		/* 转成纯IPv4地址类型 */
 		expect_layer_type = __ADDR_TYPE_IP_PAIR_V4;
@@ -841,6 +851,16 @@ const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_ty
 	int new_raw_layer_type = raw_layer_type; /* 在跳转过程中, 可能会更新中间层信息 */
 	const char *new_next_layer_data = (char *)raw_data;
 
+	if(ADDR_TYPE_IPV4 == raw_layer_type){
+		/* 转成纯IPv4地址类型 */
+		raw_layer_type = __ADDR_TYPE_IP_PAIR_V4;
+	}
+
+	if(ADDR_TYPE_IPV6 == raw_layer_type){
+		/* 转成纯IPv6地址类型 */
+		raw_layer_type = __ADDR_TYPE_IP_PAIR_V6;
+	}
+
 	if(ADDR_TYPE_IPV4 == expect_layer_type){
 		/* 转成纯IPv4地址类型 */
 		expect_layer_type = __ADDR_TYPE_IP_PAIR_V4;
@@ -884,7 +904,7 @@ const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_ty
 			break;
 
 			default:
-				sapp_runtime_log(20, "MESA_net_jump_to_layer_greedy() not support layer type:%d\n", expect_layer_type);
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_net_jump_to_layer_greedy() not support layer type:%d\n", expect_layer_type);
 				goto done;
 		}
 
