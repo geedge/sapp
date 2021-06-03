@@ -557,16 +557,16 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 
 	if(0 == is_overlay_udp_layer){ /* 非overlay层才累加相关层计数 */
 		local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
-		local_sys_stat->length[SAPP_STAT_RCV_UDP]+=ulen;
+		local_sys_stat->length[SAPP_STAT_RCV_UDP]+=datalen;
 		if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
 		{
 			local_sys_stat->count[SAPP_STAT_UDP_INBOUND]++;
-			local_sys_stat->length[SAPP_STAT_UDP_INBOUND] += ulen;
+			local_sys_stat->length[SAPP_STAT_UDP_INBOUND] += datalen;
 		}
 		else
 		{
 			local_sys_stat->count[SAPP_STAT_UDP_OUTBOUND]++;
-			local_sys_stat->length[SAPP_STAT_UDP_OUTBOUND] += ulen;
+			local_sys_stat->length[SAPP_STAT_UDP_OUTBOUND] += datalen;
 		}
 	}
 	

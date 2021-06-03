@@ -242,7 +242,6 @@ char l2tp_protocol_entry(const struct streaminfo *a_udp,  void **pme, int thread
 	int pro_plug_ret = APP_STATE_GIVEME;
 	const struct mesa_udp_hdr *udph;
 	const struct mesa_ip4_hdr *ip4hdr = (const struct mesa_ip4_hdr *)ip_hdr;	
-	udph = (const struct mesa_udp_hdr *)((char *)ip_hdr + ip4hdr->ip_hl * 4);
 
 	switch(a_udp->opstate){
 		case OP_STATE_PENDING:
@@ -256,6 +255,7 @@ char l2tp_protocol_entry(const struct streaminfo *a_udp,  void **pme, int thread
 			l2tp_pri = (struct l2tp_info_pri *)dictator_malloc(thread_seq, sizeof(struct l2tp_info_pri));
 			l2tp_context_init(l2tp_pri, thread_seq, a_udp);
 			*pme = l2tp_pri;
+			udph = (const struct mesa_udp_hdr *)((char *)ip_hdr + ip4hdr->ip_hl * 4);
 			pro_plug_ret = l2tp_process(a_udp, l2tp_pri, ip_hdr, udph);
 		}	
 		break;
@@ -263,6 +263,7 @@ char l2tp_protocol_entry(const struct streaminfo *a_udp,  void **pme, int thread
 		case OP_STATE_DATA:
 			l2tp_pri = (struct l2tp_info_pri *)(*pme);
 			l2tp_pri->ssinfo.session_state = SESSION_STATE_DATA;
+			udph = (const struct mesa_udp_hdr *)((char *)ip_hdr + ip4hdr->ip_hl * 4);
 			pro_plug_ret = l2tp_process(a_udp, l2tp_pri, ip_hdr, udph);
 		break;
 

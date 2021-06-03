@@ -83,7 +83,7 @@ int sapp_parse_cmd_args(int argc, char *argv[]);
 int sapp_parse_config(void);
 void sapp_init_breakpad_mini(void);
 void sapp_segv_generate(void);
-void sapp_generate_example_config(const char *filename);
+void sapp_generate_example_config(const char *filename, const char *version);
 void sapp_cla_override_cfg_file(void);
 void sapp_global_val_sanity_check(void);
 void *sapp_time_event_thread(void *arg);

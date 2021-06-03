@@ -402,6 +402,7 @@ void sapp_update_config_root_dir(const char *cfg_root_dir);
 void sapp_update_data_root_dir(const char *data_root_dir);
 int sapp_is_absolute_path(const char *filename);
 
+void sapp_printf_colorful(int level, const char *format, ...);
 
 #ifdef __cplusplus
 }

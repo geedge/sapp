@@ -1,24 +1,24 @@
 ###################################################################################################
-# NOTE:
-#    The format of this file is toml (https://github.com/cktan/tomlc99)
-#    to make vim editor display colorful and human readable, 
-#    you can create a symbolic links named sapp.ini to sapp.toml, ln -sf sapp.toml sapp.ini
+# NOTE:                                                                                           #
+#    The format of this file is toml (https://github.com/cktan/tomlc99)                           #
+#    to make vim editor display colorful and human readable,                                      #
+#    you can create a symbolic links named sapp.ini to sapp.toml, ln -sf sapp.toml sapp.ini       #
 ###################################################################################################
 
 [SYSTEM]
-instance_name = "sapp_v4.2"
+	instance_name = "sapp_v4.2"
 
 [CPU]
-worker_threads=1
-send_only_threads_max=0
+	worker_threads=1
+	send_only_threads_max=0
 ### note, bind_mask, if you do not want to bind thread to special CPU core, keep it empty as []
 ### there are two different grammars:
 ### toml array format: bind_mask=[1,2,3,4,5,11,12,13,14,15]
 ### MESA_load_profile range format: bind_mask="1-5,11-15"
-bind_mask=[]
+	bind_mask=[]
 
 [MEM]
-dictator_enable=1
+	dictator_enable=1
 
 [PACKET_IO]
     [overlay_tunnel_definition]
@@ -58,7 +58,7 @@ dictator_enable=1
     inject_mode_single_gateway_src_mac="00:11:22:77:88:99"
     inject_mode_single_gateway_dst_mac="00:11:22:33:44:55"
 
-    dumpfile_sleep_time_before_exit=3
+    dumpfile_sleep_time_before_exit=0
    
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]
@@ -86,7 +86,6 @@ dictator_enable=1
     tcp_drop_pure_ack_pkt=0
     tcp_syn_option_parse_enabled=1 
     skip_not_ip_layer_over_eth=0
-    reverse_ethernet_addr=1
 
 [DUPLICATE_PKT]
 [dup_pkt.traffic.original]
@@ -146,7 +145,7 @@ dictator_enable=1
     symbol_conflict_enabled=0
   
     [profiling.log]
-    level=30
+    level=20
     interval=5
     
         [profiling.log.local]
@@ -187,7 +186,8 @@ dictator_enable=1
    
         [tools.pkt_dump.udp]
         command_port=12345
-
+		pkt_dump_ratio=30
+		
         [tools.pkt_dump.storage]
 ### note, file path must be double quotation mark extension, for example,  path="/dev/shm/pkt_dump"
         path="/dev/shm/pkt_dump"
@@ -205,7 +205,6 @@ dictator_enable=1
 ### note:
 ### These configurations format is complex and difficult to describe with toml grammar,
 ### so, create a independent secondary config file to description specific information.
-### relative path, will add prefix with cmd args --config-root-dir, use default ./etc/ without --config-root-dir args.
 
 [SECONDARY_CONFIG_LINK]	 
 	cfg_file_sapp_log="etc/sapp_log.conf"

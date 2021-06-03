@@ -120,13 +120,13 @@ static const sapp_cmd_args_usage_t cmd_args_usage[] =
 	{"-h", "help",		"no",NULL,	"show help message"},
 	{"-p",  "dumpfile-speed",	"required",dumpfile_speed_check, "\n  \t\ttop-speed\tprocess packets as fast as possible, this is default behavior\n\t\ttimestamp\tprocess packets as pcap embedded timestamp interval"},
 	{"-r", "dumpfile-file", "required",NULL,	"read packets from which pcap file"},
-	{"-t", "test-config", "optional",NULL,	"check validity of the configuration file, support level t1,t2,t3"},
+	{"-t", "test-config", "no",NULL,	"check validity of the configuration file"},
 	{"-v", "version", 	"no",NULL,	"show platform version"},
 	{NULL,	NULL, NULL,NULL,NULL}
 };
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
-static const char *sapp_cla_short_options = "dhgvc:C:D:e:r:p:f:t::";
+static const char *sapp_cla_short_options = "dhgvc:C:D:e:r:p:f:t";
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const struct option sapp_cla_long_options[] = 
@@ -142,7 +142,7 @@ static const struct option sapp_cla_long_options[] =
 	{"dumpfile-speed",	required_argument,  NULL,      'p'},
 	{"example-config", 	required_argument,  NULL,      'e'},
 	{"coredump", 		no_argument,      	NULL,      'g'},
-	{"test-config",		optional_argument,  NULL,      't'},
+	{"test-config",		no_argument,  		NULL,      't'},
 	{NULL,          	0,      			NULL,      0}
 };
 
@@ -451,7 +451,6 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 	int option_array_index;
 
 	int test_config_flag = 0;
-	char *test_config_option_value = NULL;
 
 	while(1){
 		c = getopt_long(argc, argv, sapp_cla_short_options, sapp_cla_long_options, &opt_index);
@@ -493,7 +492,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 			break;
 
 			case 'e':
-				sapp_generate_example_config(optarg);
+				sapp_generate_example_config(optarg, sapp_git_ver);
 				exit(1);
 			break;
 
@@ -528,17 +527,6 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 
 			case 't':
 				test_config_flag = 1;
-				if(optarg != NULL){
-					if((strcmp(optarg, "1") != 0)
-					&& (strcmp(optarg, "2") != 0)
-					&& (strcmp(optarg, "3") != 0)){
-						printf("option -t --test-config only support level [t1,t2,t3]\n");
-						exit(1);
-					}
-					test_config_option_value = sapp_strdup(optarg);
-				}else{
-					test_config_option_value = sapp_strdup("1"); //default is t1
-				}
 				continue;
 
 			case '?': /* invalid or unknown option */
@@ -590,7 +578,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 	}
 
 	if(test_config_flag != 0){
-		ret = sapp_config_check(atoi(test_config_option_value));
+		ret = sapp_config_check();
 		exit(ret);
 	}
 

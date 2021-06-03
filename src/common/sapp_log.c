@@ -7,6 +7,44 @@ extern "C" {
 #include "support/tomlc99_wrap.h"
 
 
+void sapp_printf_colorful(int level, const char *format, ...)
+{
+    va_list ap;
+    char local_log_content_buff[XATTR_SIZE_MAX];
+    const char *log_color_start = "";
+    const char *log_color_end = "";
+	
+    va_start(ap, format);
+    vsnprintf(local_log_content_buff, sizeof(local_log_content_buff), format, ap);
+    va_end(ap);
+
+    switch(level)
+    { 
+        case RLOG_LV_DEBUG:
+            log_color_start = "\033[33m";
+            log_color_end = "\033[0m";
+        break;
+        
+        case RLOG_LV_INFO:
+            log_color_start = "\033[1;33m";
+            log_color_end = "\033[0m";
+        break;
+        
+        case RLOG_LV_FATAL:
+            log_color_start = "\033[1;31;40m";
+            log_color_end = "\033[0m";
+        break;
+        
+        default:
+        break;
+    }
+
+    fprintf(stdout, "%s%s%s", log_color_start, local_log_content_buff, log_color_end);
+
+    return;
+}
+
+
 /*
 	print_sw, file_sw: 
 		0:²»Êä³ö; 
