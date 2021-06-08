@@ -64,12 +64,12 @@ FUNC_NAME=testtcpApp_allpkt
 #FUNC_NAME=test_allpkt_stream
 #FUNC_NAME=test_get_stream_tcp_opts
 
-#[UDP]
-#FUNC_FLAG=ALL
+[UDP]
+FUNC_FLAG=ALL
 #FUNC_NAME=print_stream_tunnel_type
 #FUNC_NAME=TEST_STREAM
 #FUNC_NAME=KEEP_STREAM
-#FUNC_NAME=testudpApp_1
+FUNC_NAME=testudpApp_1
 #FUNC_NAME=test_inet_addr_list_addr
 #FUNC_NAME=test_allpkt_stream_checklen
 #FUNC_NAME=UDP_ENTRY
