@@ -694,7 +694,7 @@ int process_confelem_plugname(char* filename,int plugtype,char** plugname)
 	if(rec < 0)
 	{
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s get plugname error",filename);
-		return -1;
+		goto plug_init_error;
 	}
 
 	if(plugtype == PLUGTYPE_PROTOCOL)
@@ -703,7 +703,7 @@ int process_confelem_plugname(char* filename,int plugtype,char** plugname)
 		if(rec != 1)
 		{
 			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[1;31;40m%s's\033[0m plugname is %s,not in the entrylist.conf",filename,buf_plugname);
-			return -1;
+			goto plug_init_error;
 		}
 	}
 
@@ -719,6 +719,13 @@ int process_confelem_plugname(char* filename,int plugtype,char** plugname)
 	*plugname = plugname_tmp;
 
 	return 0;
+
+plug_init_error:
+	if(plugin_is_necessary(filename)){
+		sapp_log(RLOG_LV_FATAL, 1, 1, "%s init error, but this plug is necessary, exit!", filename);
+		exit(1);
+	}
+	return -1;
 }
 
 
@@ -752,7 +759,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	if(buf_sofilename[0] == '\0')
 	{
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s get %s error",filename,KEYWORD_FILENAME);
-		return -1;
+		goto plug_init_error;
 	}
 
 	if((plugtype == PLUGTYPE_PLATFORM) || (plugtype == PLUGTYPE_PROTOCOL))
@@ -769,16 +776,16 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	if( filepoint == NULL ) 
 	{
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"dlopen %s in %s error:%s",buf_sofilename,filename,dlerror());
-		return -1;
+		goto plug_init_error;
 	}
 
 	//load FUNAME_INIT
 	memset(buf_funname,0,PLUGIN_MAX_CONFLEN);
 	MESA_load_profile_string_nodef(filename,SECTION_PLUGINFO,KEYWORD_FUNINIT,buf_funname,PLUGIN_MAX_CONFLEN);
 	if(buf_funname[0]=='\0')
-	{
+	{	
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no FUNNAME_INIT!",buf_sofilename);
-		return -1;
+		goto plug_init_error;
 	}
 
 	fun_init = (int (*)())(dlsym(filepoint,buf_funname));
@@ -789,7 +796,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	if(fun_init == NULL)
 	{
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no function %s error!",buf_sofilename,buf_funname);
-		return -1;
+		goto plug_init_error;
 	}
 	else
 	{
@@ -802,13 +809,9 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	rec = fun_init();
 	if(rec < 0)
 	{
-		if(plugin_is_necessary(filename)){
-			sapp_log(RLOG_LV_FATAL, 1, 1, "%s init error, but this plug is necessary, exit!", buf_sofilename);
-			exit(1);
-		}
-		plugin_load_state_update(-1, 0, buf_sofilename);
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[1;31;40m%s\033[0m init error,don't load it",buf_sofilename);
-		return -1;
+		plugin_load_state_update(-1, 0, buf_sofilename);
+		goto plug_init_error;
 	}
 
 	time_cost_us = record_time_elapse_us(&start);
@@ -850,7 +853,6 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 
 	}
 
-	
 
 	//protocol plug 
 	if(plugtype== PLUGTYPE_PROTOCOL)
@@ -865,14 +867,14 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 		if(buf_funname[0]=='\0')
 		{
 			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no %s!",buf_sofilename,KEYWORD_FUNGETID);
-			return -1;
+			goto plug_init_error;
 		}
 
 		fun_getplugid = (void(*)(unsigned short))(dlsym(filepoint,buf_funname));
 		if(fun_getplugid == NULL)
 		{
 			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no %s!",buf_sofilename,buf_funname);
-			return -1;
+			goto plug_init_error;
 		}
 		else
 		{
@@ -891,14 +893,14 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 		if(buf_funname[0]=='\0')
 		{
 			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no %s!",buf_sofilename,KEYWORD_FUNCHANGE);
-			return -1;
+			goto plug_init_error;
 		}
 
 		pluginfo_pro->fun_flagchange = (long long (*)(char*))(dlsym(filepoint,buf_funname));
 		if(pluginfo_pro->fun_flagchange == NULL)
 		{
 			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no function %s error!",buf_sofilename,buf_funname);
-			return -1;
+			goto plug_init_error;
 		}
 		else
 		{
@@ -913,7 +915,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 		if(buf_funname[0]=='\0')
 		{
 			MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s no %s!",buf_sofilename,KEYWORD_FUNSTATE);
-			return -1;
+			goto plug_init_error;
 		}
 
 		pluginfo_pro->fun_flagstate = (void (*)(long long))(dlsym(filepoint,buf_funname));
@@ -947,7 +949,13 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	check_plug_conf(filename,plugtype);
 
 	return 0;
-	
+
+plug_init_error:
+	if(plugin_is_necessary(filename)){
+		sapp_log(RLOG_LV_FATAL, 1, 1, "%s init error, but this plug is necessary, exit!", filename);
+		exit(1);
+	}	
+	return -1;
 }
 
 
