@@ -21,6 +21,10 @@ sapp_module_test:
     - ldconfig
     - ldd /home/mesasoft/sapp_run/sapp
     - cd /home/mesasoft/sapp_run
+    - echo "[platform]" > plug/conflist.inf
+    - echo "[protocol]" >> plug/conflist.inf
+    - echo "[business]" >> plug/conflist.inf
+    - ./sapp -r /home/mesasoft/benchmark_pcap/tcp/tcp_simple.pcap
     - ./gtest_sapp_v4
   tags:
   - share    
