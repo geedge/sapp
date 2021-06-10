@@ -728,7 +728,7 @@ void packet_io_exit(void)
 	sleep(sapp_global_val->config.packet_io.dumpfile_sleep_time_before_exit);
 	plugctrl_destroy_all_plug();
 	
-	exit(1);
+	exit(0);
 	
 	return;
 }
