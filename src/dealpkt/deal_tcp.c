@@ -40,7 +40,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-int set_transport_addr(struct streaminfo *pfstream, UINT16 sport, UINT16 dport);
 extern void free_heap_stream_info(struct streaminfo *heap_stream, int layer);
 extern struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream_pr, int reverse);		
 
@@ -1029,6 +1028,11 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	save_polling_inject_context(pstream_pr, raw_pkt);
 
 	pdetail_pr->auto_remedy_flag = sapp_global_val->config.stream.tcp.inject.auto_remedy;
+
+	if(pstream_pr->create_dir_by_well_known_port){
+		sapp_runtime_log(RLOG_LV_DEBUG, "create new TCP stream without SYN:%s by well known port, the first packet curdir is:%d",
+						printaddr(&pstream->addr, threadnum), pstream->curdir);
+	}	
 
 	return pindex_tcp;
 }
@@ -2941,7 +2945,7 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 	}
 
 	pstream->type=STREAM_TYPE_TCP;
-	set_transport_addr(pstream, this_tcphdr->th_sport, this_tcphdr->th_dport);
+	set_transport_addr(pstream, !(this_tcphdr->th_flags & TH_SYN), this_tcphdr->th_sport, this_tcphdr->th_dport);
 
 	pstream->addr.pkttype = PKT_TYPE_NORMAL;//add by lqy 20151222, init pkttype
 	
@@ -3167,17 +3171,19 @@ int set_stream_addr(struct streaminfo *pfstream, UINT16 sport, UINT16 dport, str
 	return 0;
 }
 #else
-int set_transport_addr(struct streaminfo *this_stream, UINT16 sport, UINT16 dport)
+int set_transport_addr(struct streaminfo *this_stream, int enable_well_known_port, UINT16 sport, UINT16 dport)
 {
 	struct streaminfo_private *this_stream_pr = (struct streaminfo_private *)this_stream;
 	struct layer_addr *this_addr = &this_stream->addr;
-	unsigned char dir_by_well_known_port;
+	unsigned char dir_by_well_known_port = 0;
 	
 	if(__ADDR_TYPE_IP_PAIR_V4 == this_addr->addrtype){
 		struct stream_tuple4_v4 *ip4_addr = this_addr->tuple4_v4;
 		/* 设置端口, 在IP-PORT-union版本以port顺序做为layer_dir的参照,
 		   同时更新layer_dir, 用于计算HASH时, 地址出现顺序 */
-		dir_by_well_known_port = adjust_stream_dir_by_well_known_ports(this_stream->type, ntohs(sport), ntohs(dport));
+		if(enable_well_known_port){
+			dir_by_well_known_port = adjust_stream_dir_by_well_known_ports(this_stream->type, ntohs(sport), ntohs(dport));
+		}
 		if(dir_by_well_known_port != 0){
 			if(DIR_C2S == dir_by_well_known_port){
 				this_stream_pr->layer_dir = 1; 
@@ -3212,7 +3218,9 @@ int set_transport_addr(struct streaminfo *this_stream, UINT16 sport, UINT16 dpor
 		this_addr->addrlen = sizeof(struct stream_tuple4_v4);
 	}else if(__ADDR_TYPE_IP_PAIR_V6 == this_addr->addrtype){
 		struct stream_tuple4_v6 *ip6_addr = this_addr->tuple4_v6;
-		dir_by_well_known_port = adjust_stream_dir_by_well_known_ports(this_stream->type,ntohs(sport), ntohs(dport));
+		if(enable_well_known_port){
+			dir_by_well_known_port = adjust_stream_dir_by_well_known_ports(this_stream->type,ntohs(sport), ntohs(dport));
+		}
 		if(dir_by_well_known_port != 0){
 			if(DIR_C2S == dir_by_well_known_port){
 				this_stream_pr->layer_dir = 1; 

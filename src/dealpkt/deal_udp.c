@@ -13,7 +13,6 @@ extern "C" {
 extern int udp_stream_table_size;
 extern int raw_ip_frag_list_stream_attach(struct streaminfo *stream);
 extern int raw_ip_frag_list_stream_detach(struct streaminfo *stream);
-extern int set_transport_addr(struct streaminfo *pfstream, UINT16 sport, UINT16 dport);
 extern void free_heap_stream_info(struct streaminfo *heap_stream, int layer);
 extern void reverse_addr(void *addr, int addrtype);
 int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *pstream_stack, int reverse);
@@ -218,6 +217,11 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 		pstream_udp_pr->stream_c2s_route_dir = raw_pkt->route_dir;
 	}else{
 		pstream_udp_pr->stream_c2s_route_dir = raw_pkt->route_dir ^ 1;
+	}
+
+	if(pstream_udp_pr->create_dir_by_well_known_port){
+		sapp_runtime_log(RLOG_LV_DEBUG, "create new UDP stream:%s by well known port, the first packet curdir is:%d",
+						printaddr(&pstream_udp->addr, threadnum), pstream_udp->curdir);
 	}
 	
 	return pindex_udp;
@@ -578,7 +582,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		memset(&pdetail_pr, 0, sizeof(struct udpdetail_private));
 		pdetail = (struct udpdetail *)&pdetail_pr;
 	
-		set_transport_addr(pstream, udph->uh_sport, udph->uh_dport);
+		set_transport_addr(pstream, 1, udph->uh_sport, udph->uh_dport);
 
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
 		
@@ -621,7 +625,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	}
 	else	
 	{
-		set_transport_addr(pstream, udph->uh_sport, udph->uh_dport);
+		set_transport_addr(pstream, 1, udph->uh_sport, udph->uh_dport);
 
 		a_index =(struct streamindex * ) findstreamindex (pindex, raw_pkt);
 		if (unlikely(!a_index)){
@@ -826,7 +830,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		}
 #endif
 
-		set_transport_addr(pstream, udph->uh_sport, udph->uh_dport);		
+		set_transport_addr(pstream, 1, udph->uh_sport, udph->uh_dport);		
 	
 		a_index =(struct streamindex * ) findstreamindex (pindex, raw_pkt);
 		if(unlikely(!a_index)){

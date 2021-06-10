@@ -404,6 +404,7 @@ int sapp_is_absolute_path(const char *filename);
 char *sapp_memmove_for_blank_table(char *data, int max_len);
 void del_last_rn(char *data, int max_len);
 void sapp_printf_colorful(int level, const char *format, ...);
+int set_transport_addr(struct streaminfo *this_stream, int enable_well_known_port, UINT16 sport, UINT16 dport);
 
 #ifdef __cplusplus
 }
