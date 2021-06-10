@@ -806,6 +806,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	}
 	else	
 	{
+#if 0	
 		if(ntohs(udph->uh_sport) > ntohs(udph->uh_dport)){
 			pstream_pr->layer_dir = 1;
 			pstream->curdir = DIR_C2S;
@@ -823,8 +824,8 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 				pstream->curdir = DIR_S2C;
 			}
 		}
+#endif
 
-		//set_port_20141216(pfstream, udph);
 		set_transport_addr(pstream, udph->uh_sport, udph->uh_dport);		
 	
 		a_index =(struct streamindex * ) findstreamindex (pindex, raw_pkt);

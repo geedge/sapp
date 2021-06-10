@@ -2940,6 +2940,7 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 		local_sys_stat->length[SAPP_STAT_TCP_OUTBOUND] += tcpdatalen;
 	}
 
+	pstream->type=STREAM_TYPE_TCP;
 	set_transport_addr(pstream, this_tcphdr->th_sport, this_tcphdr->th_dport);
 
 	pstream->addr.pkttype = PKT_TYPE_NORMAL;//add by lqy 20151222, init pkttype
@@ -2949,9 +2950,7 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 	//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_tcphdr - (char *)raw_packet->raw_pkt_data;
 	pstream_pr->offset_to_ip_hdr = (char *)this_tcphdr - (char *)this_iphdr;
 	pstream_pr->raw_pkt = raw_packet; /* 2014-12-30 lijia add */
-
-	//pstream->pfather=&pfstream_pr->stream_public;
-	pstream->type=STREAM_TYPE_TCP;
+	
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
 
@@ -3079,6 +3078,70 @@ void set_tcp_takeoverflag(struct streaminfo *pstream,int flag)
 }
 
 
+/*
+	原始配置来自: etc/well_known_port.conf
+	return value:
+		0      : not found in well known port array;
+		1: in well known port array;
+*/
+static int is_well_known_port(int stream_type, unsigned short port_host_order)
+{
+	int i;
+	const unsigned short *wellknown_port_array;
+	int wellknown_port_array_num;
+
+	if(STREAM_TYPE_TCP == stream_type){
+		if(NULL == sapp_global_val->config.stream.tcp.well_known_ports_array){
+			return 0;
+		}
+		wellknown_port_array = sapp_global_val->config.stream.tcp.well_known_ports_array;
+		wellknown_port_array_num = sapp_global_val->config.stream.tcp.well_known_ports_array_num;
+	}else{
+		if(NULL == sapp_global_val->config.stream.udp.well_known_ports_array){
+			return 0;
+		}
+		wellknown_port_array = sapp_global_val->config.stream.udp.well_known_ports_array;
+		wellknown_port_array_num = sapp_global_val->config.stream.udp.well_known_ports_array_num;		
+	}
+
+	for(i = 0 ; i < wellknown_port_array_num; i++){
+		if(port_host_order == wellknown_port_array[i]){
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+
+/*
+	2021-06-08之前, 对于udp和tcp无SYN包的情况, 都是按"大端口是客户端"规则确定流的方向,
+	2021-06-08之后, 优先判断公知端口, 比如80, 8088, 53等端口的, 认为是服务端.
+
+	return value:
+		0      : not found in well known port array;
+		DIR_C2S: in well known port array, and it's dir;
+		DIR_S2C: in well known port array, and it's dir;	
+*/
+static int adjust_stream_dir_by_well_known_ports(unsigned char stream_type,UINT16 sport_host, UINT16 dport_host)
+{
+	int ret;
+
+	ret = is_well_known_port(stream_type,dport_host);
+	if(ret != 0){
+		return DIR_C2S; /* dport命中规则, 即C2S方向 */
+	}
+
+	ret = is_well_known_port(stream_type,sport_host);
+	if(ret != 0){
+		return DIR_S2C; /* sport命中规则, 即S2C方向 */
+	}	
+
+	/* 两个端口都没有命中well known port, 按之前的判断逻辑, "大端口是客户端"规则 */
+	return 0;
+}
+
+
 #if 0 /* 20141014 lijia modify */
 int set_stream_addr(struct streaminfo *pfstream, UINT16 sport, UINT16 dport, struct layer_addr *this_addr)
 {
@@ -3108,26 +3171,39 @@ int set_transport_addr(struct streaminfo *this_stream, UINT16 sport, UINT16 dpor
 {
 	struct streaminfo_private *this_stream_pr = (struct streaminfo_private *)this_stream;
 	struct layer_addr *this_addr = &this_stream->addr;
+	unsigned char dir_by_well_known_port;
 	
 	if(__ADDR_TYPE_IP_PAIR_V4 == this_addr->addrtype){
 		struct stream_tuple4_v4 *ip4_addr = this_addr->tuple4_v4;
 		/* 设置端口, 在IP-PORT-union版本以port顺序做为layer_dir的参照,
 		   同时更新layer_dir, 用于计算HASH时, 地址出现顺序 */
-		if(ntohs(sport) > ntohs(dport)){
-			this_stream_pr->layer_dir = 1; /* 按端口顺序更新四元组layer_dir */
-			this_stream->curdir = DIR_C2S;
+		dir_by_well_known_port = adjust_stream_dir_by_well_known_ports(this_stream->type, ntohs(sport), ntohs(dport));
+		if(dir_by_well_known_port != 0){
+			if(DIR_C2S == dir_by_well_known_port){
+				this_stream_pr->layer_dir = 1; 
+				this_stream->curdir = DIR_C2S;
+			}else{
+				this_stream_pr->layer_dir = 0;
+				this_stream->curdir = DIR_S2C;
+			}
+			this_stream_pr->create_dir_by_well_known_port = 1;
 		}else{
-			if(unlikely(sport == dport)){
-				if(ntohl(ip4_addr->saddr) > ntohl(ip4_addr->daddr)){
-					this_stream_pr->layer_dir = 1;
-					this_stream->curdir = DIR_C2S;
+			if(ntohs(sport) > ntohs(dport)){
+				this_stream_pr->layer_dir = 1; /* 按端口顺序更新四元组layer_dir */
+				this_stream->curdir = DIR_C2S;
+			}else{
+				if(unlikely(sport == dport)){
+					if(ntohl(ip4_addr->saddr) > ntohl(ip4_addr->daddr)){
+						this_stream_pr->layer_dir = 1;
+						this_stream->curdir = DIR_C2S;
+					}else{
+						this_stream_pr->layer_dir = 0;
+						this_stream->curdir = DIR_S2C;
+					}
 				}else{
 					this_stream_pr->layer_dir = 0;
 					this_stream->curdir = DIR_S2C;
 				}
-			}else{
-				this_stream_pr->layer_dir = 0;
-				this_stream->curdir = DIR_S2C;
 			}
 		}
 		ip4_addr->source = sport;
@@ -3136,21 +3212,33 @@ int set_transport_addr(struct streaminfo *this_stream, UINT16 sport, UINT16 dpor
 		this_addr->addrlen = sizeof(struct stream_tuple4_v4);
 	}else if(__ADDR_TYPE_IP_PAIR_V6 == this_addr->addrtype){
 		struct stream_tuple4_v6 *ip6_addr = this_addr->tuple4_v6;
-		if(ntohs(sport) > ntohs(dport)){
-			this_stream_pr->layer_dir = 1;
-			this_stream->curdir = DIR_C2S;
-		}else{
-			if(unlikely(sport == dport)){
-				if(memcmp(ip6_addr->saddr, ip6_addr->daddr, IPV6_ADDR_LEN) >= 0){
-					this_stream_pr->layer_dir = 1;
-					this_stream->curdir = DIR_C2S;
+		dir_by_well_known_port = adjust_stream_dir_by_well_known_ports(this_stream->type,ntohs(sport), ntohs(dport));
+		if(dir_by_well_known_port != 0){
+			if(DIR_C2S == dir_by_well_known_port){
+				this_stream_pr->layer_dir = 1; 
+				this_stream->curdir = DIR_C2S;
+			}else{
+				this_stream_pr->layer_dir = 0;
+				this_stream->curdir = DIR_S2C;
+			}
+			this_stream_pr->create_dir_by_well_known_port = 1;
+		}else{		
+			if(ntohs(sport) > ntohs(dport)){
+				this_stream_pr->layer_dir = 1;
+				this_stream->curdir = DIR_C2S;
+			}else{
+				if(unlikely(sport == dport)){
+					if(memcmp(ip6_addr->saddr, ip6_addr->daddr, IPV6_ADDR_LEN) >= 0){
+						this_stream_pr->layer_dir = 1;
+						this_stream->curdir = DIR_C2S;
+					}else{
+						this_stream_pr->layer_dir = 0;
+						this_stream->curdir = DIR_S2C;
+					}
 				}else{
 					this_stream_pr->layer_dir = 0;
 					this_stream->curdir = DIR_S2C;
 				}
-			}else{
-				this_stream_pr->layer_dir = 0;
-				this_stream->curdir = DIR_S2C;
 			}
 		}
 		

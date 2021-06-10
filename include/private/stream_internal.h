@@ -186,8 +186,8 @@ struct streaminfo_private
 	unsigned long long stream_create_timestamp_ms; 
 	/* ===8 bytes=== */
 	unsigned char layer_index:4; /* 表示当前层的计数, 从最底层开始,一般是ethernet开始, 从0开始计数, 4bit最多支持15层嵌套, 也能防止隧道嵌套攻击(目前还没捕到过包) */
-	//char fake_layer_dir_for_asymmetric_cmp:2; /*因某些层两侧不对称, 尤其是还有一边有, 另一侧不存在的流, 此变量使用DIR_C2S, DIR_S2C表示哪个方向是虚拟构建的层, 解析时不作为地址比较, 发包时也要跳过 */ 
-	char __pad2:4;
+	unsigned char create_dir_by_well_known_port:1;  /* UDP或TCP按data建连接, 命中well_known_port规则, 而不是按大端口是客户端原则创建流 */
+	char __pad2:3;
 	char has_duplicate_pkt; /* 当前流曾经有过重复数据包, 后续的流量应该每个都检测 */
 	char __pad3[6];
 	/* ===8 bytes=== */
@@ -401,7 +401,8 @@ int sapp_get_secondary_file_path(void);
 void sapp_update_config_root_dir(const char *cfg_root_dir);
 void sapp_update_data_root_dir(const char *data_root_dir);
 int sapp_is_absolute_path(const char *filename);
-
+char *sapp_memmove_for_blank_table(char *data, int max_len);
+void del_last_rn(char *data, int max_len);
 void sapp_printf_colorful(int level, const char *format, ...);
 
 #ifdef __cplusplus

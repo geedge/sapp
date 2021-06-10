@@ -40,6 +40,7 @@ extern "C" {
 #define ABBR_STREAM_CMP_LAYER_CONF_FILE	sapp_global_val->config.cfg_file_path.cfg_file_stream_compare_layer_absolute
 #define ABBR_VLAN_FLIPPING_CONF_FILE	sapp_global_val->config.cfg_file_path.cfg_file_vlan_flipping_absolute
 #define ABBR_ASYM_LAYER_ADDR_CONF_FILE	sapp_global_val->config.cfg_file_path.cfg_file_asymmetric_addr_layer_absolute
+#define ABBR_WELL_KNOWN_PORT_CONF_FILE	sapp_global_val->config.cfg_file_path.cfg_file_well_known_port_absolute
 
 
 #define ABBR_SYSINFO_LOG_DATA_FILE		sapp_global_val->config.data_file_path.data_sapp_sysinfo_log_absolute

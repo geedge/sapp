@@ -373,6 +373,7 @@ void sapp_update_main_config_file(const char *main_entry_cfg)
 	pconfig->cfg_file_stream_compare_layer_absolute = sapp_strdup(pconfig->cfg_file_stream_compare_layer_relative);
 	pconfig->cfg_file_vlan_flipping_absolute = sapp_strdup(pconfig->cfg_file_vlan_flipping_relative);
 	pconfig->cfg_file_asymmetric_addr_layer_absolute = sapp_strdup(pconfig->cfg_file_asymmetric_addr_layer_relative);
+	pconfig->cfg_file_well_known_port_absolute = sapp_strdup(pconfig->cfg_file_well_known_port_relative);
 #endif
 
 }

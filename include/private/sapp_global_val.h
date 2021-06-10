@@ -110,6 +110,8 @@ typedef struct{
 	int meaningful_statistics_minimum_pkt;
 	int meaningful_statistics_minimum_byte;
 	sapp_config_stream_tcp_inject_t inject;
+	unsigned short *well_known_ports_array; /* 用于按data建连接确定server端 */
+	int well_known_ports_array_num;
 }sapp_config_stream_tcp_t;
 
 
@@ -118,6 +120,8 @@ typedef struct{
 	int timeout;
 	int meaningful_statistics_minimum_pkt;
 	int meaningful_statistics_minimum_byte;	
+	unsigned short *well_known_ports_array; /* 用于新建连接确定server端, 比如4001->8000, 实际上是OICQ的C2S方向数据包,之前的版本会被误识别为S2C方向的 */
+	int well_known_ports_array_num;	
 }sapp_config_stream_udp_t;
 
 
@@ -309,6 +313,9 @@ typedef struct{
 
 	const char *cfg_file_asymmetric_addr_layer_relative;
 	const char *cfg_file_asymmetric_addr_layer_absolute;		
+
+	const char *cfg_file_well_known_port_relative;
+	const char *cfg_file_well_known_port_absolute;		
 }sapp_config_file_link_t;
 
 

@@ -218,6 +218,7 @@
 	cfg_file_stream_compare_layer="etc/stream_compare_layer.conf"
 	cfg_file_vlan_flipping="etc/vlan_flipping_map.conf"
 	cfg_file_asymmetric_addr_layer="etc/asymmetric_addr_layer.conf"
+	cfg_file_well_known_port="etc/well_known_port.conf"
 
 [SECONDARY_DATA_LINK]	 
     data_file_sysinfo_log="sysinfo.log"
