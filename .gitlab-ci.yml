@@ -14,6 +14,7 @@ sapp_module_test:
   stage: test
   script:
     - yum makecache
+    - yum install -y net-tools psmisc
     - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini
     - yum install sapp gtest_sapp benchmark_pcap -y
     - ls -l /opt/MESA/lib
@@ -21,6 +22,8 @@ sapp_module_test:
     - ldconfig
     - ldd /home/mesasoft/sapp_run/sapp
     - cd /home/mesasoft/sapp_run
+    - ifconfig
+    - arp -an
     - ./sapp -r /home/mesasoft/benchmark_pcap/tcp/tcp_simple.pcap
     - ./gtest_sapp_v4
   tags:
