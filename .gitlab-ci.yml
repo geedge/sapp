@@ -16,14 +16,16 @@ sapp_module_test:
     - yum makecache
     - yum install -y net-tools psmisc
     - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini
-    - yum install sapp gtest_sapp benchmark_pcap -y
+    - yum install -y sapp gtest_sapp benchmark_pcap
     - ls -l /opt/MESA/lib
     - echo "/opt/MESA/lib" >> /etc/ld.so.conf
     - ldconfig
     - ldd /home/mesasoft/sapp_run/sapp
-    - cd /home/mesasoft/sapp_run
     - ifconfig
-    - arp -an
+    - sysctl -w net.ipv6.conf.all.disable_ipv6=0
+    - modprobe ipv6
+    - ifconfig
+    - cd /home/mesasoft/sapp_run
     - ./sapp -r /home/mesasoft/benchmark_pcap/tcp/tcp_simple.pcap
     - ./gtest_sapp_v4
   tags:
