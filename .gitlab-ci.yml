@@ -23,7 +23,7 @@ sapp_module_test:
     - ldd /home/mesasoft/sapp_run/sapp
     - ifconfig
     - sysctl -w net.ipv6.conf.all.disable_ipv6=0
-    - modprobe ipv6
+#    - modprobe ipv6  # 目前的CI runner无法启用ipv6
     - ifconfig
     - cd /home/mesasoft/sapp_run
     - ./sapp -r /home/mesasoft/benchmark_pcap/tcp/tcp_simple.pcap
