@@ -46,30 +46,101 @@ extern "C" {
 MESA_htable_handle *g_l2tp_htable_array; 
 unsigned short g_l2tp_plugid;
 
-int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2tp *l2tpaddr, UCHAR layer_addr)
+/*
+	将压缩的字段恢复, 同时转成主机序.
+*/
+static unsigned short ppp_hdr_protocol_decompress(int ppp_hdr_compress, unsigned short net_hdr_protocol)
+{
+	unsigned short decompress_protocol;
+	
+	if(ppp_hdr_compress){
+		decompress_protocol = net_hdr_protocol;
+	}else{
+		decompress_protocol = ntohs(net_hdr_protocol);
+	}
+
+	return decompress_protocol;
+}
+
+static int guess_l2tp_ppp_layer_len(const unsigned char *maybe_l2tp_ppp_hdr)
+{
+	int ppp_layer_len = -1;
+	const unsigned short *ppp_proto;
+	if((0xFF == maybe_l2tp_ppp_hdr[0]) && (0x03 == maybe_l2tp_ppp_hdr[1])){
+		ppp_proto = (unsigned short *)(maybe_l2tp_ppp_hdr + 2);
+
+		switch(ntohs(*ppp_proto)){
+			case PPP_PROTOCOL_IPv4:
+			case PPP_PROTOCOL_PAP:
+			case PPP_PROTOCOL_CHAP:
+			case PPP_PROTOCOL_IPv6:
+			case PPP_PROTOCOL_LCP:
+			case PPP_PROTOCOL_CCP:
+			case PPP_PROTOCOL_IPCP:
+				ppp_layer_len = 4;
+			break;
+		}
+	}else{
+		if((0x21 == maybe_l2tp_ppp_hdr[0]) || (0x57 == maybe_l2tp_ppp_hdr[0])){
+			ppp_layer_len = 1; /* 省略了control, address字段, 只有一个字节的协议号, 参考: http://www2.ic.uff.br/~michael/kr1999/5-datalink/5_08-ppp.htm#[RFC%201662]  */
+		}
+	}
+
+	return ppp_layer_len;
+}
+
+
+static int parse_l2tpv2_ppp_hdr(const unsigned char *l2tp_ppp_hdr, struct layer_addr_l2tp *l2tpaddr)
+{
+	int ppp_hdr_len;
+	const unsigned short *ppp_protocol;
+
+	ppp_hdr_len = guess_l2tp_ppp_layer_len(l2tp_ppp_hdr);
+	if(ppp_hdr_len < 0){
+		return -1;
+	}
+
+	if(sizeof(struct layer_compress_ppp_hdr) == ppp_hdr_len){
+		l2tpaddr->l2tpun.l2tp_addr_v2.ppp_hdr_compress_enable = 1;
+		l2tpaddr->l2tpun.l2tp_addr_v2.compress_ppp_hdr.protocol = l2tp_ppp_hdr[0];
+	}else if(sizeof(struct layer_ppp_hdr) == ppp_hdr_len){
+		l2tpaddr->l2tpun.l2tp_addr_v2.ppp_hdr_compress_enable = 0;
+		l2tpaddr->l2tpun.l2tp_addr_v2.ppp_hdr.address = l2tp_ppp_hdr[0];
+		l2tpaddr->l2tpun.l2tp_addr_v2.ppp_hdr.control = l2tp_ppp_hdr[1];
+
+		ppp_protocol = (unsigned short *)&l2tp_ppp_hdr[2];
+		l2tpaddr->l2tpun.l2tp_addr_v2.ppp_hdr.protocol = *ppp_protocol;
+	}else{
+		return -1;
+	}
+
+	return ppp_hdr_len;
+}
+
+int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2tp *l2tpaddr)
 {
 	unsigned short l2top_tot_len, offset_size;
 	const char *ptr = (const char *)pl2tphdrv2 + sizeof(struct l2tp_hdr_v2);
+	int l2tp_ppp_hdr_len;
+
+	memset(l2tpaddr, 0, sizeof(struct layer_addr_l2tp));
 	
 	if(pl2tphdrv2->length_present){
 		l2top_tot_len = ntohs(*((unsigned short *)ptr));
 		ptr += sizeof(short);
-		if(l2top_tot_len < sizeof(struct l2tp_hdr_v2) +  sizeof(struct mesa_ppp_hdr) + sizeof(struct mesa_ip4_hdr)){
-			return -1; /* 无有效数据 */
+		if(l2top_tot_len < sizeof(struct l2tp_hdr_v2) +  1/* compress ppp hdr len */ + sizeof(struct mesa_ip4_hdr)){
+			return -1; /* 无最小有效数据 */
 		}
 	}
 
-	if(1 == layer_addr){
-		l2tpaddr->l2tpun.l2tp_addr_v2.tunnelid_C2S = *((unsigned short *)ptr);
-		ptr += sizeof(short);
-		l2tpaddr->l2tpun.l2tp_addr_v2.sessionid_C2S = *((unsigned short *)ptr);
-		ptr += sizeof(short);	
-	}else{
-		l2tpaddr->l2tpun.l2tp_addr_v2.tunnelid_S2C = *((unsigned short *)ptr);
-		ptr += sizeof(short);
-		l2tpaddr->l2tpun.l2tp_addr_v2.sessionid_S2C = *((unsigned short *)ptr);
-		ptr += sizeof(short);	
-	}
+	 /* L2TP地址C2S, S2C方向独立, 无法靠当前包地址区分dir, 每次栈里的变量都存储于source方向, 即C2S方向,  
+        创建流时, 如果需要reverse拷贝, 则将source, dest颠倒, 否则直接memcpy到堆里的addr.
+     */
+
+	l2tpaddr->l2tpun.l2tp_addr_v2.tunnelid_C2S = *((unsigned short *)ptr);
+	ptr += sizeof(short);
+	l2tpaddr->l2tpun.l2tp_addr_v2.sessionid_C2S = *((unsigned short *)ptr);
+	ptr += sizeof(short);	
 
 	if(pl2tphdrv2->seq_present){
 		ptr += sizeof(int);	
@@ -81,19 +152,57 @@ int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2t
 		ptr += offset_size;  /* var bytes offset value length */
 	}	
 
+	l2tp_ppp_hdr_len = parse_l2tpv2_ppp_hdr((unsigned char *)ptr, l2tpaddr);
+	if(l2tp_ppp_hdr_len < 0){
+		return -1;
+	}
+	ptr += l2tp_ppp_hdr_len;
+
 	l2tpaddr->version = 2; /* version, RFC2661 */
 
 	return ptr - (char *)pl2tphdrv2;
 }
 
-int calc_l2tp_hdr_len(const struct l2tp_hdr_v2 *l2tp_hdr)
+int calc_l2tp_hdr_len_by_net_pkt(const struct l2tp_hdr_v2 *l2tp_hdr)
 {
 	int l2tphdr_len;
 	struct layer_addr_l2tp no_use_addr;
 	
-	l2tphdr_len = parse_l2tpv2_hdr(l2tp_hdr, &no_use_addr, 1);
+	l2tphdr_len = parse_l2tpv2_hdr(l2tp_hdr, &no_use_addr);
 
 	return l2tphdr_len;
+}
+
+int calc_l2tp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_stream_dir)
+{
+	int l2tp_hdr_len;
+	const struct layer_addr_l2tp *p_l2tp_layer_addr = stream_pr->stream_public.addr.l2tp;
+
+	if(3 == p_l2tp_layer_addr->version){
+		sapp_runtime_log(RLOG_LV_INFO, "calc_l2tp_hdr_len() error, not support L2TP v3 yet!");
+		return -1;
+	}
+
+	if(p_l2tp_layer_addr->l2tpun.l2tp_addr_v2.seq_present){
+		sapp_runtime_log(RLOG_LV_INFO, "calc_l2tp_hdr_len() error, not support L2TP with seq flag yet!");
+		return -1;
+	}
+
+	l2tp_hdr_len = sizeof(struct l2tp_hdr_v2); /* 固定头部长度 */
+	if(p_l2tp_layer_addr->l2tpun.l2tp_addr_v2.length_present){
+		l2tp_hdr_len += sizeof(short); /* length field */
+	}
+
+	l2tp_hdr_len += sizeof(short); /* tunnel id */
+	l2tp_hdr_len += sizeof(short); /* session id */
+
+	if(p_l2tp_layer_addr->l2tpun.l2tp_addr_v2.ppp_hdr_compress_enable){
+		l2tp_hdr_len += 1;
+	}else{
+		l2tp_hdr_len += 4;
+	}
+	
+	return l2tp_hdr_len;
 }
 
 
@@ -259,10 +368,17 @@ static void l2tp_chap_pkt_parse(const struct mesa_ppp_chap_hdr *chap_hdr, struct
 	return;
 }
 
+
 static int guess_if_l2tpv2(const struct streaminfo *a_udp, const struct mesa_udp_hdr *udph)
 {
 	const struct l2tp_hdr_v2 *pl2tphdrv2;
+	struct layer_addr_l2tp  l2tp_mem_addr;
 	unsigned short *l2tp_len;
+	int udp_payload_len;
+	int l2tphdr_len;
+	const char *next_ip_hdr;
+	const struct mesa_ip4_hdr *i4hdr;
+	const struct mesa_ip6_hdr *i6hdr;
 
 	if(STREAM_TYPE_UDP != a_udp->type){
 		return 0;
@@ -289,10 +405,20 @@ static int guess_if_l2tpv2(const struct streaminfo *a_udp, const struct mesa_udp
 	/* TODO 2, 暂时只处理L2TPv2版本, L2TPv3待添加 */
 	if(2 != pl2tphdrv2->version){
 		if(3 == pl2tphdrv2->version){
-			sapp_runtime_log(20, "recv l2tp version3 packet, but not support yet, TODO!\n");
+			sapp_runtime_log(RLOG_LV_INFO, "recv l2tp version3 packet, but not support yet, TODO!\n");
 		}
 		return 0;
 	}
+
+	udp_payload_len = ntohs(udph->uh_ulen) - sizeof(struct mesa_udp_hdr);
+
+	if(pl2tphdrv2->length_present){
+		l2tp_len = (unsigned short *)((char *)pl2tphdrv2 + sizeof(struct l2tp_hdr_v2));
+
+		if(ntohs(*l2tp_len) != udp_payload_len){
+			return 0; /* 长度不匹配, 不是L2TP, 也许是其他协议复用了UDP 1701端口, 凑巧而已 */
+		}
+	}	
 	
 	if(1 == pl2tphdrv2->type){ /* control message valid check */
 		if(0 == pl2tphdrv2->length_present){
@@ -310,12 +436,29 @@ static int guess_if_l2tpv2(const struct streaminfo *a_udp, const struct mesa_udp
 		if(1 == pl2tphdrv2->priority){
 			return 0; /* control mesage priority must be set to 0, refer to RFC2661 page10. */
 		}		
-	}
-	if(pl2tphdrv2->length_present){
-		l2tp_len = (unsigned short *)((char *)pl2tphdrv2 + sizeof(struct l2tp_hdr_v2));
-
-		if(ntohs(*l2tp_len) != ntohs(udph->uh_ulen)-8){
-			return 0; /* 长度不匹配, 不是L2TP, 也许是其他协议复用了UDP 1701端口, 凑巧而已 */
+	}else{
+		l2tphdr_len = parse_l2tpv2_hdr(pl2tphdrv2, &l2tp_mem_addr);
+		if((l2tphdr_len < 0) || (l2tphdr_len > L2TP_MAX_HDR_LEN)){
+			return 0;
+		}
+		if(udp_payload_len - l2tphdr_len < sizeof(struct mesa_ip4_hdr)){ /* 剩余数据小于最小IP包可解析长度, 非L2TP包 */
+			return 0;
+		}
+		
+		next_ip_hdr = (char *)pl2tphdrv2 + l2tphdr_len;
+		if(0x40 == (*next_ip_hdr & 0xF0)){
+			i4hdr = (struct mesa_ip4_hdr *)next_ip_hdr;
+			if(ntohs(i4hdr->ip_len) != udp_payload_len - l2tphdr_len){
+				return 0;
+			}
+		}else if(0x60 == (*next_ip_hdr & 0xF0)){
+			i6hdr = (struct mesa_ip6_hdr *)next_ip_hdr;
+			if(ntohs(i6hdr->ip6_payload_len)+sizeof(struct mesa_ip6_hdr) != udp_payload_len - l2tphdr_len){
+				return 0;
+			}
+		}else{
+			sapp_runtime_log(RLOG_LV_INFO, "stream:%s, maybe L2TP packet, but next layer not ipv4 or ipv6!\n", printaddr(&a_udp->addr, a_udp->threadnum));
+			return 0;
 		}
 	}
 
@@ -359,25 +502,25 @@ int l2tpv2_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_d
 	int ret = PASS;
 	int l2tphdr_len;
 	char *next_layer_hdr; 
-	const struct mesa_ppp_hdr *ppp_net_addr;
 	int next_layer_offset;
+	unsigned short ppp_ptotocol_host;
 	struct l2tp_info_pri *l2tp_pri;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	local_sys_stat->count_per_layer[ADDR_TYPE_L2TP][pfstream_pr->layer_index+1]++; 
 	local_sys_stat->length_per_layer[ADDR_TYPE_L2TP][pfstream_pr->layer_index+1] += raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr;		
 	
-	/* 之前已经通过协议识别插件guess_if_l2tpv2()识别过, 所以在l2tpv2_entry()里不用再次判断 */
+	/* 之前已经通过协议识别插件 guess_if_l2tpv2() 识别过, 所以在l2tpv2_entry()里不用再次判断 */
 	pl2tphdrv2 = (const struct l2tp_hdr_v2 *)((char *)this_layer_data + sizeof(struct mesa_udp_hdr));
 
 	/* L2TP层只有单向id, 先复用father的layer_dir */
-	l2tphdr_len = parse_l2tpv2_hdr(pl2tphdrv2, &l2tpaddr, pfstream_pr->layer_dir);
+	l2tphdr_len = parse_l2tpv2_hdr(pl2tphdrv2, &l2tpaddr);
 	if((l2tphdr_len < 0) || (l2tphdr_len > L2TP_MAX_HDR_LEN)){
 		return PASS;
 	}
 
 	if(1 == pl2tphdrv2->type){ 
-		/* control message, deal_l2tp模块不处理, 在l2tp_protocol_plug插件中处理 */
+		/* 1:control message, deal_l2tp模块不处理, 在l2tp_protocol_plug插件中处理 */
 		return PASS;
 	}
 
@@ -386,7 +529,7 @@ int l2tpv2_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_d
 	memset(&tmp_index, 0, sizeof(struct streamindex));
 	pstream->addr.paddr = &l2tpaddr;
 	pstream->addr.addrtype = ADDR_TYPE_L2TP;
-	pstream->addr.addrlen = sizeof(struct layer_addr_l2tp); /* 此处使用结构体长度, l2tphdr_len表示网络中传输的L2TP实际头部长度,可能很多头部字段缺失 */
+	pstream->addr.addrlen = sizeof(struct layer_addr_l2tp); /* 此处使用内存结构体长度, l2tphdr_len表示网络中传输的L2TP实际头部长度,可能很多头部字段缺失 */
 
 	/* 
 		TODO 1:
@@ -394,8 +537,8 @@ int l2tpv2_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_d
 		和PPTP的协议解析层一样, 获取CS双方的tunnelid和sessionid, 根据四元组,两个ID, 和嵌套地址链表创建L2TP流,
 		并调用l2tp业务层插件.
 	*/
-	//tream_pr->addr_use_as_hash = 1;
 	pstream_pr->addr_use_as_hash = 0;
+	pstream_pr->need_update_opposite_addr = 1;//需要更新对侧信息
 	
 	pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 	pstream_pr->raw_pkt = raw_pkt;
@@ -407,15 +550,16 @@ int l2tpv2_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_d
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
 
-	next_layer_hdr = (char *)pl2tphdrv2 + l2tphdr_len + sizeof(struct mesa_ppp_hdr);
-	ppp_net_addr = (const struct mesa_ppp_hdr *)((char *)pl2tphdrv2 + l2tphdr_len);
-	next_layer_offset = offset_to_raw_pkt_hdr + l2tphdr_len + sizeof(struct mesa_ppp_hdr); 
+	next_layer_hdr = (char *)pl2tphdrv2 + l2tphdr_len;
+	next_layer_offset = offset_to_raw_pkt_hdr + l2tphdr_len; 
 
-	//ret=ppp_entry(pstream_pr,(const void *)next_layer_hdr,thread_num,routedir,raw_pkt, offset_to_raw_pkt_hdr + l2tphdr_len);		
-
-	//l2tp_ppp_entry(&tmp_index, (const void *)next_layer_hdr,thread_num,routedir,raw_pkt, offset_to_raw_pkt_hdr + l2tphdr_len);
-
-	switch(ntohs(ppp_net_addr->protocol)){
+	if(0 == l2tpaddr.l2tpun.l2tp_addr_v2.ppp_hdr_compress_enable){
+		ppp_ptotocol_host = ppp_hdr_protocol_decompress(0, l2tpaddr.l2tpun.l2tp_addr_v2.ppp_hdr.protocol);
+	}else{
+		ppp_ptotocol_host = ppp_hdr_protocol_decompress(1, l2tpaddr.l2tpun.l2tp_addr_v2.compress_ppp_hdr.protocol);
+	}
+	
+	switch(ppp_ptotocol_host){
 		case PPP_PROTOCOL_IPv4:
 			/* 开始进入隧道内部数据传输阶段, 此时应该先告之业务插件content_type */
 			if((l2tp_pri != NULL) && (0 == l2tp_pri->content_notify_biz_flag)){
@@ -448,7 +592,7 @@ int l2tpv2_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_d
 			if(NULL == l2tp_pri){
 				break;
 			}
-			const struct mesa_ppp_lcp_ack_hdr *plcp_hdr = (const struct mesa_ppp_lcp_ack_hdr *)((const char *)pl2tphdrv2 + l2tphdr_len + sizeof(struct mesa_ppp_hdr));
+			const struct mesa_ppp_lcp_ack_hdr *plcp_hdr = (const struct mesa_ppp_lcp_ack_hdr *)((const char *)pl2tphdrv2 + l2tphdr_len);
 			if(PPP_LCP_CODE_ACK == plcp_hdr->code){
 				l2tp_lcp_pkt_parse(pstream_pr, plcp_hdr, l2tp_pri);
 			}else if((PPP_LCP_CODE_TERMINATE_ACK == plcp_hdr->code)
@@ -468,7 +612,7 @@ int l2tpv2_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_d
 				break;
 			}		
 
-			const struct mesa_ppp_ccp_ack_hdr *pccp_hdr = (const struct mesa_ppp_ccp_ack_hdr *)((const char *)pl2tphdrv2 + l2tphdr_len + sizeof(struct mesa_ppp_hdr));
+			const struct mesa_ppp_ccp_ack_hdr *pccp_hdr = (const struct mesa_ppp_ccp_ack_hdr *)((const char *)pl2tphdrv2 + l2tphdr_len);
 			if(PPP_LCP_CODE_ACK == pccp_hdr->code){
 				l2tp_ccp_pkt_parse(pstream_pr, pccp_hdr, l2tp_pri);
 			}
@@ -485,7 +629,7 @@ int l2tpv2_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_d
 			if(NULL == l2tp_pri){
 				break;
 			}		
-			const struct mesa_ppp_chap_hdr *chap_hdr = (const struct mesa_ppp_chap_hdr *)((const char *)pl2tphdrv2 + l2tphdr_len + sizeof(struct mesa_ppp_hdr));
+			const struct mesa_ppp_chap_hdr *chap_hdr = (const struct mesa_ppp_chap_hdr *)((const char *)pl2tphdrv2 + l2tphdr_len);
 			l2tp_chap_pkt_parse(chap_hdr, l2tp_pri);
 		}
 		break;

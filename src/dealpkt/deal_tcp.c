@@ -2789,7 +2789,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 
 	if(try_to_update_addr_info == 1)
 	{
-		update_opposite_addr_info((struct streaminfo_private *)(pstream_pr->pfather_pr),
+		update_opposite_addr_info(pstream_pr, (struct streaminfo_private *)(pstream_pr->pfather_pr),
 				(struct streaminfo_private *)(pindex->stream.pfather_pr), pstream->curdir);
 	}
 

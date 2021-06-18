@@ -14,7 +14,7 @@ sapp_module_test:
   stage: test
   script:
     - yum makecache
-    - yum install -y net-tools psmisc iproute
+    - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb  
     - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini
     - yum install -y sapp gtest_sapp benchmark_pcap
     - ls -l /opt/MESA/lib
@@ -23,11 +23,11 @@ sapp_module_test:
     - ldd /home/mesasoft/sapp_run/sapp
     - ifconfig
     - sysctl -w net.ipv6.conf.all.disable_ipv6=0
-#    - modprobe ipv6  # 目前的CI runner无法用modeprobe ipv6mingl
     - ifconfig
     - ip neigh show
     - ip -6 neigh show
     - cd /home/mesasoft/sapp_run
+    - ulimit -c 0
     - ./sapp -r /home/mesasoft/benchmark_pcap/tcp/tcp_simple.pcap
     - ./gtest_sapp_v4
   tags:

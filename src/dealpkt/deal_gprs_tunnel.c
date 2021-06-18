@@ -73,8 +73,6 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     /* GTP地址C2S, S2C方向独立, 无法靠当前包地址区分dir, 每次栈里的变量都存储于source方向, 即C2S方向,  
        创建流时, 如果需要reverse拷贝, 则将source, dest颠倒, 否则直接memcpy到堆里的addr.
      */
-    //memcpy(&gtpaddr.source, p_gtd_hdr, sizeof(struct gtp_hdr));
-    //gtpaddr.src_seq = cur_seq;
     gtpaddr.teid_c2s = p_gtd_hdr->teid;
     pstream->curdir = DIR_C2S;
 

@@ -293,11 +293,35 @@ struct layer_addr_udp
 };
 
 
+struct layer_ppp_hdr{
+	unsigned char address;
+	unsigned char control;
+	unsigned short protocol;	/* network order */ 		
+};
+
+/* 一般情况下, address,control都是固定不变的,都是0xFF,0x03, ppp hdr是可以压缩以节约贷款,只传输一个字节的protocol字段 */
+struct layer_compress_ppp_hdr{
+	unsigned char protocol;		
+};	
+
+
 struct layer_addr_l2tp_v2_t{
 	UINT16 tunnelid_C2S; /* network order, 以传输层创建流的方向为准 */
 	UINT16 tunnelid_S2C; /* network order, 以传输层创建流的方向为准 */
 	UINT16 sessionid_C2S; /* network order, 以传输层创建流的方向为准 */
 	UINT16 sessionid_S2C; /* network order, 以传输层创建流的方向为准 */
+
+	unsigned char priority;
+	unsigned char offset_present;
+	unsigned char seq_present;
+	unsigned char length_present;
+	unsigned char type;
+	
+	unsigned char ppp_hdr_compress_enable;
+	union{
+		struct layer_ppp_hdr ppp_hdr;
+		struct layer_compress_ppp_hdr compress_ppp_hdr;
+	};
 };
 
 struct layer_addr_l2tp_v3_t{

@@ -670,7 +670,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			}
 		}
 		if(try_to_update_addr_info == 1){
-			update_opposite_addr_info((struct streaminfo_private *)(pstream_pr->pfather_pr),
+			update_opposite_addr_info(pstream_pr, (struct streaminfo_private *)(pstream_pr->pfather_pr),
 					(struct streaminfo_private *)(pindex->stream.pfather_pr), pstream->curdir);
 		}
 		
@@ -884,7 +884,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			}
 		}
 		if(try_to_update_addr_info == 1){
-			update_opposite_addr_info((struct streaminfo_private *)(pstream_pr->pfather_pr),
+			update_opposite_addr_info(pstream_pr, (struct streaminfo_private *)(pstream_pr->pfather_pr),
 					(struct streaminfo_private *)(pindex->stream.pfather_pr), pstream->curdir);
 		}
 		

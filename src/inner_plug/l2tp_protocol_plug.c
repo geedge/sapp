@@ -17,7 +17,7 @@ extern "C" {
 const int l2tp_protocol_version_VERSION_20171220 = 20171220;
 extern MESA_htable_handle *g_l2tp_htable_array; /* 内存申请和HASH创建由协议解析插件在初始化阶段完成 */
 extern unsigned short g_l2tp_plugid;
-extern int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2tp *l2tpaddr, UCHAR layer_addr);
+extern int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2tp *l2tpaddr);
 
 
 /*
@@ -122,7 +122,7 @@ static char l2tp_ctrl_pkt_parse(const struct streaminfo *a_udp, struct l2tp_info
 	const struct streaminfo_private *a_udp_pr = (const struct streaminfo_private *)a_udp;
 	struct l2tp_stream_key *l2tp_key;
 	
-	l2tp_addr_actual_len = parse_l2tpv2_hdr(pl2tphdrv2,  &l2tp_addr, 1);
+	l2tp_addr_actual_len = parse_l2tpv2_hdr(pl2tphdrv2,  &l2tp_addr);
 	if((l2tp_addr_actual_len < 0) || (l2tp_addr_actual_len > 16)){ /* 2017-12-20, 保护性判断, 长度不能超范围 */
 		return APP_STATE_DROPME;
 	}	

@@ -121,7 +121,43 @@ static int gtp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 	return opt_len + sizeof(struct gtp_hdr) + skip_len;
 }
 
-extern int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2tp *l2tpaddr, UCHAR layer_addr);
+extern int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2tp *l2tpaddr);
+static int l2tp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
+{
+	int l2tp_hdr_len, skip_len = 0;
+	
+	const unsigned char *next_layer_hdr;
+	struct layer_addr_l2tp tmp_l2tp_addr;
+
+	if(ADDR_TYPE_L2TP == expect_layer_type){
+		return 0;
+	}
+	
+	l2tp_hdr_len = parse_l2tpv2_hdr((const struct l2tp_hdr_v2 *)raw_data, &tmp_l2tp_addr);
+	if(l2tp_hdr_len < 0){
+		return -1;
+	}
+
+	next_layer_hdr = raw_data + l2tp_hdr_len;
+
+	if(tmp_l2tp_addr.l2tpun.l2tp_addr_v2.ppp_hdr_compress_enable){
+		if(tmp_l2tp_addr.l2tpun.l2tp_addr_v2.compress_ppp_hdr.protocol == 0x21){ 
+			skip_len = ipv4_jump_to_layer((char *)next_layer_hdr, __ADDR_TYPE_IP_PAIR_V4, expect_layer_type);
+		}else if(tmp_l2tp_addr.l2tpun.l2tp_addr_v2.compress_ppp_hdr.protocol == 0x57){ 
+			skip_len = ipv6_jump_to_layer((char *)next_layer_hdr, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);		
+		}
+	}else{
+		if(ntohs(tmp_l2tp_addr.l2tpun.l2tp_addr_v2.ppp_hdr.protocol) == 0x0021){ 
+			skip_len = ipv4_jump_to_layer((char *)next_layer_hdr, __ADDR_TYPE_IP_PAIR_V4, expect_layer_type);
+		}else if(ntohs(tmp_l2tp_addr.l2tpun.l2tp_addr_v2.ppp_hdr.protocol) == 0x57){ 
+			skip_len = ipv6_jump_to_layer((char *)next_layer_hdr, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);		
+		}
+	}
+	
+	return l2tp_hdr_len + skip_len;
+}
+
+
 static int udp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
 {
 	const struct mesa_udp_hdr *uh = (const struct mesa_udp_hdr *)raw_data;
@@ -179,23 +215,13 @@ static int udp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 		}
 		skip_len += teredo_layer_len;
 	}else if((1701 == usport) || (1701 == udport)){
-		int l2tp_hdr_len;
-		int next_skip_len;
-		next_layer_hdr = raw_data+sizeof(struct mesa_udp_hdr);
-		struct layer_addr_l2tp tmp_l2tp_addr;
-		l2tp_hdr_len = parse_l2tpv2_hdr((const struct l2tp_hdr_v2 *)next_layer_hdr, &tmp_l2tp_addr, DIR_C2S);
-		if(l2tp_hdr_len < 0){
-			return -1;
-		}		
-		next_skip_len = ppp_jump_to_layer(next_layer_hdr+l2tp_hdr_len, ADDR_TYPE_PPP, expect_layer_type);
-		if(next_skip_len < 0){
-			return -1;
-		}		
-
-		skip_len = l2tp_hdr_len + next_skip_len;
+		skip_len = l2tp_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), ADDR_TYPE_UDP, expect_layer_type);
 	}else{
 		/* 其他UDP类型不支持再跳转 */
 		sapp_runtime_log(RLOG_LV_INFO, "udp_jump_to_layer(): unsupport udp sport:%u, dport:%u!\n", usport, udport);
+		return -1;
+	}
+	if(skip_len < 0){
 		return -1;
 	}
 

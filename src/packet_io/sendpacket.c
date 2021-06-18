@@ -61,7 +61,7 @@ static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream
 extern void *g_packet_dl_send_handle[MAX_THREAD_NUM];
 extern dl_io_fun_list_t dl_io_fun_list;
 extern int g_app_send_rst_type ;
-extern int calc_l2tp_hdr_len(const struct l2tp_hdr_v2 *l2tp_hdr);
+extern int calc_l2tp_hdr_len_by_net_pkt(const struct l2tp_hdr_v2 *l2tp_hdr);
 extern int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_type, 
 					int low_layer_type, int dir,int thread_num,
 					char *feedback_buf, int *feedback_buf_len, const raw_pkt_t *raw_pkt);					
@@ -1036,10 +1036,10 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 
 		case ADDR_TYPE_L2TP:
 		{
-			reserved_hdr_len = calc_l2tp_hdr_len(
-						   (const struct l2tp_hdr_v2 *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
+			reserved_hdr_len = calc_l2tp_hdr_len(stream_pr, send_stream_dir);
 		}
 		break;
+		
 		case ADDR_TYPE_GPRS_TUNNEL:
 		{
 			reserved_hdr_len = calc_gtp_hdr_len(stream_pr, send_stream_dir);
@@ -1900,63 +1900,69 @@ static int build_net_layer_vxlan(struct streaminfo_private *stream_pr, int carry
 }
 
 
-static int build_net_layer_l2tp(struct streaminfo_private *stream_pr, int carry_layer_type,
-			int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt, int l2tp_raw_hdr_len)
+static int build_net_layer_l2tp(const struct streaminfo *top_stream, struct streaminfo_private *stream_pr, int carry_layer_type,
+			int carry_layer_len, unsigned char *buf, unsigned char send_stream_dir, const raw_pkt_t *raw_pkt, int l2tp_raw_hdr_len)
 {
-	const struct l2tp_hdr_v2 *raw_hdr;
-	const char *raw_hdr_ptr;
-	unsigned char *send_ptr = buf;
-	unsigned short int16_tmp;
+	struct l2tp_hdr_v2 *inject_net_hdr;
+	unsigned char *inject_ptr;
+	unsigned short* inject_short_ptr;
+	const struct layer_addr_l2tp *stream_l2tp_layer_addr = stream_pr->stream_public.addr.l2tp;
 	
-	if(reverse != 0){
+	if(0 == (top_stream->dir & send_stream_dir)){
 		/* TODO 2:
 			L2TP包c2s和s2c方向TUNNEL-ID不一样, 目前没有形成L2TP流, 无法保存另一个方向的信息 ,
-			所以, 暂时只能单向KILL.
+			所以, 不支持单向流反向注入数据包.
 		*/
+		sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_l2tp() error, not support inject reverse pkt for single dir stream!");
 		return -1;
 	}
 
-	raw_hdr = (const struct l2tp_hdr_v2 *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
-	raw_hdr_ptr = (const char *)raw_hdr;
-	memcpy(send_ptr, raw_hdr, sizeof(struct l2tp_hdr_v2));
-	send_ptr += sizeof(struct l2tp_hdr_v2);
-	raw_hdr_ptr += sizeof(struct l2tp_hdr_v2);
+	memset(buf, 0, l2tp_raw_hdr_len);
+	
+	inject_net_hdr = (struct l2tp_hdr_v2 *)buf;
+	inject_ptr = buf + sizeof(struct l2tp_hdr_v2); /* 指向固定头部后面的缓冲区 */
+	
+	inject_net_hdr->type = 0; /* 目前仅支持注入data message */
+	inject_net_hdr->offset_present = 0;
+	inject_net_hdr->priority = 0;
+	inject_net_hdr->seq_present = 0; 
+	inject_net_hdr->version = 2; /* 目前固定支持v2 */
+	
+	if(stream_l2tp_layer_addr->l2tpun.l2tp_addr_v2.length_present){
+		inject_net_hdr->length_present = 1;
+		inject_short_ptr = (unsigned short *)inject_ptr;
+		*inject_short_ptr = htons(carry_layer_len + l2tp_raw_hdr_len);
 
-	if(raw_hdr->length_present){
-		int16_tmp = carry_layer_len + l2tp_raw_hdr_len;
-		int16_tmp = ntohs(int16_tmp);
-		memcpy(send_ptr, &int16_tmp, sizeof(short));
-		send_ptr += sizeof(short);
-		raw_hdr_ptr += sizeof(short);
+		inject_ptr += sizeof(struct l2tp_hdr_v2);
 	}
 
-	memcpy(send_ptr, raw_hdr_ptr, sizeof(short)); /* 2 byte tunnel id */
-	send_ptr += sizeof(short);
-	raw_hdr_ptr += sizeof(short);
+	if(DIR_C2S == send_stream_dir){
+		inject_short_ptr = (unsigned short *)inject_ptr;
+		*inject_short_ptr = stream_l2tp_layer_addr->l2tpun.l2tp_addr_v2.tunnelid_C2S; /* 2 byte tunnel id */
+		inject_ptr += sizeof(short);
 
-	memcpy(send_ptr, raw_hdr_ptr, sizeof(short)); /* 2 byte session id */
-	send_ptr += sizeof(short);
-	raw_hdr_ptr += sizeof(short);	
+		inject_short_ptr = (unsigned short *)inject_ptr;
+		*inject_short_ptr = stream_l2tp_layer_addr->l2tpun.l2tp_addr_v2.sessionid_C2S; /* 2 byte session id */
+		inject_ptr += sizeof(short);	
+	}else{
+		inject_short_ptr = (unsigned short *)inject_ptr;
+		*inject_short_ptr = stream_l2tp_layer_addr->l2tpun.l2tp_addr_v2.tunnelid_S2C; /* 2 byte tunnel id */
+		inject_ptr += sizeof(short);
 
-	if(raw_hdr->seq_present){
-		memcpy(send_ptr, raw_hdr_ptr, sizeof(short)); /* 2 byte Ns */
-		send_ptr += sizeof(short);
-		raw_hdr_ptr += sizeof(short);
-
-		memcpy(send_ptr, raw_hdr_ptr, sizeof(short)); /* 2 byte Nr */
-		send_ptr += sizeof(short);
-		raw_hdr_ptr += sizeof(short);	
+		inject_short_ptr = (unsigned short *)inject_ptr;
+		*inject_short_ptr = stream_l2tp_layer_addr->l2tpun.l2tp_addr_v2.sessionid_S2C; /* 2 byte session id */
+		inject_ptr += sizeof(short);	
 	}
 
-	if(raw_hdr->offset_present){
-		int16_tmp = ntohs(*(unsigned short *)raw_hdr_ptr); /* offset size */
-		memcpy(send_ptr, raw_hdr_ptr, sizeof(short)); /* 2 byte offset */
-		send_ptr += sizeof(short);
-		raw_hdr_ptr += sizeof(short);			
-
-		memcpy(send_ptr, raw_hdr_ptr, int16_tmp);
-		send_ptr += int16_tmp;
-		raw_hdr_ptr += int16_tmp;			
+	if(stream_l2tp_layer_addr->l2tpun.l2tp_addr_v2.ppp_hdr_compress_enable){
+		*inject_ptr = stream_l2tp_layer_addr->l2tpun.l2tp_addr_v2.compress_ppp_hdr.protocol;
+	}else{
+		*inject_ptr = stream_l2tp_layer_addr->l2tpun.l2tp_addr_v2.ppp_hdr.address;
+		inject_ptr++;
+		*inject_ptr = stream_l2tp_layer_addr->l2tpun.l2tp_addr_v2.ppp_hdr.control;
+		inject_ptr++;
+		inject_short_ptr = (unsigned short *)inject_ptr;
+		*inject_short_ptr = stream_l2tp_layer_addr->l2tpun.l2tp_addr_v2.ppp_hdr.protocol;
 	}
 
 	return l2tp_raw_hdr_len;
@@ -2124,7 +2130,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 					buf -= this_layer_len;
 					ret = build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir ^ DIR_DOUBLE, raw_pkt);
 					if(ret < 0){
-						sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_vlan() error!\n", printaddr(&stream->addr, stream->threadnum));
+						sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_vlan() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 						return -1;
 					}	
 					carry_layer_type = ADDR_TYPE_VLAN;					
@@ -2137,7 +2143,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 				buf -= this_layer_len;
 				ret = build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
 				if(ret < 0){
-					sapp_runtime_log(RLOG_LV_FATAL, "%s,build_net_layer_vlan() error!\n", printaddr(&stream->addr, stream->threadnum));
+					sapp_runtime_log(RLOG_LV_FATAL, "%s,build_net_layer_vlan() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 					return -1;
 				}					
 				carry_layer_type = ADDR_TYPE_VLAN;
@@ -2176,7 +2182,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			buf -= this_layer_len;
 			ret = build_net_layer_gre(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
 			if(ret < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_gre() error!\n", printaddr(&stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_gre() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_GRE;
@@ -2194,7 +2200,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 				buf -= this_layer_len;
 				ret = build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
 				if(ret < 0){
-					sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_mpls() error!\n", printaddr(&stream->addr, stream->threadnum));
+					sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_mpls() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 					return -1;
 				}				
 				carry_layer_type = ADDR_TYPE_MPLS;
@@ -2207,13 +2213,13 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 		case ADDR_TYPE_GPRS_TUNNEL:
 			this_layer_len = calc_gtp_hdr_len(stream_pr, send_stream_dir);
 			if(this_layer_len < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, calc_gtp_hdr_len() error!\n", printaddr(&stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, calc_gtp_hdr_len() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;
 			}	
 			buf -= this_layer_len;
 			ret = build_net_layer_gtp(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
 			if(ret < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_gtp() error!\n", printaddr(&stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_gtp() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_GPRS_TUNNEL;
@@ -2244,16 +2250,15 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 		break;
 		
 		case ADDR_TYPE_L2TP:
-			this_layer_len = calc_l2tp_hdr_len(
-						 (const struct l2tp_hdr_v2 *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
+			this_layer_len = calc_l2tp_hdr_len(stream_pr, send_stream_dir);
 			if(this_layer_len < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, calc_l2tp_hdr_len() error!\n", printaddr(&stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, calc_l2tp_hdr_len() error!\n", printaddr(&top_stream->addr, top_stream->threadnum));
 				return -1;
 			}
 			buf -= this_layer_len;
-			ret = build_net_layer_l2tp(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt, this_layer_len);
+			ret = build_net_layer_l2tp(top_stream, stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt, this_layer_len);
 			if(ret < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_l2tp() error!\n", printaddr(&stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_l2tp() error!\n", printaddr(&top_stream->addr, top_stream->threadnum));
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_L2TP;
@@ -2271,7 +2276,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			gre_layer_len = calc_gre_hdr_len(
 						 (const struct mesa_gre_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
 			if(gre_layer_len < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, pptp calc_gre_hdr_len() error!\n", printaddr(&stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, pptp calc_gre_hdr_len() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;
 			}						 
 			ppp_hdr_len = stream_pr->cur_layer_raw_hdr_len - gre_layer_len;
@@ -2288,7 +2293,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			buf -= gre_layer_len;
 			ret = build_net_layer_gre(stream_pr, ADDR_TYPE_PPP, carry_layer_len, buf, reverse, raw_pkt);
 			if(ret < 0){ 
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, pptp build_net_layer_gre() error!\n", printaddr(&stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, pptp build_net_layer_gre() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_GRE;

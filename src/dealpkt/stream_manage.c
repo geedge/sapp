@@ -2427,12 +2427,8 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
 		{
 			const struct layer_addr_gtp *src_gtp = (const struct layer_addr_gtp *)saddr;
 			struct layer_addr_gtp *dst_gtp = (struct layer_addr_gtp *)daddr;
-#if 0
-			dst_gtp->source = src_gtp->dest;
-			dst_gtp->dest = src_gtp->source;
-			dst_gtp->src_seq = src_gtp->dest_seq;
-			dst_gtp->dest_seq = src_gtp->src_seq;
-#endif			
+
+			dst_gtp->teid_s2c = src_gtp->teid_c2s;
 		}
 		break;
 
@@ -2452,7 +2448,6 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
         }
         break;
         
-		/* TODO 1:PPTP-addr */
 		case ADDR_TYPE_PPTP:
 		{
 			const struct layer_addr_pptp *pptp_saddr = (const struct layer_addr_pptp *)saddr;
@@ -2461,9 +2456,20 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
 			pptp_daddr->S2C_call_id = pptp_saddr->S2C_call_id;
 		}
 		break;
+
+		case ADDR_TYPE_L2TP:
+		{
+			const struct layer_addr_l2tp *src_l2tp = (const struct layer_addr_l2tp *)saddr;
+			struct layer_addr_l2tp *dst_l2tp = (struct layer_addr_l2tp *)daddr;
+
+			memcpy(dst_l2tp, src_l2tp, sizeof(struct layer_addr_l2tp));
+			dst_l2tp->l2tpun.l2tp_addr_v2.tunnelid_S2C = dst_l2tp->l2tpun.l2tp_addr_v2.tunnelid_C2S;
+			dst_l2tp->l2tpun.l2tp_addr_v2.sessionid_S2C = dst_l2tp->l2tpun.l2tp_addr_v2.sessionid_C2S;
+		}
+		break;
 		
 		default:
-			/* 其他地址类型, 如VLAN, L2TP等, 无方向性特征,直接copy */
+			/* 其他地址类型, 无方向性特征,直接copy */
 			memcpy(daddr, saddr, addrlen);
 			return;
 	}
@@ -2764,7 +2770,7 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
 }
 
 
-void update_opposite_addr_info(struct streaminfo_private *pstream_pr, 
+void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct streaminfo_private *pstream_pr, 
 	struct streaminfo_private *p_stack, unsigned char cur_dir)
 {
 	if(pstream_pr == NULL || p_stack == NULL)
@@ -2776,19 +2782,15 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 		switch(p_stack->stream_public.addr.addrtype)
 		{
 			case ADDR_TYPE_GPRS_TUNNEL:
-				    /* GTP地址C2S, S2C方向独立, 无法靠当前包地址区分dir, 每次栈里的变量都存储于source方向, 即C2S方向,  
-				       创建流时, 已经根据最内层TCP, UDP的流方向, 将GTP的地址存于source或dest, 
-				       此函数是更新的对端缺失的地址, 仅靠最内层的cur_dir表示需要更新哪个方向的地址, 固定从当前包p_stack的source拷贝. 
-				     */
+			    /* GTP地址C2S, S2C方向独立, 无法靠当前包地址区分dir, 每次栈里的变量都存储于source方向, 即C2S方向,  
+			       创建流时, 已经根据最内层TCP, UDP的流方向, 将GTP的地址存于source或dest, 
+			       此函数是更新的对端缺失的地址, 仅靠最内层的cur_dir表示需要更新哪个方向的地址, 固定从当前包p_stack的source拷贝. 
+			     */
 				if(cur_dir == DIR_C2S){
-                    //pstream_pr->stream_public.addr.gtp->source = p_stack->stream_public.addr.gtp->source;
-                    //pstream_pr->stream_public.addr.gtp->src_seq = p_stack->stream_public.addr.gtp->src_seq;
-                    pstream_pr->stream_public.addr.gtp->teid_c2s = p_stack->stream_public.addr.gtp->teid_c2s;
+                    pstream_pr->stream_public.addr.gtp->teid_c2s = p_stack->stream_public.addr.gtp->teid_c2s;/* 注意: 此处不是笔误, 就是C2S */
 				}
 				else{
-                    //pstream_pr->stream_public.addr.gtp->dest = p_stack->stream_public.addr.gtp->source;
-                    //pstream_pr->stream_public.addr.gtp->dest_seq = p_stack->stream_public.addr.gtp->src_seq;
-                    pstream_pr->stream_public.addr.gtp->teid_s2c = p_stack->stream_public.addr.gtp->teid_c2s;
+                    pstream_pr->stream_public.addr.gtp->teid_s2c = p_stack->stream_public.addr.gtp->teid_c2s;/* 注意: 此处不是笔误, 就是C2S */
 				}
 				break;
 				
@@ -2862,14 +2864,33 @@ void update_opposite_addr_info(struct streaminfo_private *pstream_pr,
 					}
 				}
 			break;
-			
+
+			case ADDR_TYPE_L2TP:
+			{
+				const struct layer_addr_l2tp *p_stack_addr = p_stack->stream_public.addr.l2tp;
+				struct layer_addr_l2tp *p_stream_addr = pstream_pr->stream_public.addr.l2tp;
+				
+			    /* L2TP地址C2S, S2C方向独立, 无法靠当前包地址区分dir, 每次栈里的变量都存储于source方向, 即C2S方向,  
+			       创建流时, 已经根据最内层TCP, UDP的流方向, 将GTP的地址存于source或dest, 
+			       此函数是更新的对端缺失的地址, 仅靠最内层的cur_dir表示需要更新哪个方向的地址, 固定从当前包p_stack的source拷贝. 
+			     */
+				if(cur_dir == DIR_C2S){
+                    p_stream_addr->l2tpun.l2tp_addr_v2.tunnelid_C2S = p_stack_addr->l2tpun.l2tp_addr_v2.tunnelid_C2S;
+                    p_stream_addr->l2tpun.l2tp_addr_v2.sessionid_C2S = p_stack_addr->l2tpun.l2tp_addr_v2.sessionid_C2S;
+				}else{
+                    p_stream_addr->l2tpun.l2tp_addr_v2.tunnelid_S2C = p_stack_addr->l2tpun.l2tp_addr_v2.tunnelid_C2S; /* 注意: 此处不是笔误, 就是C2S */
+                    p_stream_addr->l2tpun.l2tp_addr_v2.sessionid_S2C = p_stack_addr->l2tpun.l2tp_addr_v2.sessionid_C2S; /* 注意: 此处不是笔误, 就是C2S */
+				}
+			}
+			break;
+
 			default:	
 				/* 其他协议层不涉及C2S, S2C两个方向地址非对称问题 */
 				break;
 		}
 	}
 	
-	return update_opposite_addr_info((struct streaminfo_private *) pstream_pr->pfather_pr,
+	return update_opposite_addr_info(top_stream_pr, (struct streaminfo_private *) pstream_pr->pfather_pr,
 								 (struct streaminfo_private *) p_stack->pfather_pr, cur_dir);	
 }
 
