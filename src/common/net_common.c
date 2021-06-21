@@ -157,6 +157,48 @@ static int l2tp_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 	return l2tp_hdr_len + skip_len;
 }
 
+static int teredo_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
+{
+	const char *next_layer_hdr;
+	struct teredo_auth_hdr *p_teredo_hdr;
+	int teredo_layer_len = 0, tmp_hdr_len = 0, skip_len = 0;
+
+	
+	/* teredo实际没有数据包头 */
+	next_layer_hdr = raw_data;
+
+	while((*next_layer_hdr & 0xF0) != 0x60){
+		p_teredo_hdr = (struct teredo_auth_hdr *)next_layer_hdr;
+		if(p_teredo_hdr->flags == ntohs(TEREDO_AUTH_HDR_FLAG))
+		{
+			//rfc4380 5.1.1 teredo 负载0x0001时为Teredo authentication headers，需要跳过
+			tmp_hdr_len += sizeof(struct teredo_auth_hdr) + ntohs(p_teredo_hdr->au_len) + ntohs
+			(p_teredo_hdr->id_len) + 8 + 1;
+			next_layer_hdr += tmp_hdr_len;
+			teredo_layer_len += tmp_hdr_len;
+		}
+		else if(p_teredo_hdr->flags == ntohs(TEREDO_INDICATION_HDR_FLAG))
+		{
+			//rfc4380 teredo 负载0x0000时为Teredo indication headers，需要跳过
+			next_layer_hdr += TEREDO_INDICATION_HDR_LEN;
+			teredo_layer_len += TEREDO_INDICATION_HDR_LEN;
+		}
+		else
+		{
+			sapp_runtime_log(RLOG_LV_INFO, "teredo_jump_to_layer(): unsupport teredo hdr:0x%d!\n", *(unsigned int *)(next_layer_hdr));
+			return -1;
+		}
+	}
+	skip_len = ipv6_jump_to_layer(next_layer_hdr, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
+	if(skip_len < 0){
+		return -1;
+	}
+	skip_len += teredo_layer_len;
+
+	return skip_len;
+}
+
+
 
 static int udp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
 {
@@ -182,38 +224,7 @@ static int udp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 		}
 		skip_len += 8; /* skip vxlan header */
 	}else if((3544 == usport) || (3544 == udport)){
-		/* teredo实际没有数据包头, 直接跳转到ipv6层即可 , before 20181204*/
-		next_layer_hdr = raw_data+sizeof(struct mesa_udp_hdr);
-        struct teredo_auth_hdr *p_teredo_hdr;
-		int teredo_layer_len = 0, tmp_hdr_len = 0;
-		while((*next_layer_hdr & 0xF0) != 0x60)
-		{
-			p_teredo_hdr = (struct teredo_auth_hdr *)next_layer_hdr;
-			if(p_teredo_hdr->flags == ntohs(TEREDO_AUTH_HDR_FLAG))
-			{
-				//rfc4380 5.1.1 teredo 负载0x0001时为Teredo authentication headers，需要跳过
-				tmp_hdr_len += sizeof(struct teredo_auth_hdr) + ntohs(p_teredo_hdr->au_len) + ntohs
-				(p_teredo_hdr->id_len) + 8 + 1;
-				next_layer_hdr += tmp_hdr_len;
-				teredo_layer_len += tmp_hdr_len;
-			}
-			else if(p_teredo_hdr->flags == ntohs(TEREDO_INDICATION_HDR_FLAG))
-			{
-				//rfc4380 teredo 负载0x0000时为Teredo indication headers，需要跳过
-				next_layer_hdr += TEREDO_INDICATION_HDR_LEN;
-				teredo_layer_len += TEREDO_INDICATION_HDR_LEN;
-			}
-            else
-            {
-                sapp_runtime_log(RLOG_LV_INFO, "udp_jump_to_layer(): unsupport teredo hdr:0x%d!\n", *(unsigned int *)(next_layer_hdr));
-                return -1;
-            }
-		}
-		skip_len = ipv6_jump_to_layer(next_layer_hdr, __ADDR_TYPE_IP_PAIR_V6, expect_layer_type);
-		if(skip_len < 0){
-			return -1;
-		}
-		skip_len += teredo_layer_len;
+		skip_len = teredo_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), 0, expect_layer_type);
 	}else if((1701 == usport) || (1701 == udport)){
 		skip_len = l2tp_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), ADDR_TYPE_UDP, expect_layer_type);
 	}else{
@@ -227,6 +238,42 @@ static int udp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 
 	return skip_len + sizeof(struct mesa_udp_hdr);
 }
+
+static int udp_jump_to_layer_greedy(const char *raw_data,  int raw_layer_type, int expect_layer_type)
+{
+	const struct mesa_udp_hdr *uh = (const struct mesa_udp_hdr *)raw_data;
+	unsigned short usport, udport;
+	int skip_len;
+	const char *next_layer_hdr;
+
+	usport = ntohs(uh->uh_sport);
+	udport = ntohs(uh->uh_dport);
+
+	if((2152 == usport) || (2152 == udport)){
+		skip_len = gtp_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), ADDR_TYPE_UDP, expect_layer_type);
+	}else if(4789 == udport){
+		/* vxlan模式暂时只支持ethernet. TODO: 如果是hdlc, ppp封装, 需要实现一个单独的vxlan_jump_to_layer()函数 */
+		skip_len = eth_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr)+8, ADDR_TYPE_MAC, expect_layer_type);
+		if(skip_len < 0){
+			return -1;
+		}
+		skip_len += 8; /* skip vxlan header */
+	}else if((3544 == usport) || (3544 == udport)){
+		skip_len = teredo_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), 0, expect_layer_type);
+	}else if((1701 == usport) || (1701 == udport)){
+		skip_len = l2tp_jump_to_layer(raw_data+sizeof(struct mesa_udp_hdr), ADDR_TYPE_UDP, expect_layer_type);
+	}else{
+		/* 其他UDP类型不支持再跳转 */
+		sapp_runtime_log(RLOG_LV_INFO, "udp_jump_to_layer(): unsupport udp sport:%u, dport:%u!\n", usport, udport);
+		return -1;
+	}
+	if(skip_len < 0){
+		return -1;
+	}
+
+	return skip_len + sizeof(struct mesa_udp_hdr);
+}
+
 
 extern int set_gre_hdr(struct mesa_gre_hdr *stack_gre_addr, const void *this_layer_data);
 static int gre_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
@@ -872,6 +919,7 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 */
 const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_type, int expect_layer_type)
 {
+	int skip_len;
 	const void *expect_layer;
 	const void *success_layer = NULL; /* 最后一次成功找到的层 */
 	int new_raw_layer_type = raw_layer_type; /* 在跳转过程中, 可能会更新中间层信息 */
@@ -926,6 +974,18 @@ const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_ty
 			{
 				//TODO2,
 				goto done;		
+			}
+			break;
+
+			case ADDR_TYPE_UDP:
+			{
+				skip_len = udp_jump_to_layer_greedy((char *)expect_layer, ADDR_TYPE_UDP, expect_layer_type);
+				if(skip_len < 0){
+					goto done;
+				}
+
+				success_layer = (char *)expect_layer + skip_len;
+				goto done;
 			}
 			break;
 
