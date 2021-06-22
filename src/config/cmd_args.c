@@ -503,6 +503,8 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 			break;
 
 			case 'g':
+				sapp_update_main_config_file(NULL);
+				sapp_parse_config(); /* 先读取配文件, 再调用breakpad_mini */
 				sapp_init_breakpad_mini();
 				sapp_segv_generate();
 				continue;
