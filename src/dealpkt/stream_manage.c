@@ -2465,6 +2465,8 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
 			memcpy(dst_l2tp, src_l2tp, sizeof(struct layer_addr_l2tp));
 			dst_l2tp->l2tpun.l2tp_addr_v2.tunnelid_S2C = dst_l2tp->l2tpun.l2tp_addr_v2.tunnelid_C2S;
 			dst_l2tp->l2tpun.l2tp_addr_v2.sessionid_S2C = dst_l2tp->l2tpun.l2tp_addr_v2.sessionid_C2S;
+
+			dst_l2tp->l2tpun.l2tp_addr_v2.seq_present_S2C = dst_l2tp->l2tpun.l2tp_addr_v2.seq_present_C2S;
 		}
 		break;
 		
@@ -2877,9 +2879,11 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 				if(cur_dir == DIR_C2S){
                     p_stream_addr->l2tpun.l2tp_addr_v2.tunnelid_C2S = p_stack_addr->l2tpun.l2tp_addr_v2.tunnelid_C2S;
                     p_stream_addr->l2tpun.l2tp_addr_v2.sessionid_C2S = p_stack_addr->l2tpun.l2tp_addr_v2.sessionid_C2S;
+                    p_stream_addr->l2tpun.l2tp_addr_v2.seq_present_C2S = p_stack_addr->l2tpun.l2tp_addr_v2.seq_present_C2S;
 				}else{
                     p_stream_addr->l2tpun.l2tp_addr_v2.tunnelid_S2C = p_stack_addr->l2tpun.l2tp_addr_v2.tunnelid_C2S; /* 注意: 此处不是笔误, 就是C2S */
                     p_stream_addr->l2tpun.l2tp_addr_v2.sessionid_S2C = p_stack_addr->l2tpun.l2tp_addr_v2.sessionid_C2S; /* 注意: 此处不是笔误, 就是C2S */
+                    p_stream_addr->l2tpun.l2tp_addr_v2.seq_present_S2C = p_stack_addr->l2tpun.l2tp_addr_v2.seq_present_C2S;
 				}
 			}
 			break;

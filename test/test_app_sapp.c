@@ -141,10 +141,23 @@ char hierarchical_embed_layer_entry(struct streaminfo *pstream,void **pme, int t
 #if TEST_SAPP_API
 char phony_biz_test(stSessionInfo* session_info,  void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet)
 {
-	printf("I am biz plug, from pro info: %s\n", session_info->buf);
-	
+	//printf("I am biz plug, from pro info: %s\n", session_info->buf);
 
-	return APP_STATE_GIVEME;
+	if(SESSION_STATE_PENDING & session_info->session_state){
+		*pme = malloc(10);
+		printf("session_info:%p, pme:%p, state:%d\n", session_info,*pme, session_info->session_state);
+	}
+
+	if(SESSION_STATE_CLOSE & session_info->session_state){
+		printf("session_info:%p, pme:%p, state:%d\n", session_info,*pme, session_info->session_state);
+		free(*pme);
+	}
+
+	if(SESSION_STATE_DATA & session_info->session_state){
+		printf("session_info:%p, pme:%p, state:%d\n", session_info,*pme, session_info->session_state);
+	}
+
+	return PROT_STATE_GIVEME;
 }
 
 void phony_protocol_funstat(unsigned long long protflag)

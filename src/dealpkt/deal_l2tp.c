@@ -131,7 +131,6 @@ int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2t
 		if(l2top_tot_len < sizeof(struct l2tp_hdr_v2) +  1/* compress ppp hdr len */ + sizeof(struct mesa_ip4_hdr)){
 			return -1; /* 无最小有效数据 */
 		}
-		l2tpaddr->l2tpun.l2tp_addr_v2.length_present = 1;
 	}
 
 	 /* L2TP地址C2S, S2C方向独立, 无法靠当前包地址区分dir, 每次栈里的变量都存储于source方向, 即C2S方向,  
@@ -145,14 +144,13 @@ int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2t
 
 	if(pl2tphdrv2->seq_present){
 		ptr += sizeof(int);	
-		l2tpaddr->l2tpun.l2tp_addr_v2.seq_present = 1;
+		l2tpaddr->l2tpun.l2tp_addr_v2.seq_present_C2S = 1;
 	}
 
 	if(pl2tphdrv2->offset_present){
 		offset_size = ntohs(*((unsigned short *)ptr));
 		ptr += sizeof(short);	 /* 2 byte fix len offset size */
 		ptr += offset_size;  /* var bytes offset value length */
-		l2tpaddr->l2tpun.l2tp_addr_v2.offset_present = 1;
 	}	
 
 	l2tp_ppp_hdr_len = parse_l2tpv2_ppp_hdr((unsigned char *)ptr, l2tpaddr);
@@ -186,15 +184,17 @@ int calc_l2tp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_stream_d
 		return -1;
 	}
 
-	if(p_l2tp_layer_addr->l2tpun.l2tp_addr_v2.seq_present){
-		sapp_runtime_log(RLOG_LV_INFO, "calc_l2tp_hdr_len() error, not support L2TP with seq flag yet!");
+	if((DIR_C2S == send_stream_dir) && p_l2tp_layer_addr->l2tpun.l2tp_addr_v2.seq_present_C2S){
+		sapp_runtime_log(RLOG_LV_INFO, "calc_l2tp_hdr_len() error, dir C2S not support L2TP with seq flag yet!");
 		return -1;
 	}
+	if((DIR_S2C == send_stream_dir) && p_l2tp_layer_addr->l2tpun.l2tp_addr_v2.seq_present_S2C){
+		sapp_runtime_log(RLOG_LV_INFO, "calc_l2tp_hdr_len() error, dir C2S not support L2TP with seq flag yet!");
+		return -1;
+	}	
 
 	l2tp_hdr_len = sizeof(struct l2tp_hdr_v2); /* 固定头部长度 */
-	if(p_l2tp_layer_addr->l2tpun.l2tp_addr_v2.length_present){
-		l2tp_hdr_len += sizeof(short); /* length field */
-	}
+	l2tp_hdr_len += sizeof(short); /* 注入数据包固定包括 length field */
 
 	l2tp_hdr_len += sizeof(short); /* tunnel id */
 	l2tp_hdr_len += sizeof(short); /* session id */

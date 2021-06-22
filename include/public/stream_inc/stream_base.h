@@ -1,7 +1,7 @@
 #ifndef _APP_STREAM_BASE_H_
 #define _APP_STREAM_BASE_H_ 
 
-#define STREAM_BASE_H_VERSION		(20210508)
+#define STREAM_BASE_H_VERSION		(20210621)
 
 #include <sys/types.h>
 #include <netinet/in.h>            
@@ -202,16 +202,7 @@ struct single_layer_vlan_addr{     /* refer to https://en.wikipedia.org/wiki/IEE
 	unsigned short VID;  /* VLAN identifier, network order */
 };
 
-#if 0
-struct layer_addr_vlan
-{
-	UINT16 vlan_id;	/* network order, old value, to be obsoleted */
-	UCHAR c2s_layer_num;
-	UCHAR s2c_layer_num;
-	UINT32 c2s_addr_array[MAX_VLAN_ADDR_LAYER]; /* network order */
-	UINT32 s2c_addr_array[MAX_VLAN_ADDR_LAYER]; /* network order */
-};
-#else
+
 struct layer_addr_vlan
 {
 	struct single_layer_vlan_addr c2s_addr_array[MAX_VLAN_ADDR_LAYER];
@@ -220,8 +211,6 @@ struct layer_addr_vlan
 	UCHAR s2c_layer_num;
 };
 
-
-#endif
 
 struct layer_addr_pppoe_session
 {
@@ -310,13 +299,8 @@ struct layer_addr_l2tp_v2_t{
 	UINT16 tunnelid_S2C; /* network order, 以传输层创建流的方向为准 */
 	UINT16 sessionid_C2S; /* network order, 以传输层创建流的方向为准 */
 	UINT16 sessionid_S2C; /* network order, 以传输层创建流的方向为准 */
-
-	unsigned char priority;
-	unsigned char offset_present;
-	unsigned char seq_present;
-	unsigned char length_present;
-	unsigned char type;
-	
+	unsigned char seq_present_C2S;
+	unsigned char seq_present_S2C;
 	unsigned char ppp_hdr_compress_enable;
 	union{
 		struct layer_ppp_hdr ppp_hdr;
@@ -339,19 +323,6 @@ struct layer_addr_l2tp
 };
 
 #define MAX_MPLS_ADDR_LAYER 4
-#if 0
-struct layer_addr_mpls
-{
-	unsigned int src_mpls_pkt[MAX_MPLS_ADDR_LAYER];
-	unsigned int dest_mpls_pkt[MAX_MPLS_ADDR_LAYER];
-    char src_mpls_layer_num;
-    char dest_mpls_layer_num;
-	char src_has_ctrl_word;
-	char dst_has_ctrl_word;
-    unsigned int src_mpls_ctrl_word; /* refer to RFC4623 */
-    unsigned int dst_mpls_ctrl_word; /* refer to RFC4623 */
-};
-#else
 
 struct single_layer_mpls_addr{ /* refer to RFC3032 */
 	unsigned int label; /* network order */
@@ -376,7 +347,6 @@ struct layer_addr_mpls
     unsigned int s2c_mpls_ctrl_word; /* refer to RFC4623 */
 };
 
-#endif
 
 struct layer_addr_pptp
 {
@@ -386,15 +356,8 @@ struct layer_addr_pptp
 
 struct layer_addr_gtp
 {
-#if 0
-    unsigned long long source;  /* From Client */
-    unsigned int src_seq;
-    unsigned long long dest;	/* From Server */
-    unsigned int dest_seq;
-#else
 	unsigned int teid_c2s; /* network order */
 	unsigned int teid_s2c; /* network order */
-#endif
 }__attribute__ ((aligned (1)));
 
 #define MAC_IN_MAC_HDR_LEN	(sizeof(struct mesa_ethernet_hdr) +  sizeof(struct mesa_ethernet_hdr))

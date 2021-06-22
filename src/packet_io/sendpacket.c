@@ -1928,11 +1928,9 @@ static int build_net_layer_l2tp(const struct streaminfo *top_stream, struct stre
 	inject_net_hdr->seq_present = 0; 
 	inject_net_hdr->version = 2; /* 目前固定支持v2 */
 
-	/* length_present是在当前流第一个包上获取的标志, 后续的包没有再更新, 
-	   inject的l2tp->length_present其实是跟第一个包是一致的.
-	   还有 calc_l2tp_hdr_len() 计算缓冲区长度时也是按第一个包的标志预留的.
- 	 */
-	if(stream_l2tp_layer_addr->l2tpun.l2tp_addr_v2.length_present) 
+	/* 
+		注入l2tp数据包固定带有length字段
+	*/
 	{
 		inject_net_hdr->length_present = 1;
 		inject_short_ptr = (unsigned short *)inject_ptr;
