@@ -66,8 +66,32 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 		local_sys_stat->length_per_layer[ADDR_TYPE_MAC][fstream_pr->layer_index + 1] += this_layer_len;
 	}
 
+	ptmp = &tmp_index;
+	pstream_pr = &ptmp->stream;
+	pstream = &pstream_pr->stream_public;
+
+	memset(ptmp, 0, sizeof(struct streamindex));
+	set_mac_addr(&addr, p_eth_hdr);
+	pstream->addr.mac = (struct layer_addr_mac *)&addr;
+	pstream->addr.addrlen = sizeof(struct layer_addr_mac);
+	pstream->addr.addrtype = ADDR_TYPE_MAC;
+	pstream_pr->addr_use_as_hash = 0;
+
+	if(NULL == fstream_pr){
+		pstream_pr->layer_index = 0; /* first layer, index start from 0 */
+	}else{
+		if(unlikely(fstream_pr->layer_index >= SAPP_SUPPORT_LAYER_NUM_MAX)){
+			local_sys_stat->count[SAPP_STAT_DROP_ETHERNET]++;
+			sapp_runtime_log(RLOG_LV_INFO, "eth_entry: layer index more than:%d", fstream_pr->layer_index);
+			return PASS;
+		}
+		pstream_pr->layer_index = fstream_pr->layer_index + 1;
+	}	
+	this_layer_is_overlay = sapp_is_overlay_layer(pstream_pr, raw_pkt);
+
 	if(NET_CONN_SERIAL_GDEV == g_topology_mode){
-		if(unlikely(sapp_identify_broad_multicast_pkt(this_layer_hdr, raw_pkt) != 0)){
+		if((this_layer_is_overlay != 0)   /* 仅外层overlay层要检查广播和组播, 内层的流量是用户真实流量, 不做任何限制 */
+		 && (unlikely(sapp_identify_broad_multicast_pkt(this_layer_hdr, raw_pkt) != 0))){
 			local_sys_stat->count[SAPP_STAT_DROP_ETHERNET]++;
 			local_sys_stat->length[SAPP_STAT_DROP_ETHERNET]+=this_layer_len;
 			return DROP;
@@ -75,17 +99,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 	}
 
 	if(likely(0 == g_skip_ethernet_layer_sw)){
-		ptmp = &tmp_index;
-		pstream_pr = &ptmp->stream;
-		pstream = &pstream_pr->stream_public;
 		next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct mesa_ethernet_hdr);
-
-		memset(ptmp, 0, sizeof(struct streamindex));
-		set_mac_addr(&addr, p_eth_hdr);
-		pstream->addr.mac = (struct layer_addr_mac *)&addr;
-		pstream->addr.addrlen = sizeof(struct layer_addr_mac);
-		pstream->addr.addrtype = ADDR_TYPE_MAC;
-		pstream_pr->addr_use_as_hash = 0;
 		//ptmp->stream.p_layer_header = this_layer_hdr;
 		//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_layer_hdr - (char *)raw_pkt->raw_pkt_data;
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
@@ -111,16 +125,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			pstream->curdir = DIR_S2C;
 		}		
 
-		if(NULL == fstream_pr){
-			pstream_pr->layer_index = 0; /* first layer, index start from 0 */
-		}else{
-			if(unlikely(fstream_pr->layer_index >= SAPP_SUPPORT_LAYER_NUM_MAX)){
-				local_sys_stat->count[SAPP_STAT_DROP_ETHERNET]++;
-				sapp_runtime_log(RLOG_LV_INFO, "eth_entry: layer index more than:%d", fstream_pr->layer_index);
-				return PASS;
-			}
-			pstream_pr->layer_index = fstream_pr->layer_index + 1;
-		}
+
 		if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MAC][pstream_pr->layer_index] != 0){
 			pstream_pr->need_update_opposite_addr = 1;//两侧地址不一样，需要更新对侧信息, 一般用于mpls隧道内层的ethernet
 		}else{
@@ -136,7 +141,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 		}
 	}
 
-	this_layer_is_overlay = sapp_is_overlay_layer(pstream_pr, raw_pkt);
+	
 	if(0 == this_layer_is_overlay){ /* 非overlay层才累加相关层计数 */
 		local_sys_stat->count[SAPP_STAT_RCV_ETHERNET]++;
 		local_sys_stat->length[SAPP_STAT_RCV_ETHERNET] += (unsigned long long)this_layer_len;

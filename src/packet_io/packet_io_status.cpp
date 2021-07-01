@@ -289,7 +289,7 @@ void sysinfo_output(void)
 
 	fprintf(fp,"\n*********************** %s *********************\n", time_string);
 	fprintf(fp,"*********************** \033[41m%s\033[0m *************************\n", "sysinfo exactly");
-	fprintf(fp,"%-12s %12s %12s %12s %12s\n","RCV-PKT", "total_pkt", "total_len","pps", "Bps");
+	fprintf(fp,"%-12s %12s %12s %12s %12s\n","Layer", "total_pkt", "total_len","pps", "Bps");
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_work", 0,0,(cur_count[SAPP_POLLING_WORK]-history_count[SAPP_POLLING_WORK]),0);
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_idle", 0,0,(cur_count[SAPP_POLLING_IDLE]-history_count[SAPP_POLLING_IDLE]),0);
 
@@ -302,6 +302,12 @@ void sysinfo_output(void)
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n","TCP",cur_count[SAPP_STAT_RCV_TCP],cur_length[SAPP_STAT_RCV_TCP],(cur_count[SAPP_STAT_RCV_TCP]-history_count[SAPP_STAT_RCV_TCP]),(cur_length[SAPP_STAT_RCV_TCP]-history_length[SAPP_STAT_RCV_TCP]));
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n","UDP",cur_count[SAPP_STAT_RCV_UDP],cur_length[SAPP_STAT_RCV_UDP],(cur_count[SAPP_STAT_RCV_UDP]-history_count[SAPP_STAT_RCV_UDP]),(cur_length[SAPP_STAT_RCV_UDP]-history_length[SAPP_STAT_RCV_UDP]));
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n","Unknown",cur_count[SAPP_STAT_RCV_UNKNOWN],cur_length[SAPP_STAT_RCV_UNKNOWN],(cur_count[SAPP_STAT_RCV_UNKNOWN]-history_count[SAPP_STAT_RCV_UNKNOWN]),(cur_length[SAPP_STAT_RCV_UNKNOWN]-history_length[SAPP_STAT_RCV_UNKNOWN]));
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n","Sapp_Drop",
+				cur_count[SAPP_STAT_DROP_ETHERNET]+cur_count[SAPP_STAT_DROP_IPV4]+cur_count[SAPP_STAT_DROP_IPV6],
+				(cur_length[SAPP_STAT_DROP_ETHERNET]+cur_length[SAPP_STAT_DROP_IPV4]+cur_length[SAPP_STAT_DROP_IPV6]),
+				(cur_count[SAPP_STAT_DROP_ETHERNET]+cur_count[SAPP_STAT_DROP_IPV4]+cur_count[SAPP_STAT_DROP_IPV6]-history_count[SAPP_STAT_DROP_ETHERNET]-history_count[SAPP_STAT_DROP_IPV4]-history_count[SAPP_STAT_DROP_IPV6]),
+				((cur_count[SAPP_STAT_DROP_ETHERNET]+cur_count[SAPP_STAT_DROP_IPV4]+cur_count[SAPP_STAT_DROP_IPV6]-history_count[SAPP_STAT_DROP_ETHERNET]-history_count[SAPP_STAT_DROP_IPV4]-history_count[SAPP_STAT_DROP_IPV6])));
+
 	fprintf(fp,"\n***************************************************************\n");
 	fprintf(fp,"%-10s %12s %12s %12s %12s\n","SND-PKT", "total_pkt", "total_len","pps", "Bps");
 	fprintf(fp,"%-10s %12llu %12llu %12llu %12llu\n", "TCP_RST", cur_count[SAPP_STAT_SND_TCP_RST],cur_length[SAPP_STAT_SND_TCP_RST],(cur_count[SAPP_STAT_SND_TCP_RST]-history_count[SAPP_STAT_SND_TCP_RST]),(cur_length[SAPP_STAT_SND_TCP_RST]-history_length[SAPP_STAT_SND_TCP_RST]));
@@ -367,7 +373,7 @@ void sysinfo_output(void)
 	
 	fprintf(fp,"*****************************************************************\n\n");
 	fprintf(fp,"################# \033[41m%s\033[0m --- is same as above! #########\n", "sysinfo humanly");
-	fprintf(fp,"%-12s %12s %12s %12s %12s\n", "RCV-PKT", "total_pkt", "total_len","pps", "bps");
+	fprintf(fp,"%-12s %12s %12s %12s %12s\n", "Layer", "total_pkt", "total_len","pps", "bps");
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_work", 0,0,(cur_count[SAPP_POLLING_WORK]-history_count[SAPP_POLLING_WORK]),0);
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_idle", 0,0,(cur_count[SAPP_POLLING_IDLE]-history_count[SAPP_POLLING_IDLE]),0);
 	
@@ -380,6 +386,11 @@ void sysinfo_output(void)
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n","TCP",cur_count[SAPP_STAT_RCV_TCP],byte_convert_human(cur_length[SAPP_STAT_RCV_TCP],1,1,s1),(cur_count[SAPP_STAT_RCV_TCP]-history_count[SAPP_STAT_RCV_TCP]),byte_convert_human((cur_length[SAPP_STAT_RCV_TCP]-history_length[SAPP_STAT_RCV_TCP]),1,8,s2));
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n","UDP",cur_count[SAPP_STAT_RCV_UDP],byte_convert_human(cur_length[SAPP_STAT_RCV_UDP],1,1,s1),(cur_count[SAPP_STAT_RCV_UDP]-history_count[SAPP_STAT_RCV_UDP]),byte_convert_human((cur_length[SAPP_STAT_RCV_UDP]-history_length[SAPP_STAT_RCV_UDP]),1,8,s2));	
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n","Unknown",cur_count[SAPP_STAT_RCV_UNKNOWN],byte_convert_human(cur_length[SAPP_STAT_RCV_UNKNOWN],1,1,s1),(cur_count[SAPP_STAT_RCV_UNKNOWN]-history_count[SAPP_STAT_RCV_UNKNOWN]),byte_convert_human((cur_length[SAPP_STAT_RCV_UNKNOWN]-history_length[SAPP_STAT_RCV_UNKNOWN]),1,8,s2));
+	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n","Sapp_Drop",
+				cur_count[SAPP_STAT_DROP_ETHERNET]+cur_count[SAPP_STAT_DROP_IPV4]+cur_count[SAPP_STAT_DROP_IPV6],
+				byte_convert_human(cur_length[SAPP_STAT_DROP_ETHERNET]+cur_length[SAPP_STAT_DROP_IPV4]+cur_length[SAPP_STAT_DROP_IPV6],1,1,s1),
+				(cur_count[SAPP_STAT_DROP_ETHERNET]+cur_count[SAPP_STAT_DROP_IPV4]+cur_count[SAPP_STAT_DROP_IPV6]-history_count[SAPP_STAT_DROP_ETHERNET]-history_count[SAPP_STAT_DROP_IPV4]-history_count[SAPP_STAT_DROP_IPV6]),
+				byte_convert_human((cur_count[SAPP_STAT_DROP_ETHERNET]+cur_count[SAPP_STAT_DROP_IPV4]+cur_count[SAPP_STAT_DROP_IPV6]-history_count[SAPP_STAT_DROP_ETHERNET]-history_count[SAPP_STAT_DROP_IPV4]-history_count[SAPP_STAT_DROP_IPV6]),1,8,s2));
 
 	fprintf(fp,"#################################################################\n");
 	fprintf(fp,"Network Link Quality:\n");	

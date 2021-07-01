@@ -615,23 +615,6 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 		return PASS;
 	}
 
-#if (0 == HIGH_PERF)
-	/* 2012-11-01 add, 在特殊设备模式下，不处理组播地址数据 */
-	if(unlikely(g_topology_mode & __NET_CONN_GDEV)){
-		/* 关闭私有地址段检测 */
-/*	
-		if(is_private_addr_v4(ntohl(a_packet->ip_dst.s_addr))){
-			ret = DROP;
-			goto done;
-		}
-*/
-		if(is_multicast_addr_v4(ntohl(a_packet->ip_dst.s_addr))){
-			local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
-			local_sys_stat->length[SAPP_STAT_DROP_IPV4]+=this_layer_len;
-			return DROP;
-		}	
-	}
-#endif
 
 	ptmp=&tmp_index;
 	memset(ptmp, 0x0, sizeof(struct streamindex));
@@ -660,6 +643,16 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	}else{
 		pstream_pr->addr_use_as_hash = 1;	
 	}
+
+	/* 2012-11-01 add, 在inline模式下，外层overlay层不处理组播地址 */
+	if((g_topology_mode & __NET_CONN_GDEV) && (this_layer_is_overlay != 0)){
+		if(is_multicast_addr_v4(ntohl(a_packet->ip_dst.s_addr))){
+			local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
+			local_sys_stat->length[SAPP_STAT_DROP_IPV4]+=this_layer_len;
+			return DROP;
+		}	
+	}
+	
 	//ptmp->stream.p_layer_header = a_packet;
 	//ptmp->stream.offset_to_raw_pkt_hdr = (char *)a_packet - (char *)raw_pkt->raw_pkt_data;
 	pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
