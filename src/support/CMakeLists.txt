@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 
-add_subdirectory(iknow)
 add_subdirectory(timestamp_record)
 add_subdirectory(symbol_check)
 add_subdirectory(MESA_sleep)

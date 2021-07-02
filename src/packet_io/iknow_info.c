@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-#if DEBUG
+#if 0 //delete iknow
 #include "iknow.h"
 #include "sapp_api.h"
 #include "sapp_private_api.h"

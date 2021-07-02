@@ -77,4 +77,4 @@ if(CAPTURE_MODE MATCHES "MARSIO")
     ##target_link_libraries(packet_io marsio)
 endif() 
 
-target_link_libraries(packet_io timestamp_record iknow)
+target_link_libraries(packet_io timestamp_record)

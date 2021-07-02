@@ -12,4 +12,3 @@ include_directories(/opt/MESA/include/)
 add_definitions(-D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
 
 add_library(timestamp_record STATIC  timestamp_record.cpp)
-target_link_libraries(timestamp_record iknow)
