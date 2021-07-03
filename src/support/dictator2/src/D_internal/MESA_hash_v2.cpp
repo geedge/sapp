@@ -36,18 +36,19 @@ static int max_slot_list_num = 0;   /* 每个slot最大冲突数 */
 #define HASH_TABLE_MUTEX_NUM		(256)        
 
 
-static HASH_INLINE int D_INTERNAL___MESA_hash_mutex_lock(MESA_hash_tab_v2_t * table, uint index)
-{   
-    if(table->is_thread_safe){
-        return pthread_mutex_lock(&table->htable_mutex[index%HASH_TABLE_MUTEX_NUM]);
-    }
-    return 0;
-}
-
 static HASH_INLINE int D_INTERNAL___MESA_hash_mutex_unlock(MESA_hash_tab_v2_t * table,uint index)
 {
     if(table->is_thread_safe){
         return pthread_mutex_unlock(&table->htable_mutex[index%HASH_TABLE_MUTEX_NUM]);
+    }
+    return 0;
+}
+
+
+static HASH_INLINE int D_INTERNAL___MESA_hash_mutex_lock(MESA_hash_tab_v2_t * table, uint index)
+{   
+    if(table->is_thread_safe){
+        return pthread_mutex_lock(&table->htable_mutex[index%HASH_TABLE_MUTEX_NUM]);
     }
     return 0;
 }

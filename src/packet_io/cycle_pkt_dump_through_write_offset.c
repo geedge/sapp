@@ -913,6 +913,7 @@ static void cycle_pkt_dump_set_thread_num(int thread_num)
 	pkt_dump_thread_num = thread_num;
 }
 
+#if 0
 static int cycle_pkt_dump_get_core_num(void)
 {
 	FILE *fp;
@@ -932,7 +933,7 @@ static int cycle_pkt_dump_get_core_num(void)
 	return core_num;
 }
 
-#if 0
+
 /* config is like: "0,1,2,3,4,5" */
 static int cycle_pkt_dump_parse_per_thread_switch(char *config_str)
 {
@@ -1331,7 +1332,7 @@ static int cycle_pkt_dump_socket_init(void)
 	opt = 1;
 	setsockopt(pkt_dump_tcp_cmd_sd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
 
-	bzero(&sockadd, sizeof(sockadd));
+	memset(&sockadd, 0, sizeof(sockadd));
 	sockadd.sin_family = AF_INET;
 	sockadd.sin_addr.s_addr = htonl(INADDR_ANY);
 	sockadd.sin_port = htons(pkt_dump_tcp_bind_port);

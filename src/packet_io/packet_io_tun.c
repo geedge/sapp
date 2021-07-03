@@ -237,7 +237,7 @@ int getifindex(int fd,char *ifname)
 {
     struct ifreq ifr;
     memset(&ifr,0,sizeof(ifr));
-    strcpy(ifr.ifr_name,ifname);
+    strncpy(ifr.ifr_name,ifname, sizeof(ifr.ifr_name));
     if(-1 == ioctl(fd,SIOCGIFINDEX,&ifr))
     {
         printf("ioctl error\n");
@@ -272,7 +272,7 @@ int tun_alloc(char *dev, int flags)
     }
 
     // 一旦设备开启成功，系统会给设备分配一个名称，对于tun设备，一般为tunX，X为从0开始的编号�?    // 对于tap设备，一般为tapX
-    strcpy(dev, ifr.ifr_name);
+    strncpy(dev, ifr.ifr_name, sizeof(ifr.ifr_name));
 
     return fd;
 }
@@ -283,7 +283,7 @@ int create_dev_fd(const char *dev_name)
 	int tun_fd;
     char tun_name[IFNAMSIZ];
 
-    strcpy(tun_name, dev_name);
+    strncpy(tun_name, dev_name, IFNAMSIZ);
 
     /* Flags: IFF_TUN   - TUN device (no Ethernet headers)
      *        IFF_TAP   - TAP device

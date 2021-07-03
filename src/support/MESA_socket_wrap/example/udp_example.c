@@ -25,7 +25,7 @@ int main(void)
 
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-	bzero(&bind_addr, sizeof(bind_addr));
+	memset(&bind_addr, 0, sizeof(bind_addr));
 	bind_addr.sin_family = AF_INET;
 	bind_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	bind_addr.sin_port = htons(bind_port);

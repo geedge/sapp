@@ -272,7 +272,7 @@ thread_mem_pool_t *create_mem_pool(unsigned short D_id)
 	{	
 		//get a block
 		assigned_blk_num=D_SPACE.POWER[i];
-		target_block=(mem_info_t*)p->block_buffer_container.buffer;
+		target_block=(mem_info_t*)(p->block_buffer_container.buffer);
 		fill_empty_block(target_block,assigned_blk_num ,D_id);
 		p->block_buffer_container.buffer+=assigned_blk_num*DICTATOR_UNIT_SIZE;
 		p->block_buffer_container.available_size-=assigned_blk_num*DICTATOR_UNIT_SIZE;
@@ -328,7 +328,7 @@ void* mmap_alloc(size_t size)
 	unsigned int block_num=0;
 	unsigned long assigned_size=0;
 	block_num=calc_block_num(size+USED_MEM_HEAD_LEN);
-	assigned_size=ELF_PAGEALIGN(block_num*DICTATOR_UNIT_SIZE);
+	assigned_size=ELF_PAGEALIGN((unsigned long)block_num*DICTATOR_UNIT_SIZE);
 	block_num=assigned_size/DICTATOR_UNIT_SIZE;
 	p=get_chunk(0, block_num);
 	return D_MEM(p);
@@ -478,7 +478,7 @@ inline mem_info_t *get_block(thread_mem_pool_t *thread_info,unsigned int block_n
 #endif
 		}
 		//cut a block from buffer
-		target_block=(mem_info_t*)thread_info->block_buffer_container.buffer;
+		target_block=(mem_info_t*)(thread_info->block_buffer_container.buffer);
 		fill_empty_block(target_block, D_SPACE.POWER[assigned_chain],thread_info->D_id);
 		thread_info->block_buffer_container.buffer+=assigned_size;
 		thread_info->block_buffer_container.available_size-=assigned_size;	
@@ -500,7 +500,7 @@ void *core_alloc(thread_mem_pool_t *p_mempool,size_t size)
 	block_num=calc_block_num(size+USED_MEM_HEAD_LEN);
 	if(block_num>D_SPACE.POWER[MAX_CHAIN_NUM_SUPPORT-1])
 	{
-		assigned_size=ELF_PAGEALIGN(block_num*DICTATOR_UNIT_SIZE);
+		assigned_size=ELF_PAGEALIGN((unsigned long)block_num*DICTATOR_UNIT_SIZE);
 		block_num=assigned_size/DICTATOR_UNIT_SIZE;
 		//malloc with mmap
 		target_mem=get_chunk(p_mempool->D_id, block_num);

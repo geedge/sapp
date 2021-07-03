@@ -998,7 +998,7 @@ struct __test_inline_vxlan_hdr{
 #if 0	
 	unsigned char reserved[3];
 #else
-	unsigned char nat_type; /* 复用一个保留字�? 表示NAT类型 */
+	unsigned char nat_type; /* 复用�?个保留字�? 表示NAT类型 */
 	unsigned char reserved[2];
 #endif
 	/*--------int delim -------*/
@@ -1795,7 +1795,7 @@ static void test_inject_tcp_pkt_with_this_hdr(struct streaminfo *stream,void **p
 	raw_thdr = (struct mesa_tcp_hdr *)((char *)raw_ihdr + raw_ihdr->ip_hl*4);
 	raw_tcp_payload_len = ntohs(raw_ihdr->ip_len) - raw_ihdr->ip_hl*4 - raw_thdr->th_off * 4;
 
-	/* 当前包是C2S方向的GET, 需要回复一个虚假的S2C方向的RESPONSE */
+	/* 当前包是C2S方向的GET, �?要回复一个虚假的S2C方向的RESPONSE */
 	send_ihdr = (struct mesa_ip4_hdr *)pkt_header_payload;
 	send_thdr = (struct mesa_tcp_hdr *)((char *)send_ihdr + sizeof(struct mesa_ip4_hdr));
 
@@ -2069,7 +2069,7 @@ static char test_sapp_inject_pkt(struct streaminfo *stream,void **pme, int threa
 	ip4hdr->ip_src.s_addr = tuple_v4->saddr;
 	ip4hdr->ip_dst.s_addr = tuple_v4->daddr;
 	
-	strcpy(sapp_inject_pkt_no_hdr_payload + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), sapp_inject_pkt_exclude_payload);
+	strncpy(sapp_inject_pkt_no_hdr_payload + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), sapp_inject_pkt_exclude_payload, 200);
 
 	sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, sapp_inject_pkt_no_hdr_payload, ntohs(ip4hdr->ip_len), send_route_dir);
 	
@@ -2149,7 +2149,7 @@ char polling_inject_tcp_entry(struct streaminfo *no_stream,void **no_pme, int th
 	ip4hdr->ip_src.s_addr = tuple_v4->saddr;
 	ip4hdr->ip_dst.s_addr = tuple_v4->daddr;
 	
-	strcpy(sapp_inject_pkt_no_hdr_payload + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), "send by sapp_inject_pkt hdr");
+	strncpy(sapp_inject_pkt_no_hdr_payload + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), "send by sapp_inject_pkt hdr", 200);
 
 	int ret = sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, sapp_inject_pkt_no_hdr_payload, ntohs(ip4hdr->ip_len), 0);
 	printf("polling inject pkt dir = 0: %s, ret = %d \n", printaddr(&stream->addr, thread_seq), ret);

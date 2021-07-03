@@ -373,7 +373,7 @@ const char *printaddr (const struct layer_addr *paddrinfo,int threadindex)
 			memset(buf,0,64);
 			//strcpy (buf, int_ntoa (paddr->saddr));
 			inet_ntop(AF_INET, &paddr->saddr, ip_str, 64);
-			strcpy (buf, ip_str);
+			strncpy (buf, ip_str, 64);
 			sprintf (buf + strlen (buf), ".%u>", ntohs(paddr->source));
 			//strcat (buf, int_ntoa (paddr->daddr));
 			inet_ntop(AF_INET, &paddr->daddr, ip_str, 64);
@@ -387,7 +387,7 @@ const char *printaddr (const struct layer_addr *paddrinfo,int threadindex)
 			paddr6=(struct stream_tuple4_v6 *)(paddrinfo->paddr);
 			memset(buf,0,128);
 			inet_ntop(AF_INET6, paddr6->saddr, ip_str, 64);
-			strcpy (buf, ip_str);
+			strncpy (buf, ip_str, 64);
 			sprintf (buf + strlen (buf), ".%u>", ntohs(paddr6->source));
 			inet_ntop(AF_INET6, paddr6->daddr, ip_str, 64);
 			strcat (buf, ip_str);
@@ -401,7 +401,7 @@ const char *printaddr (const struct layer_addr *paddrinfo,int threadindex)
 			memset(buf,0,128);
 			//strcpy (buf, int_ntoa (paddr->saddr));
 			inet_ntop(AF_INET, &paddr->saddr, ip_str, 64);
-			strcpy (buf, ip_str);
+			strncpy (buf, ip_str, 64);
 			strcat (buf, ">");
 			inet_ntop(AF_INET, &paddr->daddr, ip_str, 64);
 			strcat (buf, ip_str);
@@ -413,7 +413,7 @@ const char *printaddr (const struct layer_addr *paddrinfo,int threadindex)
 			paddr6=(struct stream_tuple4_v6 *)(paddrinfo->paddr);
 			memset(buf,0,128);
 			inet_ntop(AF_INET6, paddr6->saddr, ip_str, 64);
-			strcpy (buf, ip_str);
+			strncpy (buf, ip_str, 64);
 			strcat (buf, ">");
 			inet_ntop(AF_INET6, paddr6->daddr, ip_str, 64);
 			strcat (buf, ip_str);
@@ -454,7 +454,7 @@ const char *printaddr_r(const struct layer_addr *paddrinfo, char *out_buf, int o
 		memset(buf,0,128);
 		//strcpy (buf, int_ntoa (paddr->saddr));
 		inet_ntop(AF_INET, &paddr->saddr, ip_str, 64);
-		strcpy (buf, ip_str);
+		strncpy (buf, ip_str, 64);
 		sprintf (buf + strlen (buf), ".%u>", ntohs(paddr->source));
 		//strcat (buf, int_ntoa (paddr->daddr));
 		inet_ntop(AF_INET, &paddr->daddr, ip_str, 64);
@@ -467,7 +467,7 @@ const char *printaddr_r(const struct layer_addr *paddrinfo, char *out_buf, int o
 		paddr6=(struct stream_tuple4_v6 *)(paddrinfo->paddr);
 		memset(buf,0,128);
 		inet_ntop(AF_INET6, paddr6->saddr, ip_str, 64);
-		strcpy (buf, ip_str);
+		strncpy (buf, ip_str,64);
 		sprintf (buf + strlen (buf), ".%u>", ntohs(paddr6->source));
 		inet_ntop(AF_INET6, paddr6->daddr, ip_str, 64);
 		strcat (buf, ip_str);

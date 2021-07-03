@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#if 0
+
 
 #define HASH_RND_LEN_V4	(12 ) /* 2012-08-23 LiJia add, IPv4环境下四元组最大长度 */
 #define HASH_RND_LEN_V6     (36 ) /*  2013-08-16 LiJia add, IPv6环境下四元组最大长度 */
@@ -181,6 +183,8 @@ int mkaddrhash(char *pdata,int datalen)
     //printf("\ndata=%p, datalen=%d, hash vale = %u\n",pdata, datalen, res);
     return res;
 }
+#endif
+
 #endif
 
 #ifdef __cplusplus

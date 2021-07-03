@@ -3390,7 +3390,7 @@ static int send_handle_init(int tot_thread_num)
 			int opt_value = 1;
 			setsockopt(g_send_handle[i].raw_udp_fd, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof(int));
 			struct sockaddr_in listen_addr;
-			bzero(&listen_addr, sizeof(listen_addr));
+			memset(&listen_addr, 0, sizeof(listen_addr));
 			listen_addr.sin_family = AF_INET;
 			listen_addr.sin_port = htons((unsigned short)sapp_global_val->config.packet_io.inject_mode_inline_device_sport); /* 根据配置文件填写vxlan源端口 */
 			if(bind(g_send_handle[i].raw_udp_fd, (struct sockaddr *) &listen_addr, sizeof(listen_addr)) != 0){
@@ -3455,9 +3455,12 @@ int MESA_sendpacket_ethlayer(int thread_num,const char *data, int data_len, unsi
 
 int sendpacket_init_new(int tot_thread_num)
 {
+	struct timespec curtime;
+	clock_gettime (CLOCK_THREAD_CPUTIME_ID, &curtime);
+
 	srand(time(NULL));
 
-	g_rand_seed = random();
+	g_rand_seed *= curtime.tv_nsec;
 
 	if(send_handle_init(tot_thread_num) < 0){
 		return -1;

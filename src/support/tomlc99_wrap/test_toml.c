@@ -40,7 +40,7 @@ static void test_read_int_array(void)
 	}else{
 		printf("read [server]->bind_mask succ: \n");
 		printf("[ ");
-		for(i = 0; i < num; i++){
+		for(i = 0; i < 256; i++){
 			printf("%d ", mask[i]);
 		}
 		printf("]\n");

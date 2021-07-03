@@ -71,7 +71,7 @@ static const char *MESA_trace_get_time_now(char *time_res, int len)
 	struct tm *date_loc;
 
 	if(time_res && (len < 64)){
-	    strcpy(time_res, "");
+	    strncpy(time_res, "", len);
         return "";
 	}
 	

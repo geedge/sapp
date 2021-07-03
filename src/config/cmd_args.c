@@ -55,6 +55,7 @@ static int get_dumpfile_list_array(const char *opt_arg)
 {
 	FILE *fp;
 	char *exec_result, *tobe_free_result;
+	char *save_ptr;
 
 	/* 先执行一遍, 看命令是否成功 */
 	sapp_log(10, ~0, ~0, "Executing command --dumpfile-file '%s' ... ", opt_arg);
@@ -82,7 +83,7 @@ static int get_dumpfile_list_array(const char *opt_arg)
 	tobe_free_result = exec_result;
 	sapp_global_val->cla.dumpfie_list_array = NULL;
 	
-	while(ptr_cont = strtok(exec_result, delim)){
+	while(ptr_cont = strtok_r(exec_result, delim, &save_ptr)){
 		sapp_global_val->cla.dumpfie_list_array = (char **)realloc(sapp_global_val->cla.dumpfie_list_array, sizeof(void *) * (line_num + 2));//当前要存储的指针再加上EOF
 		sapp_global_val->cla.dumpfie_list_array[line_num] = strdup(ptr_cont);;
 		

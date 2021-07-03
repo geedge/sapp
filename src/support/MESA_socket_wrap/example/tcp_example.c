@@ -101,7 +101,7 @@ void *server_thread(void *arg)
 	
 	listenfd = socket(AF_INET, SOCK_STREAM, 0);
 
-	bzero(&listen_addr, sizeof(listen_addr));
+	memset(&listen_addr, 0, sizeof(listen_addr));
 	listen_addr.sin_family = AF_INET;
 	listen_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	listen_addr.sin_port = htons(LOCAL_COMM_PORT);

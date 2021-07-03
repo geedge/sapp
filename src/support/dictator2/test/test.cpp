@@ -17,14 +17,14 @@ void mem_test(void*)
 {
 	struct test_case_t test_array[TEST_CNT];
 	int i=0;
-	for(i=0;i<TEST_CNT;i++)
+	for(i=1;i<TEST_CNT;i++)
 	{
 		test_array[i].size=i*64;
 		test_array[i].mem=malloc(test_array[i].size);
 		g_used_mem_size+=test_array[i].size;
 	}
 	sleep(10);
-	for(i=0;i<TEST_CNT;i++)
+	for(i=1;i<TEST_CNT;i++)
 	{
 		switch(i%10)
 		{

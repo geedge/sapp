@@ -68,13 +68,20 @@ static void test_mesa_sock_strerror(void)
 	}
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
-	char *dip = "10.0.6.201";
+	char *dip;
 	unsigned short dport = 9999;
 	struct sockaddr_in s_addr;
 	int i, conn_fd, ret;
 	pthread_t pid;
+
+	if(argc < 2){
+		printf("usage: %s <dest ip address>\n", argv[0]);
+		exit(0);
+	}
+
+	dip = argv[1];
 
 	test_mesa_sock_strerror();
 
@@ -118,7 +125,7 @@ int main(void)
 			}
 		}
 
-		tot_send += ret;
+		tot_send += (unsigned long)ret;
 	}
 
 	return 0;

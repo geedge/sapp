@@ -1386,7 +1386,7 @@ static int fetch_section_name(char *filename, char *section_name)
 
 	*filename = '\0';
 
-	strcpy(section_name, start_ptr);
+	strncpy(section_name, start_ptr, PLUGIN_FILENAME_MAXLEN);
 
 	return 0;
 }

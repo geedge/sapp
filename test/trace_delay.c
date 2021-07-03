@@ -342,7 +342,7 @@ const char *trace_delay_get_time_now(char *time_res, int len)
 	static char __time_str[64];
 
 	if(time_res && (len < 64)){
-	    strcpy(time_res, "");
+	    strncpy(time_res, "", len);
         return "";
 	}
 	

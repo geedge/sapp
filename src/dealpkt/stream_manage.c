@@ -500,7 +500,8 @@ int init_stream_manage(int threadcount)
 {
 	int i;
 	
-	wy_init_hash();
+	//wy_init_hash();
+	
 	for(i=0;i<MAX_TCP_STATE;i++)
 		tcp_stream_table_size+=tcpstate_num[i];
 	for(i=0;i<MAX_UDP_STATE;i++)

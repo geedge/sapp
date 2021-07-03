@@ -234,7 +234,7 @@ int getifindex(int fd,char *ifname)
 {
     struct ifreq ifr;
     memset(&ifr,0,sizeof(ifr));
-    strcpy(ifr.ifr_name,ifname);
+    strncpy(ifr.ifr_name,ifname,sizeof(ifr.ifr_name));
     if(-1 == ioctl(fd,SIOCGIFINDEX,&ifr))
     {
         printf("ioctl error\n");
@@ -673,10 +673,10 @@ static int sock_init(void)
         return -1;
     }
 
-	strcpy(phy_sock_addr.sa_data, phy_dev_name);
+	strncpy(phy_sock_addr.sa_data, phy_dev_name, sizeof(phy_sock_addr.sa_data));
 	phy_sock_addr.sa_family = PF_INET;
 
-	strcpy(tun_sock_addr.sa_data, tun_dev_name);
+	strncpy(tun_sock_addr.sa_data, tun_dev_name, sizeof(tun_sock_addr.sa_data));
 	tun_sock_addr.sa_family = PF_INET;
 
 	if(MESA_get_dev_ipv4(phy_dev_name, &local_phy_dev_ip_net) < 0){

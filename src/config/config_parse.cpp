@@ -1006,10 +1006,10 @@ void sapp_cla_override_cfg_file(void)
 	
 	if (sapp_get_cla_raw("dumpfile", &cmd_args) >= 0)
 	{ /* dumpfile模式自动覆盖interface配置 */
-		strcpy(pconfig->packet_io.depolyment_mode_str, "dumpfile");
+		strncpy(pconfig->packet_io.depolyment_mode_str, "dumpfile", NAME_MAX);
 		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
 		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
-		strcpy(pconfig->packet_io.internal.interface.type_str, "pcap");
+		strncpy(pconfig->packet_io.internal.interface.type_str, "pcap", NAME_MAX);
 		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_PCAP_DUMPFILE;
 	}
 
@@ -2383,7 +2383,7 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 	char section_string[128] = {};
 	char *cfg_key;
 	char *cfg_value;
-	const char *key_delim = "="; /* key只能用=分割, 否则会把key的值里的空格\t删除, 比如bpf filter */ 
+	const char *kname_delim = "="; /* 参数的值只能用=分割, 否则会把key的值里的空格\t删除, 比如bpf filter */ 
 	const char *section_delim = "[] \t";
 	char *key_save_ptr, *section_save_ptr;
 	FILE *fp;
@@ -2408,12 +2408,12 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 		memcpy(config_line, raw_config_line, sizeof(raw_config_line));
 		if('[' == raw_config_line[0]){ /* 以[开头表示是section段落开始 */
 			char *pure_sesion_str = strtok_r(config_line, section_delim, &section_save_ptr);
-			strcpy(section_string, pure_sesion_str);
+			strncpy(section_string, pure_sesion_str, sizeof(section_string));
 			while(strtok_r(NULL, section_delim, &section_save_ptr));
 			continue;
 		}
 
-		cfg_key = strtok_r(config_line, key_delim, &key_save_ptr);
+		cfg_key = strtok_r(config_line, kname_delim, &key_save_ptr);
 		if(NULL == cfg_key){
 			sapp_printf_colorful(RLOG_LV_FATAL, "invalid config line:%s\n", config_line);
 			continue;
@@ -2421,7 +2421,7 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 		sapp_del_last_char(cfg_key, strlen(cfg_key), ' ');
 		sapp_del_last_char(cfg_key, strlen(cfg_key), '\t');
 
-		cfg_value = strtok_r(NULL, key_delim, &key_save_ptr);
+		cfg_value = strtok_r(NULL, kname_delim, &key_save_ptr);
 		if(NULL == cfg_value){
 			sapp_printf_colorful(RLOG_LV_FATAL, "invalid config line:%s\n", config_line);
 			continue;
@@ -2429,9 +2429,9 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 
 		sapp_memmove_for_blank_table(cfg_value, strlen(cfg_value));
 
-		const char *key_value_delim = "\"'";  /* 参数的值可能被双引号保护了, 此时只能去掉引号但是不能再用空格\t分割了, 比如bpf_filter */
+		const char *kkvalue_delim = "\"'";  /* 参数的值可能被双引号保护了, 此时只能去掉引号但是不能再用空格\t分割了, 比如bpf_filter */
 		char *pure_cfg_value_save_ptr;
-		char *pure_cfg_value = strtok_r(cfg_value, key_value_delim, &pure_cfg_value_save_ptr);
+		char *pure_cfg_value = strtok_r(cfg_value, kkvalue_delim, &pure_cfg_value_save_ptr);
 		ret = sapp_config_check_update_option(local_cfg_check_attr, section_string, cfg_key, pure_cfg_value);
 		if(ret <= 0){
 			sapp_printf_colorful(RLOG_LV_FATAL, "unsupport config: [%s] -> %s\n", section_string, raw_config_line);
@@ -2440,7 +2440,7 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 			fun_ret = SAPP_MAX(fun_ret, RLOG_LV_INFO);
 		}
 
-		while(strtok_r(NULL, key_delim, &key_save_ptr));
+		while(strtok_r(NULL, kname_delim, &key_save_ptr));
 	}
 
 	return fun_ret;

@@ -349,7 +349,7 @@ int MESA_sock_has_error(int sockfd)
 	int ret, error;
 	socklen_t len;
 
-	len = sizeof(int);
+	len = sizeof(error);
 
 	ret = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len);
 	if(ret < 0){
@@ -560,6 +560,7 @@ re_send:
 				continue;
 			}else if(0 == ret ){
 				ret = MESA_SOCK_TIMEOUT;
+				goto recovery;	
 			}else{
 				goto recovery;	
 			}
@@ -573,8 +574,8 @@ re_send:
 recovery:
 	MESA_sock_recovery(sockfd, &mesa_epoll_arg);
 
-	if(count - mesa_epoll_arg.op_len > 0){ /* test if already sent some data */
-		return count - mesa_epoll_arg.op_len;
+	if((int)count - mesa_epoll_arg.op_len > 0){ /* test if already sent some data */
+		return (int)count - mesa_epoll_arg.op_len;
 	}
 	
 	return ret;
