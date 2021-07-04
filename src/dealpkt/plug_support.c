@@ -1697,11 +1697,15 @@ void *sapp_realloc(void *old_buf, int size)
     if(size <= 0){
 		return NULL;
     }
+
+    if(NULL == old_buf){ /* old_buf可以是NULL, 此时realloc等同于malloc */
+		return malloc(size);
+    }
     
     new_buf = malloc(size);
-    memcpy(new_buf, old_buf, size); /* todo: 如果size比原来大, 此处会有读越界, 怎么解决?  */
+    memcpy(new_buf, old_buf, size); /* todo: 如果size比原来大, 此处会有读越界, 原来的size拿不到, 怎么解决?  */
     free(old_buf);
-    
+
     return new_buf;
 }
 
