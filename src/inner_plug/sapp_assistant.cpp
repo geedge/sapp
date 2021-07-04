@@ -935,7 +935,7 @@ static int sapp_fs2_init(void)
 	int cfg_port;
 	int fs2_opt;
 	int cycle;
-	int send_historgram;
+	int send_historgram = 0;
 	void *fs2_handle;
 	unsigned short fs_server_port;
 	sapp_gval_individual_fixed_fs_t *pfs_para = &sapp_global_val->individual_fixed.field_stat2_para;

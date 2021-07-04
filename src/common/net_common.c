@@ -70,6 +70,10 @@ char MESA_ascii_to_hex(char ascii)
 		case 'F':
 			c = 10 + ascii - 0x41;
 		break;
+
+		default:
+			c = 0; //todo , what error number return?
+		break;
 	}
 
 	return c;
@@ -896,6 +900,9 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 		break;
 		
 		case ADDR_TYPE_PPPOE_SES:	
+			return NULL;
+		break;
+		
 		default:
 			sapp_runtime_log(20, "MESA_net_jump_to_layer(): unsupport raw_layer_type:%d in MESA_net_jump_to_layer()!\n", raw_layer_type);
 			return NULL;
@@ -1580,6 +1587,88 @@ const char *sapp_raw_ipv6_ntop(const struct mesa_ip6_hdr *ip6_hdr, char *out_buf
 	snprintf(out_buf, buf_len, "%s.%u > %s.%u", ipsrc_str, sport, ipdst_str, dport);
 
 
+	return out_buf;
+}
+
+const char *sapp_rawpkt_ntop(const raw_pkt_t *raw_pkt, int greedy_inner_layer, char *out_buf, int buf_len)
+{
+	const struct mesa_ethernet_hdr *ehdr;
+	const struct mesa_ip4_hdr *ip4hdr;
+	const struct mesa_ip6_hdr *ip6hdr;
+	const struct mesa_tcp_hdr *thdr;
+	const struct mesa_udp_hdr *uhdr;
+	char ipsrc_str[64], ipdst_str[64];
+	unsigned short sport, dport, ipid, transport_checksum;
+	unsigned char ip_pro;
+
+	if(greedy_inner_layer){
+		ip4hdr = (struct mesa_ip4_hdr *)MESA_net_jump_to_layer_greedy(raw_pkt->raw_pkt_data, (int)raw_pkt->low_layer_type, (int)ADDR_TYPE_IPV4);
+	}else{
+		ip4hdr = (struct mesa_ip4_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, (int)raw_pkt->low_layer_type, (int)ADDR_TYPE_IPV4);
+	}
+	if(ip4hdr){
+		inet_ntop(AF_INET, &ip4hdr->ip_src.s_addr, ipsrc_str, 64);
+		inet_ntop(AF_INET, &ip4hdr->ip_dst.s_addr, ipdst_str, 64);
+		ipid = ntohs(ip4hdr->ip_id);
+		ip_pro = ip4hdr->ip_p;
+
+		if(IPPROTO_TCP == ip_pro){
+			thdr = (const struct mesa_tcp_hdr *)((char *)ip4hdr + ip4hdr->ip_hl * 4);
+			sport = ntohs(thdr->th_sport);
+			dport = ntohs(thdr->th_dport);
+			transport_checksum = ntohs(thdr->th_sum);
+
+			snprintf(out_buf, buf_len, "IPv4: %s.%u > %s.%u, IPID:%u, PROTO:TCP, TCP-Checksum:0x%x",
+					ipsrc_str, sport, ipdst_str, dport, ipid, transport_checksum);		
+		}else if(IPPROTO_UDP == ip_pro){
+			uhdr = (const struct mesa_udp_hdr *)((char *)ip4hdr + ip4hdr->ip_hl * 4);
+			sport = ntohs(uhdr->uh_sport);
+			dport = ntohs(uhdr->uh_dport);
+			transport_checksum = ntohs(uhdr->uh_sum);
+			snprintf(out_buf, buf_len, "IPv4: %s.%u > %s.%u, IPID:%u, PROTO:UDP, UDP-Checksum:0x%x",
+					ipsrc_str, sport, ipdst_str, dport, ipid, transport_checksum);	
+
+		}else{
+			snprintf(out_buf, buf_len, "IPv4: %s > %s, IPID:%u, IPPROTO:%u",ipsrc_str, ipdst_str, ipid, ip_pro);				
+		}
+		
+		return out_buf;
+	}
+
+	if(greedy_inner_layer){
+		ip6hdr = (struct mesa_ip6_hdr *)MESA_net_jump_to_layer_greedy(raw_pkt->raw_pkt_data, (int)raw_pkt->low_layer_type, (int)ADDR_TYPE_IPV6);
+	}else{
+		ip6hdr = (struct mesa_ip6_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, (int)raw_pkt->low_layer_type, (int)ADDR_TYPE_IPV6);
+	}
+	if(NULL == ip6hdr){
+		return ""; /* 此次返回一个空字符串, 而不是NULL, 防止调用者不判断返回值而崩溃, 返回空串只是什么都不打印 */
+	}
+	
+	{
+		inet_ntop(AF_INET6, &ip6hdr->ip6_src, ipsrc_str, 64);
+		inet_ntop(AF_INET6, &ip6hdr->ip6_dst, ipdst_str, 64);
+		ip_pro = ip6hdr->ip6_nxt_hdr;
+
+		if(IPPROTO_TCP == ip_pro){
+			thdr = (const struct mesa_tcp_hdr *)((char *)ip6hdr + sizeof(struct mesa_ip6_hdr));
+			sport = ntohs(thdr->th_sport);
+			dport = ntohs(thdr->th_dport);
+			transport_checksum = ntohs(thdr->th_sum);
+
+			snprintf(out_buf, buf_len, "IPv6: %s.%u > %s.%u, IPID:%u, PROTO:TCP, TCP-Checksum:0x%x",
+					ipsrc_str, sport, ipdst_str, dport, ipid, transport_checksum);		
+		}else if(IPPROTO_UDP == ip_pro){
+			uhdr = (const struct mesa_udp_hdr *)((char *)ip6hdr + sizeof(struct mesa_ip6_hdr));
+			sport = ntohs(uhdr->uh_sport);
+			dport = ntohs(uhdr->uh_dport);
+			transport_checksum = ntohs(uhdr->uh_sum);
+			snprintf(out_buf, buf_len, "IPv6: %s.%u > %s.%u, IPID:%u, PROTO:UDP, UDP-Checksum:0x%x",
+					ipsrc_str, sport, ipdst_str, dport, ipid, transport_checksum);	
+
+		}else{
+			snprintf(out_buf, buf_len, "IPv6: %s > %s, IPPROTO:%u",ipsrc_str, ipdst_str, ip_pro);				
+		}
+	}
 	return out_buf;
 }
 

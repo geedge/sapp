@@ -151,7 +151,7 @@ retry:
 			switch(errno){
 				case EAGAIN:
 					if(0 == g_use_MESA_sleep_sw){
-						usleep(1);
+						sapp_usleep(1);
 					}else{
 						MESA_sleep();
 					}	
@@ -213,7 +213,7 @@ static void *cycle_pkt_dump_check_father(void *arg)
 		if(1 == getppid()){ /* 父进程变为init, 说明主进程已经退出 */
 			exit(1);
 		}else{
-			usleep(100000);
+			sapp_usleep(100000);
 		}
 	}
 
@@ -769,7 +769,7 @@ static int cycle_pkt_dump_child_init(void)
 		listen(G_UNIX_DOMAIN_SD[i], 10);
 	}
 
-	usleep(10000);
+	sapp_usleep(10000);
 
 	for(i = 0; i < g_packet_io_thread_num; i++){
 		ret = read(G_UNIX_DOMAIN_SD[i], test_buf, 1024); /* 阻塞等待捕包进程的数据, 正确返回说明连接正常 */
@@ -876,7 +876,7 @@ static void cycle_pkt_dump_exec(int argc, char *argv[])
 		}		
 		prctl(PR_SET_NAME, PKT_DUMP_PROCESS_NAME, 0, 0, 0);
 	}else if(pid > 0){
-		usleep(50000);
+		sapp_usleep(50000);
 		if(cycle_pkt_dump_father_init() < 0){
 			printf("cycle pkt dump init error!\n");
 			exit(1);
@@ -891,7 +891,7 @@ static void cycle_pkt_dump_exec(int argc, char *argv[])
 		if(G_PKT_DUMP_PER_THREAD_SW[i] != 0){
 			thread_seq[i] = i;
 			pthread_create(&thread_id[i], NULL, cycle_pkt_dump_thread, &thread_seq[i]);
-			usleep(100);
+			sapp_usleep(100);
 		}
 	}
 
@@ -1016,7 +1016,7 @@ static int cycle_pkt_dump_set_file_size(long total_files_size, long file_size_pe
 	cur_files_size = cycle_pkt_dump_get_cur_files_size();
 	if(cur_files_size < 0 || cur_files_size >= total_files_size){
 		printf("\033[33m[Warning]pkt_dump is enable, but current files size is more than 'pkt_dump_total_size', disable pktdump!\033[0m\n");
-		usleep(100000);
+		sapp_usleep(1000);
 		G_PKT_DUMP_SW = 0;
 		return -1;
 	}
@@ -1024,7 +1024,7 @@ static int cycle_pkt_dump_set_file_size(long total_files_size, long file_size_pe
 	cur_enable_thread_num = cycle_pkt_dump_get_cur_enable_thread();
 	if(0 == cur_enable_thread_num){
 		printf("\033[33m[Warning]pkt_dump is enable, but enable thread number is 0, disable pktdump!\033[0m\n");
-		usleep(100000);
+		sapp_usleep(1000);
 		return -1;
 	}
 
@@ -1286,7 +1286,7 @@ err_exit:
 	
 	/* 可单独按线程指定捕包, 每次恢复默认值 */
 	memset(G_PKT_DUMP_PER_THREAD_SW, 0,  sizeof(G_PKT_DUMP_PER_THREAD_SW));
-	usleep(1000 * 500); /* 延时释放, 避免有线程正在使用BPF过滤器 */
+	sapp_usleep(1000 * 500); /* 延时释放, 避免有线程正在使用BPF过滤器 */
 	for(i = 0; i <  (unsigned int )g_packet_io_thread_num + sapp_global_val->config.cpu.send_only_threads_max_num; i++){
 		pcap_freecode(&G_PKT_DUMP_BPF_FILTER[i]);
 		pkt_dump_mthread_info[i].sample_pkt_num = 0;

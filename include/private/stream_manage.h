@@ -119,6 +119,7 @@ typedef struct _stStreamFunInfo
 {
 	char appState;
 	int funtype;/* 2014-12-31 lqy add */
+	int entry_id; /* 全局唯一的id, 用于每个插件入口函数的执行时间统计 */
 	char (*pfun)(void);
 	void *pAppInfo;
 	struct _stStreamFunInfo *next;

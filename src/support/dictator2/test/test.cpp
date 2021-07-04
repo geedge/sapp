@@ -4,6 +4,7 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
+#if 0 // for EAL check, Delete code temporary
 #define	TEST_CNT	(8)
 #define	TEST_THREAD	(4)
 struct test_case_t
@@ -44,11 +45,14 @@ void mem_test(void*)
 				break;
 		}
 	}
-	
+
+	for(i=1;i<TEST_CNT;i++){
+		free(test_array[i].mem);
+	}
 }
 int main(int argc,char* argv[])
 {
-	pthread_t	 thread_desc;
+	pthread_t	 thread_desc[TEST_THREAD];
 	pthread_attr_t attr;
 	int i=0;
 	memset(&thread_desc, 0, sizeof(thread_desc));
@@ -66,13 +70,21 @@ int main(int argc,char* argv[])
 	}
 	for(i=0;i<TEST_THREAD;i++)
 	{
-		if(0 != pthread_create(&(thread_desc), &(attr), (void *(*)(void *))(mem_test), NULL))
+		if(0 != pthread_create(&(thread_desc[i]), &(attr), (void *(*)(void *))(mem_test), NULL))
 		{
 			fprintf(stderr,"pthread_create(): %d %s", errno, strerror(errno));
 			pthread_attr_destroy(&(attr));
 			return -1;
 		}
 	}
-	sleep(500);
+	sleep(5);
 	return 0;
 }
+#else
+int main(int argc,char* argv[])
+{
+	return 0;
+}
+
+#endif
+

@@ -138,7 +138,7 @@
 [profiling.pkt_latency]
     enabled=0
 ### note, threshold unit is microseconds (us)
-    threshold=1000000
+    threshold=100000
 	
     [profiling.sanity_check]
     raw_pkt_broken_enabled=0

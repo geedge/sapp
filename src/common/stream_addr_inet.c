@@ -220,7 +220,7 @@ static int __addr_pure_tcp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -230,7 +230,7 @@ static int __addr_pure_tcp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -260,7 +260,7 @@ static int __addr_tcpv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -270,7 +270,7 @@ static int __addr_tcpv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -318,7 +318,7 @@ static int __addr_tcpv6_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -328,7 +328,7 @@ static int __addr_tcpv6_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -376,7 +376,7 @@ static int __addr_pure_udp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -386,7 +386,7 @@ static int __addr_pure_udp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -416,7 +416,7 @@ static int __addr_udpv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -426,7 +426,7 @@ static int __addr_udpv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -474,7 +474,7 @@ static int __addr_udpv6_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -484,7 +484,7 @@ static int __addr_udpv6_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -749,7 +749,7 @@ static int __addr_pptp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -759,7 +759,7 @@ static int __addr_pptp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -798,14 +798,14 @@ static int __addr_gtp_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	gtpaddr->teid_c2s = htonl(temp);
 
 	item = strtok_r(NULL, "-", &save_ptr);
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	gtpaddr->teid_s2c = htonl(temp);	
 
     addr_bin_val->stream.addr.addrtype = ADDR_TYPE_GPRS_TUNNEL;
@@ -835,26 +835,26 @@ static int __addr_vxlan_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val
 	if(NULL == vxlan_struct_item){
 		return -1;
 	}
-	vxlan_bin_addr->vlan_id = atoi(vxlan_struct_item);
+	vxlan_bin_addr->vlan_id = strtol(vxlan_struct_item, NULL, 10);
 
 	vxlan_struct_item = strtok_r(NULL, delim, &save_ptr);
 	if(NULL == vxlan_struct_item){
 		return -1;
 	}
-	vxlan_bin_addr->dir = atoi(vxlan_struct_item);
+	vxlan_bin_addr->dir = strtol(vxlan_struct_item, NULL, 10);
 
 
 	vxlan_struct_item = strtok_r(NULL, delim, &save_ptr);
 	if(NULL == vxlan_struct_item){
 		return -1;
 	}
-	vxlan_bin_addr->link_id = atoi(vxlan_struct_item);
+	vxlan_bin_addr->link_id = strtol(vxlan_struct_item, NULL, 10);
 
 	vxlan_struct_item = strtok_r(NULL, delim, &save_ptr);
 	if(NULL == vxlan_struct_item){
 		return -1;
 	}
-	vxlan_bin_addr->link_type = atoi(vxlan_struct_item);
+	vxlan_bin_addr->link_type = strtol(vxlan_struct_item, NULL, 10);
 
 
 	return 0;
@@ -873,7 +873,7 @@ static int __addr_sockv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_va
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -883,7 +883,7 @@ static int __addr_sockv4_pton(char *addr_str, addr_continuous_bin_t *addr_bin_va
 	if(NULL == item){
 		goto err;
 	}
-	temp = atoi(item);
+	temp = strtol(item, NULL, 10);
 	if(temp < 0 || temp > 65535){
 		goto err;
 	}
@@ -1966,6 +1966,10 @@ const char *__layer_addr_prefix_ntop_pad(const struct streaminfo_private *pstrea
 		case ADDR_TYPE_VLAN:
 			addr_prefix = "_PAD_VLAN";
 		break;		
+
+		default:
+			addr_prefix = NULL;
+		break;
 	}
 
 	return addr_prefix;

@@ -405,6 +405,10 @@ char *sapp_memmove_for_blank_table(char *data, int max_len);
 void del_last_rn(char *data, int max_len);
 void sapp_printf_colorful(int level, const char *format, ...);
 int set_transport_addr(struct streaminfo *this_stream, int enable_well_known_port, UINT16 sport, UINT16 dport);
+long long sapp_random(void);
+int sapp_usleep(int usec);
+void *sapp_realloc(void *old_buf, int size) ;
+
 
 #ifdef __cplusplus
 }

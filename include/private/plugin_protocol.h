@@ -16,6 +16,7 @@ typedef struct _plugin_protocol_fun_info
 	int plugid;
 	int aliveflag;										//业务层插件是否被卸载标记，被卸载的函数不再给新会话调用
 	int callnum;										//入口函数被会话调用次数，只有当没有被调用时，才能卸载该插件
+	int entry_id; 			/* 全局唯一的id, 用于每个插件入口函数的执行时间统计 */
 	long long protocol_flag;							//需要解析层解析字段flag标志
 	AppEntry appentry;								//入口函数
 	char biz_plug_name[PLUGIN_FILENAME_MAXLEN];		//业务层插件名称

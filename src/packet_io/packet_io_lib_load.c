@@ -305,13 +305,13 @@ int packet_io_lib_load(int cap_mode)
 			printf("\033[33mPlease copy newest packet_io library to './platform_lib/'\033[0m\n");
 
 			/* 可能某些情况下需要新旧几个版本对比测试, 应该允许不一样的版本运行, 但要打印警告提示 */
-			usleep(1000*100);
+			sapp_usleep(1000*100);
 			printf("\033[33m[Warning]Run anyway, are you sure? \033[0m\n");
-			usleep(1000*500);
+			sapp_usleep(1000*500);
 			printf("\033[33m[Warning]Run anyway, are you sure??? \033[0m\n");	
-			usleep(1000*1000);
+			sleep(1);
 			printf("\033[33m[Warning]Run anyway, are you sure????? \033[0m\n");
-			usleep(1000*2000);	
+			sleep(2);	
 			printf("\033[33m[Warning]Run anyway, platform action is unpredictable!\033[0m\n");			
 		}
 	}

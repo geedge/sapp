@@ -23,7 +23,7 @@
 #endif
 
 static char *devname = "xxx";
-static char *devip = "169.254.1.1";
+static char *devip = "xxx";
 static char *devmac = "FF:FF:FF:FF:FF:FF";
 
 static unsigned int local_dev_ip_bin; /* network order */
@@ -69,6 +69,10 @@ static char nf_ascii_to_hex(char ascii)
 		case 'E':
 		case 'F':
 			c = 10 + ascii - 0x41;
+		break;
+
+		default:
+			c = 0;
 		break;
 	}
 
@@ -333,7 +337,7 @@ static struct nf_hook_ops stb_hook = {
 
 static int __init init_nf (void)
 {
-	if(strncasecmp(devip, "169.254.1.1", strlen("169.254.1.1")) == 0){
+	if(strncasecmp(devip, "xxx", strlen("xxx")) == 0){
 		printk (KERN_ERR "sapp_tun_bridge init error, must set devip!\n");
 		printk (KERN_ERR "Usage: insmod sapp_tun_bridge.ko devname=\"eth0\" devip=\"x.x.x.x\" devmac=\"xx:xx:xx:xx:xx:xx\"!\n");
 		return -1;

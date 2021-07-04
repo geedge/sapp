@@ -11,9 +11,20 @@
 #include <pthread.h>
 #include <errno.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 #define SOCK_BUF_LEN		(65536)
-static unsigned short LOCAL_COMM_PORT = 11999;
+static unsigned short LOCAL_COMM_PORT = 8080;
+
+
+static long long gen_random(void)
+{
+	struct timespec curtime;
+
+	clock_gettime(CLOCK_MONOTONIC, &curtime);
+
+	return (curtime.tv_nsec * 131) ^ curtime.tv_sec;
+}
 
 
 static void test_communication(int connfd, const char *whoami)
@@ -22,8 +33,8 @@ static void test_communication(int connfd, const char *whoami)
 	char buf[SOCK_BUF_LEN];
 
 	while(1){
-		rand_len = rand() % SOCK_BUF_LEN + 1;
-		rand_time = rand() % 1000 + 100;
+		rand_len = gen_random() % SOCK_BUF_LEN + 1;
+		rand_time = gen_random() % 1000 + 100;
 	
 		ret = MESA_sock_greedy_read(connfd, buf, rand_len, rand_time);
 		if(0 == ret){
@@ -39,10 +50,10 @@ static void test_communication(int connfd, const char *whoami)
 			}
 		}
 
-		usleep(rand() % 500000 + 500000);
+		sleep(1);
 
-		rand_len = rand() % SOCK_BUF_LEN + 1;
-		rand_time = rand() % 1000 + 100;
+		rand_len = gen_random() % SOCK_BUF_LEN + 1;
+		rand_time = gen_random() % 1000 + 100;
 		
 		ret = MESA_sock_force_write(connfd, buf, rand_len, rand_time);
 		if(0 == ret){
@@ -62,11 +73,14 @@ static void test_communication(int connfd, const char *whoami)
 			}
 		}
 
-		usleep(rand() % 500000 + 500000);
+		sleep(1);
 	}
 
 	return;
 }
+
+static const char *server_ip_addr;
+
 
 void *client_thread(void *arg)
 {
@@ -79,7 +93,7 @@ void *client_thread(void *arg)
 	memset(&conn_addr, 0, sizeof(conn_addr));
 	conn_addr.sin_family = AF_INET;
 	conn_addr.sin_port = htons(LOCAL_COMM_PORT);
-	inet_pton(AF_INET, "10.0.6.205", &conn_addr.sin_addr.s_addr);
+	inet_pton(AF_INET, server_ip_addr, &conn_addr.sin_addr.s_addr);
 
 	ret = MESA_sock_connect(connfd, (const struct sockaddr *)&conn_addr, sizeof(struct sockaddr_in), 2000);
 	if(ret < 0){
@@ -91,6 +105,7 @@ void *client_thread(void *arg)
 
 	return NULL;
 }
+
 
 void *server_thread(void *arg)
 {
@@ -129,19 +144,23 @@ void *server_thread(void *arg)
 	return NULL;
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	pthread_t cpid,spid;
 
-	srand(time(NULL));
+	if(argc < 2){
+		printf("usage: %s <server_ip>\n", argv[0]);
+		exit(0);
+	}
+
+	server_ip_addr = argv[1];
 
 	pthread_create(&spid, NULL, server_thread, NULL);
 	sleep(1);
 	pthread_create(&cpid, NULL, client_thread, NULL);
 
 	while(1){
-		sleep(3);
-		srand(time(NULL));
+		sleep(1);
 	}
 	
 	return 0;

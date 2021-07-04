@@ -34,6 +34,10 @@ SYM_HIDDEN char *ddos_type_n2p(unsigned int ddos_type)
 		case AFH_ATTACK_DDOS_NTP:
 			ddos_str = "ddos_ntp";
 		break;
+
+		default:
+			ddos_str = "Unknown";
+		break;
 	}
 
 	return "Unknown";

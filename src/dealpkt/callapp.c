@@ -71,7 +71,7 @@ extern "C" char callIpApp_old(struct streaminfo *pstream,int routedir, int threa
 extern void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq);
 
 /* 2014-12-31 lqy add */
-int stream_register_funtoArray(int funtype,char (*x)(void),stFunArray *pArrary,int *pNum)
+int stream_register_funtoArray(int funtype,char (*x)(void),stFunArray *pArrary,int *pNum, int plug_entry_id)
 {
 	if(*pNum>=MAX_FUN_NUM)
 	{
@@ -82,58 +82,59 @@ int stream_register_funtoArray(int funtype,char (*x)(void),stFunArray *pArrary,i
 	
 	pArrary[(*pNum)].funtype=funtype;
 	pArrary[(*pNum)].pfun=x;
+	pArrary[(*pNum)].entry_id = plug_entry_id;
 	(*pNum)++;
 	return 0;
 }
 
-int stream_register_fun(int funtype,char (*x)(void))
+int stream_register_fun(int funtype,char (*x)(void), int plug_entry_id)
 {
 	int ret=0;
 	switch(funtype)
 	{
 		case FUN_TYPE_IPV4:
-			ret=stream_register_funtoArray(FUN_TYPE_IPV4,x,g_Ipv4Fun,&g_Ipv4FunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_IPV4,x,g_Ipv4Fun,&g_Ipv4FunNum, plug_entry_id);
 			break;
 		case FUN_TYPE_IPV4_FRAG:
-			ret=stream_register_funtoArray(FUN_TYPE_IPV4_FRAG,x,g_Ipv4FragFun,&g_Ipv4FragFunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_IPV4_FRAG,x,g_Ipv4FragFun,&g_Ipv4FragFunNum, plug_entry_id);
 			break;	
 		case FUN_TYPE_IPV6_FRAG:
-			ret=stream_register_funtoArray(FUN_TYPE_IPV6_FRAG,x,g_Ipv6FragFun,&g_Ipv6FragFunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_IPV6_FRAG,x,g_Ipv6FragFun,&g_Ipv6FragFunNum, plug_entry_id);
 			break;				
 		case FUN_TYPE_IPV6:
-			ret=stream_register_funtoArray(FUN_TYPE_IPV6,x,g_Ipv6Fun,&g_Ipv6FunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_IPV6,x,g_Ipv6Fun,&g_Ipv6FunNum, plug_entry_id);
 			break;
 		case FUN_TYPE_TCP:
-			ret=stream_register_funtoArray(FUN_TYPE_TCP,x,g_StreamTcpFun,&g_StreamTcpFunNum);;
+			ret=stream_register_funtoArray(FUN_TYPE_TCP,x,g_StreamTcpFun,&g_StreamTcpFunNum, plug_entry_id);
 			break;
 		case FUN_TYPE_TCPALL:
-			ret=stream_register_funtoArray(FUN_TYPE_TCPALL,x,g_StreamTcpAllFun,&g_StreamTcpAllFunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_TCPALL,x,g_StreamTcpAllFun,&g_StreamTcpAllFunNum, plug_entry_id);
 			break;
 		case FUN_TYPE_UDP:
-			ret=stream_register_funtoArray(FUN_TYPE_UDP,x,g_StreamUdpFun,&g_StreamUdpFunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_UDP,x,g_StreamUdpFun,&g_StreamUdpFunNum, plug_entry_id);
 			break;
 		case FUN_TYPE_IPV4_RAW:
-			ret=stream_register_funtoArray(FUN_TYPE_IPV4_RAW,x,g_Ipv4Fun,&g_Ipv4FunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_IPV4_RAW,x,g_Ipv4Fun,&g_Ipv4FunNum, plug_entry_id);
 			break;
 		case FUN_TYPE_IPV4_FRAG_RAW:
-			ret=stream_register_funtoArray(FUN_TYPE_IPV4_FRAG_RAW,x,g_Ipv4FragFun,&g_Ipv4FragFunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_IPV4_FRAG_RAW,x,g_Ipv4FragFun,&g_Ipv4FragFunNum, plug_entry_id);
 			break;			
 		case FUN_TYPE_IPV6_RAW:
-			ret=stream_register_funtoArray(FUN_TYPE_IPV6_RAW,x,g_Ipv6Fun,&g_Ipv6FunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_IPV6_RAW,x,g_Ipv6Fun,&g_Ipv6FunNum, plug_entry_id);
 			break;
 		case FUN_TYPE_IPV6_FRAG_RAW:
-			ret=stream_register_funtoArray(FUN_TYPE_IPV6_FRAG_RAW,x,g_Ipv6FragFun,&g_Ipv6FragFunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_IPV6_FRAG_RAW,x,g_Ipv6FragFun,&g_Ipv6FragFunNum, plug_entry_id);
 			break;			
 		case FUN_TYPE_TCP_RAW:
-			ret=stream_register_funtoArray(FUN_TYPE_TCP_RAW,x,g_StreamTcpFun,&g_StreamTcpFunNum);;
+			ret=stream_register_funtoArray(FUN_TYPE_TCP_RAW,x,g_StreamTcpFun,&g_StreamTcpFunNum, plug_entry_id);
 			break;
 
 		case FUN_TYPE_TCPALL_RAW:
-			ret=stream_register_funtoArray(FUN_TYPE_TCPALL_RAW,x,g_StreamTcpAllFun,&g_StreamTcpAllFunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_TCPALL_RAW,x,g_StreamTcpAllFun,&g_StreamTcpAllFunNum, plug_entry_id);
 			break;
 
 		case FUN_TYPE_UDP_RAW:
-			ret=stream_register_funtoArray(FUN_TYPE_UDP_RAW,x,g_StreamUdpFun,&g_StreamUdpFunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_UDP_RAW,x,g_StreamUdpFun,&g_StreamUdpFunNum, plug_entry_id);
 			break;	
 
 		case FUN_TYPE_PHONY:
@@ -143,7 +144,7 @@ int stream_register_fun(int funtype,char (*x)(void))
 			break;
 
 		case FUN_TYPE_POLLING:
-			ret=stream_register_funtoArray(FUN_TYPE_POLLING, x, g_PollingFun,&g_PollingFunNum);
+			ret=stream_register_funtoArray(FUN_TYPE_POLLING, x, g_PollingFun,&g_PollingFunNum, plug_entry_id);
 			break;
 			
 		default:
@@ -155,75 +156,88 @@ int stream_register_fun(int funtype,char (*x)(void))
 
 int stream_register_ip (IPv4_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_IPV4,(char (*)())x,g_Ipv4Fun,&g_Ipv4FunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_IPV4,(char (*)())x,g_Ipv4Fun,&g_Ipv4FunNum,0);
 }
 
 int stream_register_ip_frag (IPv4_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_IPV4_FRAG,(char (*)())x,g_Ipv4FragFun,&g_Ipv4FragFunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_IPV4_FRAG,(char (*)())x,g_Ipv4FragFun,&g_Ipv4FragFunNum,0);
 }
 
 int stream_register_ip_raw (SAPP_PKT_CB_FUN_T  x)
 {
-	return stream_register_funtoArray(FUN_TYPE_IPV4_RAW,(char (*)())x,g_Ipv4Fun,&g_Ipv4FunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_IPV4_RAW,(char (*)())x,g_Ipv4Fun,&g_Ipv4FunNum,0);
 }
 
 int stream_register_ipv4_frag_raw (SAPP_PKT_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_IPV4_FRAG_RAW,(char (*)())x,g_Ipv4FragFun,&g_Ipv4FragFunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_IPV4_FRAG_RAW,(char (*)())x,g_Ipv4FragFun,&g_Ipv4FragFunNum,0);
 }
 
 int stream_register_ipv6 (IPv6_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_IPV6,(char (*)())x,g_Ipv6Fun,&g_Ipv6FunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_IPV6,(char (*)())x,g_Ipv6Fun,&g_Ipv6FunNum, 0);
 }
 
 int stream_register_ipv6_frag(IPv4_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_IPV6_FRAG,(char (*)())x,g_Ipv6FragFun,&g_Ipv6FragFunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_IPV6_FRAG,(char (*)())x,g_Ipv6FragFun,&g_Ipv6FragFunNum,0);
 }
 
 int stream_register_ipv6_raw (SAPP_PKT_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_IPV6_RAW,(char (*)())x,g_Ipv6Fun,&g_Ipv6FunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_IPV6_RAW,(char (*)())x,g_Ipv6Fun,&g_Ipv6FunNum, 0);
 }
 
 int stream_register_ipv6_frag_raw (IPv4_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_IPV6_FRAG_RAW,(char (*)())x,g_Ipv6FragFun,&g_Ipv6FragFunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_IPV6_FRAG_RAW,(char (*)())x,g_Ipv6FragFun,&g_Ipv6FragFunNum,0);
 }
 
 int stream_register_tcp (STREAM_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_TCP,(char (*)())x,g_StreamTcpFun,&g_StreamTcpFunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_TCP,(char (*)())x,g_StreamTcpFun,&g_StreamTcpFunNum, 0);
 }
 
 
 int stream_register_tcp_allpkt (STREAM_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_TCPALL,(char (*)())x,g_StreamTcpAllFun,&g_StreamTcpAllFunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_TCPALL,(char (*)())x,g_StreamTcpAllFun,&g_StreamTcpAllFunNum, 0);
 
 }
 int stream_register_udp (STREAM_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_UDP,(char (*)())x,g_StreamUdpFun,&g_StreamUdpFunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_UDP,(char (*)())x,g_StreamUdpFun,&g_StreamUdpFunNum, 0);
 }
 
 
 int stream_register_tcp_raw(SAPP_STREAM_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_TCP_RAW,(char (*)())x,g_StreamTcpFun,&g_StreamTcpFunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_TCP_RAW,(char (*)())x,g_StreamTcpFun,&g_StreamTcpFunNum, 0);
 }
-
 
 int stream_register_tcp_allpkt_raw(SAPP_STREAM_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_TCPALL_RAW,(char (*)())x,g_StreamTcpAllFun,&g_StreamTcpAllFunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_TCPALL_RAW,(char (*)())x,g_StreamTcpAllFun,&g_StreamTcpAllFunNum, 0);
 
 }
 int stream_register_udp_raw(SAPP_STREAM_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_UDP_RAW,(char (*)())x,g_StreamUdpFun,&g_StreamUdpFunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_UDP_RAW,(char (*)())x,g_StreamUdpFun,&g_StreamUdpFunNum, 0);
 }
 
 
@@ -240,17 +254,20 @@ int stream_register_tcp_takeover (STREAM_CB_FUN_T x)
 
 int stream_register_arp(SAPP_PKT_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_ARP,(char (*)())x, g_ArpFun, &g_ArpFunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_ARP,(char (*)())x, g_ArpFun, &g_ArpFunNum, 0);
 }
 
 int stream_register_overlay_ip(IPv4_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_IPV4,(char (*)())x,g_OverlayIpv4Fun,&g_OverlayIpv4FunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_IPV4,(char (*)())x,g_OverlayIpv4Fun,&g_OverlayIpv4FunNum, 0);
 }
 
 int stream_register_overlay_udp(STREAM_CB_FUN_T x)
 {
-	return stream_register_funtoArray(FUN_TYPE_UDP,(char (*)())x,g_OverlayUdpFun,&g_OverlayUdpFunNum);
+	//to do, call plug_mange_get_entry_id() 
+	return stream_register_funtoArray(FUN_TYPE_UDP,(char (*)())x,g_OverlayUdpFun,&g_OverlayUdpFunNum, 0);
 }
 
 
@@ -261,10 +278,12 @@ int stream_register_overlay_udp(STREAM_CB_FUN_T x)
 #if 0
 int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const void *raw_pkt,int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate)
 #else
-//20170525 liuy add for wy serical
 char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo *a_stream,const void *transport_hdr,int thread_seq,const void *a_packet)
 {
 	char rec;
+	struct timespec before_ts, after_ts;
+	long long time_spent_us;
+	char debug_raw_pkt_string[256];
 
 #if SAPP_INSECTICIDE
 	const struct streaminfo_private *stream_pr = (const struct streaminfo_private *)a_stream;
@@ -274,12 +293,10 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 	}
 #endif
 
-#if 0
-	if(g_business_plug_info!=NULL)
-	{
-		plug_record_start_time(g_business_plug_info->plugid, thread_seq);
+	if(g_timestamp_record_sw){
+		clock_gettime(CLOCK_REALTIME, &before_ts);
 	}
-#endif
+
 	if(type==CALL_FUN_TYPE_RAW)
 	{
 		rec=((SAPP_STREAM_FUN_T)pFunInfo->pfun)(a_stream,transport_hdr,a_packet,&(pFunInfo->pAppInfo));
@@ -289,12 +306,23 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 		rec=((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),thread_seq, a_packet);
 	}
 
-#if 0	
-	if(g_business_plug_info!=NULL)
-	{
-		plug_record_end_time(g_business_plug_info->plugid, thread_seq);
-	}
-#endif	
+	if(g_timestamp_record_sw){
+		clock_gettime(CLOCK_REALTIME, &after_ts);
+		time_spent_us = (after_ts.tv_sec*1000000000 + after_ts.tv_nsec)/1000 - (before_ts.tv_sec*1000000000 + before_ts.tv_nsec)/1000;
+		if(time_spent_us >= g_timestamp_record_threshold){
+			if(NULL == a_packet ){
+				sapp_runtime_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, pkt process latency:%lld us", 
+								g_plug_global_entry[pFunInfo->entry_id].plug_name, 
+								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, time_spent_us);
+			}else{
+				const struct streaminfo_private *stream_pr = (struct streaminfo_private *)a_stream;
+				sapp_runtime_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, pkt process latency:%lld us, %s", 
+								g_plug_global_entry[pFunInfo->entry_id].plug_name, 
+								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, time_spent_us,
+								sapp_rawpkt_ntop(stream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string)));
+			}				
+		}		
+	}	
 
 #if SAPP_INSECTICIDE
 	if(a_packet != NULL){
@@ -302,12 +330,6 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 		assert(RAW_PKT_MAGIC_NUM == stream_pr->raw_pkt->magic_num);
 	}
 #endif
-
-/*	if(g_business_plug_type==PLUGTYPE_JC)
-	{
-		rec=rec|APP_STATE_DROPPKT;
-	}
-*/
 	return rec;
 }
 
@@ -338,11 +360,7 @@ char plugin_call_ipentry(int type,IPv4_CB_FUN_T stream_fun,SAPP_PKT_CB_FUN_T sap
 
 	}
 #endif	
-/*	if(g_business_plug_type==PLUGTYPE_JC)
-	{
-		rec=rec|APP_STATE_DROPPKT;
-	}
-*/
+
 	return rec;
 }
 
@@ -424,6 +442,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 			pFunInfo->pAppInfo=NULL;
 			pFunInfo->funtype=pfunAarry[i].funtype;
 			pFunInfo->pfun=pfunAarry[i].pfun;
+			pFunInfo->entry_id=pfunAarry[i].entry_id;
 			pFunInfo->next=NULL;
 			//add by lqy 20141230
 			//注意如下的只有是stream_raw类型的函数，函数调用不一样

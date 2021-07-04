@@ -11,6 +11,17 @@ extern "C" {
 
 #define MESA_TRACE_LOG	"./log/MESA_path_trace.log"
 
+
+static long long trace_gen_random(void)
+{
+	struct timespec curtime;
+
+	clock_gettime(CLOCK_MONOTONIC, &curtime);
+
+	return (curtime.tv_nsec * 131) ^ curtime.tv_sec;
+}
+
+
 /*
 	参数说明:
 		dstip_net_order: 数据包目标IP地址, 网络序;
@@ -86,7 +97,7 @@ static const char *MESA_trace_get_time_now(char *time_res, int len)
 static void MESA_trace_write_log(struct streaminfo *a_udp)
 {
 	FILE *fp;
-	time_t tm_now;
+	//time_t tm_now;
 	char time_str[64];
 	char ip_src_str[64], ip_dst_str[64];
 	unsigned short sport, dport;
@@ -107,7 +118,7 @@ static void MESA_trace_write_log(struct streaminfo *a_udp)
 		dport = ntohs(a_udp->addr.tuple4_v6->dest);
 	}
 	
-	tm_now = time(NULL);
+	//tm_now = time(NULL);
 	
 	fprintf(fp, "%s, recv MESA trace packet: %s.%u ---> %s.%u\n",  
 		  MESA_trace_get_time_now(time_str, 64), 
@@ -173,7 +184,7 @@ int main(void)
 	while(1){
 		test_addr.ip_addr_type = 4;
 		test_addr.ipv4_dst = 0x12345678;
-		MESA_path_trace_build_payload(&test_addr, buf, 1024, rand());
+		MESA_path_trace_build_payload(&test_addr, buf, 1024, trace_gen_random());
 
 		if(times & 1){
 			buf[0] = 0; /* 故意修改数据 */
@@ -187,7 +198,7 @@ int main(void)
 
 		test_addr.ip_addr_type = 6;
 		inet_pton(AF_INET6, "2002:1234:10:0:6:229", &test_addr.ipv6_dst);
-		MESA_path_trace_build_payload(&test_addr, buf, 1024, rand());
+		MESA_path_trace_build_payload(&test_addr, buf, 1024, trace_gen_random());
 
 		if(times & 1){
 			buf[0] = 0; /* 故意修改数据 */

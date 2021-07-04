@@ -36,12 +36,15 @@ struct plug_manage_key_t{
 };
 
 /* 
+	根据插件的名称和入口函数名称, 找到入口函数在内存中的地址.
    key : plug name, and plug entry name(TCP, UDP, HTTP, etc),
    data: entry function addr; 
 */
 static MESA_htable_handle g_plug_manage_htable;
 
 
+plug_global_entry_t g_plug_global_entry[MAX_PLUG_ENTRY_NUM];
+static int g_plug_global_entry_index;
 /*
 	TODO1:
 		插件加载失败是否退�? 取决于g_plug_uniq_htable中的necessary是否设置;
@@ -65,6 +68,25 @@ static MESA_htable_handle g_plug_manage_htable;
 		而且, 一个tcp流里可能有多个http session, 每个http session又对应了一个业务插件的pme调用�? 且只有解析层插件自己知道这个结构, 
 		仅在sapp内部, 目前是不可能找到解析层上挂载的每个业务层插件pme�?!!	
 */
+
+
+int plug_mange_get_entry_id(const char *plug_name, const char *plug_entry_name)
+{
+	int this_entry_id;
+	
+	if(g_plug_global_entry_index >= MAX_PLUG_ENTRY_NUM){
+		sapp_runtime_log(RLOG_LV_FATAL, "plug entry number overflow! no valid id for %s->%s\n", plug_name, plug_entry_name);
+		return -1;
+	}
+	this_entry_id = g_plug_global_entry_index;
+	g_plug_global_entry[this_entry_id].entry_id = this_entry_id;
+	g_plug_global_entry[this_entry_id].plug_name =  sapp_strdup(plug_name);
+	g_plug_global_entry[this_entry_id].plug_entry_name =  sapp_strdup(plug_entry_name);
+
+	g_plug_global_entry_index++;
+	
+	return this_entry_id;
+}
 
 static MESA_htable_handle create_plug_necessary_htable(void)
 {
@@ -334,6 +356,14 @@ int plugin_manage_init(void)
 	assert(g_plug_manage_htable != NULL);
 	
 	plugin_parse_necessary_conf();
+
+	/* index 0保留, 全为内置插件, 如 udp_teredo_identify_entry(), gdev_keepalive_udp_entry()等等
+       或者是暂不支持entry_id, 而直接调用  stream_register_xxx系列函数注册的插件.
+	*/
+	g_plug_global_entry[0].entry_id = 0;
+	g_plug_global_entry[0].plug_name = sapp_strdup("inner_plug");
+	g_plug_global_entry[0].plug_entry_name = sapp_strdup("inner_entry");
+	g_plug_global_entry_index++;
 
 	return 0;
 }

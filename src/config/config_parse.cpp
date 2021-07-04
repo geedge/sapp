@@ -445,7 +445,7 @@ static const char *sapp_cfg_get_value_from_attr_by_id(const sapp_config_check_t 
 {
 	int i;
 
-	for(i = 0; i < sapp_cfg_check_attr[i].global_id != -1; i++){
+	for(i = 0; sapp_cfg_check_attr[i].global_id != -1; i++){
 		if(sapp_cfg_check_attr[i].global_id == cfg_global_id){
 			return sapp_cfg_check_attr[i].cfg_value;
 		}
@@ -458,7 +458,7 @@ static const char *sapp_cfg_get_value_from_attr_by_section_key(const sapp_config
 {
 	int i;
 
-	for(i = 0; i < sapp_cfg_check_attr[i].global_id != -1; i++){
+	for(i = 0; sapp_cfg_check_attr[i].global_id != -1; i++){
 		if((strncmp(sapp_cfg_check_attr[i].section,section, strlen(sapp_cfg_check_attr[i].section)) == 0)
 		 &&(strncmp(sapp_cfg_check_attr[i].section,section, strlen(section)) == 0)
 		 &&(strncmp(sapp_cfg_check_attr[i].cfg_key,key, strlen(sapp_cfg_check_attr[i].cfg_key)) == 0)
@@ -1544,7 +1544,7 @@ static int parse_well_known_port_config(void)
 			return -1;			
 		}
 
-		port_array = (unsigned short *)realloc(port_array, sizeof(short)*(port_array_num+1));
+		port_array = (unsigned short *)sapp_realloc(port_array, sizeof(short)*(port_array_num+1));
 		port_array[port_array_num] = (unsigned short)tmpnum;
 		port_array_num++;
 	}
@@ -2197,7 +2197,7 @@ int sapp_parse_config(void)
 
 	/*******************************  PROFILING ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.pkt_latency", (char *)"enabled", (int *)&pconfig->profiling.pkt_latency_enabled, 0);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.pkt_latency", (char *)"threshold", (int *)&pconfig->profiling.pkt_latency_threshold_in_us, 10000);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.pkt_latency", (char *)"threshold", (int *)&pconfig->profiling.pkt_latency_threshold_in_us, 1000000);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.sanity_check", (char *)"raw_pkt_broken_enabled", (int *)&pconfig->profiling.sanity_check_raw_pkt_broken_enabled, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.sanity_check", (char *)"symbol_conflict_enabled", (int *)&pconfig->profiling.sanity_check_symbol_conflict_enabled, 0);
 

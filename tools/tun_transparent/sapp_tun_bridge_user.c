@@ -104,6 +104,10 @@ static char MESA_ascii_to_hex(char ascii)
 		case 'F':
 			c = 10 + ascii - 0x41;
 		break;
+
+		default:
+			c = 0;
+		break;
 	}
 
 	return c;

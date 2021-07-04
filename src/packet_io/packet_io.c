@@ -661,17 +661,17 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	if(unlikely(g_timestamp_record_sw))
     {
 		clock_gettime(CLOCK_MONOTONIC, &end);
-    	timecost = (end.tv_sec - start.tv_sec)*1000000 + (end.tv_nsec - start.tv_nsec);
+    	timecost = (end.tv_sec*1000000000 +end.tv_nsec) - (start.tv_sec * 1000000000 + start.tv_nsec);
 
 		//timestamp_region_update(thread_num,  timecost);
 		sapp_fs2_set_latency(thread_num,  timecost);
 	}
 #if DEBUG
-	if(unlikely(g_timestamp_record_sw)){
-		if(timecost > g_timedelay_threshold){
-			__timestamp_print_max_tuple4(p_raw_pkt, timecost, thread_num);
-		}
-	}	
+	//if(unlikely(g_timestamp_record_sw)){
+		//if(timecost > g_timedelay_threshold){
+		//	__timestamp_print_max_tuple4(p_raw_pkt, timecost, thread_num);
+		//}
+	//}	
 	
 	if(unlikely(g_raw_pkt_broken_check != 0)){
 		MESA_MD5_sum_bin((unsigned char *)p_raw_pkt->raw_pkt_data, p_raw_pkt->raw_pkt_len, raw_pkt_md5_after);
@@ -682,6 +682,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		}
 	}	
 #endif
+
 	if(g_platform_action_cb_fun != NULL){
 		ret = g_platform_action_cb_fun(sapp_global_val->config.packet_io.depolyment_mode_bin, ret);
 	}

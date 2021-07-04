@@ -178,7 +178,7 @@ int marsio_dl_io_set_capdev_parallel(const char *cap_dev)
 		if(NULL == g_mr4_up_device_name){
 			g_mr4_up_device_name = (char **)malloc(sizeof(void *) * (g_mr4_device_num + 1));
 		}else{
-			g_mr4_up_device_name = (char **)realloc(g_mr4_up_device_name, sizeof(void *) * (g_mr4_device_num + 1));
+			g_mr4_up_device_name = (char **)sapp_realloc(g_mr4_up_device_name, sizeof(void *) * (g_mr4_device_num + 1));
 		}
 
 		g_mr4_up_device_name[g_mr4_device_num] = strdup(single_device);
@@ -211,7 +211,7 @@ int marsio_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 		if(NULL == g_mr4_down_device_name){
 			g_mr4_down_device_name = (char **)malloc(sizeof(void *) * (local_mr4_serial_device_num + 1));
 		}else{
-			g_mr4_down_device_name = (char **)realloc(g_mr4_down_device_name, sizeof(void *) * (local_mr4_serial_device_num + 1));
+			g_mr4_down_device_name = (char **)sapp_realloc(g_mr4_down_device_name, sizeof(void *) * (local_mr4_serial_device_num + 1));
 		}
 
 		g_mr4_down_device_name[local_mr4_serial_device_num] = strdup(single_device);
@@ -501,8 +501,8 @@ void * marsio_dl_io_device_alias(unsigned int target_id, char *device_args)
 		tmp_vdevice_name = (char **)malloc(sizeof(void *));
 		tmp_vdevice_sendpath = (struct mr_sendpath **)malloc(sizeof(void *));
 	}else{
-		tmp_vdevice_name = (char **)realloc(tmp_vdevice_name, sizeof(void *) * (tmp_vdevice_num + 1));
-		tmp_vdevice_sendpath = (struct mr_sendpath **)realloc(tmp_vdevice_sendpath, sizeof(void *) * (tmp_vdevice_num + 1));
+		tmp_vdevice_name = (char **)sapp_realloc(tmp_vdevice_name, sizeof(void *) * (tmp_vdevice_num + 1));
+		tmp_vdevice_sendpath = (struct mr_sendpath **)sapp_realloc(tmp_vdevice_sendpath, sizeof(void *) * (tmp_vdevice_num + 1));
 	}
 	tmp_vdevice_name[tmp_vdevice_num] = strdup(device_args);
 	
@@ -775,7 +775,7 @@ static inline void marsio4_sleep(int tot_call_times, int rcv_pkt_times)
 	float work_percent = ((float)rcv_pkt_times/(float)tot_call_times) * 100.0;
 
 	if((work_percent < 90.0) && (marsio4_sleep_time_table[(int)work_percent] > 0)){
-		usleep(marsio4_sleep_time_table[(int)work_percent]);
+		sapp_usleep(marsio4_sleep_time_table[(int)work_percent]);
 	}
 
 /*
@@ -826,7 +826,7 @@ static void *marsio4_worker(void *arg)
 	raw_pkt.offset_to_raw_pkt_hdr = 0;
 
 	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
-		usleep(1000);
+		sapp_usleep(1000);
 	}
 	
 	while(1){		

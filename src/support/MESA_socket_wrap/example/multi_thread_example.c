@@ -24,19 +24,13 @@
 
 static volatile long tot_read_len = 0;
 static volatile long tot_send_len = 0;
+static const char *server_ip_addr;
 
 #if USE_MESA_SOCKET_WRAP
 int g_timeout = 10;
 #else
 int g_timeout = 0;
 #endif
-
-void inline test_sleep(void)
-{
-#if RAND_SLEEP_ENABLE
-	usleep(rand() % 10 + 1);
-#endif
-}
 
 void *muti_test_stat_thread(void *arg)
 {
@@ -64,7 +58,7 @@ void *client_thread(void *arg)
 	memset(&s_addr, 0, sizeof(s_addr));
 	s_addr.sin_family = AF_INET;
 	s_addr.sin_port = htons(SERV_PORT);
-	inet_pton(AF_INET, "127.0.0.1", &s_addr.sin_addr.s_addr);
+	inet_pton(AF_INET, server_ip_addr, &s_addr.sin_addr.s_addr);
 
 	ret = MESA_sock_connect(sockfd, (const struct sockaddr *)&s_addr, sizeof(struct sockaddr_in), g_timeout);
 	if(ret != 0){
@@ -77,13 +71,13 @@ void *client_thread(void *arg)
 	while(1){
 		ret = MESA_sock_force_write(sockfd, buf, SEND_BUF_LEN, 0);
 		//if((ret < 0) && (ret != MESA_SOCK_TIMEOUT)){
-		if(0){
+		if(ret < 0){
 			printf("sockfd %d error:%d\n", sockfd, ret);
 			return NULL;
 		}
 		ret = MESA_sock_greedy_read(sockfd, buf, READ_BUF_LEN, 0);	
 		//if((ret < 0) && (ret != MESA_SOCK_TIMEOUT)){
-		if(0){
+		if(ret < 0){
 			printf("sockfd %d error:%d\n", sockfd, ret);
 			return NULL;
 		}
@@ -127,14 +121,14 @@ void *rcv_thread(void *arg)
 		}
 
 		//test_sleep();
-		usleep(2);
+		sleep(1);
 	}
 	
 	return NULL;
 }
 
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	struct sockaddr_in servaddr, cliaddr;
 	socklen_t cliaddr_len;
@@ -142,6 +136,13 @@ int main(void)
 	int i, listenfd, connfd, on = 1;
 	pthread_t rcv_pid, stat_pid, client_pid;
 
+	if(argc < 2){
+		printf("usage: %s <server_ip>\n", argv[0]);
+		exit(0);
+	}
+
+	server_ip_addr = argv[1];
+	
 	pthread_create(&stat_pid, NULL, muti_test_stat_thread, NULL);
 
 	for(i = 0; i < CLIENT_NUM; i++){

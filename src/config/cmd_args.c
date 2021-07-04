@@ -35,7 +35,7 @@ static char *popen_result_store(FILE *fp)
 	exec_result = (char *)malloc(1);
 	
 	while((chr = fgetc(fp)) != EOF){
-		exec_result = realloc(exec_result, exec_result_size + 2);
+		exec_result = sapp_realloc(exec_result, exec_result_size + 2);
 		exec_result[exec_result_size] = (char)chr;
 		exec_result_size++;
 	}
@@ -84,7 +84,7 @@ static int get_dumpfile_list_array(const char *opt_arg)
 	sapp_global_val->cla.dumpfie_list_array = NULL;
 	
 	while(ptr_cont = strtok_r(exec_result, delim, &save_ptr)){
-		sapp_global_val->cla.dumpfie_list_array = (char **)realloc(sapp_global_val->cla.dumpfie_list_array, sizeof(void *) * (line_num + 2));//当前要存储的指针再加上EOF
+		sapp_global_val->cla.dumpfie_list_array = (char **)sapp_realloc(sapp_global_val->cla.dumpfie_list_array, sizeof(void *) * (line_num + 2));//当前要存储的指针再加上EOF
 		sapp_global_val->cla.dumpfie_list_array[line_num] = strdup(ptr_cont);;
 		
 		//printf("#### %d: result_content:%s\n", line_num, sapp_global_val->cla.dumpfie_list_array[line_num]);
@@ -298,7 +298,7 @@ static int store_cmd_args(const char *opt_name, const char *opt_arg)
 	if(NULL == sapp_global_val->cla.cmd_args_array){
 		sapp_global_val->cla.cmd_args_array = (sapp_cmd_args_val_t **)calloc(1, sizeof(void *));
 	}else{
-		sapp_global_val->cla.cmd_args_array = (sapp_cmd_args_val_t **)realloc(sapp_global_val->cla.cmd_args_array, sizeof(void *) * (sapp_global_val->cla.cmd_args_num + 1));
+		sapp_global_val->cla.cmd_args_array = (sapp_cmd_args_val_t **)sapp_realloc(sapp_global_val->cla.cmd_args_array, sizeof(void *) * (sapp_global_val->cla.cmd_args_num + 1));
 	}
 
 	sapp_global_val->cla.cmd_args_array[sapp_global_val->cla.cmd_args_num] = new_opt;
@@ -534,6 +534,11 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 				continue;
 
 			case '?': /* invalid or unknown option */
+				ret = -1;
+				return ret;
+			break;
+
+			default:
 				ret = -1;
 				return ret;
 			break;

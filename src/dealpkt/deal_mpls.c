@@ -46,6 +46,9 @@ static int guess_mpls_with_control_word(const unsigned char *maybe_eth_hdr)
 		case ETH_P_PPP_SES:
 			return 0; /* 合法的ethernet类型, 不含CW */
 		break;
+
+		default:
+		break;
 	}
 
 	ehdr = (struct mesa_ethernet_hdr *)(maybe_eth_hdr + 4);
@@ -57,6 +60,9 @@ static int guess_mpls_with_control_word(const unsigned char *maybe_eth_hdr)
 		case ETH_P_PPP_SES:
 			return 1; /* 合法的ethernet类型, 包含CW */
 		break;
+		
+		default:
+		break;		
 	}
 
 	/* TODO: 以上都不是, 此处应该返回个什么值? */

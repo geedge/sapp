@@ -245,7 +245,7 @@ static void *pag_worker(void *arg)
 		data = packet_io_pag_get(&raw_pkt, tid);
 		if(unlikely(NULL == data)){
 			if(0 == g_use_MESA_sleep_sw){
-				usleep(1);
+				sapp_usleep(1);
 			}else{
 				MESA_sleep();
 			}	

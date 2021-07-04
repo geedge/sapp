@@ -71,7 +71,9 @@ static void pfring_sig_handle(int signo)
 			pfring_run_flag = 0;
 		break;
 
-		case SIGPIPE:		
+		case SIGPIPE:	
+		break;
+		
 		default:
 		break;
 	}

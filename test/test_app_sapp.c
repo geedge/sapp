@@ -2954,7 +2954,7 @@ char KILL_STREAM_SYNACK(struct streaminfo *a_tcp,  void **pme, int thread_seq,vo
 
 char SLEEP_ENTRY(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
-	usleep(1);
+	sapp_usleep(1);
 	return APP_STATE_GIVEME;
 }
 
@@ -3261,7 +3261,7 @@ char POLLING_ENTRY(struct streaminfo *stream,  void **pme, int thread_seq,void *
 	return APP_STATE_GIVEME;	
 }
 
-
+extern long long sapp_random(void);
 char fake_deadlock(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
 {
 	/* 随机在任意线程, 模拟死锁 */
@@ -3270,7 +3270,7 @@ char fake_deadlock(struct streaminfo *pstream,void **pme, int thread_seq,void *a
 	int tot_thread_cnt;
 	sapp_get_platform_opt(SPO_THREAD_COUNT, &tot_thread_cnt, &opt_val_len);
 
-	tid = rand() % tot_thread_cnt;
+	tid = sapp_random() % tot_thread_cnt;
 
 	if(tid == pstream->threadnum){
 		printf("thread:%d, fake deadlock!\n", tid);

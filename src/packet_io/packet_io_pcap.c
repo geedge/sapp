@@ -385,7 +385,7 @@ send_again:
 			  || (ENOMEM==local_errno))
 	  		{
 	  			if(retry_times++ < 3){
-					usleep(1);
+					sapp_usleep(1);
 					goto send_again;
 	       		}else{
 					sapp_runtime_log(RLOG_LV_FATAL,"sendpacket","retry more than %d times, %s\n", retry_times, strerror(local_errno));
@@ -762,7 +762,7 @@ static void *__pcap_work_thread(void *arg)
 	//bind_thread_to_cpuid(thread_num + 1);
 
 	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
-		usleep(1000);
+		sapp_usleep(1000);
 	}
 
 	while(1){
@@ -781,7 +781,7 @@ static void *__pcap_work_thread(void *arg)
 				total_call_times = 0;
 				rcv_pkt_tims = 0;
 				polling_work_times = 0;
-				usleep(1);
+				sapp_usleep(1);
 			}
 			continue;
 		}	
@@ -804,7 +804,7 @@ static void *__pcap_work_thread(void *arg)
 			total_call_times = 0;
 			rcv_pkt_tims = 0;
 			polling_work_times = 0;
-			usleep(1);
+			sapp_usleep(1);
 		}
 
 		if(PCAP_OP_FLAG_IDLE_POLLING == pkt_queue_node.op_flag){
@@ -965,8 +965,8 @@ retry:
 		if(0 == ret){
 			pthread_cond_signal(&work_thread_pool[i].cond);
 		}else{
-			//usleep(1);
-			MESA_sleep();
+			sapp_usleep(1);
+			//MESA_sleep();
 			goto retry;
 		}
 	}
@@ -1005,7 +1005,7 @@ static void dumpfile_wait_according_timestamp(const struct pcap_pkthdr *hdr)
 	cur_time_ms = __get_current_time_in_ms() - dumpfile_timestamp_diff_with_start;
 
 	while(pkt_time_ms > cur_time_ms){
-		usleep(100);
+		sapp_usleep(100);
 		cur_time_ms = __get_current_time_in_ms() - dumpfile_timestamp_diff_with_start;	
 	}
 }
@@ -1092,7 +1092,7 @@ retry:
 		pthread_mutex_unlock(&work_thread_pool[thread_num].mutex);
 	}else{
 		if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
-			usleep(1);
+			sapp_usleep(1);
 			goto retry;  /* 在读包模式下, 保证不因队列满而丢包 */
 		}
 		pcap_app_drop_num[thread_num]++;
@@ -1154,7 +1154,7 @@ retry:
 	}else{
 		if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
 			if(0 == g_use_MESA_sleep_sw){
-				usleep(1);
+				sapp_usleep(1);
 			}else{
 				MESA_sleep();
 			}
@@ -1308,7 +1308,7 @@ static void *pcap_io_thread(void *arg)
 	}
 
 	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
-		usleep(1000);
+		sapp_usleep(1000);
 	}
 
 	//if(g_PollingFunNum > 0){
@@ -1439,7 +1439,7 @@ int pcap_dl_io_init(int argc, char *argv[])
 	
 	pcap_create_work_thread();
 
-	dispatch_thread_rnd_num = rand();
+	dispatch_thread_rnd_num = (unsigned int)sapp_random();
 	
 #if 0 /* version3.0 */
 	MESA_load_profile_string_def("conf/main.conf", "Module", "dumpfile_speed", cfg_buf, sizeof(cfg_buf), "topspeed");

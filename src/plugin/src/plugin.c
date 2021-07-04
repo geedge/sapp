@@ -45,7 +45,7 @@ content:1、加载业务层插件的update指针
     FUN_TYPE_TCPALL_RAW, 
     FUN_TYPE_UDP_RAW, 
 };
-int stream_register_fun(int funtype,char (*x)(void));
+int stream_register_fun(int funtype,char (*x)(void), int);
 **********************************************************************************************
 时间:2015-02-28
 内容:plugin.c:150 add total_flag=0;否则如果没有任何业务层插件，解析层收到的
@@ -360,7 +360,7 @@ stProtocolPlugInfo* get_propluginfo_plugid(unsigned short plugid)
 		   -1:error
 *****************************************************************************/
 
-int stream_register_app(stProtocolFunInfo** fun_list,unsigned short plugid,AppEntry x,long long proflag)
+int stream_register_app(stProtocolFunInfo** fun_list,unsigned short plugid,AppEntry x,long long proflag, int plug_entry_id)
 {
 	stProtocolFunInfo* funelem_last;
 	stProtocolFunInfo* funelem = (stProtocolFunInfo*)malloc(sizeof(stProtocolFunInfo));
@@ -370,7 +370,7 @@ int stream_register_app(stProtocolFunInfo** fun_list,unsigned short plugid,AppEn
 	funelem->aliveflag = 1;
 	funelem->appentry = x;
 	funelem->protocol_flag = proflag;
-
+	funelem->entry_id = plug_entry_id;
 
 	if(*fun_list == NULL)
 	{
@@ -378,7 +378,6 @@ int stream_register_app(stProtocolFunInfo** fun_list,unsigned short plugid,AppEn
 	}
 	else
 	{
-
 		funelem_last = *fun_list;
 
 		while(funelem_last->next !=NULL)
@@ -661,7 +660,7 @@ int process_conf_entryname()
 		}
 
 		g_entryname_info->num ++;
-		g_entryname_info->entryname = (stEntryNameElem* )realloc(g_entryname_info->entryname,(g_entryname_info->num)*sizeof(stEntryNameElem));
+		g_entryname_info->entryname = (stEntryNameElem* )sapp_realloc(g_entryname_info->entryname,(g_entryname_info->num)*sizeof(stEntryNameElem));
 		memset(&(g_entryname_info->entryname[g_entryname_info->num-1]),0,sizeof(stEntryNameElem));
 		memcpy(&(g_entryname_info->entryname[g_entryname_info->num-1]),buf_entryname,strlen(buf_entryname));
 	}
@@ -977,7 +976,7 @@ int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname)
 	int ret=0;
 	char buf_funflag[PLUGIN_MAX_CONFLEN]={0};
 	char buf_funname[PLUGIN_MAX_CONFLEN] = {0};
-
+	int plug_entry_id;
 	char (*fun_pointer)(void);
 
 	for(i=0;i<PLUGIN_MAX_ENTRYNUM;i++)
@@ -1006,8 +1005,9 @@ int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname)
 				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has [%s],but not load %s from %s sofile",filename,g_plugin_entryname[i],buf_funname,plugname);
 				return -1;
 			}
-			
-			ret=stream_register_fun(i,fun_pointer); 
+
+			plug_entry_id = plug_mange_get_entry_id(plugname, buf_funname);
+			ret=stream_register_fun(i,fun_pointer, plug_entry_id); 
 			if(ret==-1)
 			{
 				printf("\033[1;31;40m[Error]%s stream_register %s entry error\033[0m\n",filename,g_plugin_entryname[i]);
@@ -1302,7 +1302,7 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 	char buf_funname[PLUGIN_MAX_CONFLEN];
 	char buf_funflag[PLUGIN_MAX_CONFLEN];
 	stProtocolPlugInfo* pluginfo_pro;
-
+	int plug_entry_id;
 	AppEntry appentry;
 
 	for(i=0;i<g_entryname_info->num;i++)
@@ -1346,8 +1346,9 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has %s in [%s],not load from %s sofile",filename,buf_funname,entryname,pluginfo_bus->plugname);
 				return -1;
 			}
-			
-			rec = stream_register_app(&(pluginfo_pro->fun_list),pluginfo_bus->plugid,appentry,flag);
+
+			plug_entry_id = plug_mange_get_entry_id(pluginfo_bus->plugname, buf_funname);
+			rec = stream_register_app(&(pluginfo_pro->fun_list),pluginfo_bus->plugid,appentry,flag, plug_entry_id);
 			if(rec < 0)
 			{
 				printf("\033[1;31;40m[Error]%s's %s stream_register_app() error\033[0m\n", pluginfo_bus->plugname,buf_funname);
@@ -1489,8 +1490,6 @@ int process_conflist(int plug_type)
 	return rec;	
 }
 
-//20170525 add liuy for wy serial
-
 void plug_record_start_time(int plug_id, int thread_seq)
 {
 	if(plugctrl_runtime_info.runtime_switch == 1)
@@ -1528,27 +1527,47 @@ void plug_record_end_time(int plug_id, int thread_seq)
 		}
 	}
 }
+
+extern const char *sapp_rawpkt_ntop(const raw_pkt_t *raw_pkt, int greedy, char *out_buf, int buf_len);
+
 char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* session_info,int thread_seq,struct streaminfo *a_stream,const void *a_packet)
 {
 	char rec=APP_STATE_DROPME;
+	struct timespec before_ts, after_ts;
+	long long time_spent_us;
+	char debug_raw_pkt_string[256];
 
 	if(g_business_plug_info==NULL)
 	{
 		return rec;
 	}
 
-	//plug_record_start_time(g_business_plug_info->plugid, thread_seq);
-
+	if(g_timestamp_record_sw){
+		//plug_record_start_time(g_business_plug_info->plugid, thread_seq);
+		clock_gettime(CLOCK_REALTIME, &before_ts);
+	}
 	rec=funelem_session->appentry(session_info,&(funelem_session->pme),thread_seq,a_stream,a_packet);
 
 	//plug_record_end_time(g_business_plug_info->plugid, thread_seq);
+	if(g_timestamp_record_sw){
+		//plug_record_start_time(g_business_plug_info->plugid, thread_seq);
+		clock_gettime(CLOCK_REALTIME, &after_ts);
+		time_spent_us = (after_ts.tv_sec*1000000000 + after_ts.tv_nsec)/1000 - (before_ts.tv_sec*1000000000 + before_ts.tv_nsec)/1000;
+		if(time_spent_us >= g_timestamp_record_threshold){
+			if(NULL == a_packet ){
+				sapp_runtime_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, pkt process latency:%lld us", 
+								g_plug_global_entry[funelem_session->entry_id].plug_name, 
+								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, time_spent_us);
+			}else{
+				const struct streaminfo_private *stream_pr = (struct streaminfo_private *)a_stream;
+				sapp_runtime_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, pkt process latency:%lld us, %s", 
+								g_plug_global_entry[funelem_session->entry_id].plug_name, 
+								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, time_spent_us,
+								sapp_rawpkt_ntop(stream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string)));
+			}				
+		}
+	}	
 
-/*
-	if(g_business_plug_type==PLUGTYPE_JC)
-	{
-		rec=rec|APP_STATE_DROPPKT;
-	}
-*/
 	return rec;
 }
 
@@ -1581,6 +1600,7 @@ char plugin_process_pending(stProtocolFunInfo* funlist_pro,stSessionInfo* sessio
 //modify liuy 20150316 for init
 		funelem_session->called_flag = 0;
 //modify end
+		funelem_session->entry_id = funelem_pro->entry_id;
 
 		if(funelem_session->protflag&prot_flag)
 		{

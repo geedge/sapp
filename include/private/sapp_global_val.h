@@ -194,10 +194,10 @@ typedef struct{
 
 typedef struct{
 	sapp_config_profiling_log_t log;
-	unsigned char pkt_latency_enabled;
-	unsigned char sanity_check_raw_pkt_broken_enabled;
-	unsigned char sanity_check_symbol_conflict_enabled;
-	unsigned int pkt_latency_threshold_in_us; /* microsecond */
+	int pkt_latency_enabled;
+	int sanity_check_raw_pkt_broken_enabled;
+	int sanity_check_symbol_conflict_enabled;
+	int pkt_latency_threshold_in_us; /* microsecond */
 }sapp_config_profiling_t;
 
 typedef struct{

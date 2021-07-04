@@ -208,7 +208,7 @@ static void *topsec_worker(void *arg)
 		ret = packet_io_topsec_get(&raw_pkt, tid);
 		if(ret < 0){
 			if(0 == g_use_MESA_sleep_sw){
-				usleep(1);
+				sapp_usleep(1);
 			}else{
 				MESA_sleep();
 			}

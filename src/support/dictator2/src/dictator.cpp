@@ -328,7 +328,7 @@ void* mmap_alloc(size_t size)
 	unsigned int block_num=0;
 	unsigned long assigned_size=0;
 	block_num=calc_block_num(size+USED_MEM_HEAD_LEN);
-	assigned_size=ELF_PAGEALIGN((unsigned long)block_num*DICTATOR_UNIT_SIZE);
+	assigned_size=ELF_PAGEALIGN((unsigned long)block_num*(unsigned long)DICTATOR_UNIT_SIZE);
 	block_num=assigned_size/DICTATOR_UNIT_SIZE;
 	p=get_chunk(0, block_num);
 	return D_MEM(p);
@@ -500,7 +500,7 @@ void *core_alloc(thread_mem_pool_t *p_mempool,size_t size)
 	block_num=calc_block_num(size+USED_MEM_HEAD_LEN);
 	if(block_num>D_SPACE.POWER[MAX_CHAIN_NUM_SUPPORT-1])
 	{
-		assigned_size=ELF_PAGEALIGN((unsigned long)block_num*DICTATOR_UNIT_SIZE);
+		assigned_size=ELF_PAGEALIGN((unsigned long)block_num*(unsigned long)DICTATOR_UNIT_SIZE);
 		block_num=assigned_size/DICTATOR_UNIT_SIZE;
 		//malloc with mmap
 		target_mem=get_chunk(p_mempool->D_id, block_num);

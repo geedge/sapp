@@ -1690,6 +1690,43 @@ int sapp_is_absolute_path(const char *filename)
 	return 0;
 }
 
+void *sapp_realloc(void *old_buf, int size) 
+{
+    void *new_buf;
+
+    if(size <= 0){
+		return NULL;
+    }
+    
+    new_buf = malloc(size);
+    memcpy(new_buf, old_buf, size); /* todo: 如果size比原来大, 此处会有读越界, 怎么解决?  */
+    free(old_buf);
+    
+    return new_buf;
+}
+
+long long sapp_random(void)
+{
+	struct timespec curtime;
+
+	clock_gettime(CLOCK_MONOTONIC, &curtime);
+
+	return (curtime.tv_nsec * 131) ^ curtime.tv_sec;
+}
+
+int sapp_usleep(int usec)
+{
+	struct timespec sleep_time_val;
+
+	sleep_time_val.tv_sec = 0;
+	sleep_time_val.tv_nsec = usec * 1000;
+
+	nanosleep(&sleep_time_val, NULL);
+
+	return 0;
+}
+
+
 
 #ifdef __cplusplus
 }

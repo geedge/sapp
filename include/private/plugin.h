@@ -95,17 +95,29 @@ typedef struct _plugin_protocol_session_fun_info
 //modify end
 	char appstate;
 	char pre_kill_flag;
+	int entry_id; 
 	void* pme;			//业务插件上下文信息
 	struct _plugin_protocol_session_fun_info* next;
 }stSessionFunInfo;
 
+
+typedef struct {
+	int entry_id; /* 全局唯一, 所有插件每层的entry都分配一个id */
+	const char *plug_name;
+	const char *plug_entry_name;
+}plug_global_entry_t;
+
+#define MAX_PLUG_ENTRY_NUM	(256)
+extern plug_global_entry_t g_plug_global_entry[MAX_PLUG_ENTRY_NUM];
 extern void* g_plugin_runtime_handle;
-extern int stream_register_fun(int funtype,char (*x)(void));
+extern int stream_register_fun(int funtype,char (*x)(void), int entry_id);
 
 void plugin_call_flagstate();
 int process_conf_entryname();
 int process_confelem_plugname(char* filename,int plugtype,char** plugname);
 int process_conflist(int plug_type);
+int plug_mange_get_entry_id(const char *plug_name, const char *plug_entry_name);
+
 
 #ifdef __cplusplus
 }

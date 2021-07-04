@@ -146,7 +146,7 @@ static void *ppf_worker(void *arg)
 		pkt = ppf_getDataBlock_no_Lock(tid);
 		if(NULL == pkt) 
 		{
-			usleep(100);
+			sapp_usleep(100);
 			//MESA_sleep();
 			continue;
 		}

@@ -123,6 +123,8 @@ static void terminal_tag_transform(struct terminal_tag_t *terminal_tag,
 		break;
 
 		case TERMINAL_ADDR_TYPE_GLOBAL_SIP:
+		break;
+		
 		default:
 			inet_ntop(AF_INET, &sip_addr, ip_str, 16);
 			snprintf((char *)stack_tag_string, TERMINAL_TAG_SIZE_MAX, "%s:%s", "G:00000", ip_str);

@@ -624,7 +624,7 @@ re_send:
 
 	return count - unsnd_count;
 err:
-	return -1;
+	return ret;
 }
 
 /*

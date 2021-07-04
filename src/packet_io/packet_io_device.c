@@ -30,7 +30,7 @@ static int insert_to_device_alias(unsigned int target_id, char *device_args)
 		packet_device_alias_num = target_id + 1;
 	}else{
 		if(packet_device_alias_num <= (int)target_id){
-			g_packet_device_alias = (packet_io_device_alias_t *)realloc(g_packet_device_alias, sizeof(packet_io_device_alias_t) * (target_id + 1));
+			g_packet_device_alias = (packet_io_device_alias_t *)sapp_realloc(g_packet_device_alias, sizeof(packet_io_device_alias_t) * (target_id + 1));
 			packet_device_alias_num = target_id + 1;
 		}
 	}
@@ -82,7 +82,7 @@ static int parse_send_raw_pkt_conf(void)
 
 		if(tid > 1000){
 			printf("\033[33mWarning! in '%s', target_id is too large!\033[0m\n", ABBR_SEND_RAW_PKT_CONF_FILE);
-			usleep(100000);
+			sleep(1);
 		}
 
 		column_index = 0;

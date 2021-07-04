@@ -351,7 +351,7 @@ void *tun_work_thread(void *arg)
 			
 			if(total_call_times >= 100){
 				total_call_times = 0;
-				usleep(1);
+				sapp_usleep(1);
 			}
 		}
 	}

@@ -11,6 +11,8 @@
 #include <pthread.h>
 #include <errno.h>
 #include <arpa/inet.h>
+#include <time.h>
+
 
 #define SEND_BUF_LEN							(1460)
 #define USE_NON_BLOCK_TYPE					(0)
@@ -68,6 +70,16 @@ static void test_mesa_sock_strerror(void)
 	}
 }
 
+static long long gen_random(void)
+{
+	struct timespec curtime;
+
+	clock_gettime(CLOCK_MONOTONIC, &curtime);
+
+	return (curtime.tv_nsec * 131) ^ curtime.tv_sec;
+}
+
+
 int main(int argc, char *argv[])
 {
 	char *dip;
@@ -85,12 +97,12 @@ int main(int argc, char *argv[])
 
 	test_mesa_sock_strerror();
 
-	srand(time(NULL));
+	///srand(time(NULL));
 
 	signal(SIGPIPE, SIG_IGN);
 
 	for(i = 0; i < SEND_BUF_LEN; i++){
-	    send_data[i] = rand()%26 + 0x61;
+	    send_data[i] = gen_random()%26 + 0x61;
 	}
 
 	pthread_create(&pid, NULL, stat_thread, NULL);

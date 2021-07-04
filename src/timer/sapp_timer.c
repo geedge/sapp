@@ -160,12 +160,12 @@ static void *__st_alone_timer_check_thread(void *arg)
 	sapp_timer_handle_inner_t *inner_h = (sapp_timer_handle_inner_t *)arg;
 
 	while(0 == MESA_ATOMIC_READ(inner_h->running)){
-		usleep(1000);
+		sapp_usleep(1000);
 	}
 	
 	while(MESA_ATOMIC_READ(inner_h->running)){
 		event_base_loop(inner_h->libev_base, 0);
-		usleep(100);
+		sapp_usleep(100);
 	}
 
 	return NULL;
@@ -406,7 +406,7 @@ static void *sapp_standalone_timer_check_timeout(void *arg)
 			event_base_loop(inner_h->libev_base, EVLOOP_NONBLOCK);
 		}	
 		
-		usleep(1);
+		sapp_usleep(1);
 	}
 
 	return NULL;

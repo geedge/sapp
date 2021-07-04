@@ -15,13 +15,21 @@
 static unsigned short bind_port = 9999;
 static unsigned short remote_port = 9999;
 
-int main(void)
+static const  char * server_ip_addr;
+int main(int argc, char *argv[])
 {
 	int sockfd, ret;
 	struct sockaddr_in remote_addr, bind_addr;
 	socklen_t addr_len;
 	//char rcv_buf[2048];
 	int on = 1;
+
+	if(argc < 2){
+		printf("usage: %s <server_ip>\n", argv[0]);
+		exit(0);
+	}
+
+	server_ip_addr = argv[1];
 
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -39,7 +47,7 @@ int main(void)
 	addr_len = sizeof(struct sockaddr_in);
 
 	while(1){
-#if 0
+#if 1
 		ret = MESA_sock_recvfrom(sockfd, rcv_buf, 2048, 0, (struct sockaddr *)&remote_addr, &addr_len,  0);
 		if(ret > 0){
 			printf("recv from %x:%u %d bytes!\n", remote_addr.sin_addr.s_addr, remote_addr.sin_port, ret);
@@ -48,7 +56,7 @@ int main(void)
 		}
 #else
 		remote_addr.sin_family = AF_INET;
-		inet_pton(AF_INET, "10.0.6.201", &remote_addr.sin_addr.s_addr);
+		inet_pton(AF_INET, server_ip_addr, &remote_addr.sin_addr.s_addr);
 		remote_addr.sin_port = htons(remote_port);
 
 		ret = MESA_sock_can_be_write(sockfd, 1000);

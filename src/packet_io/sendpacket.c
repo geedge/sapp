@@ -3458,7 +3458,7 @@ int sendpacket_init_new(int tot_thread_num)
 	struct timespec curtime;
 	clock_gettime (CLOCK_THREAD_CPUTIME_ID, &curtime);
 
-	srand(time(NULL));
+	///srand(time(NULL));
 
 	g_rand_seed *= curtime.tv_nsec;
 

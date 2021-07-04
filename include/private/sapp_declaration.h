@@ -69,6 +69,7 @@ extern sapp_global_t *sapp_global_val;
 #define g_packet_io_cap_mode 	sapp_global_val->config.packet_io.internal.interface.type_bin
 #define g_packet_io_cap_level	sapp_global_val->individual_fixed.packet_io_cap_level
 #define g_timestamp_record_sw	sapp_global_val->config.profiling.pkt_latency_enabled
+#define g_timestamp_record_threshold	sapp_global_val->config.profiling.pkt_latency_threshold_in_us
 #define g_discard_ack_sw		sapp_global_val->config.protocol_feature.tcp_drop_pure_ack_pkt
 #define g_tcp_syn_option_parse_enabled	sapp_global_val->config.protocol_feature.tcp_syn_option_parse_enabled
 #define g_ipv6_decapsulation_enabled  sapp_global_val->config.protocol_feature.ipv6_decapsulation_enabled
