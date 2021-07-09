@@ -472,10 +472,12 @@ void *sapp_time_event_thread(void *arg)
 			sysinfo_output();
 			sapp_watch_dog();
 		}
+
+		sapp_fuzzy_latency_update();
 		
 		ABBR_CURRENT_TIME_MS = sapp_get_current_time_in_ms();
 		
-		usleep(10);
+		sapp_usleep(10);
 	}
 	
 	return NULL;

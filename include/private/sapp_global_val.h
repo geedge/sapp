@@ -195,9 +195,15 @@ typedef struct{
 typedef struct{
 	sapp_config_profiling_log_t log;
 	int pkt_latency_enabled;
+	/* 精确模式开启后, fs2自身统计也非常耗CPU, 每个包都要调用FS_operate(),
+	   如果停用精确模式, 输入fs2的是保留最近一段时间的最大值, 最小值和这一段时间的平均值, 仅调用FS_operate()三次,
+	   精确度降低了一些, 但大大减少了调用FS_operate()的次数.
+		开启pkt_latency_accurate_enable后平均值基本是对的, 但标准差就不准了.
+	   */
+	int pkt_latency_accurate_enable; 
 	int sanity_check_raw_pkt_broken_enabled;
 	int sanity_check_symbol_conflict_enabled;
-	int pkt_latency_threshold_in_us; /* microsecond */
+	int pkt_latency_threshold_in_ns; /* nanosecond, 配置文件里单位是microsecond, 需要乘以1000 */
 }sapp_config_profiling_t;
 
 typedef struct{
@@ -361,6 +367,7 @@ typedef struct{
 	int fs_id_count_array[SAPP_STAT_NUM_MAX];
 	int fs_id_length_array[SAPP_STAT_NUM_MAX];
 	int fs_latency_id_array[SAPP_MAX_THREADS];
+	int fs_latency_plug_entrg_id_array[SAPP_MAX_PLUG_ENTRY_NUM];
 }sapp_gval_individual_fixed_fs_t; /* field stat info */
 
 typedef struct{
@@ -388,9 +395,18 @@ typedef struct{
 }sapp_gval_mthread_sys_stat_t;
 
 
+typedef struct{
+	int stat_count; /* 一段时间内, 记录的数据包延时总数, time_cost_sum/stat_count即平均延时 */
+	int min_time_cost;
+	int max_time_cost;
+	long long time_cost_sum;
+}sapp_fuzzy_latency_stat_t;
+
 struct __sapp_gval_mthread{
 	sapp_gval_mthread_sys_stat_t sys_stat;
 	unsigned short stream_seq_per_thread; /* 用于计算全局流ID */
+	sapp_fuzzy_latency_stat_t fuzzy_pkt_latency_stat_per_thread;
+	sapp_fuzzy_latency_stat_t fuzzy_pkt_latency_stat_per_entry_per_thread[SAPP_MAX_PLUG_ENTRY_NUM];
 	const raw_pkt_t *raw_pkt; /* 因为MESA_fakepacket_send_xxx系列函数没有raw_pkt参数, 也没有stream_info, 为了向前兼容, 不好修改接口, 增加全局变量用于存储当前包 */
 	void *dup_pkt_distinguish_handle; /* 三个流量入口开关, inject, ipv4_tcp, ipv4_udp, 共同使用一个bloom句柄 */
 }__attribute__ ((aligned (64))); /* for multi-thread, must 64byte alignment */

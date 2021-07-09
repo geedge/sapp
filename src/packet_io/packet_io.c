@@ -664,7 +664,11 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
     	timecost = (end.tv_sec*1000000000 +end.tv_nsec) - (start.tv_sec * 1000000000 + start.tv_nsec);
 
 		//timestamp_region_update(thread_num,  timecost);
-		sapp_fs2_set_latency(thread_num,  timecost);
+		if(sapp_global_val->config.profiling.pkt_latency_accurate_enable != 0){
+			sapp_fs2_set_latency(thread_num,  timecost);
+		}else{
+			sapp_fs2_fuzzy_latency_update_per_thread(thread_num,  timecost);
+		}
 	}
 #if DEBUG
 	//if(unlikely(g_timestamp_record_sw)){

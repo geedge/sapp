@@ -265,6 +265,7 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{6000,0,RLOG_LV_DEBUG,"PROFILING",	NULL,NULL,	NULL, NULL, NULL, 0},
 	{6101,0,RLOG_LV_DEBUG,"profiling.pkt_latency",	"enabled",	NULL,NULL, NULL, NULL, 0},
 	{6102,6101,RLOG_LV_DEBUG,"profiling.pkt_latency",	"threshold",	"1",NULL, NULL, NULL, 0},
+	{6103,6101,RLOG_LV_DEBUG,"profiling.pkt_latency",	"accurate_enable",	NULL,NULL, NULL, NULL, 0},
 
 	{6201,0,RLOG_LV_DEBUG,"profiling.sanity_check",	"raw_pkt_broken_enabled",	NULL,NULL, NULL, NULL, 0},
 	{6202,0,RLOG_LV_DEBUG,"profiling.sanity_check",	"symbol_conflict_enabled",	NULL,NULL, NULL, NULL, 0},
@@ -348,7 +349,6 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"SPECIAL_CONFIG_LINK","send_raw_pkt_path",NULL, NULL, NULL,NULL, 0},
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"SPECIAL_CONFIG_LINK","vxlan_sport_service_map_path",NULL, NULL, NULL,NULL, 0},
 
-	
 	{-1,-1,RLOG_LV_DEBUG,NULL,NULL,NULL, NULL, NULL,NULL, 0}
 };
 
@@ -2197,7 +2197,21 @@ int sapp_parse_config(void)
 
 	/*******************************  PROFILING ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.pkt_latency", (char *)"enabled", (int *)&pconfig->profiling.pkt_latency_enabled, 0);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.pkt_latency", (char *)"threshold", (int *)&pconfig->profiling.pkt_latency_threshold_in_us, 1000000);
+	if(pconfig->profiling.pkt_latency_enabled != 0){
+		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.pkt_latency", (char *)"accurate_enable", (int *)&pconfig->profiling.pkt_latency_accurate_enable, 0);
+		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.pkt_latency", (char *)"threshold", (int *)&pconfig->profiling.pkt_latency_threshold_in_ns, 1000000);
+		if(pconfig->profiling.pkt_latency_threshold_in_ns <= 0){
+			sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,999999]");
+			return -1;
+		}
+		if(pconfig->profiling.pkt_latency_threshold_in_ns >= 1000000){
+			sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,999999], set to max value 999999!");
+			pconfig->profiling.pkt_latency_threshold_in_ns *= 999999;		
+		}	
+		/* 为了配置文件方便查看, 避免写太多的0, 配置文件里的单位是微秒, 程序处理实际以纳秒ns为单位, 此处要乘以1000 */
+		pconfig->profiling.pkt_latency_threshold_in_ns *= 1000;
+	}
+	
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.sanity_check", (char *)"raw_pkt_broken_enabled", (int *)&pconfig->profiling.sanity_check_raw_pkt_broken_enabled, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.sanity_check", (char *)"symbol_conflict_enabled", (int *)&pconfig->profiling.sanity_check_symbol_conflict_enabled, 0);
 

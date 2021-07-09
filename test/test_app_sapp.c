@@ -2954,7 +2954,7 @@ char KILL_STREAM_SYNACK(struct streaminfo *a_tcp,  void **pme, int thread_seq,vo
 
 char SLEEP_ENTRY(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
-	sapp_usleep(1);
+	sleep(1);
 	return APP_STATE_GIVEME;
 }
 

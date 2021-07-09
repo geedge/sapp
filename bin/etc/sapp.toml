@@ -59,6 +59,12 @@
     inject_mode_single_gateway_dst_mac="00:11:22:33:44:55"
 
     dumpfile_sleep_time_before_exit=0
+
+### note, for example, dst mac is 01:12:34:56:78:90, src src is 02:AA:BB:CC:DD:EE:FF, 
+### ether[0] is 0x01, dst mac first octet, ether[1] is 0x12, dst mac second octet,
+### ether[6] is 0x02, src mac first octet, ether[11] is 0xFF, src mac sixth octet.
+### the bit field is from 0 to 7, the 0 is least significant bit, the 7 is most significant bit.
+    extract_linkdir_from_mac_in_mirror_mode="ether[4]:0"
    
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]
@@ -137,6 +143,7 @@
 [PROFILING]
 [profiling.pkt_latency]
     enabled=0
+    accurate_enable=0
 ### note, threshold unit is microseconds (us)
     threshold=100000
 	
@@ -155,7 +162,7 @@
      
         [profiling.log.remote]
         enabled=1
-        server_ip="192.168.11.90"
+        server_ip="127.0.0.1"
         server_port=8126
 
         [profiling.log.remote.field_stat2]

@@ -1534,7 +1534,7 @@ char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* sessi
 {
 	char rec=APP_STATE_DROPME;
 	struct timespec before_ts, after_ts;
-	long long time_spent_us;
+	long long time_spent_ns;
 	char debug_raw_pkt_string[256];
 
 	if(g_business_plug_info==NULL)
@@ -1552,18 +1552,27 @@ char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* sessi
 	if(g_timestamp_record_sw){
 		//plug_record_start_time(g_business_plug_info->plugid, thread_seq);
 		clock_gettime(CLOCK_REALTIME, &after_ts);
-		time_spent_us = (after_ts.tv_sec*1000000000 + after_ts.tv_nsec)/1000 - (before_ts.tv_sec*1000000000 + before_ts.tv_nsec)/1000;
-		if(time_spent_us >= g_timestamp_record_threshold){
-			if(NULL == a_packet ){
-				sapp_runtime_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, pkt process latency:%lld us", 
+		time_spent_ns = (after_ts.tv_sec*1000000000 + after_ts.tv_nsec) - (before_ts.tv_sec*1000000000 + before_ts.tv_nsec);
+		if(sapp_global_val->config.profiling.pkt_latency_accurate_enable != 0){
+			sapp_fs2_set_plug_entry_latency(funelem_session->entry_id, time_spent_ns);
+		}else{
+			sapp_fs2_fuzzy_latency_update_per_entry(thread_seq, funelem_session->entry_id, time_spent_ns);
+		}
+		
+		if(time_spent_ns >= g_timestamp_record_threshold){
+			if(NULL == a_packet || (SESSION_STATE_CLOSE & session_info->session_state)){
+				sapp_runtime_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, session close process latency:%lld ns, %s", 
 								g_plug_global_entry[funelem_session->entry_id].plug_name, 
-								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, time_spent_us);
+								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, time_spent_ns,
+								printaddr(&a_stream->addr, thread_seq));
+
 			}else{
 				const struct streaminfo_private *stream_pr = (struct streaminfo_private *)a_stream;
-				sapp_runtime_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, pkt process latency:%lld us, %s", 
+				sapp_rawpkt_ntop(stream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string));
+				sapp_runtime_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, pkt process latency:%lld ns, %s", 
 								g_plug_global_entry[funelem_session->entry_id].plug_name, 
-								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, time_spent_us,
-								sapp_rawpkt_ntop(stream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string)));
+								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, 
+								time_spent_ns,debug_raw_pkt_string);
 			}				
 		}
 	}	

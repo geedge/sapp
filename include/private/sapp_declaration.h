@@ -69,7 +69,9 @@ extern sapp_global_t *sapp_global_val;
 #define g_packet_io_cap_mode 	sapp_global_val->config.packet_io.internal.interface.type_bin
 #define g_packet_io_cap_level	sapp_global_val->individual_fixed.packet_io_cap_level
 #define g_timestamp_record_sw	sapp_global_val->config.profiling.pkt_latency_enabled
-#define g_timestamp_record_threshold	sapp_global_val->config.profiling.pkt_latency_threshold_in_us
+#define g_timestamp_record_accurate 	sapp_global_val->config.profiling.pkt_latency_accurate_enable
+#define g_timestamp_record_threshold	sapp_global_val->config.profiling.pkt_latency_threshold_in_ns
+
 #define g_discard_ack_sw		sapp_global_val->config.protocol_feature.tcp_drop_pure_ack_pkt
 #define g_tcp_syn_option_parse_enabled	sapp_global_val->config.protocol_feature.tcp_syn_option_parse_enabled
 #define g_ipv6_decapsulation_enabled  sapp_global_val->config.protocol_feature.ipv6_decapsulation_enabled
@@ -92,6 +94,9 @@ void *sapp_time_event_thread(void *arg);
 void sapp_fs2_update_count(int field_index, unsigned  long long value);
 void sapp_fs2_update_length(int field_index, unsigned  long long value);
 void sapp_fs2_set_latency(int thead_seq, long long time_cost);
+void sapp_fs2_set_plug_entry_latency(int entry_id, long long time_cost);
+int sapp_independent_thread_init(void);
+
 void sapp_gval_init(void);
 struct mr_instance *sapp_get_marsio_instance(void);
 int __sapp_timer_platform_init(void);
@@ -100,6 +105,7 @@ void __sapp_timer_platform_run(void);
 void sapp_set_current_state(enum sapp_state_t st);
 void line_protocol_update_metrics(void);
 char *timet_to_str(time_t timet, char *time_str, int time_str_len);
+void sapp_fuzzy_latency_update(void);
 
 
 extern volatile unsigned int  g_aiSysCounter[COUNTER_NUM]; /*newly modified   ---LiLei*/

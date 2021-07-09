@@ -288,8 +288,6 @@ int MESA_platform_init(int argc, char *argv[])
 		usleep(10000);
 	}
 
-	sapp_assistant_init();
-
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"send_tcp_offload", &sapp_global_single.cfg_send_tcp_offload_sw, 0);
 
 	sapp_set_current_state(SAPP_STATE_PLATFORM_INITED);
@@ -318,10 +316,15 @@ int MESA_platform_init(int argc, char *argv[])
 		return -1;
 	}
 
+	sapp_independent_thread_init(); /* 要放在插件初始化之前, 插件初始化时会启动 independent_thread 独立发包线程 */
+
 	sapp_dup_pkt_init();
 
 	sapp_set_current_state(SAPP_STATE_PLUG_INITING);
 	plugctrl_proc();
+
+	/* 2021-07-05, sapp_assistant_init()移动到plugctrl_proc()之后, 要用已加载插件所有entry的列表 */
+	sapp_assistant_init();
 
 	sapp_platform_finish_up(); /* 支持动态project tag注册, 必须在所有插件初始化完成后调用, 做一些平台初始化阶段的收尾工作 */
 	sapp_set_current_state(SAPP_STATE_PLUG_INITED);

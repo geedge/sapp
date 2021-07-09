@@ -909,23 +909,155 @@ void sapp_fs2_set_latency(int thead_seq, long long time_cost)
     }
 }
 
-int sapp_assistant_init(void)
-{
-	sapp_fs2_init();
 
+void sapp_fs2_set_plug_entry_latency(int entry_id, long long time_cost)
+{
+	if(unlikely(entry_id < 0 || entry_id >= SAPP_MAX_PLUG_ENTRY_NUM)){
+		return;
+	}
+    if(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle != NULL){
+        FS_operate(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle, 
+        		   sapp_global_val->individual_fixed.field_stat2_para.fs_latency_plug_entrg_id_array[entry_id], 
+        		   0, FS_OP_SET, time_cost);
+    }
+}
+
+/*
+	模糊计算包处理延时, 不用每个包都调用一次FS_operate(),
+	由sapp timer线程每隔一段时间调用sapp_fuzzy_latency_update(), 更新filed_stat2计数.
+*/
+void sapp_fs2_fuzzy_latency_update_per_thread(int thead_seq, long long time_cost)
+{
+	sapp_fuzzy_latency_stat_t *this_thread_stat = &sapp_global_val->mthread_volatile[thead_seq]->fuzzy_pkt_latency_stat_per_thread;
+
+	if(time_cost < this_thread_stat->min_time_cost){
+		this_thread_stat->min_time_cost = time_cost;
+	}
+
+	if(time_cost > this_thread_stat->max_time_cost){
+		this_thread_stat->max_time_cost = time_cost;
+	}
+	
+	this_thread_stat->time_cost_sum += time_cost;
+	this_thread_stat->stat_count++;
+}
+
+void sapp_fs2_fuzzy_latency_update_per_entry(int thead_seq, int entry_id, long long time_cost)
+{
+	sapp_fuzzy_latency_stat_t *this_thread_stat;
+	if(unlikely(entry_id < 0 || entry_id >= SAPP_MAX_PLUG_ENTRY_NUM)){
+		return;
+	}	
+
+	this_thread_stat = &sapp_global_val->mthread_volatile[thead_seq]->fuzzy_pkt_latency_stat_per_entry_per_thread[entry_id];
+
+	if(time_cost < this_thread_stat->min_time_cost){
+		this_thread_stat->min_time_cost = time_cost;
+	}
+
+	if(time_cost > this_thread_stat->max_time_cost){
+		this_thread_stat->max_time_cost = time_cost;
+	}
+	
+	this_thread_stat->time_cost_sum += time_cost;
+	this_thread_stat->stat_count++;
+
+}
+
+
+/*
+	由sapp timer独立线程调用, 每隔一段时间, 将积累的包处理延时数据刷新给field_stat2.
+*/
+void sapp_fuzzy_latency_update(void)
+{
+	int tid, entry_id, this_stat_count;
+	long long min_latency, max_latency;
+	double avg_latency;
+	sapp_fuzzy_latency_stat_t *this_thread_stat, *this_entry_stat;
+	
+	if(sapp_global_val->config.profiling.pkt_latency_accurate_enable != 0){
+		/* 精确模式, 单包调用FS_operate(), 此处无需再处理 */
+		return;
+	}
+
+	for(tid = 0; tid < g_packet_io_thread_num; tid++){
+		this_thread_stat = &sapp_global_val->mthread_volatile[tid]->fuzzy_pkt_latency_stat_per_thread;
+		avg_latency = (double)this_thread_stat->time_cost_sum/(double)this_thread_stat->stat_count;
+		min_latency = this_thread_stat->min_time_cost;
+		max_latency = this_thread_stat->max_time_cost;
+		this_stat_count = this_thread_stat->stat_count;
+
+		if(this_stat_count > 0){
+			memset(this_thread_stat, 0, sizeof(sapp_fuzzy_latency_stat_t));
+			this_thread_stat->min_time_cost = 999999999; /* 要记录最小值, 初始化要设成最大值 */
+
+			/* 每次更新三个值, 最大,最小和平均值 */
+			sapp_fs2_set_latency(tid, min_latency);
+			sapp_fs2_set_latency(tid, max_latency);
+			sapp_fs2_set_latency(tid, (long long)avg_latency);
+		}
+		
+		for(entry_id = 1; entry_id < g_plug_global_entry_index; entry_id++){
+			this_entry_stat = &sapp_global_val->mthread_volatile[tid]->fuzzy_pkt_latency_stat_per_entry_per_thread[entry_id];
+			avg_latency = (double)this_entry_stat->time_cost_sum/(double)this_entry_stat->stat_count;
+			min_latency = this_entry_stat->min_time_cost;
+			max_latency = this_entry_stat->max_time_cost;
+			this_stat_count = this_entry_stat->stat_count;
+			if(this_stat_count > 0){
+				memset(this_entry_stat, 0, sizeof(sapp_fuzzy_latency_stat_t));
+				this_entry_stat->min_time_cost = 999999999; /* 要记录最小值, 初始化要设成最大值 */
+				
+				sapp_fs2_set_latency(tid, min_latency);
+				sapp_fs2_set_latency(tid, max_latency);
+				sapp_fs2_set_plug_entry_latency(entry_id, (long long)avg_latency);
+			}
+		}
+	}
+}
+
+
+int sapp_independent_thread_init(void)
+{
 	pthread_mutex_init(&g_plug_Independent_thread_mutex, NULL);
 
 	if(sapp_global_val->config.cpu.send_only_threads_max_num > 0){
 		g_plug_Independent_thread_pid = (pthread_t *)calloc(g_packet_io_thread_num + sapp_global_val->config.cpu.send_only_threads_max_num, sizeof(pthread_t));
 	}
+
+	return 0;
+}
+
+int sapp_assistant_init(void)
+{
+	sapp_fs2_init();
 	
-	return 1;
+	return 0;
 }
 
 
 #ifdef __cplusplus
 }
 #endif
+
+
+static int fs2_plug_entry_historgram_init(void *fs2_handle)
+{
+	int i;
+	sapp_gval_individual_fixed_fs_t *pfs_para = &sapp_global_val->individual_fixed.field_stat2_para;
+
+	/* 0保留给sapp内置插件, index从1开始 */
+	for(i = 1; i < g_plug_global_entry_index; i++){
+		pfs_para->fs_latency_plug_entrg_id_array[i] = FS_register_histogram(fs2_handle,  //Field Stat句柄
+								  FS_CALC_SPEED,    //输出累计值或瞬时值
+								  g_plug_global_entry[i].plug_entry_name,     //统计项名称，字符串
+								  1,                  //可追踪的最小值
+								  1000000,            //可追踪的最大值
+								  2);                 //精度，即小数点后几位，范围1~4
+	}
+
+	return 0;
+}
+
 
 /************************ C++ compiler **************************************/
 static int sapp_fs2_init(void)
@@ -1098,6 +1230,8 @@ static int sapp_fs2_init(void)
                 FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &pfs_para->fs_latency_id_array[i], sizeof(int));
             }
 		}
+
+		fs2_plug_entry_historgram_init(fs2_handle);
 	}
 	FS_start(fs2_handle);
 	

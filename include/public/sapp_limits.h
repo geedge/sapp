@@ -15,5 +15,8 @@
 #endif
 
 
+#define SAPP_MAX_PLUG_ENTRY_NUM	(256) /* 所有插件的entry数量最大值 */
+
+
 #endif
 

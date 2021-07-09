@@ -3,6 +3,7 @@
 
 #include <netinet/ip.h>
 #include "stream.h"
+#include "sapp_limits.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -107,8 +108,9 @@ typedef struct {
 	const char *plug_entry_name;
 }plug_global_entry_t;
 
-#define MAX_PLUG_ENTRY_NUM	(256)
-extern plug_global_entry_t g_plug_global_entry[MAX_PLUG_ENTRY_NUM];
+
+extern plug_global_entry_t g_plug_global_entry[SAPP_MAX_PLUG_ENTRY_NUM];
+extern int g_plug_global_entry_index;
 extern void* g_plugin_runtime_handle;
 extern int stream_register_fun(int funtype,char (*x)(void), int entry_id);
 

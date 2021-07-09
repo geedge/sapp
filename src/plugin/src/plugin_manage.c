@@ -1,6 +1,7 @@
 #include "sapp_api.h"
 #include "sapp_declaration.h"
 #include "sapp_private_api.h"
+
 /*
     sapp挂载插件失败后，仅写错误日志，然后继续加载下一个插件，
 	即便所有插件都加载失败，仍然会处理流量，空跑�?	有时候必要的插件如果不加载，sapp运行已无意义，应该退出，这样其他监控程序可以告警�?	而仅写一条错误日志，不方便通过第三方监测程序发现问题�?
@@ -43,8 +44,8 @@ struct plug_manage_key_t{
 static MESA_htable_handle g_plug_manage_htable;
 
 
-plug_global_entry_t g_plug_global_entry[MAX_PLUG_ENTRY_NUM];
-static int g_plug_global_entry_index;
+plug_global_entry_t g_plug_global_entry[SAPP_MAX_PLUG_ENTRY_NUM];
+int g_plug_global_entry_index;
 /*
 	TODO1:
 		插件加载失败是否退�? 取决于g_plug_uniq_htable中的necessary是否设置;
@@ -74,7 +75,7 @@ int plug_mange_get_entry_id(const char *plug_name, const char *plug_entry_name)
 {
 	int this_entry_id;
 	
-	if(g_plug_global_entry_index >= MAX_PLUG_ENTRY_NUM){
+	if(g_plug_global_entry_index >= SAPP_MAX_PLUG_ENTRY_NUM){
 		sapp_runtime_log(RLOG_LV_FATAL, "plug entry number overflow! no valid id for %s->%s\n", plug_name, plug_entry_name);
 		return -1;
 	}
