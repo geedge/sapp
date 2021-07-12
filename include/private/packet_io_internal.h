@@ -177,6 +177,7 @@ unsigned long long MESA_rand_range(unsigned long long start, unsigned long long 
 int __MESA_rst_tcp_c(struct streaminfo *stream, unsigned char rst_th_flags, int rst_pkt_num, unsigned char snd_rst_dir, 
 							unsigned short signature_seed1, unsigned short signature_seed2);
 int packet_io_hook_input(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num);
+int packet_io_hook_input_mirror(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num);
 int packet_io_hook_forward(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num);
 int packet_io_hook_sendto(const raw_pkt_t *raw_pkt, unsigned char route_dir, char *send_pkt_data, void *send_pkt_io_reference);
 void sapp_pkt_dump_by_raw_pkt(int tid, const void *pkt, int pkt_len, int has_layer2_hdr, unsigned short eth_pro_host_order, enum _pkt_classify class_val);

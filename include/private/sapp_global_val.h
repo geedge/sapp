@@ -277,6 +277,11 @@ typedef struct{
 	char inject_mode_single_gateway_src_mac[6]; /* inject_mode_single_gateway_device网卡的MAC */
 	int dumpfile_sleep_time_before_exit; /* 读包模式退出之前, 为了某些线程能还写日志, 异步发送数据等操作, 再sleep一会 */
 	sapp_dup_pkt_t dup_pkt_para; /* 重复流量识别 */
+
+	char extract_linkdir_from_mac_sntax_raw_string[32];
+	char extract_linkdir_from_mac_enabled;
+	unsigned char extract_linkdir_from_mac_byte_index; /* 从mac地址的第几个字节获取链路方向, 从0开始到11结束, 总计12字节 */
+	unsigned char extract_linkdir_from_mac_bit_value; /* 从某个字节获取链路方向的bit值, 而不是index, 可以直接进行&运算 */
 }sapp_config_packet_io_t;
 
 

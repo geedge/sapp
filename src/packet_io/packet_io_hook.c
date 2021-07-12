@@ -225,6 +225,23 @@ int packet_io_hook_input(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
 	return ret;
 }
 
+int packet_io_hook_input_mirror(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
+{
+	const unsigned char *p_mac_addr;
+
+	p_mac_addr = (unsigned char *)raw_pkt->raw_pkt_data;
+
+	if(p_mac_addr[sapp_global_val->config.packet_io.extract_linkdir_from_mac_byte_index] & sapp_global_val->config.packet_io.extract_linkdir_from_mac_bit_value){
+		raw_pkt->route_dir = 1;
+	}else{
+		raw_pkt->route_dir = 0;
+	}
+
+	static int pkt_num = 0;
+	printf("%d: route dir=%d\n", pkt_num++, raw_pkt->route_dir);
+
+	return 0;
+}
 
 int packet_io_hook_forward(raw_pkt_t *raw_pkt, unsigned char route_dir, int thread_num)
 {

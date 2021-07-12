@@ -597,6 +597,10 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
 			return DROP;
 		}
+	}else if(DEPOLYMENT_MODE_MIRROR == sapp_global_val->config.packet_io.depolyment_mode_bin){
+		if(sapp_global_val->config.packet_io.extract_linkdir_from_mac_enabled != 0){
+			packet_io_hook_input_mirror((raw_pkt_t *)p_raw_pkt, dir, thread_num);
+		}
 	}
 
 	local_sys_stat->count[SAPP_STAT_RCV_RAW]++;
