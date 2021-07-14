@@ -1,7 +1,7 @@
 if(CAPTURE_MODE MATCHES "MARSIO")
-    configure_file(sapp_marsio.service.in sapp.service)
+	execute_process(COMMAND cp sapp_marsio.service.in ${CMAKE_BINARY_DIR}/service/sapp.service)
 else()
-    configure_file(sapp_default.service.in sapp.service)
+	execute_process(COMMAND cp sapp_default.service.in ${CMAKE_BINARY_DIR}/service/sapp.service)
 endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/service/sapp.service DESTINATION /usr/lib/systemd/system)

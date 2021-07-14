@@ -4,8 +4,8 @@ After=After=network.target
 
 [Service]
 Type=notify
-WorkingDirectory=${CMAKE_INSTALL_PREFIX}
-ExecStart=${CMAKE_INSTALL_PREFIX}/sapp
+EnvironmentFile=/etc/sysconfig/sapp
+ExecStart=${SAPP_ROOT}/sapp -c ${SAPP_ROOT}/sapp/etc/sapp.toml -D /var/log/sapp
 TimeoutSec=300s
 RestartSec=10s
 Restart=always
