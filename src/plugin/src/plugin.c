@@ -184,17 +184,9 @@ void sapp_plugin_load_state_output(void)
 	int i;
 	plugin_load_state_t *ptr_plugin_load_state[128] = {};
 	char time_str[64];
-	char state_log_file_name[PATH_MAX];
 	FILE *fp;
 
-	if((strncasecmp(sapp_global_val->config.data_file_path.data_files_root_dir, "./", 2) == 0)
-	&& (strlen(sapp_global_val->config.data_file_path.data_files_root_dir) == 2)){
-		snprintf(state_log_file_name, PATH_MAX, "%s", "load_plugin_stat.log");
-	}else{
-		snprintf(state_log_file_name, PATH_MAX, "%s/sapp/%s", sapp_global_val->config.data_file_path.data_files_root_dir, "load_plugin_stat.log");
-	}
-	
-	fp = fopen(state_log_file_name, "w+");
+	fp = fopen(ABBR_LOAD_PLUG_STAT_LOG_DATA_FILE, "w+");
 	if(NULL == fp){
 		return;
 	}

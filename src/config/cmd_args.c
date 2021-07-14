@@ -435,6 +435,7 @@ void sapp_update_data_root_dir(const char *data_root_dir)
 	pdata->data_sapp_sysinfo_log_absolute = sapp_strdup(pdata->data_sapp_sysinfo_log_relative);
 	pdata->data_sapp_fs2_log_absolute = sapp_strdup(pdata->data_sapp_fs2_log_relative);
 	pdata->data_inline_keepalive_log_absolute = sapp_strdup(pdata->data_inline_keepalive_log_relative);
+	pdata->data_load_plugin_stat_log_absolute = sapp_strdup(pdata->data_load_plugin_stat_log_relative);
 #endif
 }
 

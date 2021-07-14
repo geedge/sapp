@@ -325,7 +325,7 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{9101,1,RLOG_LV_INFO,"SECONDARY_DATA_LINK",	"data_file_sysinfo_log",	NULL,NULL, NULL, NULL, 0},
 	{9102,6501,RLOG_LV_DEBUG, "SECONDARY_DATA_LINK",	"data_file_field_stat_log",	"1",NULL, NULL, NULL, 0},
 	{9103,4301,RLOG_LV_DEBUG, "SECONDARY_DATA_LINK",	"data_file_inline_keepalive_log",	"inline",NULL, NULL, NULL, 0},
-
+	{9104,0,RLOG_LV_DEBUG, "SECONDARY_DATA_LINK",	"data_file_load_plugin_stat_log",	NULL,NULL, NULL, NULL, 0},
 
 	/* 以下是历史上曾经出现过的配置, 也不算错误,也不算不支持,输出告警信息表示被废弃掉了 */
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"overlay_tunnel_definition","stream_compare_layer_cfg_file",NULL, NULL, NULL,NULL, 0},
@@ -2130,6 +2130,14 @@ int sapp_get_secondary_file_path(void)
 			free((void *)pconfig->data_file_path.data_inline_keepalive_log_relative);
 		}		
 		pconfig->data_file_path.data_inline_keepalive_log_relative = sapp_strdup(str_tmp);
+	}
+
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_DATA_LINK", (char *)"data_file_load_plugin_stat_log", str_tmp, ARG_MAX, "load_plugin_stat.log");
+	if(str_tmp[0] != '\0'){
+		if(pconfig->data_file_path.data_load_plugin_stat_log_relative){
+			free((void *)pconfig->data_file_path.data_load_plugin_stat_log_relative);
+		}
+		pconfig->data_file_path.data_load_plugin_stat_log_relative = sapp_strdup(str_tmp);
 	}
 
 	return 0;

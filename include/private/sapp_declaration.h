@@ -46,6 +46,7 @@ extern "C" {
 #define ABBR_SYSINFO_LOG_DATA_FILE		sapp_global_val->config.data_file_path.data_sapp_sysinfo_log_absolute
 #define ABBR_FS2_LOG_DATA_FILE			sapp_global_val->config.data_file_path.data_sapp_fs2_log_absolute
 #define ABBR_INLINE_KEEPALIVE_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_inline_keepalive_log_absolute
+#define ABBR_LOAD_PLUG_STAT_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_load_plugin_stat_log_absolute
 
 
 extern sapp_global_t *sapp_global_val;

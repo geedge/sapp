@@ -237,9 +237,6 @@ int packet_io_hook_input_mirror(raw_pkt_t *raw_pkt, unsigned char dir, int threa
 		raw_pkt->route_dir = 0;
 	}
 
-	static int pkt_num = 0;
-	printf("%d: route dir=%d\n", pkt_num++, raw_pkt->route_dir);
-
 	return 0;
 }
 

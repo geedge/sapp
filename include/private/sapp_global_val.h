@@ -341,6 +341,9 @@ typedef struct{
 
 	const char *data_inline_keepalive_log_relative;
 	const char *data_inline_keepalive_log_absolute;	
+
+	const char *data_load_plugin_stat_log_relative;
+	const char *data_load_plugin_stat_log_absolute;		
 }sapp_data_file_link_t;
 
 typedef struct{
