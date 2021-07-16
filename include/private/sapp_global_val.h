@@ -7,11 +7,6 @@
 #include "sapp_limits.h"
 #include "stream_inc/stream_base.h"
 
-
-#define SAPP_CFG_SECONDARY_DIR  "sapp" /* 命令行参数-d指定配置文件根目录, 但是还有很多插件, 所以平台追加二级目录sapp, 避免大量文件都存储在一个目录太混乱 */
-#define SAPP_DATA_SECONDARY_DIR  SAPP_CFG_SECONDARY_DIR
-
-
 enum pkt_dump_mode{
 	PKT_DUMP_LOCAL_FILE		=	1, 
 	PKT_DUMP_UDP_SOCKET		=	2, 

@@ -1,1 +1,2 @@
 SAPP_ROOT=/opt/tsg/sapp
+SAPP_LOG_ROOT=/var/log/sapp

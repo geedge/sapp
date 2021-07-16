@@ -1,7 +1,11 @@
+set(SAPP_LOG_PATH_VAR "\${SAPP_LOG_ROOT}")
+
 if(CAPTURE_MODE MATCHES "MARSIO")
-	execute_process(COMMAND cp ${PROJECT_SOURCE_DIR}/service/sapp_marsio.service.in ${CMAKE_BINARY_DIR}/service/sapp.service)
+	configure_file(${PROJECT_SOURCE_DIR}/service/sapp_marsio.service.in ${CMAKE_BINARY_DIR}/service/sapp.service)
+	#execute_process(COMMAND cp ${PROJECT_SOURCE_DIR}/service/sapp_marsio.service.in ${CMAKE_BINARY_DIR}/service/sapp.service)
 else()
-	execute_process(COMMAND cp ${PROJECT_SOURCE_DIR}/service/sapp_default.service.in ${CMAKE_BINARY_DIR}/service/sapp.service)
+    configure_file(${PROJECT_SOURCE_DIR}/service/sapp_default.service.in ${CMAKE_BINARY_DIR}/service/sapp.service)
+	#execute_process(COMMAND cp ${PROJECT_SOURCE_DIR}/service/sapp_default.service.in ${CMAKE_BINARY_DIR}/service/sapp.service)
 endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/service/sapp.service DESTINATION /usr/lib/systemd/system)

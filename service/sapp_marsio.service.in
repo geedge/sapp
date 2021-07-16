@@ -6,7 +6,8 @@ After=mrzcpd.service
 [Service]
 Type=notify
 EnvironmentFile=/etc/sysconfig/sapp
-ExecStart=${SAPP_ROOT}/sapp -c ${SAPP_ROOT}/sapp/etc/sapp.toml -D /var/log/sapp
+WorkingDirectory=${CMAKE_INSTALL_PREFIX}
+ExecStart=${CMAKE_INSTALL_PREFIX}/sapp -c ${CMAKE_INSTALL_PREFIX}/etc/sapp.toml -C ${CMAKE_INSTALL_PREFIX} -D ${SAPP_LOG_PATH_VAR}
 TimeoutSec=300s
 RestartSec=10s
 Restart=always

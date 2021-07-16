@@ -309,28 +309,27 @@ static int store_cmd_args(const char *opt_name, const char *opt_arg)
 }
 
 /*
-	将相对文件路径转换为绝对路径, 受命令行参数-c和配置文件是否使用绝对路径影响.
+	将相对文件路径转换为绝对路径, 受命令行参数-D和配置文件是否使用绝对路径影响.
+
+	sapp的二级日志文件路径从sapp.toml获取, 
+	如果已经是绝对路径(即以/开始), 则不受命令参数-D控制, 
+	否则以-D为根目录, 再追加sapp.toml中的路径为子目录创建文件. 
 */
 static void sapp_convert_relative_to_absolute(const char *raw_relative_path, char **absolute_path, const char *cmd_arg_root_dir)
 {
 	int cfg_is_absolute_path;
-	char sapp_cfg_filename[PATH_MAX];
+	char tmp_filename[PATH_MAX];
 
 	cfg_is_absolute_path = sapp_is_absolute_path(raw_relative_path);
 
-	if(cmd_arg_root_dir){
-		if(cfg_is_absolute_path){
-			/* 如果指定了-c命令行参数, 且配置文件使用了绝对路径, 这是矛盾的, 仅使用绝对路径最后的文件名 */
-			snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s/%s", cmd_arg_root_dir, SAPP_CFG_SECONDARY_DIR, basename(raw_relative_path));
-			*absolute_path = sapp_strdup(sapp_cfg_filename);
-		}else{
-			snprintf(sapp_cfg_filename, PATH_MAX, "%s/%s/%s", cmd_arg_root_dir, SAPP_CFG_SECONDARY_DIR, raw_relative_path);
-			*absolute_path = sapp_strdup(sapp_cfg_filename);
-		}
-	}else{
-		/* 没有-c参数, 直接复制sapp.toml原始的relative_path */
+	if(cfg_is_absolute_path){
+		/* 以/开始的路径, absolute等于  relative */
 		*absolute_path = sapp_strdup(raw_relative_path);	
+		return;
 	}
+
+	snprintf(tmp_filename, PATH_MAX, "%s/%s", cmd_arg_root_dir, raw_relative_path);
+	*absolute_path = sapp_strdup(tmp_filename);
 
 	return;
 }
@@ -346,7 +345,7 @@ void sapp_update_main_config_file(const char *main_entry_cfg)
 		pconfig->cfg_main_entry_absolute = sapp_strdup("./etc/sapp.toml");
 	}
 
-	/* 因为sapp.toml可能不是默认值了, 再重新获取一遍配置文件相对路径 */
+	/* 因为有-c参数, sapp.toml可能不是默认路径了, 再重新获取一遍配置文件相对路径 */
 	sapp_get_secondary_file_path();
 
 	/* sapp的二级配置文件路径从sapp.toml获取, 不受命令参数控制, -C,-D仅用于插件 */
@@ -362,6 +361,7 @@ void sapp_update_main_config_file(const char *main_entry_cfg)
 	sapp_convert_relative_to_absolute(pconfig->cfg_file_stream_compare_layer_relative, (char **)&pconfig->cfg_file_stream_compare_layer_absolute, cfg_root_dir);
 	sapp_convert_relative_to_absolute(pconfig->cfg_file_vlan_flipping_relative, (char **)&pconfig->cfg_file_vlan_flipping_absolute, cfg_root_dir);
 	sapp_convert_relative_to_absolute(pconfig->cfg_file_asymmetric_addr_layer_relative, (char **)&pconfig->cfg_file_asymmetric_addr_layer_absolute, cfg_root_dir);	
+	sapp_convert_relative_to_absolute(pconfig->cfg_file_well_known_port_relative, (char **)&pconfig->cfg_file_well_known_port_absolute, cfg_root_dir);	
 #else
 	pconfig->cfg_sapp_log_absolute = sapp_strdup(pconfig->cfg_sapp_log_relative);
 	pconfig->cfg_plug_list_absolute = sapp_strdup(pconfig->cfg_plug_list_relative);
@@ -406,7 +406,6 @@ void sapp_update_config_root_dir(const char *cfg_root_dir)
 
 void sapp_update_data_root_dir(const char *data_root_dir)
 {
-	char sapp_secondary_dir[PATH_MAX];
 	char sapp_data_filename[PATH_MAX];
 	sapp_data_file_link_t *pdata;
 	
@@ -421,16 +420,20 @@ void sapp_update_data_root_dir(const char *data_root_dir)
 		}
 			
 		pdata->data_files_root_dir = sapp_strdup(data_root_dir);
-		snprintf(sapp_secondary_dir, PATH_MAX, "%s/%s", data_root_dir, SAPP_DATA_SECONDARY_DIR);
-		MESA_mkdir_p(sapp_secondary_dir, 0755);		
+		MESA_mkdir_p(data_root_dir, 0755);		
 	}else{
 		pdata->data_files_root_dir = sapp_strdup("./");
 	}	
 
-#if 0 /* sapp的二级日志文件路径从sapp.toml获取, 不受命令参数控制, -C,-D仅用于插件 */
-	sapp_convert_relative_to_absolute(pdata->data_sapp_sysinfo_log_relative, (char **)&pdata->data_sapp_sysinfo_log_absolute, data_root_dir);
-	sapp_convert_relative_to_absolute(pdata->data_sapp_fs2_log_relative, (char **)&pdata->data_sapp_fs2_log_absolute, data_root_dir);
-	sapp_convert_relative_to_absolute(pdata->data_inline_keepalive_log_relative, (char **)&pdata->data_inline_keepalive_log_absolute, data_root_dir);	
+	/* sapp的二级日志文件路径从sapp.toml获取, 
+	   如果已经是绝对路径(即以/开始), 则不受命令参数-D控制, 
+	   否则以-D为根目录, 再追加sapp.toml中的路径为子目录创建文件. 
+	*/
+#if 1 
+	sapp_convert_relative_to_absolute(pdata->data_sapp_sysinfo_log_relative, (char **)&pdata->data_sapp_sysinfo_log_absolute, pdata->data_files_root_dir);
+	sapp_convert_relative_to_absolute(pdata->data_sapp_fs2_log_relative, (char **)&pdata->data_sapp_fs2_log_absolute, pdata->data_files_root_dir);
+	sapp_convert_relative_to_absolute(pdata->data_inline_keepalive_log_relative, (char **)&pdata->data_inline_keepalive_log_absolute, pdata->data_files_root_dir);	
+	sapp_convert_relative_to_absolute(pdata->data_load_plugin_stat_log_relative, (char **)&pdata->data_load_plugin_stat_log_absolute, pdata->data_files_root_dir);	
 #else
 	pdata->data_sapp_sysinfo_log_absolute = sapp_strdup(pdata->data_sapp_sysinfo_log_relative);
 	pdata->data_sapp_fs2_log_absolute = sapp_strdup(pdata->data_sapp_fs2_log_relative);
