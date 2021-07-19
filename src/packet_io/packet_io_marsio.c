@@ -72,12 +72,11 @@ extern void timestamp_region_update_driver(int tid, long long cpu_cycle);
 extern int stream_process_polling(int thread_seq);
 
 /* dlopen funtion pointer */
-#define MARSIO_SO_FILE_PATH "/opt/mrzcpd/lib/libmarsio.so"
 static int (*ptr_marsio_option_set)(struct mr_instance * instance, marsio_opt_type_t opt_type, void * opt, size_t sz_opt);
 static void (*ptr_marsio_send_burst_flush)(struct mr_sendpath * sendpath, queue_id_t sid);
 static int (*ptr_marsio_init)(struct mr_instance * instance, const char * appsym);
 static struct mr_vdev * (*ptr_marsio_open_device)(struct mr_instance * instance,
-    const char * devsym, unsigned int nr_rxstream, unsigned int nr_txstream);
+    					const char * devsym, unsigned int nr_rxstream, unsigned int nr_txstream);
 static struct mr_sendpath * (*ptr_marsio_sendpath_create_by_vdev)(struct mr_vdev * dest_device);    
 static struct mr_instance * (*ptr_marsio_create)(void);
 static int (*ptr_marsio_thread_init)(struct mr_instance * instance);
@@ -88,17 +87,12 @@ void (*ptr_marsio_buff_free)(struct mr_instance * instance, marsio_buff_t *marsi
 int (*ptr_marsio_buff_malloc_global)(struct mr_instance * instance, marsio_buff_t *marsio_buff[], unsigned int nr_mbufs, int socket_id, int thread_id);
 char * (*ptr_marsio_buff_append)(marsio_buff_t *m, uint16_t len);
 void * (*ptr_marsio_buff_ctrlzone)(marsio_buff_t *m, uint8_t id);
-
 void (*ptr_marsio_buff_ctrlzone_set)(marsio_buff_t *m, uint8_t id, void* ptr_data, uint8_t size);
-
 void (*ptr_marsio_buff_set_rehash_index)(marsio_buff_t *m, uint32_t hash);
-
 char * (*ptr_marsio_buff_mtod)(marsio_buff_t *m);
 uint32_t (*ptr_marsio_buff_datalen)(marsio_buff_t *m);
 uint32_t (*ptr_marsio_buff_buflen)(marsio_buff_t *m);
-
 marsio_buff_t * (*ptr_marsio_buff_clone_with_options)(struct mr_instance * instance, marsio_buff_t * md, int socket_id, int thread_id, uint16_t options);
-
 
 int (*ptr_marsio_buff_get_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
 int (*ptr_marsio_buff_set_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
@@ -870,130 +864,130 @@ static int marsio_dl_get_function_entry(void)
 {
 	void *marsio_so_handle;
 
-	marsio_so_handle = dlopen(MARSIO_SO_FILE_PATH, RTLD_NOW | RTLD_LOCAL | RTLD_NODELETE);
+	marsio_so_handle = dlopen(ABBR_MARSIO_LIBRARY_FILE, RTLD_NOW | RTLD_LOCAL | RTLD_NODELETE);
 	if(NULL == marsio_so_handle){
-		printf("\033[1;31;40m[Error]dlopen '%s' failed!\033[0m\n", "/opt/mrzcpd/lib/libmarsio.so");
+		printf("\033[1;31;40m[Error]dlopen '%s' failed!\033[0m\n", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_option_set = (int (*)(struct mr_instance * instance, marsio_opt_type_t opt_type, void * opt, size_t sz_opt))dlsym(marsio_so_handle, "marsio_option_set");
 	if(NULL == ptr_marsio_option_set){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_option_set", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_option_set", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_create = (struct mr_instance * (*)(void))dlsym(marsio_so_handle, "marsio_create");
 	if(NULL == ptr_marsio_create){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_create", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_create", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_init = (int (*)(struct mr_instance * instance, const char * appsym))dlsym(marsio_so_handle, "marsio_init");
 	if(NULL == ptr_marsio_init){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_init", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_init", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_open_device = (struct mr_vdev * (*)(struct mr_instance * instance, const char * devsym, unsigned int nr_rxstream, unsigned int nr_txstream))dlsym(marsio_so_handle, "marsio_open_device");
 	if(NULL == ptr_marsio_open_device){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_open_device", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_open_device", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_sendpath_create_by_vdev = (struct mr_sendpath * (*)(struct mr_vdev * dest_device))dlsym(marsio_so_handle, "marsio_sendpath_create_by_vdev");
 	if(NULL == ptr_marsio_sendpath_create_by_vdev){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_sendpath_create_by_vdev", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_sendpath_create_by_vdev", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_thread_init = (int (*)(struct mr_instance * instance))dlsym(marsio_so_handle, "marsio_thread_init");
 	if(NULL == ptr_marsio_thread_init){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_thread_init", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_thread_init", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_recv_burst = (int (*)(struct mr_vdev * vdev, queue_id_t qid, marsio_buff_t * mbufs[], int nr_mbufs))dlsym(marsio_so_handle, "marsio_recv_burst");
 	if(NULL == ptr_marsio_recv_burst){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_recv_burst", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_recv_burst", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_send_burst = (int (*)(struct mr_sendpath * sendpath,  queue_id_t qid, marsio_buff_t * mbufs[], int nr_mbufs))dlsym(marsio_so_handle, "marsio_send_burst");
 	if(NULL == ptr_marsio_send_burst){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_send_burst", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_send_burst", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_send_burst_with_options = (int (*)(struct mr_sendpath * sendpath, queue_id_t sid, marsio_buff_t * mbufs[], int nr_mbufs, uint16_t options))dlsym(marsio_so_handle, "marsio_send_burst_with_options");
 	if(NULL == ptr_marsio_send_burst_with_options){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_send_burst_with_options", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_send_burst_with_options", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_buff_free = (void (*)(struct mr_instance * instance, marsio_buff_t *marsio_buff[],unsigned int nr_mbufs, int socket_id, int thread_id))dlsym(marsio_so_handle, "marsio_buff_free");
 	if(NULL == ptr_marsio_buff_free){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_free", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_free", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_buff_malloc_global = (int (*)(struct mr_instance * instance, marsio_buff_t *marsio_buff[], unsigned int nr_mbufs, int socket_id, int thread_id))dlsym(marsio_so_handle, "marsio_buff_malloc_global");
 	if(NULL == ptr_marsio_buff_malloc_global){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_malloc_global", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_malloc_global", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_buff_append = (char * (*)(marsio_buff_t *m, uint16_t len))dlsym(marsio_so_handle, "marsio_buff_append");
 	if(NULL == ptr_marsio_buff_append){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_append", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_append", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_buff_ctrlzone = (void * (*)(marsio_buff_t *m, uint8_t id))dlsym(marsio_so_handle, "marsio_buff_ctrlzone");
 	if(NULL == ptr_marsio_buff_ctrlzone){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_ctrlzone", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_ctrlzone", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_buff_ctrlzone_set = (void (*)(marsio_buff_t *m, uint8_t id, void* ptr_data, uint8_t size))dlsym(marsio_so_handle, "marsio_buff_ctrlzone_set");
 	if(NULL == ptr_marsio_buff_ctrlzone_set){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_ctrlzone_set", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_ctrlzone_set", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_buff_set_rehash_index = (void (*)(marsio_buff_t *m, uint32_t hash))dlsym(marsio_so_handle, "marsio_buff_set_rehash_index");
 	if(NULL == ptr_marsio_buff_set_rehash_index){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_rehash_index", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_rehash_index", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_buff_mtod = (char * (*)(marsio_buff_t *m))dlsym(marsio_so_handle, "marsio_buff_mtod");
 	if(NULL == ptr_marsio_buff_mtod){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_mtod", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_mtod", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_buff_datalen = (uint32_t (*)(marsio_buff_t *m))dlsym(marsio_so_handle, "marsio_buff_datalen");
 	if(NULL == ptr_marsio_buff_datalen){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_datalen", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_datalen", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_buff_buflen = (uint32_t (*)(marsio_buff_t *m))dlsym(marsio_so_handle, "marsio_buff_buflen");
 	if(NULL == ptr_marsio_buff_buflen){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_buflen", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_buflen", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	ptr_marsio_buff_clone_with_options = (marsio_buff_t * (*)(struct mr_instance * instance, marsio_buff_t * md, int socket_id, int thread_id, uint16_t options))dlsym(marsio_so_handle, "marsio_buff_clone_with_options");
 	if(NULL == ptr_marsio_buff_clone_with_options){
-		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_clone_with_options", MARSIO_SO_FILE_PATH);
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_clone_with_options", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
 	/*************   note: 没有marsio_send_burst_flush()函数不算错误, 向后兼容! *****************/
 	ptr_marsio_send_burst_flush = (void (*)(struct mr_sendpath * sendpath, queue_id_t sid))dlsym(marsio_so_handle, "marsio_send_burst_flush");
 	if(NULL == ptr_marsio_send_burst_flush){
-		printf("\033[33m[Warning]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_send_burst_flush", MARSIO_SO_FILE_PATH);
+		printf("\033[33m[Warning]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_send_burst_flush", ABBR_MARSIO_LIBRARY_FILE);
 		//go on
 	}
 
@@ -1001,21 +995,21 @@ static int marsio_dl_get_function_entry(void)
 	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
 		ptr_marsio_buff_get_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_get_metadata");
 		if(NULL == ptr_marsio_buff_get_metadata){
-			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_get_metadata", MARSIO_SO_FILE_PATH);
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_get_metadata", ABBR_MARSIO_LIBRARY_FILE);
 			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
 			sleep(1);
 		}
 
 		ptr_marsio_buff_set_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_set_metadata");
 		if(NULL == ptr_marsio_buff_set_metadata){
-			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_metadata", MARSIO_SO_FILE_PATH);
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_metadata", ABBR_MARSIO_LIBRARY_FILE);
 			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
 			sleep(1);
 		}
 
 		ptr_marsio_buff_unset_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type))dlsym(marsio_so_handle, "marsio_buff_unset_metadata");
 		if(NULL == ptr_marsio_buff_unset_metadata){
-			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_unset_metadata", MARSIO_SO_FILE_PATH);
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_unset_metadata", ABBR_MARSIO_LIBRARY_FILE);
 			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
 			sleep(1);
 		}		
@@ -1078,7 +1072,7 @@ int marsio_dl_io_init(int argc, char *argv[])
 	char app_name[32];
 
 	if(marsio_dl_get_function_entry() < 0){
-		printf("\033[1;31;40m[Error] dlopen marsio.so symbol failed!\033[0m\n");
+		printf("\033[1;31;40m[Error]dlopen marsio.so symbol failed!\033[0m\n");
 		return -1;
 	}
 

@@ -233,3 +233,6 @@
     data_file_inline_keepalive_log="gdev_keeplive_status.log"
     data_file_load_plugin_stat_log="load_plugin_stat.log"
 
+[LIBRARY_LINK]	 
+    marsio_library_path="/opt/tsg/framework/libmarsio.so"
+    

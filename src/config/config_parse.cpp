@@ -327,7 +327,11 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{9103,4301,RLOG_LV_DEBUG, "SECONDARY_DATA_LINK",	"data_file_inline_keepalive_log",	"inline",NULL, NULL, NULL, 0},
 	{9104,0,RLOG_LV_DEBUG, "SECONDARY_DATA_LINK",	"data_file_load_plugin_stat_log",	NULL,NULL, NULL, NULL, 0},
 
-	/* 以下是历史上曾经出现过的配置, 也不算错误,也不算不支持,输出告警信息表示被废弃掉了 */
+	{9201,0,RLOG_LV_INFO, "LIBRARY_LINK",	"marsio_library_path",	NULL,NULL, NULL, NULL, 0},
+
+	/******************************************************************************************************************/
+	/*********** 以下是历史上曾经出现过的配置, 也不算错误,也不算不支持,输出告警信息表示被废弃掉了 *********************/
+	/******************************************************************************************************************/
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"overlay_tunnel_definition","stream_compare_layer_cfg_file",NULL, NULL, NULL,NULL, 0},
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"overlay_tunnel_definition","vlan_flipping_cfg_file",NULL, NULL, NULL,NULL, 0},
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"overlay_tunnel_definition","asymmetric_presence_layer_cfg_file",NULL, NULL, NULL,NULL, 0},
@@ -2362,7 +2366,7 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"tools.pkt_dump", (char *)"mode", pconfig->tools.pkt_dump.mode_str, NAME_MAX, "udp_socket");
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"tools.pkt_dump", (char *)"BSD_packet_filter", str_tmp, ARG_MAX, "");
 	if(str_tmp[0] != '\0'){
-		pconfig->tools.pkt_dump.bpf_filter = strdup(str_tmp);
+		pconfig->tools.pkt_dump.bpf_filter = sapp_strdup(str_tmp);
 	}
 
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"tools.pkt_dump.threads", (char *)"all_threads_enabled", &pconfig->tools.pkt_dump.dump_all_thread_enabled, 0);
@@ -2378,6 +2382,8 @@ int sapp_parse_config(void)
 	pconfig->tools.pkt_dump.storge_path = sapp_strdup(str_tmp);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"tools.pkt_dump.storage", (char *)"file_size_max_per_thread", (int *)&pconfig->tools.pkt_dump.file_size_max_per_thread, 1000);
 
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"LIBRARY_LINK", (char *)"marsio_library_path", str_tmp, ARG_MAX, "/opt/mrzcpd/lib/libmarsio.so");
+	pconfig->library_file_path.libmarsio_file_path = sapp_strdup(str_tmp);
 
 	log_handle_init();
 

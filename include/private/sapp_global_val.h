@@ -342,6 +342,10 @@ typedef struct{
 }sapp_data_file_link_t;
 
 typedef struct{
+	const char *libmarsio_file_path; /* libmarsio.so是动态dlopen的, 但sapp事先不一定知道在哪个路径, 从配置文件获取 */
+}sapp_library_file_link_t;
+
+typedef struct{
 	int ipv6_decapsulation_enabled; /* 是否解析ipv6数据包 */
 	int ipv6_send_packet_enabled; /* 是否支持发送ipv6数据包, 此项依赖系统ipv6内核模块是否加载 */
 	int tcp_drop_pure_ack_pkt; /* 丢弃没有负载的纯ack包, 可以节约一次流表查询, 根据业务需求设置 */
@@ -362,6 +366,7 @@ typedef struct{
 	sapp_protocol_feature_t protocol_feature;
 	sapp_config_file_link_t cfg_file_path;
 	sapp_data_file_link_t data_file_path;
+	sapp_library_file_link_t library_file_path;
 }sapp_config_t;
 
 
