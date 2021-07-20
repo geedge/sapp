@@ -958,11 +958,11 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 	if(NULL == stream){ /* 递归计算终结条件! */
 		return 0;
 	}
-    raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
+    
 	if(is_proxy_stream(stream)){ /* 代理流结构为虚拟结构, 实际构造包时跳过不处理 */
-		reserved_hdr_len = 0;
-		goto done;
+		return calc_reserved_hdr_len((struct streaminfo *)stream->pfather, net_layer_type, send_stream_dir);
 	}
+	raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
 	
 	switch(stream->addr.addrtype){
 		case ADDR_TYPE_IPV4:
@@ -2033,8 +2033,8 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 	carry_layer_stream = stream;
 
 	if(is_proxy_stream(stream)){ /* 代理流结构为虚拟结构, 实际的包不存在此层, 构造包时跳过不处理 */
-		this_layer_len = 0;
-		goto done;
+		return build_net_layer_pkt(top_stream, carry_layer_stream, (struct streaminfo_private *)stream->pfather, carry_layer_type, 
+								this_layer_len+carry_layer_len, buf, reverse, raw_pkt, send_stream_dir);
 	}
 
 	switch(stream->addr.addrtype){

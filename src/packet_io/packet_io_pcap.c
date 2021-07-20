@@ -524,7 +524,7 @@ long pcap_dl_io_get_lib_drop_num(void)
 void * pcap_dl_io_device_alias(unsigned int target_id, char *device_args)
 {
 	/* 对于pcap模式来说, 就是设备名称 eth1, eth2, etc. */
-	return (void *)strdup(device_args);
+	return (void *)sapp_strdup(device_args);
 }
 
 int pcap_dl_io_register_cb(PACKET_IO_CB_T fun)

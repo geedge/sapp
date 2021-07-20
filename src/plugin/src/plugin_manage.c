@@ -200,9 +200,9 @@ static uchar * plug_manage_key_dup_cb(const uchar *key, uint key_size)
 	struct plug_manage_key_t *new_mg_key; 
 	const struct plug_manage_key_t *raw_mg_key = (struct plug_manage_key_t *)key;
 
-	new_mg_key = (struct plug_manage_key_t *)malloc(sizeof(struct plug_manage_key_t));
-	new_mg_key->plug_name = strdup(raw_mg_key->plug_name);
-	new_mg_key->plug_entry_type = strdup(raw_mg_key->plug_entry_type);
+	new_mg_key = (struct plug_manage_key_t *)sapp_mem_alloc(sizeof(struct plug_manage_key_t));
+	new_mg_key->plug_name = sapp_strdup(raw_mg_key->plug_name);
+	new_mg_key->plug_entry_type = sapp_strdup(raw_mg_key->plug_entry_type);
 
 	return (uchar *)new_mg_key;
 }

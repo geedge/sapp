@@ -85,15 +85,15 @@ int tun_dl_io_set_cap_mode(int cap_mode)
 
 int tun_dl_io_set_capdev_parallel(const char *cap_dev)
 {
-	tun_up_dev_name = strdup(cap_dev);
+	tun_up_dev_name = sapp_strdup(cap_dev);
 
 	return 0;
 }
 
 int tun_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 {
-	tun_up_dev_name = strdup(up_dev);
-	tun_down_dev_name = strdup(down_dev);
+	tun_up_dev_name = sapp_strdup(up_dev);
+	tun_down_dev_name = sapp_strdup(down_dev);
 
 	return 0;
 }
@@ -126,7 +126,7 @@ long tun_dl_io_get_lib_drop_num(void)
 void * tun_dl_io_device_alias(unsigned int target_id, char *device_args)
 {
 	/* 对于tun模式来说, 就是设备名称 eth1, eth2, etc. */
-	return (void *)strdup(device_args);
+	return (void *)sapp_strdup(device_args);
 }
 
 int tun_dl_io_register_cb(PACKET_IO_CB_T fun)
@@ -168,9 +168,9 @@ int tun_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 	int dir_reverse, ret;
 
 send_again:
-	/* 发包时, dir要取反一次, 因为从tun0收的包,rcv_dir=0, 如果send_dir=0, 即业务插件要同向发送,实际是从tun1发走 */
+	/* 发包�? dir要取反一�? 因为从tun0收的�?rcv_dir=0, 如果send_dir=0, 即业务插件要同向发�?实际是从tun1发走 */
 
-	/* 发包之前恢复原始ip地址, kni, tfe看到的都是假象 */
+	/* 发包之前恢复原始ip地址, kni, tfe看到的都是假�?*/
 	tun_xor_static_nat((struct mesa_ip4_hdr *)data);
 	
 	ret = write(g_tun_fd[(dir & 0x1) ^ 1], data, datalen);

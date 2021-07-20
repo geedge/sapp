@@ -1575,7 +1575,7 @@ static int parse_well_known_port_config(void)
 			return -1;			
 		}
 
-		port_array = (unsigned short *)sapp_realloc(port_array, sizeof(short)*(port_array_num+1));
+		port_array = (unsigned short *)sapp_mem_realloc(port_array, sizeof(short)*(port_array_num+1));
 		port_array[port_array_num] = (unsigned short)tmpnum;
 		port_array_num++;
 	}
@@ -2204,14 +2204,13 @@ int sapp_parse_config(void)
 	/*******************************  packet_io.overlay_tunnel_definition ******************************/
 	
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"overlay_tunnel_definition", (char *)"l2_l3_tunnel_support", &pconfig->packet_io.packet_io_tunnel.l2_l3_tunnel_support, 0);
-	//tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"overlay_tunnel_definition", (char *)"create_mpls_anyway", &pconfig->packet_io.create_mpls_anyway, 0);
 
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"overlay_tunnel_definition", (char *)"overlay_mode", pconfig->packet_io.packet_io_tunnel.overlay_mode_string, NAME_MAX, "none");
 
 	/*******************************  packet_io.feature ******************************/
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"BSD_packet_filter", str_tmp, NAME_MAX, "");
 	if(str_tmp[0] != '\0'){
-		pconfig->packet_io.input_bpf_filter = strdup(str_tmp);
+		pconfig->packet_io.input_bpf_filter = sapp_strdup(str_tmp);
 	}
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"inbound_route_dir", &pconfig->packet_io.inbound_route_dir, 0);
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"pcap_capture_direction", pconfig->packet_io.pcap_capture_direction, NAME_MAX, "in");
@@ -2670,7 +2669,7 @@ int sapp_config_check(void)
 	int i, ret1, ret2, ret3, final_ret = 0;
 
 	/* 全局变量中有固定不变的配置, 也有动态从配置文件读取的数据, 所以此处copy一份临时数据 */
-	sapp_config_check_t *local_cfg_check_attr = (sapp_config_check_t *)malloc(sizeof(g_sapp_cfg_check_attr)); 
+	sapp_config_check_t *local_cfg_check_attr = (sapp_config_check_t *)sapp_mem_alloc(sizeof(g_sapp_cfg_check_attr)); 
 	memcpy(local_cfg_check_attr, g_sapp_cfg_check_attr, sizeof(g_sapp_cfg_check_attr));
 
 	for(i = 0; i < sizeof(g_interger_range_array)/sizeof(int); i++){
@@ -2700,7 +2699,7 @@ done:
 		printf("\033[32msapp config check success!\033[0m\n");
 	}
 
-	free(local_cfg_check_attr);
+	sapp_mem_free(local_cfg_check_attr);
 
 	return final_ret;
 }

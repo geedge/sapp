@@ -154,7 +154,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 		}
 	}
 
-#if 0 /* 2021-05-06 lijia close, 非对称mpls改成动态插入streaminfo的方式解决. */		
+#if 0 /* 2021-05-06 lijia close, 非对称mpls改成动态插入streaminfo的方式解决, 详见: streaminfo_layer_alignment() */		
 	if(should_create_empty_mpls_layer_for_symmetric(pstream, eth_type) != 0){
 		((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offset;
 		ret = mpls_empty_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);

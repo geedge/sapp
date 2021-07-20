@@ -652,7 +652,7 @@ int process_conf_entryname()
 		}
 
 		g_entryname_info->num ++;
-		g_entryname_info->entryname = (stEntryNameElem* )sapp_realloc(g_entryname_info->entryname,(g_entryname_info->num)*sizeof(stEntryNameElem));
+		g_entryname_info->entryname = (stEntryNameElem* )sapp_mem_realloc(g_entryname_info->entryname,(g_entryname_info->num)*sizeof(stEntryNameElem));
 		memset(&(g_entryname_info->entryname[g_entryname_info->num-1]),0,sizeof(stEntryNameElem));
 		memcpy(&(g_entryname_info->entryname[g_entryname_info->num-1]),buf_entryname,strlen(buf_entryname));
 	}

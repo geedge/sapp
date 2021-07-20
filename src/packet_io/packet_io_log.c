@@ -124,37 +124,50 @@ int MESA_mkdir_p(const char *pathname, mode_t mode)
 #else
 int MESA_mkdir_p(const char *pathname, mode_t mode)
 {
-        char tmp[PATH_MAX];
-        char *p = NULL;
-        size_t len;
-        int ret;
+    char tmp[PATH_MAX];
+    char *p = NULL;
+    size_t len;
+    int ret;
+
+    if(NULL == pathname){
+		return -1;
+    }
+
+	/* 当前目录 */
+	if((strncasecmp(pathname, "./", 2) == 0) && (strlen(pathname) == 2)){
+		return 0;
+	}
+	/* 上一级目录 */	
+	if((strncasecmp(pathname, "../", 3) == 0) && (strlen(pathname) == 3)){
+		return 0;
+	}    
 
 	if(strncasecmp(pathname, "./", 2) == 0){
 		pathname += 2;
 	}
 	
-        snprintf(tmp, PATH_MAX-1, "%s", pathname);
-        len = strlen(tmp);
-        if(tmp[len - 1] == '/'){
-                tmp[len - 1] = 0;
-        }
-        for(p = tmp + 1; *p; p++){
-                if(*p == '/') {
-                        *p = 0;
-                        ret = mkdir(tmp, mode);
-                        if((ret < 0) && (errno != EEXIST)){
-					return -1;
-                        }
-                        *p = '/';
-                }
-        }      
-        
-        ret = mkdir(tmp, mode);
-        if((ret < 0) && (errno != EEXIST)){
-		return -1;
-        }
+    snprintf(tmp, PATH_MAX-1, "%s", pathname);
+    len = strlen(tmp);
+    if(tmp[len - 1] == '/'){
+            tmp[len - 1] = 0;
+    }
+    for(p = tmp + 1; *p; p++){
+            if(*p == '/') {
+                    *p = 0;
+                    ret = mkdir(tmp, mode);
+                    if((ret < 0) && (errno != EEXIST)){
+				return -1;
+                    }
+                    *p = '/';
+            }
+    }      
+    
+    ret = mkdir(tmp, mode);
+    if((ret < 0) && (errno != EEXIST)){
+	return -1;
+    }
 
-        return 0;
+    return 0;
 }
 #endif
 

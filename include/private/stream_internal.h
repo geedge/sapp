@@ -145,7 +145,7 @@ struct streaminfo_private
 	UCHAR  stream_dir:1; /* 流的生存期内有效, 流的存储的地址是否和默认规则"大端口是客户端"相同  */		
 	UCHAR  stream_c2s_route_dir:1; /* c2s方向的包, 对应的链路route dir方向, 用于获取inbound, outbound流量 */
 	UCHAR  addr_use_as_hash:1; /* 本层的addr是否做为HASH计算和比较的参数, 如:MAC地址不参与计算 */
-	UCHAR  addr_skip_for_layer_cmp:1;/*因MPLS两侧不对称, 尤其是还有一边有MPLS, 另一端没有MPLS的流, 此变量=1表示虚拟构建的层, 解析时不作为地址比较, 发包时也要跳过 */
+	UCHAR  __pad1:1;/*因MPLS两侧不对称, 尤其是还有一边有MPLS, 另一端没有MPLS的流, 此变量=1表示虚拟构建的层, 解析时不作为地址比较, 发包时也要跳过 */
 	UCHAR  need_update_opposite_addr:1;/*本层的addr是否在对侧来包时更新，如：MPLS标签非对称时需要在S2C侧第一个包记录本侧标签,该值默认为0，即不需要更新*/
 	UCHAR  stream_killed_flag:1; /* 2014-08-22 lijia add, 串联模式下, 已经被插件Kill, 之后此流可直接Drop或Kill, 无需再给上层插件 */
 	UCHAR  dirreverse;	     /* 建立连接时是否进行了ip地址反转, 即与"大端口是客户端"规则相反 */
@@ -330,9 +330,7 @@ struct sapp_global_single_t{
 
 	//int send_fake_pkt_mode; /* 2018-10-26 lijia add, for PanGu, 由于缺少FD路由, 需借用串联GDEV发送rst包, DNS-fake包等,mode 0： 协议栈三层发包， 1：协议栈二层发包，3：gdev注入发包，此模式下send_fake_pkt_gdev_sport有效 */
 	//int send_fake_pkt_gdev_sport;  /* 2018-10-26 lijia add, for PanGu, 用于选择vxlan源端口 */
-	int send_fake_pkt_sip;
-	//int create_mpls_anyway;/*无条件在MAC和IP层之间创建MPLS层*/
-	
+	int send_fake_pkt_sip;	
 };
 
 #define TIMESTAMP_SINGLE_PKT_REGION 		(4) /* 单包延时统计区间 */
@@ -357,6 +355,12 @@ struct sapp_global_mthread_t{
 	timestamp_record_region_t runtime_record;
 	timestamp_record_region_t runtime_record_driver; /* 驱动从网卡拿到包, 到平台拿到包的延时 */
 }__attribute__ ((aligned (64)));
+
+typedef struct{
+	unsigned int magic; /* malloc后填充0x4D4D4D4D,  即MMMM 的16进制; free后填充0xFEFEFEFE */
+	unsigned int user_buf_size;
+}sapp_private_mem_t;
+
 
 extern struct sapp_global_single_t sapp_global_single;
 extern struct sapp_global_mthread_t sapp_global_mthread[MAX_THREAD_NUM];
@@ -407,7 +411,11 @@ void sapp_printf_colorful(int level, const char *format, ...);
 int set_transport_addr(struct streaminfo *this_stream, int enable_well_known_port, UINT16 sport, UINT16 dport);
 long long sapp_random(void);
 int sapp_usleep(int usec);
-void *sapp_realloc(void *old_buf, int size) ;
+
+void *sapp_mem_alloc(int size);
+void sapp_mem_free(void *data);
+void *sapp_mem_realloc(void *old_ptr, int size);
+
 
 
 #ifdef __cplusplus

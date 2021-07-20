@@ -261,7 +261,6 @@ typedef struct{
 	int without_usleep; /* 性能测试模式, 不会调用usleep, CPU会100% */
 	int inbound_route_dir; /* 表示入境, I2C方向的值是0还是1 */
 	char pcap_capture_direction[NAME_MAX]; /* in, out, inout */
-	//int create_mpls_anyway;
 	char inject_pkt_mode_string[NAME_MAX];
 	int inject_pkt_mode; /* 包注入方式二进制值, 详见: enum send_fake_packet_mode */
 	unsigned short inject_mode_inline_device_sport; /* udp socket绑定的本端源端口, host order, 主机序 */

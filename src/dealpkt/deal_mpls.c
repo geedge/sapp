@@ -149,7 +149,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		pstream->addr.paddr=&addr;
 		pstream->addr.addrtype = ADDR_TYPE_MPLS;
 		pstream->addr.addrlen = sizeof(struct layer_addr_mpls);
-		pstream_pr->addr_skip_for_layer_cmp = 0;//为了地址比较, 创建的空MPLS层为1, 此处有实际mpls地址, 设为0
+		//pstream_pr->addr_skip_for_layer_cmp = 0;//为了地址比较, 创建的空MPLS层为1, 此处有实际mpls地址, 设为0
 		//pstream_pr->fake_layer_dir_for_asymmetric_cmp = 0;
 		//ptmp->stream.p_layer_header = this_layer_data;
 		//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_layer_data - (char *)raw_pkt->raw_pkt_data;
@@ -251,6 +251,10 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 	return ret;
 }
 
+/* 2021-05-06 lijia close, 非对称mpls改成动态插入streaminfo的方式解决.
+   详见函数: streaminfo_layer_alignment()
+*/ 	
+#if 0
 int mpls_empty_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_data,int thread_num,
 				  unsigned char routedir, const raw_pkt_t *raw_pkt,int offset_to_raw_pkt_hdr)
 {
@@ -309,6 +313,7 @@ int mpls_empty_entry(struct streaminfo_private *pfstream_pr,const void *this_lay
 
 	return ret;
 }
+#endif
 
 #ifdef __cplusplus
 }

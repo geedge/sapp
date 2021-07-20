@@ -1690,24 +1690,50 @@ int sapp_is_absolute_path(const char *filename)
 	return 0;
 }
 
-void *sapp_realloc(void *old_buf, int size) 
+
+void *sapp_mem_alloc(int size)
 {
-    void *new_buf;
+	char *ptr = (char *)calloc(1, size + sizeof(sapp_private_mem_t));
+	sapp_private_mem_t *mhdr = (sapp_private_mem_t *)ptr;
 
-    if(size <= 0){
-		return NULL;
-    }
-
-    if(NULL == old_buf){ /* old_buf可以是NULL, 此时realloc等同于malloc */
-		return malloc(size);
-    }
-    
-    new_buf = malloc(size);
-    memcpy(new_buf, old_buf, size); /* todo: 如果size比原来大, 此处会有读越界, 原来的size拿不到, 怎么解决?  */
-    free(old_buf);
-
-    return new_buf;
+	mhdr->magic = 0x4D4D4D4D; 
+	mhdr->user_buf_size = size;
+	
+	return ptr + sizeof(sapp_private_mem_t);
 }
+
+
+void sapp_mem_free(void *data)
+{	
+	char *ptr = (char *)data;
+
+	sapp_private_mem_t *mhdr = (sapp_private_mem_t *)(ptr - sizeof(sapp_private_mem_t));
+
+	assert(0x4D4D4D4D == mhdr->magic);
+
+	mhdr->magic = 0xFEFEFEFE;
+	
+	free(mhdr);
+}
+
+void *sapp_mem_realloc(void *old_ptr, int size)
+{
+	void *new_ptr;
+	sapp_private_mem_t *mhdr;
+	
+	if(NULL == old_ptr){ /* first time,  NULL pointer, same to sapp_mem_alloc() */
+		return sapp_mem_alloc(size);
+	}
+
+	mhdr = (sapp_private_mem_t *)((char *)old_ptr - sizeof(sapp_private_mem_t));
+	new_ptr = sapp_mem_alloc(size);
+	memmove(new_ptr, old_ptr, mhdr->user_buf_size); 
+
+	sapp_mem_free(old_ptr);
+
+	return new_ptr;
+}
+
 
 long long sapp_random(void)
 {
