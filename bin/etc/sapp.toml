@@ -64,7 +64,8 @@
 ### ether[0] is 0x01, dst mac first octet, ether[1] is 0x12, dst mac second octet,
 ### ether[6] is 0x02, src mac first octet, ether[11] is 0xFF, src mac sixth octet.
 ### the bit field is from 0 to 7, the 0 is least significant bit, the 7 is most significant bit.
-    extract_linkdir_from_mac_in_mirror_mode="ether[4]:0"
+    ##extract_linkdir_from_mac_in_mirror_mode="ether[4]:0"  ## for Xj example
+    extract_linkdir_from_mac_in_mirror_mode=""
    
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]

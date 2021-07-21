@@ -57,7 +57,7 @@ set(CPACK_RPM_PACKAGE_AUTOREQ "no")
 
 # setup %config(noreplace)
 set(CPACK_RPM_EXECUTABLE_USER_FILELIST "%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/gdev.conf"
-                            "%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/sapp.toml"
+                "%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/sapp.toml"
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/send_raw_pkt.conf"
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/project_list.conf"
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/plugin.conf"
@@ -71,7 +71,8 @@ set(CPACK_RPM_EXECUTABLE_USER_FILELIST "%config(noreplace) ${CMAKE_INSTALL_PREFI
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/stream_compare_layer.conf"
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/necessary_plug_list.conf"
 				"%config(noreplace) ${CMAKE_INSTALL_PREFIX}/etc/sapp_log.conf"
-				"%config(noreplace) /etc/sysconfig/sapp")
+				"%config(noreplace) /etc/sysconfig/sapp"
+				"%config(noreplace) /usr/lib/systemd/system/sapp.service")
 
 # Must uninstall the debug package before install release package
 set(CPACK_RPM_PACKAGE_CONFLICTS ${MY_RPM_NAME_PREFIX})
