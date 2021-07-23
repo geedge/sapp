@@ -42,6 +42,9 @@
 ### note, same as tcpdump -Q/-P arg, possible values are `in', `out' and `inout', default is "in"
     pcap_capture_direction="in"
 
+### note, support two mode: "inner_tuple2", "outer_tuple2"
+    pcap_distmode="inner_tuple2"
+
 ### note, depolyment.mode options: [sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]
 ### sys_route: send ip(ipv6) packet by system route table, this is default mode in mirror mode;
 ### vxlan_by_inline_device: encapsulation inject packet with vxlan, and then send to inline device by udp socket.

@@ -9,8 +9,8 @@ extern "C" {
 
 #define PROCESS_BAR_SW 		(1)
 
-int g_pcap_version_VERSION_20190907; 
-static int g_pcap_version_internal = 20190907;
+int g_pcap_version_VERSION_20210722; 
+static int g_pcap_version_internal = 20210722;
 
 #define PCAP_SNAPLEN_MAX	(65535)
 
@@ -21,6 +21,12 @@ typedef struct{
 	struct sockaddr saddr_down;
 	UINT8 pcap_send_buf[SENDPACKET_BUF_LEN];
 }pcap_send_handle;
+
+/* 分流模式, 按内层二元组还是外层二元组, TODO:按需求开发, 以后可以支持四元组 */
+typedef enum{ 
+	PCAP_DISTMODE_INNER_TUPLE2,
+	PCAP_DISTMODE_OUTER_TUPLE2,
+}pcap_distmode_t;
 
 #define PCAP_MALLOC(size)		malloc(size)
 #define PCAP_FREE(ptr)			free(ptr)
@@ -43,10 +49,10 @@ static volatile long pcap_lib_drop_up_num = 0; /* 并联模式默认使用此变量存储 */
 static volatile long pcap_lib_drop_down_num = 0;
 static struct mesa_ethernet_hdr *raw_pkt_hdr[MAX_THREAD_NUM]; /* 记录原始包头指针, 用于发包获取MAC地址用 */
 static unsigned char raw_pkt_route_dir[MAX_THREAD_NUM]; /* 记录原始包方向, 用于发送数据包 */
-static unsigned int dispatch_thread_rnd_num;
 static unsigned long long tot_up_rcv_pkt_num, tot_down_rcv_pkt_num;
 static int pcap_device_up_mtu = 1500;
 static int pcap_device_down_mtu = 1500;
+static pcap_distmode_t g_pcap_distmode = PCAP_DISTMODE_OUTER_TUPLE2;
 
 extern sapp_global_t *sapp_global_val;
 extern int g_PollingFunNum;
@@ -911,8 +917,13 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 	unsigned int disp_arg1, disp_arg2;
 	const struct ip *ipv4_hdr;
 	const struct ip6_hdr *ipv6_hdr;
+
+	if(PCAP_DISTMODE_OUTER_TUPLE2 == g_pcap_distmode){
+		res = MESA_net_jump_to_layer((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
+	}else{
+		res = MESA_net_jump_to_layer_greedy((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
+	}
 	
-	res = MESA_net_jump_to_layer((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
 	if(res){
 		ipv4_hdr = (const struct ip *)res;
 		if(memcmp(&ipv4_hdr->ip_src.s_addr, &ipv4_hdr->ip_dst.s_addr, sizeof(int)) >= 0){
@@ -925,7 +936,11 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 		goto disp;
 	}
 
-	res = MESA_net_jump_to_layer((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
+	if(PCAP_DISTMODE_OUTER_TUPLE2 == g_pcap_distmode){
+		res = MESA_net_jump_to_layer((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
+	}else{
+		res = MESA_net_jump_to_layer_greedy((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
+	}
 	if(res){
 		ipv6_hdr = (const struct ip6_hdr *)res;
 		/* 只使用IPv6地址的一部分 */
@@ -945,7 +960,7 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 	return 0;
 
 disp:
-	hash = pcap_dispatch_hash(disp_arg1, disp_arg2, dispatch_thread_rnd_num); 
+	hash = pcap_dispatch_hash(disp_arg1, disp_arg2, 0xFEEDBEAF); 
 	hash %=  g_pcap_work_thread_num;
 
 	return hash;
@@ -1438,8 +1453,6 @@ int pcap_dl_io_init(int argc, char *argv[])
 	}
 	
 	pcap_create_work_thread();
-
-	dispatch_thread_rnd_num = (unsigned int)sapp_random();
 	
 #if 0 /* version3.0 */
 	MESA_load_profile_string_def("conf/main.conf", "Module", "dumpfile_speed", cfg_buf, sizeof(cfg_buf), "topspeed");
@@ -1456,6 +1469,17 @@ int pcap_dl_io_init(int argc, char *argv[])
 		}
 	}
 #endif
+
+	char conf_pcap_distmode[NAME_MAX];
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"pcap_distmode", conf_pcap_distmode, sizeof(conf_pcap_distmode), "inner_tuple2");
+	if(strncasecmp(conf_pcap_distmode, "inner_tuple2", strnlen("inner_tuple2", NAME_MAX)) == 0){
+		g_pcap_distmode = PCAP_DISTMODE_INNER_TUPLE2;
+	}else if(strncasecmp(conf_pcap_distmode, "outer_tuple2", strnlen("outer_tuple2", NAME_MAX)) == 0){
+		g_pcap_distmode = PCAP_DISTMODE_OUTER_TUPLE2;
+	}else{
+		printf("\033[1;31;40m[Error]invalid [packet_io.feature]->pcap_distmode:'%s', only support [\"inner_tuple2\", \"outer_tuple2\"].\033[0m\n");
+		return -1;
+	}
 
 	return 0;
 }

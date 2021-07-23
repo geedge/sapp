@@ -180,14 +180,13 @@ static int cfg_value_check_stream_id_base_time(const sapp_config_check_t *sapp_c
 }
 
 
-
-
 static const char *cfg_chk_value_overlay_mode[2] = {"none", "vxlan"};
 static const char *cfg_chk_value_pcap_capture_direction[3] = {"in", "out", "inout"};
 static const char *cfg_chk_value_inject_pkt_mode[4] = {"sys_route", "vxlan_by_inline_device", "raw_ethernet_single_gateway", "raw_ethernet_multi_gateway"};
 static const char *cfg_chk_value_depolyment_mode[4] = {"mirror", "inline", "transparent", "dumpfile"};
 static const char *cfg_chk_value_interface_type[2] = {"pcap", "marsio"};
 static const char *cfg_chk_value_pkt_dump_mode[2] = {"storage", "udp_socket"};
+static const char *cfg_chk_value_pcap_distmode[2] = {"inner_tuple2", "outer_tuple2"};
 
 
 static const sapp_config_check_t g_sapp_cfg_check_attr[] = 
@@ -215,6 +214,7 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{4208,4204,RLOG_LV_INFO,"packet_io.feature",	"inject_mode_single_gateway_dst_mac",	"raw_ethernet_single_gateway",cfg_value_check_inject_mode, NULL, NULL, 0},
 	{4209,0,RLOG_LV_DEBUG,"packet_io.feature",	"dumpfile_sleep_time_before_exit",	NULL, cfg_value_check_integer_range, NULL, g_interger_range_array, 65535},
 	{4210,0,RLOG_LV_DEBUG,"packet_io.feature",	"extract_linkdir_from_mac_in_mirror_mode",	NULL, NULL, NULL, NULL, 0},
+	{4211,0,RLOG_LV_DEBUG,"packet_io.feature",	"pcap_distmode",	NULL,cfg_value_check_string_range, NULL, cfg_chk_value_pcap_distmode, 2},
 
 	{4301,1,RLOG_LV_FATAL,"packet_io.depolyment",	"mode",	NULL,cfg_value_check_string_range, NULL, cfg_chk_value_depolyment_mode, 3},
 	{4302,1,RLOG_LV_FATAL,"packet_io.internal.interface",	"type",	NULL,cfg_value_check_string_range, NULL, cfg_chk_value_interface_type, 2},
