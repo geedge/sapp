@@ -1037,6 +1037,7 @@ UINT8 net_layer_to_ipv4_protocol(int addr_type)
 			proto = IPPROTO_IPIP;
 		break;
 
+		case ADDR_TYPE_IPV6: //6over4 tunnel
 		case __ADDR_TYPE_IP_PAIR_V6:
 			proto = IPPROTO_IPV6;
 		break;
@@ -1054,7 +1055,7 @@ UINT8 net_layer_to_ipv4_protocol(int addr_type)
 		break;
 
 		default:
-			sapp_runtime_log(20, "net_layer_to_ipv4_protocol(): unknown ip4 protocolr:%d\n", addr_type);
+			sapp_runtime_log(RLOG_LV_INFO, "net_layer_to_ipv4_protocol(): unknown ip4 protocol:%d\n", addr_type);
 			proto = 0xFF;
 		break;
 	}
@@ -1075,12 +1076,13 @@ UINT8 net_layer_to_ipv6_protocol(int addr_type)
 			proto = NEXTHDR_UDP;
 		break;
 
+		case ADDR_TYPE_IPV4: //4over6 tunnel
 		case __ADDR_TYPE_IP_PAIR_V4:
 			proto = NEXTHDR_IPIP;
 		break;
 
 		default:
-			sapp_runtime_log(20, "net_layer_to_ipv6_protocol(): unknown ip6 next-hdr:%d\n", addr_type);
+			sapp_runtime_log(RLOG_LV_INFO, "net_layer_to_ipv6_protocol(): unknown ip6 next-hdr:%d\n", addr_type);
 			return 0xFF;
 		break;
 	}
