@@ -48,13 +48,9 @@ int frags_list_append(struct frag_ipq *ipq, const raw_pkt_t *raw_pkt, int type, 
 		return -1;
 	}
 
-	pkt_len = raw_pkt->raw_pkt_len;
-#if 0
-	struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)((char *)raw_pkt->raw_pkt_data + 14);
-	printf("##### frag append ip id:0x%x\n", ntohs(ip4hdr->ip_id));
-#endif
+	pkt_len = raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes; /* 2021-07-29 lijia modify, inline模式下, 原始ip分片包不包括overlay层 */
 	save_pkt_ptr = dictator_malloc(thread_num, pkt_len);
-	memcpy(save_pkt_ptr, raw_pkt->raw_pkt_data, pkt_len);
+	memcpy(save_pkt_ptr, raw_pkt->raw_pkt_data + raw_pkt->overlay_layer_bytes, pkt_len);
 	new_list_node = (raw_ipfrag_list_t *)dictator_malloc(thread_num, sizeof(raw_ipfrag_list_t));
 	new_list_node->frag_packet = save_pkt_ptr;
 	new_list_node->pkt_len = pkt_len;

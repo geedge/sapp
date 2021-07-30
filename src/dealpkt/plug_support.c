@@ -34,7 +34,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_DATA:
 		{
 			void **out_value = (void **)void_value;
-			*out_value = (void *)rawpkt->raw_pkt_data;
+			*out_value = (char *)rawpkt->raw_pkt_data + rawpkt->overlay_layer_bytes;
 		}
 		break;
 
@@ -48,7 +48,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		case RAW_PKT_GET_TOT_LEN:
 		{
 			int *out_value = (int *)void_value;
-			*out_value = rawpkt->raw_pkt_len;
+			*out_value = rawpkt->raw_pkt_len - rawpkt->overlay_layer_bytes;
 		}
 		break;
 
