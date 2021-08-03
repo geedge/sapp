@@ -24,7 +24,7 @@ set_target_properties(pptp_protocol_plug  PROPERTIES PREFIX "")
 add_library(isakmp_protocol_plug SHARED isakmp_protocol_plug_add_nat.c)
 set_target_properties(isakmp_protocol_plug  PROPERTIES PREFIX "")
 
-add_library(inner_plug STATIC g_device_plug.c)
+add_library(inner_plug STATIC g_device_plug.cpp)
 
 if(ENABLE_STATIC_LINK)
     add_library(sapp_assistant STATIC sapp_assistant.cpp)

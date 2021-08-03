@@ -467,6 +467,9 @@ int sendpacket_do_checksum(unsigned char *buf, int protocol, int len);
 int sendpacket_init_packet(int p_size, unsigned char **buf);
 int sendpacket_tool_init(void);
 extern int sendpacket_write_new( sendpacketTool *pTool,int sendlen, char dir);
+int sendpacket_build_icmpv4_echo(u_int8_t type, u_int8_t code, u_int16_t sum,
+	u_int16_t id, u_int16_t seq, u_int8_t *payload, u_int32_t payload_s, unsigned char *buf);
+
 #ifdef __cplusplus
 }
 #endif
@@ -491,17 +494,19 @@ int sendpacket_build_ip(u_int16_t len, u_char tos, u_int16_t id, u_int16_t frag,
             int payload_s, char *buf);
 int sendpacket_build_ipv4(u_int16_t len, u_int8_t tos, u_int16_t id, u_int16_t frag,
             u_int8_t ttl, u_int8_t prot, u_int32_t src, u_int32_t dst,
-            const char *payload, int payload_s, char *buf);
+            const char *payload, int payload_s, unsigned char *buf);
+int sendpacket_build_icmpv4_echo(u_int8_t type, u_int8_t code, u_int16_t sum,
+	u_int16_t id, u_int16_t seq, u_int8_t *payload, u_int32_t payload_s, unsigned char *buf);            
 int sendpacket_build_tcp(u_int16_t sp, u_int16_t dp, u_int32_t seq, u_int32_t ack, u_int8_t control,
             u_int16_t win, u_int16_t urg, const char *payload, int payload_s,
             char *buf);
-int sendpacket_build_udp_dual_stack(u_int16_t sp, u_int16_t dp, const char *payload, int payload_s,int,char *buf);
+int sendpacket_build_udp_dual_stack(u_int16_t sp, u_int16_t dp, const char *payload, int payload_s,int,unsigned char *buf);
 int sendpacket_build_ethernet(u_char *dst, u_char *src, u_short type,
             const u_char *payload, int payload_s, u_char *buf);
 int sendpacket_build_arp(u_short hrd, u_short pro, u_char hln, u_char pln, u_short op,
             u_char *sha, u_char *spa, u_char *tha, u_char *tpa,
             const u_char *payload, int payload_s, u_char *buf);
-int sendpacket_do_checksum(char *buf, int protocol, int len);
+int sendpacket_do_checksum(unsigned char *buf, int protocol, int len);
 int sendpacket_init_packet(int p_size, char **buf);
 #ifdef __cplusplus
 }

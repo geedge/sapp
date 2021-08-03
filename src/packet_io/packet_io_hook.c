@@ -175,17 +175,23 @@ static int packet_io_hook_input_vxlan(raw_pkt_t *raw_pkt, unsigned char dir, int
 	const struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr));
 	const struct mesa_udp_hdr *carry_vxlan_udp_hdr;
 	const inline_vxlan_hdr_t *vxlan_hdr;
+	const struct mesa_icmp_echo_hdr *icmp_hdr;
 
-	if(ip4hdr->ip_p != IPPROTO_UDP){
-		sapp_runtime_log(RLOG_LV_INFO, "packet_io_hook_input_vxlan: recv not udp packet, IPPROTO:%d", ip4hdr->ip_p);
-		return -1;
-	}
-	
-	carry_vxlan_udp_hdr = (struct mesa_udp_hdr *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr));
-	if(carry_vxlan_udp_hdr->uh_dport != htons(VXLAN_KEEPALIVE_PKT_PORT)
-	  && carry_vxlan_udp_hdr->uh_dport != htons(VXLAN_OVERLAY_PKT_PORT)){
-	  	sapp_runtime_log(RLOG_LV_INFO, "packet_io_hook_input_vxlan: recv dst udp port:%u, not %u and not %u in vxlan mode\n", 
-	  					ntohs(carry_vxlan_udp_hdr->uh_dport), VXLAN_KEEPALIVE_PKT_PORT, VXLAN_OVERLAY_PKT_PORT);
+	if(IPPROTO_UDP == ip4hdr->ip_p){
+		carry_vxlan_udp_hdr = (struct mesa_udp_hdr *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr));
+		if(carry_vxlan_udp_hdr->uh_dport != htons(VXLAN_KEEPALIVE_PKT_PORT)
+		  && carry_vxlan_udp_hdr->uh_dport != htons(VXLAN_OVERLAY_PKT_PORT)){
+		  	sapp_runtime_log(RLOG_LV_DEBUG, "packet_io_hook_input_vxlan: recv dst udp port:%u, not %u and not %u in vxlan mode\n", 
+		  					ntohs(carry_vxlan_udp_hdr->uh_dport), VXLAN_KEEPALIVE_PKT_PORT, VXLAN_OVERLAY_PKT_PORT);
+			return -1;
+		}
+	}else if(IPPROTO_ICMP == ip4hdr->ip_p){
+		icmp_hdr = (struct mesa_icmp_echo_hdr *)((char *)ip4hdr + ip4hdr->ip_hl*4);
+		if(icmp_hdr->icmp_type != ICMP_ECHO){
+			return -1;
+		}
+	}else{
+		sapp_runtime_log(RLOG_LV_DEBUG, "packet_io_hook_input_vxlan: recv not udp and icmp packet, IPPROTO:%d", ip4hdr->ip_p);
 		return -1;
 	}
 	
