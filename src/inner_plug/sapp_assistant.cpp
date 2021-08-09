@@ -685,6 +685,18 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		}
 		break;
 
+		case SPO_DEPLOYMENT_MODE:
+		{
+			if(*opt_val_len != sizeof(enum sapp_deploment_mode_t)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_DEPLOYMENT_MODE error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}	
+			enum sapp_deploment_mode_t *dep_mode = (enum sapp_deploment_mode_t *)opt_val;
+			*dep_mode = (enum sapp_deploment_mode_t)sapp_global_val->config.packet_io.depolyment_mode_bin;			
+		}
+		break;
+
 		case SPO_CURRENT_STATE:
 		{
 			if(*opt_val_len != sizeof(enum sapp_state_t)){

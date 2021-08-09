@@ -2955,6 +2955,10 @@ int save_polling_inject_context(struct streaminfo_private *pstream_pr, const raw
 	pstream_pr->polling_inject_context = (polling_inject_context_t *)dictator_malloc(thread_index, sizeof(polling_inject_context_t));
 	memset(pstream_pr->polling_inject_context, 0, sizeof(polling_inject_context_t));
 
+	/* TODO:
+	    此处将每个方向的第一个包都存下来, 如果都是短流太费内存了, 也耗CPU,
+	    如果遇到flood攻击就更严重了!!
+	    将发包所需的参数都藏于private结构中, 不再依赖原始包 */
 	if((DIR_ROUTE_DOWN & pstream_pr->stream_public.routedir) == DIR_ROUTE_DOWN){
 		pstream_pr->polling_inject_context->raw_pkt_down = sapp_raw_pkt_dup(thread_index, raw_pkt);
 	}else{

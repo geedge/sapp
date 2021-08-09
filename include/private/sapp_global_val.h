@@ -12,11 +12,6 @@ enum pkt_dump_mode{
 	PKT_DUMP_UDP_SOCKET		=	2, 
 };
 
-enum depolyment_mode_config{
-	DEPOLYMENT_MODE_MIRROR		= 1,
-	DEPOLYMENT_MODE_TRANSPARENT	= 2,
-	DEPOLYMENT_MODE_INLINE		= 3,
-};
 
 /*
 	vxlan和vlan_flipping是可以共存的,
@@ -252,7 +247,7 @@ typedef struct{
 	sapp_config_packet_io_tunnel_t packet_io_tunnel;
 	const char *input_bpf_filter;
 	char depolyment_mode_str[NAME_MAX]; /* [mirror, inline, transparent, dumpfile] */
-	enum depolyment_mode_config depolyment_mode_bin; /* 方便程序内处理, 转成数值形式, 如1:mirror; 2:transparent; 3:inline等, 详见: enum depolyment_mode_config */
+	enum sapp_deploment_mode_t depolyment_mode_bin; /* 方便程序内处理, 转成数值形式, 如1:mirror; 2:transparent; 3:inline等, 详见: enum sapp_deploment_mode_t */
 	sapp_config_packet_io_dev_t internal;
 	sapp_config_packet_io_dev_t external;
 	char pcap_dumpfile_name[NAME_MAX];

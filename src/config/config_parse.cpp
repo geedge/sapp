@@ -1664,6 +1664,9 @@ static int config_expression_convert(void)
 	if(strncasecmp(tmp_str, "mirror", strlen("mirror")) == 0){
 		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
 		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
+	}else if(strncasecmp(tmp_str, "dumpfile", strlen("dumpfile")) == 0){
+		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
+		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
 	}else if(strncasecmp(tmp_str, "inline", strlen("inline")) == 0){
 		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_INLINE;
 		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_SERIAL_GDEV;

@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define STREAM_CONTROL_H_VERSION		(20210511)
+#define STREAM_CONTROL_H_VERSION		(20210806)
 
 #define TCP_CTEAT_LINK_BYSYN   			0x01  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
 #define TCP_CTEAT_LINK_BYDATA 			0x02  /* for MESA_stream_opt->MSO_TCP_CREATE_LINK_MODE */
@@ -79,12 +79,10 @@ enum sapp_platform_opt{
 	SPO_TCP_STREAM_NEW,			/* total created tcp streams from start, opt_val type must be unsigned long long */
 	SPO_TCP_STREAM_CLOSE,		/* total closed tcp streams from start, opt_val type must be unsigned long long */
 	SPO_TCP_STREAM_ESTAB,		/* realtime established tcp streams, opt_val type must be unsigned long long */
-
 	SPO_TOTAL_INBOUND_PKT,		/* total inbound packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_INBOUND_BYTE,		/* total inbound packet bytes, opt_val type must be unsigned long long */
 	SPO_TOTAL_OUTBOUND_PKT,		/* total outbound packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_OUTBOUND_BYTE,	/* total outbound packet bytes, opt_val type must be unsigned long long */
-
 	SPO_UDP_STREAM_NEW,			/* total created udp streams from start, opt_val type must be unsigned long long */
 	SPO_UDP_STREAM_CLOSE,		/* total closed udp streams from start, opt_val type must be unsigned long long */
 	SPO_UDP_STREAM_CONCURRENT,	/* realtime Concurrent udp streams, opt_val type must be unsigned long long */	
@@ -96,7 +94,6 @@ enum sapp_platform_opt{
 	SPO_TOTAL_RCV_INBOUND_IPV6_BYTE,		/* total recv ipv6 packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_OUTBOUND_IPV6_PKT,	/* total recv ipv6 packet bytes, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_OUTBOUND_IPV6_BYTE,	/* total recv ipv6 packet bytes, opt_val type must be unsigned long long */
-
 	SPO_TOTAL_RCV_INBOUND_TCP_PKT,		/* total recv tcp packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_INBOUND_TCP_BYTE,		/* total recv tcp packet number, opt_val type must be unsigned long long */
 	SPO_TOTAL_RCV_OUTBOUND_TCP_PKT,		/* total recv tcp packet bytes, opt_val type must be unsigned long long */
@@ -107,9 +104,9 @@ enum sapp_platform_opt{
 	SPO_TOTAL_RCV_OUTBOUND_UDP_BYTE,		/* total recv udp packet bytes, opt_val type must be unsigned long long */
 	SPO_CURTIME_TIMET_MS,		/* current time in millisecond, opt_val type must be long long */
 	SPO_CURRENT_STATE,			/* running stage of sapp, opt_val type is enum sapp_state_t */
-
 	SPO_CONFIG_ROOT_DIR,		/* config file root directory, opt_val type must be char[], opt_val_len is value-result argument */
 	SPO_DATA_ROOT_DIR,			/* data or state file root directory, opt_val type must be char[], opt_val_len is value-result argument */
+	SPO_DEPLOYMENT_MODE, /* Similar to SPO_DEPLOYMENT_MODE_STR, opt_val type is sapp_deploment_mode_t */
 };
 
 
@@ -215,6 +212,13 @@ struct mso_plug_pme{
 	const char *plug_entry_type; 	/* argument: IN, only support: TCP, TCP_ALL, UDP.  */
 	void *plug_pme;					/* argument: OUT, plug private memory address of current stream */
 };
+
+enum sapp_deploment_mode_t{
+	DEPOLYMENT_MODE_MIRROR		= 1,
+	DEPOLYMENT_MODE_TRANSPARENT	= 2,
+	DEPOLYMENT_MODE_INLINE		= 3,
+};
+
 
 
 /*
