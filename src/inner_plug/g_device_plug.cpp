@@ -772,9 +772,9 @@ static int gdev_keepalive_fs2_init(void)
 	fs2_opt = 1; /* 1:Rewrite ,2: Append.  */
 	FS_set_para(gdev_keepalive_fs2_handle, PRINT_MODE, &fs2_opt, sizeof(int));
 
-	fs2_opt = 0;
+	fs2_opt = 1;
 	FS_set_para(gdev_keepalive_fs2_handle, PRINT_TRIGGER, &fs2_opt, sizeof(int));
-	//FS_set_para(gdev_keepalive_fs2_handle, OUTPUT_DEVICE, "./inline_keepalive.log", strlen("./inline_keepalive.log") + 1); 
+	FS_set_para(gdev_keepalive_fs2_handle, OUTPUT_DEVICE, "./fs2_inline_keepalive.log", strlen("./fs2_inline_keepalive.log") + 1); 
 
 	fs2_opt = 1;
     FS_set_para(gdev_keepalive_fs2_handle, NOT_SEND_METRIC_TO_SERVER, &fs2_opt, sizeof(int));
@@ -790,8 +790,8 @@ static int gdev_keepalive_fs2_init(void)
 
 
 	/* 先注册列, 初始化后固定不变, 行以ip为单位动态注册, gdev_keepalive_dynamic_register_fs2_line() */
-	gdev_keepalive_fs2_column_id_array[FS2_COLUMN_REQUEST_NUM] = FS_register(gdev_keepalive_fs2_handle, FS_STYLE_COLUMN, FS_CALC_SPEED, "req_pkt");
-	gdev_keepalive_fs2_column_id_array[FS2_COLUMN_REPLY_NUM] = FS_register(gdev_keepalive_fs2_handle, FS_STYLE_COLUMN, FS_CALC_SPEED, "rpy_pkt");
+	gdev_keepalive_fs2_column_id_array[FS2_COLUMN_REQUEST_NUM] = FS_register(gdev_keepalive_fs2_handle, FS_STYLE_COLUMN, FS_CALC_CURRENT, "req_pkt");
+	gdev_keepalive_fs2_column_id_array[FS2_COLUMN_REPLY_NUM] = FS_register(gdev_keepalive_fs2_handle, FS_STYLE_COLUMN, FS_CALC_CURRENT, "rpy_pkt");
 
 	FS_start(gdev_keepalive_fs2_handle);
 
