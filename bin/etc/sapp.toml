@@ -211,6 +211,7 @@
     breakpad_minidump_dir="/tmp/crashreport"
     enable_breakpad_upload=0
     breakpad_upload_url="http://127.0.0.1/"
+    breakpad_upload_tools="/opt/MESA/bin/minidump_upload"
 
 
 ### note:

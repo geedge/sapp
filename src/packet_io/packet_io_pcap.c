@@ -224,7 +224,6 @@ static unsigned long process_bar_get_pps(void)
 static void process_bar_print(int len)
 {
 	double percent;
-	int index;
 	double bytes_per_sec, remain_time;
 	FILE *fp;
 	char dumpfile_proc_log_absolute[PATH_MAX];
@@ -243,10 +242,6 @@ static void process_bar_print(int len)
 			percent = ((double)dumpfile_read_size/(double)dumpfile_total_size) * 100;
 		}else{
 			percent = 100.00;
-		}
-		index = (int )percent;
-		if(index >= 99){
-			index = 99;
 		}
 
 		/* 猜测剩余时间 */
@@ -914,7 +909,8 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 {
 	const void *res;
 	unsigned int hash = 0;
-	unsigned int disp_arg1, disp_arg2;
+	unsigned char *disp_arg1, *disp_arg2;
+	int disp_addrlen;
 	const struct ip *ipv4_hdr;
 	const struct ip6_hdr *ipv6_hdr;
 
@@ -927,12 +923,13 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 	if(res){
 		ipv4_hdr = (const struct ip *)res;
 		if(memcmp(&ipv4_hdr->ip_src.s_addr, &ipv4_hdr->ip_dst.s_addr, sizeof(int)) >= 0){
-			disp_arg1 = ipv4_hdr->ip_src.s_addr;
-			disp_arg2 = ipv4_hdr->ip_dst.s_addr;
+			disp_arg1 = (unsigned char *)&ipv4_hdr->ip_src.s_addr;
+			disp_arg2 = (unsigned char *)&ipv4_hdr->ip_dst.s_addr;
 		}else{
-			disp_arg1 = ipv4_hdr->ip_dst.s_addr;
-			disp_arg2 = ipv4_hdr->ip_src.s_addr;
+			disp_arg1 = (unsigned char *)&ipv4_hdr->ip_dst.s_addr;
+			disp_arg2 = (unsigned char *)&ipv4_hdr->ip_src.s_addr;
 		}
+		disp_addrlen = sizeof(int);
 		goto disp;
 	}
 
@@ -945,12 +942,13 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 		ipv6_hdr = (const struct ip6_hdr *)res;
 		/* 只使用IPv6地址的一部分 */
 		if(memcmp(&ipv6_hdr->ip6_src.s6_addr32[3], &ipv6_hdr->ip6_dst.s6_addr32[3], sizeof(int)) >= 0){
-			disp_arg1 = ipv6_hdr->ip6_src.s6_addr32[3];
-			disp_arg2 = ipv6_hdr->ip6_dst.s6_addr32[3];
+			disp_arg1 = (unsigned char *)&ipv6_hdr->ip6_src;
+			disp_arg2 = (unsigned char *)&ipv6_hdr->ip6_dst;
 		}else{
-			disp_arg1 = ipv6_hdr->ip6_dst.s6_addr32[3];
-			disp_arg2 = ipv6_hdr->ip6_src.s6_addr32[3];
+			disp_arg1 = (unsigned char *)&ipv6_hdr->ip6_dst;
+			disp_arg2 = (unsigned char *)&ipv6_hdr->ip6_src;
 		}
+		disp_addrlen = sizeof(struct in6_addr);
 		goto disp;
 	}
 
@@ -960,7 +958,8 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 	return 0;
 
 disp:
-	hash = pcap_dispatch_hash(disp_arg1, disp_arg2, 0xFEEDBEAF); 
+	//hash = pcap_dispatch_hash(disp_arg1, disp_arg2, 0xFEEDBEAF); 
+	hash = dpdk_rte_ip_hash(disp_arg1, disp_arg2, disp_addrlen);
 	hash %=  g_pcap_work_thread_num;
 
 	return hash;
@@ -1302,7 +1301,6 @@ static void *pcap_io_thread(void *arg)
 	unsigned char route_dir = (unsigned char)route_dir_arg;
 	pcap_t *handle;
 	int pcap_ret;
-	char pcap_errbuf[PCAP_ERRBUF_SIZE];
 	char *no_use;
 
 #if(__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__ >= 480) /* 版本判断, 很多旧系统无法编译 */
@@ -1364,7 +1362,6 @@ int pcap_dl_io_init(int argc, char *argv[])
 {
 	char pcap_errbuf[PCAP_ERRBUF_SIZE];
 	int opt_len;
-	char cfg_buf[256];
 
 #if PCAP_CAP_FROM_IP	
 	printf("\033[41m Warning! 'PCAP_CAP_FROM_IP' is enable!. \033[0m\n");
@@ -1406,7 +1403,7 @@ int pcap_dl_io_init(int argc, char *argv[])
 	{
 		if((strncasecmp(sapp_global_val->config.packet_io.depolyment_mode_str, "transparent", strlen("transparent")) == 0)
 		  && (strstr(sapp_global_val->config.packet_io.pcap_capture_direction, "out") != NULL)){
-			printf("\033[1;31;40m[Error]in transparent mode, pcap_capture_direction must set 'in'![0m\n", g_pcap_up_dev_name, pcap_errbuf);
+			printf("\033[1;31;40m[Error]in transparent mode, pcap_capture_direction must set 'in'![0m\n");
 			return -1;
 		}
 		pcap_up_handle = pcap_open_live(g_pcap_up_dev_name, PCAP_SNAPLEN_MAX,1,1,pcap_errbuf);
@@ -1477,7 +1474,7 @@ int pcap_dl_io_init(int argc, char *argv[])
 	}else if(strncasecmp(conf_pcap_distmode, "outer_tuple2", strnlen("outer_tuple2", NAME_MAX)) == 0){
 		g_pcap_distmode = PCAP_DISTMODE_OUTER_TUPLE2;
 	}else{
-		printf("\033[1;31;40m[Error]invalid [packet_io.feature]->pcap_distmode:'%s', only support [\"inner_tuple2\", \"outer_tuple2\"].\033[0m\n");
+		printf("\033[1;31;40m[Error]invalid [packet_io.feature]->pcap_distmode:'%s', only support [\"inner_tuple2\", \"outer_tuple2\"].\033[0m\n", conf_pcap_distmode);
 		return -1;
 	}
 

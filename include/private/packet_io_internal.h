@@ -181,6 +181,7 @@ int packet_io_hook_input_mirror(raw_pkt_t *raw_pkt, unsigned char dir, int threa
 int packet_io_hook_forward(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num);
 int packet_io_hook_sendto(const raw_pkt_t *raw_pkt, unsigned char route_dir, char *send_pkt_data, void *send_pkt_io_reference);
 void sapp_pkt_dump_by_raw_pkt(int tid, const void *pkt, int pkt_len, int has_layer2_hdr, unsigned short eth_pro_host_order, enum _pkt_classify class_val);
+unsigned int dpdk_rte_ip_hash(const char *sipaddr, const char *dipaddr, int addrlen);
 
 
 /********************** funcitons for dynamic link ***********************/

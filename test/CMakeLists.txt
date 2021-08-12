@@ -39,6 +39,7 @@ add_custom_command(OUTPUT  libtest_phony.a
 		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/MESA_socket_wrap/src/libMESA_socket_wrap.a
 		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/timestamp_record/libtimestamp_record.a
 		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/MESA_sleep/libMESA_sleep.a
+		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/dpdk_rte_hash/libdpdk_ip_hash.a
 		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/sapp_dev/libsapp_dev.a
 		COMMAND ar -x ${CMAKE_BINARY_DIR}/vendor/libdabloom/lib/libdablooms.a
 		COMMAND ar -x ${CMAKE_BINARY_DIR}/vendor/libevent/lib/libevent.a 
