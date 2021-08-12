@@ -15,7 +15,6 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <dirent.h>
-#include "mrtunnat.h"
 #include "dpdk_rte_hash_crc.h"
 
 
