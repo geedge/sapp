@@ -3003,11 +3003,12 @@ void free_polling_inject_context(struct streaminfo_private *pstream_pr)
 unsigned long long get_global_stream_id(unsigned long long thread_seq)
 {
 #define RELATIVE_TIME_MAX (268435456L)
+#define THREAD_SEQ_MAX    (32768)
 	unsigned long long glo_sid = 0;
 	unsigned long long stream_seq; 
 	unsigned long long relative_base_time;
 
-	stream_seq = sapp_global_val->mthread_volatile[thread_seq]->stream_seq_per_thread++;
+	stream_seq = sapp_global_val->mthread_volatile[thread_seq]->stream_seq_per_thread++ % THREAD_SEQ_MAX;
 	relative_base_time = (sapp_global_val->individual_volatile->current_time - sapp_global_val->config.stream.stream_id_base_time_t) % RELATIVE_TIME_MAX;
 	
 	glo_sid = (thread_seq << 43) | (relative_base_time << 15) | (stream_seq);

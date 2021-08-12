@@ -6,6 +6,7 @@ SI/
 *.a
 *.o
 *.d
+*.bak
 .idea/
 bin/log/
 bin/sapp
