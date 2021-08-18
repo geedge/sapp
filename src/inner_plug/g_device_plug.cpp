@@ -108,7 +108,7 @@ extern int sendpacket_build_icmpv4_echo(u_int8_t type, u_int8_t code, u_int16_t 
 extern char *timet_to_str(time_t timet, char *time_str, int time_str_len);
 static int vxlan_sport_service_map_init(void);
 extern void del_last_rn(char *data, int max_len);
-static unsigned char g_vxlan_sport_to_service_id[65536]; /* 数组下标为源端口, 值为service-id */
+static unsigned char g_vxlan_sport_to_service_id[65536]; /* 数组下标为源端口, 值为service-id, 理论最大值是65535 */
 
 
 static int gdev_kp_action_judge(int service_id)

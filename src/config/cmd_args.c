@@ -116,7 +116,7 @@ static const sapp_cmd_args_usage_t cmd_args_usage[] =
 						./sapp -D /tmp/MESA/log"},	
 	{"-e", "example-config", "required",NULL, "generate example main config file sapp.toml"},
 	{"-f", "dumpfile-list", "required",NULL, "read many pcap files at one time without exiting, get the list of pcap files by command, for example: \n \
-						./sapp -f 'ls files/*.pcap', ./sapp -f 'find /home/files -name *.pcap'"},
+						./sapp -f 'find /home/pcap -name *.pcap'"},
 	{"-g", "coredump", 	"no",NULL,	"generate coredump for test"},
 	{"-h", "help",		"no",NULL,	"show help message"},
 	{"-p",  "dumpfile-speed",	"required",dumpfile_speed_check, "\n  \t\ttop-speed\tprocess packets as fast as possible, this is default behavior\n\t\ttimestamp\tprocess packets as pcap embedded timestamp interval"},

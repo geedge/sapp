@@ -1275,6 +1275,7 @@ static void pcap_io_dumpfile_list(void)
 	while(sapp_global_val->cla.dumpfie_list_array[pcap_file_num] != NULL){
 		pcap_handle = pcap_open_dumpfile_mode(sapp_global_val->cla.dumpfie_list_array[pcap_file_num]);
 		if(pcap_handle){
+			pcap_up_handle = pcap_handle;
 			gettimeofday(&start_time, NULL);
 			pcap_loop(pcap_handle, -1, __pcap_pkt_handle, (unsigned char *)&route_dir);
 			gettimeofday(&end_time, NULL);
@@ -1356,12 +1357,11 @@ static void *pcap_io_thread(void *arg)
 }
 
 
-
-
 int pcap_dl_io_init(int argc, char *argv[])
 {
 	char pcap_errbuf[PCAP_ERRBUF_SIZE];
 	int opt_len;
+	char *no_use;
 
 #if PCAP_CAP_FROM_IP	
 	printf("\033[41m Warning! 'PCAP_CAP_FROM_IP' is enable!. \033[0m\n");
@@ -1373,20 +1373,15 @@ int pcap_dl_io_init(int argc, char *argv[])
 			printf("\033[1;31;40m[Error]cap_mode is %d, but topology is serial!\033[0m\n", g_pcap_cap_mode);
 			return -1;
 		}
-#if 0	 /* 2016-12-23 lijia modify, 因AS7.0之后网卡命名规则太复杂, 不再做判断, dumpfile模式固定只读取dumpfile文件 */	
-		if((strncasecmp(g_pcap_up_dev_name, "eth", 3) == 0)
-		||(strncasecmp(g_pcap_up_dev_name, "pag", 3) == 0)
-		||(strncasecmp(g_pcap_up_dev_name, "dna", 3) == 0)
-		||(strncasecmp(g_pcap_up_dev_name, "em", 2) == 0)
-		||(strncasecmp(g_pcap_up_dev_name, "lo", 2) == 0)){
-			/* 如果没写捕包文件名, 默认为'dumpfile' */
-			strncpy(g_pcap_up_dev_name, "dumpfile", DEV_NAME_STR_LEN);
-		}
-#endif		
-		if((pcap_up_handle = pcap_open_offline(sapp_global_val->config.packet_io.pcap_dumpfile_name, pcap_errbuf)) == NULL)
-		{
-			printf("\033[1;31;40m[Error]Can't open file:'%s', %s\033[0m\n", sapp_global_val->config.packet_io.pcap_dumpfile_name, pcap_errbuf);
-			return -1;
+		
+		if(sapp_get_cla_raw("dumpfile-list", &no_use) >= 0){
+			;//读列表模式, 无需此处打开dumpfile文件
+		}else{
+			if((pcap_up_handle = pcap_open_offline(sapp_global_val->config.packet_io.pcap_dumpfile_name, pcap_errbuf)) == NULL)
+			{
+				printf("\033[1;31;40m[Error]Can't open file:'%s', %s\033[0m\n", sapp_global_val->config.packet_io.pcap_dumpfile_name, pcap_errbuf);
+				return -1;
+			}
 		}
 #if PROCESS_BAR_SW
 		dumpfile_name = "dumpfile";
