@@ -74,193 +74,22 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		}
 		break;
 
-#if IOMODE_MARSIO
-		case RAW_PKT_GET_GDEV_IP:
-		{
-			if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-				const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-				if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
-					ret = -1;
-					break;
-				}
-				int *out_value = (int *)void_value;
-				*out_value = mr_ctrlzone->g_device_in_addr;
-			}else{
-				sapp_log(20, 0, 20, "can't support option 'RAW_PKT_GET_GDEV_IP' in no marsio mode!");
-				ret = -1;
-			}
-		}
-		break;
-
-		case RAW_PKT_GET_VXLAN_LOCAL_IP:
-		{
-			if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-				const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-				if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
-					ret = -1;
-					break;
-				}
-				int *out_value = (int *)void_value;
-				*out_value = mr_ctrlzone->l_device_in_addr;
-			}else{
-				sapp_log(20, 0, 20, "can't support option 'RAW_PKT_GET_VXLAN_LOCAL_IP' in no marsio mode!");
-				ret = -1;
-			}
-		}
-		break;
-
-
-		case RAW_PKT_GET_VXLAN_ID:
-		{
-			if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-				const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-				if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
-					ret = -1;
-					break;
-				}			
-				int *out_value = (int *)void_value;
-				*out_value = ntohl(mr_ctrlzone->g_device_linkpair);
-			}else{
-				sapp_log(20, 0, 20, "can't support option 'RAW_PKT_GET_VXLAN_ID' in no marsio mode!");
-				ret = -1;
-			}
-		}
-		break;
-
-		case RAW_PKT_GET_VXLAN_VPNID:
-		{
-			if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-				const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-				if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
-					ret = -1;
-					break;
-				}	
-				int *out_value = (int *)void_value;
-				*out_value = ntohl(mr_ctrlzone->g_device_vpn_id);
-			}else{
-				sapp_log(20, 0, 20, "can't support option 'RAW_PKT_GET_VXLAN_VPNID' in no marsio mode!");
-				ret = -1;
-			}
-		}
-		break;
-
-		case RAW_PKT_GET_VXLAN_SPORT:
-		{
-			if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-				const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-				if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
-					ret = -1;
-					break;
-				}			
-				short *out_value = (short *)void_value;
-				*out_value = mr_ctrlzone->l4_src_port;
-			}else{
-				sapp_log(20, 0, 20, "can't support option 'RAW_PKT_GET_VXLAN_SPORT' in no marsio mode!");
-				ret = -1;
-			}
-		}
-		break;
-
-		case RAW_PKT_GET_VXLAN_ENCAP_TYPE:
-		{
-			if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-				const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-				if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
-					ret = -1;
-					break;
-				}			
-				unsigned char *out_value = (unsigned char *)void_value;
-				*out_value = mr_ctrlzone->__encap_type;
-			}else{
-				sapp_log(20, 0, 20, "can't support option 'RAW_PKT_GET_VXLAN_ENCAP_TYPE' in no marsio mode!");
-				ret = -1;
-			}
-		}
-		break;
-		
-		case RAW_PKT_GET_VXLAN_LINK_DIR:
-		{
-			if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-				const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-				if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
-					ret = -1;
-					break;
-				}			
-				unsigned char *out_value = (unsigned char *)void_value;
-				*out_value = mr_ctrlzone->route_dir;
-			}else{
-				sapp_log(20, 0, 20, "can't support option 'RAW_PKT_GET_VXLAN_LINK_DIR' in no marsio mode!");
-				ret = -1;
-			}
-		}
-		break;
-
-		case RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC:
-		{
-			if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-				const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-				if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
-					ret = -1;
-					break;
-				}			
-				memcpy(void_value, mr_ctrlzone->g_device_mac, 6);
-			}else{
-				sapp_log(20, 0, 20, "can't support option 'RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC' in no marsio mode!");
-				ret = -1;
-			}
-		}
-		break;
-
-		case RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC:
-		{
-			if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-				const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-				if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
-					ret = -1;
-					break;
-				}			
-				memcpy(void_value, mr_ctrlzone->l_device_mac, 6);
-			}else{
-				sapp_log(20, 0, 20, "can't support option 'RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC' in no marsio mode!");
-				ret = -1;
-			}
-		}
-		break;
-
 		case RAW_PKT_GET_VIRTUAL_LINK_ID:
 		{
-			if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-				const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-				if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
-					ret = -1;
-					break;
-				}
-				unsigned long long *out_value = (unsigned long long *)void_value;
-				*out_value = mr_ctrlzone->virtual_link_id;
-			}else{
-				sapp_log(20, 0, 20, "can't support option 'RAW_PKT_GET_VIRTUAL_LINK_ID' in no marsio mode!");
-				ret = -1;
-			}
+			/* from sapp v4.2, there is no mrtunnat module, so not support this option! */
+			sapp_log(20, 0, 20, "not support option 'RAW_PKT_GET_VIRTUAL_LINK_ID' in sappv4.2 and later!");
+			ret = -1;
 		}
 		break;
 		
 		case RAW_PKT_GET_REHASH_INDEX:
 		{
-			if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-				const struct mr_tunnat_ctrlzone *mr_ctrlzone = (const struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone((marsio_buff_t *)rawpkt->io_lib_pkt_reference, 0); /* index */
-				if(0 == (mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD)){/* 非vxlan包, 肯定没有这些选项 */
-					ret = -1;
-					break;
-				}
-				unsigned long long *out_value = (unsigned long long *)void_value;
-				*out_value = mr_ctrlzone->rehash_index;
-			}else{
-				sapp_log(20, 0, 20, "can't support option 'RAW_PKT_GET_REHASH_INDEX' in no marsio mode!");
-				ret = -1;
-			}
+			/* from sapp v4.2, there is no mrtunnat module, so not support this option! */
+			sapp_log(20, 0, 20, "not support option 'RAW_PKT_GET_REHASH_INDEX' in sappv4.2 and later!");
+			ret = -1;
 		}
 		break;
-#endif
+
 
 		/* 用于插件获取最底层真实mac地址, 无论什么模式, 有没有mrtunnat, 都用这一个接口 */
 		case RAW_PKT_GET_ORIGINAL_LOWEST_ETH_SMAC:
@@ -321,12 +150,143 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		break;		
 
 		default:
+			sapp_runtime_log(RLOG_LV_FATAL, "get_opt_from_rawpkt(): not support option type: %d", type);
 			ret = -1;
 		break;
 	}
 
 	return ret;
 }
+
+
+
+static const struct streaminfo_private *offset_to_vxlan_layer(const struct streaminfo_private *pstream_pr)
+{
+	while(pstream_pr && (ADDR_TYPE_VXLAN != pstream_pr->stream_public.addr.addrtype)){
+		pstream_pr = pstream_pr->pfather_pr;
+	}
+
+	return pstream_pr;
+}
+
+
+static int get_vxlan_info_from_streaminfo(const struct streaminfo_private *pstream_pr, int type, void *void_value)
+{
+	int ret;
+	const struct streaminfo_private *vxlan_pstream_pr;
+	const raw_pkt_t *rawpkt;
+	const inline_vxlan_hdr_t *p_vxlan_hdr;
+
+	if(DEPOLYMENT_MODE_INLINE != g_topology_mode_raw){
+		sapp_runtime_log(RLOG_LV_INFO, "get_rawpkt_opt_from_streaminfo() error: can't support option type: %d in no inline mode!", type);
+		return -1;
+	}
+
+	vxlan_pstream_pr = offset_to_vxlan_layer(pstream_pr);
+	if(NULL == vxlan_pstream_pr){
+		sapp_runtime_log(RLOG_LV_FATAL, "get_rawpkt_opt_from_streaminfo() error, stream:%s not found vxlan layer!", 
+						printaddr(&pstream_pr->stream_public.addr, pstream_pr->stream_public.threadnum));
+		return -1;
+	}
+
+	rawpkt = pstream_pr->raw_pkt;
+	p_vxlan_hdr = (inline_vxlan_hdr_t *)((char *)rawpkt->raw_pkt_data + vxlan_pstream_pr->offset_to_raw_pkt_hdr);		
+
+	switch(type){
+		case RAW_PKT_GET_GDEV_IP:
+		{
+			const struct mesa_ip4_hdr *pip4_hdr;
+			const struct streaminfo_private *carry_vxlan_ip_layer = vxlan_pstream_pr->pfather_pr;
+			if(NULL == carry_vxlan_ip_layer){
+				return -1;
+			}
+
+			pip4_hdr = (struct mesa_ip4_hdr *)((char *)rawpkt->raw_pkt_data + carry_vxlan_ip_layer->offset_to_raw_pkt_hdr);
+			int *out_value = (int *)void_value;
+			*out_value = pip4_hdr->ip_src.s_addr;
+		}
+		break;
+
+		case RAW_PKT_GET_VXLAN_LOCAL_IP:
+		{
+			const struct mesa_ip4_hdr *pip4_hdr;
+			const struct streaminfo_private *carry_vxlan_ip_layer = vxlan_pstream_pr->pfather_pr;
+			if(NULL == carry_vxlan_ip_layer){
+				return -1;
+			}
+		
+			pip4_hdr = (struct mesa_ip4_hdr *)((char *)rawpkt->raw_pkt_data + carry_vxlan_ip_layer->offset_to_raw_pkt_hdr);
+			int *out_value = (int *)void_value;
+			*out_value = pip4_hdr->ip_dst.s_addr;
+		}
+		break;
+
+		case RAW_PKT_GET_VXLAN_ID:
+		{
+			int *out_value = (int *)void_value;
+			*out_value = htonl((int)p_vxlan_hdr->link_id);			
+		}
+		break;
+
+		case RAW_PKT_GET_VXLAN_VPNID:
+		{
+			int local_tmp_vpn_id;
+			local_tmp_vpn_id = ((int)p_vxlan_hdr->vlan_id_half_high  << 4) | (int)p_vxlan_hdr->vlan_id_half_low; 
+			int *out_value = (int *)void_value;
+			*out_value = htonl(local_tmp_vpn_id);	
+		}
+		break;
+
+		case RAW_PKT_GET_VXLAN_SPORT:
+		{
+			const struct mesa_ip4_hdr *pip4_hdr;
+			const struct mesa_udp_hdr *pudp_hdr;
+			const struct streaminfo_private *carry_vxlan_ip_layer = vxlan_pstream_pr->pfather_pr;
+			if(NULL == carry_vxlan_ip_layer){
+				return -1;
+			}
+		
+			pip4_hdr = (struct mesa_ip4_hdr *)((char *)rawpkt->raw_pkt_data + carry_vxlan_ip_layer->offset_to_raw_pkt_hdr);
+			pudp_hdr = (struct mesa_udp_hdr *)((char *)pip4_hdr + pip4_hdr->ip_hl*4);
+			unsigned short *out_value = (unsigned short *)void_value;
+			*out_value = pudp_hdr->uh_sport; /* 从收包的角度来看, src port是inline设备的sport */
+		}
+		break;
+
+		case RAW_PKT_GET_VXLAN_ENCAP_TYPE:
+		{
+			char *out_value = (char *)void_value;
+			*out_value = p_vxlan_hdr->link_layer_type;	
+		}
+		break;
+		
+		case RAW_PKT_GET_VXLAN_LINK_DIR:
+		{
+			char *out_value = (char *)void_value;
+			*out_value = p_vxlan_hdr->dir;	
+		}
+		break;
+
+		/* 从收包的角度来看, src host是inline设备的mac */
+		case RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC:
+		{
+			const struct mesa_ethernet_hdr *p_eth_hdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
+			memcpy(void_value, p_eth_hdr->ether_shost, ETH_ALEN);
+		}
+		break;
+
+		/* 从收包的角度来看, dst host是本机的mac */
+		case RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC:
+		{
+			const struct mesa_ethernet_hdr *p_eth_hdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
+			memcpy(void_value, p_eth_hdr->ether_dhost, ETH_ALEN);
+		}
+		break;	
+	}
+
+	return ret;
+}
+
 
 int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, void *out_value)
 {
@@ -348,6 +308,21 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 			ret = 1;
 		}
 		return ret;
+	}
+
+	/* sappv4.2之后, 没有mrtunnat, 无法从ctrlzone获取这些vxlan相关的值, 要靠streaminfo->pfather偏移获取 */
+	switch(type){
+		case RAW_PKT_GET_GDEV_IP:
+		case RAW_PKT_GET_VXLAN_ID:
+		case RAW_PKT_GET_VXLAN_SPORT:
+		case RAW_PKT_GET_VXLAN_ENCAP_TYPE:
+		case RAW_PKT_GET_VXLAN_LINK_DIR:
+		case RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC:
+		case RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC:
+		case RAW_PKT_GET_VXLAN_VPNID:
+		case RAW_PKT_GET_VXLAN_LOCAL_IP:
+			return get_vxlan_info_from_streaminfo(pstream_pr, type, out_value);
+		break;
 	}
 	
 	return get_opt_from_rawpkt(pstream_pr->raw_pkt, type, out_value);
@@ -1294,6 +1269,10 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		break;
 
 		case MSO_STREAM_VXLAN_INFO:
+			if(DEPOLYMENT_MODE_MIRROR != g_topology_mode_raw){
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error: can't support option MSO_STREAM_VXLAN_INFO in no mirror mode!");
+				return -1;
+			}		
 			if(*opt_val_len != sizeof(struct vxlan_info)){
 				return -1;
 			}

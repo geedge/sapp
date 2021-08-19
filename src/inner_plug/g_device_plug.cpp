@@ -15,7 +15,7 @@
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
-
+#include "stream_inc/gdev_keepalive.h"
 #include "field_stat2.h"
 
 #if IOMODE_MARSIO	

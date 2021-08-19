@@ -212,6 +212,7 @@ install(FILES bin/etc/vlan_flipping_map.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/stream_compare_layer.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/necessary_plug_list.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/well_known_port.conf DESTINATION etc COMPONENT PROFILE)
+install(FILES bin/etc/vxlan_sport_service_map.conf DESTINATION etc COMPONENT PROFILE)
 
 if(NOT ENABLE_STATIC_LINK)
 
@@ -266,6 +267,7 @@ install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_rawpkt.h DE
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_tunnel.h DESTINATION  /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/sapp_inject.h DESTINATION  /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_bridge.h DESTINATION  /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
+install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/gdev_keepalive.h DESTINATION  /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
 
 install(FILES ${CMAKE_BINARY_DIR}/test/libsapp_devel.a DESTINATION . COMPONENT HEADER)
 install(FILES ${CMAKE_BINARY_DIR}/service/sapp.service DESTINATION /usr/lib/systemd/system/ COMPONENT PROFILE)

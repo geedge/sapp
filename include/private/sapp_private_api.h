@@ -16,7 +16,6 @@
 #include "private/mesa_net.h"
 #include "private/sysinfo.h"
 #include "private/g_device.h"
-#include "private/gdev_keepalive.h"
 #include "private/stream_internal.h"
 #include "private/iknow.h"
 #include "private/project_requirement.h"
