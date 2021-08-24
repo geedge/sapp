@@ -105,10 +105,12 @@ static int packet_io_hook_output_vxlan(raw_pkt_t *raw_pkt, void *raw_pkt_data, u
 	send_ip4h->ip_dst.s_addr = tmp_ip_addr;
 #endif
 
-	send_outer_udp_hdr->uh_sum = 0;
-
-	send_vxlan_hdr->dir = route_dir;
-
+	/* keepalive icmp应答不是udp协议, 是g_dev_plug插件直接注入原始包, 是个特例, 此处要判断一下 */
+	if(IPPROTO_UDP == raw_ip4h->ip_p){
+		send_outer_udp_hdr->uh_sum = 0;
+		send_vxlan_hdr->dir = route_dir;
+	}
+	
 	return 0;
 }
 
