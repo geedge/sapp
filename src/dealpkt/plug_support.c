@@ -172,7 +172,7 @@ static const struct streaminfo_private *offset_to_vxlan_layer(const struct strea
 
 static int get_vxlan_info_from_streaminfo(const struct streaminfo_private *pstream_pr, int type, void *void_value)
 {
-	int ret;
+	int ret = 0;
 	const struct streaminfo_private *vxlan_pstream_pr;
 	const raw_pkt_t *rawpkt;
 	const inline_vxlan_hdr_t *p_vxlan_hdr;

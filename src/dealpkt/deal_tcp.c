@@ -2026,10 +2026,15 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 	{
 		if(a_tcp->opstate== OP_STATE_CLOSE)
 		{
-				return PASS;
+			ret = PASS;
+			goto done;
 		}	
-		if ((after (pakiet->seq, EXP_SEQ)) && (orderflag==CHECK_ORDER_DATA))
-					break;
+		
+		if ((after (pakiet->seq, EXP_SEQ)) && (orderflag==CHECK_ORDER_DATA)){
+			ret = PASS;
+			goto done;
+		}
+
 		if (after (pakiet->seq + pakiet->tcpdatalen+pakiet->fin+pakiet->rst, EXP_SEQ))
 		{                    
 			/* 2015-01-13 lijia add, 如果因乱序包触发kill_tcp或inject相关函数, 需要更新原始包信息 */
@@ -2057,7 +2062,8 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 				if(STREAM_LINK_DATA == last_link_state){
 				    tcp_update_should_close_reason_stat(a_tcp->threadnum);
 					tcp_change_stream_tonouse(pindex);
-					return DROP;
+					ret = DROP;
+					goto done;
 				}
 				/* 因为调用了update_stream_list_raw_pkt_pointer, 此处不能返回, 先恢复原始包指针 */
 				ret = PASS;
@@ -2348,7 +2354,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		 }
 		 //乱序的rst报文，如果链接未建立，会丢弃，链接已经建立，会进入排序
 	}
-	assert(rcv->count >= 0);
+
 	//链接复用 
 	if (th_flags & TH_SYN)
 	{
@@ -2426,7 +2432,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 			return ret;
 		}
 	}
-	assert(rcv->count >= 0);
+
 	if(pstream->dir==DIR_DOUBLE)
 	{
 		//if((snd->finstate ==FIN_CONFIRMED)&&(rcv->finstate ==FIN_CONFIRMED))
