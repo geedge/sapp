@@ -41,9 +41,11 @@ add_custom_command(OUTPUT  libtest_phony.a
 		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/MESA_sleep/libMESA_sleep.a
 		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/dpdk_rte_hash/libdpdk_ip_hash.a
 		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/sapp_dev/libsapp_dev.a
+		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/cpu_limit/libcpu_limit.a
 		COMMAND ar -x ${CMAKE_BINARY_DIR}/vendor/libdabloom/lib/libdablooms.a
 		COMMAND ar -x ${CMAKE_BINARY_DIR}/vendor/libevent/lib/libevent.a 
-        	COMMAND ar -rc libsapp_devel.a  *.o
+		
+		COMMAND ar -rc libsapp_devel.a  *.o
 			#COMMAND cp libsapp_devel.a  /opt/MESA/lib/
         )
 

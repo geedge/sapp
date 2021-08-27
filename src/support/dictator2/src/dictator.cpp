@@ -67,7 +67,7 @@ char boundary_marker[D_MARKER_SIZE]={'d'};
 #define	ELF_MIN_ALIGN	PAGE_SIZE
 #define	ELF_PAGEALIGN(_v)	(((_v)+ELF_MIN_ALIGN-1)&~(ELF_MIN_ALIGN-1))
 
-inline pid_t gettid(void){
+static inline pid_t dictator_gettid(void){
 	pid_t ret=(pid_t)pthread_self();
 	return ret;
 }

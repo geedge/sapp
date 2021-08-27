@@ -269,7 +269,7 @@ void __sapp_timer_platform_run(void)
 
 	for(i = 0; i < g_iThreadNum; i++){
 		inner_h = (sapp_timer_handle_inner_t *)ABBR_SAPP_TIMER_HANDLE[i];
-		inner_h->effective_thread_pid = sapp_global_val->individual_fixed.pkt_process_tid[i];
+		inner_h->effective_thread_pid = sapp_global_val->individual_fixed.thread_obtain_id[i];
 		MESA_ATOMIC_SET(inner_h->running, 1);
 	}
 
@@ -338,7 +338,7 @@ int sapp_timer_start(sapp_timer_handle h)
 		pthread_detach(stand_alone_pid);
 		inner_h->effective_thread_pid = stand_alone_pid;
 	}else{
-		inner_h->effective_thread_pid = sapp_global_val->individual_fixed.pkt_process_tid[inner_h->effective_thread_index];
+		inner_h->effective_thread_pid = sapp_global_val->individual_fixed.thread_obtain_id[inner_h->effective_thread_index];
 	}
 
 	MESA_ATOMIC_SET(inner_h->running, 1);

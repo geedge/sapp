@@ -1643,7 +1643,7 @@ static int build_net_layer_gerv1_exthdr(const struct mesa_gre_hdr *parsed_hdr,
 	return 0;
 }
 
-static int build_net_layer_gre(struct streaminfo_private *stream_pr, int carry_layer_type,
+static int build_net_layer_gre(const struct streaminfo *top_stream, struct streaminfo_private *stream_pr, int carry_layer_type,
 			int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt)
 {
 	const struct mesa_gre_hdr *raw_hdr;
@@ -1663,9 +1663,8 @@ static int build_net_layer_gre(struct streaminfo_private *stream_pr, int carry_l
 		return -1;
 	}
 	
-	if((reverse != 0)
-	    && ((0 == raw_pptp_addr->C2S_call_id) || (0 == raw_pptp_addr->S2C_call_id))){
-	    	/* 有任意一个方向没有获取到callid, 反向发送无法填充 */
+	if((reverse != 0) && (top_stream->dir != DIR_DOUBLE)){
+	    	/* 反方向没有收到过包, 反向发送无法填充 */
 	    	sapp_runtime_log(20, "in gre layer, send dir is reverse, but haven't get opposite single stream info!\n");
 		return -1;
 	}
@@ -2183,7 +2182,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			this_layer_len = calc_gre_hdr_len(
 						 (const struct mesa_gre_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
 			buf -= this_layer_len;
-			ret = build_net_layer_gre(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
+		ret = build_net_layer_gre(top_stream, stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
 			if(ret < 0){
 				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_gre() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;
@@ -2294,7 +2293,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			memcpy(buf, (char *)raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr + gre_layer_len, ppp_hdr_len);
 			
 			buf -= gre_layer_len;
-			ret = build_net_layer_gre(stream_pr, ADDR_TYPE_PPP, carry_layer_len, buf, reverse, raw_pkt);
+			ret = build_net_layer_gre(top_stream, stream_pr, ADDR_TYPE_PPP, carry_layer_len, buf, reverse, raw_pkt);
 			if(ret < 0){ 
 				sapp_runtime_log(RLOG_LV_FATAL, "%s, pptp build_net_layer_gre() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;

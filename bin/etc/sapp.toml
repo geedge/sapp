@@ -90,6 +90,23 @@
 ### note, polling_priority = call sapp_recv_pkt every call polling_entry times,     
     polling_priority=1
 
+    [packet_io.under_ddos]
+### note, to reduce impact of ddos attack,set some stream bypass, all plugins will not process these streams   
+    stream_bypass_enabled=0
+### note, unit of get_cpu_usage_interval is milliseconds(ms)     
+    get_cpu_usage_interval=50
+### note, use the average of the last $smooth_avg_window times as current realtime value 
+    smooth_avg_window=5
+### note, cpu usage value is percent, range: [1,100]    
+### bypass_trigger_cpu_usage must bigger than recovery_cpu_usage
+### sapp change to bypass state immediately when realtime cpu usage > bypass_trigger_cpu_usage
+### sapp change to normal state immediately when realtime cpu usage < recovery_cpu_usage
+    bypass_trigger_cpu_usage=90
+    recovery_cpu_usage=70
+### note, unit of bypass_observe_time is second(s)     
+    recovery_observe_time=60
+
+
 [PROTOCOL_FEATURE]
     ipv6_decapsulation_enabled=1
     ipv6_send_packet_enabled=1
@@ -237,6 +254,7 @@
     data_file_field_stat_log="fs2_sysinfo.log"
     data_file_inline_keepalive_log="gdev_keeplive_status.log"
     data_file_load_plugin_stat_log="load_plugin_stat.log"
+    data_file_under_ddos_stat_log="under_ddos_stat.log"
 
 [LIBRARY_LINK]	 
     marsio_library_path="/opt/mrzcpd/lib/libmarsio.so"

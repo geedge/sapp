@@ -801,16 +801,18 @@ static inline void marsio4_flush_queue_buf(int tid)
 
 static void *marsio4_worker(void *arg)
 {
-	int tid = *((int *)arg);
+	int tseq = *((int *)arg);
 	raw_pkt_t raw_pkt;
 	int total_call_times = 0, rcv_pkt_tims = 0, polling_work_times = 0;
 
 	char  thread_name[32] = "";
-	sprintf(thread_name, "sapp_marsio_%d", tid);
+	sprintf(thread_name, "sapp_marsio_%d", tseq);
 	prctl(PR_SET_NAME, thread_name);
 
 	if(sapp_global_val->config.cpu.bind_mask_array_num > 0){
 		ptr_marsio_thread_init(sapp_marsio4_instance);
+		sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[tseq] = get_current_thread_cpu_affinity_id();
+		sapp_global_val->individual_fixed.thread_tid[tseq] = syscall(SYS_gettid);
 	}
 	memset(&raw_pkt, 0, sizeof(raw_pkt_t));
 
@@ -824,25 +826,25 @@ static void *marsio4_worker(void *arg)
 	}
 	
 	while(1){		
-		if(marsio4_process_packet(tid, &raw_pkt) > 0){
+		if(marsio4_process_packet(tseq, &raw_pkt) > 0){
 			rcv_pkt_tims++;
 		}else{
-			marsio4_flush_queue_buf(tid);
+			marsio4_flush_queue_buf(tseq);
 			/* 无包时要调用polling接口 */
-			if((stream_process_polling(tid) & POLLING_STATE_WORK) != 0){
+			if((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0){
 				polling_work_times++;
 			}
-			if(polling_stream_timeout(tid) & POLLING_STATE_WORK){
+			if(polling_stream_timeout(tseq) & POLLING_STATE_WORK){
 				polling_work_times++;
 			}
 		}
 
-		sapp_global_val->mthread_volatile[tid]->sys_stat.count[SAPP_STAT_FETCH_PKT]++;
+		sapp_global_val->mthread_volatile[tseq]->sys_stat.count[SAPP_STAT_FETCH_PKT]++;
 		total_call_times++;
 
 		if((rcv_pkt_tims % sapp_global_val->config.packet_io.polling_priority) == 0){
 			/* 如果流量巨大, 一直有包时, 每隔polling_priority个包也要调用polling接口 */
-			if((stream_process_polling(tid) & POLLING_STATE_WORK) != 0){
+			if((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0){
 				polling_work_times++;
 			}
 			total_call_times++;
@@ -1198,7 +1200,7 @@ void marsio_dl_io_run(void)
 		marsio4_work_thread_seq[i] = i;
 		ret = pthread_create(&(marsio4_work_tid[i]), NULL, marsio4_worker, (void *) &(marsio4_work_thread_seq[i]));
 		assert(0 == ret);
-		sapp_global_val->individual_fixed.pkt_process_tid[i] = marsio4_work_tid[i];
+		sapp_global_val->individual_fixed.thread_obtain_id[i] = marsio4_work_tid[i];
 	}
 }
 

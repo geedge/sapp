@@ -34,6 +34,7 @@
 #include <getopt.h>
 #include <sys/sysinfo.h>
 #include <dirent.h>
+#include <sys/syscall.h>
 
 
 /* MESA framework */

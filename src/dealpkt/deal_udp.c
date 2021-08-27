@@ -122,7 +122,7 @@ void iterate_stream_list(const struct streaminfo *stream)
 }
 #endif
 
-#if 1
+
 static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 			struct mesa_udp_hdr *this_udphdr, const raw_pkt_t *raw_pkt)
 {
@@ -223,57 +223,16 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 		sapp_runtime_log(RLOG_LV_DEBUG, "create new UDP stream:%s by well known port, the first packet curdir is:%d",
 						printaddr(&pstream_udp->addr, threadnum), pstream_udp->curdir);
 	}
+
+	pstream_udp_pr->under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
+	if(pstream_udp_pr->under_ddos_bypass){
+		sapp_global_val->mthread_volatile[threadnum]->sys_stat.count[SAPP_STAT_UDP_BYPASS_STREAM]++;
+		cycle_pkt_dump_by_classify(threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
+		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream:%s under ddos bypass!", printaddr(&pstream_udp->addr, threadnum));
+	}
 	
 	return pindex_udp;
 }
-#else
-static struct streamindex *udp_add_new_stream(struct streamindex *pindex, struct mesa_udp_hdr *udph)
-{
-	struct streamindex *a_udp=NULL;
-	struct udpdetail *pdetail=NULL;
-	struct udpdetail_private *pdetail_pr=NULL;
-	struct stream_list *plist=NULL;
-	char createdir;
-	unsigned char threadnum=pindex->stream.stream_public.threadnum;
-	struct streaminfo_private *pstream_udp_pr;
-	struct streaminfo *pstream_udp;
-	
-	//a_udp=(struct streamindex *)dictator_malloc(threadnum,sizeof(struct streamindex));
-	a_udp=malloc_and_copy_streamindex(threadnum, pindex);
-	//memcpy(a_udp,pindex,sizeof(struct streamindex));
-
-	pstream_udp_pr = &a_udp->stream;
-	pstream_udp = &pstream_udp_pr->stream_public;
-
-	copy_ipport_union_addr(pstream_udp, &pindex->stream.stream_public, 0);
-
-	pstream_udp->pfather = (struct streaminfo *)copy_stream_info_to_heap((struct streaminfo_private *)pstream_udp->pfather, 0);
-	//set_stream_addr(a_udp->stream.pfather, udph->uh_sport, udph->uh_dport, &a_udp->stream.addr);
-	set_transport_addr(pstream_udp, udph->uh_sport, udph->uh_dport);
-
-	createdir=pstream_udp->curdir;
-	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[UDP_ONE_STATE]);
-	pstream_udp->stream_state=UDP_ONE_STATE;
-
-	hash_add_stream(a_udp);	
-	streamaddlist(a_udp,plist);
-	pdetail_pr = (struct udpdetail_private*)dictator_malloc(threadnum,sizeof(struct udpdetail_private)); 
-	memset(pdetail_pr,0,sizeof(struct udpdetail_private));
-	pdetail=&pdetail_pr->udpdetail_public;
-	pstream_udp->opstate=OP_STATE_PENDING;
-	pstream_udp->pktstate=OP_STATE_PENDING;
-	pdetail->createtime=g_CurrentTime;
-	pstream_udp->pdetail=(void *)pdetail_pr;
-
-	pstream_udp->curdir=createdir;
-	pstream_udp->dir=createdir;
-
-	pstream_udp_pr->pproject = project_requirement_create(pstream_udp->threadnum);
-	pstream_udp_pr->stream_bridge = stream_bridge_create_per_stream(threadnum);
-	
-	return a_udp;	
-}
-#endif
 
 static inline void udp_cleardata(struct streaminfo *a_udp)
 {
@@ -644,6 +603,12 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		//pstream->addr.pktipfragtype = pstream->stream_public.addr.pktipfragtype; /* 2015-11-04 lijia add, IP分片类型更新 */
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 
+		if(pstream_pr->under_ddos_bypass){
+			local_sys_stat->count[SAPP_STAT_UDP_BYPASS_PKTS]++;
+			local_sys_stat->length[SAPP_STAT_UDP_BYPASS_BYTES]+= ulen;					
+			return PASS;
+		}
+
 		/* 2014-11-15 lijia add, for udp serial kill udp */
 		if(unlikely(a_index->stream.stream_killed_flag != 0)){
 			return DROP;
@@ -810,26 +775,6 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	}
 	else	
 	{
-#if 0	
-		if(ntohs(udph->uh_sport) > ntohs(udph->uh_dport)){
-			pstream_pr->layer_dir = 1;
-			pstream->curdir = DIR_C2S;
-		}else{
-			 if(unlikely(udph->uh_sport == udph->uh_dport)){ /* 如果端口恰好完全相同, 需要比较IP地址 */
-			 	if(memcmp(&a_packet->ip6_src, &a_packet->ip6_dst, sizeof(struct in6_addr)) >= 0){
-					pstream_pr->layer_dir = 1;
-					pstream->curdir = DIR_C2S;
-			 	}else{
-					pstream_pr->layer_dir = 0;
-					pstream->curdir = DIR_S2C;
-			 	}
-			 }else{		
-				pstream_pr->layer_dir = 0;
-				pstream->curdir = DIR_S2C;
-			}
-		}
-#endif
-
 		set_transport_addr(pstream, 1, udph->uh_sport, udph->uh_dport);		
 	
 		a_index =(struct streamindex * ) findstreamindex (pindex, raw_pkt);

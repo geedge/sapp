@@ -348,21 +348,6 @@ void sapp_update_main_config_file(const char *main_entry_cfg)
 	/* 因为有-c参数, sapp.toml可能不是默认路径了, 再重新获取一遍配置文件相对路径 */
 	sapp_get_secondary_file_path();
 
-	/* sapp的二级配置文件路径从sapp.toml获取, 不受命令参数控制, -C,-D仅用于插件 */
-#if 0
-	sapp_convert_relative_to_absolute(pconfig->cfg_sapp_log_relative, (char **)&pconfig->cfg_sapp_log_absolute, cfg_root_dir);
-	sapp_convert_relative_to_absolute(pconfig->cfg_plug_list_relative, (char **)&pconfig->cfg_plug_list_absolute, cfg_root_dir);
-	sapp_convert_relative_to_absolute(pconfig->cfg_project_list_relative, (char **)&pconfig->cfg_project_list_absolute, cfg_root_dir);	
-	sapp_convert_relative_to_absolute(pconfig->cfg_entry_list_relative, (char **)&pconfig->cfg_entry_list_absolute, cfg_root_dir);
-	sapp_convert_relative_to_absolute(pconfig->cfg_file_send_raw_pkt_relative, (char **)&pconfig->cfg_file_send_raw_pkt_absolute, cfg_root_dir);
-	sapp_convert_relative_to_absolute(pconfig->cfg_file_vxlan_sport_map_relative, (char **)&pconfig->cfg_file_vxlan_sport_map_absolute, cfg_root_dir);
-	sapp_convert_relative_to_absolute(pconfig->cfg_file_inline_dev_relative, (char **)&pconfig->cfg_file_inline_dev_absolute, cfg_root_dir);
-	sapp_convert_relative_to_absolute(pconfig->cfg_file_necessary_plug_relative, (char **)&pconfig->cfg_file_necessary_plug_absolute, cfg_root_dir);
-	sapp_convert_relative_to_absolute(pconfig->cfg_file_stream_compare_layer_relative, (char **)&pconfig->cfg_file_stream_compare_layer_absolute, cfg_root_dir);
-	sapp_convert_relative_to_absolute(pconfig->cfg_file_vlan_flipping_relative, (char **)&pconfig->cfg_file_vlan_flipping_absolute, cfg_root_dir);
-	sapp_convert_relative_to_absolute(pconfig->cfg_file_asymmetric_addr_layer_relative, (char **)&pconfig->cfg_file_asymmetric_addr_layer_absolute, cfg_root_dir);	
-	sapp_convert_relative_to_absolute(pconfig->cfg_file_well_known_port_relative, (char **)&pconfig->cfg_file_well_known_port_absolute, cfg_root_dir);	
-#else
 	pconfig->cfg_sapp_log_absolute = sapp_strdup(pconfig->cfg_sapp_log_relative);
 	pconfig->cfg_plug_list_absolute = sapp_strdup(pconfig->cfg_plug_list_relative);
 	pconfig->cfg_project_list_absolute = sapp_strdup(pconfig->cfg_project_list_relative);
@@ -375,7 +360,6 @@ void sapp_update_main_config_file(const char *main_entry_cfg)
 	pconfig->cfg_file_vlan_flipping_absolute = sapp_strdup(pconfig->cfg_file_vlan_flipping_relative);
 	pconfig->cfg_file_asymmetric_addr_layer_absolute = sapp_strdup(pconfig->cfg_file_asymmetric_addr_layer_relative);
 	pconfig->cfg_file_well_known_port_absolute = sapp_strdup(pconfig->cfg_file_well_known_port_relative);
-#endif
 
 }
 
@@ -429,17 +413,13 @@ void sapp_update_data_root_dir(const char *data_root_dir)
 	   如果已经是绝对路径(即以/开始), 则不受命令参数-D控制, 
 	   否则以-D为根目录, 再追加sapp.toml中的路径为子目录创建文件. 
 	*/
-#if 1 
+
 	sapp_convert_relative_to_absolute(pdata->data_sapp_sysinfo_log_relative, (char **)&pdata->data_sapp_sysinfo_log_absolute, pdata->data_files_root_dir);
 	sapp_convert_relative_to_absolute(pdata->data_sapp_fs2_log_relative, (char **)&pdata->data_sapp_fs2_log_absolute, pdata->data_files_root_dir);
 	sapp_convert_relative_to_absolute(pdata->data_inline_keepalive_log_relative, (char **)&pdata->data_inline_keepalive_log_absolute, pdata->data_files_root_dir);	
 	sapp_convert_relative_to_absolute(pdata->data_load_plugin_stat_log_relative, (char **)&pdata->data_load_plugin_stat_log_absolute, pdata->data_files_root_dir);	
-#else
-	pdata->data_sapp_sysinfo_log_absolute = sapp_strdup(pdata->data_sapp_sysinfo_log_relative);
-	pdata->data_sapp_fs2_log_absolute = sapp_strdup(pdata->data_sapp_fs2_log_relative);
-	pdata->data_inline_keepalive_log_absolute = sapp_strdup(pdata->data_inline_keepalive_log_relative);
-	pdata->data_load_plugin_stat_log_absolute = sapp_strdup(pdata->data_load_plugin_stat_log_relative);
-#endif
+	sapp_convert_relative_to_absolute(pdata->data_under_ddos_stat_log_relative, (char **)&pdata->data_under_ddos_stat_log_absolute, pdata->data_files_root_dir);	
+
 }
 
 

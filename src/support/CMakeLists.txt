@@ -8,11 +8,4 @@ add_subdirectory(MESA_socket_wrap/src)
 add_subdirectory(dictator2/src)
 add_subdirectory(tomlc99_wrap)
 add_subdirectory(dpdk_rte_hash)
-
-#if(OPT_USE_DICTATOR)
-#	add_subdirectory(dictator2)
-#endif()
-#
-#if(OPT_USE_TXMEM)
-#	add_subdirectory(txmem2)
-#endif()
+add_subdirectory(cpu_limit)

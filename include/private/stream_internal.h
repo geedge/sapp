@@ -190,7 +190,8 @@ struct streaminfo_private
 	unsigned char create_dir_by_well_known_port:1;  /* UDP或TCP按data建连接, 命中well_known_port规则, 而不是按大端口是客户端原则创建流 */
 	char __pad2:3;
 	char has_duplicate_pkt; /* 当前流曾经有过重复数据包, 后续的流量应该每个都检测 */
-	char __pad3[6];
+	char under_ddos_bypass;
+	char __pad3[5];
 	/* ===8 bytes=== */
 	
 	void   *stream_bridge;	/* 20210425 lijia add, 类似project功能, 支持同步和异步两种模式, 原有project类似异步模式 */
@@ -416,6 +417,8 @@ int sapp_usleep(int usec);
 void *sapp_mem_alloc(int size);
 void sapp_mem_free(void *data);
 void *sapp_mem_realloc(void *old_ptr, int size);
+void set_current_thread_cpu_affinity(int);
+int get_current_thread_cpu_affinity_id(void);
 
 
 

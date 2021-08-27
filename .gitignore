@@ -20,3 +20,4 @@ GTAGS
 cmake-build*
 /src/support/breakpad_mini/cmake/changelog.txt
 /CMakeFiles/cmake.check_cache
+/src/config/sapp.toml.hex.array.c

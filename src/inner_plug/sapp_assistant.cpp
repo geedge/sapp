@@ -1223,7 +1223,14 @@ static int sapp_fs2_init(void)
 	pfs_para->fs_id_count_array[SAPP_STAT_SND_TCP_SYNACK] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Tcp_S/A");
 	pfs_para->fs_id_count_array[SAPP_STAT_SND_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Udp");
 
-	
+	pfs_para->fs_id_count_array[SAPP_STAT_TCP_BYPASS_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bypass_STM");	
+	pfs_para->fs_id_count_array[SAPP_STAT_TCP_BYPASS_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bypass_Pkt");
+	pfs_para->fs_id_count_array[SAPP_STAT_TCP_BYPASS_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bypass_Bit");
+
+	pfs_para->fs_id_count_array[SAPP_STAT_UDP_BYPASS_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bypass_STM");	
+	pfs_para->fs_id_count_array[SAPP_STAT_UDP_BYPASS_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bypass_Pkt");
+	pfs_para->fs_id_count_array[SAPP_STAT_UDP_BYPASS_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bypass_Bit");
+
 	
 	if(unlikely(g_timestamp_record_sw))
 	{

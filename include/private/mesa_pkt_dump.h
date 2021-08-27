@@ -17,6 +17,7 @@ enum _pkt_classify{
 	PKT_CLASSIFY_DROP		= 0x08,  /* DMAC ascii码值: D */
 	PKT_CLASSIFY_ERROR		= 0x10,  /* DMAC ascii码值: E */
 	PKT_CLASSIFY_REPEAT		= 0x20,  /* DMAC ascii码值: R */
+	PKT_CLASSIFY_BYPASS		= 0x40,  /* DMAC ascii码值:   P */
 };
 
 enum pkt_dump_opt_t{

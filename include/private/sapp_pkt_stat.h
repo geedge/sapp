@@ -169,7 +169,14 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_UDP_CLOSE_BY_KICKOUT,
 	SAPP_STAT_UDP_CLOSE_BY_DUMPFILE_END,
 
-	
+
+	/* under ddos bypass  */
+	SAPP_STAT_TCP_BYPASS_STREAM,
+	SAPP_STAT_TCP_BYPASS_PKTS,
+	SAPP_STAT_TCP_BYPASS_BYTES,
+	SAPP_STAT_UDP_BYPASS_STREAM,
+	SAPP_STAT_UDP_BYPASS_PKTS,
+	SAPP_STAT_UDP_BYPASS_BYTES,	
 	/*************  memory stat  *******************/
 
 	/************** Maximum Value Definition *******/

@@ -70,7 +70,7 @@ iknow_info.c                           packet_io_log.c         sendpacket.c
 packet_io.c
 packet_io_status.cpp packet_io_status_new.c 
 packet_io_device.c sapp_compat_old_papp_api.c
-sapp_inject.c packet_io_hook.c)
+sapp_inject.c packet_io_hook.c under_ddos.cpp)
 
 add_library(packet_io STATIC ${PACKET_IO_STATIC_SOURCE})
 if(CAPTURE_MODE MATCHES "MARSIO")

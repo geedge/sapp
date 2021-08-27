@@ -5,6 +5,7 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 #include <pcap/pcap.h>
+#include <sys/types.h>
 
 
 #define PROCESS_BAR_SW 		(1)
@@ -760,7 +761,10 @@ static void *__pcap_work_thread(void *arg)
 	pthread_setname_np(pthread_self(), "sapp_pkt_process");
 #endif
 #endif
-	//bind_thread_to_cpuid(thread_num + 1);
+
+	set_current_thread_cpu_affinity(thread_num);
+	sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[thread_num] = get_current_thread_cpu_affinity_id();
+	sapp_global_val->individual_fixed.thread_tid[thread_num] = syscall(SYS_gettid);
 
 	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
 		sapp_usleep(1000);
@@ -876,7 +880,7 @@ static int pcap_create_work_thread(void)
 
 		ret = pthread_create(&work_thread_pool[i].work_tid, NULL, __pcap_work_thread, &work_thread_pool[i].thread_num);
 		assert(ret == 0);
-		sapp_global_val->individual_fixed.pkt_process_tid[i] = work_thread_pool[i].work_tid;
+		sapp_global_val->individual_fixed.thread_obtain_id[i] = work_thread_pool[i].work_tid;
 	}
 
 	return 0;

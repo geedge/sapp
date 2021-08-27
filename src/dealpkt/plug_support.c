@@ -1449,33 +1449,47 @@ int is_proxy_stream(const struct streaminfo *pstream)
 }
 
 
-void bind_thread_to_cpuid(int thread_id)
+void set_current_thread_cpu_affinity(int thread_index)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18)
-#if(__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__ >= 440)
-	cpu_set_t cpuset;
-	u_long core_id;
-	int res;
-	int tot_cpu_num = sysconf(_SC_NPROCESSORS_ONLN);
-
-	/* Bind this thread to a specific core */
-	if(tot_cpu_num > 1) {
-		core_id = (thread_id + 1) % tot_cpu_num; 
-
+	if(sapp_global_val->config.cpu.bind_mask_array_num != 0){
+		cpu_set_t cpuset;
 		CPU_ZERO(&cpuset);
-		CPU_SET(core_id, &cpuset);
-		res = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
-		if (res != 0){
-			fprintf(stderr, "Error while binding thread %d to core %ld: errno=%i\n", 
-	     			thread_id, core_id, res);
-	      }else{
-			printf("[Info]Binding thread %d to core %ld success!\n", thread_id, core_id);
-	      }
+		CPU_SET(sapp_global_val->config.cpu.bind_mask_array[thread_index], &cpuset);
+		pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
 	}
-#endif	
-#endif
+
 	return;
 }
+
+int get_current_thread_cpu_affinity_id(void)
+{
+	int i;
+    cpu_set_t current_cpu_mask;
+	
+	CPU_ZERO(&current_cpu_mask);
+	
+	if(pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &current_cpu_mask) < 0){
+		return -1;
+	}
+	
+	int tot_cpu_core = get_nprocs();
+	int tot_cpu_set_count = CPU_COUNT(&current_cpu_mask);
+	if((tot_cpu_set_count == tot_cpu_core) || (tot_cpu_set_count > 1)){
+		/* 全部都设置了, 其实就是没有绑定, 
+		   但如果设置了isolcpus, 即便不绑核, CPU_COUNT和总核心数并不相等, 
+		   反正超过1个肯定是没有精确绑定到某个核心 */
+		return -1;
+	}
+	
+	for(i = 0; i <= tot_cpu_core; i++){
+		if(CPU_ISSET(i, &current_cpu_mask)){
+			break;
+		}
+	}
+	
+	return i;
+}
+
 
 
 extern int project_req_terminal_tag_id;

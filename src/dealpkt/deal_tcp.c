@@ -2629,12 +2629,17 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	struct streaminfo *pstream = &pstream_pr->stream_public;
 	int try_to_update_addr_info = 0;
 	int call_tcpall_after_reset = 0; /* 2019-10-18 lijia modify, 当前流被reset之后,保证先调用tcpall,再调用tcp */	
-	sapp_gval_mthread_sys_stat_t *local_sys_stat;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[pstream->threadnum]->sys_stat;
+	int under_ddos_bypass = 0;
 
 	pindex_tcp = findstreamindex (pindex, raw_pkt);
 	if(unlikely(!pindex_tcp)){
+		under_ddos_bypass = packet_io_under_ddos_should_bypass(pstream->threadnum);
+		
 		/* 每个流的首包无需检测, 也无法得知是否重复, 但要加入bloom filter */
-		if((ADDR_TYPE_IPV4 == pstream->addr.addrtype) && sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp){
+		if((0 == under_ddos_bypass) 
+		  && (ADDR_TYPE_IPV4 == pstream->addr.addrtype) 
+		  && sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp){
 			sapp_dup_pkt_mark_tcp(pstream->threadnum,pstream->addr.addrtype, this_iphdr, this_tcphdr);
 		}
 
@@ -2671,8 +2676,17 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 				pdetail_pr = (struct tcpdetail_private *)(pindex_tcp->stream.stream_public.pdetail);
 				pdetail = (struct tcpdetail *)(&pdetail_pr->tcpdetail_public);
 				pstream_pr->raw_pkt = raw_pkt; //add by lijia 20171206
+				pstream_pr->under_ddos_bypass = under_ddos_bypass;
 				//add by lqy 20140114
-				ret=tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);
+				if(under_ddos_bypass){
+					local_sys_stat->count[SAPP_STAT_TCP_BYPASS_STREAM]++;
+					local_sys_stat->count[SAPP_STAT_TCP_BYPASS_PKTS]++;
+					local_sys_stat->length[SAPP_STAT_TCP_BYPASS_BYTES]+= tcplen;
+					cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
+					sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream:%s under ddos bypass!", printaddr(&pstream->addr, pstream->threadnum));
+				}else{
+					ret=tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);
+				}
 			}
 			return ret;
 		}
@@ -2705,13 +2719,24 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 #endif				
 				//end of add by yw to detect dataflood attack			
 			pindex_tcp=tcp_add_new_stream_bydata(pindex,this_tcphdr,tcplen,CTREAT_LINK, raw_pkt);
+			
 			if(likely(pindex_tcp != NULL))
 			{
 				pstream_pr = &pindex_tcp->stream;
 				pstream = &pstream_pr->stream_public;
-					pstream_pr->raw_pkt = raw_pkt;  //add by lijia 20171206
+				pstream_pr->raw_pkt = raw_pkt;  //add by lijia 20171206
+				pstream_pr->under_ddos_bypass = under_ddos_bypass;			
 				//add by lqy 20150114 新建立的链接必须先调用all函数
-				return tcp_process_newstreambydata(pindex_tcp,this_iphdr, this_tcphdr,tcplen,raw_pkt);
+				if(under_ddos_bypass){
+					local_sys_stat->count[SAPP_STAT_TCP_BYPASS_STREAM]++;
+					local_sys_stat->count[SAPP_STAT_TCP_BYPASS_PKTS]++;
+					local_sys_stat->length[SAPP_STAT_TCP_BYPASS_BYTES]+= tcplen;	
+					cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
+					sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream:%s under ddos bypass!", printaddr(&pstream->addr, pstream->threadnum));				
+				}else{
+					ret = tcp_process_newstreambydata(pindex_tcp,this_iphdr, this_tcphdr,tcplen,raw_pkt);
+					return ret;
+				}
 			}
 			}
 		}		
@@ -2734,6 +2759,15 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 
 	pdetail_pr =(struct tcpdetail_private*)(pstream->pdetail);
 	pdetail =(struct tcpdetail *)(&pdetail_pr->tcpdetail_public);
+
+	/* ddos bypass优先级最高 */
+	if(pstream_pr->under_ddos_bypass){
+		local_sys_stat->count[SAPP_STAT_TCP_BYPASS_PKTS]++;
+		local_sys_stat->length[SAPP_STAT_TCP_BYPASS_BYTES]+= tcplen;
+		/* 疑似ddos攻击时只是保护自身, 不调用插件节约CPU, 不对包进行丢弃操作, 所以是返回PASS */
+		cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
+		return PASS;
+	}
 
 	/* 2014-10-11 lijia add, Fd补救由平台实现 */
 	if(unlikely(pstream_pr->stream_killed_flag != 0)){
@@ -2767,7 +2801,6 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		   2)如果开启了firewall的drop策略, 第一次drop成功了, 但应用层会重传, 重传包被识别成了重复包的话, sapp就直接PASS了, 导致CT.
 	*/
 	if(deal_tcp_stream_dup_pkt_check(pstream->threadnum, pstream_pr, pdetail_pr, this_iphdr, this_tcphdr) != 0){
-		local_sys_stat = &sapp_global_val->mthread_volatile[pstream->threadnum]->sys_stat;
 		local_sys_stat->count[SAPP_STAT_RCV_DUP_TCP]++;
 		local_sys_stat->length[SAPP_STAT_RCV_DUP_TCP] += tcplen;	
 		cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);

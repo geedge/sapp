@@ -244,6 +244,15 @@ typedef struct{
 }sapp_dup_pkt_t;
 
 typedef struct{
+	int enabled;
+	int get_cpu_usage_interval; //单位:毫秒, milliseconds(ms)
+	int smooth_avg_window; //用最近N次的平均值代替实时值, 避免抖动
+	double bypass_trigger_cpu_usage;
+	double recovery_cpu_usage;
+	int recovery_observe_time; //单位:秒, second(s)
+}sapp_under_ddos_config_t;
+
+typedef struct{
 	sapp_config_packet_io_tunnel_t packet_io_tunnel;
 	const char *input_bpf_filter;
 	char depolyment_mode_str[NAME_MAX]; /* [mirror, inline, transparent, dumpfile] */
@@ -271,6 +280,8 @@ typedef struct{
 	char extract_linkdir_from_mac_enabled;
 	unsigned char extract_linkdir_from_mac_byte_index; /* 从mac地址的第几个字节获取链路方向, 从0开始到11结束, 总计12字节 */
 	unsigned char extract_linkdir_from_mac_bit_value; /* 从某个字节获取链路方向的bit值, 而不是index, 可以直接进行&运算 */
+
+	sapp_under_ddos_config_t under_ddos_config;
 }sapp_config_packet_io_t;
 
 
@@ -333,6 +344,9 @@ typedef struct{
 
 	const char *data_load_plugin_stat_log_relative;
 	const char *data_load_plugin_stat_log_absolute;		
+
+	const char *data_under_ddos_stat_log_relative;
+	const char *data_under_ddos_stat_log_absolute;		
 }sapp_data_file_link_t;
 
 typedef struct{
@@ -382,11 +396,14 @@ typedef struct{
 	unsigned char create_stream_mode; /* 兼容原来的逻辑, 值从配置stream.tcp.syn_mandatory转换得到 */
 	int packet_io_cap_level; 
 	sapp_gval_individual_fixed_fs_t field_stat2_para;
-	pthread_t pkt_process_tid[SAPP_MAX_THREADS];
+	pthread_t thread_obtain_id[SAPP_MAX_THREADS]; /* pthread_create返回的id */
+	pid_t thread_tid[SAPP_MAX_THREADS]; /* gdb 或 top 查看的id */
+	int cpu_bind_core_id_per_thread[SAPP_MAX_THREADS]; /* 如果设置了bind_mask, 记录每个IO工作线程绑定的cpu core id */
 	void *breakpad;
-
 	char overlay_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX]; /* 表示在原始报文基础上封装的隧道, 如vxlan, 这些层不应该调用插件, 回注时需要特殊处理 */
 	char prune_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   /* 表示注入包时需要跳过的层, 用于代替最早的配置文件: skip_not_iop_layer, 比如vlan, mpls等, 用于mirror模式下, 接入点和注入点不一样的网络环境 */
+
+	void *under_ddos_handle;
 }sapp_gval_individual_fixed_t;
 
 typedef struct{
@@ -434,8 +451,8 @@ typedef struct{
 	sapp_cla_t cla;
 	sapp_config_t config;
 	sapp_gval_individual_fixed_t individual_fixed; /* 初始化后不再改变的变量 */
-	sapp_gval_individual_volatile_t *individual_volatile; /* 程序运行时会实时更新的变量 */
-	sapp_gval_mthread_t *mthread_volatile[SAPP_MAX_THREADS];
+	sapp_gval_individual_volatile_t *individual_volatile; /* 程序启动后会实时更新的独立变量 */
+	sapp_gval_mthread_t *mthread_volatile[SAPP_MAX_THREADS]; /* 程序启动后会实时更新的多线程变量 */
 }sapp_global_t;
 
 extern embed_layer_t g_stream_compare_layer_set; 

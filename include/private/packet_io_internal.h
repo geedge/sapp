@@ -234,6 +234,10 @@ extern int pcap_dl_io_register_cb(PACKET_IO_CB_T fun);
 extern int pcap_dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun); 
 extern int pcap_dl_io_get_version(void);
 extern void * pcap_dl_io_device_alias(unsigned int target_id, char *device_args);
+void packet_io_under_ddos_run(void);
+int packet_io_under_ddos_init(void);
+int packet_io_under_ddos_should_bypass(int thread_index);
+
 
 /********************** pcap funcitons for dynamic link ***********************/
 
