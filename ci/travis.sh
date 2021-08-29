@@ -44,7 +44,7 @@ if [ $ASAN_OPTION ];then
 	source /opt/rh/devtoolset-7/enable
 fi
 
-xxd -v
+/usr/bin/xxd -v
 
 mkdir build || true
 cd build
