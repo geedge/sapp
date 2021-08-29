@@ -3,7 +3,7 @@ variables:
   GIT_STRATEGY: "clone"
   BUILD_PADDING_PREFIX: /tmp/padding_for_CPACK_RPM_BUILD_SOURCE_DIRS_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX/
   INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
-  INSTALL_DEPENDENCY_LIBRARY: libunwind gperftools mrzcpd numactl-devel zlib-devel librdkafka-devel systemd-devel libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libbreakpad_mini-devel
+  INSTALL_DEPENDENCY_LIBRARY: libunwind gperftools mrzcpd numactl-devel zlib-devel librdkafka-devel systemd-devel libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libbreakpad_mini-devel vim-common
   SYMBOL_TARGET: sapp
 
 stages:
@@ -14,7 +14,7 @@ sapp_module_test:
   stage: test
   script:
     - yum makecache
-    - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb  vim-common
+    - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb 
     - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini
     - yum install -y sapp gtest_sapp benchmark_pcap
     - yum install -y libwire_graft-devel libwire_graft
