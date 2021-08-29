@@ -14,7 +14,7 @@ sapp_module_test:
   stage: test
   script:
     - yum makecache
-    - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb  
+    - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb  vim
     - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini
     - yum install -y sapp gtest_sapp benchmark_pcap
     - yum install -y libwire_graft-devel libwire_graft
