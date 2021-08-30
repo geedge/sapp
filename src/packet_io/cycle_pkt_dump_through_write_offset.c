@@ -714,6 +714,11 @@ void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 
 }
 
+/*
+	TODO: 如果一个包有多个标签, 比如重复数据包REPEAT, 同时肯定是FORWARD,
+	      遇到ddos时, BYPASS的包其实也是FORWARD,
+	      使用多个标志位表示, 但物理包仅发送一次, 可以节约一些CPU和IO资源.
+*/
 void cycle_pkt_dump_by_classify(int thread_seq, const raw_pkt_t *p_raw_pkt, enum _pkt_classify class_val)
 {
 	if(0 == G_PKT_DUMP_SW){

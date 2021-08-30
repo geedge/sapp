@@ -687,7 +687,10 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		/* 链接复用, 重新生成一个新的streamid */
 		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);				
 		pdetail->createtime=g_CurrentTime;
-		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;		
+		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
+
+		/* 连接重置, 重新判断一下ddos 状态 */
+		pstream_pr->under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
 	}
 
 	/* 2014-07-31 LiJia add, for set one stream unorder number */
@@ -733,7 +736,14 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	pdetail->lastmtime=g_CurrentTime;	
 	pdetail_pr->link_state=STREAM_LINK_JUST_EST;	
 	pstream->stream_state=TCP_SYN_STATE;
-	streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[TCP_SYN_STATE]));
+
+	if(pstream_pr->under_ddos_bypass){
+		/* bypass状态不调用任何插件, 后续的project,  parse_opt等操作都可以忽略了 */
+		pstream->stream_state=TCP_NOUSE_STATE;
+		streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]));
+		return pindex_tcp;
+	}
+	streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]));
 
 	/* LiJia add, 某些项目特殊应用初始化, 如标签、原始IP分片列表等 */
 	pstream_pr->pproject = project_requirement_create(pstream->threadnum);
@@ -891,7 +901,10 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		}
 		pstream_pr->stream_killed_flag = 0;
 		/* 链接复用, 重新生成一个新的streamid */
-		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);			
+		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);	
+
+		/* 链接复用, 重新判断一下ddos 状态 */
+		pstream_pr->under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);		
 	}
 
 	pstream->dir=createdir;
@@ -928,8 +941,6 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	}
 #endif
 
-	streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]));
-
 	pstream_pr->timeout=link_default_nopkt_time;
 	pdetail_pr->creat_mod=TCP_CTEAT_LINK_BYDATA;	
 	pstream->opstate=OP_STATE_PENDING;
@@ -945,6 +956,16 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
 	pdetail->lastmtime=g_CurrentTime;
 	pdetail_pr->link_state=STREAM_LINK_DATA;	
+
+	if(pstream_pr->under_ddos_bypass){
+		/* bypass状态不调用任何插件, 后续的project,  parse_opt,初始化half_stream等操作都可以忽略了 */
+		pstream->stream_state=TCP_NOUSE_STATE;
+		streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]));
+		return pindex_tcp;
+	}
+	
+	streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]));
+	
 	//if(datalen>0)
 	//有数的但是不带结束标志的报文adjust by lqy 20150325
 	if((datalen>0) && (!(this_tcphdr->th_flags & TH_FIN)) && (!(this_tcphdr->th_flags & TH_RST)))	
@@ -2630,15 +2651,11 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	int try_to_update_addr_info = 0;
 	int call_tcpall_after_reset = 0; /* 2019-10-18 lijia modify, 当前流被reset之后,保证先调用tcpall,再调用tcp */	
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[pstream->threadnum]->sys_stat;
-	int under_ddos_bypass = 0;
 
 	pindex_tcp = findstreamindex (pindex, raw_pkt);
 	if(unlikely(!pindex_tcp)){
-		under_ddos_bypass = packet_io_under_ddos_should_bypass(pstream->threadnum);
-		
 		/* 每个流的首包无需检测, 也无法得知是否重复, 但要加入bloom filter */
-		if((0 == under_ddos_bypass) 
-		  && (ADDR_TYPE_IPV4 == pstream->addr.addrtype) 
+		if((ADDR_TYPE_IPV4 == pstream->addr.addrtype) 
 		  && sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp){
 			sapp_dup_pkt_mark_tcp(pstream->threadnum,pstream->addr.addrtype, this_iphdr, this_tcphdr);
 		}
@@ -2676,9 +2693,8 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 				pdetail_pr = (struct tcpdetail_private *)(pindex_tcp->stream.stream_public.pdetail);
 				pdetail = (struct tcpdetail *)(&pdetail_pr->tcpdetail_public);
 				pstream_pr->raw_pkt = raw_pkt; //add by lijia 20171206
-				pstream_pr->under_ddos_bypass = under_ddos_bypass;
 				//add by lqy 20140114
-				if(under_ddos_bypass){
+				if(pstream_pr->under_ddos_bypass){
 					local_sys_stat->count[SAPP_STAT_TCP_BYPASS_STREAM]++;
 					local_sys_stat->count[SAPP_STAT_TCP_BYPASS_PKTS]++;
 					local_sys_stat->length[SAPP_STAT_TCP_BYPASS_BYTES]+= tcplen;
@@ -2725,9 +2741,8 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 				pstream_pr = &pindex_tcp->stream;
 				pstream = &pstream_pr->stream_public;
 				pstream_pr->raw_pkt = raw_pkt;  //add by lijia 20171206
-				pstream_pr->under_ddos_bypass = under_ddos_bypass;			
 				//add by lqy 20150114 新建立的链接必须先调用all函数
-				if(under_ddos_bypass){
+				if(pstream_pr->under_ddos_bypass){
 					local_sys_stat->count[SAPP_STAT_TCP_BYPASS_STREAM]++;
 					local_sys_stat->count[SAPP_STAT_TCP_BYPASS_PKTS]++;
 					local_sys_stat->length[SAPP_STAT_TCP_BYPASS_BYTES]+= tcplen;	

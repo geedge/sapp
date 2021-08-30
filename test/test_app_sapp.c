@@ -3087,22 +3087,37 @@ char INJECT_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 
 char TEST_STREAM(struct streaminfo *stream,  void **pme, int thread_seq,void *a_packet)
 {
-	const char *data;
-	int datalen;
-	static char __tmp_use[65535];
+	char *data = NULL;
+	int i, datalen = -1, ret;
+	char local_data[65535];
+	long result1[65535], result2[65535];
+	double nouse_sum = 0.0;
 
-	if(STREAM_TYPE_TCP == stream->type){
-		data = (const char *)stream->ptcpdetail->pdata;
-		datalen = stream->ptcpdetail->datalen;
-	}else{
-		data = (const char *)stream->pudpdetail->pdata;
-		datalen = stream->pudpdetail->datalen;
+	if(NULL == a_packet){
+		return APP_STATE_DROPME;
 	}
 
-	if(data){
-		assert(datalen <= 65535);
-		memcpy(__tmp_use, data, datalen);
-		memcpy(__tmp_use, stream->addr.paddr, stream->addr.addrlen);
+	for(i = 0; i < 65535; i++){
+		local_data[i] = rand();
+	}
+	
+	ret = get_rawpkt_opt_from_streaminfo(stream, RAW_PKT_GET_DATA, &data);
+	if(ret < 0 || NULL == data){
+		return APP_STATE_GIVEME;
+	}
+	
+	ret = get_rawpkt_opt_from_streaminfo(stream, RAW_PKT_GET_TOT_LEN, &datalen);
+	if(ret < 0 || NULL == data){
+		return APP_STATE_GIVEME;
+	}
+
+	/* 随便写点东西, 耗费CPU */
+	if((data != NULL) && (datalen > 0)){
+		for(i = 0; i < datalen; i++){
+			result1[i] = (long)memchr(local_data, data[i], 65535);
+			result2[i] = (long long )memmem((void *)local_data, 65535, (void *)&data[i], datalen-i);
+			nouse_sum += (double)result1[i] * result2[i];
+		}
 	}
 
 	return APP_STATE_GIVEME;

@@ -192,6 +192,8 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	pdetail_pr =  (struct udpdetail_private*)dictator_malloc(threadnum,sizeof(struct udpdetail_private));
 	pdetail= &pdetail_pr->udpdetail_public;
 	memset(pdetail_pr,0,sizeof(struct udpdetail_private));
+	pstream_udp->pdetail=(void *)pdetail_pr;
+
 	pstream_udp->opstate=OP_STATE_PENDING;
 	pstream_udp->pktstate=OP_STATE_PENDING;
 	pdetail->createtime=g_CurrentTime;	
@@ -199,7 +201,12 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	pdetail->lastmtime=g_CurrentTime;
 	pstream_udp_pr->timeout=udp_reset_time;
 
-	pstream_udp->pdetail=(void *)pdetail_pr;
+	if(pstream_udp_pr->under_ddos_bypass){
+		sapp_global_val->mthread_volatile[threadnum]->sys_stat.count[SAPP_STAT_UDP_BYPASS_STREAM]++;
+		cycle_pkt_dump_by_classify(threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
+		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream:%s under ddos bypass!", printaddr(&pstream_udp->addr, threadnum));
+		return pindex_udp;
+	}
 
 	/* 2014-03-26 LiJia add, 某些项目特殊应用初始化, 如标签、原始IP分片列表等 */
 	pstream_udp_pr->pproject = project_requirement_create(threadnum);
@@ -224,13 +231,6 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 						printaddr(&pstream_udp->addr, threadnum), pstream_udp->curdir);
 	}
 
-	pstream_udp_pr->under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
-	if(pstream_udp_pr->under_ddos_bypass){
-		sapp_global_val->mthread_volatile[threadnum]->sys_stat.count[SAPP_STAT_UDP_BYPASS_STREAM]++;
-		cycle_pkt_dump_by_classify(threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
-		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream:%s under ddos bypass!", printaddr(&pstream_udp->addr, threadnum));
-	}
-	
 	return pindex_udp;
 }
 
@@ -791,6 +791,12 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);		
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
+
+		if(pstream_pr->under_ddos_bypass){
+			local_sys_stat->count[SAPP_STAT_UDP_BYPASS_PKTS]++;
+			local_sys_stat->length[SAPP_STAT_UDP_BYPASS_BYTES]+= ulen;					
+			return PASS;
+		}
 
 		/* 2014-11-15 lijia add, for udp serial kill udp */
 		if(unlikely(a_index->stream.stream_killed_flag != 0)){

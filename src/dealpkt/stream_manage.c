@@ -614,11 +614,6 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 				/* 当前流独有超时时间比默认全局的大, 且还没有超时, 不能淘汰! */
 				if((tmpstream->stream.timeout > link_default_nopkt_time)
 				 && (g_CurrentTime - tmpstream->stream.stream_public.ptcpdetail->lastmtime < tmpstream->stream.timeout)){
-/*				 
-printf("###### %s timeout is %d, remain %lld, can't be free!\n", printaddr(&tmpstream->stream.stream_public.addr, tmpstream->stream.stream_public.threadnum),
-			tmpstream->stream.timeout,
-			g_CurrentTime - tmpstream->stream.stream_public.ptcpdetail->lastmtime);
-*/			
 					tmpstream = tmpstream->next;
 				 }else{
 					del_stream(tmpstream, STREAM_CLOSE_REASON_LRUOUT);
@@ -649,30 +644,8 @@ printf("###### %s timeout is %d, remain %lld, can't be free!\n", printaddr(&tmps
 		plist->head = pindex;
 	}
 	plist->cnt++;
-	//add by lqy 20120919 just for show
 
-#if 0		
-	if(pstream->type==STREAM_TYPE_TCP)
-	{
-		switch(pstream->stream_state)
-		{
-			case TCP_SYN_STATE:
-					stream_info[pstream->threadnum].syn_cnt++;
-					break;
-			case TCP_DATA_STATE:
-					stream_info[pstream->threadnum].ack_cnt++;
-					break;
-			case TCP_NOUSE_STATE:
-					stream_info[pstream->threadnum].tcp_num++;
-					break;
-		}
-		
-	}
-#endif		
 	update_stream_status(pstream->threadnum, pstream->type, pstream->stream_state, 1);
-
-	/* Fix bug, 放在streamaddlist函数, 每个流状态变化时会生成多个不同的streamid, 移动至hash_add_stream */
-	//pindex->stream.global_stream_id = get_global_stream_id(pstream->threadnum);
 }
 
 
@@ -1960,26 +1933,10 @@ void hash_add_stream(struct streamindex *pindex)
 #endif	
 	pelementcount[hash_index]++;
 
-
-#if 0
-static int listnum = 0;
-if(pelementcount[pindex->hash_index] >= listnum){
-	//printf("%s, ", printaddr(&pindex->stream.addr, pindex->stream.threadnum));
-	printf("########### index:%d, list-num:%d\n", pindex->hash_index, pelementcount[pindex->hash_index]);
-	listnum++;
-}
-#endif
-	/*
-		
-	ptmindex=phashstream[pindex->hash_index] ;
-	for(i=0;i<pelementcount[pindex->hash_index];i++)
-	{
-		assert(ptmindex!=NULL);
-		if(ptmindex->hash_index !=pindex->hash_index)
-		  assert(0);
-		ptmindex=ptmindex->phashnext;
-	}	
+	/* TCP, UDP新建流时都会调用此函数, 所以把ddos检测放到此处,
+		但是切记不要放到streamaddlist()函数, 因为同一个流切换不同状态时, 可能会调用streamaddlist()好几次.
 	*/
+	pindex->stream.under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
 
 	pindex->stream.global_stream_id = get_global_stream_id(threadnum);
 }
@@ -2979,6 +2936,10 @@ void free_polling_inject_context(struct streaminfo_private *pstream_pr)
 	int thread_index;
 	
 	if(0 == sapp_global_val->config.packet_io.polling_enabled){
+		return;
+	}
+
+	if(NULL == pstream_pr->polling_inject_context){
 		return;
 	}
 

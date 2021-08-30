@@ -185,13 +185,15 @@ static void field_stat2_update_metrics(void)
 	sapp_fs2_update_count(SAPP_STAT_SND_TCP_SYNACK,  cur_count[SAPP_STAT_SND_TCP_SYNACK]);
 	sapp_fs2_update_count(SAPP_STAT_SND_UDP,  cur_count[SAPP_STAT_SND_UDP]);
 
+	sapp_fs2_update_count(SAPP_STAT_GLOBAL_BYPASS, packet_io_under_ddos_global_status());
+
 	sapp_fs2_update_count(SAPP_STAT_TCP_BYPASS_STREAM,  cur_count[SAPP_STAT_TCP_BYPASS_STREAM]);
 	sapp_fs2_update_count(SAPP_STAT_TCP_BYPASS_PKTS,  cur_count[SAPP_STAT_TCP_BYPASS_PKTS]);
-	sapp_fs2_update_count(SAPP_STAT_TCP_BYPASS_BYTES,  cur_length[SAPP_STAT_TCP_BYPASS_BYTES]);
+	sapp_fs2_update_length(SAPP_STAT_TCP_BYPASS_BYTES,  cur_length[SAPP_STAT_TCP_BYPASS_BYTES]);
 
 	sapp_fs2_update_count(SAPP_STAT_UDP_BYPASS_STREAM,  cur_count[SAPP_STAT_UDP_BYPASS_STREAM]);
 	sapp_fs2_update_count(SAPP_STAT_UDP_BYPASS_PKTS,  cur_count[SAPP_STAT_UDP_BYPASS_PKTS]);
-	sapp_fs2_update_count(SAPP_STAT_UDP_BYPASS_BYTES,  cur_length[SAPP_STAT_UDP_BYPASS_BYTES]);	
+	sapp_fs2_update_length(SAPP_STAT_UDP_BYPASS_BYTES,  cur_length[SAPP_STAT_UDP_BYPASS_BYTES]);	
 }
 
 static void sysinfo_output_per_layer_stat(FILE *fp)

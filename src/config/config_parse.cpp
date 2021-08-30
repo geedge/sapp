@@ -253,8 +253,7 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{4602,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"get_cpu_usage_interval",	"1",NULL, NULL, NULL, 0},
 	{4603,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"smooth_avg_window",	"1",NULL, NULL, NULL, 0},
 	{4604,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"bypass_trigger_cpu_usage",	"1",cfg_value_check_integer_range, NULL, g_interger_range_array, 99},
-	{4605,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"recovery_cpu_usage",	"1",cfg_value_check_integer_range, NULL, g_interger_range_array, 99},
-	{4606,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"recovery_observe_time","1",NULL, NULL, NULL, 0},
+	{4605,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"recovery_observe_time","1",NULL, NULL, NULL, 0},
 
 	{5001,0,RLOG_LV_INFO,"STREAM",	"stream_id_base_time",	NULL,cfg_value_check_stream_id_base_time, NULL, NULL, 0},
 	
@@ -1473,17 +1472,6 @@ static int config_sanity_check(void)
 			sapp_log(30, ~0, ~0, "[Error] [packet_io.under_ddos]->bypass_trigger_cpu_usage invalid!");
 			return -1;		
 		}
-
-		if(pconfig->packet_io.under_ddos_config.recovery_cpu_usage < 1.0
-		|| pconfig->packet_io.under_ddos_config.recovery_cpu_usage >= 100.0){
-			sapp_log(30, ~0, ~0, "[Error] [packet_io.under_ddos]->recovery_cpu_usage invalid!");
-			return -1;		
-		}	
-
-		if(pconfig->packet_io.under_ddos_config.bypass_trigger_cpu_usage <= pconfig->packet_io.under_ddos_config.recovery_cpu_usage){
-			sapp_log(30, ~0, ~0, "[Error] [packet_io.under_ddos] bypass_trigger_cpu_usage must bigger than recovery_cpu_usage !");
-			return -1;	
-		}
 	}
 
 	/*******************************  PKT_DUMP  ******************************/
@@ -1789,8 +1777,6 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"smooth_avg_window", &pconfig->packet_io.under_ddos_config.smooth_avg_window, 3);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"bypass_trigger_cpu_usage", &tmp_int, 90);
 	pconfig->packet_io.under_ddos_config.bypass_trigger_cpu_usage = (double)tmp_int;
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"recovery_cpu_usage", &tmp_int, 60);
-	pconfig->packet_io.under_ddos_config.recovery_cpu_usage = (double)tmp_int;	
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"recovery_observe_time", &pconfig->packet_io.under_ddos_config.recovery_observe_time, 60);
 
 	/*******************************  STREAM ******************************/

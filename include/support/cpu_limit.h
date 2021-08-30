@@ -18,9 +18,9 @@ typedef enum{
 #endif
 
 typedef enum{
+	/* set options */
 	CL_OPT_DEBUG_LOG_FILE_NAME, 
 	CL_OPT_RES_TRIGGER_THRESHOLD,  //double, 把资源限制在某个数值内, 比如限速到1Mbps, CPU占用率最大60%, 等等
-	CL_OPT_RES_RECOVERY_THRESHOLD,  //double, 一旦恢复到这个数值后, 不再做任何操作
 	CL_OPT_THREAD_COUNT, //int ,是否支持多线程模式, 线程数量, 默认是1, 
 	CL_OPT_RES_SMOOTH_SCOPE, //int, 为了平滑资源占用统计, 避免抖动, 使用最近N次的平均值, 假如统计CPU占用率设成10, 即最近10次的CPU平均值. 如果无此选项, 默认是1
 	CL_OPT_STAT_INTERVAL, //int ,获取当前资源占用时间间隔, 单位ms, 默认1000, 即1秒
@@ -28,12 +28,15 @@ typedef enum{
 	CL_OPT_FACTOR_GET_FUN, // 获取当前占用资源的操作因子数值, 比如pps, bps, new_link/s等,  函数指针
 	CL_OPT_USER_ARG, //void *, 用户自定义字段
 	CL_OPT_DESTROY_CALLBCAK_FUN, //释放资源callback, cl_destroy_cb_t
+
+	/* get options */
+	CL_OPT_GLOBAL_BYPASS_STATE, //int, 全局bypass状态
 }cpu_limit_opt;
 
 cpu_limit_handle cpu_limit_create(void);
 
 int cpu_limit_set_opt(cpu_limit_handle h, cpu_limit_opt opt, void *value, int value_len);
-
+int cpu_limit_get_opt(cpu_limit_handle h, cpu_limit_opt opt, void *value, int *value_len);
 int cpu_limit_start(cpu_limit_handle h);
 
 int cpu_limit_can_i_do(cpu_limit_handle h, int thread_seq);

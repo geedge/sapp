@@ -171,6 +171,7 @@ typedef enum __sapp_sys_stat_type{
 
 
 	/* under ddos bypass  */
+	SAPP_STAT_GLOBAL_BYPASS, /* 任意线程cpu超标, 都会设置全局bypass标志 */
 	SAPP_STAT_TCP_BYPASS_STREAM,
 	SAPP_STAT_TCP_BYPASS_PKTS,
 	SAPP_STAT_TCP_BYPASS_BYTES,

@@ -98,11 +98,8 @@
 ### note, use the average of the last $smooth_avg_window times as current realtime value 
     smooth_avg_window=5
 ### note, cpu usage value is percent, range: [1,100]    
-### bypass_trigger_cpu_usage must bigger than recovery_cpu_usage
 ### sapp change to bypass state immediately when realtime cpu usage > bypass_trigger_cpu_usage
-### sapp change to normal state immediately when realtime cpu usage < recovery_cpu_usage
     bypass_trigger_cpu_usage=90
-    recovery_cpu_usage=70
 ### note, unit of bypass_observe_time is second(s)     
     recovery_observe_time=60
 

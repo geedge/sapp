@@ -56,8 +56,7 @@ int sapp_thread_index_to_core_id(int thread_seq)
 	
 	CPU_ZERO(&current_cpu_mask);
 	
-	if(pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &current_cpu_mask) < 0){
-		printf("pid:%ld is not set affinity\n", pthread_self());
+	if(pthread_getaffinity_np(sapp_global_val->individual_fixed.thread_obtain_id[thread_seq], sizeof(cpu_set_t), &current_cpu_mask) < 0){
 		return -1;
 	}
 	
@@ -98,7 +97,7 @@ static void read_cpu_usage_from_proc(cpu_tck_t *per_cpu_core_stat, int max_cpu_n
 	}
 
 	/* 第一行是系统整体cpu占用率, 然后是每个CPU核心的 */
-    fscanf(stat_fp, "%s \n", no_use_string);
+    fgets(no_use_string, sizeof(no_use_string), stat_fp);
 
     for(i = 0; i < max_cpu_num; i++)
 	{
@@ -132,6 +131,9 @@ static double sapp_get_cpu_usage_cb(cpu_limit_handle h, int _thread_index, void 
 	under_sapp_user_args_t *ud_usr_arg = (under_sapp_user_args_t *)_void_user_arg;
 	
 	cpu_core_id = sapp_thread_index_to_core_id(_thread_index);
+	if(cpu_core_id < 0){
+		return 0.0;
+	}
 
 	/* 外部模块调用, thread_index是从0-N顺序依次调用,
 	   仅在第一次从/proc/stat中获取, 后续的直接从内存里获取, 避免多次打开/proc/stat */
@@ -180,6 +182,48 @@ static double sapp_get_create_stream_rate_cb(cpu_limit_handle h, int thread_inde
 	return (double)cur_create_stream_rate;
 }
 
+#if 0
+void update_under_ddos_stream_state(struct streaminfo *pstream, int payload_len)
+{
+	if(STREAM_TYPE_TCP == pstream->type){
+		switch(pstream->stream_state){
+			case TCP_SYN_STATE:
+				if(payload_len > 0){
+					pstream->stream_state = TCP_NOUSE_STATE; /* 有数据传输直接切换到nouse状态 */
+				}			
+			break;
+
+			case TCP_DATA_STATE:
+				pstream->stream_state = TCP_NOUSE_STATE; 
+			break;
+		}
+	}else{
+		switch(pstream->stream_state){
+			case UDP_ONE_STATE:
+				pstream->stream_state = UDP_TWO_STATE; 
+			break;
+
+			case UDP_TWO_STATE:
+				pstream->stream_state = UDP_MORE_STATE; 
+			break;
+		}
+	}
+}
+#endif
+
+int packet_io_under_ddos_global_status(void)
+{
+	int global_bypass_state;
+	int opt_len = sizeof(int);
+
+	if(0 == sapp_global_val->config.packet_io.under_ddos_config.enabled){
+		return 0;
+	}
+	
+	cpu_limit_get_opt(sapp_global_val->individual_fixed.under_ddos_handle, CL_OPT_GLOBAL_BYPASS_STATE, &global_bypass_state, &opt_len);
+
+	return global_bypass_state;
+}
 
 int packet_io_under_ddos_should_bypass(int thread_index)
 {
@@ -231,7 +275,7 @@ int packet_io_under_ddos_init(void)
 	}	
 
 	cpu_limit_set_opt(ud_handle, CL_OPT_RES_TRIGGER_THRESHOLD, &p_ddos_cfg->bypass_trigger_cpu_usage, sizeof(double));
-	cpu_limit_set_opt(ud_handle, CL_OPT_RES_RECOVERY_THRESHOLD, &p_ddos_cfg->recovery_cpu_usage, sizeof(double));	
+	//cpu_limit_set_opt(ud_handle, CL_OPT_RES_RECOVERY_THRESHOLD, &p_ddos_cfg->recovery_cpu_usage, sizeof(double));	
 
 	iopt_value = g_packet_io_thread_num;
 	cpu_limit_set_opt(ud_handle, CL_OPT_THREAD_COUNT, &iopt_value, sizeof(int));

@@ -798,11 +798,9 @@ int packet_io_init(int argc, char *argv[])
 
 	packet_io_status_init();
 
-#if 0
 	if(packet_io_under_ddos_init() < 0){
 		return -1;
 	}
-#endif
 
 	return 0;
 }
@@ -824,9 +822,9 @@ void packet_io_run(void)
 	app_function_rationality_check();
 	
 	pthread_create(&pid, NULL, sapp_time_event_thread ,NULL);
-#if 0
+
 	packet_io_under_ddos_run();
-#endif	
+	
 	dl_io_fun_list.dl_io_run();
 }
 

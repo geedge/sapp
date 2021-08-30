@@ -248,7 +248,7 @@ typedef struct{
 	int get_cpu_usage_interval; //单位:毫秒, milliseconds(ms)
 	int smooth_avg_window; //用最近N次的平均值代替实时值, 避免抖动
 	double bypass_trigger_cpu_usage;
-	double recovery_cpu_usage;
+	//double recovery_cpu_usage;
 	int recovery_observe_time; //单位:秒, second(s)
 }sapp_under_ddos_config_t;
 
