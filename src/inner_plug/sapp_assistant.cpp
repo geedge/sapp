@@ -1201,6 +1201,11 @@ static int sapp_fs2_init(void)
 	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DEL] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Link_Del");
 	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DATA] = FS_register(fs2_handle, FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Concurrent");
 
+	pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_NEW] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Link_New");
+	pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_DEL] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Link_Del");
+	pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_MORE] = FS_register(fs2_handle, FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Concurrent");
+	
+
     pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DOUBLE] = FS_register(fs2_handle, FS_STYLE_STATUS,FS_CALC_CURRENT, "Tcp_Link_Double");
     pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_C2S");
     pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_S2C");

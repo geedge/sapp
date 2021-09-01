@@ -824,6 +824,11 @@ static void *marsio4_worker(void *arg)
 	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
 		sapp_usleep(1000);
 	}
+
+	/* for perf optimize
+	   频繁调用stream_process_polling()等函数, 此处先在函数外部判断一下是否需要调用.
+	*/
+	int polling_enabled = sapp_global_val->config.packet_io.polling_enabled;
 	
 	while(1){		
 		if(marsio4_process_packet(tseq, &raw_pkt) > 0){
@@ -831,10 +836,10 @@ static void *marsio4_worker(void *arg)
 		}else{
 			marsio4_flush_queue_buf(tseq);
 			/* 无包时要调用polling接口 */
-			if((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0){
+			if(polling_enabled && ((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0)){
 				polling_work_times++;
 			}
-			if(polling_stream_timeout(tseq) & POLLING_STATE_WORK){
+			if(polling_enabled && (polling_stream_timeout(tseq) & POLLING_STATE_WORK)){
 				polling_work_times++;
 			}
 		}
@@ -844,7 +849,7 @@ static void *marsio4_worker(void *arg)
 
 		if((rcv_pkt_tims % sapp_global_val->config.packet_io.polling_priority) == 0){
 			/* 如果流量巨大, 一直有包时, 每隔polling_priority个包也要调用polling接口 */
-			if((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0){
+			if(polling_enabled && ((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0)){
 				polling_work_times++;
 			}
 			total_call_times++;

@@ -164,6 +164,10 @@ static void field_stat2_update_metrics(void)
 	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_DEL, cur_count[SAPP_STAT_TCP_STREAM_DEL]);
 	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_DATA, cur_count[SAPP_STAT_TCP_STREAM_DATA]);
 
+	sapp_fs2_update_count(SAPP_STAT_UDP_STREAM_NEW,cur_count[SAPP_STAT_UDP_STREAM_NEW]);
+	sapp_fs2_update_count(SAPP_STAT_UDP_STREAM_DEL, cur_count[SAPP_STAT_UDP_STREAM_DEL]);
+	sapp_fs2_update_count(SAPP_STAT_UDP_STREAM_MORE, cur_count[SAPP_STAT_UDP_STREAM_MORE]);
+	
 	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_DOUBLE,cur_count[SAPP_STAT_TCP_STREAM_DOUBLE]);
 	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_C2S, cur_count[SAPP_STAT_TCP_STREAM_C2S]);
 	sapp_fs2_update_count(SAPP_STAT_TCP_STREAM_S2C, cur_count[SAPP_STAT_TCP_STREAM_S2C]);

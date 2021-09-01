@@ -1116,10 +1116,12 @@ int stream_process_polling(int thread_seq)
 {
 	int i;
 	char plug_ret, fun_ret = 0;
-
+	
+#if 0
 	if(0 == sapp_global_val->config.packet_io.polling_enabled){
 		return POLLING_STATE_IDLE;
 	}
+#endif	
 
 	__st_pkt_proc_context_check_timeout(thread_seq);
 

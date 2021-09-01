@@ -253,7 +253,9 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{4602,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"get_cpu_usage_interval",	"1",NULL, NULL, NULL, 0},
 	{4603,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"smooth_avg_window",	"1",NULL, NULL, NULL, 0},
 	{4604,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"bypass_trigger_cpu_usage",	"1",cfg_value_check_integer_range, NULL, g_interger_range_array, 99},
-	{4605,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"recovery_observe_time","1",NULL, NULL, NULL, 0},
+	{4605,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"decrease_ratio","1",NULL, NULL, NULL, 0},
+	{4606,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"increase_ratio","1",NULL, NULL, NULL, 0},
+	{4607,4601,RLOG_LV_INFO,"packet_io.under_ddos",	"recovery_observe_time","1",NULL, NULL, NULL, 0},
 
 	{5001,0,RLOG_LV_INFO,"STREAM",	"stream_id_base_time",	NULL,cfg_value_check_stream_id_base_time, NULL, NULL, 0},
 	
@@ -1472,6 +1474,15 @@ static int config_sanity_check(void)
 			sapp_log(30, ~0, ~0, "[Error] [packet_io.under_ddos]->bypass_trigger_cpu_usage invalid!");
 			return -1;		
 		}
+
+		if(pconfig->packet_io.under_ddos_config.factor_decrease_ratio >= 1.0000){
+			sapp_log(30, ~0, ~0, "[Error] [packet_io.under_ddos]->factor_decrease_ratio invalid, must smaller than 1.0!");
+			return -1;					
+		}
+		if(pconfig->packet_io.under_ddos_config.factor_increase_ratio <= 1.0000){
+			sapp_log(30, ~0, ~0, "[Error] [packet_io.under_ddos]->factor_increase_ratio invalid, must bigger than 1.0!");
+			return -1;					
+		}		
 	}
 
 	/*******************************  PKT_DUMP  ******************************/
@@ -1775,8 +1786,16 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"stream_bypass_enabled", &pconfig->packet_io.under_ddos_config.enabled, 0); //向前兼容, 默认不开启
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"get_cpu_usage_interval", &pconfig->packet_io.under_ddos_config.get_cpu_usage_interval, 50);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"smooth_avg_window", &pconfig->packet_io.under_ddos_config.smooth_avg_window, 3);
+
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"bypass_trigger_cpu_usage", &tmp_int, 90);
 	pconfig->packet_io.under_ddos_config.bypass_trigger_cpu_usage = (double)tmp_int;
+
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"decrease_ratio", str_tmp, sizeof(str_tmp), "0.99");
+	pconfig->packet_io.under_ddos_config.factor_decrease_ratio = strtod(str_tmp, NULL);
+
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"increase_ratio", str_tmp, sizeof(str_tmp), "1.001");
+	pconfig->packet_io.under_ddos_config.factor_increase_ratio = strtod(str_tmp, NULL);
+	
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"recovery_observe_time", &pconfig->packet_io.under_ddos_config.recovery_observe_time, 60);
 
 	/*******************************  STREAM ******************************/

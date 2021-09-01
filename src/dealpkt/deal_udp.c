@@ -202,6 +202,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	pstream_udp_pr->timeout=udp_reset_time;
 
 	if(pstream_udp_pr->under_ddos_bypass){
+		/* bypass状态不调用任何插件, 后续的project,   bridge,初始化half_stream等操作都可以忽略了 */
 		sapp_global_val->mthread_volatile[threadnum]->sys_stat.count[SAPP_STAT_UDP_BYPASS_STREAM]++;
 		cycle_pkt_dump_by_classify(threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
 		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream:%s under ddos bypass!", printaddr(&pstream_udp->addr, threadnum));

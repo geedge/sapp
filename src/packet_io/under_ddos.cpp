@@ -54,8 +54,11 @@ int sapp_thread_index_to_core_id(int thread_seq)
 	int i;
     cpu_set_t current_cpu_mask;
 	
-	CPU_ZERO(&current_cpu_mask);
-	
+    if(sapp_global_val->individual_fixed.thread_obtain_id[thread_seq] <= 0){
+		return -1;
+    }	
+
+    CPU_ZERO(&current_cpu_mask);
 	if(pthread_getaffinity_np(sapp_global_val->individual_fixed.thread_obtain_id[thread_seq], sizeof(cpu_set_t), &current_cpu_mask) < 0){
 		return -1;
 	}
@@ -103,7 +106,7 @@ static void read_cpu_usage_from_proc(cpu_tck_t *per_cpu_core_stat, int max_cpu_n
 	{
         fscanf(
             stat_fp,
-            "%s %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu\n",
+            "%16s %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu\n",
             per_cpu_core_stat[i].name,
             &(per_cpu_core_stat[i].tcks[TCK_USER]),
             &(per_cpu_core_stat[i].tcks[TCK_NICE]),
@@ -129,6 +132,11 @@ static double sapp_get_cpu_usage_cb(cpu_limit_handle h, int _thread_index, void 
 	int cpu_core_id;
 	int sys_actual_cpu_core_num = get_nprocs();
 	under_sapp_user_args_t *ud_usr_arg = (under_sapp_user_args_t *)_void_user_arg;
+
+	/* 此函数是被cl_limit后台线程调用, 第一次启动有可能sapp IO线程还没真正跑起来, 所以此处判断一下状态 */
+	if(SAPP_STATE_PROCESSING != sapp_global_val->individual_volatile->current_state){
+		return 0.0;
+	}
 	
 	cpu_core_id = sapp_thread_index_to_core_id(_thread_index);
 	if(cpu_core_id < 0){
@@ -275,22 +283,20 @@ int packet_io_under_ddos_init(void)
 	}	
 
 	cpu_limit_set_opt(ud_handle, CL_OPT_RES_TRIGGER_THRESHOLD, &p_ddos_cfg->bypass_trigger_cpu_usage, sizeof(double));
-	//cpu_limit_set_opt(ud_handle, CL_OPT_RES_RECOVERY_THRESHOLD, &p_ddos_cfg->recovery_cpu_usage, sizeof(double));	
+
+	cpu_limit_set_opt(ud_handle, CL_OPT_FACTOR_DECREASE_RATIO, &p_ddos_cfg->factor_decrease_ratio, sizeof(double));
+	cpu_limit_set_opt(ud_handle, CL_OPT_FACTOR_INCREASE_RATIO, &p_ddos_cfg->factor_increase_ratio, sizeof(double));
 
 	iopt_value = g_packet_io_thread_num;
 	cpu_limit_set_opt(ud_handle, CL_OPT_THREAD_COUNT, &iopt_value, sizeof(int));
 
 	cpu_limit_set_opt(ud_handle, CL_OPT_STAT_INTERVAL, &p_ddos_cfg->get_cpu_usage_interval, sizeof(int));
-
+	cpu_limit_set_opt(ud_handle, CL_OPT_OBSERVE_TIME, &p_ddos_cfg->recovery_observe_time, sizeof(int));
 	cpu_limit_set_opt(ud_handle, CL_OPT_RES_SMOOTH_SCOPE, &p_ddos_cfg->smooth_avg_window, sizeof(int));
-	
 	cpu_limit_set_opt(ud_handle, CL_OPT_RES_GET_FUN, (void *)&sapp_get_cpu_usage_cb, sizeof(void *));	
-
 	cpu_limit_set_opt(ud_handle, CL_OPT_FACTOR_GET_FUN, (void *)&sapp_get_create_stream_rate_cb, sizeof(void *));	
-
 	under_sapp_user_args_t *ud_user_arg = (under_sapp_user_args_t *)calloc(1, sizeof(under_sapp_user_args_t));
 	cpu_limit_set_opt(ud_handle, CL_OPT_USER_ARG, ud_user_arg, sizeof(void *));	
-
 	cpu_limit_set_opt(ud_handle, CL_OPT_DEBUG_LOG_FILE_NAME, (void *)sapp_global_val->config.data_file_path.data_under_ddos_stat_log_absolute, strlen(sapp_global_val->config.data_file_path.data_under_ddos_stat_log_absolute));		
 
 	sapp_global_val->individual_fixed.under_ddos_handle = ud_handle;

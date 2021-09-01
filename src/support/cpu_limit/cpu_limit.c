@@ -23,6 +23,7 @@ extern "C" {
 
 
 #define MAX_THREAD_COUNT	(128)
+#define CL_HISTORY_FACTOR_NUM (10)
 #define CPUL_MAGIC_NUM		(0xCC12345678LU)
 
 typedef enum{
@@ -37,26 +38,21 @@ typedef enum{
 	CL_STATE_TO_BE_DESTORY = 2,  //2:准备释放所有资源
 }cl_running_state_t;
 
-
-static const double g_cpul_reduce_step = 0.99; /* 超阈值后, factor每次降低的频率 */
-static const double g_cpul_raise_step = 1.01;  /* 观察期, factor每次升高的频率 */
-
-static const double g_cpul_recovery_bypass_percent = 0.05; /* 观察期, bypass占比总数小于此值时, 认为可用恢复常态 */ 
-static const int g_abnormal_observe_time = 60; //刚从异常态转为正常态, 为了避免抖动, 需要观察一段时间, 单位:秒
-
+static const double g_cpul_limit_min = 100.00; /* 测试时设了一个极低的res阈值, 无论怎么减, res都降不下来, 一直降到0为止, 导致无法恢复!! 先内置一个最低值 */
+static const double g_cpul_recovery_bypass_percent = 0.05; /* 在观察期内, bypass占比总数小于此值时, 认为可恢复常态 */ 
 
 struct __cpul_mthread_stat{
 	cl_limit_state_t op_state; 
 
 	int recent_smooth_index; //平滑平均值数组下标
 	double *recent_smooth_res_value; //默认是1, 即只看最近一次的实时值, 实际看用户设置
-	double history_diff_res_value; //如果CL_OPT_RES_TYPE是RES_TYPE_DIFFERENCE, 通过这个数组存储最近两次的值
-
 	double realtime_res_val;//最近一次的资源占用值, 综合计算出来的
 	
 	double last_time_factor_value;//最近一次用户操作的实际factor值, 比如pps, bps, link_new_create/pps等
 	double actual_limit_factor_value; //本次资源限制值, 会随op_state变化
 
+	double history_factor_value[CL_HISTORY_FACTOR_NUM]; //最近N次用户操作的实际factor值, 用于res第一次超阈值后, 选个合适的actual_limit_factor_value
+	unsigned int history_factor_index;
 	//int abnormal_observe_time; //曾经超过阈值, 但已经恢复正常了, 观察等待期时间, 单位:秒
 	
 	/* 会随时间变化, 动态更新的变量, 支持多线程 */
@@ -70,7 +66,8 @@ struct __cpul_mthread_stat{
 	volatile long long observe_work_count;   /* 观察期外部应用请求cpu_limit_can_i_do()函数返回Yes, 即work的次数 */
 	volatile long long observe_bypass_count; /* 观察期外部应用请求cpu_limit_can_i_do()函数返回No,  即bypass的次数 */
 
-	volatile long long user_factor_per_second; /* stat_interval 单位是毫秒, 如果按这么断的时间间隔统计pps, bps等参数, 误差太大, 所以此值每秒更新一次 */
+	volatile long long debug_factor_work_per_second; /* stat_interval 单位是毫秒, 如果配置了太短的时间间隔统计pps, bps等参数, 误差太大, 所以此值每秒更新一次 */
+	volatile long long debug_factor_bypass_per_second; /* stat_interval 单位是毫秒, 如果配置了太短的时间间隔统计pps, bps等参数, 误差太大, 所以此值每秒更新一次 */
 }__attribute__ ((aligned (64)));
 typedef struct __cpul_mthread_stat cpul_mthread_stat_t;
 
@@ -89,10 +86,13 @@ typedef struct{
 	/* 用户定义的选项或参数, 启动后固定不变 */
 	char *debug_log_filename; //是否开启本地debug日志
 	double user_trigger_value;
+	double factor_decrease_ratio; /* 超阈值后, factor每次降低的频率 */
+	double factor_increase_ratio; /* 观察期, factor每次升高的频率 */
 	/* 因为获取时间间隔太短, 经常有cpu占用率为0.0的情况,  所以不能加最低快速恢复阈值 */
 	//double user_recovery_value; //低于这个值, 立即恢复正常, 不再限制
-	int recent_res_smooth_number;
+	int recent_res_smooth_number; 
 	int stat_interval; //每次获取资源间隔时间, 单位ms
+	int recovery_observe_time; 
 	cl_get_res_t get_res_fun;
 	cl_get_factor_t get_factor_fun;
 	void *user_arg;
@@ -107,7 +107,7 @@ typedef struct{
 static void cl_get_res(cpu_limit_inner_t *h)
 {
 	double tmp_res_val, this_time_val;
-	int tid, j, last_time_diff_index;
+	int tid, j;
 	cpul_mthread_stat_t *this_stat;
 	double tmp_smooth_sum_res = 0.0;
 
@@ -115,19 +115,7 @@ static void cl_get_res(cpu_limit_inner_t *h)
 		tmp_res_val = h->get_res_fun(h, tid, h->user_arg);
 		this_stat = &h->mthread_stat[tid];
 
-		/* 获取当前时刻的res值, 可能是绝对值, 可能需要求两次的差值 */
-		//if(RES_TYPE_DIFFERENCE == h->get_res_type)
-		if(0){
-			if(this_stat->history_diff_res_value > 0){
-				this_time_val = tmp_res_val - this_stat->history_diff_res_value;
-			}else{
-				/* 首次获取, 因为历史记录为0, 避免差值变成了第一次绝对值, 第一次先返回0 */
-				this_time_val = 0;
-			}
-			this_stat->history_diff_res_value = tmp_res_val;
-		}else{
-			this_time_val = tmp_res_val;
-		}
+		this_time_val = tmp_res_val;
 
 		/* 根据情况是否需要平滑求平均值 */
 		if(h->recent_res_smooth_number > 1){
@@ -151,96 +139,120 @@ static void cl_get_res(cpu_limit_inner_t *h)
 static void cl_get_factor(cpu_limit_inner_t *h)
 {
 	int i;
+	cpul_mthread_stat_t *this_stat;
 
 	for( i = 0; i < h->thread_count; i++){
+		this_stat = &h->mthread_stat[i];
+		
 		//h->mthread_stat[i].last_time_factor_value = h->get_factor_fun(h, i, h->user_arg);
-		h->mthread_stat[i].last_time_factor_value = h->mthread_stat[i].realtime_work_count + h->mthread_stat[i].realtime_bypass_count;		
-		h->mthread_stat[i].realtime_work_count = 0;
-		h->mthread_stat[i].realtime_bypass_count = 0;
+		this_stat->last_time_factor_value = this_stat->realtime_work_count + this_stat->realtime_bypass_count;	
+
+		this_stat->history_factor_value[this_stat->history_factor_index++ % CL_HISTORY_FACTOR_NUM] = h->mthread_stat[i].last_time_factor_value;
 	}
+}
+
+/* 连续超过阈值, 每次按之前限制的值倍数减少, 
+   因为监控CPU周期可能比较短, 避免减的太快, 每秒操作一次 
+*/
+static inline void cl_update_limit_factor(cpu_limit_inner_t *h, cpul_mthread_stat_t *this_stat, double differ)
+{
+	if(this_stat->last_adjust_factor_time < h->current_time){
+		if(this_stat->actual_limit_factor_value > g_cpul_limit_min){
+			this_stat->actual_limit_factor_value = this_stat->actual_limit_factor_value * differ;
+		}
+		//this_stat->actual_limit_factor_value = this_stat->actual_limit_factor_value + 1;//加法增大
+		this_stat->last_adjust_factor_time = h->current_time;
+	}
+}
+
+/*
+	TODO: 使用最近N次的最大值, 还是平均值呢??
+	      最大值可能太抖了, 
+	      平均值可能比较小,
+*/
+static inline double cl_get_history_max_factor(cpul_mthread_stat_t *this_stat)
+{
+	int i;
+	double max_value = 0.0;
+
+	for(i = 0; i < CL_HISTORY_FACTOR_NUM; i++){
+		if(this_stat->history_factor_value[i] > max_value){
+			max_value = this_stat->history_factor_value[i];
+		}
+	}
+
+	return max_value;
 }
 
 static void cl_analysis_reduce_state(cpu_limit_inner_t *h, int tid, cpul_mthread_stat_t *this_stat)
 {
-	if(0 == this_stat->last_abnormal_time){ //首次超阈值, 按最近一次的实际factor递减
-		this_stat->actual_limit_factor_value = this_stat->last_time_factor_value * g_cpul_reduce_step;
+	double history_factor_max_val;
+	
+	if(0 == this_stat->last_abnormal_time){
+		/*
+			TODO: 此处如果之前流量很小, 瞬间忽然来了一大股流量, 导致actual_limit_factor_value很小,
+			虽然bypass后cpu不会超阈值, 但是user factor被压制的太小了, 也不合实际!!
+
+			设置一点静默时间, 首次发现超阈值后, 先观察几秒, 测试一个平均的actual_limit_factor_value.
+		*/
+		history_factor_max_val = cl_get_history_max_factor(this_stat);
+		this_stat->actual_limit_factor_value = history_factor_max_val * h->factor_decrease_ratio;
+		this_stat->last_abnormal_time = h->current_time;
 	}else{
-		/* 连续超过阈值, 每次递减, 因为监控CPU周期可能比较短, 避免减的太快, 每秒操作一次 */
-		if(this_stat->last_adjust_factor_time < h->current_time){
-			this_stat->actual_limit_factor_value = this_stat->actual_limit_factor_value * g_cpul_reduce_step; //除法减少
-			this_stat->last_adjust_factor_time = h->current_time;
-		}
+		cl_update_limit_factor(h, this_stat, h->factor_decrease_ratio);
 	}
 	
-	this_stat->last_abnormal_time = h->current_time;
 	this_stat->op_state = CL_LIMIT_STATE_REDUCE;
 	h->global_last_abnormal_time = h->current_time;
 
 	DPRINT("### thread:%d cl_analysis(), res:%.2f, change to reduce state, CL limit factor:%.2f\n", tid, this_stat->realtime_res_val, this_stat->actual_limit_factor_value);			
 }
 
-#if 0
-static void cl_analysis_recovery_state(cpu_limit_inner_t *h, int tid, cpul_mthread_stat_t *this_stat)
+static int cl_fast_recovery(cpu_limit_inner_t *h, cpul_mthread_stat_t *this_stat)
 {
-#if 0
-	this_stat->op_state = CL_LIMIT_STATE_PENDING; 
-	this_stat->last_abnormal_time = 0;
-	this_stat->observe_work_count = 0;
-	this_stat->observe_bypass_count = 0;
+	int recovery = 0;
 
-	DPRINT("### thread:%d cl_analysis(), current res:%.2f < low threshold, change to pending state!\n", tid, this_stat->realtime_res_val);			
-#endif
-    printf("### thread:%d cl_analysis(), current res:%.2f < low threshold, change to pending state!\n", tid, this_stat->realtime_res_val);	
+	if(this_stat->last_abnormal_time + h->recovery_observe_time >= h->current_time){//还未超时
+		return 0;
+	}
+	
+	if(this_stat->observe_work_count + this_stat->observe_bypass_count > 0){
+		if(((double)this_stat->observe_bypass_count/(double)(this_stat->observe_work_count + this_stat->observe_bypass_count) < g_cpul_recovery_bypass_percent)
+		 &&(this_stat->realtime_res_val < h->user_trigger_value*0.9)){
+			recovery = 1;
+		}
+	}else{	 
+		/* 测试时忽然停了流量, 计数全0时也要恢复 */
+		recovery = 1;
+	}
+
+	return recovery;
 }
-#endif
 
 static void cl_analysis_observe_state(cpu_limit_inner_t *h, int tid, cpul_mthread_stat_t *this_stat)
 {
 	if(0 == this_stat->last_abnormal_time){
-		/* 可能是从启动以来就没啥事, 或者已经从异常态超时恢复, 保持CL_LIMIT_STATE_PENDING状态 */
+		/* 可能是从启动以来就没啥事, 或者刚从异常态超时恢复, 保持CL_LIMIT_STATE_PENDING状态 */
 		this_stat->op_state = CL_LIMIT_STATE_PENDING; 	
 		return;
 	}
 
-	/* 继续判断, 如果this_stat->last_abnormal_time > 0, 肯定是之前曾超阈值被限制了 */
-
-	/* 因为监控CPU周期可能比较短, 避免减的太快, 每秒操作一次 */
-	if(this_stat->last_adjust_factor_time < h->current_time){
-		if(this_stat->realtime_res_val < h->user_trigger_value*0.9){
-			//this_stat->actual_limit_factor_value = this_stat->actual_limit_factor_value * g_cpul_raise_step;
-			this_stat->actual_limit_factor_value = this_stat->actual_limit_factor_value + 1;//加法增大
-			this_stat->last_adjust_factor_time = h->current_time;
-		}
-	}
-
-	return;/////////////////////////////////////////
-
-	if(this_stat->last_abnormal_time + g_abnormal_observe_time > h->current_time){
-		/* 1倍观察期内, 保持之前的limit值不变 */
-		this_stat->op_state = CL_LIMIT_STATE_OBSERVE;
+	if(cl_fast_recovery(h, this_stat)){ 
+		this_stat->last_abnormal_time = 0;	
+		this_stat->op_state = CL_LIMIT_STATE_PENDING; 	
 		return;
 	}
 
-	if(this_stat->last_abnormal_time + g_abnormal_observe_time*2 > h->current_time){
-		/* 2倍观察期内, 判断最近一段时间的work和bypass结果 */
-		if((double)this_stat->observe_bypass_count/(double)(this_stat->observe_work_count + this_stat->observe_bypass_count) >= g_cpul_recovery_bypass_percent){ 
-			this_stat->op_state = CL_LIMIT_STATE_OBSERVE;
-			this_stat->last_abnormal_time = h->current_time; /* 观察期还是有很多bypass, 认为还是异常状态, 重置last_abnormal_time */
-			this_stat->observe_work_count = 0;
-			this_stat->observe_bypass_count = 0;					
-		}else{
-			this_stat->op_state = CL_LIMIT_STATE_OBSERVE;
-			/* 因为CPU抖动, actual_limit_factor_value可能下降的比限制实际效果的值还要小, 如果一直保持不变,要丢包很长时间, 此处再缓慢的调高一些 */
-			this_stat->actual_limit_factor_value++; 				
-		}
-	}else{
-		/* 2倍观察期后, 重置为pending */
-		this_stat->op_state = CL_LIMIT_STATE_PENDING; 
-		this_stat->last_abnormal_time = 0;				
-		this_stat->observe_work_count = 0;
-		this_stat->observe_bypass_count = 0;	
-		return;
+	if((this_stat->observe_work_count + this_stat->observe_bypass_count > 0)
+	 && ((double)this_stat->observe_bypass_count/(double)(this_stat->observe_work_count + this_stat->observe_bypass_count) > g_cpul_recovery_bypass_percent)){
+		this_stat->last_abnormal_time = h->current_time; /* 观察期还是有很多bypass, 认为还是异常状态, 更新last_abnormal_time */				
 	}
+
+	/* 在线测试发现, 某些线程的流量巨小甚至为0, 此时还一直增加actual_limit_factor_value就没有意义了, 判断一下 */
+	if(this_stat->observe_work_count + this_stat->observe_bypass_count > this_stat->actual_limit_factor_value*0.9){
+		cl_update_limit_factor(h, this_stat, h->factor_increase_ratio); /* 每次升高一点点, 让user res在最高阈值附近小范围浮动 */	
+	}
+	this_stat->op_state = CL_LIMIT_STATE_OBSERVE;	
 
 	return ;
 }
@@ -309,20 +321,20 @@ static void cl_debug_log(cpu_limit_inner_t *h)
 {
 	int tid;
 	int thread_bypass_state = 0;
+	FILE *fp;
+	cpul_mthread_stat_t *this_stat;
 	
 	if(NULL == h->debug_log_filename){
 		return;
 	}
 
-	if(h->last_debug_log_print_time + 1 > h->current_time){
+	if(h->last_debug_log_print_time >= h->current_time){
 		return;
 	}
-
-	FILE *fp;
+	h->last_debug_log_print_time = h->current_time;
 
 	fp = fopen(h->debug_log_filename, "w+");
 	if(NULL == fp){
-		h->last_debug_log_print_time = h->current_time;
 		return;
 	}
 
@@ -330,37 +342,43 @@ static void cl_debug_log(cpu_limit_inner_t *h)
 	fprintf(fp, "%s\n", cl_timet_to_str(h->current_time, cur_time_string, sizeof(cur_time_string)));
 	
 
-	fprintf(fp, "User define high trigger threshod:%.2f\n", h->user_trigger_value);
+	fprintf(fp, "User define bypass trigger threshod:%.2f%%\n", h->user_trigger_value);
 	//fprintf(fp, "User define low recovery threshod:%.2f\n", h->user_recovery_value);
-	fprintf(fp, "User define get res interval:%d ms\n", h->stat_interval);
-	if(h->global_bypass_state){	
+	fprintf(fp, "User define get res interval:%dms\n", h->stat_interval);
+	if(h->global_last_abnormal_time != 0){	
 		char abnormal_time_string[64];
-		fprintf(fp, "last abnormal time:%s\n", cl_timet_to_str(h->global_last_abnormal_time, abnormal_time_string, sizeof(abnormal_time_string)));
+		fprintf(fp, "lastest abnormal time:%s\n", cl_timet_to_str(h->global_last_abnormal_time, abnormal_time_string, sizeof(abnormal_time_string)));
 	}
-	fprintf(fp, "-------------------------------------------\n");
+	fprintf(fp, "-------------------------------------------------------------------------------\n");
 
-	fprintf(fp, "%9s %7s %9s %15s CL_Limit(/%dms)\n", "Thread_ID", "State", "CPU_Usage", "Usr_Factor(/s)", h->stat_interval);
+	fprintf(fp, "%9s %7s %9s %15s %18s CL_Limit(/%dms)\n", "Thread_ID", "State", "CPU_Usage", "Req_Factor(/s)","Bypass_Factor(/s)", h->stat_interval);
 	for(tid = 0; tid < h ->thread_count; tid++){
-		if(h->mthread_stat[tid].op_state != CL_LIMIT_STATE_PENDING){
+		this_stat = &h->mthread_stat[tid];
+		
+		if(this_stat->op_state != CL_LIMIT_STATE_PENDING){
 			thread_bypass_state++;
 		}
-		if(CL_LIMIT_STATE_PENDING == h->mthread_stat[tid].op_state){
-			fprintf(fp, "%9d %7s %9.2f %15ld %15s\n", tid, 
-					cl_op_state_ntop(h->mthread_stat[tid].op_state), 
-					h->mthread_stat[tid].realtime_res_val, 
-					h->mthread_stat[tid].user_factor_per_second,
+		if(CL_LIMIT_STATE_PENDING == this_stat->op_state){
+			fprintf(fp, "%9d %7s %9.2f %15ld %18ld %15s\n", tid, 
+					cl_op_state_ntop(this_stat->op_state), 
+					this_stat->realtime_res_val, 
+					this_stat->debug_factor_work_per_second + this_stat->debug_factor_bypass_per_second,
+					this_stat->debug_factor_bypass_per_second,
 					"infinity"/*无限制*/);
 		}else{
-			fprintf(fp, "%9d %7s %9.2f %15ld %15.2f\n", tid, 
-					cl_op_state_ntop(h->mthread_stat[tid].op_state), 
-					h->mthread_stat[tid].realtime_res_val, 
-					h->mthread_stat[tid].user_factor_per_second,
-					h->mthread_stat[tid].actual_limit_factor_value);
+			fprintf(fp, "%9d %7s %9.2f %15ld %18ld %15.2f\n", tid, 
+					cl_op_state_ntop(this_stat->op_state), 
+					this_stat->realtime_res_val, 
+					this_stat->debug_factor_work_per_second + this_stat->debug_factor_bypass_per_second,
+					this_stat->debug_factor_bypass_per_second,
+					this_stat->actual_limit_factor_value);
 		}
 
-		h->mthread_stat[tid].user_factor_per_second = 0;
+		this_stat->debug_factor_work_per_second = 0; /* 每秒更新一次 */
+		this_stat->debug_factor_bypass_per_second = 0; /* 每秒更新一次 */
 	}
-
+	fprintf(fp, "-------------------------------------------------------------------------------\n");
+	
 	if(0 == thread_bypass_state){
 		h->global_bypass_state = 0;
 	}else{
@@ -374,6 +392,18 @@ static void cl_debug_log(cpu_limit_inner_t *h)
 	h->last_debug_log_print_time = h->current_time;
 }
 
+
+static void cl_clear_counter(cpu_limit_inner_t *h)
+{
+	int i;
+	for( i = 0; i < h->thread_count; i++){	
+		h->mthread_stat[i].realtime_work_count = 0;
+		h->mthread_stat[i].realtime_bypass_count = 0;
+		h->mthread_stat[i].observe_work_count = 0;
+		h->mthread_stat[i].observe_bypass_count = 0;			
+	}
+
+}
 
 static inline long long _cl_get_current_time_in_ms(void)
 {
@@ -395,7 +425,6 @@ static inline long long _cl_get_current_time_in_ms(void)
 static void *cl_bg_thread(void *_arg_h)
 {
 	cpu_limit_inner_t *h = (cpu_limit_inner_t *)_arg_h;
-	int analysis_count = 0;
 	long long cur_time_ms = 0;
 
 	while(CL_STATE_RUNNING != h->running_state){
@@ -406,16 +435,9 @@ static void *cl_bg_thread(void *_arg_h)
 	while(CL_STATE_RUNNING == h->running_state){
 		cl_get_res(h);
 		cl_get_factor(h);
-
-		/* 分析周期略微长于获取res和factor周期 */
-		//if(++analysis_count > 3)
-		if(1)
-		{
-			cl_analysis(h);
-			analysis_count = 0;
-		}
-
+		cl_analysis(h);
 		cl_debug_log(h);
+		cl_clear_counter(h);
 		
 		h->current_time = time(NULL);
 
@@ -425,7 +447,7 @@ static void *cl_bg_thread(void *_arg_h)
            因为以上函数自身耗时可能就很长, 再usleep()那么长时间就不准了.
 		*/
 		while(h->last_analysis_time_ms + h->stat_interval > cur_time_ms){
-			sapp_usleep(1);
+			sapp_usleep(10);
 			cur_time_ms = _cl_get_current_time_in_ms();
 		}
 		h->last_analysis_time_ms = cur_time_ms;
@@ -459,11 +481,15 @@ int cpu_limit_set_opt(cpu_limit_handle _arg_h, cpu_limit_opt opt, void *value, i
 		case CL_OPT_RES_TRIGGER_THRESHOLD:
 			h->user_trigger_value = *(double *)value;
 		break;
-#if 0
-		case CL_OPT_RES_RECOVERY_THRESHOLD:
-			h->user_recovery_value = *(double *)value;
+
+		case CL_OPT_FACTOR_DECREASE_RATIO:
+			h->factor_decrease_ratio = *(double *)value;
 		break;
-#endif
+
+		case CL_OPT_FACTOR_INCREASE_RATIO:
+			h->factor_increase_ratio = *(double *)value;
+		break;
+		
 		case CL_OPT_THREAD_COUNT:
 			h->thread_count = *(int *)value;
 		break;
@@ -474,6 +500,10 @@ int cpu_limit_set_opt(cpu_limit_handle _arg_h, cpu_limit_opt opt, void *value, i
 
 		case CL_OPT_STAT_INTERVAL:
 			h->stat_interval = *(int *)value;
+		break;
+
+		case CL_OPT_OBSERVE_TIME:
+			h->recovery_observe_time  = *(int *)value;
 		break;
 		
 
@@ -519,7 +549,7 @@ int cpu_limit_get_opt(cpu_limit_handle _arg_h, cpu_limit_opt opt, void *value, i
 
 	cpu_limit_inner_t *h = (cpu_limit_inner_t *)_arg_h;
 
-	if(NULL == _arg_h || NULL == value || value_len <= 0){
+	if(NULL == _arg_h || NULL == value || NULL == value_len){
 		return -1;
 	}	
 
@@ -597,13 +627,13 @@ int cpu_limit_can_i_do(cpu_limit_handle _arg_h, int thread_seq)
 	if(can_i_do){
 		this_stat->realtime_work_count++;
 		this_stat->observe_work_count++;
+		this_stat->debug_factor_work_per_second++;		
 	}else{
 		this_stat->observe_bypass_count++;
 		this_stat->realtime_bypass_count++;
+		this_stat->debug_factor_bypass_per_second++;
 	}
 
-	this_stat->user_factor_per_second++;
-	
 	return can_i_do;
 }
 

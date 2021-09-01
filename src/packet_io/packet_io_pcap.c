@@ -770,14 +770,19 @@ static void *__pcap_work_thread(void *arg)
 		sapp_usleep(1000);
 	}
 
+	/* for perf optimize
+	   频繁调用stream_process_polling()等函数, 此处先在函数外部判断一下是否需要调用.
+	*/
+	int polling_enabled = sapp_global_val->config.packet_io.polling_enabled;
+
 	while(1){
 		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_FETCH_PKT]++;
 		
 		if(0 == MESA_lqueue_get_count(work_thread_pool[thread_num].pkt_queue)){
-			if(stream_process_polling(thread_num) != 0){
+			if(polling_enabled && (stream_process_polling(thread_num) & POLLING_STATE_WORK)){
 				polling_work_times++;
 			}
-			if(polling_stream_timeout(thread_num) != 0){
+			if(polling_enabled && (polling_stream_timeout(thread_num) & POLLING_STATE_WORK)){
 				polling_work_times++;
 			}
 			total_call_times++;
@@ -801,7 +806,7 @@ static void *__pcap_work_thread(void *arg)
 		total_call_times++;
 		if(total_call_times >= sapp_global_val->config.packet_io.polling_priority){
 			/* 如果流量巨大, 一直有包时, 每隔polling_priority个包也要调用polling接口 */
-			if(stream_process_polling(thread_num) > 0){
+			if(polling_enabled && (stream_process_polling(thread_num) & POLLING_STATE_WORK )){
 				polling_work_times++;
 			}
 		}

@@ -15,6 +15,19 @@ static unsigned short phony_protocol_plugid;
 #define TEST_SAPP_API		   1
 
 
+typedef struct{
+	int ivalue1;
+	int ivalue2;
+	char str_value1[NAME_MAX];
+	char str_value2[NAME_MAX];
+}test_app_val_t;
+
+/* 设置一些全局变量, 有各种不同的类型, 方便测试用例传递参数, 
+   参数的意义由各个用例自己解释 
+*/
+static test_app_val_t g_test_app_val;
+static const char *g_test_app_cfg_file="./etc/test_app.conf";
+
 char test_gtp_volatile_addr_entry(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
 {
 	enum stream_carry_tunnel_t tunnel_type;
@@ -3097,7 +3110,9 @@ char TEST_STREAM(struct streaminfo *stream,  void **pme, int thread_seq,void *a_
 		return APP_STATE_DROPME;
 	}
 
-	for(i = 0; i < 65535; i++){
+	int min_num = SAPP_MIN(65535, g_test_app_val.ivalue1+1); //从配置文件获取
+
+	for(i = 0; i < min_num; i++){
 		local_data[i] = rand();
 	}
 	
@@ -3114,8 +3129,8 @@ char TEST_STREAM(struct streaminfo *stream,  void **pme, int thread_seq,void *a_
 	/* 随便写点东西, 耗费CPU */
 	if((data != NULL) && (datalen > 0)){
 		for(i = 0; i < datalen; i++){
-			result1[i] = (long)memchr(local_data, data[i], 65535);
-			result2[i] = (long long )memmem((void *)local_data, 65535, (void *)&data[i], datalen-i);
+			result1[i] = (long)memchr(local_data, data[i], min_num);
+			result2[i] = (long long )memmem((void *)local_data, min_num, (void *)&data[i], datalen-i);
 			nouse_sum += (double)result1[i] * result2[i];
 		}
 	}
@@ -3296,19 +3311,43 @@ char fake_deadlock(struct streaminfo *pstream,void **pme, int thread_seq,void *a
 }
 
 
+void CHAR_CONFIG_INIT(void)
+{
+	int ret;
+	ret = MESA_load_profile_int_def(g_test_app_cfg_file, "main", "int_value1", &g_test_app_val.ivalue1, 0);
+	if(ret < 0){
+		printf("test_app plug: get config %s error, use default value:%d\n", "int_value1", 0);
+	}else{
+		printf("test_app plug: get config %s succ, value:%d\n", "int_value1", g_test_app_val.ivalue1);
+	}
+	
+	MESA_load_profile_int_def(g_test_app_cfg_file, "main", "int_value2", &g_test_app_val.ivalue2, 0);
+	if(ret < 0){
+		printf("test_app plug: get config %s error, use default value:%d\n", "int_value2", 0);
+	}else{
+		printf("test_app plug: get config %s succ, value:%d\n", "int_value2", g_test_app_val.ivalue2);
+	}
+
+	MESA_load_profile_string_def(g_test_app_cfg_file, "main", "string_value1", g_test_app_val.str_value1, sizeof(g_test_app_val.str_value1), "null");
+	if(ret < 0){
+		printf("test_app plug: get config %s error, use default value:%s\n", "string_value1", "null");
+	}else{
+		printf("test_app plug: get config %s succ, value:%s\n", "string_value1", g_test_app_val.str_value1);
+	}	
+	MESA_load_profile_string_def(g_test_app_cfg_file, "main", "string_value2", g_test_app_val.str_value2, sizeof(g_test_app_val.str_value1), "");
+	if(ret < 0){
+		printf("test_app plug: get config %s error, use default value:%s\n", "string_value2", "null");
+	}else{
+		printf("test_app plug: get config %s succ, value:%s\n", "string_value2", g_test_app_val.str_value2);
+	}		
+}
+
 
 int CHAR_INIT()
 {
-	//test_sapp_get_device_opt("ens33");
-	
-	int demo_plugid = 51;
+	CHAR_CONFIG_INIT();
 
-//  函数实现自定义
-//  只要求函数返回值为插件ID；
-
-	//stream_register_arp((SAPP_PKT_CB_FUN_T)arp_plug_entry);
-	
-	return demo_plugid;
+	return 1;
 }
 
 void CHAR_DESTROY(void)

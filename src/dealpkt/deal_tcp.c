@@ -738,7 +738,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	pstream->stream_state=TCP_SYN_STATE;
 
 	if(pstream_pr->under_ddos_bypass){
-		/* bypass状态不调用任何插件, 后续的project,  parse_opt等操作都可以忽略了 */
+		/* bypass状态不调用任何插件, 后续的project,  parse_tcp_option等操作都可以忽略了,以节约cpu资源 */
 		pstream->stream_state=TCP_NOUSE_STATE;
 		streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]));
 		return pindex_tcp;
@@ -958,7 +958,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	pdetail_pr->link_state=STREAM_LINK_DATA;	
 
 	if(pstream_pr->under_ddos_bypass){
-		/* bypass状态不调用任何插件, 后续的project,  parse_opt,初始化half_stream等操作都可以忽略了 */
+		/* bypass状态不调用任何插件, 后续的project,  bridge,parse_opt,初始化half_stream等操作都可以忽略了 */
 		pstream->stream_state=TCP_NOUSE_STATE;
 		streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]));
 		return pindex_tcp;
