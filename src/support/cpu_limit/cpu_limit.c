@@ -38,7 +38,7 @@ typedef enum{
 	CL_STATE_TO_BE_DESTORY = 2,  //2:准备释放所有资源
 }cl_running_state_t;
 
-static const double g_cpul_limit_min = 100.00; /* 测试时设了一个极低的res阈值, 无论怎么减, res都降不下来, 一直降到0为止, 导致无法恢复!! 先内置一个最低值 */
+static const double g_cpul_limit_min = 1.00; /* 测试时设了一个极低的res阈值, 无论怎么减factor, res都降不下来, 一直降到0为止, 导致无法恢复!! 先内置一个最低值 */
 static const double g_cpul_recovery_bypass_percent = 0.05; /* 在观察期内, bypass占比总数小于此值时, 认为可恢复常态 */ 
 
 struct __cpul_mthread_stat{
@@ -157,8 +157,9 @@ static void cl_get_factor(cpu_limit_inner_t *h)
 static inline void cl_update_limit_factor(cpu_limit_inner_t *h, cpul_mthread_stat_t *this_stat, double differ)
 {
 	if(this_stat->last_adjust_factor_time < h->current_time){
-		if(this_stat->actual_limit_factor_value > g_cpul_limit_min){
-			this_stat->actual_limit_factor_value = this_stat->actual_limit_factor_value * differ;
+		this_stat->actual_limit_factor_value = this_stat->actual_limit_factor_value * differ;
+		if(this_stat->actual_limit_factor_value < g_cpul_limit_min){
+			this_stat->actual_limit_factor_value = g_cpul_limit_min;
 		}
 		//this_stat->actual_limit_factor_value = this_stat->actual_limit_factor_value + 1;//加法增大
 		this_stat->last_adjust_factor_time = h->current_time;
