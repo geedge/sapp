@@ -815,9 +815,26 @@ struct packet_io_mac_addr{
 	char __pad__;	 /* 整体结构8字节对齐 */
 };
 
+
+
+struct hdlc_net_hdr{
+	unsigned char address;
+	unsigned char control;
+	unsigned short protocol;	/* network order */ 		
+}__attribute__((packed));
+
+
+
 /* 关于网络相关字段, 均为网络序, network order */
 #define VXLAN_KEEPALIVE_PKT_PORT	(3784)
 #define VXLAN_OVERLAY_PKT_PORT		(4789)
+
+
+typedef enum{
+	VXLAN_ENCAP_ETH = 0x0,
+	VXLAN_ENCAP_PPP = 0x8,
+	VXLAN_ENCAP_HDLC = 0xC,
+}vxlan_encap_type_t;
 
 struct __inline_vxlan_hdr{
 	unsigned char flags;

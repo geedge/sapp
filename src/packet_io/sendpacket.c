@@ -1073,7 +1073,10 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 		break;
 
 		case ADDR_TYPE_VXLAN:
-			reserved_hdr_len = sizeof(inline_vxlan_hdr_t);
+		{
+			const struct layer_addr_vxlan_private *vxaddr_pr = (struct layer_addr_vxlan_private *)stream_pr->stream_public.addr.paddr;
+			reserved_hdr_len = vxaddr_pr->actual_total_len;
+		}
 		break;
 		
 		default:
@@ -1879,15 +1882,18 @@ static int build_net_layer_ppp(struct streaminfo_private *stream_pr, int carry_l
 }
 
 static int build_net_layer_vxlan(struct streaminfo_private *stream_pr, int carry_layer_type,
-			int carry_layer_len, unsigned char *buf, UCHAR send_stream_dir, const raw_pkt_t *raw_pkt)
+			int carry_layer_len, unsigned char *buf, UCHAR send_stream_dir, const raw_pkt_t *raw_pkt, const struct layer_addr_vxlan_private *raw_vxlan_hdr)
 {
 	inline_vxlan_hdr_t *send_vxlan_hdr = (inline_vxlan_hdr_t *)buf;
-	const inline_vxlan_hdr_t *raw_vxlan_hdr;
-	int threadnum = (int)stream_pr->stream_public.threadnum;
 
-	raw_vxlan_hdr = (inline_vxlan_hdr_t *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
-
-	memcpy(send_vxlan_hdr, raw_vxlan_hdr, sizeof(inline_vxlan_hdr_t));
+	//vlan_id = htons((vlan_id_high<<4) | vlan_id_low);
+	
+	memset(send_vxlan_hdr, 0, sizeof(inline_vxlan_hdr_t));
+	send_vxlan_hdr->flags = 0x08;
+	send_vxlan_hdr->vlan_id_half_high = ntohs(raw_vxlan_hdr->addr_public.vlan_id) >> 4;
+	send_vxlan_hdr->vlan_id_half_low = ntohs(raw_vxlan_hdr->addr_public.vlan_id) & 0xF;
+	send_vxlan_hdr->link_layer_type = raw_vxlan_hdr->addr_public.link_type;
+	send_vxlan_hdr->link_id = raw_vxlan_hdr->addr_public.link_id;
 
 	if(DIR_C2S == send_stream_dir){
 		send_vxlan_hdr->dir = stream_pr->stream_c2s_route_dir;
@@ -1895,7 +1901,21 @@ static int build_net_layer_vxlan(struct streaminfo_private *stream_pr, int carry
 		send_vxlan_hdr->dir = stream_pr->stream_c2s_route_dir ^ 1;
 	}
 
-	return sizeof(inline_vxlan_hdr_t);
+	if(VXLAN_ENCAP_HDLC == raw_vxlan_hdr->addr_public.link_type){
+		struct hdlc_net_hdr *snd_hdlc_hdr = (struct hdlc_net_hdr *)(buf + sizeof(inline_vxlan_hdr_t));
+		snd_hdlc_hdr->address = raw_vxlan_hdr->inner_hdlc.address;
+		snd_hdlc_hdr->control = raw_vxlan_hdr->inner_hdlc.control;
+		snd_hdlc_hdr->protocol = raw_vxlan_hdr->inner_hdlc.protocol;
+	}else if(VXLAN_ENCAP_PPP == raw_vxlan_hdr->addr_public.link_type){
+		struct layer_ppp_hdr *snd_ppp_hdr = (struct layer_ppp_hdr *)(buf + sizeof(inline_vxlan_hdr_t));
+		snd_ppp_hdr->address = raw_vxlan_hdr->inner_ppp.address;
+		snd_ppp_hdr->control = raw_vxlan_hdr->inner_ppp.control;
+		snd_ppp_hdr->protocol = raw_vxlan_hdr->inner_ppp.protocol;
+	}else{
+		;//ethernet, do nothing!
+	}
+
+	return raw_vxlan_hdr->actual_total_len;
 }
 
 
@@ -2321,10 +2341,13 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 #endif
 
 		case ADDR_TYPE_VXLAN:
-			buf -= sizeof(inline_vxlan_hdr_t);
-			this_layer_len = sizeof(inline_vxlan_hdr_t);
-			build_net_layer_vxlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
+		{
+			const struct layer_addr_vxlan_private *vxaddr_pr = (struct layer_addr_vxlan_private *)stream_pr->stream_public.addr.paddr;
+			buf -= vxaddr_pr->actual_total_len;
+			this_layer_len = vxaddr_pr->actual_total_len;
+			build_net_layer_vxlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt, vxaddr_pr);
 			carry_layer_type = ADDR_TYPE_VXLAN;		
+		}
 		break;
 		
 		default:

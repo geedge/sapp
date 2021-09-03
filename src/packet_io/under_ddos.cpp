@@ -10,11 +10,9 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 typedef enum
 {
@@ -75,8 +73,6 @@ int sapp_thread_index_to_core_id(int thread_seq)
 
 }
 
-
-
 static inline uint64_t calc_total_ticks(cpu_tck_t *stat)
 {
     uint64_t total = 0;
@@ -85,7 +81,6 @@ static inline uint64_t calc_total_ticks(cpu_tck_t *stat)
         total += stat->tcks[i];
     return total;
 }
-
 
 static void read_cpu_usage_from_proc(cpu_tck_t *per_cpu_core_stat, int max_cpu_num)
 {
@@ -123,7 +118,6 @@ static void read_cpu_usage_from_proc(cpu_tck_t *per_cpu_core_stat, int max_cpu_n
 
     fclose(stat_fp);
 }
-
 
 static double sapp_get_cpu_usage_cb(cpu_limit_handle h, int _thread_index, void *_void_user_arg)
 {
@@ -190,35 +184,6 @@ static double sapp_get_create_stream_rate_cb(cpu_limit_handle h, int thread_inde
 	return (double)cur_create_stream_rate;
 }
 
-#if 0
-void update_under_ddos_stream_state(struct streaminfo *pstream, int payload_len)
-{
-	if(STREAM_TYPE_TCP == pstream->type){
-		switch(pstream->stream_state){
-			case TCP_SYN_STATE:
-				if(payload_len > 0){
-					pstream->stream_state = TCP_NOUSE_STATE; /* 有数据传输直接切换到nouse状态 */
-				}			
-			break;
-
-			case TCP_DATA_STATE:
-				pstream->stream_state = TCP_NOUSE_STATE; 
-			break;
-		}
-	}else{
-		switch(pstream->stream_state){
-			case UDP_ONE_STATE:
-				pstream->stream_state = UDP_TWO_STATE; 
-			break;
-
-			case UDP_TWO_STATE:
-				pstream->stream_state = UDP_MORE_STATE; 
-			break;
-		}
-	}
-}
-#endif
-
 int packet_io_under_ddos_global_status(void)
 {
 	int global_bypass_state;
@@ -247,7 +212,6 @@ int packet_io_under_ddos_should_bypass(int thread_index)
 	return !ret;
 }
 
-
 void packet_io_under_ddos_run(void)
 {
 	const sapp_under_ddos_config_t *p_ddos_cfg = &sapp_global_val->config.packet_io.under_ddos_config;
@@ -272,13 +236,13 @@ int packet_io_under_ddos_init(void)
 	}
 
 	if(sapp_global_val->config.cpu.bind_mask_array_num == 0){
-		sapp_runtime_log(RLOG_LV_FATAL, "cpu_limit_create() error, must set [CPU]->bind_mask!\n");
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "cpu_limit_create() error, must set [CPU]->bind_mask when stream_bypass_enabled=1\n");
 		return -1;
 	}
 
 	ud_handle = cpu_limit_create();
 	if(NULL == ud_handle){
-		sapp_runtime_log(RLOG_LV_FATAL, "cpu_limit_create() error!\n");
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "cpu_limit_create() error!\n");
 		return -1;		
 	}	
 

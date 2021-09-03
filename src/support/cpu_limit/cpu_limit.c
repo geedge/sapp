@@ -1,3 +1,13 @@
+/***********************************************************************************************************************
+    本文件用于实现疑似ddos攻击时, 将某些流切换为bypass状态, 以忽略一小部分流的代价, 使大部分流还是能正常处理.
+    暂时先放在sapp工程里, 尽量保持独立, 也不一定仅限于CPU, 也可以是内存, pps, bps, drop_pps等参数,
+    以后可能作为一个独立的库存在.
+
+    TODO:
+        可以参考反馈控制PID算法 : 
+            https://en.wikipedia.org/wiki/PID_controller
+            http://brettbeauregard.com/blog/2011/04/improving-the-beginners-pid-introduction/
+***********************************************************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -19,7 +29,6 @@ extern "C" {
 #else
 #define DPRINT(fmt, args...)    /* Don't do anything in release builds */
 #endif
-
 
 
 #define MAX_THREAD_COUNT	(128)
@@ -72,7 +81,6 @@ struct __cpul_mthread_stat{
 typedef struct __cpul_mthread_stat cpul_mthread_stat_t;
 
 
-
 typedef struct{
 	/* 内部私有变量 */
 	long long header_magic; 
@@ -94,7 +102,7 @@ typedef struct{
 	int stat_interval; //每次获取资源间隔时间, 单位ms
 	int recovery_observe_time; 
 	cl_get_res_t get_res_fun;
-	cl_get_factor_t get_factor_fun;
+	cl_get_factor_t get_factor_fun; /* TODO: 要不要这个callbakc呢? 其实从 cpu_limit_can_i_do() 函数就能获取了 */
 	void *user_arg;
 	cl_destroy_cb_t destroy_cb_fun;
 	int thread_count; 
@@ -258,7 +266,6 @@ static void cl_analysis_observe_state(cpu_limit_inner_t *h, int tid, cpul_mthrea
 	return ;
 }
 
-
 static void cl_analysis(cpu_limit_inner_t *h)
 {
 	cpul_mthread_stat_t *this_stat;
@@ -276,7 +283,6 @@ static void cl_analysis(cpu_limit_inner_t *h)
 
 	return;
 }
-
 
 static const char *cl_op_state_ntop(cl_limit_state_t cl_op_state)
 {
@@ -342,7 +348,6 @@ static void cl_debug_log(cpu_limit_inner_t *h)
 	char cur_time_string[64];
 	fprintf(fp, "%s\n", cl_timet_to_str(h->current_time, cur_time_string, sizeof(cur_time_string)));
 	
-
 	fprintf(fp, "User define bypass trigger threshod:%.2f%%\n", h->user_trigger_value);
 	//fprintf(fp, "User define low recovery threshod:%.2f\n", h->user_recovery_value);
 	fprintf(fp, "User define get res interval:%dms\n", h->stat_interval);
@@ -387,7 +392,6 @@ static void cl_debug_log(cpu_limit_inner_t *h)
 	}
 
 	fprintf(fp, "Global BYAPSS status: %s\n", (h->global_bypass_state > 0)?"YES":"NO");
-
 	fclose(fp);
 
 	h->last_debug_log_print_time = h->current_time;
@@ -421,8 +425,7 @@ static inline long long _cl_get_current_time_in_ms(void)
 }
 
 
-
-/* 后台实时统计分析线程 */
+/* 后台实时统计分析线程, 不占用sapp IO线程的时间片 */
 static void *cl_bg_thread(void *_arg_h)
 {
 	cpu_limit_inner_t *h = (cpu_limit_inner_t *)_arg_h;
@@ -443,9 +446,8 @@ static void *cl_bg_thread(void *_arg_h)
 		h->current_time = time(NULL);
 
 		/* 
-		   get和analysis都结束后,  
-		   此处为啥不能直接休眠等一会, 即usleep(h->stat_interval * 1000) ?
-           因为以上函数自身耗时可能就很长, 再usleep()那么长时间就不准了.
+		   get和analysis都结束后,    此处为啥不能直接休眠等一会? 即usleep(h->stat_interval * 1000) ?
+           因为以上函数自身耗时可能就很长, 再usleep()那么长时间, 真正usleep的时间肯定比预期的长, 就不准了.
 		*/
 		while(h->last_analysis_time_ms + h->stat_interval > cur_time_ms){
 			sapp_usleep(10);
@@ -534,7 +536,6 @@ int cpu_limit_set_opt(cpu_limit_handle _arg_h, cpu_limit_opt opt, void *value, i
 			h->destroy_cb_fun = (cl_destroy_cb_t )value;
 		break;
 
-
 		default:
 			ret = -1;
 		break;
@@ -542,7 +543,6 @@ int cpu_limit_set_opt(cpu_limit_handle _arg_h, cpu_limit_opt opt, void *value, i
 
 	return ret;
 }
-
 
 int cpu_limit_get_opt(cpu_limit_handle _arg_h, cpu_limit_opt opt, void *value, int *value_len)
 {
@@ -569,7 +569,6 @@ int cpu_limit_get_opt(cpu_limit_handle _arg_h, cpu_limit_opt opt, void *value, i
 	return ret;
 }
 
-
 cpu_limit_handle cpu_limit_create(void)
 {
 	cpu_limit_inner_t *h = calloc(1, sizeof(cpu_limit_inner_t));
@@ -582,7 +581,6 @@ cpu_limit_handle cpu_limit_create(void)
 	
 	return h;
 }
-
 
 int cpu_limit_start(cpu_limit_handle _arg_h)
 {
@@ -605,7 +603,6 @@ int cpu_limit_start(cpu_limit_handle _arg_h)
 	
 	return 0;
 }
-
 
 int cpu_limit_can_i_do(cpu_limit_handle _arg_h, int thread_seq)
 {
@@ -659,6 +656,4 @@ void cpu_limit_destroy(cpu_limit_handle _arg_h)
 #ifdef __cplusplus
 }
 #endif
-
-
 

@@ -286,7 +286,7 @@ struct layer_ppp_hdr{
 	unsigned char address;
 	unsigned char control;
 	unsigned short protocol;	/* network order */ 		
-};
+}__attribute__((packed));
 
 /* 一般情况下, address,control都是固定不变的,都是0xFF,0x03, ppp hdr是可以压缩以节约贷款,只传输一个字节的protocol字段 */
 struct layer_compress_ppp_hdr{

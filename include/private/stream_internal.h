@@ -364,6 +364,22 @@ typedef struct{
 }sapp_private_mem_t;
 
 
+/*
+	vxlan ppp和hdlc字段基本不变, 不像ethernet, 涉及到反向发包, 要将mac地址颠倒方向.
+	所以不再创建一个新的streaminfo结构, 浪费内存也耗费CPU, 意义不大,
+	将hdlc, ppp的字段和vxlan合并, 类似ip层和tcp/udp的关系一样.
+*/
+struct layer_addr_vxlan_private{
+	struct layer_addr_vxlan addr_public;
+	unsigned char actual_total_len; /* 真正的网络传输中的vxlan头部地址长度, 包括后续追加的hdlc, ppp字段  */
+	union{
+		struct hdlc_net_hdr inner_hdlc;
+		struct layer_ppp_hdr inner_ppp;
+	};
+};
+
+
+
 extern struct sapp_global_single_t sapp_global_single;
 extern struct sapp_global_mthread_t sapp_global_mthread[MAX_THREAD_NUM];
 extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX]; 
