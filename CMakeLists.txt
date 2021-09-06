@@ -181,6 +181,9 @@ add_subdirectory(./test)
 add_subdirectory(./service)
 add_subdirectory(./tools)
 
+enable_testing()
+add_subdirectory(./ctest)
+
 #by default, not include sapp_module_test dir
 #add_subdirectory(./test/sapp_module_test/src)
 

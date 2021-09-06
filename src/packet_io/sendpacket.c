@@ -915,10 +915,12 @@ static int calc_gtp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_st
 	    太复杂了!  
 	    TODO吧!!
 	*/
-	if(raw_net_gtp_hdr->flags & 0x02)
+	if(raw_net_gtp_hdr->flags & GTP_HDR_FLAG_SEQ_NUM)
 	{
-        sapp_runtime_log(RLOG_LV_FATAL, "%s, calc_gtp_hdr_len error, inject GTP pkt not support SEQ!", printaddr(&stream_pr->stream_public.addr, stream_pr->stream_public.threadnum));
-        return -1;
+		if(0 == sapp_global_val->config.protocol_feature.skip_gtp_seq_field_for_inject){
+        	sapp_runtime_log(RLOG_LV_FATAL, "calc_gtp_hdr_len error, inject GTP pkt not support SEQ, you should set 'skip_gtp_seq_field_for_inject' to avoid this!");
+        	return -1;
+        }
     }
 
 	if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_GPRS_TUNNEL][stream_pr->layer_index] != 0){
@@ -1829,7 +1831,7 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
 				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_gtp() error, no c2s gtp addr, but asymmetric_addr_layer is set!\n");
 				return -1;				
 			}else{
-				p_gtp_layer_addr->teid_s2c;
+				this_pkt_teid = p_gtp_layer_addr->teid_s2c;
 			}
 		}else{
 			this_pkt_teid = p_gtp_layer_addr->teid_c2s;
@@ -1840,7 +1842,7 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
 				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_gtp() error, no s2c gtp addr, but asymmetric_addr_layer is set!\n");
 				return -1;				
 			}else{
-				p_gtp_layer_addr->teid_c2s;
+				this_pkt_teid = p_gtp_layer_addr->teid_c2s;
 			}
 		}else{
 			this_pkt_teid = p_gtp_layer_addr->teid_s2c;
@@ -2407,19 +2409,19 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 {
 	int i, ret = -1, reserved_hdr_len, send_len = 0;
 	MESA_send_handle *send_handle;
-	int thread_num = stream->threadnum;
+	int thread_num;
 	int low_net_layer_type = -1;
 	tcp_rst_finger_mark_t *tcp_rst_finger;
 	const raw_pkt_t *raw_pkt = NULL;
 	struct streaminfo_private *stream_pr;
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat;
 	
 	(void)ext_raw_pkt;
 
 	if(NULL == stream){
 		return -1;
 	}
-
+	thread_num = stream->threadnum;
 	stream_pr = (struct streaminfo_private *)stream;
 	send_handle = &g_send_handle[thread_num];
 	/* 因改变了某些回调函数的原始包类型为IP包头(兼容之前papp平台), 所以不需要插件传输原始包, 信息都存储于私有流结构体内 */
@@ -2427,6 +2429,7 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 	if((NULL == raw_pkt) || (RAW_PKT_MAGIC_NUM != raw_pkt->magic_num)){
 		return -1;
 	}
+	local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	send_handle->user_arg = (void *)stream;
 
 	tcp_rst_finger = make_tcp_rst_finger_mark(thread_num, (const raw_pkt_t *)raw_pkt);
@@ -2575,7 +2578,7 @@ int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
 #else //2020-10-05 lijia modify
 int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
 {
-	int ret;
+	int ret1,ret2;
 	struct rst_tcp_para rst_paras = {};
 	struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
 	
@@ -2590,11 +2593,10 @@ int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
 	rst_paras.signature_seed1 = sapp_global_val->config.stream.tcp.inject.rst_signature_seed1;
 	rst_paras.signature_seed2 = sapp_global_val->config.stream.tcp.inject.rst_signature_seed2;
 
-	ret = MESA_rst_tcp(stream, &rst_paras, sizeof(struct rst_tcp_para));
-
-	/* 反向发送 */
+	ret1 = MESA_rst_tcp(stream, &rst_paras, sizeof(struct rst_tcp_para));
+	/* 此处不管是否发生错误, 反方向的也要发送, 某个单方向成功也是可以产生实际效果的 */
 	rst_paras.dir = stream->curdir ^ DIR_DOUBLE;
-	ret = MESA_rst_tcp(stream, &rst_paras, sizeof(struct rst_tcp_para));
+	ret2 = MESA_rst_tcp(stream, &rst_paras, sizeof(struct rst_tcp_para));
 
 	/* 兼容新的标志位, kill_tcp自动设置, 保持功能跟之前一致 */
 	stream_pr->stream_killed_flag = 1;
@@ -2603,8 +2605,11 @@ int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
 	pdetail_pr->auto_remedy_flag = sapp_global_val->config.stream.tcp.inject.auto_remedy;
 	pdetail_pr->drop_stream_flag = 1;
 
-	/* 外部调用, 第一次FD, 发送KILL_TCP_RST_NUM次. */
-	return ret; 
+	if((ret1 < 0) && (ret2 < 0)){
+		return -1;
+	}
+	
+	return 0; 
 }
 
 #endif
@@ -2647,25 +2652,26 @@ static int __do_kill_tcp_synack(struct streaminfo *stream, const void *ext_raw_p
 {
 	int i, ret, reserved_hdr_len, send_len = 0;
 	MESA_send_handle *send_handle;
-	int thread_num = stream->threadnum;
+	int thread_num;
 	int low_net_layer_type;
 	tcp_rst_finger_mark_t *tcp_rst_finger;
 	const raw_pkt_t *raw_pkt = NULL;
 	struct streaminfo_private *stream_pr;
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat;
 
 	(void)ext_raw_pkt;
 	
 	if(NULL == stream){
 		return -1;
 	}
-
+	thread_num = stream->threadnum;
 	stream_pr = (struct streaminfo_private *)stream;
 	send_handle = &g_send_handle[thread_num];
 	raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
 	if((NULL == raw_pkt) || (RAW_PKT_MAGIC_NUM != raw_pkt->magic_num)){
 		return -1;
 	}
+	local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
     //send_handle->user_arg = (void *)stream;
     reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type, stream_pr->stream_c2s_route_dir ^ 1);
 	if((reserved_hdr_len < 0) || (-1 == low_net_layer_type)){
@@ -3007,13 +3013,13 @@ int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_
 {
 	int ret = -1, reserved_hdr_len, send_len = 0;
 	MESA_send_handle *send_handle;
-	int thread_num = stream->threadnum;
+	int thread_num;
 	int low_net_layer_type;
 	int snd_routedir_reverse;
 	UCHAR stream_send_dir;
 	const raw_pkt_t *raw_pkt;
 	struct streaminfo_private *stream_pr;
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat;
 
 	(void)ext_raw_pkt;
 	
@@ -3024,6 +3030,7 @@ int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_
 	if(dir_check(snd_routedir) < 0){
 		return -1;
 	}
+	thread_num = stream->threadnum;
 	
 	stream_pr = (struct streaminfo_private *)stream;
 	/* 因改变了某些回调函数的原始包类型为IP包头, 所以不需要插件传输原始包, 信息都存储于私有流结构体内 */
@@ -3031,6 +3038,8 @@ int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_
 	if((NULL == raw_pkt) || (RAW_PKT_MAGIC_NUM != raw_pkt->magic_num)){
 		return -1;
 	}
+	
+	local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	if(snd_routedir == stream->routedir){
 		snd_routedir_reverse = 0;
@@ -3239,13 +3248,13 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 {
 	int ret = -1, reserved_hdr_len = 0, send_len = 0;
 	MESA_send_handle *send_handle;
-	int thread_num = raw_stream->threadnum;
+	int thread_num;
 	int low_net_layer_type;
 	int snd_routedir_reverse;
 	UCHAR send_stream_dir;
 	const raw_pkt_t *raw_pkt;
 	struct streaminfo_private *raw_stream_pr;
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
+	sapp_gval_mthread_sys_stat_t *local_sys_stat;
 	int carry_layer_type;
 	struct streaminfo *inject_stream;
 	struct streaminfo_private *inject_stream_pr;
@@ -3257,11 +3266,11 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	if(dir_check(snd_routedir) < 0){
 		return -1;
 	}
-
+	thread_num = raw_stream->threadnum;
 	carry_layer_type = raw_stream->addr.addrtype;
 	inject_stream = raw_stream;
 	inject_stream_pr = (struct streaminfo_private *)raw_stream;
-
+	local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	if((SIO_EXCLUDE_THIS_LAYER_HDR & sio) != 0){
 		/* 跳过当前层 */
 		inject_stream = raw_stream->pfather;

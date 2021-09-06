@@ -113,6 +113,7 @@
     tcp_drop_pure_ack_pkt=0
     tcp_syn_option_parse_enabled=1 
     skip_not_ip_layer_over_eth=0
+    skip_gtp_seq_field_for_inject=0
 
 [DUPLICATE_PKT]
 [dup_pkt.traffic.original]

@@ -239,7 +239,7 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{4404,0,RLOG_LV_DEBUG,"PROTOCOL_FEATURE",	"tcp_syn_option_parse_enabled",	NULL,NULL, NULL, NULL, 0},
 	{4405,0,RLOG_LV_DEBUG,"PROTOCOL_FEATURE",	"skip_not_ip_layer_over_eth",	NULL,NULL, NULL, NULL, 0},
 	{4406,0,RLOG_LV_DEBUG,"PROTOCOL_FEATURE",	"ipv6_decapsulation_enabled",	NULL,NULL, NULL, NULL, 0},
-	{4407,0,RLOG_LV_DEBUG,"PROTOCOL_FEATURE",	"ipv6_decapsulation_enabled",	NULL,NULL, NULL, NULL, 0},
+	{4407,0,RLOG_LV_DEBUG,"PROTOCOL_FEATURE",	"skip_gtp_seq_field_for_inject",	NULL,NULL, NULL, NULL, 0},
 
 	{4501,0,RLOG_LV_INFO,"dup_pkt.traffic.original",	"original_ipv4_tcp_enabled",	NULL,NULL, NULL, NULL, 0},
 	{4502,0,RLOG_LV_INFO,"dup_pkt.traffic.original",	"original_ipv4_udp_enabled",	NULL,NULL, NULL, NULL, 0},
@@ -1905,8 +1905,8 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"tcp_drop_pure_ack_pkt", (int *)&pconfig->protocol_feature.tcp_drop_pure_ack_pkt, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"tcp_syn_option_parse_enabled", (int *)&pconfig->protocol_feature.tcp_syn_option_parse_enabled, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"skip_not_ip_layer_over_eth", (int *)&pconfig->protocol_feature.skip_not_ip_layer_over_eth, 0);
-	//tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"treat_vlan_as_mac_in_mac", (int *)&pconfig->protocol_feature.treat_vlan_as_mac_in_mac_enabled, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"reverse_ethernet_addr", (int *)&pconfig->protocol_feature.reverse_ethernet_addr_enabled, 1);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"skip_gtp_seq_field_for_inject", (int *)&pconfig->protocol_feature.skip_gtp_seq_field_for_inject, 0);
 
 	/*******************************  TOOLS **********************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"tools.signal_handler", (char *)"signal", (int *)&pconfig->tools.signal_handler.signal, 0);
