@@ -430,6 +430,7 @@ static void pkt_dump_with_watermark(int tid, const void *rawpkt, int pktlen, enu
 		return;
 	}
 
+	/* 带watermark标签要修改原始包mac地址, copy一份 */
 	memcpy(temp_pkt_buf, rawpkt, pktlen);
 
 	ehdr = (struct mesa_ethernet_hdr *)temp_pkt_buf;
@@ -458,6 +459,10 @@ static void pkt_dump_with_watermark(int tid, const void *rawpkt, int pktlen, enu
 		case PKT_CLASSIFY_REPEAT:
 			watermaker = 'R';
 		break;		
+
+		case PKT_CLASSIFY_BYPASS:
+			watermaker = 'P';
+		break;			
 	}
 
 	memset(ehdr->ether_shost, watermaker, ETH_ALEN);
@@ -717,7 +722,8 @@ void cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt)
 /*
 	TODO: 如果一个包有多个标签, 比如重复数据包REPEAT, 同时肯定是FORWARD,
 	      遇到ddos时, BYPASS的包其实也是FORWARD,
-	      使用多个标志位表示, 但物理包仅发送一次, 可以节约一些CPU和IO资源.
+	      使用多个标志位表示, 但物理包仅发送一次, watermark可以同时打多个标签,
+	      可以节约一些CPU和IO资源.
 */
 void cycle_pkt_dump_by_classify(int thread_seq, const raw_pkt_t *p_raw_pkt, enum _pkt_classify class_val)
 {
