@@ -819,9 +819,11 @@ static int parse_asymmetric_addr_layer_config(void)
 				strcat(debug_layer_index_str, one_layer_index_str);
 			}
 		}
+#if 0		
 		sapp_runtime_log(RLOG_LV_DEBUG, "asymmetric_addr_layer: %s:%s", 
 					addr_type_abbreviation_ntop((enum addr_type_t)i),
 					debug_layer_index_str);
+#endif
 	}
 
 	fclose(fp);
@@ -1513,34 +1515,6 @@ static int config_sanity_check(void)
 }
 
 
-/* 因为处理过程中,要写文件,log_handle必须先初始化 */
-static void log_handle_init(void)
-{
-	void *lhand;
-	MESA_handle_runtime_log_creation(ABBR_SAPP_LOG_CONF_FILE);
-	lhand = MESA_create_runtime_log_handle("./log/runtimelog", sapp_global_val->config.profiling.log.level);
-
-	sapp_global_val->individual_fixed.log_handle = lhand;
-}
-
-
-void sapp_gval_init(void)
-{
-	int tseq;
-	
-	sapp_global_val = (sapp_global_t *)calloc(1, sizeof(sapp_global_t));
-	sapp_global_val->individual_volatile = (sapp_gval_individual_volatile_t *)calloc(1, sizeof(sapp_gval_individual_volatile_t));
-
-	for(tseq = 0; tseq < SAPP_MAX_THREADS; tseq++){
-		sapp_global_val->mthread_volatile[tseq] = (sapp_gval_mthread_t *)calloc(1, sizeof(sapp_gval_mthread_t));
-		sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[tseq] = -1; /* 初始化设置为-1, 表示没绑定到任何一个cpu core */
-	}
-
-	/* set default value, maybe not input by user or config file */
-	snprintf(sapp_global_val->config.packet_io.pcap_dumpfile_name, NAME_MAX, "dumpfile");
-
-	ABBR_CURRENT_TIME = time(NULL);
-}
 
 /*
 	支持读写分离模式, 更新各种配置文件路径, 本地数据文件路径.
@@ -1680,6 +1654,16 @@ int sapp_get_secondary_file_path(void)
 	}
 
 	return 0;
+}
+
+/* 因为处理过程中,要写文件,log_handle必须先初始化 */
+static void log_handle_init(void)
+{
+	void *lhand;
+	MESA_handle_runtime_log_creation(ABBR_SAPP_LOG_CONF_FILE);
+	lhand = MESA_create_runtime_log_handle("./log/runtimelog", sapp_global_val->config.profiling.log.level);
+
+	sapp_global_val->individual_fixed.log_handle = lhand;
 }
 
 
@@ -2254,6 +2238,16 @@ done:
 	return final_ret;
 }
 
+
+
+void sapp_log_handle_destroy(void)
+{
+	//此处报错, double free, 暂不确定是哪的问题
+	//MESA_destroy_runtime_log_handle(sapp_global_val->individual_fixed.log_handle);
+	sapp_global_val->individual_fixed.log_handle = NULL;
+}
+
+
 /* init breakpad_mini */
 void sapp_init_breakpad_mini(void)
 {
@@ -2273,6 +2267,8 @@ void sapp_segv_generate()
 {
 	breakpad_segv_generate();
 }
+
+
 
 #ifdef __cplusplus
 }

@@ -292,7 +292,7 @@ static int store_cmd_args(const char *opt_name, const char *opt_arg)
 	new_opt = (sapp_cmd_args_val_t *)sapp_mem_alloc(sizeof(sapp_cmd_args_val_t));
 	new_opt->long_opt_name = sapp_strdup(opt_name);
 	if(opt_arg){
-		new_opt->arg_val.string_value = strdup(opt_arg);
+		new_opt->arg_val.string_value = sapp_strdup(opt_arg);
 	}
 	
 	if(NULL == sapp_global_val->cla.cmd_args_array){

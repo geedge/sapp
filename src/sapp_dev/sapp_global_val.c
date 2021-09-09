@@ -215,6 +215,96 @@ void sapp_global_val_sanity_check(void)
 
 }
 
+void sapp_gval_init(void)
+{
+	int tseq;
+	
+	sapp_global_val = (sapp_global_t *)calloc(1, sizeof(sapp_global_t));
+	sapp_global_val->individual_volatile = (sapp_gval_individual_volatile_t *)calloc(1, sizeof(sapp_gval_individual_volatile_t));
+
+	for(tseq = 0; tseq < SAPP_MAX_THREADS; tseq++){
+		sapp_global_val->mthread_volatile[tseq] = (sapp_gval_mthread_t *)calloc(1, sizeof(sapp_gval_mthread_t));
+		sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[tseq] = -1; /* 初始化设置为-1, 表示没绑定到任何一个cpu core */
+	}
+
+	/* set default value, maybe not input by user or config file */
+	snprintf(sapp_global_val->config.packet_io.pcap_dumpfile_name, NAME_MAX, "dumpfile");
+
+	ABBR_CURRENT_TIME = time(NULL);
+}
+
+void sapp_gval_destroy(void)
+{
+	int tseq;
+	
+	if(sapp_global_val->individual_volatile){
+		SAPP_FREE(sapp_global_val->individual_volatile);
+	}
+
+	for(tseq = 0; tseq < SAPP_MAX_THREADS; tseq++){
+		SAPP_FREE(sapp_global_val->mthread_volatile[tseq]);
+	}	
+
+	if(sapp_global_val->cla.cmd_args_array){
+		int i, args_num = sapp_global_val->cla.cmd_args_num;
+		sapp_cmd_args_val_t *free_opt;
+
+		for(i = 0; i < args_num; i++){
+			free_opt = sapp_global_val->cla.cmd_args_array[i];
+			SAPP_FREE(free_opt->long_opt_name);
+			SAPP_FREE(free_opt->arg_val.string_value);
+		}
+		
+		sapp_mem_free(sapp_global_val->cla.cmd_args_array);//此处使用了realloc追加, 要用sapp_mem_free()
+		sapp_global_val->cla.cmd_args_array = NULL;
+	}
+
+	sapp_config_file_link_t *pconfig = &sapp_global_val->config.cfg_file_path;
+	SAPP_FREE(pconfig->cfg_files_root_dir);
+	SAPP_FREE(pconfig->cfg_main_entry_relative);
+	SAPP_FREE(pconfig->cfg_main_entry_absolute);
+	SAPP_FREE(pconfig->cfg_sapp_log_relative);
+	SAPP_FREE(pconfig->cfg_sapp_log_absolute);
+	SAPP_FREE(pconfig->cfg_plug_list_relative);
+	SAPP_FREE(pconfig->cfg_plug_list_absolute);
+	SAPP_FREE(pconfig->cfg_project_list_relative);
+	SAPP_FREE(pconfig->cfg_project_list_absolute);
+	SAPP_FREE(pconfig->cfg_file_send_raw_pkt_relative);
+	SAPP_FREE(pconfig->cfg_file_send_raw_pkt_absolute);
+	SAPP_FREE(pconfig->cfg_file_vxlan_sport_map_relative);
+	SAPP_FREE(pconfig->cfg_file_vxlan_sport_map_absolute);
+	SAPP_FREE(pconfig->cfg_file_inline_dev_relative);
+	SAPP_FREE(pconfig->cfg_file_inline_dev_absolute);
+	SAPP_FREE(pconfig->cfg_file_necessary_plug_relative);
+	SAPP_FREE(pconfig->cfg_file_necessary_plug_absolute);
+	SAPP_FREE(pconfig->cfg_file_stream_compare_layer_relative);
+	SAPP_FREE(pconfig->cfg_file_stream_compare_layer_absolute);
+	SAPP_FREE(pconfig->cfg_file_vlan_flipping_relative);
+	SAPP_FREE(pconfig->cfg_file_vlan_flipping_absolute);
+	SAPP_FREE(pconfig->cfg_file_asymmetric_addr_layer_relative);
+	SAPP_FREE(pconfig->cfg_file_asymmetric_addr_layer_absolute);
+	SAPP_FREE(pconfig->cfg_file_well_known_port_relative);
+	SAPP_FREE(pconfig->cfg_file_well_known_port_absolute);
+
+	sapp_data_file_link_t *pdata = &sapp_global_val->config.data_file_path;
+	SAPP_FREE(pdata->data_files_root_dir);
+	SAPP_FREE(pdata->data_sapp_sysinfo_log_relative);
+	SAPP_FREE(pdata->data_sapp_sysinfo_log_absolute);
+	SAPP_FREE(pdata->data_sapp_fs2_log_relative);
+	SAPP_FREE(pdata->data_sapp_fs2_log_absolute);
+	SAPP_FREE(pdata->data_inline_keepalive_log_relative);
+	SAPP_FREE(pdata->data_inline_keepalive_log_absolute);
+	SAPP_FREE(pdata->data_load_plugin_stat_log_relative);
+	SAPP_FREE(pdata->data_load_plugin_stat_log_absolute);
+	SAPP_FREE(pdata->data_under_ddos_stat_log_relative);
+	SAPP_FREE(pdata->data_under_ddos_stat_log_absolute);
+
+	SAPP_FREE(sapp_global_val->config.library_file_path.libmarsio_file_path);
+
+	memset((void *)sapp_global_val, 0, sizeof(sapp_global_t));
+	SAPP_FREE(sapp_global_val);
+}
+
 
 #ifdef __cplusplus
 }

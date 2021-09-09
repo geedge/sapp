@@ -3206,7 +3206,7 @@ static int skip_asymmetric_presence_layer(const struct streaminfo *stream, UCHAR
 
 static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream_dir)
 {
-	int ret = stream->addr.addrtype;
+	int ret = -1;
 	struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
 
 	while(stream_pr && stream_pr->pfather_pr){
@@ -3234,9 +3234,9 @@ static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream
 				}			
 			}
 		}
-
-		ret = stream->addr.addrtype;	
+	
 		stream_pr = stream_pr->pfather_pr;
+		stream = &stream_pr->stream_public;
 	}
 
 	return ret;
@@ -3407,12 +3407,12 @@ static int send_handle_init(int tot_thread_num)
 #endif	
 		g_send_handle[i].raw_ipv4_fd = socket(PF_INET, SOCK_RAW, IPPROTO_RAW);
 		if(g_send_handle[i].raw_ipv4_fd < 0){
-			sapp_log(30, ~0, ~0, "socket v4 error, %s\n", strerror(errno));
+			sapp_log(30, ~0, ~0, "create raw socket v4 error, %s\n", strerror(errno));
 			return -1;
 		}
 		g_send_handle[i].raw_udp_fd = socket(AF_INET, SOCK_DGRAM|SOCK_CLOEXEC, 0);
 		if(g_send_handle[i].raw_udp_fd < 0){
-			sapp_log(30, ~0, ~0, "socket udp error, %s\n", strerror(errno));
+			sapp_log(30, ~0, ~0, "create udp socket error, %s\n", strerror(errno));
 			return -1;
 		} 
 
@@ -3433,7 +3433,7 @@ static int send_handle_init(int tot_thread_num)
 		if(g_ipv6_send_packet_enabled){
 			g_send_handle[i].raw_ipv6_fd = socket(PF_INET6, SOCK_RAW, IPPROTO_RAW);
 			if(g_send_handle[i].raw_ipv6_fd < 0){
-				sapp_log(30, ~0, ~0, "socket v6 error, %s\n", strerror(errno));
+				sapp_log(30, ~0, ~0, "create socket v6 error, %s\n", strerror(errno));
 				sapp_log(30, ~0, ~0, "Please disable IPv6 module, then try again!\n");
 				return -1;
 			}
@@ -3442,7 +3442,7 @@ static int send_handle_init(int tot_thread_num)
 		if(pcfg_io->inject_mode_single_gateway_device[0] != '\0'){
 			ret = g_send_handle[i].raw_eth_fd =  socket(PF_INET, SOCK_PACKET, htons(ETH_P_ALL));
 			if(g_send_handle[i].raw_eth_fd < 0){
-				sapp_log(30, ~0, ~0, "socket raw eth error, %s\n", strerror(errno));
+				sapp_log(30, ~0, ~0, "create socket raw eth error, %s\n", strerror(errno));
 				return -1;
 			}
 			ret = snprintf(g_send_handle[i].saddr_raw_eth.sa_data, sizeof(g_send_handle[i].saddr_raw_eth.sa_data), 
@@ -3466,6 +3466,14 @@ static int send_handle_init(int tot_thread_num)
 
 	return 0;
 }
+
+void send_handle_destroy(int thread_index)
+{
+	if(dl_io_fun_list.dl_io_free_send_handle){
+		dl_io_fun_list.dl_io_free_send_handle(thread_index, g_send_handle[thread_index].low_level_send_handle);
+	}
+}
+
 
 /* 2015-01-04 lijia add, 从papp平台迁移到sapp平台, 底层发包接口不同 */
 int MESA_sendpacket_ethlayer(int thread_num,const char *data, int data_len, unsigned int target_id)
@@ -3505,6 +3513,28 @@ int sendpacket_init_new(int tot_thread_num)
 	*/
 
 	return 0;
+}
+
+void sendpacket_destroy(int tot_thread_num)
+{
+	int i;
+
+	for(i = 0; i < tot_thread_num; i++){
+		if(g_send_handle[i].raw_ipv4_fd > 0){
+			close(g_send_handle[i].raw_ipv4_fd);
+		}
+		if(g_send_handle[i].raw_ipv6_fd > 0){
+			close(g_send_handle[i].raw_ipv6_fd);
+		}	
+		if(g_send_handle[i].raw_udp_fd > 0){
+			close(g_send_handle[i].raw_udp_fd);
+		}			
+		if(g_send_handle[i].raw_eth_fd > 0){
+			close(g_send_handle[i].raw_eth_fd);
+		}	
+
+		send_handle_destroy(i);
+	}
 }
 
 

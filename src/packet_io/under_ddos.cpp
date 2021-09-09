@@ -268,6 +268,16 @@ int packet_io_under_ddos_init(void)
 	return 0;
 }
 
+void packet_io_under_ddos_destroy(void)
+{
+	if(0 == sapp_global_val->config.packet_io.under_ddos_config.enabled){
+		return;
+	}
+
+	cpu_limit_destroy(sapp_global_val->individual_fixed.under_ddos_handle);	
+	SAPP_FREE(sapp_global_val->individual_fixed.under_ddos_handle);
+}
+
 #ifdef __cplusplus
 }
 #endif

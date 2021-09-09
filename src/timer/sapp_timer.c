@@ -458,7 +458,7 @@ void *sapp_time_event_thread(void *arg)
 
 	last_log_time = time(NULL);
 	
-	while(1)
+	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state)
 	{
 		ABBR_CURRENT_TIME = time(NULL);
 		/*

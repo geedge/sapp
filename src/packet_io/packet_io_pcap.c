@@ -11,7 +11,7 @@ extern "C" {
 #define PROCESS_BAR_SW 		(1)
 
 int g_pcap_version_VERSION_20210722; 
-static int g_pcap_version_internal = 20210722;
+static int g_pcap_version_internal = 20210907;
 
 #define PCAP_SNAPLEN_MAX	(65535)
 
@@ -560,7 +560,7 @@ void pcap_dl_io_free_sendbuf(void *phandle, int thread_num)
 	return;
 }
 
-void *pcap_dl_io_get_send_handle(int thread_num)
+void *pcap_dl_io_get_send_handle(int thread_seq)
 {
 	pcap_send_handle *send_handle = (pcap_send_handle *)calloc(1, sizeof(pcap_send_handle));
 
@@ -569,7 +569,7 @@ void *pcap_dl_io_get_send_handle(int thread_num)
 		printf("socket error: %s\n", strerror(errno));
 		goto err_exit;
 	}
-	send_handle->thread_num = thread_num;
+	send_handle->thread_num = thread_seq;
 	strncpy(send_handle->saddr_up.sa_data, g_pcap_up_dev_name, sizeof(struct sockaddr));
 	strncpy(send_handle->saddr_down.sa_data, g_pcap_down_dev_name, sizeof(struct sockaddr));
 	send_handle->saddr_up.sa_family = PF_INET;
@@ -580,6 +580,22 @@ void *pcap_dl_io_get_send_handle(int thread_num)
 err_exit:
 	free(send_handle);
 	return NULL;
+}
+
+void pcap_dl_io_free_send_handle(int thread_seq, void *_handle)
+{
+	pcap_send_handle *send_handle = (pcap_send_handle *)_handle;
+
+	if(NULL == _handle){
+		return;
+	}
+
+	if(send_handle->raw_eth_fd > 0){
+		close(send_handle->raw_eth_fd);
+		send_handle->raw_eth_fd = -1;
+	}
+
+	free(_handle);
 }
 
 int pcap_dl_io_get_version(void)
@@ -600,17 +616,21 @@ int pcap_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void
 	snd_addr.sa_family = PF_INET;
 
 /* 2017-02-28 lijia add, for tcp offload sendback, 某些乱七八糟的破网卡, GRO, GSO等特性关不掉, 导致串联模式大包丢包 */
+	//TODO, 此处功能要移到sapp的上层发包接口, 不再这么底层的接口做offload, 因为还可能涉及到marsio模式
+    //根据发包网卡的MTU自动判断, 是否需要offload.
+#if 0 
 	if(datalen > 1514){
 		if(sapp_global_single.cfg_send_tcp_offload_sw){
-			sapp_runtime_log(10, "send pkt len > 1514,  send packet by tcp_offload,  the slice pkt maybe different with raw pkt !\n");
+			sapp_runtime_log(10, "send pkt len is:%d, more than 1514,  send packet by tcp_offload,  the slice pkt maybe different with raw pkt !\n", datalen);
 			ret = sendpacket_tcp_offload((char *)data, datalen, send_handle->raw_eth_fd, (struct sockaddr *)&snd_addr);
 			return ret;		
 		}
 
-		sapp_runtime_log(30, "send pkt len > 1514,  but main.conf->send_tcp_offload is disable !\n");
+		sapp_runtime_log(30, "send pkt len is:%d, moren than 1514,  but main.conf->send_tcp_offload is disable !\n", datalen);
 		return -1;
 	}
-	
+#endif
+
 send_again:
 	ret = sendto(send_handle->raw_eth_fd, data, datalen, 0, (struct sockaddr *)&snd_addr, sizeof(struct sockaddr));
 	if(ret < 0){
@@ -775,7 +795,7 @@ static void *__pcap_work_thread(void *arg)
 	*/
 	int polling_enabled = sapp_global_val->config.packet_io.polling_enabled;
 
-	while(1){
+	while(SAPP_STATE_PROCESSING == sapp_get_current_state()){
 		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_FETCH_PKT]++;
 		
 		if(0 == MESA_lqueue_get_count(work_thread_pool[thread_num].pkt_queue)){
@@ -845,9 +865,6 @@ static void *__pcap_work_thread(void *arg)
 	}
 
 exit:
-	while(1){
-		pause();
-	}
 	return NULL;
 }
 
@@ -1356,9 +1373,7 @@ static void *pcap_io_thread(void *arg)
 		}else if(pcap_ret < 0){
 			printf("pcap err, %s\n", pcap_geterr(handle));
 			sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
-			sched_yield();
-			sleep(1);
-			exit(1);
+			exit(0);
 		}
 	}
 
@@ -1483,6 +1498,18 @@ int pcap_dl_io_init(int argc, char *argv[])
 	}
 
 	return 0;
+}
+
+void pcap_dl_io_destroy(void)
+{
+	if(pcap_up_handle){
+		pcap_close(pcap_up_handle);
+		pcap_up_handle = NULL;
+	}
+	if(pcap_down_handle){
+		pcap_close(pcap_down_handle);
+		pcap_down_handle = NULL;
+	}	
 }
 
 /* not return except some error occur. */

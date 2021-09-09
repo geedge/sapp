@@ -156,9 +156,9 @@ static int get_gprs_hdr_len_v1(const struct gtp_hdr *gtph)
 	return base_len;
 }
 
-static int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned int payload_len)
+static int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned int udp_payload_len)
 {
-    if (payload_len >= sizeof(struct gtp_hdr))
+    if (udp_payload_len >= sizeof(struct gtp_hdr))
     {
         unsigned int gtp_u = (2152);
         unsigned int gtp_c = (2123);
@@ -186,7 +186,7 @@ static int identify_gtp(const struct streaminfo *pstream,const char *payload, un
             }else if(gtp_version == 1) {
                 unsigned short message_len = ntohs(gtp->len);
                 /* NOTE: gtp->len不包括gtp头部固定长度(8字节), 只包括扩展头部和负载 */
-                if (message_len == (payload_len - sizeof(struct gtp_hdr))) {
+                if (message_len == (udp_payload_len - sizeof(struct gtp_hdr))) {
                     return 1;
                 }
             }else{

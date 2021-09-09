@@ -435,6 +435,8 @@ void sapp_mem_free(void *data);
 void *sapp_mem_realloc(void *old_ptr, int size);
 void set_current_thread_cpu_affinity(int);
 int get_current_thread_cpu_affinity_id(void);
+void sapp_fs2_destroy(void);
+void sapp_gval_destroy(void);
 
 
 

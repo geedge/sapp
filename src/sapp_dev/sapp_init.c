@@ -56,9 +56,10 @@ extern int sapp_assistant_init(void);
 extern char gdev_keepalive_ip_entry(const struct streaminfo *pstream,unsigned char routedir,int thread_seq, const struct mesa_ip4_hdr *ipv4_hdr);
 extern char gdev_keepalive_udp_entry(const struct streaminfo *a_udp,  void **pme, int thread_seq, const void *ip_hdr);
 
+static int _check_exit_cap_mode;
 static void forbid_call_exit_in_running_state(void)
 {
-	if(g_packet_io_cap_mode != CAP_MODEL_PCAP_DUMPFILE){
+	if(_check_exit_cap_mode != CAP_MODEL_PCAP_DUMPFILE){
 		printf("\033[41mCall exit() in running state is forbidden!!\033[0m\n");
 		abort();
 	}
@@ -346,7 +347,10 @@ void MESA_platform_run(void)
 	/* 
 		使用atexit()注册的函数, 调用与注册函数相反, 所以尽可能延后atexit()注册位置,
 		放在所有初始化完成之后, packet_io_run()之前。
+
+		调用了sapp_gval_destroy()之后, 全局变量sapp_global_val都被free了, 此处临时存一下.
 	*/
+	_check_exit_cap_mode = g_packet_io_cap_mode;
 	atexit(forbid_call_exit_in_running_state);
 
 	__sapp_timer_platform_run();
@@ -354,10 +358,10 @@ void MESA_platform_run(void)
 	packet_io_run();
 
 	sapp_set_current_state(SAPP_STATE_PROCESSING);
-	/* If TFE is run by systemd's notify, then tell the systemd our tfe is ready.
-	 * and disable the stderr log, only print logs into files */
-	if (check_is_started_by_notify())
-	{
+	/* 
+	   If sapp is started by systemd with notify, then tell the systemd sapp is ready.
+     */
+	if (check_is_started_by_notify()){
 		sd_notify(0, "READY=1");
 		sleep(1);
 	}

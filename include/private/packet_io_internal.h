@@ -182,6 +182,8 @@ int packet_io_hook_forward(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num
 int packet_io_hook_sendto(const raw_pkt_t *raw_pkt, unsigned char route_dir, char *send_pkt_data, void *send_pkt_io_reference);
 void sapp_pkt_dump_by_raw_pkt(int tid, const void *pkt, int pkt_len, int has_layer2_hdr, unsigned short eth_pro_host_order, enum _pkt_classify class_val);
 unsigned int dpdk_rte_ip_hash(const char *sipaddr, const char *dipaddr, int addrlen);
+void sendpacket_destroy(int tot_thread_num);
+void send_handle_destroy(int thread_index);
 
 
 /********************** funcitons for dynamic link ***********************/
@@ -236,9 +238,11 @@ extern int pcap_dl_io_get_version(void);
 extern void * pcap_dl_io_device_alias(unsigned int target_id, char *device_args);
 void packet_io_under_ddos_run(void);
 int packet_io_under_ddos_init(void);
+void packet_io_under_ddos_destroy(void);
 int packet_io_under_ddos_should_bypass(int thread_index);
 void update_under_ddos_stream_state(struct streaminfo *pstream);
 int packet_io_under_ddos_global_status(void);
+void pcap_dl_io_destroy(void);
 
 
 /********************** pcap funcitons for dynamic link ***********************/
@@ -267,6 +271,7 @@ extern int pag_dl_io_register_cb(PACKET_IO_CB_T fun);
 extern int pag_dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun); 
 extern int pag_dl_io_get_version(void);
 extern void * pag_dl_io_device_alias(unsigned int target_id, char *device_args);
+extern void pcap_dl_io_free_send_handle(int thread_seq, void *_handle);
 
 /********************** pag funcitons for dynamic link ***********************/
 

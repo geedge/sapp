@@ -400,6 +400,7 @@ typedef struct{
 	sapp_gval_individual_fixed_fs_t field_stat2_para;
 	pthread_t thread_obtain_id[SAPP_MAX_THREADS]; /* pthread_create返回的id */
 	pid_t thread_tid[SAPP_MAX_THREADS]; /* gdb 或 top 查看的id */
+	pthread_t thread_timer_event_id;
 	int cpu_bind_core_id_per_thread[SAPP_MAX_THREADS]; /* 如果设置了bind_mask, 记录每个IO工作线程绑定的cpu core id */
 	void *breakpad;
 	char overlay_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX]; /* 表示在原始报文基础上封装的隧道, 如vxlan, 这些层不应该调用插件, 回注时需要特殊处理 */

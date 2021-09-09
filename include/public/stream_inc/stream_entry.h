@@ -85,7 +85,8 @@ char POLLING_ENTRY(struct streaminfo *stream,  void **pme, int thread_seq,void *
 
 char PROT_PROCESS(stSessionInfo* session_info,  void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet);
 
-int libsapp_setup_env(int argc, char *argv[]);
+int  libsapp_setup_env(int argc, char *argv[]);
+void libsapp_destroy_env(void);
 
 
 #ifdef __cplusplus

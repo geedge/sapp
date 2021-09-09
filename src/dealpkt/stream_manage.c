@@ -36,7 +36,7 @@ int sapp_version_v4_20191119;
 	下面的版本号用于packet_io_lib校验, 防止平台和dl.so不匹配导致运行异常, 或已修复的BUG未更新.
 */
 #if IOMODE_PCAP
-int sapp_packet_io_v = 20190820;
+int sapp_packet_io_v = 20210907;
 #elif IOMODE_PAG
 int sapp_packet_io_v = 20151106;
 #elif IOMODE_PFRING

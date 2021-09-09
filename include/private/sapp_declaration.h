@@ -16,6 +16,11 @@ extern "C" {
 #define SAPP_MIN(a, b)       (((a) < (b)) ? (a) : (b))
 #endif
 
+#ifndef SAPP_FREE
+#define SAPP_FREE(m) do{if(m){free((void *)m); m = NULL;}}while(0)
+
+#endif
+
 
 /* ÒòÇ¶Ì×²ã´ÎÌ«¶à, Ê¹ÓÃ¼ò³ÆÃèÊö */
 #define ABBR_SAPP_LOG_LEVEL 	sapp_global_val->config.profiling.log.level

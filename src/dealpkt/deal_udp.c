@@ -668,18 +668,26 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	}
 	
 	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_TEREDO){
-		ret = teredo_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);		
+		ret = teredo_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);	
+		if(DROP == ret){
+			sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+			return ret;
+		}		
 	}
 	
 	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_L2TP){
 		ret = l2tpv2_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);	
+		if(DROP == ret){
+			sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+			return ret;
+		}			
 	}
+	
 	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNEL_GPRS_TUNNEL){
 		ret = gtp_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
 	}
 
 #endif
-
 	if(DROP == ret){
 		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 	}
@@ -701,7 +709,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	int try_to_update_addr_info = 0;
 	sapp_dup_pkt_key_v6_t dup_bloom_key;
-
+	int next_layer_offset;
 	iplen = ntohs (a_packet->ip6_payload_len);
 	ulen = ntohs (udph->uh_ulen);
 
@@ -740,6 +748,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	pstream->type=STREAM_TYPE_UDP;
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
+	next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct mesa_udp_hdr);
 
 	//add by lqy 20130530 
 	// udp有不开启流还原的功能需求，直接按单包单流处理
@@ -857,6 +866,18 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 		ret=stream_process_udp(pstream,(const void *)a_packet, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));  
 		udp_cleardata(pstream);
+	}
+
+	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_L2TP){
+		ret = l2tpv2_entry(pstream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);	
+		if(DROP == ret){
+			sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+			return ret;
+		}		
+	}
+
+	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNEL_GPRS_TUNNEL){
+		ret = gtp_entry(pstream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
 	}
 
 	/* TODO 2, 基于IPv6的UDP port 1701 L2TP协议 */

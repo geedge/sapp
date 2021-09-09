@@ -104,7 +104,7 @@
     decrease_ratio="0.95"
     increase_ratio="1.005"
 ### note, unit of bypass_observe_time is second(s)     
-    recovery_observe_time=10
+    recovery_observe_time=30
 
 
 [PROTOCOL_FEATURE]

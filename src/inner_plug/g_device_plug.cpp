@@ -30,7 +30,7 @@ extern void (*ptr_marsio_buff_free)(struct mr_instance * instance, marsio_buff_t
  __attribute__((__used__)) const char *g_device_plug_git_ver = GIT_VERSION;
 #endif
 
-#define MAX_SUPPORT_GDEV_NUM	(16)  /* 每个线程内最多支持inline device的数量, 根据分流策略和线程数的不同, 最小值是MAX_SUPPORT_GDEV_NUM, 最大值是MAX_SUPPORT_GDEV_NUM * sapp_thread_count */
+#define MAX_SUPPORT_GDEV_NUM	(64)  /* 每个线程内最多支持inline device的数量, 根据分流策略和线程数的不同, 最小值是MAX_SUPPORT_GDEV_NUM, 最大值是MAX_SUPPORT_GDEV_NUM * sapp_thread_count */
 #define MAX_VXLAN_SERVICE_NUM	(256) /* 目前最大支持255种不同业务, 数组下标最大是255 */
 
 #define MAX_NO_PKT_TIMEOUT 		(120) /* 超过这么长时间一直没保活包, 把此设备剔除 */
@@ -985,8 +985,12 @@ int gdev_keepalive_plug_init(void)
 	char deploy_mode_string[32];
 	int opt_len;
 	int i;
-
+#if 0
 	gdev_kp_log_handle = MESA_create_runtime_log_handle("./log/gdev_keeplive.log", 10);
+#else
+	/* 2020-12-23 保活插件内置, 此处复用sapp的log_handle, 靠module名称区别, 不再单独写文件了 */
+	gdev_kp_log_handle = sapp_global_val->individual_fixed.log_handle;
+#endif
 
 #ifdef GIT_VERSION
 	MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]", "g_device_plug version: %s\n", g_device_plug_git_ver);	

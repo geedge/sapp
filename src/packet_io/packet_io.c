@@ -730,89 +730,12 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 }
 
 
-void packet_io_exit(void)
-{
-	/* 读包模式下, 给其他线程一些时间, 处理未完成数据, 比如MESA_tcp异步发送数据等等. */
-	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
-	sleep(sapp_global_val->config.packet_io.dumpfile_sleep_time_before_exit);
-	plugctrl_destroy_all_plug();
-	
-	exit(0);
-	
-	return;
-}
-
-int packet_io_init(int argc, char *argv[])
-{
-	int i, ret;
-
-	if(sapp_global_val->config.stream.tcp.inject.remedy_kill_tcp_by_inline_device != 0){
-		ret = gdev_block_init();
-		if(ret < 0){
-			printf("\n\033[33m[Error]gdev_block_init error!\033[0m\n");
-			return -1;
-		}
-	}
-		
-	if(0 == use_custom_pkt_cb){
-		packet_io_register_cb(mesa_default_pkt_cb);	
-	}
-
-	if(NULL == dl_io_fun_list.dl_io_init){
-		printf("Error, packet io library must support 'dl_io_init' !\n");
-		exit(0);
-	}
-	
-	if(dl_io_fun_list.dl_io_init(argc, argv) < 0){
-		return -1;
-	}
-
-	for(i = 0; i < MAX_THREAD_NUM; i++){
-		g_send_buf_pool[i] = (UINT8 *)malloc(SENDPACKET_BUF_LEN);
-	}
-
-	if(sendpacket_init_new(g_packet_io_thread_num) < 0){
-		printf("Error, sendpacket_init_new error !\n");
-		return -1;
-	}
-
-#if 0 /* 20161117 lijia move to send_handle_init() */
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		g_packet_dl_send_handle[i] = dl_io_fun_list.dl_io_get_send_handle(i);
-	}
-#endif
-
-	if(CAP_MODEL_PCAP_DUMPFILE == g_packet_io_cap_mode){
-		dl_io_fun_list.dl_io_register_exit_cb(packet_io_exit);
-	}
-
-	if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){
-    	parse_send_gdev_ip_conf("conf/send_gdev.conf");
-    }
-
-	if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE){
-		parse_send_route_conf("conf/send_route.conf");
-	}
-	
-	packet_io_device_alias_init();
-
-	packet_io_status_init();
-
-	if(packet_io_under_ddos_init() < 0){
-		return -1;
-	}
-
-	return 0;
-}
-
 extern int g_StreamTcpAllFunNum;
 extern int g_Ipv6FunNum;
 extern  int app_function_rationality_check(void);
  /* not return until error, or use 'CAP_MODEL_PCAP_DUMPFILE' mode */
 void packet_io_run(void)
-{
-	pthread_t pid;
-		
+{		
 	if(NULL == dl_io_fun_list.dl_io_run){
 		printf("Error, packet io library must support 'dl_io_run' !\n");
 		sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: Error, packet io library must support 'dl_io_run' !\n", __FILE__, __LINE__);
@@ -821,7 +744,7 @@ void packet_io_run(void)
 
 	app_function_rationality_check();
 	
-	pthread_create(&pid, NULL, sapp_time_event_thread ,NULL);
+	pthread_create(&sapp_global_val->individual_fixed.thread_timer_event_id, NULL, sapp_time_event_thread ,NULL);
 
 	packet_io_under_ddos_run();
 	
@@ -829,14 +752,7 @@ void packet_io_run(void)
 }
 
 extern volatile int update_packet_io_status_sw;
-void packet_io_clean_thread_context(int thread_seq)
-{
-	free_thread_stream(thread_seq);
 
-	ipv4_frag_per_thread_exit(thread_seq);
-	ipv6_frag_per_thread_exit(thread_seq);
-	pptp_per_thread_exit(thread_seq);
-}
 
 
 MESA_send_handle *packet_io_get_send_handle(int thread_id)
@@ -1384,6 +1300,116 @@ int packet_io_send_raw(int thread_num, char *data, int datalen,unsigned int targ
 									
 	return ret;
 }
+
+
+
+void packet_io_clean_thread_context(int thread_seq)
+{
+	free_thread_stream(thread_seq);
+
+	ipv4_frag_per_thread_exit(thread_seq);
+	ipv6_frag_per_thread_exit(thread_seq);
+	pptp_per_thread_exit(thread_seq);
+}
+
+void packet_io_lib_destroy(void)
+{
+	if(dl_io_fun_list.dl_io_destroy){
+		dl_io_fun_list.dl_io_destroy();
+	}
+}
+
+int packet_io_init(int argc, char *argv[])
+{
+	int i, ret;
+
+	if(sapp_global_val->config.stream.tcp.inject.remedy_kill_tcp_by_inline_device != 0){
+		ret = gdev_block_init();
+		if(ret < 0){
+			printf("\n\033[33m[Error]gdev_block_init error!\033[0m\n");
+			return -1;
+		}
+	}
+		
+	if(0 == use_custom_pkt_cb){
+		packet_io_register_cb(mesa_default_pkt_cb);	
+	}
+
+	if(NULL == dl_io_fun_list.dl_io_init){
+		printf("Error, packet io library must support 'dl_io_init' !\n");
+		exit(0);
+	}
+	
+	if(dl_io_fun_list.dl_io_init(argc, argv) < 0){
+		return -1;
+	}
+
+	for(i = 0; i < MAX_THREAD_NUM; i++){
+		g_send_buf_pool[i] = (UINT8 *)malloc(SENDPACKET_BUF_LEN);
+	}
+
+	if(sendpacket_init_new(g_packet_io_thread_num) < 0){
+		printf("Error, sendpacket_init_new error !\n");
+		return -1;
+	}
+
+#if 0 /* 20161117 lijia move to send_handle_init() */
+	for(i = 0; i < g_packet_io_thread_num; i++){
+		g_packet_dl_send_handle[i] = dl_io_fun_list.dl_io_get_send_handle(i);
+	}
+#endif
+
+	if(CAP_MODEL_PCAP_DUMPFILE == g_packet_io_cap_mode){
+		dl_io_fun_list.dl_io_register_exit_cb(libsapp_destroy_env);
+	}
+
+	if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){
+    	parse_send_gdev_ip_conf("conf/send_gdev.conf");
+    }
+
+	if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE){
+		parse_send_route_conf("conf/send_route.conf");
+	}
+	
+	packet_io_device_alias_init();
+
+	packet_io_status_init();
+
+	if(packet_io_under_ddos_init() < 0){
+		return -1;
+	}
+
+	return 0;
+}
+
+
+void packet_io_exit(void)
+{
+	/* 读包模式下, 给其他非IO线程一些时间, 处理未完成数据, 比如异步发送日志, field_stat刷新统计数据等等. */
+	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
+	sleep(sapp_global_val->config.packet_io.dumpfile_sleep_time_before_exit);
+
+	sysinfo_output(); /* 最后一次写统计信息, 关闭标志位, 因为流表将被清空, 再写就没意义了 */
+	update_packet_io_status_sw = 0;
+		
+	plugctrl_destroy_all_plug();
+	sendpacket_destroy(g_packet_io_thread_num);
+	packet_io_lib_destroy();
+
+
+	sapp_log_handle_destroy();
+	sapp_fs2_destroy();
+	packet_io_under_ddos_destroy();
+
+	sapp_timer_destroy(sapp_global_val->individual_fixed.sapp_standalone_timer);
+	
+	sapp_gval_destroy();
+
+	exit(0);
+	
+	return;
+}
+
 
 #ifdef __cplusplus
 }

@@ -122,6 +122,37 @@ int libsapp_setup_env(int argc, char *argv[])
 }
 
 
+static void wait_for_all_io_threads(void)
+{
+	int tseq;
+
+	for(tseq = 0; tseq < g_packet_io_thread_num; tseq++){
+		pthread_join(sapp_global_val->individual_fixed.thread_obtain_id[tseq], NULL);
+	}
+
+	pthread_join(sapp_global_val->individual_fixed.thread_timer_event_id, NULL);
+}
+
+
+
+void libsapp_destroy_env_per_thread(int tseq)
+{
+	
+}
+
+
+
+
+void libsapp_destroy_env(void)
+{
+	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
+
+	wait_for_all_io_threads();
+	
+	packet_io_exit();
+}
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -1051,6 +1051,34 @@ int sapp_assistant_init(void)
 }
 #endif
 
+static int sapp_line_protocol_init(void)
+{
+	log_line_protocol_handle_t *lp_handle;
+
+	if(0 == sapp_global_val->config.profiling.log.remote.enabled){
+		sapp_log(RLOG_LV_INFO, 10, 10, "profiling.log.remote.enabled = 0, line protocol is disable.\n");
+		return 0;
+	}
+
+	if(strncasecmp(sapp_global_val->config.profiling.log.remote.remote_send_out_type, "line_protocol", strlen("line_protocol")) != 0){
+		sapp_log(RLOG_LV_INFO, 10, 10, "profiling.log.remote.enabled, remote_send_out_type is field_stat2, line protocol is disable.\n");
+		return 0;
+	}
+
+	lp_handle = (log_line_protocol_handle_t *)calloc(1, sizeof(log_line_protocol_handle_t));
+
+	lp_handle->sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    lp_handle->sock_addr.sin_family = AF_INET;
+    inet_pton(AF_INET, sapp_global_val->config.profiling.log.remote.server_ip, &lp_handle->sock_addr.sin_addr.s_addr);
+    lp_handle->sock_addr.sin_port = ntohs((unsigned short)sapp_global_val->config.profiling.log.remote.server_port);
+
+    lp_handle->last_send_metrics_time = 0;
+
+	sapp_global_val->individual_fixed.profiling_log_remote_handle = lp_handle;
+	
+	return 0;
+}
+
 
 static int fs2_plug_entry_historgram_init(void *fs2_handle)
 {
@@ -1265,31 +1293,12 @@ static int sapp_fs2_init(void)
 }
 
 
-static int sapp_line_protocol_init(void)
+void sapp_fs2_destroy(void)
 {
-	log_line_protocol_handle_t *lp_handle;
-
-	if(0 == sapp_global_val->config.profiling.log.remote.enabled){
-		sapp_log(RLOG_LV_INFO, 10, 10, "profiling.log.remote.enabled = 0, line protocol is disable.\n");
-		return 0;
+	if(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle){
+		FS_stop(&sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle);
+		sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle = NULL;
 	}
-
-	if(strncasecmp(sapp_global_val->config.profiling.log.remote.remote_send_out_type, "line_protocol", strlen("line_protocol")) != 0){
-		sapp_log(RLOG_LV_INFO, 10, 10, "profiling.log.remote.enabled, remote_send_out_type is field_stat2, line protocol is disable.\n");
-		return 0;
-	}
-
-	lp_handle = (log_line_protocol_handle_t *)calloc(1, sizeof(log_line_protocol_handle_t));
-
-	lp_handle->sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    lp_handle->sock_addr.sin_family = AF_INET;
-    inet_pton(AF_INET, sapp_global_val->config.profiling.log.remote.server_ip, &lp_handle->sock_addr.sin_addr.s_addr);
-    lp_handle->sock_addr.sin_port = ntohs((unsigned short)sapp_global_val->config.profiling.log.remote.server_port);
-
-    lp_handle->last_send_metrics_time = 0;
-
-	sapp_global_val->individual_fixed.profiling_log_remote_handle = lp_handle;
-	
-	return 0;
 }
+
 
