@@ -137,7 +137,13 @@ static void wait_for_all_io_threads(void)
 
 void libsapp_destroy_env_per_thread(int tseq)
 {
-	
+	if(sapp_global_val->mthread_volatile[tseq]->destory_env_done){
+		return;
+	}
+
+	sapp_global_val->mthread_volatile[tseq]->destory_env_done = 1;
+	packet_io_clean_thread_context(tseq);
+	sapp_global_val->mthread_volatile[tseq]->destory_env_done = 2;
 }
 
 
@@ -145,11 +151,18 @@ void libsapp_destroy_env_per_thread(int tseq)
 
 void libsapp_destroy_env(void)
 {
+	if(sapp_global_val->individual_volatile->destory_env_done){
+		return;
+	}
+
+	sapp_global_val->individual_volatile->destory_env_done = 1;
 	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
 
 	wait_for_all_io_threads();
 	
 	packet_io_exit();
+
+	sapp_global_val->individual_volatile->destory_env_done = 2;
 }
 
 

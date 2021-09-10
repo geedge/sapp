@@ -315,6 +315,12 @@ inline void process_bar_print(int len)
 }
 #endif
 
+/*
+	TODO, 
+	此功能要再抽象一下, 仅对内层tcp包做拆分, 且MTU由配置文件控制, 不能写死!
+	外层可以是其他隧道协议, 或vxlan等等, 
+	仅保证大的数据包能被拆分发出(不是IP分片), 而不保证网络传输的可靠性.
+*/
 static int sendpacket_tcp_offload(char *raw_data, int raw_datalen, int fd, const struct sockaddr *sa)
 {
 #define TCP_TSO_SPLIT_MTU 1400
@@ -842,7 +848,7 @@ static void *__pcap_work_thread(void *arg)
 			polling_stream_timeout(thread_num);		
 			continue;
 		}else if(PCAP_OP_FLAG_EOF == pkt_queue_node.op_flag){
-			packet_io_clean_thread_context(thread_num);
+			libsapp_destroy_env_per_thread(thread_num);
 			printf("[Info]free_thread_context success, tid:%d\n", thread_num);
 			work_thread_pool[thread_num].op_status = PCAP_OP_FLAG_EOF;
 			goto exit;
@@ -879,7 +885,7 @@ static int pcap_create_work_thread(void)
 		pthread_mutex_init (&work_thread_pool[i].mutex, NULL);		
 		work_thread_pool[i].sd_raw_eth = socket(PF_INET, SOCK_PACKET, htons(ETH_P_ALL));
 		if(work_thread_pool[i].sd_raw_eth < 0){
-			printf("%s:%d, socket raw eth error, %s\n", __FILE__, __LINE__,strerror(errno));
+			printf("pcap_create_work_thread(), socket raw eth error, %s\n", strerror(errno));
 			assert(0);
 		}
 		ret = snprintf(work_thread_pool[i].sock_addr_up.sa_data, 
@@ -1351,11 +1357,8 @@ static void *pcap_io_thread(void *arg)
 		sapp_usleep(1000);
 	}
 
-	//if(g_PollingFunNum > 0){
-		//pcap_setnonblock(handle, 1, pcap_errbuf);
-	//}
 	while(1){
-		//if(0 == g_PollingFunNum){
+
 		if(1){
 			pcap_ret = pcap_loop(handle, -1, __pcap_pkt_handle, (unsigned char *)&route_dir);
 		}else{
@@ -1373,7 +1376,7 @@ static void *pcap_io_thread(void *arg)
 		}else if(pcap_ret < 0){
 			printf("pcap err, %s\n", pcap_geterr(handle));
 			sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
-			exit(0);
+			exit(1);
 		}
 	}
 

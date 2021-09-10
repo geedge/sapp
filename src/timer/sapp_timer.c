@@ -457,6 +457,10 @@ void *sapp_time_event_thread(void *arg)
 #endif
 
 	last_log_time = time(NULL);
+
+	while(SAPP_STATE_PROCESSING != sapp_global_val->individual_volatile->current_state){
+		sapp_usleep(100);
+	}
 	
 	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state)
 	{

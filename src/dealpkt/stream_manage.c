@@ -737,7 +737,7 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 	}
 	else
 	{
-		sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: del_stream_by_time() error! stream->type is:%d, not TCP or UDP.\n", __FILE__, __LINE__, pstream->type);	
+		sapp_runtime_log(RLOG_LV_FATAL, "del_stream_by_time() error! stream->type is:%d, not TCP or UDP.\n", pstream->type);	
 		return -1;
 		//assert(0);
 	}
@@ -885,7 +885,7 @@ int mkstreamhash_new(struct streaminfo_private *pstream_pr, int maxsize)
 		
 		default:
 			//printf("Unknown addr type:%d!", this_stream->addr.addrtype);
-			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: mkstreamhash_new() Unknown addr type:%d.\n", __FILE__, __LINE__, this_stream->addr.addrtype);	
+			sapp_runtime_log(RLOG_LV_FATAL, "mkstreamhash_new() Unknown addr type:%d.\n", this_stream->addr.addrtype);	
 			//assert(0);
 			return -1;
 		break;

@@ -436,7 +436,7 @@ static int symbol_file_check(const char *raw_filename, void *user_arg)
 	
 	fp = popen(cmd_buf, "r");	
 	if(NULL == fp){
-		printf("%s:%d, popen error, %s\n", __FILE__, __LINE__, strerror(errno));
+		printf("symbol_file_check() popen error, %s\n", strerror(errno));
 		return 0;
 	}
 	while(fgets(symbol_info_buf, PATH_MAX, fp)){

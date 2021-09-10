@@ -1802,7 +1802,7 @@ const char *stream_addr_list_ntop_outward(const struct streaminfo *pstream)
 		addr_single_len = snprintf(result + addr_tot_len, MAX_ADDR_LIST_STRING_LEN-addr_tot_len,
 							 "%s", addr_single_str);
 		if(addr_single_len >= MAX_ADDR_LIST_STRING_LEN-addr_tot_len){
-			printf("%s:%d, no enough space to convert string!\n", __FILE__,__LINE__);
+			sapp_runtime_log(RLOG_LV_INFO, "stream_addr_list_ntop_outward(), no enough space to convert string!\n");
 			return NULL;
 		}
 		addr_tot_len += addr_single_len;		

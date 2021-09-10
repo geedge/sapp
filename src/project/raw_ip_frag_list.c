@@ -366,7 +366,7 @@ const raw_ipfrag_list_t *get_raw_frag_list(const struct streaminfo *stream)
 		ip_frag_list = (const raw_ipfrag_list_t *)project_req_get_struct(stream, g_raw_ip_frag_list_v6_plugid);
 	}else{
 		ip_frag_list = NULL;
-		sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: get_raw_frag_list(), unknown addrtype:%d.\n", __FILE__, __LINE__, stream->addr.addrtype);		
+		sapp_runtime_log(RLOG_LV_FATAL, "get_raw_frag_list(), unknown addrtype:%d.\n", stream->addr.addrtype);		
 	}
 
 	return ip_frag_list;

@@ -431,6 +431,7 @@ struct __sapp_gval_mthread{
 	sapp_fuzzy_latency_stat_t fuzzy_pkt_latency_stat_per_entry_per_thread[SAPP_MAX_PLUG_ENTRY_NUM];
 	const raw_pkt_t *raw_pkt; /* 因为MESA_fakepacket_send_xxx系列函数没有raw_pkt参数, 也没有stream_info, 为了向前兼容, 不好修改接口, 增加全局变量用于存储当前包 */
 	void *dup_pkt_distinguish_handle; /* 三个流量入口开关, inject, ipv4_tcp, ipv4_udp, 共同使用一个bloom句柄 */
+	volatile int destory_env_done; //0:do nothing; 1:doing; 2:done
 }__attribute__ ((aligned (64))); /* for multi-thread, must 64byte alignment */
 typedef struct __sapp_gval_mthread sapp_gval_mthread_t; 
 
@@ -439,6 +440,7 @@ struct __sapp_gval_individual_volatile{
 	volatile time_t current_time;
 	volatile long long current_time_ms;
 	volatile int current_state; /* refer to enum sapp_state_t  */
+	volatile int destory_env_done;
 }__attribute__ ((aligned (64)));
 typedef struct __sapp_gval_individual_volatile sapp_gval_individual_volatile_t;
 

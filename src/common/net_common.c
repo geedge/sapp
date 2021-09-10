@@ -1117,7 +1117,7 @@ UINT16 net_layer_to_ethernet_protocol(int addr_type)
 
 		case ADDR_TYPE_TCP:
 		case ADDR_TYPE_UDP:
-			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: Ethernet can't carry addr type:%d directly!\n", __FILE__, __LINE__,addr_type);
+			sapp_runtime_log(RLOG_LV_FATAL, "net_layer_to_ethernet_protocol(): Ethernet can't carry addr type:%d directly!\n", addr_type);
 			//assert(0);
 			ether_type = -1;
 		break;
@@ -1136,7 +1136,7 @@ UINT16 net_layer_to_ethernet_protocol(int addr_type)
 
 		default:
 			/* to do, unknown type */
-			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: unknown ethernet carry addr type:%d!\n", __FILE__, __LINE__, addr_type);
+			sapp_runtime_log(RLOG_LV_FATAL, "net_layer_to_ethernet_protocol(): unknown ethernet carry addr type:%d!\n", addr_type);
 			ether_type = -1;
 		break;
 	}
@@ -1176,7 +1176,7 @@ UINT16 net_layer_to_ethernet_protocol_by_stream(const struct streaminfo *pstream
 
 		case ADDR_TYPE_TCP:
 		case ADDR_TYPE_UDP:
-			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: Ethernet can't carry addr type:%d directly!\n", __FILE__, __LINE__,addr_type);
+			sapp_runtime_log(RLOG_LV_FATAL, "net_layer_to_ethernet_protocol_by_stream(): Ethernet can't carry addr type:%d directly!\n", addr_type);
 			//assert(0);
 			ether_type = -1;
 		break;
@@ -1195,7 +1195,7 @@ UINT16 net_layer_to_ethernet_protocol_by_stream(const struct streaminfo *pstream
 
 		default:
 			/* to do, unknown type */
-			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: unknown ethernet carry addr type:%d!\n", __FILE__, __LINE__, addr_type);
+			sapp_runtime_log(RLOG_LV_FATAL, "net_layer_to_ethernet_protocol_by_stream(): unknown ethernet carry addr type:%d!\n", addr_type);
 			ether_type = -1;
 		break;
 	}
@@ -1244,7 +1244,7 @@ enum addr_type_t ethernet_protocol_to_net_layer(UINT16 ether_type_host)
 
 		default:
 			/* to do, unknown type */
-			sapp_runtime_log(RLOG_LV_INFO, "%s:%d: unknown ethernet carry addr type:0x%x\n", __FILE__, __LINE__, ether_type_host);
+			sapp_runtime_log(RLOG_LV_INFO, "ethernet_protocol_to_net_layer(): unknown ethernet carry addr type:0x%x\n", ether_type_host);
 		break;
 	}
 

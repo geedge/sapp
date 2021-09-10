@@ -975,7 +975,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 				reserved_hdr_len = sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip4_hdr);
 			}else{
 				//printf("addr type is tuple4v4, but stream type is not TCP or UDP!\n");
-				sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: addr type is tuple4v4, but stream type is :%d, not TCP or UDP.\n", __FILE__, __LINE__, stream->type);		
+				sapp_runtime_log(RLOG_LV_FATAL, "calc_reserved_hdr_len(): addr type is tuple4v4, but stream type is :%d, not TCP or UDP.\n", stream->type);		
 				return -1;
 				//assert(0);
 			}
@@ -989,7 +989,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 				reserved_hdr_len = sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip6_hdr);;
 			}else{
 				//printf("addr type is tuple4v6, but stream type is not TCP or UDP!\n");
-				sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: addr type is tuple4v6, but stream type is :%d, not TCP or UDP.\n", __FILE__, __LINE__, stream->type);		
+				sapp_runtime_log(RLOG_LV_FATAL, "calc_reserved_hdr_len(): addr type is tuple4v6, but stream type is :%d, not TCP or UDP.\n", stream->type);		
 				return -1;
 				//assert(0);
 			}
@@ -1005,7 +1005,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 
 		case ADDR_TYPE_ARP:
 			//printf("Sendpacket use ARP!\n");
-			sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: Sendpacket use ARP.\n", __FILE__, __LINE__);		
+			sapp_runtime_log(RLOG_LV_FATAL, "calc_reserved_hdr_len(): Sendpacket use ARP.\n");		
 			return -1;
 			//assert(0);
 		break;
@@ -3058,7 +3058,7 @@ int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_
 	}
 	
 	if(payload_len + reserved_hdr_len > MTU_MAX){
-		sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: MESA_inject_pkt() error! payload_len too long:%d.\n", __FILE__, __LINE__, payload_len + reserved_hdr_len);	
+		sapp_runtime_log(RLOG_LV_FATAL, "MESA_inject_pkt() error! payload_len too long:%d.\n", payload_len + reserved_hdr_len);	
 		return -1;
 		//assert(0);
 	}
@@ -3320,8 +3320,8 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	}
 	
 	if(payload_len + reserved_hdr_len > MTU_MAX){
-		sapp_runtime_log(RLOG_LV_FATAL, "%s:%d: MESA_inject_pkt() error! payload_len too long:%d.\n", 
-		                 __FILE__, __LINE__, payload_len + reserved_hdr_len);	
+		sapp_runtime_log(RLOG_LV_FATAL, "MESA_inject_pkt() error! payload_len too long:%d.\n", 
+		                 payload_len + reserved_hdr_len);	
 		return -1;
 	}
 

@@ -1850,9 +1850,13 @@ static void test_inject_tcp_pkt_with_this_hdr(struct streaminfo *stream,void **p
 
 char test_inject_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
-	char fake_http_data[] = "HTTP/1.1 200 OK\r\nServer: Apache-Coyote/1.1\r\nContent-Type: text/html;charset=UTF-8\r\nContent-Language: zh-CN\r\nContent-Length: 32\r\nConnection: Close\r\n\r\n<html><head>HaHaHa</head></html>";
+	const char *fake_http_pattern = "HTTP/1.1 200 OK\r\nServer: Apache-Coyote/1.1\r\nContent-Type: text/html;charset=UTF-8\r\nContent-Language: zh-CN\r\nContent-Length: %d\r\nConnection: Close\r\n\r\n%s";
 	char plug_ret = APP_STATE_DROPME;
-	int optval;
+	int i, optval;
+	int total_payload_len, payload_char_len;
+	char payload_buf[8192];
+	char payload_with_html_buf[8192];
+	char fake_http_send_buf[8192];
 	
 	if(OP_STATE_CLOSE == stream->opstate){
 		return plug_ret;
@@ -1861,10 +1865,26 @@ char test_inject_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,co
 	if(OP_STATE_PENDING == stream->opstate){
 		if((DIR_C2S == stream->curdir)
 		  && (memmem(stream->ptcpdetail->pdata, stream->ptcpdetail->datalen, "hijack", 6) != NULL)){
-		  	printf("found key 'hijack', send fake http response ' hahaha'!\n");
+		  	memset(payload_buf, '*', sizeof(payload_buf));
+		  	for(i = 0; i < sizeof(payload_buf); i++){
+				if(0 == (i % 80)){
+					payload_buf[i] ='\r';
+				}else if(0 == (i % 81)){
+					payload_buf[i] ='\n';
+				}				
+		  	}
+
+		  	payload_char_len = SAPP_MIN(g_test_app_val.ivalue1, 4096);
+		  	payload_buf[payload_char_len] = '\0';
+		  	snprintf(payload_with_html_buf, sizeof(payload_with_html_buf), "<html><head>%s</head></html>", payload_buf);
+
+			total_payload_len = strlen(payload_with_html_buf);
+			snprintf(fake_http_send_buf, sizeof(fake_http_send_buf), fake_http_pattern, total_payload_len, payload_with_html_buf);
+		  	
+		  	printf("found key 'hijack', send fake http response, len=%d\n", total_payload_len);
 			//MESA_inject_pkt(stream, fake_http_data, sizeof(fake_http_data), raw_pkt, stream->routedir ^ 1);
-			//sapp_inject_pkt(stream, SIO_DEFAULT, fake_http_data, sizeof(fake_http_data), stream->routedir ^ 1);
-			test_inject_tcp_pkt_with_this_hdr(stream, pme, thread_seq, raw_pkt);
+			sapp_inject_pkt(stream, SIO_DEFAULT, fake_http_send_buf, strlen(fake_http_send_buf), stream->routedir ^ 1);
+			//test_inject_tcp_pkt_with_this_hdr(stream, pme, thread_seq, raw_pkt);
 			plug_ret |= APP_STATE_DROPPKT;
 
 			optval = 1;
