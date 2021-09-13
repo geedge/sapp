@@ -7,12 +7,12 @@ extern "C" {
 #include "MESA_htable.h"
 #include "MESA_list.h"
 
-#define STREAM_BRIDEG_MAX_NUM  (128)
+#define STREAM_BRIDGE_MAX_NUM  (128)
 
-#define STREAM_BRIDGE_MAGIC_SUCC (0x62726765)
+#define STREAM_BRIDGE_MAGIC_SUCC (0x62726765)  // "brge" 十六进制
 
 typedef struct{	
-	int magic_num; /* 表示当前bridge曾经注册成功过 */
+	int magic_num; /* 安全性校验, 也表示当前bridge曾经注册成功过 */
 	int bridge_id;
 	char bridge_name[NAME_MAX];
 	stream_bridge_free_cb_t *async_data_free_cb;
@@ -21,13 +21,13 @@ typedef struct{
 
 struct stream_bridge_item{
 	long long value; 
-	char valid_flag; /* 用于识别初始状态值为0, 和外部调用者设置了0, 两种值相同但不同的状态 */
+	char valid_flag; /* 用于识别初始状态值为0, 和外部调用者设置了0. 两种值相同, 但是两个不同的状态 */
 }__attribute__((packed, aligned(1)));
 typedef struct stream_bridge_item stream_bridge_item_t;
 
 
 static int g_stream_bridge_actual_num;
-static stream_bridge_manage_t g_stream_bridge_manage[STREAM_BRIDEG_MAX_NUM];
+static stream_bridge_manage_t g_stream_bridge_manage[STREAM_BRIDGE_MAX_NUM];
 
 static MESA_htable_handle g_stream_bridge_name2id_htable;
 
@@ -90,7 +90,11 @@ static int stream_bridege_create_new_bridge(const char *bridge_name)
 	*bridge_id = g_stream_bridge_actual_num;
 
 	ret = MESA_htable_add(g_stream_bridge_name2id_htable, (const unsigned char *)bridge_name, strlen(bridge_name), (void *)bridge_id);
-	assert(ret >= 0);
+	if(ret < 0){
+		free(bridge_id);
+		sapp_runtime_log(RLOG_LV_FATAL, "stream_bridge_build() error, bridge name '%s' already exist!", bridge_name);
+		return -1;
+	}
 
 	memset(&g_stream_bridge_manage[g_stream_bridge_actual_num], 0, sizeof(stream_bridge_manage_t));
 	g_stream_bridge_manage[g_stream_bridge_actual_num].magic_num = STREAM_BRIDGE_MAGIC_SUCC;
@@ -146,7 +150,7 @@ int stream_bridge_build(const char *bridge_name, const char *rw_mode)
 {
 	int bridge_id;
 
-	if(strlen(bridge_name) >= NAME_MAX){
+	if(strnlen(bridge_name, NAME_MAX+1) >= NAME_MAX){
 		sapp_runtime_log(RLOG_LV_FATAL, "stream_bridge_build() error, bridge name too long:%s", bridge_name);
 		errno = EINVAL ;
 		return -1;
@@ -155,9 +159,13 @@ int stream_bridge_build(const char *bridge_name, const char *rw_mode)
 	bridge_id = stream_bridge_name2id(bridge_name);
 
 	if(bridge_id < 0){
-		if(strncasecmp(rw_mode, "r", 1) == 0){
+		if((strncasecmp(rw_mode, "r", 1) == 0) && (strnlen(rw_mode, 2) == 1)){
 			return -1;
-		}else if(strncasecmp(rw_mode, "w", 1) == 0){
+		}else if((strncasecmp(rw_mode, "w", 1) == 0) || (strncasecmp(rw_mode, "rw", 2) == 0)){
+			if(sapp_global_val->individual_volatile->current_state >= SAPP_STATE_PROCESSING){
+				sapp_runtime_log(RLOG_LV_FATAL, "stream_bridge_build() error, can't call use write mode in processing state!");
+				return -1;
+			}
 			bridge_id = stream_bridege_create_new_bridge(bridge_name);
 		}else{
 			sapp_runtime_log(RLOG_LV_FATAL, "stream_bridge_build() error, unknown mode:%s", rw_mode);
@@ -173,7 +181,7 @@ int stream_bridge_register_data_sync_cb(int bridge_id, stream_bridge_sync_cb_t *
 {
 	MESA_list_t *new_list_node;
 	
-	if((bridge_id < 0) || (bridge_id >= STREAM_BRIDEG_MAX_NUM) || (g_stream_bridge_manage[bridge_id].magic_num != STREAM_BRIDGE_MAGIC_SUCC)){
+	if((bridge_id < 0) || (bridge_id >= STREAM_BRIDGE_MAX_NUM) || (g_stream_bridge_manage[bridge_id].magic_num != STREAM_BRIDGE_MAGIC_SUCC)){
 		errno = EINVAL ;
 		return -1;
 	}
@@ -187,7 +195,8 @@ int stream_bridge_register_data_sync_cb(int bridge_id, stream_bridge_sync_cb_t *
 
 int stream_bridge_register_data_free_cb(int bridge_id, stream_bridge_free_cb_t *cb_fun)
 {
-	if((bridge_id >= 0) || (bridge_id >= STREAM_BRIDEG_MAX_NUM) || (g_stream_bridge_manage[bridge_id].magic_num != STREAM_BRIDGE_MAGIC_SUCC)){
+	if((bridge_id < 0) || (bridge_id >= STREAM_BRIDGE_MAX_NUM) || (g_stream_bridge_manage[bridge_id].magic_num != STREAM_BRIDGE_MAGIC_SUCC)){
+		errno = EINVAL ;
 		return -1;
 	}
 
@@ -202,7 +211,7 @@ int stream_bridge_async_data_put(const struct streaminfo *stream, int bridge_id,
 	stream_bridge_item_t *bridge_item_array;
 	struct streaminfo_private *stream_pr;
 
-	if((bridge_id < 0) || (bridge_id >= STREAM_BRIDEG_MAX_NUM) || (g_stream_bridge_manage[bridge_id].magic_num != STREAM_BRIDGE_MAGIC_SUCC)){
+	if((bridge_id < 0) || (bridge_id >= STREAM_BRIDGE_MAX_NUM) || (g_stream_bridge_manage[bridge_id].magic_num != STREAM_BRIDGE_MAGIC_SUCC)){
 		errno = EINVAL ;
 		return -1;
 	}
@@ -222,7 +231,7 @@ void *stream_bridge_async_data_get(const struct streaminfo *stream, int bridge_i
 	stream_bridge_item_t *bridge_item_array;
 	struct streaminfo_private *stream_pr;
 
-	if((bridge_id < 0) || (bridge_id >= STREAM_BRIDEG_MAX_NUM) || (g_stream_bridge_manage[bridge_id].magic_num != STREAM_BRIDGE_MAGIC_SUCC)){
+	if((bridge_id < 0) || (bridge_id >= STREAM_BRIDGE_MAX_NUM) || (g_stream_bridge_manage[bridge_id].magic_num != STREAM_BRIDGE_MAGIC_SUCC)){
 		errno = EINVAL ;
 		return NULL;
 	}
@@ -245,11 +254,10 @@ void *stream_bridge_async_data_get(const struct streaminfo *stream, int bridge_i
 int stream_bridge_sync_data_put(const struct streaminfo *stream, int bridge_id, void *data)
 {
 	stream_bridge_sync_cb_t *sync_cb_fun;
-	struct streaminfo_private *stream_pr;
 	MESA_list_t *list_node;
 	int callback_num = 0;
 
-	if((bridge_id < 0) || (bridge_id >= STREAM_BRIDEG_MAX_NUM) || (g_stream_bridge_manage[bridge_id].magic_num != STREAM_BRIDGE_MAGIC_SUCC)){
+	if((bridge_id < 0) || (bridge_id >= STREAM_BRIDGE_MAX_NUM) || (g_stream_bridge_manage[bridge_id].magic_num != STREAM_BRIDGE_MAGIC_SUCC)){
 		errno = EINVAL ;
 		return -1;
 	}
