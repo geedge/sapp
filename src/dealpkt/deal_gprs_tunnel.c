@@ -23,6 +23,60 @@ extern int ipv4_entry(struct streaminfo_private *pfstream, const void *this_laye
 extern int ipv6_entry(struct streaminfo_private *pfstream, const void *this_layer_data, int thread_num,
                       unsigned char routedir, const raw_pkt_t *raw_pkt, int);
 
+/*
+  gprs头部根据标志位的不同, 长度也不同, 不能直接用sizeof(struct gtp_hdr)获取长度.
+*/
+static int deal_gtp_calc_gtp_hdr_len(const struct gtp_hdr *gtph)
+{
+	int ext_field_len;
+	const unsigned char *p_ext_hdr = (unsigned char *)gtph + sizeof(struct gtp_hdr);
+	unsigned char next_hdr_type;
+	unsigned char this_ext_field_cont_len;
+
+	/* 
+	   v0太古老了, 已被废弃;
+	   不存在GTPv2-U协议, 在LTE中的GTP-U仍使用GTPv1-U, 
+	   所以, sapp目前仅支持gtp v1版本.
+	 */
+	if(((gtph->flags & GTP_HDR_VER_MASK) >> 5) != 1){
+	  return -1; 
+	}
+
+	if(gtph->flags & (GTP_HDR_FLAG_SEQ_NUM | GTP_HDR_FLAG_N_PDU | GTP_HDR_FLAG_NEXT_EXT_HDR)){
+	  //todo, parse and get seq field
+	  p_ext_hdr += 2; //seq field length is 2 bytes
+
+	  //todo, parse and get N-PDU field
+	  p_ext_hdr++; //N-PDU field length is 1 byte 
+
+    /*
+		解析gtp扩展头部字段, 
+		参考3GPP文档第5.1, 5.2章节,
+		以及wireshark源码, packet-gtp.c -> dissect_gtp_common()函数.
+    */
+
+	next_hdr_type = *p_ext_hdr;
+	  if(gtph->flags & GTP_HDR_FLAG_NEXT_EXT_HDR){
+		  while(next_hdr_type != 0){
+		  	//todo, parse and get extension headers
+			  p_ext_hdr++; //指向长度字段, 以4个字节为单位
+			  this_ext_field_cont_len = *p_ext_hdr * 4 - 2;
+
+			  p_ext_hdr++; //指向数据部分第一个字节
+			  p_ext_hdr += this_ext_field_cont_len;
+
+			  //指向下一个头部字段
+			  next_hdr_type = *p_ext_hdr;
+			  p_ext_hdr++;
+		  }
+	  }else{
+		  p_ext_hdr++;
+	  }
+	}
+
+	return (char *)p_ext_hdr - (char *)gtph;
+}
+
 int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int thread_num, 
 		unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
@@ -38,7 +92,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     int ret = PASS;
     char *next_layer_hdr;
     int next_layer_offset;
-    unsigned int cur_seq = 0, seq_offset = 0;
+    int gtp_hdr_len;
     sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 
 	local_sys_stat->count_per_layer[ADDR_TYPE_GPRS_TUNNEL][pfstream_pr->layer_index+1]++; 
@@ -51,29 +105,26 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     /* 仅处理T-PDU类型的数据面信息，控制面不认为是GTP隧道*/
     if(p_gtd_hdr->msg_type != GTP_MSG_TYPE_T_PDU)
     {
-        sapp_runtime_log(10, "GTP layer msg_type not T_PDU, %x !\n", p_gtd_hdr->msg_type);
-        return PASS;
-    }
-    if(p_gtd_hdr->flags != 0x30 && p_gtd_hdr->flags != 0x32) /* 不存在GTPv2-U协议, 在LTE中的GTP-U仍使用GTPv1-U */
-    {
-        sapp_runtime_log(20, "GTP layer flag not 0x30, %x !\n", p_gtd_hdr->flags);
+        sapp_runtime_log(RLOG_LV_DEBUG, "GTP layer msg_type not T_PDU, %x !\n", p_gtd_hdr->msg_type);
         return PASS;
     }
 
-    if(p_gtd_hdr->flags == 0x32)
-    {
-        cur_seq = ntohl(*(unsigned int *)(p_gtd_hdr + 1));
-        seq_offset = sizeof(unsigned int);
-    }
+	gtp_hdr_len = deal_gtp_calc_gtp_hdr_len(p_gtd_hdr);
+	if(gtp_hdr_len < 0){
+		sapp_runtime_log(RLOG_LV_DEBUG, "get gtp header len error, flags:0x%x, msg_type:0x%x, len:%u\n", 
+						p_gtd_hdr->flags, p_gtd_hdr->msg_type, ntohs(p_gtd_hdr->len));
+		return PASS;
+	}
 
     local_sys_stat->count[SAPP_STAT_TUNNEL_GTP]++;
 
     memset(&tmp_index, 0, sizeof(struct streamindex));
-    memset(&gtpaddr, 0, sizeof(struct layer_addr_gtp));
+
     /* GTP地址C2S, S2C方向独立, 无法靠当前包地址区分dir, 每次栈里的变量都存储于source方向, 即C2S方向,  
        创建流时, 如果需要reverse拷贝, 则将source, dest颠倒, 否则直接memcpy到堆里的addr.
      */
     gtpaddr.teid_c2s = p_gtd_hdr->teid;
+    gtpaddr.teid_s2c = 0;
     pstream->curdir = DIR_C2S;
 
     pstream->addr.paddr = &gtpaddr;
@@ -95,8 +146,8 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     pstream->routedir=routedir;
     pstream->threadnum=(UCHAR)thread_num;
 
-    next_layer_hdr = (char *)p_gtd_hdr + sizeof(struct gtp_hdr) + seq_offset;
-    next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct gtp_hdr) + seq_offset;
+    next_layer_hdr = (char *)p_gtd_hdr + gtp_hdr_len;
+    next_layer_offset = offset_to_raw_pkt_hdr + gtp_hdr_len;
 
 	int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
     if((*next_layer_hdr & 0xF0) == 0x40)
@@ -132,29 +183,6 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     return ret;
 }
 
-
-/*
-	gprs头部根据标志位的不同, 长度也不同, 不能直接用sizeof(struct gtp_hdr)获取长度.
-	
-*/
-static int get_gprs_hdr_len_v1(const struct gtp_hdr *gtph)
-{
-	int base_len = sizeof(struct gtp_hdr);
-
-	if(gtph->flags & GTP_HDR_FLAG_NEXT_EXT_HDR){
-		base_len += 1;
-	}
-
-	if(gtph->flags & GTP_HDR_FLAG_SEQ_NUM){
-		base_len += 4;
-	}
-
-	if(gtph->flags & GTP_HDR_FLAG_N_PDU){
-		base_len += 1;
-	}
-
-	return base_len;
-}
 
 static int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned int udp_payload_len)
 {

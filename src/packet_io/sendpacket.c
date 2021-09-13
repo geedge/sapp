@@ -915,10 +915,10 @@ static int calc_gtp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_st
 	    太复杂了!  
 	    TODO吧!!
 	*/
-	if(raw_net_gtp_hdr->flags & GTP_HDR_FLAG_SEQ_NUM)
+	if(raw_net_gtp_hdr->flags & (GTP_HDR_FLAG_SEQ_NUM | GTP_HDR_FLAG_N_PDU | GTP_HDR_FLAG_NEXT_EXT_HDR))
 	{
-		if(0 == sapp_global_val->config.protocol_feature.skip_gtp_seq_field_for_inject){
-        	sapp_runtime_log(RLOG_LV_FATAL, "calc_gtp_hdr_len error, inject GTP pkt not support SEQ, you should set 'skip_gtp_seq_field_for_inject' to avoid this!");
+		if(0 == sapp_global_val->config.protocol_feature.skip_gtp_S_PN_E_field_for_inject){
+        	sapp_runtime_log(RLOG_LV_FATAL, "calc_gtp_hdr_len error, inject GTP pkt not support SEQ or N-PDU or Extension header, you should set 'skip_gtp_S_PN_E_field_for_inject' to avoid this!");
         	return -1;
         }
     }
@@ -3210,10 +3210,12 @@ static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream
 	struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
 
 	while(stream_pr && stream_pr->pfather_pr){
+#if 0 //使用动态创建非对称协议层, 此处不用再额外判断了	
 		if(skip_asymmetric_presence_layer(stream, send_stream_dir)){
 			stream_pr = stream_pr->pfather_pr;
 			continue;
 		}
+#endif		
 		if(CAP_LEVEL_MAC == g_packet_io_cap_level) {
 			if(stream_pr->pfather_pr 
 			 && ((ADDR_TYPE_MAC_IN_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype) || (ADDR_TYPE_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype))){

@@ -763,6 +763,8 @@ struct mesa_isakmp_payload_hdr{ /* RFC2408-Page22 */
 
 #define GTP_MSG_TYPE_T_PDU (0xFF)
 
+#define GTP_HDR_VER_MASK			(0xE0)
+
 #define GTP_HDR_FLAG_NEXT_EXT_HDR 	(0x04)
 #define GTP_HDR_FLAG_SEQ_NUM 		(0x02)
 #define GTP_HDR_FLAG_N_PDU 			(0x01)
