@@ -26,7 +26,7 @@ extern int ipv6_entry(struct streaminfo_private *pfstream, const void *this_laye
 /*
   gprs头部根据标志位的不同, 长度也不同, 不能直接用sizeof(struct gtp_hdr)获取长度.
 */
-static int deal_gtp_calc_gtp_hdr_len(const struct gtp_hdr *gtph)
+int deal_gtp_calc_gtp_hdr_len(const struct gtp_hdr *gtph)
 {
 	int ext_field_len;
 	const unsigned char *p_ext_hdr = (unsigned char *)gtph + sizeof(struct gtp_hdr);

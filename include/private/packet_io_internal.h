@@ -184,6 +184,7 @@ void sapp_pkt_dump_by_raw_pkt(int tid, const void *pkt, int pkt_len, int has_lay
 unsigned int dpdk_rte_ip_hash(const char *sipaddr, const char *dipaddr, int addrlen);
 void sendpacket_destroy(int tot_thread_num);
 void send_handle_destroy(int thread_index);
+int deal_gtp_calc_gtp_hdr_len(const struct gtp_hdr *gtph);
 
 
 /********************** funcitons for dynamic link ***********************/

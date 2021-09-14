@@ -99,19 +99,20 @@ static int arp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 static int gtp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expect_layer_type)
 {
 	const struct gtp_hdr *gh = (struct gtp_hdr *)raw_data;
-	int opt_len = 0; /* 可选项长度 */
 	const unsigned char *next_ip_layer_hdr;
 	int skip_len;
+	int gtp_hdr_len;
 
 	if(ADDR_TYPE_GPRS_TUNNEL == expect_layer_type){
 		return 0;
 	}
-	
-	if(gh->flags & 0x2){
-		opt_len += sizeof(int);  /* sequence */
+
+	gtp_hdr_len = deal_gtp_calc_gtp_hdr_len(gh);
+	if(gtp_hdr_len < 0){
+		return -1;
 	}
 
-	next_ip_layer_hdr = (unsigned char *)raw_data + opt_len + sizeof(struct gtp_hdr);
+	next_ip_layer_hdr = (unsigned char *)raw_data + gtp_hdr_len;
 
 	if((*next_ip_layer_hdr & 0x40) == 0x40){
 		skip_len = ipv4_jump_to_layer((char *)next_ip_layer_hdr, __ADDR_TYPE_IP_PAIR_V4, expect_layer_type);
@@ -122,7 +123,7 @@ static int gtp_jump_to_layer(const char *raw_data,  int raw_layer_type, int expe
 		return -1;
 	}
 
-	return opt_len + sizeof(struct gtp_hdr) + skip_len;
+	return gtp_hdr_len + skip_len;
 }
 
 extern int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2tp *l2tpaddr);
@@ -463,8 +464,12 @@ static int ipv6_jump_to_layer(const char *raw_data,  int raw_layer_type, int exp
 				if(ADDR_TYPE_UDP == expect_layer_type){
 					skip_len = next_hdr_ptr - (UINT8 *)raw_data;
 				}else{
-					/* TODO: IPv6的其他隧道模式 */
-					skip_len = -1;
+					skip_len = udp_jump_to_layer((char *)next_hdr_ptr, ADDR_TYPE_UDP, expect_layer_type); 
+					if(skip_len < 0){
+						return -1;
+					}else{
+						return skip_len + next_hdr_ptr - (UINT8 *)raw_data;
+					}					
 				}
 				goto done;
 			break;
