@@ -100,9 +100,9 @@ const void *get_this_layer_header(const struct streaminfo *pstream);
 	举例:
 		假设当前层为Ethernet, 起始包头地址为this_layer_hdr, 想跳转到IPv6层头部:
 		struct ip6_hdr *ip6_header;
-		ip6_header = MESA_net_jump_to_layer(this_layer_hdr, ADDR_TYPE_MAC, ADDR_TYPE_IPV6);
+		ip6_header = MESA_jump_layer(this_layer_hdr, ADDR_TYPE_MAC, ADDR_TYPE_IPV6);
 */
-const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
+const void *MESA_jump_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
 
 #ifdef __cplusplus
 }

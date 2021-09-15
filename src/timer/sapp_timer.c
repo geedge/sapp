@@ -458,7 +458,10 @@ void *sapp_time_event_thread(void *arg)
 
 	last_log_time = time(NULL);
 
-	while(SAPP_STATE_PROCESSING != sapp_global_val->individual_volatile->current_state){
+	/* 为了避免在docker, 虚拟机, 内存不足的情况下, 此处不能用 current_state != SAPP_STATE_PROCESSING 判断条件 
+       曾经出现过dumpfile模式仅读取一个pcap包, 瞬间就退出了, 导致此处死循环的问题!!
+	*/
+	while(sapp_global_val->individual_volatile->current_state < SAPP_STATE_PROCESSING){
 		sapp_usleep(100);
 	}
 	

@@ -1418,7 +1418,7 @@ static char test_rst_pkt(struct streaminfo *pstream,unsigned char routedir,int t
 	const struct mesa_ip4_hdr *ip4_hdr;
 	const struct mesa_tcp_hdr *tcp_hdr;
 
-	ip4_hdr = (const struct mesa_ip4_hdr *)MESA_net_jump_to_layer((const void *)real_raw_pkt->raw_pkt_data, real_raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V4);
+	ip4_hdr = (const struct mesa_ip4_hdr *)MESA_jump_layer((const void *)real_raw_pkt->raw_pkt_data, real_raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V4);
 	if(NULL == ip4_hdr){
 		return 1;
 	}
@@ -2502,14 +2502,14 @@ char test_jump_layer(struct streaminfo *f_stream,unsigned char routedir,int thre
 	}
 
 #if 0
-	const struct mesa_arp_hdr *arphdr = (const struct mesa_arp_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_ARP);
+	const struct mesa_arp_hdr *arphdr = (const struct mesa_arp_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_ARP);
 	if(arphdr){
 		printf("jump to ARP OK!\n");
 	}
 #endif
 
 #if 0
-	const struct mesa_ip4_hdr * iphdr = (const struct mesa_ip4_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_IPV4);
+	const struct mesa_ip4_hdr * iphdr = (const struct mesa_ip4_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_IPV4);
 	if(iphdr){
 		if(__checkip4pkt(iphdr) < 0){
 			assert(0);
@@ -2520,7 +2520,7 @@ char test_jump_layer(struct streaminfo *f_stream,unsigned char routedir,int thre
 #endif
 
 #if 0
-	const struct mesa_ip6_hdr * ip6hdr = (const struct mesa_ip6_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_IPV6);
+	const struct mesa_ip6_hdr * ip6hdr = (const struct mesa_ip6_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_IPV6);
 	if(ip6hdr){
 		if(__checkip6pkt(ip6hdr) < 0){
 			assert(0);
@@ -2531,14 +2531,14 @@ char test_jump_layer(struct streaminfo *f_stream,unsigned char routedir,int thre
 #endif
 
 #if 0
-	const struct mesa_udp_hdr * udphdr =  (const struct mesa_udp_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_UDP);
+	const struct mesa_udp_hdr * udphdr =  (const struct mesa_udp_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_UDP);
 	if(udphdr){
 		printf("jump to UDP OK!\n");
 	}	
 #endif
 
 #if 0
-	const struct mesa_tcp_hdr * tcphdr =  (const struct mesa_tcp_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_TCP);
+	const struct mesa_tcp_hdr * tcphdr =  (const struct mesa_tcp_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_TCP);
 	if(tcphdr){
 		printf("jump to TCP OK!\n");
 	}	
@@ -2554,12 +2554,12 @@ char test_jump_layer(struct streaminfo *f_stream,unsigned char routedir,int thre
 	ipsrc_greedy[0] = '\0';
 	ipdst_greedy[0] = '\0';
 
-	iphdr = (const struct mesa_ip4_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V4);
+	iphdr = (const struct mesa_ip4_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V4);
 	if(iphdr){
 		inet_ntop(AF_INET, &iphdr->ip_src.s_addr, ipsrc, 64);
 		inet_ntop(AF_INET, &iphdr->ip_dst.s_addr, ipdst, 64);
 	}
-	iphdr_greedy = (const struct mesa_ip4_hdr *)MESA_net_jump_to_layer_greedy(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V4);
+	iphdr_greedy = (const struct mesa_ip4_hdr *)MESA_jump_layer_greedy(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V4);
 	if(iphdr_greedy){
 		inet_ntop(AF_INET, &iphdr_greedy->ip_src.s_addr, ipsrc_greedy, 64);
 		inet_ntop(AF_INET, &iphdr_greedy->ip_dst.s_addr, ipdst_greedy, 64);
@@ -2573,12 +2573,12 @@ char test_jump_layer(struct streaminfo *f_stream,unsigned char routedir,int thre
 	ipsrc_greedy[0] = '\0';
 	ipdst_greedy[0] = '\0';
 
-	ip6hdr = (const struct mesa_ip6_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V6);
+	ip6hdr = (const struct mesa_ip6_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V6);
 	if(ip6hdr){
 		inet_ntop(AF_INET6, &ip6hdr->ip6_src, ipsrc, 64);
 		inet_ntop(AF_INET6, &ip6hdr->ip6_dst, ipdst, 64);
 	}
-	ip6hdr_greedy = (const struct mesa_ip6_hdr *)MESA_net_jump_to_layer_greedy(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V6);
+	ip6hdr_greedy = (const struct mesa_ip6_hdr *)MESA_jump_layer_greedy(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V6);
 	if(ip6hdr_greedy){
 		inet_ntop(AF_INET6, &ip6hdr_greedy->ip6_src, ipsrc_greedy, 64);
 		inet_ntop(AF_INET6, &ip6hdr_greedy->ip6_dst, ipdst_greedy, 64);

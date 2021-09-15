@@ -870,8 +870,6 @@ UINT16 net_layer_to_ethernet_protocol_by_stream(const struct streaminfo *pstream
 enum addr_type_t ethernet_protocol_to_net_layer(UINT16 ether_type_host);
 int net_common_build_send_mac(unsigned char *buf, const struct mesa_ethernet_hdr *raw_eth_hdr, int addr_type, int dir_reverse, int net_topology_mode);
 int net_common_adjust_forward_mac(struct mesa_ethernet_hdr *raw_eth_hdr,int net_topology_mode);
-const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
-const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_type, int expect_layer_type);
 char MESA_ascii_to_hex(char ascii);
 const char *sapp_raw_ipv4_ntop(const struct mesa_ip4_hdr *ip4_hdr, char *out_buf, int buf_len );
 const char *sapp_raw_ipv6_ntop(const struct mesa_ip6_hdr *ip6_hdr, char *out_buf, int buf_len);

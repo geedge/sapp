@@ -621,7 +621,7 @@ static void *gdev_keepalive_log_thread(void *arg)
 
 	MESA_mkdir_p(sapp_global_val->config.data_file_path.data_files_root_dir, 0755);
 
-	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
+	while(sapp_get_current_state() < SAPP_STATE_PROCESSING){
 		sapp_usleep(100);
 	}
 	

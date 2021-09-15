@@ -282,7 +282,7 @@ char TCP_ALL_ENTRY(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 		thdr = (struct mesa_tcp_hdr *)((char *)a_packet + ip4hdr->ip_hl * 4);
 	}else{
 		ip6hdr = (struct mesa_ip6_hdr *)a_packet;	
-		thdr = (struct mesa_tcp_hdr *)MESA_net_jump_to_layer(a_packet, ADDR_TYPE_IPV6, ADDR_TYPE_TCP);
+		thdr = (struct mesa_tcp_hdr *)MESA_jump_layer(a_packet, ADDR_TYPE_IPV6, ADDR_TYPE_TCP);
 		if(NULL == thdr){
 			goto dropme;
 		}

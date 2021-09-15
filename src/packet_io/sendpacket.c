@@ -194,7 +194,7 @@ static tcp_rst_finger_mark_t *make_tcp_rst_finger_mark(int thread_id,  const raw
 
 	/* NOTE, 只有IPv4能在ip_id上做些标记, IPv6暂不支持RST指纹 */
 	/* TODO 2, 此处如果有隧道, 靠jump_to_layer不知道跳到哪一层, 应该用stream_private->offset_to_ip_hdr偏移到本层的IP头部 */
-	ip4_hdr = (const struct mesa_ip4_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V4);
+	ip4_hdr = (const struct mesa_ip4_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V4);
 	if((NULL == ip4_hdr) || (0 == ABBR_INJECT_RST_SIGN)){ /* 随机填充, 无指纹信息 */
 		rst_finger->ip_id_host_order = (unsigned short)MESA_rand();
 		rst_finger->ip_ttl = (unsigned short)MESA_rand_range(48, 120);

@@ -79,7 +79,8 @@ char MESA_ascii_to_hex(char ascii)
 	return c;
 }
 
-
+/* jump layer功能从sapp剥离, 独立成为一个公共库: libMESA_jump_layer, 可复用于tcpdump_mesa, 和其他插件, 模块等等 */
+#if 0
 static inline int check_layer_type(int layer_type)
 {
 	if(NULL == addr_type_to_prefix((enum addr_type_t)layer_type)){
@@ -832,7 +833,7 @@ static int mac_in_mac_jump_to_layer(const char *raw_data,  int raw_layer_type, i
 		Non-NULL: the pointer to expect layer;
 		NULL: not found expect layer.
 */
-const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type)
+const void *MESA_jump_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type)
 {
 	int  ret;
 
@@ -909,7 +910,7 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 		break;
 		
 		default:
-			sapp_runtime_log(20, "MESA_net_jump_to_layer(): unsupport raw_layer_type:%d in MESA_net_jump_to_layer()!\n", raw_layer_type);
+			sapp_runtime_log(20, "MESA_jump_layer(): unsupport raw_layer_type:%d in MESA_jump_layer()!\n", raw_layer_type);
 			return NULL;
 	}
 
@@ -922,14 +923,14 @@ const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, in
 
 /*
 	与MESA_net_jump_to_layer()的区别:
-		MESA_net_jump_to_layer()从最外层开始, 找到第一个符合条件的层就退出;
-		MESA_net_jump_to_layer_greedy()会一直尝试找最内层协议头, 适合隧道模式.
+		MESA_jump_layer()从最外层开始, 找到第一个符合条件的层就退出;
+		MESA_jump_layer_greedy()会一直尝试找最内层协议头, 适合隧道模式.
 	
 	return value:
 		Non-NULL: the pointer to expect layer;
 		NULL: not found expect layer.
 */
-const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_type, int expect_layer_type)
+const void *MESA_jump_layer_greedy(const void *raw_data, int raw_layer_type, int expect_layer_type)
 {
 	int skip_len;
 	const void *expect_layer;
@@ -957,7 +958,7 @@ const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_ty
 		expect_layer_type = __ADDR_TYPE_IP_PAIR_V6;
 	}
 
-	expect_layer = MESA_net_jump_to_layer(new_next_layer_data, new_raw_layer_type, expect_layer_type);
+	expect_layer = MESA_jump_layer(new_next_layer_data, new_raw_layer_type, expect_layer_type);
 	while(expect_layer){
 		success_layer = expect_layer;
 
@@ -1002,17 +1003,17 @@ const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_ty
 			break;
 
 			default:
-				sapp_runtime_log(RLOG_LV_INFO, "MESA_net_jump_to_layer_greedy() not support layer type:%d\n", expect_layer_type);
+				sapp_runtime_log(RLOG_LV_INFO, "MESA_jump_layer_greedy() not support layer type:%d\n", expect_layer_type);
 				goto done;
 		}
 
-		expect_layer = MESA_net_jump_to_layer(new_next_layer_data, new_raw_layer_type, expect_layer_type);
+		expect_layer = MESA_jump_layer(new_next_layer_data, new_raw_layer_type, expect_layer_type);
 	}
 
 done:
 	return success_layer;
 }
-
+#endif 
 
 typedef struct{
 	enum addr_type_t addrtype;
@@ -1609,9 +1610,9 @@ const char *sapp_rawpkt_ntop(const raw_pkt_t *raw_pkt, int greedy_inner_layer, c
 	unsigned char ip_pro;
 
 	if(greedy_inner_layer){
-		ip4hdr = (struct mesa_ip4_hdr *)MESA_net_jump_to_layer_greedy(raw_pkt->raw_pkt_data, (int)raw_pkt->low_layer_type, (int)ADDR_TYPE_IPV4);
+		ip4hdr = (struct mesa_ip4_hdr *)MESA_jump_layer_greedy(raw_pkt->raw_pkt_data, (int)raw_pkt->low_layer_type, (int)ADDR_TYPE_IPV4);
 	}else{
-		ip4hdr = (struct mesa_ip4_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, (int)raw_pkt->low_layer_type, (int)ADDR_TYPE_IPV4);
+		ip4hdr = (struct mesa_ip4_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, (int)raw_pkt->low_layer_type, (int)ADDR_TYPE_IPV4);
 	}
 	if(ip4hdr){
 		inet_ntop(AF_INET, &ip4hdr->ip_src.s_addr, ipsrc_str, 64);
@@ -1643,9 +1644,9 @@ const char *sapp_rawpkt_ntop(const raw_pkt_t *raw_pkt, int greedy_inner_layer, c
 	}
 
 	if(greedy_inner_layer){
-		ip6hdr = (struct mesa_ip6_hdr *)MESA_net_jump_to_layer_greedy(raw_pkt->raw_pkt_data, (int)raw_pkt->low_layer_type, (int)ADDR_TYPE_IPV6);
+		ip6hdr = (struct mesa_ip6_hdr *)MESA_jump_layer_greedy(raw_pkt->raw_pkt_data, (int)raw_pkt->low_layer_type, (int)ADDR_TYPE_IPV6);
 	}else{
-		ip6hdr = (struct mesa_ip6_hdr *)MESA_net_jump_to_layer(raw_pkt->raw_pkt_data, (int)raw_pkt->low_layer_type, (int)ADDR_TYPE_IPV6);
+		ip6hdr = (struct mesa_ip6_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, (int)raw_pkt->low_layer_type, (int)ADDR_TYPE_IPV6);
 	}
 	if(NULL == ip6hdr){
 		return ""; /* 此次返回一个空字符串, 而不是NULL, 防止调用者不判断返回值而崩溃, 返回空串只是什么都不打印 */

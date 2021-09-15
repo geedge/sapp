@@ -10,8 +10,6 @@ extern int ipv4_entry(struct streaminfo_private *pfstream, const void *this_laye
 			unsigned char routedir, const raw_pkt_t *raw_pkt, int);
 extern int ipv6_entry(struct streaminfo_private *pfstream, const void *this_layer_data, int thread_num, 
 			unsigned char routedir, const raw_pkt_t *raw_pkt, int);
-extern const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
-
 
 #define TEREDO_DEFAULT_PORT	(3544)		
 		

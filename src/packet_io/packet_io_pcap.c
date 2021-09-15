@@ -78,8 +78,6 @@ extern void timestamp_record_lib(const raw_pkt_t *raw_pkt);
 */
 
 
-extern const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
-
 /* 2014-12-01 lijia add */
 #define PCAP_OP_FLAG_PKT			(0x01)
 #define PCAP_OP_FLAG_EOF			(0x02)
@@ -947,9 +945,9 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 	const struct ip6_hdr *ipv6_hdr;
 
 	if(PCAP_DISTMODE_OUTER_TUPLE2 == g_pcap_distmode){
-		res = MESA_net_jump_to_layer((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
+		res = MESA_jump_layer((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
 	}else{
-		res = MESA_net_jump_to_layer_greedy((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
+		res = MESA_jump_layer_greedy((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
 	}
 	
 	if(res){
@@ -966,9 +964,9 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 	}
 
 	if(PCAP_DISTMODE_OUTER_TUPLE2 == g_pcap_distmode){
-		res = MESA_net_jump_to_layer((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
+		res = MESA_jump_layer((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
 	}else{
-		res = MESA_net_jump_to_layer_greedy((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
+		res = MESA_jump_layer_greedy((const void *)data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
 	}
 	if(res){
 		ipv6_hdr = (const struct ip6_hdr *)res;
@@ -1071,9 +1069,9 @@ static int gen_route_dir_for_dumpfile_mode(const u_char *data)
 		raw_layer_type = ADDR_TYPE_IPV4;
 	}
 
-	ihdr4 = (struct mesa_ip4_hdr *)MESA_net_jump_to_layer(data, raw_layer_type, ADDR_TYPE_IPV4);
+	ihdr4 = (struct mesa_ip4_hdr *)MESA_jump_layer(data, raw_layer_type, ADDR_TYPE_IPV4);
 	if(NULL == ihdr4){
-		ihdr6 = (struct mesa_ip6_hdr *)MESA_net_jump_to_layer(data, raw_layer_type, ADDR_TYPE_IPV6);
+		ihdr6 = (struct mesa_ip6_hdr *)MESA_jump_layer(data, raw_layer_type, ADDR_TYPE_IPV6);
 		if(NULL == ihdr6){
 			return 0;
 		}else{
@@ -1315,7 +1313,8 @@ static void pcap_io_dumpfile_list(void)
 			sapp_log(20, 1, 1, "pcap file '%s' processing finished, takes time: %ldus", 
 					sapp_global_val->cla.dumpfie_list_array[pcap_file_num],
 					(end_time.tv_sec-start_time.tv_sec)*1000*1000 + (end_time.tv_usec-start_time.tv_usec));
-			pcap_close(pcap_handle);	
+			pcap_close(pcap_handle);
+			pcap_up_handle = NULL;
 
 			dumpfile_timestamp_diff_with_start = 0; /* 每个pcap包的时间戳都不一样, 处理完后重置相对时间戳 */
 		}

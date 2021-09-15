@@ -339,7 +339,7 @@ static int cycle_pkt_dump_seek_to_inner_ip(char *pkt_buf, int pktlen, int thread
 		first_ip_layer = NULL;
 	}
 	
-	ip4hdr_greedy = (struct mesa_ip4_hdr *)MESA_net_jump_to_layer_greedy(pkt_buf, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
+	ip4hdr_greedy = (struct mesa_ip4_hdr *)MESA_jump_layer_greedy(pkt_buf, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
 	if(ip4hdr_greedy){
 		if((char *)ip4hdr_greedy == first_ip_layer){
 			bpf_match_pkt_len = pktlen; /* 最内层和第一层IP一样, 说明是标准ethernet->IPv4包, 无需memmove操作 */
@@ -370,7 +370,7 @@ static int cycle_pkt_dump_seek_to_inner_ip(char *pkt_buf, int pktlen, int thread
 		bpf_match_ipv4 = 0;
 	}
 
-	ip6hdr_greedy = (struct mesa_ip6_hdr *)MESA_net_jump_to_layer_greedy(pkt_buf, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
+	ip6hdr_greedy = (struct mesa_ip6_hdr *)MESA_jump_layer_greedy(pkt_buf, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
 	if(ip6hdr_greedy){
 		if((char *)ip6hdr_greedy == first_ip_layer){
 			bpf_match_pkt_len = pktlen; /* 最内层和第一层IP一样, 说明是标准ethernet->IPv6包, 无需memmove操作 */
@@ -543,7 +543,7 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 		struct mesa_ip6_hdr *ip6hdr_greedy;
 		int inner_pkt_len;
 		const unsigned char *inner_iphdr = NULL;
-		ip4hdr_greedy = (struct mesa_ip4_hdr *)MESA_net_jump_to_layer_greedy(for_bpf_filter_data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
+		ip4hdr_greedy = (struct mesa_ip4_hdr *)MESA_jump_layer_greedy(for_bpf_filter_data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V4);
 		if (ip4hdr_greedy)
 		{
 			inner_iphdr = (const unsigned char *)ip4hdr_greedy;
@@ -551,7 +551,7 @@ static void __do_cycle_pkt_dump_udp_socket(int thread_seq, const raw_pkt_t *p_ra
 		}
 		else
 		{
-			ip6hdr_greedy = (struct mesa_ip6_hdr *)MESA_net_jump_to_layer_greedy(for_bpf_filter_data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
+			ip6hdr_greedy = (struct mesa_ip6_hdr *)MESA_jump_layer_greedy(for_bpf_filter_data, ADDR_TYPE_MAC, __ADDR_TYPE_IP_PAIR_V6);
 			if (ip6hdr_greedy)
 			{
 				inner_iphdr = (const unsigned char *)ip6hdr_greedy;

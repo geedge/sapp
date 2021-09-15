@@ -7,6 +7,7 @@
 #include "MESA_handle_logger.h"
 #include "mesa_pkt_dump.h"
 #include "sapp_limits.h"
+#include "MESA_jump_layer.h"
 
 //#define STREAM_BASE_MD5_CHECK		"dd09b3b11993cc835200db477dad7d4b"
 //#define STREAM_CONTROL_MD5_CHECK 	"75aab0821e489b84355fa22ad02a2e78"
