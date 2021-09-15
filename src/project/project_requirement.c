@@ -288,6 +288,10 @@ static int __project_req_add(struct streaminfo *stream, int project_req_id, long
 
 	stream_pr = (struct streaminfo_private *)stream;
 	pinfo = (project_req_info_t *)(stream_pr->pproject);
+	if(NULL == pinfo){
+		sapp_runtime_log(RLOG_LV_FATAL, "project add error, id=%d, value is:%lld, pproject is NULL!", project_req_id, project_req_value);
+		return -1;
+	}
 
 	pinfo[project_req_id].value = project_req_value;
 	pinfo[project_req_id].valid_flag = 1;
@@ -358,6 +362,11 @@ static long long __project_req_get(const struct streaminfo *stream, int project_
 	}
 
 	pinfo = (project_req_info_t *)(stream_pr->pproject);
+
+	if(NULL == pinfo){
+		sapp_runtime_log(RLOG_LV_FATAL, "project get error, id=%d, pproject is NULL!", project_req_id);
+		return -1;
+	}
 
 	if(0 == pinfo[project_req_id].valid_flag){ /* 生产者还未设置过, 返回-1并设置errno */
 		errno = ERANGE;

@@ -2881,6 +2881,10 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		if(0 == ret){
 			return PASS;
 		}
+		/* 如果在tcp_reset_stream()新建流时, 被设置了bypass标志, 此处直接返回, 不能再调用tcp_processallpkt */
+		if(pstream_pr->under_ddos_bypass){
+			return PASS;
+		}
 		ret = tcp_processallpkt(pstream, this_iphdr, this_tcphdr, tcplen, raw_pkt);
 		if(DROP == ret){
 			return DROP;
@@ -2932,6 +2936,13 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			ret=tcp_deal_nouse_stream(pindex_tcp,this_iphdr,raw_pkt,this_tcphdr,tcplen);
 		}
 	}
+	
+	/* 如果在tcp_deal_nouse_stream(),tcp_deal_data_stream()函数中, 调用过tcp_reset_stream()重置当前流时, 
+	   凑巧被设置了bypass标志, 此处要直接返回, 不能再调用stream_process_tcp_allpkt()  
+	 */
+	if(pstream_pr->under_ddos_bypass){
+		return ret;
+	}	
 	
 	//adjust by lqy 20150107 为了防止SYN重建链接时SYN在第一个链接中
 	if((0 == call_tcpall_after_reset) && pindex_tcp && (pstream->pktstate!=OP_STATE_CLOSE))

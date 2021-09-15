@@ -790,6 +790,11 @@ static void *__pcap_work_thread(void *arg)
 	sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[thread_num] = get_current_thread_cpu_affinity_id();
 	sapp_global_val->individual_fixed.thread_tid[thread_num] = syscall(SYS_gettid);
 
+	sapp_runtime_log(RLOG_LV_FATAL, "pid:%d, thread_index:%d, TID(LWP):%ld, PSR:%d", 
+					getpid(), thread_num, 
+					sapp_global_val->individual_fixed.thread_tid[thread_num],
+					sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[thread_num]);
+
 	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
 		sapp_usleep(1000);
 	}

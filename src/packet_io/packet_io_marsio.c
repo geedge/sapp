@@ -811,9 +811,15 @@ static void *marsio4_worker(void *arg)
 
 	if(sapp_global_val->config.cpu.bind_mask_array_num > 0){
 		ptr_marsio_thread_init(sapp_marsio4_instance);
-		sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[tseq] = get_current_thread_cpu_affinity_id();
-		sapp_global_val->individual_fixed.thread_tid[tseq] = syscall(SYS_gettid);
+		sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[tseq] = get_current_thread_cpu_affinity_id();	
 	}
+	sapp_global_val->individual_fixed.thread_tid[tseq] = syscall(SYS_gettid);
+	
+	sapp_runtime_log(RLOG_LV_FATAL, "pid:%d, thread_index:%d, TID(LWP):%ld, PSR:%d", 
+					getpid(),  tseq, 
+					sapp_global_val->individual_fixed.thread_tid[tseq],
+					sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[tseq]);
+					
 	memset(&raw_pkt, 0, sizeof(raw_pkt_t));
 
 	/* 固定不变的参数预先设置 */
