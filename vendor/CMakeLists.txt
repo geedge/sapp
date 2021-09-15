@@ -18,7 +18,7 @@ include(ExternalProject)
 ExternalProject_Add(libevent PREFIX libevent
         URL ${CMAKE_CURRENT_SOURCE_DIR}/libevent-2.1.10-stable.tar.gz
         URL_MD5 999caf86f52943af2363bc8077f00167
-        CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR> --disable-shared --disable-samples --disable-openssl
+        CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR> --enable-shared CFLAGS=-fPIC --disable-samples --disable-openssl
         BUILD_COMMAND make LDFLAGS="-ldl"
         BUILD_IN_SOURCE 1)
 

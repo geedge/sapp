@@ -14,6 +14,7 @@ endif()
 
 add_definitions(-D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
 add_definitions(-DPLATFORM_NSDPF_PAPP=1)
+add_definitions(-fPIC)
 
 #execute_process(COMMAND  echo "" > sapp.toml.hex.array.c ${CMAKE_SOURCE_DIR}/src/config)
 execute_process(COMMAND  xxd -i ${CMAKE_SOURCE_DIR}/bin/etc/sapp.toml  ${CMAKE_SOURCE_DIR}/src/config/sapp.toml.hex.array.c

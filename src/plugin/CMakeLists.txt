@@ -8,5 +8,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include/support)
 include_directories(${MESA_SDK_PREFIX}/include)
 include_directories(${MESA_SDK_PREFIX}/include/MESA)
 
+add_definitions(-fPIC)
+
 add_library(plugctrl STATIC src/plugin_proc.c src/plugin.c src/plugin_platform.c 
 			src/plugin_protocol.c src/plugin_business.c  src/plugin_manage.c)

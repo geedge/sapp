@@ -20,6 +20,8 @@ typedef struct{
 	int ivalue2;
 	char str_value1[NAME_MAX];
 	char str_value2[NAME_MAX];
+
+	int test_project_id;
 }test_app_val_t;
 
 /* 设置一些全局变量, 有各种不同的类型, 方便测试用例传递参数, 
@@ -2199,19 +2201,8 @@ char test_project_add(struct streaminfo *pstream,void **pme, int thread_seq,cons
 	static int __init_flag = 0;
 	static int project_id;
 	char *pro_value = (char *)"test project!";
-
-	if(0 == __init_flag){
-		project_id = project_producer_register("test_project", PROJECT_VAL_TYPE_STRUCT, __test_project_cb);
-		if(project_id < 0){
-			printf("test_project_add error, 'test_project' is not enable!\n");
-			exit(0);
-		}
-		__init_flag = 1;
-	}
 	
-	if(OP_STATE_PENDING == pstream->opstate){
-		project_req_add_struct(pstream, project_id, pro_value);		
-	}
+	project_req_add_struct(pstream, g_test_app_val.test_project_id, pro_value);		
 
 	return APP_STATE_GIVEME;
 }
@@ -3363,9 +3354,17 @@ void CHAR_CONFIG_INIT(void)
 }
 
 
+static void __fake_project_free_cb(int thread_seq, void *project_req_value)
+{
+	;
+}
+
 int CHAR_INIT()
 {
 	CHAR_CONFIG_INIT();
+
+	/* 仅可以在初始化时可以注册project */
+	g_test_app_val.test_project_id =  project_producer_register("test_project", "struct", __fake_project_free_cb);
 
 	return 1;
 }

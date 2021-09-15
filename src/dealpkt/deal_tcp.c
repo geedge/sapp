@@ -852,6 +852,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		pdetail_pr=(struct tcpdetail_private *)dictator_malloc(threadnum,sizeof(struct tcpdetail_private));
 		pdetail=&pdetail_pr->tcpdetail_public;
 		memset(pdetail_pr,0,sizeof(struct tcpdetail_private));
+		pstream->pdetail=(void *)pdetail_pr;
 
 #if USE_RBTREE_INSTEAD_LIST
 		if(1 == pstream_pr->layer_dir){
@@ -2700,11 +2701,12 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 					local_sys_stat->length[SAPP_STAT_TCP_BYPASS_BYTES]+= tcplen;
 					cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
 					sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream:%s under ddos bypass!", printaddr(&pstream->addr, pstream->threadnum));
+					ret = PASS;
 				}else{
 					ret=tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);
 				}
 			}
-			return ret;
+			return ret; 
 		}
 //		else if(tcplen>0)
 		else
@@ -2747,13 +2749,14 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 					local_sys_stat->count[SAPP_STAT_TCP_BYPASS_PKTS]++;
 					local_sys_stat->length[SAPP_STAT_TCP_BYPASS_BYTES]+= tcplen;	
 					cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
-					sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream:%s under ddos bypass!", printaddr(&pstream->addr, pstream->threadnum));				
+					sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream:%s under ddos bypass!", printaddr(&pstream->addr, pstream->threadnum));			
+					ret = PASS;
 				}else{
 					ret = tcp_process_newstreambydata(pindex_tcp,this_iphdr, this_tcphdr,tcplen,raw_pkt);
-					return ret;
 				}
 			}
 			}
+			return ret;
 		}		
 		
 		if(!pindex_tcp)

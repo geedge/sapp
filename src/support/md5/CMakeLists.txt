@@ -6,6 +6,6 @@ cmake_minimum_required(VERSION 2.8)
 #include_directories(${CMAKE_SOURCE_DIR}/include/support)
 #include_directories(${CMAKE_SOURCE_DIR}/dealpkt)
 
-add_definitions(-D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
+add_definitions(-fPIC -D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
 
 add_library(md5 STATIC  md5.c)

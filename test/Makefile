@@ -14,7 +14,7 @@ TARGET += test_sendpacket_performance.so
 #TARGET  += test_anti_flood_hijack
 #TARGET  += sapp_so_run
 
-TARGET += test_sapp_dev
+TARGET += test_sapp_dev_static test_sapp_dev_dynamic
 
 INCS = 
 
@@ -58,9 +58,12 @@ inline_device_measurement.so:inline_device_measurement.c
 sapp_so_run:test_sapp_so.o
 	$(CC) -o $@ -g $(INCS) $(CFLAGS) $^ -lpcap -ldl
 
-test_sapp_dev:test_sapp_dev.c
+test_sapp_dev_static:test_sapp_dev.c
 	gcc -o $@ $^ ../build/src/sapp_dev/libsapp_dev.a  -I/opt/MESA/include/MESA -I/opt/MESA/include/MESA/stream_inc -L/opt/MESA/lib -lpcap -lpthread -ldl -lMESA_htable -lMESA_prof_load -lMESA_handle_logger -lMESA_field_stat2
 	
+test_sapp_dev_dynamic:test_sapp_dev.c
+	gcc -o $@ $^ -lsapp_devel  -I/opt/MESA/include/MESA -I/opt/MESA/include/MESA/stream_inc -L/opt/MESA/lib -lpcap -lpthread -ldl -lMESA_htable -lMESA_prof_load -lMESA_handle_logger -lMESA_field_stat2 -lsystemd -lMESA_jump_layer
+
 .c.o:  
 	$(CC) -c -o $@ $(CFLAGS) -I. $(INCS) $<
 

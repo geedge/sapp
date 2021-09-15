@@ -7,6 +7,6 @@ include_directories(${CMAKE_SOURCE_DIR}/include/support)
 include_directories(/opt/MESA/include/MESA)
 include_directories(/opt/MESA/include/)
 
-add_definitions(-D_BSD_SOURCE -D_GNU_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
+add_definitions(-D_BSD_SOURCE -D_GNU_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H -fPIC)
 
 add_library(cpu_limit STATIC  cpu_limit.c)

@@ -14,5 +14,6 @@ endif()
 
 add_definitions(-D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
 add_definitions(-DPLATFORM_NSDPF_PAPP=1)
+add_definitions(-fPIC)
 
 add_library(timer sapp_timer.c)

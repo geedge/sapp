@@ -9,5 +9,6 @@ include_directories(${CMAKE_SOURCE_DIR}/include/support)
 include_directories(${MESA_SDK_PREFIX}/include)
 include_directories(${MESA_SDK_PREFIX}/include/MESA)
 
+add_definitions(-fPIC)
 
 add_library(project STATIC project_requirement.c raw_ip_frag_list.c stream_bridge.c )

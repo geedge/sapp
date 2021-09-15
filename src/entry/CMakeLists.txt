@@ -7,6 +7,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include/support)
 include_directories(${MESA_SDK_PREFIX}/include)
 include_directories(${MESA_SDK_PREFIX}/include/MESA)
 
+add_definitions(-fPIC)
 
 LINK_DIRECTORIES(/opt/MESA/lib)
 LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/lib)
