@@ -478,6 +478,7 @@ void *sapp_time_event_thread(void *arg)
 		if(ABBR_CURRENT_TIME > last_log_time){
 			last_log_time = ABBR_CURRENT_TIME;
 			sysinfo_output();
+			sapp_mem_stat_output();
 			sapp_watch_dog();
 		}
 

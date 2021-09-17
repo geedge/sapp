@@ -346,6 +346,7 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{9103,4301,RLOG_LV_DEBUG, "SECONDARY_DATA_LINK",	"data_file_inline_keepalive_log",	"inline",NULL, NULL, NULL, 0},
 	{9104,0,RLOG_LV_DEBUG, "SECONDARY_DATA_LINK",	"data_file_load_plugin_stat_log",	NULL,NULL, NULL, NULL, 0},
 	{9105,0,RLOG_LV_DEBUG, "SECONDARY_DATA_LINK",	"data_file_under_ddos_stat_log",	NULL,NULL, NULL, NULL, 0},
+	{9106,0,RLOG_LV_DEBUG, "SECONDARY_DATA_LINK",	"data_file_memory_stat_log",	NULL,NULL, NULL, NULL, 0},
 
 	{9201,0,RLOG_LV_INFO, "LIBRARY_LINK",	"marsio_library_path",	NULL,NULL, NULL, NULL, 0},
 
@@ -1072,7 +1073,7 @@ static int parse_well_known_port_config(void)
 			return -1;			
 		}
 
-		port_array = (unsigned short *)sapp_mem_realloc(port_array, sizeof(short)*(port_array_num+1));
+		port_array = (unsigned short *)sapp_mem_realloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,port_array, sizeof(short)*(port_array_num+1));
 		port_array[port_array_num] = (unsigned short)tmpnum;
 		port_array_num++;
 	}
@@ -1528,7 +1529,7 @@ int sapp_get_secondary_file_path(void)
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_sapp_log", str_tmp, ARG_MAX, "etc/sapp_log.conf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_sapp_log_relative){
-			free((void *)pconfig->cfg_file_path.cfg_sapp_log_relative);
+			SAPP_GLOBAL_FREE(pconfig->cfg_file_path.cfg_sapp_log_relative);
 		}
 		pconfig->cfg_file_path.cfg_sapp_log_relative = sapp_strdup(str_tmp);
 	}
@@ -1536,7 +1537,7 @@ int sapp_get_secondary_file_path(void)
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_plug_list", str_tmp, ARG_MAX, "plug/conflist.inf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_plug_list_relative){
-			free((void *)pconfig->cfg_file_path.cfg_plug_list_relative);
+			SAPP_GLOBAL_FREE(pconfig->cfg_file_path.cfg_plug_list_relative);
 		}	
 		pconfig->cfg_file_path.cfg_plug_list_relative = sapp_strdup(str_tmp);
 	}
@@ -1544,7 +1545,7 @@ int sapp_get_secondary_file_path(void)
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_project_list", str_tmp, ARG_MAX, "etc/project_list.conf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_project_list_relative){
-			free((void *)pconfig->cfg_file_path.cfg_project_list_relative);
+			SAPP_GLOBAL_FREE(pconfig->cfg_file_path.cfg_project_list_relative);
 		}		
 		pconfig->cfg_file_path.cfg_project_list_relative = sapp_strdup(str_tmp);
 	}
@@ -1552,56 +1553,56 @@ int sapp_get_secondary_file_path(void)
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_entrylist", str_tmp, ARG_MAX, "etc/entrylist.conf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_entry_list_relative){
-			free((void *)pconfig->cfg_file_path.cfg_entry_list_relative);
+			SAPP_GLOBAL_FREE(pconfig->cfg_file_path.cfg_entry_list_relative);
 		}		
 		pconfig->cfg_file_path.cfg_entry_list_relative = sapp_strdup(str_tmp);
 	}
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_send_raw_pkt", str_tmp, ARG_MAX, "etc/send_raw_pkt.conf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_file_send_raw_pkt_relative){
-			free((void *)pconfig->cfg_file_path.cfg_file_send_raw_pkt_relative);
+			SAPP_GLOBAL_FREE(pconfig->cfg_file_path.cfg_file_send_raw_pkt_relative);
 		}		
 		pconfig->cfg_file_path.cfg_file_send_raw_pkt_relative = sapp_strdup(str_tmp);
 	}
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_vxlan_sport_map", str_tmp, ARG_MAX, "etc/vxlan_sport_service_map.conf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_file_vxlan_sport_map_relative){
-			free((void *)pconfig->cfg_file_path.cfg_file_vxlan_sport_map_relative);
+			SAPP_GLOBAL_FREE(pconfig->cfg_file_path.cfg_file_vxlan_sport_map_relative);
 		}		
 		pconfig->cfg_file_path.cfg_file_vxlan_sport_map_relative = sapp_strdup(str_tmp);
 	}
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_inline_device", str_tmp, ARG_MAX, "etc/gdev.conf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_file_inline_dev_relative){
-			free((void *)pconfig->cfg_file_path.cfg_file_inline_dev_relative);
+			SAPP_GLOBAL_FREE(pconfig->cfg_file_path.cfg_file_inline_dev_relative);
 		}		
 		pconfig->cfg_file_path.cfg_file_inline_dev_relative = sapp_strdup(str_tmp);
 	}
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_necessary_plug_list", str_tmp, ARG_MAX, "etc/necessary_plug_list.conf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_file_necessary_plug_relative){
-			free((void *)pconfig->cfg_file_path.cfg_file_necessary_plug_relative);
+			SAPP_GLOBAL_FREE(pconfig->cfg_file_path.cfg_file_necessary_plug_relative);
 		}		
 		pconfig->cfg_file_path.cfg_file_necessary_plug_relative = sapp_strdup(str_tmp);
 	}
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_stream_compare_layer", str_tmp, ARG_MAX, "etc/stream_compare_layer.conf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_file_stream_compare_layer_relative){
-			free((void *)pconfig->cfg_file_path.cfg_file_stream_compare_layer_relative);
+			SAPP_GLOBAL_FREE(pconfig->cfg_file_path.cfg_file_stream_compare_layer_relative);
 		}		
 		pconfig->cfg_file_path.cfg_file_stream_compare_layer_relative = sapp_strdup(str_tmp);
 	}
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_vlan_flipping", str_tmp, ARG_MAX, "etc/vlan_flipping_map.conf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_file_vlan_flipping_relative){
-			free((void *)pconfig->cfg_file_path.cfg_file_vlan_flipping_relative);
+			SAPP_GLOBAL_FREE(pconfig->cfg_file_path.cfg_file_vlan_flipping_relative);
 		}		
 		pconfig->cfg_file_path.cfg_file_vlan_flipping_relative = sapp_strdup(str_tmp);
 	}
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_asymmetric_addr_layer", str_tmp, ARG_MAX, "etc/asymmetric_addr_layer.conf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_file_asymmetric_addr_layer_relative){
-			free((void *)pconfig->cfg_file_path.cfg_file_asymmetric_addr_layer_relative);
+			SAPP_GLOBAL_FREE(pconfig->cfg_file_path.cfg_file_asymmetric_addr_layer_relative);
 		}			
 		pconfig->cfg_file_path.cfg_file_asymmetric_addr_layer_relative = sapp_strdup(str_tmp);
 	}
@@ -1609,7 +1610,7 @@ int sapp_get_secondary_file_path(void)
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_well_known_port", str_tmp, ARG_MAX, "etc/well_known_port.conf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_file_well_known_port_relative){
-			free((void *)pconfig->cfg_file_path.cfg_file_well_known_port_relative);
+			SAPP_GLOBAL_FREE(pconfig->cfg_file_path.cfg_file_well_known_port_relative);
 		}			
 		pconfig->cfg_file_path.cfg_file_well_known_port_relative = sapp_strdup(str_tmp);
 	}	
@@ -1618,21 +1619,21 @@ int sapp_get_secondary_file_path(void)
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_DATA_LINK", (char *)"data_file_sysinfo_log", str_tmp, ARG_MAX, "sysinfo.log");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->data_file_path.data_sapp_sysinfo_log_relative){
-			free((void *)pconfig->data_file_path.data_sapp_sysinfo_log_relative);
+			SAPP_GLOBAL_FREE(pconfig->data_file_path.data_sapp_sysinfo_log_relative);
 		}		
 		pconfig->data_file_path.data_sapp_sysinfo_log_relative = sapp_strdup(str_tmp);
 	}
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_DATA_LINK", (char *)"data_file_field_stat_log", str_tmp, ARG_MAX, "fs2_sysinfo.log");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->data_file_path.data_sapp_fs2_log_relative){
-			free((void *)pconfig->data_file_path.data_sapp_fs2_log_relative);
+			SAPP_GLOBAL_FREE(pconfig->data_file_path.data_sapp_fs2_log_relative);
 		}	
 		pconfig->data_file_path.data_sapp_fs2_log_relative = sapp_strdup(str_tmp);
 	}
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_DATA_LINK", (char *)"data_file_inline_keepalive_log", str_tmp, ARG_MAX, "gdev_keeplive_status.log");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->data_file_path.data_inline_keepalive_log_relative){
-			free((void *)pconfig->data_file_path.data_inline_keepalive_log_relative);
+			SAPP_GLOBAL_FREE(pconfig->data_file_path.data_inline_keepalive_log_relative);
 		}		
 		pconfig->data_file_path.data_inline_keepalive_log_relative = sapp_strdup(str_tmp);
 	}
@@ -1640,7 +1641,7 @@ int sapp_get_secondary_file_path(void)
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_DATA_LINK", (char *)"data_file_load_plugin_stat_log", str_tmp, ARG_MAX, "load_plugin_stat.log");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->data_file_path.data_load_plugin_stat_log_relative){
-			free((void *)pconfig->data_file_path.data_load_plugin_stat_log_relative);
+			SAPP_GLOBAL_FREE(pconfig->data_file_path.data_load_plugin_stat_log_relative);
 		}
 		pconfig->data_file_path.data_load_plugin_stat_log_relative = sapp_strdup(str_tmp);
 	}
@@ -1648,10 +1649,19 @@ int sapp_get_secondary_file_path(void)
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_DATA_LINK", (char *)"data_file_under_ddos_stat_log", str_tmp, ARG_MAX, "under_ddos_stat.log");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->data_file_path.data_under_ddos_stat_log_relative){
-			free((void *)pconfig->data_file_path.data_under_ddos_stat_log_relative);
+			SAPP_GLOBAL_FREE(pconfig->data_file_path.data_under_ddos_stat_log_relative);
 		}
 		pconfig->data_file_path.data_under_ddos_stat_log_relative = sapp_strdup(str_tmp);
 	}
+
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_DATA_LINK", (char *)"data_file_memory_stat_log", str_tmp, ARG_MAX, "memory_used_stat.log");
+	if(str_tmp[0] != '\0'){
+		if(pconfig->data_file_path.data_memory_stat_log_relative){
+			SAPP_GLOBAL_FREE(pconfig->data_file_path.data_memory_stat_log_relative);
+		}
+		pconfig->data_file_path.data_memory_stat_log_relative = sapp_strdup(str_tmp);
+	}
+	
 
 	return 0;
 }
@@ -2203,7 +2213,7 @@ int sapp_config_check(void)
 	int i, ret1, ret2, ret3, final_ret = 0;
 
 	/* 全局变量中有固定不变的配置, 也有动态从配置文件读取的数据, 所以此处copy一份临时数据 */
-	sapp_config_check_t *local_cfg_check_attr = (sapp_config_check_t *)sapp_mem_alloc(sizeof(g_sapp_cfg_check_attr)); 
+	sapp_config_check_t *local_cfg_check_attr = (sapp_config_check_t *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(g_sapp_cfg_check_attr)); 
 	memcpy(local_cfg_check_attr, g_sapp_cfg_check_attr, sizeof(g_sapp_cfg_check_attr));
 
 	for(i = 0; i < sizeof(g_interger_range_array)/sizeof(int); i++){
@@ -2233,7 +2243,7 @@ done:
 		printf("\033[32msapp config check success!\033[0m\n");
 	}
 
-	sapp_mem_free(local_cfg_check_attr);
+	sapp_mem_free(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,local_cfg_check_attr);
 
 	return final_ret;
 }

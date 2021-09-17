@@ -13,6 +13,9 @@ struct sapp_global_mthread_t sapp_global_mthread[MAX_THREAD_NUM];
 //extern int g_packet_io_thread_num;
 extern int tcpstate_num[MAX_TCP_STATE];
 extern int udpstate_num[MAX_UDP_STATE];
+extern char g_cmd_args_main_cfg_file[PATH_MAX];
+extern int g_sapp_global_mem_used_block;
+extern int g_sapp_global_mem_used_bytes;
 
 /* 测试时先使用全局变量, 以后动态读取配置文件,
    overlay层定义, 比如vxlan的环境下, overlay包括四层, eth[0], ipv4[1], udp[2], vxlan[3], 这些层不是原始包内容, 是为了便于分流生造出来的层, 不能调用插件, 
@@ -218,13 +221,24 @@ void sapp_global_val_sanity_check(void)
 void sapp_gval_init(void)
 {
 	int tseq;
-	
-	sapp_global_val = (sapp_global_t *)calloc(1, sizeof(sapp_global_t));
-	sapp_global_val->individual_volatile = (sapp_gval_individual_volatile_t *)calloc(1, sizeof(sapp_gval_individual_volatile_t));
 
+	/* 第一步先判断是否使用dictator,此值影响后续的内存分配  策略,否则后面的sapp_mem_xx系列函数无法运行 */
+	tomlc99_wrap_load_int_def(g_cmd_args_main_cfg_file, (char *)"MEM", (char *)"dictator_enable", (int *)&g_sapp_mem_use_dictator, 1);
+
+	/* 内存统计的数据自身就是存储在全局变量中, 这是先有鸡还是先有蛋的问题, 此处直接用系统的calloc, 独立计数 */
+	sapp_global_val = (sapp_global_t *)calloc(1, sizeof(sapp_global_t));
+	g_sapp_global_mem_used_block++;
+	g_sapp_global_mem_used_bytes += sizeof(sapp_global_t);
+	
+	sapp_global_val->individual_volatile = (sapp_gval_individual_volatile_t *)calloc(1, sizeof(sapp_gval_individual_volatile_t));
+	g_sapp_global_mem_used_block++;
+	g_sapp_global_mem_used_bytes += sizeof(sapp_gval_individual_volatile_t);
+	
 	for(tseq = 0; tseq < SAPP_MAX_THREADS; tseq++){
 		sapp_global_val->mthread_volatile[tseq] = (sapp_gval_mthread_t *)calloc(1, sizeof(sapp_gval_mthread_t));
 		sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[tseq] = -1; /* 初始化设置为-1, 表示没绑定到任何一个cpu core */
+		g_sapp_global_mem_used_block++;
+		g_sapp_global_mem_used_bytes += sizeof(sapp_gval_mthread_t);
 	}
 
 	/* set default value, maybe not input by user or config file */
@@ -236,14 +250,6 @@ void sapp_gval_init(void)
 void sapp_gval_destroy(void)
 {
 	int tseq;
-	
-	if(sapp_global_val->individual_volatile){
-		SAPP_FREE(sapp_global_val->individual_volatile);
-	}
-
-	for(tseq = 0; tseq < SAPP_MAX_THREADS; tseq++){
-		SAPP_FREE(sapp_global_val->mthread_volatile[tseq]);
-	}	
 
 	if(sapp_global_val->cla.cmd_args_array){
 		int i, args_num = sapp_global_val->cla.cmd_args_num;
@@ -251,58 +257,73 @@ void sapp_gval_destroy(void)
 
 		for(i = 0; i < args_num; i++){
 			free_opt = sapp_global_val->cla.cmd_args_array[i];
-			SAPP_FREE(free_opt->long_opt_name);
-			SAPP_FREE(free_opt->arg_val.string_value);
+			SAPP_GLOBAL_FREE(free_opt->long_opt_name);
+			SAPP_GLOBAL_FREE(free_opt->arg_val.string_value);
+			SAPP_GLOBAL_FREE(free_opt);
 		}
 		
-		sapp_mem_free(sapp_global_val->cla.cmd_args_array);//此处使用了realloc追加, 要用sapp_mem_free()
-		sapp_global_val->cla.cmd_args_array = NULL;
+		SAPP_GLOBAL_FREE(sapp_global_val->cla.cmd_args_array);//此处使用了realloc追加, 要用sapp_mem_free()
 	}
 
 	sapp_config_file_link_t *pconfig = &sapp_global_val->config.cfg_file_path;
-	SAPP_FREE(pconfig->cfg_files_root_dir);
-	SAPP_FREE(pconfig->cfg_main_entry_relative);
-	SAPP_FREE(pconfig->cfg_main_entry_absolute);
-	SAPP_FREE(pconfig->cfg_sapp_log_relative);
-	SAPP_FREE(pconfig->cfg_sapp_log_absolute);
-	SAPP_FREE(pconfig->cfg_plug_list_relative);
-	SAPP_FREE(pconfig->cfg_plug_list_absolute);
-	SAPP_FREE(pconfig->cfg_project_list_relative);
-	SAPP_FREE(pconfig->cfg_project_list_absolute);
-	SAPP_FREE(pconfig->cfg_file_send_raw_pkt_relative);
-	SAPP_FREE(pconfig->cfg_file_send_raw_pkt_absolute);
-	SAPP_FREE(pconfig->cfg_file_vxlan_sport_map_relative);
-	SAPP_FREE(pconfig->cfg_file_vxlan_sport_map_absolute);
-	SAPP_FREE(pconfig->cfg_file_inline_dev_relative);
-	SAPP_FREE(pconfig->cfg_file_inline_dev_absolute);
-	SAPP_FREE(pconfig->cfg_file_necessary_plug_relative);
-	SAPP_FREE(pconfig->cfg_file_necessary_plug_absolute);
-	SAPP_FREE(pconfig->cfg_file_stream_compare_layer_relative);
-	SAPP_FREE(pconfig->cfg_file_stream_compare_layer_absolute);
-	SAPP_FREE(pconfig->cfg_file_vlan_flipping_relative);
-	SAPP_FREE(pconfig->cfg_file_vlan_flipping_absolute);
-	SAPP_FREE(pconfig->cfg_file_asymmetric_addr_layer_relative);
-	SAPP_FREE(pconfig->cfg_file_asymmetric_addr_layer_absolute);
-	SAPP_FREE(pconfig->cfg_file_well_known_port_relative);
-	SAPP_FREE(pconfig->cfg_file_well_known_port_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_files_root_dir);
+	SAPP_GLOBAL_FREE(pconfig->cfg_main_entry_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_main_entry_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_sapp_log_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_sapp_log_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_plug_list_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_plug_list_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_project_list_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_project_list_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_send_raw_pkt_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_send_raw_pkt_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_vxlan_sport_map_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_vxlan_sport_map_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_inline_dev_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_inline_dev_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_necessary_plug_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_necessary_plug_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_stream_compare_layer_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_stream_compare_layer_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_vlan_flipping_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_vlan_flipping_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_asymmetric_addr_layer_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_asymmetric_addr_layer_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_well_known_port_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_file_well_known_port_absolute);
 
 	sapp_data_file_link_t *pdata = &sapp_global_val->config.data_file_path;
-	SAPP_FREE(pdata->data_files_root_dir);
-	SAPP_FREE(pdata->data_sapp_sysinfo_log_relative);
-	SAPP_FREE(pdata->data_sapp_sysinfo_log_absolute);
-	SAPP_FREE(pdata->data_sapp_fs2_log_relative);
-	SAPP_FREE(pdata->data_sapp_fs2_log_absolute);
-	SAPP_FREE(pdata->data_inline_keepalive_log_relative);
-	SAPP_FREE(pdata->data_inline_keepalive_log_absolute);
-	SAPP_FREE(pdata->data_load_plugin_stat_log_relative);
-	SAPP_FREE(pdata->data_load_plugin_stat_log_absolute);
-	SAPP_FREE(pdata->data_under_ddos_stat_log_relative);
-	SAPP_FREE(pdata->data_under_ddos_stat_log_absolute);
+	SAPP_GLOBAL_FREE(pdata->data_files_root_dir);
+	SAPP_GLOBAL_FREE(pdata->data_sapp_sysinfo_log_relative);
+	SAPP_GLOBAL_FREE(pdata->data_sapp_sysinfo_log_absolute);
+	SAPP_GLOBAL_FREE(pdata->data_sapp_fs2_log_relative);
+	SAPP_GLOBAL_FREE(pdata->data_sapp_fs2_log_absolute);
+	SAPP_GLOBAL_FREE(pdata->data_inline_keepalive_log_relative);
+	SAPP_GLOBAL_FREE(pdata->data_inline_keepalive_log_absolute);
+	SAPP_GLOBAL_FREE(pdata->data_load_plugin_stat_log_relative);
+	SAPP_GLOBAL_FREE(pdata->data_load_plugin_stat_log_absolute);
+	SAPP_GLOBAL_FREE(pdata->data_under_ddos_stat_log_relative);
+	SAPP_GLOBAL_FREE(pdata->data_under_ddos_stat_log_absolute);
+	SAPP_GLOBAL_FREE(pdata->data_memory_stat_log_relative);
+	SAPP_GLOBAL_FREE(pdata->data_memory_stat_log_absolute);
 
-	SAPP_FREE(sapp_global_val->config.library_file_path.libmarsio_file_path);
+	SAPP_GLOBAL_FREE(sapp_global_val->config.library_file_path.libmarsio_file_path);
 
-	memset((void *)sapp_global_val, 0, sizeof(sapp_global_t));
-	SAPP_FREE(sapp_global_val);
+	/* individual_volatile, sapp_global_val最后free */
+	if(sapp_global_val->individual_volatile){
+		free(sapp_global_val->individual_volatile); /* 初始化时用calloc, 此处只能用free */
+		g_sapp_global_mem_used_block--;
+		g_sapp_global_mem_used_bytes -= sizeof(sapp_gval_individual_volatile_t);
+	}
+
+	for(tseq = 0; tseq < SAPP_MAX_THREADS; tseq++){
+		free(sapp_global_val->mthread_volatile[tseq]); /* 初始化时用calloc, 此处只能用free */
+		g_sapp_global_mem_used_block--;
+		g_sapp_global_mem_used_bytes -= sizeof(sapp_gval_mthread_t);
+	}	
+
+	memset((void *)sapp_global_val, 0xFE, sizeof(sapp_global_t));
+	free(sapp_global_val);
 }
 
 

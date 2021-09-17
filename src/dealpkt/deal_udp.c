@@ -13,7 +13,7 @@ extern "C" {
 extern int udp_stream_table_size;
 extern int raw_ip_frag_list_stream_attach(struct streaminfo *stream);
 extern int raw_ip_frag_list_stream_detach(struct streaminfo *stream);
-extern void free_heap_stream_info(struct streaminfo *heap_stream, int layer);
+extern void free_heap_stream_info(int mem_used_type, struct streaminfo *heap_stream, int layer);
 extern void reverse_addr(void *addr, int addrtype);
 int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *pstream_stack, int reverse);
 extern int guess_if_teredo(const struct streaminfo *pstream, struct mesa_udp_hdr *udphdr);
@@ -154,7 +154,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 
  	copy_ipport_union_addr(pstream_udp, &pindex->stream.stream_public, pstream_udp_pr->layer_dir ^1);
 
- 	pstream_udp_pr->pfather_pr = copy_stream_info_to_heap((const struct streaminfo_private *)(pindex->stream.pfather_pr),  pstream_udp_pr->layer_dir ^1);
+ 	pstream_udp_pr->pfather_pr = copy_stream_info_to_heap(SAPP_MEM_DYN_UDP_STREAM, (const struct streaminfo_private *)(pindex->stream.pfather_pr),  pstream_udp_pr->layer_dir ^1);
  	pstream_udp->pfather = (struct streaminfo *)pstream_udp_pr->pfather_pr;
 
 #if SAPP_INSECTICIDE
@@ -189,7 +189,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	hash_add_stream(pindex_udp);
 	streamaddlist(pindex_udp,plist);
 
-	pdetail_pr =  (struct udpdetail_private*)dictator_malloc(threadnum,sizeof(struct udpdetail_private));
+	pdetail_pr =  (struct udpdetail_private*)sapp_mem_malloc(SAPP_MEM_DYN_UDP_DETAIL, threadnum,sizeof(struct udpdetail_private));
 	pdetail= &pdetail_pr->udpdetail_public;
 	memset(pdetail_pr,0,sizeof(struct udpdetail_private));
 	pstream_udp->pdetail=(void *)pdetail_pr;
@@ -210,17 +210,17 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	}
 
 	/* 2014-03-26 LiJia add, 某些项目特殊应用初始化, 如标签、原始IP分片列表等 */
-	pstream_udp_pr->pproject = project_requirement_create(threadnum);
-	pstream_udp_pr->stream_bridge = stream_bridge_create_per_stream(threadnum);
+	pstream_udp_pr->pproject = project_requirement_create(SAPP_MEM_DYN_UDP_PROJECT, threadnum);
+	pstream_udp_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_UDP_BRIDGE,threadnum);
 
 	/* 2016-07-14 lijia add */
 	if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
-		pdetail_pr->flow_stat = (struct udp_flow_stat *)dictator_malloc(pstream_udp->threadnum, sizeof(struct udp_flow_stat));
+		pdetail_pr->flow_stat = (struct udp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_UDP_FLOW_STAT,pstream_udp->threadnum, sizeof(struct udp_flow_stat));
 		memset(pdetail_pr->flow_stat, 0, sizeof(struct udp_flow_stat));	
 		project_req_add_struct(pstream_udp, G_UDP_FLOW_STAT_PROJECT_ID, pdetail_pr->flow_stat);
 	}
 
-	save_polling_inject_context(pstream_udp_pr, raw_pkt);
+	save_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_udp_pr, raw_pkt);
 	if(createdir==DIR_C2S){
 		pstream_udp_pr->stream_c2s_route_dir = raw_pkt->route_dir;
 	}else{
@@ -297,14 +297,13 @@ void udp_free_stream(struct streamindex *pindex)
 	streamleavlist(pindex, plist);
 	hash_del_stream(pindex);
 	
-	if(pstream->pdetail!=NULL)
-		dictator_free(threadnum,pstream->pdetail);
-
-	project_requirement_destroy(threadnum, pstream_pr->pproject);
+	if(pstream->pdetail!=NULL){
+		sapp_mem_free(SAPP_MEM_DYN_UDP_DETAIL, threadnum,pstream->pdetail);
+	}
+	project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, threadnum, pstream_pr->pproject);
 	pstream_pr->pproject = NULL;
 
-
-	stream_bridge_destroy_per_stream(pstream, pstream_pr->stream_bridge);
+	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
 	pstream_pr->stream_bridge = NULL;
 
 	if(pstream_pr->timeout > udp_reset_time){ /* 链接独有超时时间, 减少计数 */
@@ -312,10 +311,10 @@ void udp_free_stream(struct streamindex *pindex)
 	}
 
 	if(udp_stream_table_size > 0){
-		free_heap_stream_info(pstream, 0);
+		free_heap_stream_info(SAPP_MEM_DYN_UDP_STREAM, pstream, 0);
 	}
 
-	free_polling_inject_context(pstream_pr);
+	free_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr);
 	
 	free_streamindex(threadnum,pindex);
 }
@@ -359,15 +358,15 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 		
 		stream_process_udp(pstream,NULL,NULL,NULL,&(pdetail_pr->apme),&(pstream->opstate));  
 
-		project_requirement_destroy(threadnum, pstream_pr->pproject);
-		stream_bridge_destroy_per_stream(pstream, pstream_pr->stream_bridge);
+		project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, threadnum, pstream_pr->pproject);
+		stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
 
-		pstream_pr->pproject = project_requirement_create(threadnum);
-		pstream_pr->stream_bridge = stream_bridge_create_per_stream(threadnum);
+		pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_UDP_PROJECT,threadnum);
+		pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_UDP_BRIDGE,threadnum);
 
 		/* 2015-12-28 lijia add, 流重置, 从新申请内存 */
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
-			pdetail_pr->flow_stat = (struct udp_flow_stat *)dictator_malloc(threadnum, sizeof(struct udp_flow_stat));
+			pdetail_pr->flow_stat = (struct udp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_UDP_FLOW_STAT,threadnum, sizeof(struct udp_flow_stat));
 			memset(pdetail_pr->flow_stat, 0, sizeof(struct udp_flow_stat));	
 			project_req_add_struct(pstream, G_UDP_FLOW_STAT_PROJECT_ID, pdetail_pr->flow_stat);
 		}
@@ -567,20 +566,20 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		pdetail->pdata = (char *)udph + sizeof (struct udphdr);
 		pstream->pdetail=(void *)pdetail;
 
-		pstream_pr->pproject = project_requirement_create(thread_num);
-		pstream_pr->stream_bridge = stream_bridge_create_per_stream(thread_num);
+		pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_UDP_PROJECT, thread_num);
+		pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_UDP_BRIDGE,thread_num);
 
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
-			pdetail_pr.flow_stat = (struct udp_flow_stat *)dictator_malloc(thread_num, sizeof(struct udp_flow_stat));
+			pdetail_pr.flow_stat = (struct udp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_UDP_FLOW_STAT,thread_num, sizeof(struct udp_flow_stat));
 			memset(pdetail_pr.flow_stat, 0, sizeof(struct udp_flow_stat));	
 			project_req_add_struct(pstream, G_UDP_FLOW_STAT_PROJECT_ID, pdetail_pr.flow_stat);
 		}
 		
 		ret=stream_process_udp(pstream, (const void *)this_iphdr, (const void *)udph, raw_pkt,&tmpme,&(pstream->opstate));  
-		project_requirement_destroy(thread_num, pstream_pr->pproject);
+		project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, thread_num, pstream_pr->pproject);
 		pstream_pr->pproject = NULL;
 
-		stream_bridge_destroy_per_stream(pstream, pstream_pr->stream_bridge);	
+		stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);	
 		pstream_pr->stream_bridge = NULL;
 	}
 	else	
@@ -640,7 +639,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 					(struct streaminfo_private *)(pindex->stream.pfather_pr), pstream->curdir);
 		}
 		
-		update_polling_inject_context(pstream_pr, raw_pkt);
+		update_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr, raw_pkt);
 		
 		udp_change_stream_state(a_index,udph, raw_pkt);
 
@@ -768,19 +767,19 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)a_packet;
 	
-		pstream_pr->pproject = project_requirement_create(thread_num);
-		pstream_pr->stream_bridge = stream_bridge_create_per_stream(thread_num);
+		pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_UDP_PROJECT,thread_num);
+		pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_UDP_BRIDGE,thread_num);
 
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
-			pdetail_pr->flow_stat = (struct udp_flow_stat *)dictator_malloc(thread_num, sizeof(struct udp_flow_stat));
+			pdetail_pr->flow_stat = (struct udp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_UDP_FLOW_STAT,thread_num, sizeof(struct udp_flow_stat));
 			memset(pdetail_pr->flow_stat, 0, sizeof(struct udp_flow_stat));	
 			project_req_add_struct(pstream, G_UDP_FLOW_STAT_PROJECT_ID, pdetail_pr->flow_stat);
 		}
 		
 		ret=stream_process_udp(pstream, (const void *)a_packet, (const void *)udph, raw_pkt,&tmpme, &pstream->opstate);  
-		project_requirement_destroy(thread_num, pstream_pr->pproject);
+		project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, thread_num, pstream_pr->pproject);
 		pstream_pr->pproject = NULL;
-		stream_bridge_destroy_per_stream(pstream, pstream_pr->stream_bridge);	
+		stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);	
 		pstream_pr->stream_bridge = NULL;		
 	}
 	else	
@@ -855,7 +854,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);
 
-		update_polling_inject_context(pstream_pr, raw_pkt);
+		update_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr, raw_pkt);
 
 /* IP, UDP层合并后, 不再更新UDP层的offset_to_raw_pkt_hdr */
 #if 0

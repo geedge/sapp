@@ -26,11 +26,11 @@ static int insert_to_device_alias(unsigned int target_id, char *device_args)
 	void * (*dl_io_device_alias_fun)(unsigned int target_id, char *device_args) = NULL;
 	
 	if(0 == packet_device_alias_num) {
-		g_packet_device_alias = (packet_io_device_alias_t *)sapp_mem_alloc(sizeof(packet_io_device_alias_t) * (target_id + 1));
+		g_packet_device_alias = (packet_io_device_alias_t *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(packet_io_device_alias_t) * (target_id + 1));
 		packet_device_alias_num = target_id + 1;
 	}else{
 		if(packet_device_alias_num <= (int)target_id){
-			g_packet_device_alias = (packet_io_device_alias_t *)sapp_mem_realloc(g_packet_device_alias, sizeof(packet_io_device_alias_t) * (target_id + 1));
+			g_packet_device_alias = (packet_io_device_alias_t *)sapp_mem_realloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,g_packet_device_alias, sizeof(packet_io_device_alias_t) * (target_id + 1));
 			packet_device_alias_num = target_id + 1;
 		}
 	}

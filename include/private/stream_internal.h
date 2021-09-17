@@ -7,6 +7,7 @@
 #include "MESA_handle_logger.h"
 #include "mesa_pkt_dump.h"
 #include "sapp_limits.h"
+#include "sapp_mem.h"
 #include "MESA_jump_layer.h"
 
 //#define STREAM_BASE_MD5_CHECK		"dd09b3b11993cc835200db477dad7d4b"
@@ -360,7 +361,9 @@ struct sapp_global_mthread_t{
 }__attribute__ ((aligned (64)));
 
 typedef struct{
+#ifdef DEBUG
 	unsigned int magic; /* malloc后填充0x4D4D4D4D,  即MMMM 的16进制; free后填充0xFEFEFEFE */
+#endif	
 	unsigned int user_buf_size;
 }sapp_private_mem_t;
 
@@ -403,12 +406,12 @@ int gdev_block_init(void);
 int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt_t *raw_pkt);
 int sapp_identify_tunnel_inner_pkt(const raw_pkt_t *raw_pkt);
 int sapp_assistant_init(void);
-int save_polling_inject_context(struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt);
-void free_polling_inject_context(struct streaminfo_private *pstream_pr);
-int update_polling_inject_context(struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt);
+int save_polling_inject_context(int mem_used_type, struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt);
+void free_polling_inject_context(int mem_used_type, struct streaminfo_private *pstream_pr);
+int update_polling_inject_context(int mem_used_type, struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt);
 unsigned long long get_global_stream_id(unsigned long long thread_seq);
 enum sapp_state_t sapp_get_current_state(void);
-extern struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream, int reverse);
+extern struct streaminfo_private *copy_stream_info_to_heap(int mem_used_type, const struct streaminfo_private *stack_stream, int reverse);
 enum addr_type_t addr_type_abbreviation_pton(const char *addr_type_abbreviation);
 const char *addr_type_abbreviation_ntop(enum addr_type_t addrtype);
 int sapp_identify_broad_multicast_init(void);
@@ -416,8 +419,8 @@ int sapp_identify_broad_multicast_init(void);
 int plugin_manage_init(void);
 void  *plugin_get_plug_entry(const char *plug_name, const char *plug_entry_type);
 int libsapp_setup_env(int argc, char *argv[]);
-void *stream_bridge_create_per_stream(int thread_num);
-void stream_bridge_destroy_per_stream(const struct streaminfo *stream, void *pbridge);
+void *stream_bridge_create_per_stream(int mem_used_type, int thread_num);
+void stream_bridge_destroy_per_stream(int mem_used_type, const struct streaminfo *stream, void *pbridge);
 char *sapp_strdup(const char *raw_s);
 int MESA_mkdir_p(const char *pathname, mode_t mode);
 int sapp_get_secondary_file_path(void);
@@ -430,14 +433,11 @@ void sapp_printf_colorful(int level, const char *format, ...);
 int set_transport_addr(struct streaminfo *this_stream, int enable_well_known_port, UINT16 sport, UINT16 dport);
 long long sapp_random(void);
 int sapp_usleep(int usec);
-
-void *sapp_mem_alloc(int size);
-void sapp_mem_free(void *data);
-void *sapp_mem_realloc(void *old_ptr, int size);
 void set_current_thread_cpu_affinity(int);
 int get_current_thread_cpu_affinity_id(void);
 void sapp_fs2_destroy(void);
 void sapp_gval_destroy(void);
+char *byte_convert_human(unsigned long long bytes, int interval, int multiple, char * byte_str);
 
 
 

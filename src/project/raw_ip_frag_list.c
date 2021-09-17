@@ -49,9 +49,9 @@ int frags_list_append(struct frag_ipq *ipq, const raw_pkt_t *raw_pkt, int type, 
 	}
 
 	pkt_len = raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes; /* 2021-07-29 lijia modify, inline模式下, 原始ip分片包不包括overlay层 */
-	save_pkt_ptr = dictator_malloc(thread_num, pkt_len);
+	save_pkt_ptr = sapp_mem_malloc(SAPP_MEM_DYN_IP_FRAG_PKT, thread_num, pkt_len);
 	memcpy(save_pkt_ptr, raw_pkt->raw_pkt_data + raw_pkt->overlay_layer_bytes, pkt_len);
-	new_list_node = (raw_ipfrag_list_t *)dictator_malloc(thread_num, sizeof(raw_ipfrag_list_t));
+	new_list_node = (raw_ipfrag_list_t *)sapp_mem_malloc(SAPP_MEM_DYN_IP_FRAG_PKT,thread_num, sizeof(raw_ipfrag_list_t));
 	new_list_node->frag_packet = save_pkt_ptr;
 	new_list_node->pkt_len = pkt_len;
 	new_list_node->type = type;
@@ -92,8 +92,8 @@ void raw_frags_list_free_one(int thread_seq, void *project_req_value)
 	struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)((char *)free_node->frag_packet + 14);
 	printf("##### frag free  ip id:0x%x\n", ntohs(ip4hdr->ip_id));
 #endif		
-		dictator_free(thread_seq, free_node->frag_packet);
-		dictator_free(thread_seq, free_node);
+		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,thread_seq, free_node->frag_packet);
+		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,thread_seq, free_node);
 		free_node = next;
 	}
 

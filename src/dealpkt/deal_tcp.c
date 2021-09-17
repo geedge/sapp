@@ -40,8 +40,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern void free_heap_stream_info(struct streaminfo *heap_stream, int layer);
-extern struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream_pr, int reverse);		
+extern void free_heap_stream_info(int mem_used_type, struct streaminfo *heap_stream, int layer);
+extern struct streaminfo_private *copy_stream_info_to_heap(int mem_used_type, const struct streaminfo_private *stack_stream_pr, int reverse);		
 
 struct streaminfo *skip_proxy_phony_stream(struct streaminfo *a_tcp);
 static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const void *this_iphdr, 
@@ -489,13 +489,13 @@ static void tcp_store_syn_state_opts(struct streaminfo_private *pstream_pr, char
 {
 	if(DIR_C2S == dir){
 		if(NULL == pstream_pr->syn_opt_array){
-			pstream_pr->syn_opt_array = (struct tcp_option *)dictator_malloc(pstream_pr->stream_public.threadnum, sizeof(struct tcp_option) * optnum);
+			pstream_pr->syn_opt_array = (struct tcp_option *)sapp_mem_calloc(SAPP_MEM_DYN_TCP_SYN_OPT, pstream_pr->stream_public.threadnum, sizeof(struct tcp_option) * optnum);
 			memcpy(pstream_pr->syn_opt_array, opts, sizeof(struct tcp_option) * optnum);
 			pstream_pr->syn_opt_num = optnum;
 		}
 	}else{
 		if(NULL == pstream_pr->synack_opt_array){
-			pstream_pr->synack_opt_array = (struct tcp_option *)dictator_malloc(pstream_pr->stream_public.threadnum, sizeof(struct tcp_option) * optnum);
+			pstream_pr->synack_opt_array = (struct tcp_option *)sapp_mem_calloc(SAPP_MEM_DYN_TCP_SYN_OPT, pstream_pr->stream_public.threadnum, sizeof(struct tcp_option) * optnum);
 			memcpy(pstream_pr->synack_opt_array, opts, sizeof(struct tcp_option) * optnum);
 			pstream_pr->synack_opt_num = optnum;
 		}
@@ -619,7 +619,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 
 		hash_add_stream(pindex_tcp);
 
-		pstream_pr->pfather_pr = copy_stream_info_to_heap((struct streaminfo_private *)pindex->stream.pfather_pr, need_reverse);	   
+		pstream_pr->pfather_pr = copy_stream_info_to_heap(SAPP_MEM_DYN_TCP_STREAM, (struct streaminfo_private *)pindex->stream.pfather_pr, need_reverse);	   
 		pstream->pfather = (struct streaminfo *)pstream_pr->pfather_pr;
 		
 #if SAPP_INSECTICIDE
@@ -639,7 +639,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 			set_stream_addr(pstream->pfather, this_tcphdr->th_dport, this_tcphdr->th_sport, pstream);
 		}
 #endif	
-		pdetail_pr=(struct tcpdetail_private *)dictator_malloc(threadnum,sizeof(struct tcpdetail_private));
+		pdetail_pr=(struct tcpdetail_private *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_DETAIL, threadnum,sizeof(struct tcpdetail_private));
 		pdetail=&pdetail_pr->tcpdetail_public;
 		pindex_tcp->stream.stream_public.pdetail=(void *)pdetail_pr;
 		memset(pdetail_pr,0,sizeof(struct tcpdetail_private));   
@@ -746,12 +746,12 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]));
 
 	/* LiJia add, 某些项目特殊应用初始化, 如标签、原始IP分片列表等 */
-	pstream_pr->pproject = project_requirement_create(pstream->threadnum);
-	pstream_pr->stream_bridge = stream_bridge_create_per_stream(pstream->threadnum);
+	pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_TCP_PROJECT, pstream->threadnum);
+	pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_TCP_BRIDGE, pstream->threadnum);
 
 	/* 2015-12-28 lijia add */
 	if(G_TCP_FLOW_STAT_PROJECT_ID != -1){
-		pdetail_pr->flow_stat = (struct tcp_flow_stat *)dictator_malloc(pstream->threadnum, sizeof(struct tcp_flow_stat));
+		pdetail_pr->flow_stat = (struct tcp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_FLOW_STAT, pstream->threadnum, sizeof(struct tcp_flow_stat));
 		memset(pdetail_pr->flow_stat, 0, sizeof(struct tcp_flow_stat));	
 		project_req_add_struct(pstream, G_TCP_FLOW_STAT_PROJECT_ID, pdetail_pr->flow_stat);
 
@@ -779,7 +779,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	}
 
 	if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
-		pdetail_pr->deduce_flow_stat = (struct tcp_flow_stat *)dictator_malloc(pstream->threadnum, sizeof(struct tcp_flow_stat));
+		pdetail_pr->deduce_flow_stat = (struct tcp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_FLOW_STAT, pstream->threadnum, sizeof(struct tcp_flow_stat));
 		memset(pdetail_pr->deduce_flow_stat, 0, sizeof(struct tcp_flow_stat));	
 		project_req_add_struct(pstream, G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID, pdetail_pr->deduce_flow_stat);
 
@@ -797,7 +797,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	iterate_stream_list(pstream);
 #endif
 
-	save_polling_inject_context(pstream_pr, raw_pkt);
+	save_polling_inject_context(SAPP_MEM_DYN_TCP_POLLING_RAW_PKT, pstream_pr, raw_pkt);
 
 	pdetail_pr->auto_remedy_flag = sapp_global_val->config.stream.tcp.inject.auto_remedy;
 
@@ -837,7 +837,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 
  		copy_ipport_union_addr(pstream, &pindex->stream.stream_public, pstream_pr->layer_dir ^1);
  		
- 		pstream_pr->pfather_pr = copy_stream_info_to_heap((struct streaminfo_private *)(pindex->stream.pfather_pr),  pstream_pr->layer_dir ^1);
+ 		pstream_pr->pfather_pr = copy_stream_info_to_heap(SAPP_MEM_DYN_TCP_STREAM,(struct streaminfo_private *)(pindex->stream.pfather_pr),  pstream_pr->layer_dir ^1);
  		pstream->pfather = (struct streaminfo *)pstream_pr->pfather_pr;
 
 #if SAPP_INSECTICIDE
@@ -849,7 +849,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		
 		pstream->dir=createdir;
 		pstream->curdir=createdir;
-		pdetail_pr=(struct tcpdetail_private *)dictator_malloc(threadnum,sizeof(struct tcpdetail_private));
+		pdetail_pr=(struct tcpdetail_private *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_DETAIL, threadnum,sizeof(struct tcpdetail_private));
 		pdetail=&pdetail_pr->tcpdetail_public;
 		memset(pdetail_pr,0,sizeof(struct tcpdetail_private));
 		pstream->pdetail=(void *)pdetail_pr;
@@ -973,7 +973,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	{
 		if(pstream->dir==DIR_C2S)
 		{
-			pdetail_pr->pserver=(struct half_tcpstream *)dictator_malloc(threadnum,sizeof(struct half_tcpstream));
+			pdetail_pr->pserver=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM, threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pserver,0,sizeof(struct half_tcpstream));
 			//待完善
 			pdetail_pr->pserver->first_data_seq=(ntohl (this_tcphdr->th_seq) );
@@ -982,7 +982,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		}
 		 if(pstream->dir == DIR_S2C)
 		{
-			pdetail_pr->pclient=(struct half_tcpstream *)dictator_malloc(threadnum,sizeof(struct half_tcpstream));
+			pdetail_pr->pclient=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM,threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pclient,0,sizeof(struct half_tcpstream));
 			//待完善
 			pdetail_pr->pclient->first_data_seq=(ntohl (this_tcphdr->th_seq) );
@@ -1008,12 +1008,12 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	pstream->pdetail=(void *)pdetail_pr;
 
 	/* 2014-03-26 LiJia add, 某些项目特殊应用初始化, 如标签、原始IP分片列表等 */
-	pstream_pr->pproject = project_requirement_create(threadnum);
-	pstream_pr->stream_bridge = stream_bridge_create_per_stream(pstream->threadnum);
+	pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_TCP_PROJECT,threadnum);
+	pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_TCP_BRIDGE,pstream->threadnum);
 
 	/* 2016-07-14 lijia add */
 	if(G_TCP_FLOW_STAT_PROJECT_ID != -1){
-		pdetail_pr->flow_stat = (struct tcp_flow_stat *)dictator_malloc(pstream->threadnum, sizeof(struct tcp_flow_stat));
+		pdetail_pr->flow_stat = (struct tcp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_FLOW_STAT, pstream->threadnum, sizeof(struct tcp_flow_stat));
 		memset(pdetail_pr->flow_stat, 0, sizeof(struct tcp_flow_stat));	
 		project_req_add_struct(pstream, G_TCP_FLOW_STAT_PROJECT_ID, pdetail_pr->flow_stat);
 
@@ -1032,7 +1032,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	}
 
 	if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
-		pdetail_pr->deduce_flow_stat = (struct tcp_flow_stat *)dictator_malloc(pstream->threadnum, sizeof(struct tcp_flow_stat));
+		pdetail_pr->deduce_flow_stat = (struct tcp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_FLOW_STAT,pstream->threadnum, sizeof(struct tcp_flow_stat));
 		memset(pdetail_pr->deduce_flow_stat, 0, sizeof(struct tcp_flow_stat));	
 		project_req_add_struct(pstream, G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID, pdetail_pr->deduce_flow_stat);
 
@@ -1047,7 +1047,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	iterate_stream_list(pstream);
 #endif
 
-	save_polling_inject_context(pstream_pr, raw_pkt);
+	save_polling_inject_context(SAPP_MEM_DYN_TCP_POLLING_RAW_PKT, pstream_pr, raw_pkt);
 
 	pdetail_pr->auto_remedy_flag = sapp_global_val->config.stream.tcp.inject.auto_remedy;
 
@@ -1084,7 +1084,7 @@ static void tcp_change_stream_todata(struct streamindex *pindex,struct mesa_tcp_
 	if(pstream->dir & DIR_C2S)
 	{
 		if(NULL == pdetail_pr->pserver){
-			pdetail_pr->pserver=(struct half_tcpstream *)dictator_malloc(threadnum,sizeof(struct half_tcpstream));
+			pdetail_pr->pserver=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM,threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pserver,0,sizeof(struct half_tcpstream));
 			//待完善
 			pdetail_pr->pserver->first_data_seq=pdetail_pr->iserverseq;
@@ -1097,7 +1097,7 @@ static void tcp_change_stream_todata(struct streamindex *pindex,struct mesa_tcp_
 	 if(pstream->dir & DIR_S2C)
 	{
 		if(NULL == pdetail_pr->pclient){
-			pdetail_pr->pclient=(struct half_tcpstream *)dictator_malloc(threadnum,sizeof(struct half_tcpstream));
+			pdetail_pr->pclient=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM,threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pclient,0,sizeof(struct half_tcpstream));
 			//待完善
 			pdetail_pr->pclient->first_data_seq=pdetail_pr->iclientseq;
@@ -1141,7 +1141,7 @@ static void tcp_free_half(struct half_tcpstream *phalf,int threadnum)
 #endif
 		plist = ptmp;
 	}
-	dictator_free(threadnum,phalf);
+	sapp_mem_free(SAPP_MEM_DYN_TCP_HALF_STREAM, threadnum,phalf);
 	//phalf = NULL;
 }
 
@@ -1349,32 +1349,32 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 	
 	if(pstream->pdetail != NULL)
 	{
-		dictator_free(threadnum,pstream->pdetail);
+		sapp_mem_free(SAPP_MEM_DYN_TCP_DETAIL, threadnum,pstream->pdetail);
 		pstream->pdetail=NULL;
 	}
 
-	project_requirement_destroy(threadnum, pstream_pr->pproject);
+	project_requirement_destroy(SAPP_MEM_DYN_TCP_PROJECT, threadnum, pstream_pr->pproject);
 	pstream_pr->pproject = NULL;
-	stream_bridge_destroy_per_stream(pstream, pstream_pr->stream_bridge);
+	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_TCP_BRIDGE, pstream, pstream_pr->stream_bridge);
 	pstream_pr->stream_bridge = NULL;
 
 	if(pstream_pr->timeout > link_default_nopkt_time){ /* 链接独有超时时间, 减少计数 */
 		sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
 	}
 	
-	free_heap_stream_info(pstream, 0);
+	free_heap_stream_info(SAPP_MEM_DYN_TCP_STREAM, pstream, 0);
 
 	if(pstream_pr->syn_opt_array){
-		dictator_free(threadnum, pstream_pr->syn_opt_array);
+		sapp_mem_free(SAPP_MEM_DYN_TCP_SYN_OPT, threadnum, pstream_pr->syn_opt_array);
 		pstream_pr->syn_opt_array = NULL;
 	}
 
 	if(pstream_pr->synack_opt_array){
-		dictator_free(threadnum, pstream_pr->synack_opt_array);
+		sapp_mem_free(SAPP_MEM_DYN_TCP_SYN_OPT, threadnum, pstream_pr->synack_opt_array);
 		pstream_pr->synack_opt_array = NULL;
 	}
 
-	free_polling_inject_context(pstream_pr);
+	free_polling_inject_context(SAPP_MEM_DYN_TCP_POLLING_RAW_PKT, pstream_pr);
 	
 	free_streamindex(threadnum,pindex);
 	
@@ -1488,10 +1488,10 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	/* 调用完插件后再从结构中移除, 因为调用插件时, 可能会调用stream_set_single_stream_timeout(), 会操作当前流在LRU链表中的位置 */
 	streamleavlist(pindex, plist);
 	
-	project_requirement_destroy(threadnum, pstream_pr->pproject);
+	project_requirement_destroy(SAPP_MEM_DYN_TCP_PROJECT, threadnum, pstream_pr->pproject);
 	pstream_pr->pproject = NULL;
 
-	stream_bridge_destroy_per_stream(pstream, pstream_pr->stream_bridge);
+	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_TCP_BRIDGE, pstream, pstream_pr->stream_bridge);
 	pstream_pr->stream_bridge = NULL;
 
 	/* 恢复之前存储的raw_pkt */
@@ -1500,16 +1500,16 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	pstream_pr->syn_opt_num = 0;     /* 清空选项计数 */
 	pstream_pr->synack_opt_num = 0; /* 清空选项计数 */
 	if(pstream_pr->syn_opt_array){
-		dictator_free(threadnum, pstream_pr->syn_opt_array);
+		sapp_mem_free(SAPP_MEM_DYN_TCP_SYN_OPT, threadnum, pstream_pr->syn_opt_array);
 		pstream_pr->syn_opt_array = NULL;
 	}
 
 	if(pstream_pr->synack_opt_array){
-		dictator_free(threadnum, pstream_pr->synack_opt_array);
+		sapp_mem_free(SAPP_MEM_DYN_TCP_SYN_OPT, threadnum, pstream_pr->synack_opt_array);
 		pstream_pr->synack_opt_array = NULL;
 	}
 
-	free_polling_inject_context(pstream_pr); //2020-06-08 lijia add, for memory leak
+	free_polling_inject_context(SAPP_MEM_DYN_TCP_POLLING_RAW_PKT, pstream_pr); //2020-06-08 lijia add, for memory leak
 	
 	if(this_tcphdr->th_flags & TH_SYN){
 		tcp_add_new_stream_bysyn(pindex,this_iphdr,this_tcphdr,datalen,REUSE_OLD_LINK,raw_pkt);
@@ -1523,13 +1523,13 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 			hash_del_stream(pindex);
 			if(pstream->pdetail != NULL)
 			{
-				dictator_free(threadnum,pstream->pdetail);
+				sapp_mem_free(SAPP_MEM_DYN_TCP_DETAIL, threadnum,pstream->pdetail);
 				pstream->pdetail=NULL;
 			}			
 			if(pstream_pr->timeout > link_default_nopkt_time){ /* 链接独有超时时间, 减少计数 */
 				sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
 			}			
-			free_heap_stream_info(pstream, 0);
+			free_heap_stream_info(SAPP_MEM_DYN_TCP_STREAM, pstream, 0);
 			free_streamindex(threadnum,pindex);
 			ret = 0;
 		}
@@ -1741,7 +1741,7 @@ static int tcp_deal_ack(struct streaminfo *a_tcp,struct mesa_tcp_hdr *this_tcphd
 	
 	if((a_tcp->dir==DIR_C2S)&&(a_tcp->curdir==DIR_S2C))
 	{
-		pdetail_pr->pclient=(struct half_tcpstream *)dictator_malloc(threadnum,sizeof(struct half_tcpstream));
+		pdetail_pr->pclient=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM,threadnum,sizeof(struct half_tcpstream));
 		memset(pdetail_pr->pclient,0,sizeof(struct half_tcpstream));
 		phalf=pdetail_pr->pclient;
 		phalf->maxunorder = tcp_default_unorder;//add by lqy, 20150210
@@ -1758,7 +1758,7 @@ static int tcp_deal_ack(struct streaminfo *a_tcp,struct mesa_tcp_hdr *this_tcphd
 	}
 	if((a_tcp->dir==DIR_S2C)&&(a_tcp->curdir==DIR_C2S))
 	{
-		pdetail_pr->pserver=(struct half_tcpstream *)dictator_malloc(threadnum,sizeof(struct half_tcpstream));
+		pdetail_pr->pserver=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM,threadnum,sizeof(struct half_tcpstream));
 		memset(pdetail_pr->pserver,0,sizeof(struct half_tcpstream));
 		phalf=pdetail_pr->pserver;
 		phalf->maxunorder = tcp_default_unorder; //add by lqy, 20150210
@@ -2873,7 +2873,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		}
 	}
 
-	update_polling_inject_context(pstream_pr, raw_pkt);
+	update_polling_inject_context(SAPP_MEM_DYN_TCP_POLLING_RAW_PKT, pstream_pr, raw_pkt);
 	
 	/* note: reset会重置计数, 放在clientbytes+=, clientpktnum++代码之后 */
 	if(1 == lrustream(pindex_tcp)){
@@ -3365,7 +3365,7 @@ static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const v
 	int tcpdata_to_tcp_offset = (char *)tcpdata - (char *)this_tcphdr;
 	int this_ip_tot_len;
 	
-	uo_packet = (struct buf_unorder *)dictator_malloc(a_tcp->threadnum, sizeof(struct buf_unorder));
+	uo_packet = (struct buf_unorder *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_UNORDER,a_tcp->threadnum, sizeof(struct buf_unorder));
 	memset(uo_packet, 0, sizeof(struct buf_unorder));
 
 	//carry_ip_stream = skip_proxy_phony_stream(a_tcp->pfather);
@@ -3373,7 +3373,7 @@ static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const v
 
 	/* 存储原始包 */
 	memcpy(&(uo_packet->raw_pkt),  stack_raw_pkt, sizeof(raw_pkt_t));	
-	uo_packet->raw_pkt.raw_pkt_data = dictator_malloc(a_tcp->threadnum, stack_raw_pkt->raw_pkt_len);
+	uo_packet->raw_pkt.raw_pkt_data = sapp_mem_malloc(SAPP_MEM_DYN_TCP_UNORDER,a_tcp->threadnum, stack_raw_pkt->raw_pkt_len);
 	memcpy((void *)uo_packet->raw_pkt.raw_pkt_data, stack_raw_pkt->raw_pkt_data, stack_raw_pkt->raw_pkt_len);
 
 
@@ -3396,7 +3396,7 @@ static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const v
 #endif
 		uo_packet->ip_reassemble_pkt = 1;
 		this_ip_tot_len = get_ip_pkt_tot_len(carry_ip_stream, this_iphdr);
-		uo_packet->this_ip_hdr = dictator_malloc(a_tcp->threadnum, this_ip_tot_len);
+		uo_packet->this_ip_hdr = sapp_mem_malloc(SAPP_MEM_DYN_TCP_UNORDER,a_tcp->threadnum, this_ip_tot_len);
 		memcpy(uo_packet->this_ip_hdr, this_iphdr, this_ip_tot_len);
 		uo_packet->this_tcp_hdr = (struct mesa_tcp_hdr *)((char *)uo_packet->this_ip_hdr + tcp_to_ip_offset);
 		if(tcpdatalen > 0){
@@ -3433,7 +3433,7 @@ static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const v
 static void tcp_free_unorder_pkt(int threadnum, struct buf_unorder *uo_packet)
 {
 	if(uo_packet->ip_reassemble_pkt != 0){
-		dictator_free(threadnum, uo_packet->this_ip_hdr);
+		sapp_mem_free(SAPP_MEM_DYN_TCP_UNORDER, threadnum, uo_packet->this_ip_hdr);
 	}
 
 #if (0 == HIGH_PERF)	
@@ -3443,8 +3443,8 @@ static void tcp_free_unorder_pkt(int threadnum, struct buf_unorder *uo_packet)
 	}
 #endif
 
-	dictator_free(threadnum, (void *)uo_packet->raw_pkt.raw_pkt_data);
-	dictator_free(threadnum, uo_packet);
+	sapp_mem_free(SAPP_MEM_DYN_TCP_UNORDER,threadnum, (void *)uo_packet->raw_pkt.raw_pkt_data);
+	sapp_mem_free(SAPP_MEM_DYN_TCP_UNORDER,threadnum, uo_packet);
 
 	return;
 }
@@ -3480,7 +3480,7 @@ static inline void update_stream_list_raw_pkt_pointer(struct streaminfo_private 
 
 static void tcp_flow_stat_free(int thread_seq, void *project_req_value)
 {
-	dictator_free(thread_seq, project_req_value);
+	sapp_mem_free(SAPP_MEM_DYN_TCP_FLOW_STAT,thread_seq, project_req_value);
 	return;
 }
 

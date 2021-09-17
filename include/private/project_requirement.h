@@ -14,8 +14,8 @@ extern "C" {
 #define RAW_FRAG_V6_MODULE_NAME		"ipv6_frag_list"
 
 
-void *project_requirement_create(int thread_num);
-void project_requirement_destroy(int thread_num, void *pproject);
+void *project_requirement_create(int mem_use_type, int thread_num);
+void project_requirement_destroy(int mem_used_type, int thread_num, void *pproject);
 int raw_ip_frag_list_stream_attach(struct streaminfo *stream);
 int raw_ip_frag_list_stream_detach(struct streaminfo *stream);
 void raw_frags_list_free_one(int thread_seq, void *project_req_value);
