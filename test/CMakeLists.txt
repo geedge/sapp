@@ -46,7 +46,7 @@ add_custom_command(OUTPUT  libtest_phony.a
 		COMMAND ar -x ${CMAKE_BINARY_DIR}/vendor/libevent/lib/libevent.a 
 		
 		COMMAND ar -rc libsapp_devel.a  *.o
-		#COMMAND g++ -fPIC -shared -o libsapp_devel.so  *.o
+		COMMAND g++ -fPIC -shared -o libsapp_devel.so  *.o
         )
 
 add_library(test_app_sapp SHARED test_app_sapp.c)
