@@ -8,6 +8,8 @@ extern "C" {
  __attribute__((__used__)) const char *sapp_git_ver = GIT_VERSION;
 #endif
 
+/* 此处单独使用一个全局变量, 为了在sapp_gval_init()函数中判断是否开启了dictator, 不能预先分配内存 */
+char g_cmd_args_main_cfg_file[PATH_MAX] = "./etc/sapp.toml";
 
 static inline int dumpfile_speed_check(const char *opt_name, const char *opt_arg)
 {
@@ -32,10 +34,10 @@ static char *popen_result_store(FILE *fp)
 	int exec_result_size = 0;
 	char line_buf[PATH_MAX];
 
-	exec_result = (char *)sapp_mem_alloc(1);
+	exec_result = (char *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, 1);
 	
 	while((chr = fgetc(fp)) != EOF){
-		exec_result = sapp_mem_realloc(exec_result, exec_result_size + 2);
+		exec_result = sapp_mem_realloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, exec_result, exec_result_size + 2);
 		exec_result[exec_result_size] = (char)chr;
 		exec_result_size++;
 	}
@@ -43,7 +45,7 @@ static char *popen_result_store(FILE *fp)
 	exec_result[exec_result_size] = '\0';
 
 	if(exec_result_size <= 0){
-		sapp_mem_free(exec_result);
+		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, exec_result);
 		return NULL;
 	}
 
@@ -84,7 +86,7 @@ static int get_dumpfile_list_array(const char *opt_arg)
 	sapp_global_val->cla.dumpfie_list_array = NULL;
 	
 	while(ptr_cont = strtok_r(exec_result, delim, &save_ptr)){
-		sapp_global_val->cla.dumpfie_list_array = (char **)sapp_mem_realloc(sapp_global_val->cla.dumpfie_list_array, sizeof(void *) * (line_num + 2));//当前要存储的指针再加上EOF
+		sapp_global_val->cla.dumpfie_list_array = (char **)sapp_mem_realloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sapp_global_val->cla.dumpfie_list_array, sizeof(void *) * (line_num + 2));//当前要存储的指针再加上EOF
 		sapp_global_val->cla.dumpfie_list_array[line_num] = sapp_strdup(ptr_cont);;
 		
 		//printf("#### %d: result_content:%s\n", line_num, sapp_global_val->cla.dumpfie_list_array[line_num]);
@@ -94,7 +96,7 @@ static int get_dumpfile_list_array(const char *opt_arg)
 
 	sapp_global_val->cla.dumpfie_list_array[line_num] = NULL; //EOF
 
-	sapp_mem_free(tobe_free_result);
+	sapp_mem_free(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, tobe_free_result);
 	fclose(fp);
 
 	return 0;
@@ -289,16 +291,18 @@ static int store_cmd_args(const char *opt_name, const char *opt_arg)
 		return -1;
 	}
 
-	new_opt = (sapp_cmd_args_val_t *)sapp_mem_alloc(sizeof(sapp_cmd_args_val_t));
+	new_opt = (sapp_cmd_args_val_t *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(sapp_cmd_args_val_t));
 	new_opt->long_opt_name = sapp_strdup(opt_name);
 	if(opt_arg){
 		new_opt->arg_val.string_value = sapp_strdup(opt_arg);
 	}
 	
 	if(NULL == sapp_global_val->cla.cmd_args_array){
-		sapp_global_val->cla.cmd_args_array = (sapp_cmd_args_val_t **)sapp_mem_alloc(sizeof(void *));
+		sapp_global_val->cla.cmd_args_array = (sapp_cmd_args_val_t **)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(void *));
 	}else{
-		sapp_global_val->cla.cmd_args_array = (sapp_cmd_args_val_t **)sapp_mem_realloc(sapp_global_val->cla.cmd_args_array, sizeof(void *) * (sapp_global_val->cla.cmd_args_num + 1));
+		sapp_global_val->cla.cmd_args_array = (sapp_cmd_args_val_t **)sapp_mem_realloc(
+							SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, 
+							sapp_global_val->cla.cmd_args_array, sizeof(void *) * (sapp_global_val->cla.cmd_args_num + 1));
 	}
 
 	sapp_global_val->cla.cmd_args_array[sapp_global_val->cla.cmd_args_num] = new_opt;
@@ -419,6 +423,7 @@ void sapp_update_data_root_dir(const char *data_root_dir)
 	sapp_convert_relative_to_absolute(pdata->data_inline_keepalive_log_relative, (char **)&pdata->data_inline_keepalive_log_absolute, pdata->data_files_root_dir);	
 	sapp_convert_relative_to_absolute(pdata->data_load_plugin_stat_log_relative, (char **)&pdata->data_load_plugin_stat_log_absolute, pdata->data_files_root_dir);	
 	sapp_convert_relative_to_absolute(pdata->data_under_ddos_stat_log_relative, (char **)&pdata->data_under_ddos_stat_log_absolute, pdata->data_files_root_dir);	
+	sapp_convert_relative_to_absolute(pdata->data_memory_stat_log_relative, (char **)&pdata->data_memory_stat_log_absolute, pdata->data_files_root_dir);	
 
 }
 
@@ -461,6 +466,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 			case 'c':
 				cfg_main_entry_changed = 1;
 				cmd_arg_cfg_main_entry = sapp_strdup(optarg);
+				strncpy(g_cmd_args_main_cfg_file, optarg, PATH_MAX);
 				/* cmd args没有先后顺序, 此处先不要直接调用 sapp_update_config_root_dir() */
 			break;
 
@@ -559,7 +565,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 		sapp_update_config_root_dir(NULL);
 	}else{
 		sapp_update_config_root_dir(cmd_arg_cfg_root_dir);
-		free((void *)cmd_arg_cfg_root_dir);
+		SAPP_GLOBAL_FREE(cmd_arg_cfg_root_dir);
 	}
 
 	/* cmd args没有顺序, 如果先指定了-D 后面加了-c参数, 也要优先解析-c */
@@ -567,7 +573,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 		sapp_update_data_root_dir(NULL);
 	}else{
 		sapp_update_data_root_dir(cmd_arg_data_root_dir);
-		free((void *)cmd_arg_data_root_dir);
+		SAPP_GLOBAL_FREE(cmd_arg_data_root_dir);
 	}
 
 	if(test_config_flag != 0){

@@ -432,7 +432,7 @@ const void *project_req_get_struct(const struct streaminfo *stream, int project_
 }
 
 
-void project_requirement_destroy(int thread_num, void *pproject)
+void project_requirement_destroy(int mem_use_type, int thread_num, void *pproject)
 {
 	int i;
 	project_req_info_t *pinfo;
@@ -447,7 +447,7 @@ void project_requirement_destroy(int thread_num, void *pproject)
 		if(PROGECT_REQ_VALUE_TYPE_STRUCT == G_PROJECT_REQ_MANAGE[i].project_req_type){
 			if(pinfo[i].value != 0){
 				if(G_PROJECT_REQ_MANAGE[i].free_cb != NULL){
-					(*(G_PROJECT_REQ_MANAGE[i].free_cb))(thread_num, (void *)pinfo[i].value);
+					(*(G_PROJECT_REQ_MANAGE[i].free_cb))(thread_num, (void *)pinfo[i].value); /* 插件自己申请的内存无法统计  */
 				}
 #if 0				
 				else{
@@ -462,13 +462,13 @@ void project_requirement_destroy(int thread_num, void *pproject)
 		}
 	}
 
-	dictator_free(thread_num, pproject);
+	sapp_mem_free((sapp_mem_type_t)mem_use_type, thread_num, pproject);
 
 	return;
 }
 
 /* 新建一个流结构时调用 */
-void *project_requirement_create(int thread_num)
+void *project_requirement_create(int mem_use_type, int thread_num)
 {
 	project_req_info_t *pinfo;
 
@@ -476,7 +476,7 @@ void *project_requirement_create(int thread_num)
 		return NULL;
 	}
 
-	pinfo = (project_req_info_t *)dictator_malloc(thread_num, sizeof(project_req_info_t) * G_PROJECT_PLUG_NUM);
+	pinfo = (project_req_info_t *)sapp_mem_malloc((sapp_mem_type_t)mem_use_type,thread_num, sizeof(project_req_info_t) * G_PROJECT_PLUG_NUM);
 	memset(pinfo, 0, sizeof(project_req_info_t) * G_PROJECT_PLUG_NUM);
 
 	return (void *)pinfo;
@@ -524,7 +524,7 @@ int project_req_terminal_tag_init(void)
 
 static void udp_flow_stat_free(int thread_seq, void *project_req_value)
 {
-	dictator_free(thread_seq, project_req_value);
+	sapp_mem_free(SAPP_MEM_DYN_UDP_FLOW_STAT, thread_seq, project_req_value);
 
 	return;
 }

@@ -16,11 +16,6 @@ extern "C" {
 #define SAPP_MIN(a, b)       (((a) < (b)) ? (a) : (b))
 #endif
 
-#ifndef SAPP_FREE
-#define SAPP_FREE(m) do{if(m){free((void *)m); m = NULL;}}while(0)
-
-#endif
-
 
 /* ÒòÇ¶Ì×²ã´ÎÌ«¶à, Ê¹ÓÃ¼ò³ÆÃèÊö */
 #define ABBR_SAPP_LOG_LEVEL 	sapp_global_val->config.profiling.log.level
@@ -53,6 +48,8 @@ extern "C" {
 #define ABBR_INLINE_KEEPALIVE_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_inline_keepalive_log_absolute
 #define ABBR_LOAD_PLUG_STAT_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_load_plugin_stat_log_absolute
 #define ABBR_MARSIO_LIBRARY_FILE  	sapp_global_val->config.library_file_path.libmarsio_file_path
+#define ABBR_MEMORY_STAT_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_memory_stat_log_absolute
+
 
 
 extern sapp_global_t *sapp_global_val;

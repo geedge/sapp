@@ -1668,7 +1668,7 @@ int sapp_size_of_raw_pkt_t(void)
 char *sapp_strdup(const char *raw_s)
 {
 	int buflen = strlen(raw_s) + 1; //add EOF
-	char *new_s = (char *)calloc(1, buflen);
+	char *new_s = (char *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, buflen);
 	memcpy(new_s, raw_s, buflen);
 
 	return new_s;
@@ -1682,51 +1682,6 @@ int sapp_is_absolute_path(const char *filename)
 
 	return 0;
 }
-
-
-void *sapp_mem_alloc(int size)
-{
-	char *ptr = (char *)calloc(1, size + sizeof(sapp_private_mem_t));
-	sapp_private_mem_t *mhdr = (sapp_private_mem_t *)ptr;
-
-	mhdr->magic = 0x4D4D4D4D; 
-	mhdr->user_buf_size = size;
-	
-	return ptr + sizeof(sapp_private_mem_t);
-}
-
-
-void sapp_mem_free(void *data)
-{	
-	char *ptr = (char *)data;
-
-	sapp_private_mem_t *mhdr = (sapp_private_mem_t *)(ptr - sizeof(sapp_private_mem_t));
-
-	assert(0x4D4D4D4D == mhdr->magic);
-
-	mhdr->magic = 0xFEFEFEFE;
-	
-	free(mhdr);
-}
-
-void *sapp_mem_realloc(void *old_ptr, int size)
-{
-	void *new_ptr;
-	sapp_private_mem_t *mhdr;
-	
-	if(NULL == old_ptr){ /* first time,  NULL pointer, same to sapp_mem_alloc() */
-		return sapp_mem_alloc(size);
-	}
-
-	mhdr = (sapp_private_mem_t *)((char *)old_ptr - sizeof(sapp_private_mem_t));
-	new_ptr = sapp_mem_alloc(size);
-	memmove(new_ptr, old_ptr, mhdr->user_buf_size); 
-
-	sapp_mem_free(old_ptr);
-
-	return new_ptr;
-}
-
 
 long long sapp_random(void)
 {

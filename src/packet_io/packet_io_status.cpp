@@ -7,16 +7,9 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
-#define STATS_STR_LEN	(32)
-
 volatile int update_packet_io_status_sw = 1;
 
 static unsigned long long sysinfo_old[COUNTER_NUM] = {0};
-
-static const unsigned long long TO_KB = 1024;
-static const unsigned long long TO_MB = 0x100000ULL;
-static const unsigned long long TO_GB = 0x40000000ULL;
-static const unsigned long long TO_TB = 0x10000000000ULL;
 
 static unsigned long long cur_count[SAPP_STAT_NUM_MAX] = {0};
 static unsigned long long cur_length[SAPP_STAT_NUM_MAX] = {0};
@@ -27,28 +20,6 @@ extern void sapp_statsd_add_para(const char *key, unsigned long long value);
 extern void pkt_runtime_output(void);
 extern void sapp_statsd_flush_buf(void);
 extern struct sapp_global_mthread_t sapp_global_mthread[MAX_THREAD_NUM];
-
-/* 转换成人容易读的网络流量字符串, 如123bps, 34.5Mbps */
-static char *byte_convert_human(unsigned long long bytes, int interval, int multiple, char * byte_str)
-{
-    bytes *= multiple; /* to network pattern, or human pattern */
-
-    bytes /= interval; /* per second */
-
-    if(bytes < TO_KB){
-        snprintf(byte_str,STATS_STR_LEN,"%llu", bytes);
-    }else if(bytes < TO_MB){
-        snprintf(byte_str,STATS_STR_LEN,"%.2fK", (float)bytes/TO_KB);
-    }else if(bytes < TO_GB){
-        snprintf(byte_str,STATS_STR_LEN,"%.2fM", (float)bytes/TO_MB);
-    }else if(bytes < TO_TB){
-        snprintf(byte_str,STATS_STR_LEN,"%.2fG", (float)bytes/TO_GB);
-    }else{
-        snprintf(byte_str,STATS_STR_LEN,"%.2fT", (double)bytes/TO_TB);	
-    }
-
-    return byte_str;
-}
 
 
 void line_protocol_update_metrics(void)
@@ -282,7 +253,7 @@ void sysinfo_output(void)
 	fp = fopen(ABBR_SYSINFO_LOG_DATA_FILE,"w+");
 	if(fp == NULL)
 	{
-		printf("\033[1;31;40mopen local sysinfo.log error, %s\033[0m\n", strerror(errno));
+		printf("\033[1;31;40mopen %s error, %s\033[0m\n", ABBR_SYSINFO_LOG_DATA_FILE, strerror(errno));
 		return;
 	}
 

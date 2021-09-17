@@ -396,7 +396,7 @@ static void plug_entry_kick_out_tot_list(StreamFunInfo *list_head, struct stream
 		}	
 
 		tmp_ptr = list_head->next;
-		dictator_free(a_stream->threadnum, list_head);
+		sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, a_stream->threadnum, list_head);
 		list_head = tmp_ptr;
 	}
 
@@ -443,7 +443,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 			break_flag = 0;
 			if(pFunInfo==NULL)
 			{
-				pFunInfo=(StreamFunInfo *)dictator_malloc(threadnum,sizeof(StreamFunInfo));
+				pFunInfo=(StreamFunInfo *)sapp_mem_malloc(SAPP_MEM_DYN_PLUG_CTRL, threadnum,sizeof(StreamFunInfo));
 			}
 			pFunInfo->appState=APP_STATE_GIVEME;
 			pFunInfo->pAppInfo=NULL;
@@ -528,7 +528,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 		//不需要再次送入包的fun，在这里释放
 		if(pFunInfo!=NULL)
 		{
-			dictator_free(threadnum,pFunInfo);
+			sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, threadnum,pFunInfo);
 			pFunInfo = NULL;		
 		}
 
@@ -599,7 +599,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 					pPrev->next=pFunInfo->next;
 				}
 				pNext=pFunInfo->next;
-				dictator_free(threadnum,pFunInfo);
+				sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,threadnum,pFunInfo);
 				pFunInfo=pNext;
 
 				if(local_app_ret & APP_STATE_KILL_FOLLOW){
@@ -697,7 +697,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 #endif
 			}
 			pNext=pFunInfo->next;
-			dictator_free(threadnum,pFunInfo);
+			sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,threadnum,pFunInfo);
 			
 			pFunInfo=pNext;
 		}

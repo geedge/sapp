@@ -170,9 +170,9 @@ int marsio_dl_io_set_capdev_parallel(const char *cap_dev)
 
 	while((single_device = strtok_r(tmp_cap_dev_name, delim, &save_ptr)) != NULL){
 		if(NULL == g_mr4_up_device_name){
-			g_mr4_up_device_name = (char **)sapp_mem_alloc(sizeof(void *) * (g_mr4_device_num + 1));
+			g_mr4_up_device_name = (char **)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, sizeof(void *) * (g_mr4_device_num + 1));
 		}else{
-			g_mr4_up_device_name = (char **)sapp_mem_realloc(g_mr4_up_device_name, sizeof(void *) * (g_mr4_device_num + 1));
+			g_mr4_up_device_name = (char **)sapp_mem_realloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, g_mr4_up_device_name, sizeof(void *) * (g_mr4_device_num + 1));
 		}
 
 		g_mr4_up_device_name[g_mr4_device_num] = sapp_strdup(single_device);
@@ -203,9 +203,9 @@ int marsio_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 
 	while((single_device = strtok_r(tmp_cap_dev_name, delim, &save_ptr)) != NULL){
 		if(NULL == g_mr4_down_device_name){
-			g_mr4_down_device_name = (char **)sapp_mem_alloc(sizeof(void *) * (local_mr4_serial_device_num + 1));
+			g_mr4_down_device_name = (char **)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(void *) * (local_mr4_serial_device_num + 1));
 		}else{
-			g_mr4_down_device_name = (char **)sapp_mem_realloc(g_mr4_down_device_name, sizeof(void *) * (local_mr4_serial_device_num + 1));
+			g_mr4_down_device_name = (char **)sapp_mem_realloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,g_mr4_down_device_name, sizeof(void *) * (local_mr4_serial_device_num + 1));
 		}
 
 		g_mr4_down_device_name[local_mr4_serial_device_num] = sapp_strdup(single_device);
@@ -492,11 +492,11 @@ void * marsio_dl_io_device_alias(unsigned int target_id, char *device_args)
 	}
 	/* 没找到, 打开设备, 并存储发送句柄 */
 	if(0 == tmp_vdevice_num){
-		tmp_vdevice_name = (char **)sapp_mem_alloc(sizeof(void *));
-		tmp_vdevice_sendpath = (struct mr_sendpath **)sapp_mem_alloc(sizeof(void *));
+		tmp_vdevice_name = (char **)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(void *));
+		tmp_vdevice_sendpath = (struct mr_sendpath **)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(void *));
 	}else{
-		tmp_vdevice_name = (char **)sapp_mem_realloc(tmp_vdevice_name, sizeof(void *) * (tmp_vdevice_num + 1));
-		tmp_vdevice_sendpath = (struct mr_sendpath **)sapp_mem_realloc(tmp_vdevice_sendpath, sizeof(void *) * (tmp_vdevice_num + 1));
+		tmp_vdevice_name = (char **)sapp_mem_realloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,tmp_vdevice_name, sizeof(void *) * (tmp_vdevice_num + 1));
+		tmp_vdevice_sendpath = (struct mr_sendpath **)sapp_mem_realloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,tmp_vdevice_sendpath, sizeof(void *) * (tmp_vdevice_num + 1));
 	}
 	tmp_vdevice_name[tmp_vdevice_num] = sapp_strdup(device_args);
 	

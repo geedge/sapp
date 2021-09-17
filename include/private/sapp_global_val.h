@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include "sapp_pkt_stat.h"
 #include "sapp_limits.h"
+#include "sapp_mem.h"
 #include "stream_inc/stream_base.h"
 
 enum pkt_dump_mode{
@@ -347,7 +348,10 @@ typedef struct{
 	const char *data_load_plugin_stat_log_absolute;		
 
 	const char *data_under_ddos_stat_log_relative;
-	const char *data_under_ddos_stat_log_absolute;		
+	const char *data_under_ddos_stat_log_absolute;	
+
+	const char *data_memory_stat_log_relative;
+	const char *data_memory_stat_log_absolute;		
 }sapp_data_file_link_t;
 
 typedef struct{
@@ -424,6 +428,11 @@ typedef struct{
 	long long time_cost_sum;
 }sapp_fuzzy_latency_stat_t;
 
+typedef struct{
+	long long mem_used_block[__SAPP_MEM_TYPE_MAX];
+	long long mem_used_bytes[__SAPP_MEM_TYPE_MAX];
+}sapp_mem_used_stat_t;
+
 struct __sapp_gval_mthread{
 	sapp_gval_mthread_sys_stat_t sys_stat;
 	unsigned short stream_seq_per_thread; /* 用于计算全局流ID */
@@ -432,6 +441,7 @@ struct __sapp_gval_mthread{
 	const raw_pkt_t *raw_pkt; /* 因为MESA_fakepacket_send_xxx系列函数没有raw_pkt参数, 也没有stream_info, 为了向前兼容, 不好修改接口, 增加全局变量用于存储当前包 */
 	void *dup_pkt_distinguish_handle; /* 三个流量入口开关, inject, ipv4_tcp, ipv4_udp, 共同使用一个bloom句柄 */
 	volatile int destory_env_done; //0:do nothing; 1:doing; 2:done
+	sapp_mem_used_stat_t mem_used_stat;
 }__attribute__ ((aligned (64))); /* for multi-thread, must 64byte alignment */
 typedef struct __sapp_gval_mthread sapp_gval_mthread_t; 
 
@@ -441,6 +451,7 @@ struct __sapp_gval_individual_volatile{
 	volatile long long current_time_ms;
 	volatile int current_state; /* refer to enum sapp_state_t  */
 	volatile int destory_env_done;
+	sapp_mem_used_stat_t mem_used_stat; /* 全局变量或初始化就不变的内存 */
 }__attribute__ ((aligned (64)));
 typedef struct __sapp_gval_individual_volatile sapp_gval_individual_volatile_t;
 

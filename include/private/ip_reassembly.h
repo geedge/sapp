@@ -114,8 +114,8 @@ void raw_frags_list_free_stream(int thread_num, struct streaminfo *stream);
 raw_ipfrag_list_t *frags_list_merge(raw_ipfrag_list_t *new_merge_list, raw_ipfrag_list_t *old_list);
 void __frags_list_check(raw_ipfrag_list_t *frags_list);
 int MESA_stream_list_cmp(struct streaminfo_private *stream1, struct streaminfo_private *stream2);
-void MESA_stream_list_free(struct streaminfo_private *heap_stream);
-struct streaminfo_private *MESA_stream_list_dup(struct streaminfo_private *stack_stream, int reverse);
+void MESA_stream_list_free(int mem_used_type, struct streaminfo_private *heap_stream);
+struct streaminfo_private *MESA_stream_list_dup(int mem_used_type, struct streaminfo_private *stack_stream, int reverse);
 
 #ifdef __cplusplus
 }

@@ -170,7 +170,7 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 int polling_stream_timeout(int tid);
 int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct streaminfo_private *pheap_stream_pr,
 		struct streaminfo_private *pstack_stream_pr, int *heap_streaminfo_skip_layer_num, int *stack_streaminfo_skip_layer_num);
-struct streaminfo_private *copy_stream_info_to_heap_single_layer(const struct streaminfo_private *stack_stream_pr, int reverse);
+struct streaminfo_private *copy_stream_info_to_heap_single_layer(int mem_used_type, const struct streaminfo_private *stack_stream_pr, int reverse);
 
 unsigned int sapp_jhash_4words(unsigned int a, unsigned int b, unsigned int c, unsigned int initval, unsigned int *out_val);
 
