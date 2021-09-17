@@ -26,7 +26,7 @@ extern int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugn
 *****************************************************************************/
 void init_pluginfo_elem_bus(stBusinessPlugInfo** business_plug_info)
 {
-	stBusinessPlugInfo* plug_info = (stBusinessPlugInfo*)malloc(sizeof(stBusinessPlugInfo));
+	stBusinessPlugInfo* plug_info = (stBusinessPlugInfo*)SAPP_GLOBAL_ALLOC(sizeof(stBusinessPlugInfo));
 	memset(plug_info,0,sizeof(stBusinessPlugInfo));
 
 	*business_plug_info = plug_info;
@@ -48,7 +48,7 @@ void destroy_pluginfo_elem_bus(stBusinessPlugInfo* plug_info)
 		plug_info->plugname = NULL;
 	}
 
-	free(plug_info);
+	SAPP_GLOBAL_FREE(plug_info);
 	plug_info = NULL;
 
 	return;

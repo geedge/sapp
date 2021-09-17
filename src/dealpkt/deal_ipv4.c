@@ -769,7 +769,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 #if (0 == HIGH_PERF)	
 		raw_frags_list_free_global(thread_num, __ADDR_TYPE_IP_PAIR_V4);
 #endif		
-		dictator_free(thread_num, new_iph);
+		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,thread_num, new_iph);
 	}
 	
 	return ret;
@@ -856,7 +856,7 @@ int ipv4_frag_init(int thread_count, uint32 hash_size)
 {
 	int i;
 	
-	g_ipv4_frag_manage = (struct frag_manage *)malloc(sizeof(struct frag_manage) * thread_count);
+	g_ipv4_frag_manage = (struct frag_manage *)SAPP_GLOBAL_ALLOC(sizeof(struct frag_manage) * thread_count);
 	if(NULL == g_ipv4_frag_manage)
 	{
 		//to do!
@@ -877,7 +877,7 @@ int ipv4_frag_init(int thread_count, uint32 hash_size)
 		}
 #else
 		g_ipv4_frag_manage[i].hash_table_size = hash_size;
-		g_ipv4_frag_manage[i].frag_hash_table = (struct frag_ipq **)malloc(sizeof(void *) * hash_size);
+		g_ipv4_frag_manage[i].frag_hash_table = (struct frag_ipq **)SAPP_GLOBAL_ALLOC(sizeof(void *) * hash_size);
 		memset(g_ipv4_frag_manage[i].frag_hash_table, 0, sizeof(void *) * hash_size);
 		g_ipv4_frag_manage[i].hash_index = ipv4_frag_hash_index;
 		g_ipv4_frag_manage[i].hash_cmp = ipv4_frag_hash_cmp;
@@ -890,7 +890,7 @@ int ipv4_frag_init(int thread_count, uint32 hash_size)
 	return 0;
 
 err:
-	free(g_ipv4_frag_manage);
+	SAPP_GLOBAL_FREE(g_ipv4_frag_manage);
 	return -1;
 }
 
@@ -990,9 +990,9 @@ static void ipv4_frag_key_free(uchar *key, uint key_size)
 	frag_key = (struct ipv4_frag_key *)key;
 	tid = frag_key->pstream_pr->stream_public.threadnum;
 
-	MESA_stream_list_free(frag_key->pstream_pr);
+	MESA_stream_list_free(SAPP_MEM_DYN_IP_FRAG_PKT, frag_key->pstream_pr);
 	
-	dictator_free(tid, frag_key);
+	sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT, tid, frag_key);
 }
 
 static uchar * ipv4_frag_key_dup(const uchar *key, uint key_size)
@@ -1003,7 +1003,7 @@ static uchar * ipv4_frag_key_dup(const uchar *key, uint key_size)
 	raw_frag_key = (struct ipv4_frag_key *)key;
 	tid = raw_frag_key->pstream_pr->stream_public.threadnum;
 
-	new_frag_key = (struct ipv4_frag_key *)dictator_malloc(tid, sizeof(struct ipv4_frag_key));
+	new_frag_key = (struct ipv4_frag_key *)sapp_mem_calloc(SAPP_MEM_DYN_IP_FRAG_PKT, tid, sizeof(struct ipv4_frag_key));
 
 	new_frag_key->ip_src = raw_frag_key->ip_src;
 	new_frag_key->ip_dst = raw_frag_key->ip_dst;
@@ -1011,7 +1011,7 @@ static uchar * ipv4_frag_key_dup(const uchar *key, uint key_size)
 	new_frag_key->protocol = raw_frag_key->protocol;
 	memset(new_frag_key->__pad__, 0, sizeof(new_frag_key->__pad__));
 
-	new_frag_key->pstream_pr = MESA_stream_list_dup(raw_frag_key->pstream_pr, 0);
+	new_frag_key->pstream_pr = MESA_stream_list_dup(SAPP_MEM_DYN_IP_FRAG_PKT, raw_frag_key->pstream_pr, 0);
 
 	return (uchar *)new_frag_key;
 }
@@ -1046,13 +1046,13 @@ static void ipv4_frag_ipq_free_no_iph(void *data)
 	while(frag != NULL) 
 	{
     		next = frag->next;
-		dictator_free(thread_num, frag);
+		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT, thread_num, frag);
 		frag = next;
 	}
 
 	if(ipq->private_info && ipq->private_len)
 	{
-		dictator_free(thread_num, ipq->private_info);
+		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT, thread_num, ipq->private_info);
 	}
 
 #if (0 == HIGH_PERF)
@@ -1061,7 +1061,7 @@ static void ipv4_frag_ipq_free_no_iph(void *data)
 
 	ipq->ipfrag_list = NULL;
 
-	dictator_free(thread_num, ipq);
+	sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT, thread_num, ipq);
 
 	return;
 }
@@ -1072,7 +1072,7 @@ static void ipv4_frag_ipq_free_all(void *data)
 
 	/* 因重组错误删除时, 要释放new_iph内存 */
 	if(ipq->new_iph){
-		dictator_free(ipq->thread_num, ipq->new_iph);
+		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,ipq->thread_num, ipq->new_iph);
 	}
 	ipv4_frag_ipq_free_no_iph(data);
 

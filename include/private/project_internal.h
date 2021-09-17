@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-void *project_requirement_create(int thread_num);
-void project_requirement_destroy(int thread_num, void *pproject);
+void *project_requirement_create(int mem_used_type, int thread_num);
+void project_requirement_destroy(int mem_used_type, int thread_num, void *pproject);
 
 raw_ipfrag_list_t *raw_ip_frag_list_move_pkt(struct streaminfo *stream);
 raw_ipfrag_list_t *raw_ip_frag_list_global_move_pkt(struct streaminfo *stream);

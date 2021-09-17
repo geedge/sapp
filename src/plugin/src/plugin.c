@@ -609,7 +609,7 @@ int process_conf_entryname()
 		exit(1);
 	}
 
-	g_entryname_info = (stEntryNameInfo*)malloc(sizeof(stEntryNameInfo));
+	g_entryname_info = (stEntryNameInfo*)SAPP_GLOBAL_ALLOC(sizeof(stEntryNameInfo));
 	memset(g_entryname_info,0,sizeof(stEntryNameInfo));
 
 	while(feof(fp) == 0)
@@ -652,7 +652,7 @@ int process_conf_entryname()
 		}
 
 		g_entryname_info->num ++;
-		g_entryname_info->entryname = (stEntryNameElem* )sapp_mem_realloc(g_entryname_info->entryname,(g_entryname_info->num)*sizeof(stEntryNameElem));
+		g_entryname_info->entryname = (stEntryNameElem* )sapp_mem_realloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,g_entryname_info->entryname,(g_entryname_info->num)*sizeof(stEntryNameElem));
 		memset(&(g_entryname_info->entryname[g_entryname_info->num-1]),0,sizeof(stEntryNameElem));
 		memcpy(&(g_entryname_info->entryname[g_entryname_info->num-1]),buf_entryname,strlen(buf_entryname));
 	}
@@ -703,7 +703,7 @@ int process_confelem_plugname(char* filename,int plugtype,char** plugname)
 	}
 
 	len = strlen(buf_plugname);
-	plugname_tmp = (char*)malloc(len+1);
+	plugname_tmp = (char*)SAPP_GLOBAL_ALLOC(len+1);
 	memcpy(plugname_tmp,buf_plugname,len);
 	plugname_tmp[len] = '\0';
 

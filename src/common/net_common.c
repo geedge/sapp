@@ -1317,7 +1317,7 @@ int net_common_build_send_mac(UINT8 *buf, const struct mesa_ethernet_hdr *raw_et
 }
 
 
-void MESA_stream_list_free(struct streaminfo_private *pstream_pr)
+void MESA_stream_list_free(int mem_used_type, struct streaminfo_private *pstream_pr)
 {
 	struct streaminfo_private *pfather_pr;
 	struct streaminfo *pstream = &pstream_pr->stream_public;
@@ -1328,13 +1328,13 @@ void MESA_stream_list_free(struct streaminfo_private *pstream_pr)
 	/* 先将pfather保存到临时变量 */
 	pfather_pr = (struct streaminfo_private *)pstream_pr->stream_public.pfather; /* 2021-01-11, 仅用于ip分片确定地址, 此处使用内存四元组,使用pfather而不是pfather_pr */
 
-	dictator_free(pstream->threadnum, pstream->addr.paddr);
-	dictator_free(pstream->threadnum, pstream_pr);
+	sapp_mem_free((sapp_mem_type_t)mem_used_type,pstream->threadnum, pstream->addr.paddr);
+	sapp_mem_free((sapp_mem_type_t)mem_used_type,pstream->threadnum, pstream_pr);
 
-	return MESA_stream_list_free(pfather_pr);
+	return MESA_stream_list_free(mem_used_type, pfather_pr);
 }
 
-struct streaminfo_private *MESA_stream_list_dup(struct streaminfo_private *stack_stream_pr, int reverse)
+struct streaminfo_private *MESA_stream_list_dup(int mem_used_type, struct streaminfo_private *stack_stream_pr, int reverse)
 {
 	struct streaminfo_private *heap_stream_pr = NULL;
 	struct streaminfo *heap_stream;
@@ -1346,11 +1346,11 @@ struct streaminfo_private *MESA_stream_list_dup(struct streaminfo_private *stack
 	}
 	stack_stream = &stack_stream_pr->stream_public;
 
-	heap_stream_pr = (struct streaminfo_private *)dictator_malloc(stack_stream->threadnum, sizeof(struct streaminfo_private));
+	heap_stream_pr = (struct streaminfo_private *)sapp_mem_malloc((sapp_mem_type_t)mem_used_type, stack_stream->threadnum, sizeof(struct streaminfo_private));
 	memcpy(heap_stream_pr, stack_stream_pr, sizeof(struct streaminfo_private));
 	heap_stream = &heap_stream_pr->stream_public;
 	
-	heap_addr = dictator_malloc(stack_stream->threadnum, stack_stream->addr.addrlen);
+	heap_addr = sapp_mem_malloc((sapp_mem_type_t)mem_used_type, stack_stream->threadnum, stack_stream->addr.addrlen);
 	memcpy(heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrlen);
 
 	if(reverse){
@@ -1365,7 +1365,7 @@ struct streaminfo_private *MESA_stream_list_dup(struct streaminfo_private *stack
 	heap_stream->addr.addrlen = stack_stream->addr.addrlen;
 
 	/* 2021-01-11, 仅用于ip分片确定地址, 此处使用内存四元组,使用pfather而不是pfather_pr */
-	heap_stream->pfather = (struct streaminfo *)MESA_stream_list_dup((struct streaminfo_private *)(stack_stream->pfather), reverse);
+	heap_stream->pfather = (struct streaminfo *)MESA_stream_list_dup(mem_used_type, (struct streaminfo_private *)(stack_stream->pfather), reverse);
 
 	return (struct streaminfo_private *)heap_stream;
 }
@@ -1681,11 +1681,32 @@ const char *sapp_rawpkt_ntop(const raw_pkt_t *raw_pkt, int greedy_inner_layer, c
 }
 
 
-/*
-	return value:
-		Non-NULL: the pointer to expect layer;
-		NULL: not found expect layer.
-*/
+static const unsigned long long TO_KB = 1024;
+static const unsigned long long TO_MB = 0x100000ULL;
+static const unsigned long long TO_GB = 0x40000000ULL;
+static const unsigned long long TO_TB = 0x10000000000ULL;
+
+/* 转换成人容易读的网络流量字符串, 如123bps, 34.5Mbps */
+char *byte_convert_human(unsigned long long bytes, int interval, int multiple, char * byte_str)
+{
+    bytes *= multiple; /* to network pattern, or human pattern */
+
+    bytes /= interval; /* per second */
+
+    if(bytes < TO_KB){
+        snprintf(byte_str,STATS_STR_LEN,"%llu", bytes);
+    }else if(bytes < TO_MB){
+        snprintf(byte_str,STATS_STR_LEN,"%.2fK", (float)bytes/TO_KB);
+    }else if(bytes < TO_GB){
+        snprintf(byte_str,STATS_STR_LEN,"%.2fM", (float)bytes/TO_MB);
+    }else if(bytes < TO_TB){
+        snprintf(byte_str,STATS_STR_LEN,"%.2fG", (float)bytes/TO_GB);
+    }else{
+        snprintf(byte_str,STATS_STR_LEN,"%.2fT", (double)bytes/TO_TB);	
+    }
+
+    return byte_str;
+}
 
 
 

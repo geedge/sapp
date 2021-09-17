@@ -109,7 +109,7 @@ static int stream_bridege_create_new_bridge(const char *bridge_name)
 
 
 /* 新建一个流结构时调用 */
-void *stream_bridge_create_per_stream(int thread_num)
+void *stream_bridge_create_per_stream(int mem_used_type, int thread_num)
 {
 	stream_bridge_item_t *stream_bridge_array;
 
@@ -117,13 +117,13 @@ void *stream_bridge_create_per_stream(int thread_num)
 		return NULL;
 	}
 
-	stream_bridge_array = (stream_bridge_item_t *)dictator_malloc(thread_num, sizeof(stream_bridge_item_t) * g_stream_bridge_actual_num);
+	stream_bridge_array = (stream_bridge_item_t *)sapp_mem_malloc((sapp_mem_type_t)mem_used_type, thread_num, sizeof(stream_bridge_item_t) * g_stream_bridge_actual_num);
 	memset(stream_bridge_array, 0, sizeof(stream_bridge_item_t) * g_stream_bridge_actual_num);
 
 	return (void *)stream_bridge_array;
 }
 
-void stream_bridge_destroy_per_stream(const struct streaminfo *stream, void *pbridge)
+void stream_bridge_destroy_per_stream(int mem_used_type, const struct streaminfo *stream, void *pbridge)
 {
 	int i;
 	stream_bridge_item_t *bridge_array;
@@ -140,7 +140,7 @@ void stream_bridge_destroy_per_stream(const struct streaminfo *stream, void *pbr
 		}
 	}
 
-	dictator_free(stream->threadnum, pbridge);
+	sapp_mem_free((sapp_mem_type_t)mem_used_type, stream->threadnum, pbridge);
 
 	return;
 }

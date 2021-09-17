@@ -85,13 +85,13 @@ static uchar * ipv6_frag_key_dup(const uchar *key, uint key_size)
 	tid = raw_frag_key->pfstream_pr->stream_public.threadnum;
 
 	/* 此函数无法获取线程号, 所以使用malloc, 同理函数中也要使用free */
-	new_frag_key = (struct ipv6_frag_key *)dictator_malloc(tid, sizeof(struct ipv6_frag_key));
+	new_frag_key = (struct ipv6_frag_key *)sapp_mem_calloc(SAPP_MEM_DYN_IP_FRAG_PKT, tid, sizeof(struct ipv6_frag_key));
 
 	memcpy(&new_frag_key->ip6_src, &raw_frag_key->ip6_src, sizeof(struct in6_addr));
 	memcpy(&new_frag_key->ip6_dst, &raw_frag_key->ip6_dst, sizeof(struct in6_addr));
 	new_frag_key->identification = raw_frag_key->identification;
 
-	new_frag_key->pfstream_pr = MESA_stream_list_dup(raw_frag_key->pfstream_pr, 0);
+	new_frag_key->pfstream_pr = MESA_stream_list_dup(SAPP_MEM_DYN_IP_FRAG_PKT, raw_frag_key->pfstream_pr, 0);
 
 	return (uchar *)new_frag_key;
 }
@@ -108,9 +108,9 @@ static void ipv6_frag_key_free(uchar *key, uint key_size)
 	frag_key = (struct ipv6_frag_key *)key;
 	tid = frag_key->pfstream_pr->stream_public.threadnum;
 
-	MESA_stream_list_free(frag_key->pfstream_pr);
+	MESA_stream_list_free(SAPP_MEM_DYN_IP_FRAG_PKT, frag_key->pfstream_pr);
 	
-	dictator_free(tid, frag_key);
+	sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT, tid, frag_key);
 }
 
 void ipv6_frag_ipq_free_no_iph(void *data)
@@ -124,13 +124,13 @@ void ipv6_frag_ipq_free_no_iph(void *data)
 	while(frag != NULL) 
 	{
     		next = frag->next;
-		dictator_free(thread_num, frag);
+		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,thread_num, frag);
 		frag = next;
 	}
 
 	if(ipq->private_info && ipq->private_len)
 	{
-		dictator_free(thread_num, ipq->private_info);
+		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,thread_num, ipq->private_info);
 	}
 
 #if (0 == HIGH_PERF)
@@ -138,7 +138,7 @@ void ipv6_frag_ipq_free_no_iph(void *data)
 #endif	
 	ipq->ipfrag_list = NULL;
 
-	dictator_free(thread_num, ipq);
+	sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,thread_num, ipq);
 
 	return;
 }
@@ -149,7 +149,7 @@ static void ipv6_frag_ipq_free_all(void *data)
 
 	/* 因重组错误删除时, 要释放new_iph内存 */
 	if(ipq->new_iph){
-		dictator_free(ipq->thread_num, ipq->new_iph);
+		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,ipq->thread_num, ipq->new_iph);
 	}
 	ipv6_frag_ipq_free_no_iph(data);
 
@@ -957,7 +957,7 @@ done:
 #if (0 == HIGH_PERF)		
 		raw_frags_list_free_global(thread_num, __ADDR_TYPE_IP_PAIR_V6);
 #endif		
-		dictator_free(thread_num, new_ip6h);
+		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,thread_num, new_ip6h);
 	}
 	
 	return action;
@@ -969,7 +969,7 @@ err_exit:
 #if (0 == HIGH_PERF)		
 		raw_frags_list_free_global(thread_num, __ADDR_TYPE_IP_PAIR_V6);
 #endif		
-		dictator_free(thread_num, new_ip6h);
+		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,thread_num, new_ip6h);
 	}
 	
 	return DROP;
@@ -1055,7 +1055,7 @@ int ipv6_frag_init(int thread_count, uint32 hash_size)
 {
 	int i;
 	
-	g_ipv6_frag_manage = (struct frag_manage *)malloc(sizeof(struct frag_manage) * thread_count);
+	g_ipv6_frag_manage = (struct frag_manage *)SAPP_GLOBAL_ALLOC(sizeof(struct frag_manage) * thread_count);
 	if(NULL == g_ipv6_frag_manage)
 	{
 		//to do!
@@ -1071,7 +1071,7 @@ int ipv6_frag_init(int thread_count, uint32 hash_size)
 		g_ipv6_frag_manage[i].frag_hash_table = ipv6_frag_htable_create();
 #else	
 		g_ipv6_frag_manage[i].hash_table_size = hash_size;
-		g_ipv6_frag_manage[i].frag_hash_table = (struct frag_ipq **)malloc(sizeof(void *) * hash_size);
+		g_ipv6_frag_manage[i].frag_hash_table = (struct frag_ipq **)SAPP_GLOBAL_ALLOC(sizeof(void *) * hash_size);
 		memset(g_ipv6_frag_manage[i].frag_hash_table, 0, sizeof(void *) * hash_size);
 		g_ipv6_frag_manage[i].hash_index = ipv6_frag_hash_index;
 		g_ipv6_frag_manage[i].hash_cmp = ipv6_frag_hash_cmp;

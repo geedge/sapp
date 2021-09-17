@@ -115,24 +115,24 @@ static int init_stream_detail(struct global_stream *g_stream)
 
 	//预先分配hash指针
 #if USE_RBTREE_INSTEAD_LIST
-	g_stream->tcp_rb_root_table = (struct rb_root *)malloc (tcp_stream_table_size * sizeof (struct rb_root));
+	g_stream->tcp_rb_root_table = (struct rb_root *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,tcp_stream_table_size * sizeof (struct rb_root));
 	memset(g_stream->tcp_rb_root_table, 0, tcp_stream_table_size * sizeof (struct rb_root));
 
-	g_stream->udp_rb_root_table = (struct rb_root *)malloc (tcp_stream_table_size * sizeof (struct rb_root));
+	g_stream->udp_rb_root_table = (struct rb_root *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,tcp_stream_table_size * sizeof (struct rb_root));
 	memset(g_stream->udp_rb_root_table, 0, tcp_stream_table_size * sizeof (struct rb_root));
 #else
-	g_stream->tcp_stream_table = (struct streamindex **)malloc (tcp_stream_table_size * sizeof (char *));
+	g_stream->tcp_stream_table = (struct streamindex **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,tcp_stream_table_size * sizeof (char *));
     memset (g_stream->tcp_stream_table, 0, tcp_stream_table_size* sizeof (char *));
-    g_stream->udp_stream_table = (struct streamindex **)malloc (udp_stream_table_size * sizeof (char *));
+    g_stream->udp_stream_table = (struct streamindex **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,udp_stream_table_size * sizeof (char *));
     memset (g_stream->udp_stream_table, 0, udp_stream_table_size* sizeof (char *));
    //记录hash的状态
-    g_stream->tcp_stream_talbe_hash_count = (unsigned short *)malloc (tcp_stream_table_size*  sizeof (short));
+    g_stream->tcp_stream_talbe_hash_count = (unsigned short *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,tcp_stream_table_size*  sizeof (short));
     memset (g_stream->tcp_stream_talbe_hash_count, 0, tcp_stream_table_size* sizeof (short));
-    g_stream->udp_stream_talbe_hash_count = (unsigned short *)malloc (udp_stream_table_size*  sizeof (short));
+    g_stream->udp_stream_talbe_hash_count = (unsigned short *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,udp_stream_table_size*  sizeof (short));
     memset (g_stream->udp_stream_talbe_hash_count, 0, udp_stream_table_size* sizeof (short));
 #endif
 	
-    g_stream->freeList.head=(struct  streamindex *) malloc ((g_stream->freeList.max_cnt) * sizeof (struct streamindex));
+    g_stream->freeList.head=(struct  streamindex *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,(g_stream->freeList.max_cnt) * sizeof (struct streamindex));
     memset(g_stream->freeList.head, 0,(g_stream->freeList.max_cnt) * sizeof (struct streamindex));
     for (i = 0; i < g_stream->freeList.max_cnt-1; i++)
     {
@@ -507,11 +507,11 @@ int init_stream_manage(int threadcount)
 	for(i=0;i<MAX_UDP_STATE;i++)
 		udp_stream_table_size+=udpstate_num[i];
 
-	G_MESA_GLOBAL_STREAM = (struct global_stream **)malloc(threadcount * sizeof (char *));
+	G_MESA_GLOBAL_STREAM = (struct global_stream **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, threadcount * sizeof (char *));
  	memset (G_MESA_GLOBAL_STREAM, 0, threadcount * sizeof (char *));
 	for(i=0;i<threadcount;i++)
 	{
-		G_MESA_GLOBAL_STREAM[i]=(struct global_stream *)malloc(sizeof(struct global_stream));
+		G_MESA_GLOBAL_STREAM[i]=(struct global_stream *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, sizeof(struct global_stream));
 		init_stream_detail(G_MESA_GLOBAL_STREAM[i]);
 	}
 
@@ -1545,6 +1545,7 @@ int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct stre
 static void streaminfo_layer_alignment(const struct streaminfo *top_stream, struct streaminfo_private *heap_stream_pr, struct streaminfo_private *stack_stream_pr)
 {
 	struct streaminfo_private *new_heap_tmp = NULL;
+	int mem_used_type;
 	
 	if((NULL == heap_stream_pr) || (NULL == stack_stream_pr)){
 		return;
@@ -1558,7 +1559,12 @@ static void streaminfo_layer_alignment(const struct streaminfo *top_stream, stru
 		/*
 			new_heap_tmp此时执向mpls层
 		*/
-		new_heap_tmp = copy_stream_info_to_heap_single_layer(stack_stream_pr->pfather_pr, 1); /* 流对准时, 肯定是对侧来包, 反向copy, 因为同向就不存在层数不一致了, reverse固定为1 */
+		if(STREAM_TYPE_TCP == top_stream->type){
+			mem_used_type = SAPP_MEM_DYN_TCP_STREAM;
+		}else{
+			mem_used_type = SAPP_MEM_DYN_UDP_STREAM;
+		}
+		new_heap_tmp = copy_stream_info_to_heap_single_layer(mem_used_type, stack_stream_pr->pfather_pr, 1); /* 流对准时, 肯定是对侧来包, 反向copy, 因为同向就不存在层数不一致了, reverse固定为1 */
 
 		new_heap_tmp->pfather_pr = heap_stream_pr->pfather_pr;
 		new_heap_tmp->stream_public.pfather = &heap_stream_pr->pfather_pr->stream_public;
@@ -2444,7 +2450,7 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
 */
 int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *pstream_stack, int reverse)
 {
-	pstream_heap->addr.paddr = dictator_malloc(pstream_stack->threadnum, pstream_stack->addr.addrlen);
+	pstream_heap->addr.paddr = sapp_mem_malloc(SAPP_MEM_DYN_PADDR, pstream_stack->threadnum, pstream_stack->addr.addrlen);
 	if(0 == reverse){
 		memcpy(pstream_heap->addr.paddr, pstream_stack->addr.paddr, pstream_stack->addr.addrlen);
 	}else{
@@ -2556,7 +2562,7 @@ void free_thread_stream(int thread_seq)
 }
 
 /* 2014-04-08 LiJia add */
-void free_heap_stream_info(struct streaminfo *heap_stream, int layer)
+void free_heap_stream_info(int mem_used_type, struct streaminfo *heap_stream, int layer)
 {
 	struct streaminfo_private *heap_stream_pr = (struct streaminfo_private *)(heap_stream);
 	struct streaminfo_private *pfather_pr;
@@ -2571,7 +2577,7 @@ void free_heap_stream_info(struct streaminfo *heap_stream, int layer)
 
 	/* 为了节省空间, 地址类型ADDR_TYPE_IPV4/6实际存储在下一层的IP层, 无需free */
 	if(addr->paddr){
-		dictator_free(heap_stream->threadnum, addr->paddr);
+		sapp_mem_free(SAPP_MEM_DYN_PADDR, heap_stream->threadnum, addr->paddr);
 		addr->paddr = NULL;
 	}
 	
@@ -2580,9 +2586,9 @@ void free_heap_stream_info(struct streaminfo *heap_stream, int layer)
 			无需free, 
 			pfather指向的streaminfo结构才是通过copy_stream_info_to_heap()动态malloc的.
 		*/
-		dictator_free(heap_stream->threadnum, heap_stream);	
+		sapp_mem_free((sapp_mem_type_t)mem_used_type, heap_stream->threadnum, heap_stream);	
 	}
-	return free_heap_stream_info((struct streaminfo *)pfather_pr, layer+1);
+	return free_heap_stream_info(mem_used_type, (struct streaminfo *)pfather_pr, layer+1);
 }
 
 /* 2014-12-03 lijia add for sysinfo.log 
@@ -2857,14 +2863,14 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 }
 
 
-static inline raw_pkt_t *sapp_raw_pkt_dup(int thread_index, const raw_pkt_t *raw_pkt)
+static inline raw_pkt_t *sapp_raw_pkt_dup(int mem_used_type, int thread_index, const raw_pkt_t *raw_pkt)
 {
 	int hdr_offset;
 	
-	raw_pkt_t *new_raw_pkt = (raw_pkt_t *)dictator_malloc(thread_index, sizeof(raw_pkt_t));
+	raw_pkt_t *new_raw_pkt = (raw_pkt_t *)sapp_mem_malloc((sapp_mem_type_t)mem_used_type, thread_index, sizeof(raw_pkt_t));
 	memcpy(new_raw_pkt, raw_pkt, sizeof(raw_pkt_t));
 	
-	new_raw_pkt->__lib_raw_pkt_data = dictator_malloc(thread_index, raw_pkt->__lib_raw_pkt_len);
+	new_raw_pkt->__lib_raw_pkt_data = sapp_mem_malloc((sapp_mem_type_t)mem_used_type, thread_index, raw_pkt->__lib_raw_pkt_len);
 	memcpy((void *)(new_raw_pkt->__lib_raw_pkt_data), raw_pkt->__lib_raw_pkt_data, raw_pkt->__lib_raw_pkt_len);
 	
 	/* 更新raw_pkt_data指针 */
@@ -2876,7 +2882,7 @@ static inline raw_pkt_t *sapp_raw_pkt_dup(int thread_index, const raw_pkt_t *raw
 }
 
 
-int update_polling_inject_context(struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt)
+int update_polling_inject_context(int mem_used_type,struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt)
 {
 	int thread_index;
 
@@ -2888,18 +2894,18 @@ int update_polling_inject_context(struct streaminfo_private *pstream_pr, const r
 	/* 保存当前流C2S, S2C方向的第一个包 */
 	if((DIR_ROUTE_DOWN & pstream_pr->stream_public.routedir) == DIR_ROUTE_DOWN){
 		if(NULL == pstream_pr->polling_inject_context->raw_pkt_down){
-			pstream_pr->polling_inject_context->raw_pkt_down = sapp_raw_pkt_dup(thread_index, raw_pkt);
+			pstream_pr->polling_inject_context->raw_pkt_down = sapp_raw_pkt_dup(mem_used_type,thread_index, raw_pkt);
 		}
 	}else{
 		if(NULL == pstream_pr->polling_inject_context->raw_pkt_up){
-			pstream_pr->polling_inject_context->raw_pkt_up = sapp_raw_pkt_dup(thread_index, raw_pkt);
+			pstream_pr->polling_inject_context->raw_pkt_up = sapp_raw_pkt_dup(mem_used_type,thread_index, raw_pkt);
 		}
 	}
 
 	return 0;
 }
 
-int save_polling_inject_context(struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt)
+int save_polling_inject_context(int mem_used_type, struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt)
 {
 	int thread_index;
 
@@ -2909,7 +2915,7 @@ int save_polling_inject_context(struct streaminfo_private *pstream_pr, const raw
 
 	thread_index = pstream_pr->stream_public.threadnum;
 
-	pstream_pr->polling_inject_context = (polling_inject_context_t *)dictator_malloc(thread_index, sizeof(polling_inject_context_t));
+	pstream_pr->polling_inject_context = (polling_inject_context_t *)sapp_mem_malloc((sapp_mem_type_t)mem_used_type, thread_index, sizeof(polling_inject_context_t));
 	memset(pstream_pr->polling_inject_context, 0, sizeof(polling_inject_context_t));
 
 	/* TODO:
@@ -2917,21 +2923,21 @@ int save_polling_inject_context(struct streaminfo_private *pstream_pr, const raw
 	    如果遇到flood攻击就更严重了!!
 	    将发包所需的参数都藏于private结构中, 不再依赖原始包 */
 	if((DIR_ROUTE_DOWN & pstream_pr->stream_public.routedir) == DIR_ROUTE_DOWN){
-		pstream_pr->polling_inject_context->raw_pkt_down = sapp_raw_pkt_dup(thread_index, raw_pkt);
+		pstream_pr->polling_inject_context->raw_pkt_down = sapp_raw_pkt_dup(mem_used_type, thread_index, raw_pkt);
 	}else{
-		pstream_pr->polling_inject_context->raw_pkt_up = sapp_raw_pkt_dup(thread_index, raw_pkt);
+		pstream_pr->polling_inject_context->raw_pkt_up = sapp_raw_pkt_dup(mem_used_type, thread_index, raw_pkt);
 	}
 
 	return 0;
 }
 
-static inline void sapp_raw_pkt_free(int thread_index, raw_pkt_t *raw_pkt)
+static inline void sapp_raw_pkt_free(int mem_used_type, int thread_index, raw_pkt_t *raw_pkt)
 {
-	dictator_free(thread_index, (void *)raw_pkt->__lib_raw_pkt_data);
-	dictator_free(thread_index, (void *)raw_pkt);
+	sapp_mem_free((sapp_mem_type_t)mem_used_type, thread_index, (void *)raw_pkt->__lib_raw_pkt_data);
+	sapp_mem_free((sapp_mem_type_t)mem_used_type, thread_index, (void *)raw_pkt);
 }
 
-void free_polling_inject_context(struct streaminfo_private *pstream_pr)
+void free_polling_inject_context(int mem_used_type, struct streaminfo_private *pstream_pr)
 {
 	int thread_index;
 	
@@ -2945,13 +2951,13 @@ void free_polling_inject_context(struct streaminfo_private *pstream_pr)
 
 	thread_index = pstream_pr->stream_public.threadnum;
 	if(pstream_pr->polling_inject_context->raw_pkt_up){
-		sapp_raw_pkt_free(thread_index, (raw_pkt_t *)pstream_pr->polling_inject_context->raw_pkt_up);
+		sapp_raw_pkt_free(mem_used_type, thread_index, (raw_pkt_t *)pstream_pr->polling_inject_context->raw_pkt_up);
 	}
 	if(pstream_pr->polling_inject_context->raw_pkt_down){
-		sapp_raw_pkt_free(thread_index, (raw_pkt_t *)pstream_pr->polling_inject_context->raw_pkt_down);
+		sapp_raw_pkt_free(mem_used_type, thread_index, (raw_pkt_t *)pstream_pr->polling_inject_context->raw_pkt_down);
 	}	
 
-	dictator_free(thread_index, pstream_pr->polling_inject_context);
+	sapp_mem_free((sapp_mem_type_t)mem_used_type, thread_index, pstream_pr->polling_inject_context);
 	pstream_pr->polling_inject_context = NULL;
 }
 
@@ -2977,7 +2983,7 @@ unsigned long long get_global_stream_id(unsigned long long thread_seq)
 	return glo_sid;
 }
 
-struct streaminfo_private *copy_stream_info_to_heap_single_layer(const struct streaminfo_private *stack_stream_pr, int reverse)
+struct streaminfo_private *copy_stream_info_to_heap_single_layer(int mem_used_type, const struct streaminfo_private *stack_stream_pr, int reverse)
 {
 	struct streaminfo_private *heap_stream_pr = NULL;
 	void *heap_addr;
@@ -2991,7 +2997,7 @@ struct streaminfo_private *copy_stream_info_to_heap_single_layer(const struct st
 
 	stack_stream = &(stack_stream_pr->stream_public);
 
-	heap_stream_pr = (struct streaminfo_private *)dictator_malloc(stack_stream->threadnum, sizeof(struct streaminfo_private));
+	heap_stream_pr = (struct streaminfo_private *)sapp_mem_malloc((sapp_mem_type_t)mem_used_type, stack_stream->threadnum, sizeof(struct streaminfo_private));
 	memcpy(heap_stream_pr, stack_stream_pr, sizeof(struct streaminfo_private));
 	heap_stream = &(heap_stream_pr->stream_public);
 
@@ -2999,7 +3005,7 @@ struct streaminfo_private *copy_stream_info_to_heap_single_layer(const struct st
 	heap_stream_pr->pfather_pr = NULL;
 	heap_stream_pr->stream_public.pfather = NULL;
 			
-	heap_addr = dictator_malloc(stack_stream->threadnum, stack_stream->addr.addrlen);
+	heap_addr = sapp_mem_malloc(SAPP_MEM_DYN_PADDR, stack_stream->threadnum, stack_stream->addr.addrlen);
 	memset(heap_addr, 0, stack_stream->addr.addrlen);
 
 	/* 上层地址翻转, 且不是overlay层,才能反向copy地址    	   */	
@@ -3084,7 +3090,7 @@ struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_priv
 	return (struct streaminfo_private *)heap_stream;
 }
 #else
-struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream_pr, int reverse)
+struct streaminfo_private *copy_stream_info_to_heap(int mem_used_type,const struct streaminfo_private *stack_stream_pr, int reverse)
 {
 	struct streaminfo_private *heap_stream_pr;
 	struct streaminfo *heap_stream;
@@ -3094,10 +3100,10 @@ struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_priv
 		return NULL;
 	}
 
-	heap_stream_pr = copy_stream_info_to_heap_single_layer(stack_stream_pr, reverse);
+	heap_stream_pr = copy_stream_info_to_heap_single_layer(mem_used_type, stack_stream_pr, reverse);
 	heap_stream = &heap_stream_pr->stream_public;
 
-	heap_stream_pr->pfather_pr = copy_stream_info_to_heap(stack_stream_pr->pfather_pr, reverse);
+	heap_stream_pr->pfather_pr = copy_stream_info_to_heap(mem_used_type, stack_stream_pr->pfather_pr, reverse);
 	pfather_pr = stack_stream_pr->pfather_pr;
 	if((pfather_pr != NULL)
 	  && (DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)

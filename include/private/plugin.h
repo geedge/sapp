@@ -4,6 +4,7 @@
 #include <netinet/ip.h>
 #include "stream.h"
 #include "sapp_limits.h"
+#include "sapp_mem.h"
 
 #ifdef __cplusplus
 extern "C" {

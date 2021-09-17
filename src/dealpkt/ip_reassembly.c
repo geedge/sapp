@@ -21,9 +21,9 @@ extern void raw_frags_list_free_one(int thread_num, void *);
 /* 申请size大小的一块内存，同时更新总内存占用值 */
 void *frag_malloc(struct frag_manage *handle, int size)
 {
-	void *p = dictator_malloc(handle->thread_num, size);
+	void *p = sapp_mem_malloc(SAPP_MEM_DYN_IP_FRAG_PKT, handle->thread_num, size);
 
-	handle->total_mem += size;
+	//handle->total_mem += size;
 
 	return p;
 }
@@ -32,8 +32,8 @@ void *frag_malloc(struct frag_manage *handle, int size)
 /* 需要额外传递free的指针所指向内存块的大小，用于统计内存占用值 */
 void frag_free(struct frag_manage *handle, void *free_p, int size)
 {
-	dictator_free(handle->thread_num, free_p);
-	handle->total_mem -= size;
+	sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT, handle->thread_num, free_p);
+	//handle->total_mem -= size;
 
 	return;
 }
@@ -196,13 +196,13 @@ struct frag_ipq* frag_ipq_create(int thread_num)
 {
 	struct frag_ipq *ipq;
 
-	ipq = (struct frag_ipq *)dictator_malloc(thread_num, sizeof(struct frag_ipq));
+	ipq = (struct frag_ipq *)sapp_mem_malloc(SAPP_MEM_DYN_IP_FRAG_PKT, thread_num, sizeof(struct frag_ipq));
 	memset(ipq, 0, sizeof(struct frag_ipq));
 
 	ipq->thread_num = thread_num;
 
 	/* 为新IP包分配空间, 初始大小为2048字节 */
-	ipq->new_iph = dictator_malloc(thread_num, IP_FRAG_DEFAULT_BUF_SIZE);
+	ipq->new_iph = sapp_mem_malloc(SAPP_MEM_DYN_IP_FRAG_PKT, thread_num, IP_FRAG_DEFAULT_BUF_SIZE);
 	ipq->buf_size = IP_FRAG_DEFAULT_BUF_SIZE;
 
 	ipq->create_time = g_CurrentTime;
