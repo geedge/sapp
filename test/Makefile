@@ -62,7 +62,7 @@ test_sapp_dev_static:test_sapp_dev.c
 	gcc -o $@ $^ ../build/src/sapp_dev/libsapp_dev.a  -I/opt/MESA/include/MESA -I/opt/MESA/include/MESA/stream_inc -L/opt/MESA/lib -lpcap -lpthread -ldl -lMESA_htable -lMESA_prof_load -lMESA_handle_logger -lMESA_field_stat2
 	
 test_sapp_dev_dynamic:test_sapp_dev.c
-	gcc -o $@ $^ -lsapp_devel  -I/opt/MESA/include/MESA -I/opt/MESA/include/MESA/stream_inc -L/opt/MESA/lib -lpcap -lpthread -ldl -lMESA_htable -lMESA_prof_load -lMESA_handle_logger -lMESA_field_stat2 -lsystemd -lMESA_jump_layer
+	gcc -o $@ $^ -lsapp_devel  -I/opt/MESA/include/MESA -I/opt/MESA/include/MESA/stream_inc -L/opt/MESA/lib -lpcap -lpthread -ldl -lMESA_htable -lMESA_prof_load -lMESA_handle_logger -lMESA_field_stat2 -lsystemd -lMESA_jump_layer -lbreakpad_mini
 
 .c.o:  
 	$(CC) -c -o $@ $(CFLAGS) -I. $(INCS) $<
