@@ -26,14 +26,17 @@ static const  mem_stat_name_tuple_t mem_stat_name_tuple[] =
 	{SAPP_MEM_STACK_LOCAL, 		"stack_local" },
 	{SAPP_MEM_FIX_GLOBAL_VAL ,  "global_val"},
 	{SAPP_MEM_FIX_GLOBAL_STREAM , "global_stream"},
+	{SAPP_MEM_FIX_PLUG_CTRL, "global_plugctrl"},
+	
 	{__SAPP_FIX_DYN_SEPARATOR , "_separator"},
+	
 	{SAPP_MEM_DYN_MEM_HDR , 	"mem_hdr"},
 	{SAPP_MEM_DYN_IP_FRAG_PKT , "ip_frag_pkt"},
 	{SAPP_MEM_DYN_TCP_STREAM , "tcp_stream"},
 	{SAPP_MEM_DYN_UDP_STREAM , "udp_stream"},
 	{SAPP_MEM_DYN_TCP_HALF_STREAM , "tcp_half_stream"},
 	{SAPP_MEM_DYN_UDP_HALF_STREAM , "udp_half_stream"},
-	{SAPP_MEM_DYN_PLUG_CTRL , 	"plug_ctrl"},
+	{SAPP_MEM_DYN_PLUG_CTRL , 	"stream_plugctrl"},
 	{SAPP_MEM_DYN_TCP_UNORDER , "tcp_unorder"},
 	{SAPP_MEM_DYN_TCP_SYN_OPT , "tcp_option"},
 	{SAPP_MEM_DYN_TCP_POLLING_RAW_PKT , "tcp_polling_pkt"},
@@ -229,7 +232,7 @@ void sapp_mem_stat_output(void)
 
 	for(stat_index = 0; stat_index < __SAPP_MEM_TYPE_MAX; stat_index++){
 		if((int)mem_stat_name_tuple[stat_index].mem_type != stat_index){
-			printf("\033[1;31;40m[Error] mem_stat_name_tuple index:%d is not equal with mem_stat_name_tuple_t\033[0m\n", stat_index);
+			printf("\033[1;31;40m[Error] mem_stat_name_tuple[] array index:%d is not equal with mem_stat_name_tuple_t\033[0m\n", stat_index);
 			exit(1);
 		}
 	}

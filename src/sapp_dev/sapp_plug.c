@@ -25,6 +25,9 @@ void MESA_platform_run(void);
 extern int sapp_args_v;
 int dpdk_init(int argc, char **argv);
 
+static volatile long g_destory_env_done;
+static volatile long g_destory_env_per_thread_done[MAX_THREAD_NUM];
+
 
 static void signal_user_handler(int signo)
 {
@@ -118,6 +121,11 @@ int libsapp_setup_env(int argc, char *argv[])
 
 	MESA_platform_run();
 
+	while((SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state)
+	 && (sapp_global_val->config.packet_io.depolyment_mode_bin)){
+		usleep(1);
+	}
+
 	return 0;
 }
 
@@ -151,8 +159,17 @@ void libsapp_destroy_env_per_thread(int tseq)
 
 void libsapp_destroy_env(void)
 {
-	if(sapp_global_val->individual_volatile->destory_env_done){
+	/* 
+		一种特殊情况: sapp -d读包完毕后, 会自动调用libsapp_destroy_env(),
+		但是插件也可能会在外部主动调用libsapp_destroy_env(),
+		如果不做控制, 就double free了!!
+		此处靠变量控制一下先后逻辑顺序.
+	*/
+	if(MESA_ATOMIC_READ(sapp_global_val->individual_volatile->destory_env_done) != 0){
+		while(MESA_ATOMIC_READ(sapp_global_val->individual_volatile->destory_env_done) != 2);
 		return;
+	}else{
+		MESA_ATOMIC_SET(sapp_global_val->individual_volatile->destory_env_done, 1);
 	}
 
 	sapp_global_val->individual_volatile->destory_env_done = 1;
