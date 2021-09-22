@@ -439,6 +439,8 @@ int get_current_thread_cpu_affinity_id(void);
 void sapp_fs2_destroy(void);
 void sapp_gval_destroy(void);
 char *byte_convert_human(unsigned long long bytes, int interval, int multiple, char * byte_str);
+void cycle_pkt_dump_destroy(void);
+void stream_destroy_plugin(void);
 
 
 

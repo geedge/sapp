@@ -55,6 +55,8 @@ static int pcap_device_up_mtu = 1500;
 static int pcap_device_down_mtu = 1500;
 static pcap_distmode_t g_pcap_distmode = PCAP_DISTMODE_OUTER_TUPLE2;
 
+static pthread_t g_pcap_io_pid_up, g_pcap_io_pid_down;
+
 extern sapp_global_t *sapp_global_val;
 extern int g_PollingFunNum;
 extern int g_use_MESA_sleep_sw;
@@ -1361,13 +1363,9 @@ static void *pcap_io_thread(void *arg)
 		sapp_usleep(1000);
 	}
 
-	while(1){
+	while(SAPP_STATE_PROCESSING == sapp_get_current_state()){
+		pcap_ret = pcap_loop(handle, -1, __pcap_pkt_handle, (unsigned char *)&route_dir);
 
-		if(1){
-			pcap_ret = pcap_loop(handle, -1, __pcap_pkt_handle, (unsigned char *)&route_dir);
-		}else{
-			pcap_ret = pcap_dispatch(handle, -1, __pcap_pkt_handle, (unsigned char *)&route_dir);
-		}
 		if(0 == pcap_ret){
 			if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
 				printf("\033[32m[Notice]process dumpfile over!\033[0m\n");
@@ -1377,7 +1375,9 @@ static void *pcap_io_thread(void *arg)
 			}else{
 				__pcap_nodify_work_thread(PCAP_OP_FLAG_IDLE_POLLING);
 			}		
-		}else if(pcap_ret < 0){
+		}else if(pcap_ret == -2){
+			;//do nothing, after call pcap_breakloop()
+		}else if(pcap_ret == -1){
 			printf("pcap err, %s\n", pcap_geterr(handle));
 			sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
 			exit(1);
@@ -1507,8 +1507,35 @@ int pcap_dl_io_init(int argc, char *argv[])
 	return 0;
 }
 
+
+
+/* not return except some error occur. */
+void pcap_dl_io_run(void)
+{
+	long dir_up = DIR_ROUTE_UP;
+	long dir_down = DIR_ROUTE_DOWN;
+	
+	pthread_create(&g_pcap_io_pid_up, NULL, pcap_io_thread, (void *)dir_up);
+
+	if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode){ /* 双网卡串联模式 */	
+		pthread_create(&g_pcap_io_pid_down, NULL, pcap_io_thread, (void *)dir_down);
+	}
+
+	return;
+}
+
 void pcap_dl_io_destroy(void)
 {
+	if(g_pcap_io_pid_up != 0){
+		pcap_breakloop(pcap_up_handle);
+		pthread_join(g_pcap_io_pid_up, NULL);
+	}
+	
+	if(g_pcap_io_pid_down){
+		pcap_breakloop(pcap_down_handle);
+		pthread_join(g_pcap_io_pid_down, NULL);
+	}
+
 	if(pcap_up_handle){
 		pcap_close(pcap_up_handle);
 		pcap_up_handle = NULL;
@@ -1519,21 +1546,6 @@ void pcap_dl_io_destroy(void)
 	}	
 }
 
-/* not return except some error occur. */
-void pcap_dl_io_run(void)
-{
-	pthread_t tid_up, tid_down;
-	long dir_up = DIR_ROUTE_UP;
-	long dir_down = DIR_ROUTE_DOWN;
-	
-	pthread_create(&tid_up, NULL, pcap_io_thread, (void *)dir_up);
-
-	if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode){ /* 双网卡串联模式 */	
-		pthread_create(&tid_down, NULL, pcap_io_thread, (void *)dir_down);
-	}
-
-	return;
-}
 
 
 #ifdef __cplusplus

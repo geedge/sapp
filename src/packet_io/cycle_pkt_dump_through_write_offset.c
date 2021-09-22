@@ -76,6 +76,7 @@ static int tcpdump_perceptive_flag = 0; /* 明察秋毫模式, 可以发现丢包数量 */
 static int greedy_seek_flag = 0; /* 偏移到最内层IP, 便于隧道模式下查找BUG */
 static int tcpdump_mesa_pkt_classify = PKT_CLASSIFY_IN;
 static int pkt_classify_watermark_flag = 0; /* 保存捕包来源值到dmac, 便于分别数据包来源 */
+static pthread_t g_socket_mode_cmd_listen_thread_id;
 
 static unsigned char phony_mac_hdr[14] = 
 {
@@ -989,6 +990,7 @@ static long cycle_pkt_dump_get_cur_files_size(void)
 	}
 
 	if(NULL == fgets(tmp_str, 1024, fp)){
+		pclose(fp);
 		return -1;
 	}
 	cur_files_size = (long)strtol(tmp_str, NULL, 10);
@@ -1319,8 +1321,12 @@ static void * cycle_pkt_dump_udp_socket_daemon_thread(void *arg)
 #endif
 	printf("\033[32m[Notice]'%s'is ready, port %d.\033[0m\n", "tcpdump_mesa",
 	        pkt_dump_tcp_bind_port);
+
+	while(sapp_get_current_state() < SAPP_STATE_PROCESSING){
+		sapp_usleep(1000);
+	}
 	
-	while(1){
+	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
 		cliaddr_len = sizeof(cliaddr);
 		connfd = accept(pkt_dump_tcp_cmd_sd, (struct sockaddr *) &cliaddr, &cliaddr_len);
 		if(connfd > 0){
@@ -1334,11 +1340,11 @@ static void * cycle_pkt_dump_udp_socket_daemon_thread(void *arg)
 
 static int cycle_pkt_dump_socket_init(void)
 {
-	pthread_t pid;
 	int i, opt;
 	struct sockaddr_in sockadd;
 	
 	pkt_dump_tcp_cmd_sd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
+	sapp_runtime_log(RLOG_LV_DEBUG, "cycle_pkt_dump_socket_init() create tcp command socket:%d\n", pkt_dump_tcp_cmd_sd);
 
 	opt = 1;
 	setsockopt(pkt_dump_tcp_cmd_sd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
@@ -1354,11 +1360,13 @@ static int cycle_pkt_dump_socket_init(void)
 	}
 	listen(pkt_dump_tcp_cmd_sd,  1); /* 不支持并发, 暂时只支持一个客户端捕包 */
 
+	/* 可能会捕获inject流量, 所以要预先分配send only max的fd */
 	for(i = 0; i < g_packet_io_thread_num + sapp_global_val->config.cpu.send_only_threads_max_num; i++){
 		pkt_dump_udp_pkt_sd[i] = socket(AF_INET, SOCK_DGRAM, 0);
+		sapp_runtime_log(RLOG_LV_DEBUG, "cycle_pkt_dump_socket_init() create udp send packet socket:%d\n", pkt_dump_udp_pkt_sd[i]);
 	}
 	
-	pthread_create(&pid, NULL, cycle_pkt_dump_udp_socket_daemon_thread, NULL);
+	pthread_create(&g_socket_mode_cmd_listen_thread_id, NULL, cycle_pkt_dump_udp_socket_daemon_thread, NULL);
 
 	return 0;
 }
@@ -1429,12 +1437,34 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 			printf("Catch SIGSEGV error!\n");	
 		}
 
-		sapp_log(20, 1, 1, "tools.pkt_dump enable, this maybe encumber performance!\n");
+		sapp_log(20, 1, 1, "tools.pkt_dump enable, this maybe slow down performance!\n");
 	}else{
 		ret = cycle_pkt_dump_socket_init();
 	}
 	
 	return ret;
+}
+
+
+void cycle_pkt_dump_destroy(void)
+{
+	unsigned int i;
+	
+	if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
+		for(i = 0; i < (unsigned int )g_packet_io_thread_num + sapp_global_val->config.cpu.send_only_threads_max_num; i++){
+			pcap_freecode(&G_PKT_DUMP_BPF_FILTER[i]);
+		}
+	}
+
+	if(PKT_DUMP_UDP_SOCKET == G_PKT_DUMP_MODE){
+		for(i = 0; i < g_packet_io_thread_num + sapp_global_val->config.cpu.send_only_threads_max_num; i++){
+				close(pkt_dump_udp_pkt_sd[i]);
+		}
+
+		close(pkt_dump_tcp_cmd_sd);
+
+		pthread_join(g_socket_mode_cmd_listen_thread_id, NULL);
+	}
 }
 
 

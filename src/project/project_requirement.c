@@ -257,16 +257,18 @@ static int project_req_conf_is_exist(const char *check_name)
 		preq_name = strtok_r(line_buf, delim, &save_ptr);
 		if(NULL == preq_name){
 			printf("invalid conf in %s, line %d\n", ABBR_PROJECT_LIST_CONF_FILE, line_num);
-			return 0;
+			goto fun_exit;
 		}
 
 		if(strncasecmp(preq_name, check_name, strlen(preq_name)) == 0){
-			return 1;
+			goto fun_exit;
 		}
 
 		while(strtok_r(NULL, delim, &save_ptr));
 		line_num++;
 	}
+
+fun_exit:
 
 	fclose(fp);
 	return 0;

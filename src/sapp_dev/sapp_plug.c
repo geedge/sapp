@@ -25,8 +25,13 @@ void MESA_platform_run(void);
 extern int sapp_args_v;
 int dpdk_init(int argc, char **argv);
 
-static volatile long g_destory_env_done;
-static volatile long g_destory_env_per_thread_done[MAX_THREAD_NUM];
+/*
+	这些变量不能放在sapp_global_val, 用于判断destroy进度状态的, destroy本身就是要free sapp_global_val变量的!
+	0:do nothing; 1:doing;  0x7FFFFFFF:done
+*/
+
+static volatile unsigned long g_destory_env_done;
+static volatile unsigned long g_destory_env_per_thread_done[MAX_THREAD_NUM];
 
 
 static void signal_user_handler(int signo)
@@ -74,7 +79,8 @@ static void show_mesa_log(void)
 int libsapp_setup_env(int argc, char *argv[])
 {
 	int ret;
-	
+
+	MESA_ATOMIC_SET(g_destory_env_done, 0);
 	sapp_gval_init();
 	sapp_set_current_state(SAPP_STATE_JUST_START);
 	sapp_set_current_state(SAPP_STATE_CONFIG_PARSE);
@@ -121,11 +127,14 @@ int libsapp_setup_env(int argc, char *argv[])
 
 	MESA_platform_run();
 
+	//TODO: dumpfile模式读包完后后自动退出, 否则一直运行
+	//除非有信号, 或者在其他线程强行调用sapp_destroy_env()
+#if 0	
 	while((SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state)
 	 && (sapp_global_val->config.packet_io.depolyment_mode_bin)){
 		usleep(1);
 	}
-
+#endif 
 	return 0;
 }
 
@@ -145,13 +154,18 @@ static void wait_for_all_io_threads(void)
 
 void libsapp_destroy_env_per_thread(int tseq)
 {
-	if(sapp_global_val->mthread_volatile[tseq]->destory_env_done){
+	if(MESA_ATOMIC_INC(g_destory_env_per_thread_done[tseq]) != 1){ 
+		/* INC后不是1, 说明原来肯定不是0, 说明至少有一个线程正在做destroy操作, 阻塞等待, 直到结束为止 */
+		while(MESA_ATOMIC_READ(g_destory_env_per_thread_done[tseq]) != 0x7FFFFFFF){
+			sapp_usleep(100);
+		}
 		return;
+	}else{
+		MESA_ATOMIC_SET(g_destory_env_per_thread_done[tseq], 1);
 	}
 
-	sapp_global_val->mthread_volatile[tseq]->destory_env_done = 1;
 	packet_io_clean_thread_context(tseq);
-	sapp_global_val->mthread_volatile[tseq]->destory_env_done = 2;
+	MESA_ATOMIC_SET(g_destory_env_per_thread_done[tseq], 0x7FFFFFFF);
 }
 
 
@@ -165,21 +179,26 @@ void libsapp_destroy_env(void)
 		如果不做控制, 就double free了!!
 		此处靠变量控制一下先后逻辑顺序.
 	*/
-	if(MESA_ATOMIC_READ(sapp_global_val->individual_volatile->destory_env_done) != 0){
-		while(MESA_ATOMIC_READ(sapp_global_val->individual_volatile->destory_env_done) != 2);
+	
+	if(MESA_ATOMIC_INC(g_destory_env_done) != 1){ 
+		/* INC后不是1, 说明原来肯定不是0, 说明至少有一个线程正在做destroy操作, 阻塞等待, 直到结束为止 */
+		while(MESA_ATOMIC_READ(g_destory_env_done) != 0x7FFFFFFF){
+			sapp_usleep(100);
+		}
 		return;
 	}else{
-		MESA_ATOMIC_SET(sapp_global_val->individual_volatile->destory_env_done, 1);
+		MESA_ATOMIC_SET(g_destory_env_done, 1);
 	}
 
-	sapp_global_val->individual_volatile->destory_env_done = 1;
+	MESA_ATOMIC_SET(g_destory_env_done, 1);
+
 	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
 
 	wait_for_all_io_threads();
 	
 	packet_io_exit();
 
-	sapp_global_val->individual_volatile->destory_env_done = 2;
+	MESA_ATOMIC_SET(g_destory_env_done, 0x7FFFFFFF);
 }
 
 

@@ -3414,12 +3414,17 @@ static int send_handle_init(int tot_thread_num)
 		if(g_send_handle[i].raw_ipv4_fd < 0){
 			sapp_log(30, ~0, ~0, "create raw socket v4 error, %s\n", strerror(errno));
 			return -1;
+		}else{
+			sapp_runtime_log(RLOG_LV_DEBUG, "send_handle_init() create raw_ipv4_fd socket:%d\n", g_send_handle[i].raw_ipv4_fd );
 		}
+		
 		g_send_handle[i].raw_udp_fd = socket(AF_INET, SOCK_DGRAM|SOCK_CLOEXEC, 0);
 		if(g_send_handle[i].raw_udp_fd < 0){
 			sapp_log(30, ~0, ~0, "create udp socket error, %s\n", strerror(errno));
 			return -1;
-		} 
+		}else{
+			sapp_runtime_log(RLOG_LV_DEBUG, "send_handle_init() create raw_udp_fd socket:%d\n", g_send_handle[i].raw_udp_fd );
+		}
 
 		if(SEND_PKT_MODE_GDEV == pcfg_io->inject_pkt_mode)
 		{
@@ -3441,6 +3446,8 @@ static int send_handle_init(int tot_thread_num)
 				sapp_log(30, ~0, ~0, "create socket v6 error, %s\n", strerror(errno));
 				sapp_log(30, ~0, ~0, "Please disable IPv6 module, then try again!\n");
 				return -1;
+			}else{
+				sapp_runtime_log(RLOG_LV_DEBUG, "send_handle_init() create raw_ipv6_fd socket:%d\n", g_send_handle[i].raw_ipv6_fd );
 			}
 		}
 		
@@ -3449,7 +3456,10 @@ static int send_handle_init(int tot_thread_num)
 			if(g_send_handle[i].raw_eth_fd < 0){
 				sapp_log(30, ~0, ~0, "create socket raw eth error, %s\n", strerror(errno));
 				return -1;
+			}else{
+				sapp_runtime_log(RLOG_LV_DEBUG, "send_handle_init() create raw_eth_fd socket:%d\n", g_send_handle[i].raw_eth_fd );
 			}
+			
 			ret = snprintf(g_send_handle[i].saddr_raw_eth.sa_data, sizeof(g_send_handle[i].saddr_raw_eth.sa_data), 
 						   "%s", pcfg_io->inject_mode_single_gateway_device);
 			if(ret >= (int)sizeof(g_send_handle[i].saddr_raw_eth.sa_data)){
@@ -3522,19 +3532,25 @@ int sendpacket_init_new(int tot_thread_num)
 
 void sendpacket_destroy(int tot_thread_num)
 {
-	int i;
+	int i, max_thread_num;
 
-	for(i = 0; i < tot_thread_num; i++){
+	max_thread_num = ((tot_thread_num) >= (INDEPENDENT_SEND_QUEUE_MAX_NUM)) ? (tot_thread_num) : (INDEPENDENT_SEND_QUEUE_MAX_NUM);
+
+	for(i = 0; i < max_thread_num; i++){
 		if(g_send_handle[i].raw_ipv4_fd > 0){
+			sapp_runtime_log(RLOG_LV_DEBUG, "sendpacket_destroy() close raw_ipv4_fd socket:%d\n", g_send_handle[i].raw_ipv4_fd );
 			close(g_send_handle[i].raw_ipv4_fd);
 		}
 		if(g_send_handle[i].raw_ipv6_fd > 0){
+			sapp_runtime_log(RLOG_LV_DEBUG, "sendpacket_destroy() close raw_ipv6_fd socket:%d\n", g_send_handle[i].raw_ipv6_fd );
 			close(g_send_handle[i].raw_ipv6_fd);
 		}	
 		if(g_send_handle[i].raw_udp_fd > 0){
+			sapp_runtime_log(RLOG_LV_DEBUG, "sendpacket_destroy() close raw_udp_fd socket:%d\n", g_send_handle[i].raw_udp_fd );
 			close(g_send_handle[i].raw_udp_fd);
 		}			
 		if(g_send_handle[i].raw_eth_fd > 0){
+			sapp_runtime_log(RLOG_LV_DEBUG, "sendpacket_destroy() close raw_eth_fd socket:%d\n", g_send_handle[i].raw_eth_fd );
 			close(g_send_handle[i].raw_eth_fd);
 		}	
 

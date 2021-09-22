@@ -1317,6 +1317,26 @@ int platform_register_action_judge(char (*action_cb_fun)(int net_conn_mode, char
 
 	return 0;
 }
+
+
+/* 清空各种计数, 慎用全局变量!! */
+void stream_destroy_plugin(void)
+{
+	g_StreamTcpFunNum=0;
+	g_StreamTcpAllFunNum=0;
+	g_StreamUdpFunNum=0;
+	g_Ipv4FunNum=0;
+	g_Ipv6FunNum=0;
+	g_Ipv4FragFunNum=0;
+	g_Ipv6FragFunNum=0;
+	g_PhonyFunNum=0;
+	g_PollingFunNum=0;
+	g_ArpFunNum=0;
+	g_OverlayIpv4FunNum=0;
+	g_OverlayUdpFunNum=0;
+
+}
+
 #ifdef __cplusplus
 }
 #endif
