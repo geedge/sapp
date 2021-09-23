@@ -375,6 +375,9 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"SPECIAL_CONFIG_LINK","send_raw_pkt_path",NULL, NULL, NULL,NULL, 0},
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"SPECIAL_CONFIG_LINK","vxlan_sport_service_map_path",NULL, NULL, NULL,NULL, 0},
 
+	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"tools.pkt_dump","pkt_dump_total_size",NULL, NULL, NULL,NULL, 0},
+	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"tools.pkt_dump","pkt_dump_file_max_size",NULL, NULL, NULL,NULL, 0},
+
 	{-1,-1,RLOG_LV_DEBUG,NULL,NULL,NULL, NULL, NULL,NULL, 0}
 };
 
@@ -970,7 +973,7 @@ static int parse_stream_compare_layer_config(void)
 		ret = embed_layer_t_pton(line_cont, &embed_layer);
 		if(ret < 0){
 			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse stream compare layer cfg_file:%s error, inlavid:%s", ABBR_STREAM_CMP_LAYER_CONF_FILE, line_cont); 
-			return -1;
+			goto fun_exit;
 		}
 
 		update_asymmetric_layer_info(&g_stream_compare_layer_set, &embed_layer);
@@ -992,6 +995,9 @@ static int parse_stream_compare_layer_config(void)
 						addr_type_abbreviation_ntop((enum addr_type_t)i), debug_layer_index_str);
 	}
 
+fun_exit:
+	fclose(fp);
+	
 	return 0;
 }
 

@@ -1402,10 +1402,17 @@ void packet_io_exit(void)
 	packet_io_under_ddos_destroy();
 
 	sapp_timer_destroy(sapp_global_val->individual_fixed.sapp_standalone_timer);
+
+	plugin_manage_destroy();
+
+	cycle_pkt_dump_destroy();
+
+	stream_destroy_plugin();
 	
 	sapp_gval_destroy();
 
-	exit(0);
+	//exit(0);
+	//TODO, 是否退出进程由外部模块控制, 或者设置配置文件或参数, 比如-d -n
 	
 	return;
 }

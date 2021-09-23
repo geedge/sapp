@@ -79,7 +79,7 @@ static void sapp_dictator_init(void)
 		assert(tmp != NULL);
 		free(tmp);
 	}else{
-		printf("\033[33m[Warning]dictator is not enable, maybe degrade performance, please check 'sapp.toml -> dictator_enable'.\033[0m\n");
+		printf("\033[33m[Warning]dictator is not enable, maybe slow down performance, please check 'sapp.toml -> dictator_enable'.\033[0m\n");
 	}
 #else
 	printf("\033[33m[Warning]sapp is compiled without dictator.\033[0m\n");

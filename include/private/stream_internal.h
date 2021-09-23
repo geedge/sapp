@@ -417,6 +417,7 @@ const char *addr_type_abbreviation_ntop(enum addr_type_t addrtype);
 int sapp_identify_broad_multicast_init(void);
 
 int plugin_manage_init(void);
+void plugin_manage_destroy(void);
 void  *plugin_get_plug_entry(const char *plug_name, const char *plug_entry_type);
 int libsapp_setup_env(int argc, char *argv[]);
 void *stream_bridge_create_per_stream(int mem_used_type, int thread_num);
@@ -438,6 +439,8 @@ int get_current_thread_cpu_affinity_id(void);
 void sapp_fs2_destroy(void);
 void sapp_gval_destroy(void);
 char *byte_convert_human(unsigned long long bytes, int interval, int multiple, char * byte_str);
+void cycle_pkt_dump_destroy(void);
+void stream_destroy_plugin(void);
 
 
 

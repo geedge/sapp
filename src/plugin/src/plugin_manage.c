@@ -81,12 +81,20 @@ int plug_mange_get_entry_id(const char *plug_name, const char *plug_entry_name)
 	}
 	this_entry_id = g_plug_global_entry_index;
 	g_plug_global_entry[this_entry_id].entry_id = this_entry_id;
-	g_plug_global_entry[this_entry_id].plug_name =  sapp_strdup(plug_name);
-	g_plug_global_entry[this_entry_id].plug_entry_name =  sapp_strdup(plug_entry_name);
-
+	g_plug_global_entry[this_entry_id].plug_name =  sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_name)+1);
+	strncpy((char *)g_plug_global_entry[this_entry_id].plug_name, plug_name, strlen(plug_name));
+	
+	g_plug_global_entry[this_entry_id].plug_entry_name =  sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_entry_name));
+	strncpy((char *)g_plug_global_entry[this_entry_id].plug_entry_name, plug_entry_name, strlen(plug_entry_name));
 	g_plug_global_entry_index++;
 	
 	return this_entry_id;
+}
+
+static void plug_necessary_htable_free_cb(void *data)
+{
+	//necessary htable没有实际的data, 只有key
+	;//do nothing
 }
 
 static MESA_htable_handle create_plug_necessary_htable(void)
@@ -115,14 +123,21 @@ static MESA_htable_handle create_plug_necessary_htable(void)
 	opt_int = HASH_ELIMINATE_ALGO_FIFO;
 	MESA_htable_set_opt(htable, MHO_ELIMIMINATE_TYPE, &opt_int, sizeof(int));	
 
-	/* key是字符串, MHO_CBFUN_KEY_COMPARE, MHO_CBFUN_KEY_TO_INDEX使用htable内置的默认函数即�?*/
+	/* key是字符串, MHO_CBFUN_KEY_COMPARE, MHO_CBFUN_KEY_TO_INDEX使用htable内置的默认函�?*/
 
-	/* 此hash表永不超�? 永不淘汰, 可以不注册free callback */
-	//MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  NULL, sizeof(void *));	
+	MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  plug_necessary_htable_free_cb, sizeof(void *));	
 	
 	ret = MESA_htable_mature(htable);
 	
 	return htable;
+}
+
+static void plug_uniq_htable_free_cb(void *data)
+{
+	struct plug_uniq_t *plug_info = (struct plug_uniq_t *)data;
+
+	sapp_mem_free(SAPP_MEM_FIX_PLUG_CTRL, -1, (void *)plug_info->plug_path);
+	sapp_mem_free(SAPP_MEM_FIX_PLUG_CTRL, -1, (void *)plug_info);
 }
 
 
@@ -154,8 +169,7 @@ static MESA_htable_handle create_plug_uniq_htable(void)
 
 	/* key是字符串, MHO_CBFUN_KEY_COMPARE, MHO_CBFUN_KEY_TO_INDEX使用htable内置的默认函数即�?*/
 
-	/* 此hash表永不超�? 永不淘汰, 可以不注册free callback */
-	//MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  NULL, sizeof(void *));	
+	MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  plug_uniq_htable_free_cb, sizeof(void *));	
 	
 	ret = MESA_htable_mature(htable);
 	
@@ -200,11 +214,23 @@ static uchar * plug_manage_key_dup_cb(const uchar *key, uint key_size)
 	struct plug_manage_key_t *new_mg_key; 
 	const struct plug_manage_key_t *raw_mg_key = (struct plug_manage_key_t *)key;
 
-	new_mg_key = (struct plug_manage_key_t *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(struct plug_manage_key_t));
-	new_mg_key->plug_name = sapp_strdup(raw_mg_key->plug_name);
-	new_mg_key->plug_entry_type = sapp_strdup(raw_mg_key->plug_entry_type);
+	new_mg_key = (struct plug_manage_key_t *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(struct plug_manage_key_t));
+	new_mg_key->plug_name = sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, strlen(raw_mg_key->plug_name)+1);
+	strncpy((char *)new_mg_key->plug_name, raw_mg_key->plug_name, strlen(raw_mg_key->plug_name));
+	
+	new_mg_key->plug_entry_type = sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, strlen(raw_mg_key->plug_entry_type)+1);
+	strncpy((char *)new_mg_key->plug_entry_type, raw_mg_key->plug_entry_type, strlen(raw_mg_key->plug_entry_type));
 
 	return (uchar *)new_mg_key;
+}
+
+
+static void plug_manage_key_free_cb(uchar *key, uint key_size)
+{
+	struct plug_manage_key_t *raw_mg_key = (struct plug_manage_key_t *)key;
+
+	sapp_mem_free(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, (void *)raw_mg_key->plug_name);
+	sapp_mem_free(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, (void *)raw_mg_key->plug_entry_type);
 }
 
 
@@ -240,7 +266,9 @@ static MESA_htable_handle create_plug_manage_htable(void)
 
 	MESA_htable_set_opt(htable, MHO_CBFUN_COMPLEX_KEY_DUP,  (void *)&plug_manage_key_dup_cb, sizeof(void *));	
 
-	/* 此hash表永不超�? 永不淘汰, 可以不注册free callback */
+	MESA_htable_set_opt(htable, MHO_CBFUN_COMPLEX_KEY_FREE, (void *)plug_manage_key_free_cb, sizeof(void *));
+
+	/* 注意: plug_manage的data是dlopen的函数地址, 不能注册free callback */
 	//MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  NULL, sizeof(void *));	
 	//MESA_htable_set_opt(htable, MHO_CBFUN_COMPLEX_KEY_FREE,  (void *)&ipv4_frag_key_free, sizeof(void *));	
 	
@@ -272,8 +300,9 @@ int plugin_load_new_plug(const char *plug_name, const char *plug_path)
 		return -1;
 	}
 
-	plug_info = (struct plug_uniq_t *)malloc(sizeof(struct plug_uniq_t));
-	plug_info->plug_path = strdup(plug_path);
+	plug_info = (struct plug_uniq_t *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, sizeof(struct plug_uniq_t));
+	plug_info->plug_path = sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_path)+1);
+	strncpy((char *)plug_info->plug_path, plug_path, strlen(plug_path));
 	plug_info->is_necessary = plugin_is_necessary(plug_path);
 
 	MESA_htable_add(g_plug_uniq_htable, (unsigned char *)plug_name, strlen(plug_name), plug_info);
@@ -358,8 +387,8 @@ int plugin_manage_init(void)
 	
 	plugin_parse_necessary_conf();
 
-	/* index 0保留, 全为内置插件, 如 udp_teredo_identify_entry(), gdev_keepalive_udp_entry()等等
-       或者是暂不支持entry_id, 而直接调用  stream_register_xxx系列函数注册的插件.
+	/* index 0保留, 全为内置插件, �?udp_teredo_identify_entry(), gdev_keepalive_udp_entry()等等
+       或者是暂不支持entry_id, 而直接调�? stream_register_xxx系列函数注册的插�?
 	*/
 	g_plug_global_entry[0].entry_id = 0;
 	g_plug_global_entry[0].plug_name = sapp_strdup("inner_plug");
@@ -369,6 +398,26 @@ int plugin_manage_init(void)
 	return 0;
 }
 
+void plugin_manage_destroy(void)
+{
+	int i;
+	
+	MESA_htable_destroy(g_plug_necessary_htable, NULL);
+	g_plug_necessary_htable = NULL;
+	
+	MESA_htable_destroy(g_plug_uniq_htable, NULL);
+	g_plug_uniq_htable = NULL;
+	
+	MESA_htable_destroy(g_plug_manage_htable, NULL);
+	g_plug_manage_htable = NULL;
+
+	for(i = 0; i < g_plug_global_entry_index; i++){
+		sapp_mem_free(SAPP_MEM_FIX_PLUG_CTRL, -1, (void *)g_plug_global_entry[i].plug_name);
+		sapp_mem_free(SAPP_MEM_FIX_PLUG_CTRL, -1, (void *)g_plug_global_entry[i].plug_entry_name);
+	}
+	memset(g_plug_global_entry, 0, sizeof(g_plug_global_entry));
+	g_plug_global_entry_index = 0;
+}
 
 #ifdef __cplusplus
 }

@@ -14,6 +14,7 @@ typedef enum{
 	
 	SAPP_MEM_FIX_GLOBAL_VAL, 
 	SAPP_MEM_FIX_GLOBAL_STREAM, 
+	SAPP_MEM_FIX_PLUG_CTRL, 	/* 插件管理初始化必需的相关数据结构, 跟每个流动态挂载的插件无关 */
 	
 /*******************************************	
 	以上是全局变量, 或初始化后不变的内存
@@ -29,7 +30,7 @@ typedef enum{
 	SAPP_MEM_DYN_UDP_STREAM,
 	SAPP_MEM_DYN_TCP_HALF_STREAM, /* c2s, s2c半流结构 */
 	SAPP_MEM_DYN_UDP_HALF_STREAM,
-	SAPP_MEM_DYN_PLUG_CTRL, 	/* 表示插件管理必需的相关数据结构, 但不包括业务插件使用的内存 */
+	SAPP_MEM_DYN_PLUG_CTRL, 	/* 每个流插件管理必需的相关数据结构, 但不包括业务插件使用的内存 */
 	SAPP_MEM_DYN_TCP_UNORDER,
 	SAPP_MEM_DYN_TCP_SYN_OPT,	
 	SAPP_MEM_DYN_TCP_POLLING_RAW_PKT,
