@@ -441,6 +441,13 @@ void sapp_gval_destroy(void);
 char *byte_convert_human(unsigned long long bytes, int interval, int multiple, char * byte_str);
 void cycle_pkt_dump_destroy(void);
 void stream_destroy_plugin(void);
+void stream_bridge_destroy(void);
+void global_project_req_destroy(void);
+void raw_ip_frag_list_v4_destroy(void);
+void raw_ip_frag_list_v6_destroy(void);
+void global_stream_destroy(void);
+void global_sapp_timer_destroy(void);
+
 
 
 

@@ -1083,6 +1083,7 @@ int marsio_dl_io_init(int argc, char *argv[])
 	int i, ret;
 	char bind_mask_string[128];
 	char app_name[32];
+	int max_send_queue_num;
 
 	if(marsio_dl_get_function_entry() < 0){
 		printf("\033[1;31;40m[Error]dlopen marsio.so symbol failed!\033[0m\n");
@@ -1173,10 +1174,12 @@ int marsio_dl_io_init(int argc, char *argv[])
 	g_mr4_sendpath_up_set = (struct mr_sendpath **)malloc(sizeof(void *) * g_mr4_device_num);	
 	g_mr4_sendpath_down_set = (struct mr_sendpath **)malloc(sizeof(void *) * g_mr4_device_num);	
 
+	max_send_queue_num = sapp_global_val->config.cpu.worker_threads + sapp_global_val->config.cpu.send_only_threads_max_num;
+	
 	for(i = 0; i < g_mr4_device_num; i++){
 		g_mr4_dev_up_handle_set[i] = ptr_marsio_open_device(sapp_marsio4_instance, g_mr4_up_device_name[i], 
 											g_marsio4_work_thread_num, 
-											INDEPENDENT_SEND_QUEUE_MAX_NUM);
+											max_send_queue_num);
 		if(NULL == g_mr4_dev_up_handle_set[i]){
 			printf("\033[1;31;40m[Error]Open device '%s' error, please check sapp.toml->packet_io.interface!\033[0m\n", 
 				g_mr4_up_device_name[i]);
@@ -1187,7 +1190,7 @@ int marsio_dl_io_init(int argc, char *argv[])
 		if(NET_CONN_SERIAL_2CARD == g_marsio4_topology_mode){								
 			g_mr4_dev_down_handle_set[i] = ptr_marsio_open_device(sapp_marsio4_instance, g_mr4_down_device_name[i], 
 												g_marsio4_work_thread_num, 
-												INDEPENDENT_SEND_QUEUE_MAX_NUM);
+												max_send_queue_num);
 			if(NULL == g_mr4_dev_down_handle_set[i]){
 				printf("\033[1;31;40m[Error]Open device '%s' error, please check sapp.toml->packet_io.interface!\033[0m\n", 
 					g_mr4_up_device_name[i]);
@@ -1197,7 +1200,6 @@ int marsio_dl_io_init(int argc, char *argv[])
 		}									
 	}
 
-	
 	return 0;
 }
 

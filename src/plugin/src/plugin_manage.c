@@ -84,7 +84,7 @@ int plug_mange_get_entry_id(const char *plug_name, const char *plug_entry_name)
 	g_plug_global_entry[this_entry_id].plug_name =  sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_name)+1);
 	strncpy((char *)g_plug_global_entry[this_entry_id].plug_name, plug_name, strlen(plug_name));
 	
-	g_plug_global_entry[this_entry_id].plug_entry_name =  sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_entry_name));
+	g_plug_global_entry[this_entry_id].plug_entry_name =  sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_entry_name)+1);
 	strncpy((char *)g_plug_global_entry[this_entry_id].plug_entry_name, plug_entry_name, strlen(plug_entry_name));
 	g_plug_global_entry_index++;
 	

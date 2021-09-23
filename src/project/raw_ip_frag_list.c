@@ -476,6 +476,21 @@ raw_ipfrag_list_t *raw_ip_frag_list_global_move_pkt(struct streaminfo *stream)
 	return pkt_frag_list;
 }
 
+void raw_ip_frag_list_v4_destroy(void)
+{
+	free(G_IP_FRAG_LIST_V4);
+	G_IP_FRAG_LIST_V4 = NULL;
+	g_raw_ip_frag_list_v4_plugid = -1;
+}
+
+void raw_ip_frag_list_v6_destroy(void)
+{
+	free(G_IP_FRAG_LIST_V6);
+	G_IP_FRAG_LIST_V6 = NULL;
+	g_raw_ip_frag_list_v6_plugid = -1;
+}
+
+
 #ifdef __cplusplus
 }
 #endif

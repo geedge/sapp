@@ -84,6 +84,7 @@ struct streamindex
 
 struct stream_list
 {
+	struct streamindex *__real_head; /* 初始化后不变, 仅用于最后free */
 	struct streamindex *head; /* 删除淘汰从head开始, 即oldest */
 	struct streamindex *tail; /* 新节点做为tail, 即newest */
 	int cnt;

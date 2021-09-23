@@ -197,13 +197,13 @@ enum sapp_state_t{
 	SAPP_STATE_JUST_START, /* main() called by shell command */
 	SAPP_STATE_CONFIG_PARSE,
 	SAPP_STATE_PLATFORM_INITING,
-	SAPP_STATE_PLATFORM_INITED,
+	SAPP_STATE_PLATFORM_INITED, /* 3 */
 	SAPP_STATE_PLUG_INITING,
-	SAPP_STATE_PLUG_INITED, 
+	SAPP_STATE_PLUG_INITED,     /* 5 */
 	SAPP_STATE_PKT_IO_INITING,
 	SAPP_STATE_PKT_IO_INITED,		
-	SAPP_STATE_PROCESSING,
-	SAPP_STATE_READY_TO_EXIT, /* pcap dumpfile mode, or recv custom signal */
+	SAPP_STATE_PROCESSING,      /* 8 */
+	SAPP_STATE_READY_TO_EXIT,   /* 9,  pcap dumpfile mode, or recv custom signal */
 };
 
 

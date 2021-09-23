@@ -3407,7 +3407,10 @@ static int send_handle_init(int tot_thread_num)
 #if 0 /* 2018 lijia modify , 增加插件创建的线程主动发包功能 */
 	for(i = 0; i < tot_thread_num; i++){
 #else
-	max_thread_num = ((tot_thread_num) >= (INDEPENDENT_SEND_QUEUE_MAX_NUM)) ? (tot_thread_num) : (INDEPENDENT_SEND_QUEUE_MAX_NUM);
+
+	//max_thread_num = ((tot_thread_num) >= (INDEPENDENT_SEND_QUEUE_MAX_NUM)) ? (tot_thread_num) : (INDEPENDENT_SEND_QUEUE_MAX_NUM);
+	max_thread_num = sapp_global_val->config.cpu.worker_threads + sapp_global_val->config.cpu.send_only_threads_max_num;
+	
 	for(i = 0; i < max_thread_num; i++){
 #endif	
 		g_send_handle[i].raw_ipv4_fd = socket(PF_INET, SOCK_RAW, IPPROTO_RAW);
@@ -3534,7 +3537,8 @@ void sendpacket_destroy(int tot_thread_num)
 {
 	int i, max_thread_num;
 
-	max_thread_num = ((tot_thread_num) >= (INDEPENDENT_SEND_QUEUE_MAX_NUM)) ? (tot_thread_num) : (INDEPENDENT_SEND_QUEUE_MAX_NUM);
+	//max_thread_num = ((tot_thread_num) >= (INDEPENDENT_SEND_QUEUE_MAX_NUM)) ? (tot_thread_num) : (INDEPENDENT_SEND_QUEUE_MAX_NUM);
+	max_thread_num = sapp_global_val->config.cpu.worker_threads + sapp_global_val->config.cpu.send_only_threads_max_num;
 
 	for(i = 0; i < max_thread_num; i++){
 		if(g_send_handle[i].raw_ipv4_fd > 0){

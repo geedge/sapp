@@ -1412,6 +1412,18 @@ static int config_sanity_check(void)
 		sleep(1);
 	}
 
+	if(sapp_global_val->config.cpu.send_only_threads_max_num > INDEPENDENT_SEND_QUEUE_MAX_NUM){
+		sapp_log(30, ~0, ~0, "[Error]send_only_threads_max is:%d, but max support value is:%d", sapp_global_val->config.cpu.send_only_threads_max_num, INDEPENDENT_SEND_QUEUE_MAX_NUM); 
+		return -1;		
+	}
+
+	if(sapp_global_val->config.cpu.worker_threads + sapp_global_val->config.cpu.send_only_threads_max_num > INDEPENDENT_SEND_QUEUE_MAX_NUM){
+		sapp_log(30, ~0, ~0, "[Error]send_only_threads_max + worker_threads is:%d, but max support send queue is:%d", 
+				sapp_global_val->config.cpu.send_only_threads_max_num + sapp_global_val->config.cpu.worker_threads, 
+				INDEPENDENT_SEND_QUEUE_MAX_NUM); 
+		return -1;		
+	}	
+
 	if(pconfig->cpu.bind_mask_array_num > 0){ 
 		if(pconfig->cpu.worker_threads + pconfig->cpu.send_only_threads_max_num != pconfig->cpu.bind_mask_array_num){
 			printf("\033[41m[Error]etc/sapp.toml->CPU->bind_mask value is not match etc/sapp.toml->CPU->worker_threads + CPU->send_only_threads_max!\033[0m\n");

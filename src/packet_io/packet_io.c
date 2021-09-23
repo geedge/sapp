@@ -1384,36 +1384,38 @@ int packet_io_init(int argc, char *argv[])
 
 
 void packet_io_exit(void)
-{
+{	
 	/* 读包模式下, 给其他非IO线程一些时间, 处理未完成数据, 比如异步发送日志, field_stat刷新统计数据等等. */
 	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
-	sleep(sapp_global_val->config.packet_io.dumpfile_sleep_time_before_exit);
+	//sleep(sapp_global_val->config.packet_io.dumpfile_sleep_time_before_exit);
 
 	sysinfo_output(); /* 最后一次写统计信息, 关闭标志位, 因为流表将被清空, 再写就没意义了 */
 	update_packet_io_status_sw = 0;
-		
+
+	global_sapp_timer_destroy();
+	
 	plugctrl_destroy_all_plug();
 	sendpacket_destroy(g_packet_io_thread_num);
 	packet_io_lib_destroy();
-
 
 	sapp_log_handle_destroy();
 	sapp_fs2_destroy();
 	packet_io_under_ddos_destroy();
 
-	sapp_timer_destroy(sapp_global_val->individual_fixed.sapp_standalone_timer);
-
 	plugin_manage_destroy();
+
+	global_project_req_destroy();
+
+	stream_bridge_destroy();
 
 	cycle_pkt_dump_destroy();
 
 	stream_destroy_plugin();
+
+	global_stream_destroy();
 	
 	sapp_gval_destroy();
 
-	//exit(0);
-	//TODO, 是否退出进程由外部模块控制, 或者设置配置文件或参数, 比如-d -n
-	
 	return;
 }
 

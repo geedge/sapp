@@ -287,6 +287,15 @@ int stream_bridge_init(void)
 	return 0;
 }
 
+void stream_bridge_destroy(void)
+{
+	g_stream_bridge_actual_num = 0;
+	memset(g_stream_bridge_manage, 0, sizeof(g_stream_bridge_manage));
+	MESA_htable_destroy(g_stream_bridge_name2id_htable, NULL);
+	g_stream_bridge_name2id_htable = NULL;
+}
+
+
 #ifdef __cplusplus
 }
 #endif

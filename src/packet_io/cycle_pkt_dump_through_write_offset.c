@@ -1326,12 +1326,13 @@ static void * cycle_pkt_dump_udp_socket_daemon_thread(void *arg)
 		sapp_usleep(1000);
 	}
 	
-	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
+	while(SAPP_STATE_PROCESSING == sapp_get_current_state()){
 		cliaddr_len = sizeof(cliaddr);
 		connfd = accept(pkt_dump_tcp_cmd_sd, (struct sockaddr *) &cliaddr, &cliaddr_len);
 		if(connfd > 0){
-			//cycle_pkt_dump_command_parse(connfd);
 			cycle_pkt_dump_command_parse(connfd);
+		}else{
+			sapp_usleep(1000 * 10);
 		}
 	}
 
@@ -1348,6 +1349,10 @@ static int cycle_pkt_dump_socket_init(void)
 
 	opt = 1;
 	setsockopt(pkt_dump_tcp_cmd_sd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
+
+	/* 改为非阻塞模式, 便于sapp整体destroy dev, 而不退出进程 */
+	int flags = fcntl(pkt_dump_tcp_cmd_sd, F_GETFL, 0);
+	fcntl(pkt_dump_tcp_cmd_sd , F_SETFL , flags|O_NONBLOCK);
 
 	memset(&sockadd, 0, sizeof(sockadd));
 	sockadd.sin_family = AF_INET;

@@ -211,6 +211,11 @@ void __st_pkt_proc_context_check_timeout(int tid)
 	sapp_timer_handle_inner_t *inner_h;
 
 	inner_h = (sapp_timer_handle_inner_t *)ABBR_SAPP_TIMER_HANDLE[tid];
+
+	if(NULL == sapp_global_val || NULL == inner_h){
+		return;
+	}
+	
 	if(0 == MESA_ATOMIC_READ(inner_h->running)){
 		return;
 	}	
@@ -335,7 +340,6 @@ int sapp_timer_start(sapp_timer_handle h)
 
 	if(STO_EFFECTIVE_SCOPE_STANDALONE_THREAD == inner_h->effective_mode){
 		pthread_create(&stand_alone_pid, NULL, __st_alone_timer_check_thread, h);
-		pthread_detach(stand_alone_pid);
 		inner_h->effective_thread_pid = stand_alone_pid;
 	}else{
 		inner_h->effective_thread_pid = sapp_global_val->individual_fixed.thread_obtain_id[inner_h->effective_thread_index];
@@ -346,28 +350,7 @@ int sapp_timer_start(sapp_timer_handle h)
 	return 0;
 }
 
-int sapp_timer_destroy(sapp_timer_handle h)
-{
-	sapp_timer_handle_inner_t *inner_h = (sapp_timer_handle_inner_t *)h;
 
-
-	if(__st_is_platform_timer(h)){
-		return ST_RET_CANT_OP_PLATFORM_TIMER; /* 不允许外部调用者start 全局句柄 */
-	}
-
-	if(STO_EFFECTIVE_SCOPE_PKT_PROCESS_THREADS == inner_h->effective_mode){
-		return ST_RET_CANT_OP_PLATFORM_TIMER; /* 不允许外部调用者start 全局句柄 */
-	}
-
-	MESA_ATOMIC_SET(inner_h->running, 0);
-	pthread_cancel(inner_h->effective_thread_pid);
-
-	///////to do, to be improved
-
-	free(h);
-
-	return ST_RET_SUCC;
-}
 
 
 sapp_timer_handle sapp_get_platform_timer(int thread_index)
@@ -401,11 +384,8 @@ static void *sapp_standalone_timer_check_timeout(void *arg)
 {
 	sapp_timer_handle_inner_t *inner_h = (sapp_timer_handle_inner_t *)sapp_global_val->individual_fixed.sapp_standalone_timer;
 	
-	while(1){
-		if(MESA_ATOMIC_READ(inner_h->running)){
-			event_base_loop(inner_h->libev_base, EVLOOP_NONBLOCK);
-		}	
-		
+	while(MESA_ATOMIC_READ(inner_h->running)){
+		event_base_loop(inner_h->libev_base, EVLOOP_NONBLOCK);
 		sapp_usleep(1);
 	}
 
@@ -491,6 +471,41 @@ void *sapp_time_event_thread(void *arg)
 	
 	return NULL;
 }
+
+int sapp_timer_destroy(sapp_timer_handle h)
+{
+	sapp_timer_handle_inner_t *inner_h = (sapp_timer_handle_inner_t *)h;
+
+	if(NULL == inner_h){
+		return ST_RET_ERROR;
+	}
+
+	MESA_ATOMIC_SET(inner_h->running, 0);
+	sapp_usleep(100);
+	pthread_join(inner_h->effective_thread_pid, NULL);
+
+	//free 内存在global_sapp_timer_destroy()实现
+	//free(h);
+
+	return ST_RET_SUCC;
+}
+
+void global_sapp_timer_destroy(void)
+{
+	int i;
+	sapp_timer_handle_inner_t *inner_h;
+	
+	for(i = 0; i < g_iThreadNum; i++){
+		inner_h = (sapp_timer_handle_inner_t *)ABBR_SAPP_TIMER_HANDLE[i];
+		event_base_free(inner_h->libev_base);
+		free(inner_h);
+	}
+
+	inner_h = sapp_global_val->individual_fixed.sapp_standalone_timer;	
+	event_base_free(inner_h->libev_base);
+	free(inner_h);	
+}
+
 
 #ifdef __cplusplus
 }

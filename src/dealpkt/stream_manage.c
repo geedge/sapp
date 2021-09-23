@@ -148,6 +148,7 @@ static int init_stream_detail(struct global_stream *g_stream)
     g_stream->freeList.cnt=g_stream->freeList.max_cnt;
     g_stream->freeList.tail= &(g_stream->freeList.head[g_stream->freeList.max_cnt-1]);	
 
+	g_stream->freeList.__real_head = g_stream->freeList.head;
     return 0;
 }
 
@@ -496,34 +497,7 @@ int udp_set_stream_num(int udp1,int udp2,int udp3)
 	return 0;	
 }
 
-int init_stream_manage(int threadcount)
-{
-	int i;
-	
-	//wy_init_hash();
-	
-	for(i=0;i<MAX_TCP_STATE;i++)
-		tcp_stream_table_size+=tcpstate_num[i];
-	for(i=0;i<MAX_UDP_STATE;i++)
-		udp_stream_table_size+=udpstate_num[i];
 
-	G_MESA_GLOBAL_STREAM = (struct global_stream **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, threadcount * sizeof (char *));
- 	memset (G_MESA_GLOBAL_STREAM, 0, threadcount * sizeof (char *));
-	for(i=0;i<threadcount;i++)
-	{
-		G_MESA_GLOBAL_STREAM[i]=(struct global_stream *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, sizeof(struct global_stream));
-		init_stream_detail(G_MESA_GLOBAL_STREAM[i]);
-	}
-
-	//add 20140626 	初始化procject接口
-	project_requirement_global_init();
-
-	if(stream_bridge_init() < 0){
-		exit(1);
-	}
-
-	return 0;   
-}
 
 static struct streaminfo *del_stream(struct streamindex *pindex, unsigned char close_cause)
 {
@@ -3504,6 +3478,56 @@ int find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *t
 	return tot_found_stream_num;
 }
 
+int init_stream_manage(int threadcount)
+{
+	int i;
+	
+	//wy_init_hash();
+	
+	for(i=0;i<MAX_TCP_STATE;i++)
+		tcp_stream_table_size+=tcpstate_num[i];
+	for(i=0;i<MAX_UDP_STATE;i++)
+		udp_stream_table_size+=udpstate_num[i];
+
+	G_MESA_GLOBAL_STREAM = (struct global_stream **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, threadcount * sizeof (char *));
+ 	memset (G_MESA_GLOBAL_STREAM, 0, threadcount * sizeof (char *));
+	for(i=0;i<threadcount;i++)
+	{
+		G_MESA_GLOBAL_STREAM[i]=(struct global_stream *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, sizeof(struct global_stream));
+		init_stream_detail(G_MESA_GLOBAL_STREAM[i]);
+	}
+
+	//add 20140626 	初始化procject接口
+	project_requirement_global_init();
+
+	if(stream_bridge_init() < 0){
+		exit(1);
+	}
+
+	return 0;   
+}
+
+
+void global_stream_destroy(void)
+{
+	int tseq;
+
+	for(tseq = 0; tseq < g_packet_io_thread_num; tseq++){
+		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM[tseq]->tcp_stream_table);
+		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM[tseq]->udp_stream_table);
+		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM[tseq]->tcp_stream_talbe_hash_count);
+		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM[tseq]->udp_stream_talbe_hash_count);
+		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM[tseq]->freeList.__real_head);
+
+		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM[tseq]);
+	}
+	
+	sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM);
+	G_MESA_GLOBAL_STREAM = NULL;
+	
+	tcp_stream_table_size = 0;
+	udp_stream_table_size = 0;
+}
 		
 
 #ifdef __cplusplus

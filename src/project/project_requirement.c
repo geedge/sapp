@@ -605,6 +605,19 @@ int project_requirement_global_init(void)
 	return 0;
 }
 
+
+void global_project_req_destroy(void)
+{
+	raw_ip_frag_list_v4_destroy();
+	raw_ip_frag_list_v6_destroy();
+
+	MESA_htable_destroy(G_PROJECT_NAME_HASH, NULL);
+	G_PROJECT_NAME_HASH = NULL;
+
+	G_PROJECT_PLUG_NUM = 0;
+	memset(G_PROJECT_REQ_MANAGE, 0, sizeof(G_PROJECT_REQ_MANAGE));
+}
+
 #ifdef __cplusplus
 }
 #endif

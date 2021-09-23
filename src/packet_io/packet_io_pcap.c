@@ -797,7 +797,7 @@ static void *__pcap_work_thread(void *arg)
 					sapp_global_val->individual_fixed.thread_tid[thread_num],
 					sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[thread_num]);
 
-	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
+	while(sapp_get_current_state() < SAPP_STATE_PROCESSING){
 		sapp_usleep(1000);
 	}
 
@@ -853,10 +853,9 @@ static void *__pcap_work_thread(void *arg)
 			polling_stream_timeout(thread_num);		
 			continue;
 		}else if(PCAP_OP_FLAG_EOF == pkt_queue_node.op_flag){
-			libsapp_destroy_env_per_thread(thread_num);
 			printf("[Info]free_thread_context success, tid:%d\n", thread_num);
 			work_thread_pool[thread_num].op_status = PCAP_OP_FLAG_EOF;
-			goto exit;
+			break;
 		}
 
 		raw_pkt_hdr[thread_num] = (struct mesa_ethernet_hdr *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data;
@@ -874,6 +873,8 @@ static void *__pcap_work_thread(void *arg)
 
 		PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
 	}
+
+	libsapp_destroy_env_per_thread(thread_num);
 
 exit:
 	return NULL;
@@ -1278,9 +1279,6 @@ static void wait_all_work_thread(void)
 	
 	printf("[Info]clear all context success.\n");
 
-	//packet_io_exit();
-	(*g_pcap_exit_cb_fun)();
-
 	return;
 }
 
@@ -1359,7 +1357,7 @@ static void *pcap_io_thread(void *arg)
 		handle = pcap_down_handle;
 	}
 
-	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
+	while(sapp_get_current_state() < SAPP_STATE_PROCESSING){
 		sapp_usleep(1000);
 	}
 
@@ -1370,13 +1368,13 @@ static void *pcap_io_thread(void *arg)
 			if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
 				printf("\033[32m[Notice]process dumpfile over!\033[0m\n");
 				__pcap_nodify_work_thread(PCAP_OP_FLAG_EOF);
-				wait_all_work_thread();
-				return NULL;
+				break;
 			}else{
 				__pcap_nodify_work_thread(PCAP_OP_FLAG_IDLE_POLLING);
 			}		
 		}else if(pcap_ret == -2){
-			;//do nothing, after call pcap_breakloop()
+			__pcap_nodify_work_thread(PCAP_OP_FLAG_EOF);
+			break;//do nothing, after call pcap_breakloop()
 		}else if(pcap_ret == -1){
 			printf("pcap err, %s\n", pcap_geterr(handle));
 			sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
@@ -1384,6 +1382,10 @@ static void *pcap_io_thread(void *arg)
 		}
 	}
 
+	if(g_pcap_exit_cb_fun){
+		(*g_pcap_exit_cb_fun)();
+	}
+	
 	return NULL;
 }
 
@@ -1526,6 +1528,8 @@ void pcap_dl_io_run(void)
 
 void pcap_dl_io_destroy(void)
 {
+	int i;
+	
 	if(g_pcap_io_pid_up != 0){
 		pcap_breakloop(pcap_up_handle);
 		pthread_join(g_pcap_io_pid_up, NULL);
@@ -1544,6 +1548,13 @@ void pcap_dl_io_destroy(void)
 		pcap_close(pcap_down_handle);
 		pcap_down_handle = NULL;
 	}	
+
+	for(i = 0; i < g_pcap_work_thread_num; i++){
+		pthread_cond_destroy(&work_thread_pool[i].cond);
+		pthread_mutex_destroy(&work_thread_pool[i].mutex);
+		close(work_thread_pool[i].sd_raw_eth);
+		work_thread_pool[i].sd_raw_eth = -1;
+	}
 }
 
 

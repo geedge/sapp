@@ -238,8 +238,8 @@ int MESA_platform_init(int argc, char *argv[])
 	timestamp_record_init();
 
 	/* timer must before packet_io and plug_proc() */
-	__sapp_timer_platform_init();
 
+	__sapp_timer_platform_init();
 	
 #if 1
 	if(cycle_pkt_dump_init(argc , argv) < 0){
