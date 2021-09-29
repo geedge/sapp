@@ -113,6 +113,7 @@ typedef struct{
 	int (*dl_io_send_only_thread_init)(void); /* 2020-06-01 lijia add, 插件自行创建的独立发包线程, 需要调用此接口绑定到特定CPU核心上 */
 	void (*dl_io_free_send_handle)(int thread_seq, void *handle);
 	void (*dl_io_destroy)(void);
+	void (*dl_io_device_alias_free)(unsigned int target_id, char *device_args);
 }dl_io_fun_list_t;
 
 /* 以下函数必须调用, 传入正确参数才能正常运行 */

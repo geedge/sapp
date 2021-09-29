@@ -116,6 +116,20 @@ int packet_io_device_alias_init(void)
 	return 0;
 }
 
+void packet_io_device_alias_destroy(void)
+{
+	int i;
+
+	for(i = 0; i < packet_device_alias_num; i++){
+		SAPP_GLOBAL_FREE(g_packet_device_alias[i].device_args);
+		if(dl_io_fun_list.dl_io_device_alias_free){
+			(*dl_io_fun_list.dl_io_device_alias_free)(g_packet_device_alias[i].target_id, g_packet_device_alias[i].dl_io_param);
+		}
+	}
+	SAPP_GLOBAL_FREE(g_packet_device_alias);
+	packet_device_alias_num = 0;
+}
+
 #ifdef __cplusplus
 }
 #endif

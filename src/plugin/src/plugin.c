@@ -2026,6 +2026,7 @@ void plugctrl_destroy_all_plug(void)
 {
 	stBusinessPlugInfo *plug_info;
 	stProtocolPlugInfo *pro_plug_info;
+	int i;
 
 	plug_info = g_platform_plug_info;
 	while(plug_info){
@@ -2050,6 +2051,12 @@ void plugctrl_destroy_all_plug(void)
 		}
 		plug_info = plug_info->next;
 	}	
+
+ 	SAPP_GLOBAL_FREE(g_entryname_info->entryname);
+ 	SAPP_GLOBAL_FREE(g_entryname_info);
+
+	MESA_destroy_runtime_log_handle(g_plugin_runtime_handle);
+	g_plugin_runtime_handle = NULL;
 }
 
 

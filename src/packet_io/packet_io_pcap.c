@@ -535,6 +535,13 @@ void * pcap_dl_io_device_alias(unsigned int target_id, char *device_args)
 	return (void *)sapp_strdup(device_args);
 }
 
+void pcap_dl_io_device_alias_free(unsigned int target_id, char *device_args)
+{
+	/* 对于pcap模式来说, 就是设备名称 eth1, eth2, etc. */
+	SAPP_GLOBAL_FREE(device_args);
+}
+
+
 int pcap_dl_io_register_cb(PACKET_IO_CB_T fun)
 {
 	g_pcap_work_fun = fun;
@@ -774,6 +781,26 @@ send_again:
 
 	return (ret);	
 }
+
+static void pcap_clear_pkt_queue_left(int thread_index)
+{
+	int ret;
+	pkt_queue_t pkt_queue_node;
+	long recv_len;
+	
+	while(MESA_lqueue_get_count(work_thread_pool[thread_index].pkt_queue)){
+		pthread_mutex_lock(&work_thread_pool[thread_index].mutex);
+		recv_len = sizeof(pkt_queue_t);
+		ret = MESA_lqueue_get_head(work_thread_pool[thread_index].pkt_queue, &pkt_queue_node, &recv_len);
+		pthread_mutex_unlock(&work_thread_pool[thread_index].mutex);
+		if(ret < 0){
+			continue;
+		}
+
+		PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
+	}
+}
+
 static void *__pcap_work_thread(void *arg)
 {
 	int thread_num = (int)(*((short *)arg));
@@ -1550,6 +1577,13 @@ void pcap_dl_io_destroy(void)
 	}	
 
 	for(i = 0; i < g_pcap_work_thread_num; i++){
+		//pcap work threads 在 wait_for_all_io_threads() 函数中回收线程资源.
+		//pthread_join(work_thread_pool[i].work_tid, NULL);
+
+		/* 队列中可能还有未处理的数据 */
+		pcap_clear_pkt_queue_left(i);
+		MESA_lqueue_destroy(work_thread_pool[i].pkt_queue, NULL, NULL);
+		
 		pthread_cond_destroy(&work_thread_pool[i].cond);
 		pthread_mutex_destroy(&work_thread_pool[i].mutex);
 		close(work_thread_pool[i].sd_raw_eth);

@@ -2270,8 +2270,7 @@ done:
 
 void sapp_log_handle_destroy(void)
 {
-	//此处报错, double free, 暂不确定是哪的问题
-	//MESA_destroy_runtime_log_handle(sapp_global_val->individual_fixed.log_handle);
+	MESA_destroy_runtime_log_handle(sapp_global_val->individual_fixed.log_handle);
 	sapp_global_val->individual_fixed.log_handle = NULL;
 }
 

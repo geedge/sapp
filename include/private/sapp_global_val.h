@@ -411,6 +411,7 @@ typedef struct{
 	char prune_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   /* 表示注入包时需要跳过的层, 用于代替最早的配置文件: skip_not_iop_layer, 比如vlan, mpls等, 用于mirror模式下, 接入点和注入点不一样的网络环境 */
 
 	void *under_ddos_handle;
+	pthread_t gdev_keepalive_log_thread_id;
 }sapp_gval_individual_fixed_t;
 
 typedef struct{

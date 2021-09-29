@@ -1345,7 +1345,7 @@ int packet_io_init(int argc, char *argv[])
 	}
 
 	for(i = 0; i < MAX_THREAD_NUM; i++){
-		g_send_buf_pool[i] = (UINT8 *)malloc(SENDPACKET_BUF_LEN);
+		g_send_buf_pool[i] = (UINT8 *)SAPP_GLOBAL_ALLOC(SENDPACKET_BUF_LEN);
 	}
 
 	if(sendpacket_init_new(g_packet_io_thread_num) < 0){
@@ -1385,6 +1385,8 @@ int packet_io_init(int argc, char *argv[])
 
 void packet_io_exit(void)
 {	
+	int i;
+	
 	/* 读包模式下, 给其他非IO线程一些时间, 处理未完成数据, 比如异步发送日志, field_stat刷新统计数据等等. */
 	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
 	//sleep(sapp_global_val->config.packet_io.dumpfile_sleep_time_before_exit);
@@ -1392,16 +1394,23 @@ void packet_io_exit(void)
 	sysinfo_output(); /* 最后一次写统计信息, 关闭标志位, 因为流表将被清空, 再写就没意义了 */
 	update_packet_io_status_sw = 0;
 
+	for(i = 0; i < MAX_THREAD_NUM; i++){
+		SAPP_GLOBAL_FREE(g_send_buf_pool[i]);
+	}	
+
 	global_sapp_timer_destroy();
-	
+	gdev_keepalive_plug_destroy();	
 	plugctrl_destroy_all_plug();
 	sendpacket_destroy(g_packet_io_thread_num);
 	packet_io_lib_destroy();
+	packet_io_device_alias_destroy();
 
 	sapp_log_handle_destroy();
 	sapp_fs2_destroy();
 	packet_io_under_ddos_destroy();
 
+	ipv4_frag_exit();
+	ipv6_frag_exit();
 	plugin_manage_destroy();
 
 	global_project_req_destroy();
@@ -1413,6 +1422,8 @@ void packet_io_exit(void)
 	stream_destroy_plugin();
 
 	global_stream_destroy();
+
+	sapp_dup_pkt_destroy();
 	
 	sapp_gval_destroy();
 

@@ -70,7 +70,9 @@ extern "C" char callIpApp_old(struct streaminfo *pstream,int routedir, int threa
 
 extern void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq);
 
-/* 2014-12-31 lqy add */
+/* 2014-12-31 lqy add 
+	TODO, 这些内置插件没有destroy接口.
+*/
 int stream_register_funtoArray(int funtype,char (*x)(void),stFunArray *pArrary,int *pNum, int plug_entry_id)
 {
 	if(*pNum>=MAX_FUN_NUM)

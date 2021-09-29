@@ -484,7 +484,7 @@ int sapp_timer_destroy(sapp_timer_handle h)
 	sapp_usleep(100);
 	pthread_join(inner_h->effective_thread_pid, NULL);
 
-	//free 内存在global_sapp_timer_destroy()实现
+	//free 内存在 global_sapp_timer_destroy() 实现
 	//free(h);
 
 	return ST_RET_SUCC;

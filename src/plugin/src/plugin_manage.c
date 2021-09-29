@@ -231,6 +231,7 @@ static void plug_manage_key_free_cb(uchar *key, uint key_size)
 
 	sapp_mem_free(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, (void *)raw_mg_key->plug_name);
 	sapp_mem_free(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, (void *)raw_mg_key->plug_entry_type);
+	sapp_mem_free(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, (void *)raw_mg_key);
 }
 
 
@@ -266,7 +267,7 @@ static MESA_htable_handle create_plug_manage_htable(void)
 
 	MESA_htable_set_opt(htable, MHO_CBFUN_COMPLEX_KEY_DUP,  (void *)&plug_manage_key_dup_cb, sizeof(void *));	
 
-	MESA_htable_set_opt(htable, MHO_CBFUN_COMPLEX_KEY_FREE, (void *)plug_manage_key_free_cb, sizeof(void *));
+	MESA_htable_set_opt(htable, MHO_CBFUN_COMPLEX_KEY_FREE, (void *)&plug_manage_key_free_cb, sizeof(void *));
 
 	/* 注意: plug_manage的data是dlopen的函数地址, 不能注册free callback */
 	//MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  NULL, sizeof(void *));	

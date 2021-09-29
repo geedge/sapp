@@ -3063,10 +3063,14 @@ int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_
 		//assert(0);
 	}
 
-	if((ADDR_TYPE_IPV4 == stream->addr.addrtype)
-	 || (ADDR_TYPE_TCP == stream->addr.addrtype)){
-		set_build_layer_tcp_args(thread_num, TH_PUSH|TH_ACK, MESA_rand_range(1000, 1460), 0);
-	}
+	/* 
+	   2021-09-18 fix bug:
+	   原来仅Ipv4增加build-args, 原意是在ipv4和tcp包头增加指纹,
+	   改为ipv6也加 build_args, 
+	   否则在build_net_layer_tcp()时判断build_tcp_args是NULL, 会使用随机序号, 发包就不对了!! 
+	 */
+
+	set_build_layer_tcp_args(thread_num, TH_PUSH|TH_ACK, MESA_rand_range(1000, 1460), 0);
 
 	send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
 

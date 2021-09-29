@@ -905,12 +905,8 @@ void ipv4_frag_per_thread_exit(int thread_seq)
 
 void ipv4_frag_exit(void)
 {
-#if USE_MESA_STREAM_HASH	
-	int i;
-
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		MESA_htable_destroy(g_ipv4_frag_manage[i].frag_hash_table, NULL);
-	}
+#if USE_MESA_STREAM_HASH
+	SAPP_GLOBAL_FREE(g_ipv4_frag_manage);
 #endif	
 }
 

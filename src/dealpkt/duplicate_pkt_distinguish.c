@@ -129,6 +129,18 @@ int sapp_dup_pkt_init(void)
 	return 0;
 }
 
+void sapp_dup_pkt_destroy(void)
+{
+	int i;
+	
+	for(i = 0; i < sapp_global_val->config.cpu.worker_threads; i++){
+		if(sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle){
+			expiry_dablooms_destroy(sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle);
+		}
+	}
+
+}
+
 #ifdef __cplusplus
 }
 #endif

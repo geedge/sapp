@@ -273,8 +273,8 @@ install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/sapp_inject.h DEST
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_bridge.h DESTINATION  /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/gdev_keepalive.h DESTINATION  /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
 
-install(FILES ${CMAKE_BINARY_DIR}/test/libsapp_devel.a DESTINATION . COMPONENT HEADER)
-install(FILES ${CMAKE_BINARY_DIR}/test/libsapp_devel.so DESTINATION . COMPONENT HEADER)
+install(FILES ${CMAKE_BINARY_DIR}/test/libsapp_devel.a  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib COMPONENT HEADER)
+install(FILES ${CMAKE_BINARY_DIR}/test/libsapp_devel.so DESTINATION ${CMAKE_INSTALL_PREFIX}/lib COMPONENT HEADER)
 install(FILES ${CMAKE_BINARY_DIR}/service/sapp.service DESTINATION /usr/lib/systemd/system/ COMPONENT PROFILE)
 
 include(Package)

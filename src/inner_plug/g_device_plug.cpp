@@ -625,7 +625,7 @@ static void *gdev_keepalive_log_thread(void *arg)
 		sapp_usleep(100);
 	}
 	
-	while(1){
+	while(sapp_get_current_state() == SAPP_STATE_PROCESSING){
 		while(last_op_time == time(NULL)){
 			sapp_usleep(100);
 		}
@@ -1037,10 +1037,32 @@ int gdev_keepalive_plug_init(void)
 		return -1;
 	}
 
-	pthread_t log_pid;
-	pthread_create(&log_pid, NULL, gdev_keepalive_log_thread, NULL);
+	pthread_create(&sapp_global_val->individual_fixed.gdev_keepalive_log_thread_id, NULL, gdev_keepalive_log_thread, NULL);
 
 	return 0;
+}
+
+
+void gdev_keepalive_plug_destroy(void)
+{
+	if(DEPOLYMENT_MODE_INLINE != sapp_global_val->config.packet_io.depolyment_mode_bin){
+		return;
+	}
+
+	if(sapp_global_val->individual_fixed.gdev_keepalive_log_thread_id){
+		pthread_join(sapp_global_val->individual_fixed.gdev_keepalive_log_thread_id, NULL);
+		sapp_global_val->individual_fixed.gdev_keepalive_log_thread_id = 0;
+	}
+
+	if(gdev_keepalive_fs2_handle){
+		FS_stop(&gdev_keepalive_fs2_handle);
+		gdev_keepalive_fs2_handle = NULL;
+	}
+
+	memset(GDEV_KEEPALIVE_STAT, 0, sizeof(GDEV_KEEPALIVE_STAT));
+	memset(g_dev_keepalive_service_ctrl_array, 0, sizeof(g_dev_keepalive_service_ctrl_array));
+	g_dev_keepalive_flag = 1;
+	g_dev_keepalive_default_action = 1;
 }
 
 

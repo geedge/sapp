@@ -265,6 +265,9 @@ void sapp_gval_destroy(void)
 		SAPP_GLOBAL_FREE(sapp_global_val->cla.cmd_args_array);//此处使用了realloc追加, 要用sapp_mem_free()
 	}
 
+	SAPP_GLOBAL_FREE(sapp_global_val->config.stream.tcp.well_known_ports_array);
+	SAPP_GLOBAL_FREE(sapp_global_val->config.stream.udp.well_known_ports_array);
+
 	sapp_config_file_link_t *pconfig = &sapp_global_val->config.cfg_file_path;
 	SAPP_GLOBAL_FREE(pconfig->cfg_files_root_dir);
 	SAPP_GLOBAL_FREE(pconfig->cfg_main_entry_relative);
@@ -275,6 +278,8 @@ void sapp_gval_destroy(void)
 	SAPP_GLOBAL_FREE(pconfig->cfg_plug_list_absolute);
 	SAPP_GLOBAL_FREE(pconfig->cfg_project_list_relative);
 	SAPP_GLOBAL_FREE(pconfig->cfg_project_list_absolute);
+	SAPP_GLOBAL_FREE(pconfig->cfg_entry_list_relative);
+	SAPP_GLOBAL_FREE(pconfig->cfg_entry_list_absolute);	
 	SAPP_GLOBAL_FREE(pconfig->cfg_file_send_raw_pkt_relative);
 	SAPP_GLOBAL_FREE(pconfig->cfg_file_send_raw_pkt_absolute);
 	SAPP_GLOBAL_FREE(pconfig->cfg_file_vxlan_sport_map_relative);
@@ -308,6 +313,8 @@ void sapp_gval_destroy(void)
 	SAPP_GLOBAL_FREE(pdata->data_memory_stat_log_absolute);
 
 	SAPP_GLOBAL_FREE(sapp_global_val->config.library_file_path.libmarsio_file_path);
+	SAPP_GLOBAL_FREE(sapp_global_val->config.tools.pkt_dump.bpf_filter);
+	SAPP_GLOBAL_FREE(sapp_global_val->config.tools.pkt_dump.storge_path);
 
 	/* individual_volatile, sapp_global_val最后free */
 	if(sapp_global_val->individual_volatile){

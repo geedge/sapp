@@ -447,6 +447,9 @@ void raw_ip_frag_list_v4_destroy(void);
 void raw_ip_frag_list_v6_destroy(void);
 void global_stream_destroy(void);
 void global_sapp_timer_destroy(void);
+void gdev_keepalive_plug_destroy(void);
+void packet_io_device_alias_destroy(void);
+void sapp_dup_pkt_destroy(void);
 
 
 
