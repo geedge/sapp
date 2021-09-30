@@ -785,7 +785,7 @@ send_again:
 static void pcap_clear_pkt_queue_left(int thread_index)
 {
 	int ret;
-	pkt_queue_t pkt_queue_node;
+	pkt_queue_t pkt_queue_node = {};
 	long recv_len;
 	
 	while(MESA_lqueue_get_count(work_thread_pool[thread_index].pkt_queue)){
@@ -796,8 +796,9 @@ static void pcap_clear_pkt_queue_left(int thread_index)
 		if(ret < 0){
 			continue;
 		}
-
-		PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
+		if(PCAP_OP_FLAG_PKT == pkt_queue_node.op_flag){
+			PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
+		}
 	}
 }
 
@@ -1401,11 +1402,12 @@ static void *pcap_io_thread(void *arg)
 			}		
 		}else if(pcap_ret == -2){
 			__pcap_nodify_work_thread(PCAP_OP_FLAG_EOF);
-			break;//do nothing, after call pcap_breakloop()
+			break;//after call pcap_breakloop()
 		}else if(pcap_ret == -1){
+			__pcap_nodify_work_thread(PCAP_OP_FLAG_EOF);
 			printf("pcap err, %s\n", pcap_geterr(handle));
 			sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
-			exit(1);
+			break;//after call pcap_breakloop()
 		}
 	}
 
