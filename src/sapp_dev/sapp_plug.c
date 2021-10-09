@@ -218,9 +218,8 @@ void libsapp_destroy_env(void)
 	}
 
 	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
-
+	packet_io_stop();
 	wait_for_all_io_threads();
-	
 	packet_io_exit();
 
 	MESA_ATOMIC_SET(g_destory_env_done, 0x7FFFF);

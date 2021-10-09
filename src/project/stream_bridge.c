@@ -31,6 +31,13 @@ static stream_bridge_manage_t g_stream_bridge_manage[STREAM_BRIDGE_MAX_NUM];
 
 static MESA_htable_handle g_stream_bridge_name2id_htable;
 
+static void _stream_bridge_name2id_htable_free_cb(void *data)
+{
+	if(data){
+		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, data);
+	}
+}
+
 static MESA_htable_handle stream_bridge_name2id_htable_create(void)
 {
 	MESA_htable_handle htable;
@@ -58,7 +65,9 @@ static MESA_htable_handle stream_bridge_name2id_htable_create(void)
 	MESA_htable_set_opt(htable, MHO_SCREEN_PRINT_CTRL, &opt_int, sizeof(int));
 
 	opt_int = HASH_ELIMINATE_ALGO_FIFO;
-	MESA_htable_set_opt(htable, MHO_ELIMIMINATE_TYPE, &opt_int, sizeof(int));	
+	MESA_htable_set_opt(htable, MHO_ELIMIMINATE_TYPE, &opt_int, sizeof(int));
+
+	MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE, _stream_bridge_name2id_htable_free_cb, sizeof(void *));
 	
 	ret = MESA_htable_mature(htable);
 	if(ret < 0){
@@ -85,7 +94,7 @@ static int stream_bridege_create_new_bridge(const char *bridge_name)
 {
 	int *bridge_id, ret;
 
-	bridge_id = (int *)malloc(sizeof(int));
+	bridge_id = (int *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, sizeof(int));
 
 	*bridge_id = g_stream_bridge_actual_num;
 
@@ -186,7 +195,7 @@ int stream_bridge_register_data_sync_cb(int bridge_id, stream_bridge_sync_cb_t *
 		return -1;
 	}
 
-	new_list_node = (struct MESA_list *)malloc(sizeof(struct MESA_list));
+	new_list_node = (struct MESA_list *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, sizeof(struct MESA_list));
 	new_list_node->quiddity = cb_fun;
 	MESA_list_add(&g_stream_bridge_manage[bridge_id].sync_callback_fun_list, new_list_node);
 
@@ -289,9 +298,22 @@ int stream_bridge_init(void)
 
 void stream_bridge_destroy(void)
 {
-	g_stream_bridge_actual_num = 0;
-	memset(g_stream_bridge_manage, 0, sizeof(g_stream_bridge_manage));
+	int bridge_id;
+	MESA_list_t *list_node, *next_node;
 	MESA_htable_destroy(g_stream_bridge_name2id_htable, NULL);
+
+	for(bridge_id = 0; bridge_id < g_stream_bridge_actual_num; bridge_id++){
+		list_node = g_stream_bridge_manage[bridge_id].sync_callback_fun_list.nextele;
+		while(0 == MESA_list_is_empty(&g_stream_bridge_manage[bridge_id].sync_callback_fun_list)){
+			next_node = list_node->nextele;
+			MESA_list_del(&g_stream_bridge_manage[bridge_id].sync_callback_fun_list, list_node);
+			sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, (void *)list_node);
+			list_node = next_node;
+		}
+	}
+
+	g_stream_bridge_actual_num = 0;
+	memset(g_stream_bridge_manage, 0, sizeof(g_stream_bridge_manage));	
 	g_stream_bridge_name2id_htable = NULL;
 }
 

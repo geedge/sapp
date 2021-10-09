@@ -22,6 +22,7 @@ typedef struct{
 	char str_value2[NAME_MAX];
 
 	int test_project_id;
+	int test_bridge_id;
 }test_app_val_t;
 
 /* 设置一些全局变量, 有各种不同的类型, 方便测试用例传递参数, 
@@ -2661,6 +2662,57 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 	return APP_STATE_GIVEME;	
 }
 
+
+static void __stream_bridge_free_cb(const struct streaminfo *stream, int bridge_id, void *data)
+{
+	free(data);
+}
+
+char stream_bridge_tcp_entry(struct streaminfo *pstream,void **pme, int thread_seq,const void *a_packet)
+{
+	int bridge_id;
+
+	bridge_id = stream_bridge_build("test_bridge", "r");
+	if(bridge_id < 0){
+		printf("##### stream_bridge_tcp_entry(): stream_bridge_build error!\n");
+		return APP_STATE_DROPME;	
+	}
+
+	if(OP_STATE_CLOSE == pstream->opstate){
+		/* tcp先结束, 存入数据 */
+		void *data = calloc(1, 100);
+		strncpy(data, "abcdefg1234567", 100);
+		stream_bridge_async_data_put(pstream, bridge_id, data);	
+		printf("##### tcp entry bridge put data:%s\n", data);
+	}
+
+	return APP_STATE_GIVEME;
+}
+
+char stream_bridge_tcpall_entry(struct streaminfo *pstream,void **pme, int thread_seq,const void *a_packet)
+{
+	int bridge_id;
+
+	bridge_id = stream_bridge_build("test_bridge", "r");
+	if(bridge_id < 0){
+		printf("##### stream_bridge_tcpall_entry(): stream_bridge_build error!\n");
+		return APP_STATE_DROPME;	
+	}
+
+	if(OP_STATE_CLOSE == pstream->pktstate){
+		char *data;
+		data = (char *)stream_bridge_async_data_get(pstream, bridge_id);
+		if(data){
+			printf("tcpall entry bridge get:%s\n", data);
+		}else{
+			printf("tcpall entry bridge get data error\n");
+		}
+	}
+
+	return APP_STATE_GIVEME;
+}
+
+
 char UDP_ENTRY(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
 	//test_project_add(a_tcp,pme,thread_seq,a_packet);
@@ -3365,6 +3417,16 @@ int CHAR_INIT()
 
 	/* 仅可以在初始化时可以注册project */
 	g_test_app_val.test_project_id =  project_producer_register("test_project", "struct", __fake_project_free_cb);
+	if(g_test_app_val.test_project_id < 0){
+		printf("##### project_producer_register error!\n");
+		return -1;	
+	}
+	g_test_app_val.test_bridge_id = stream_bridge_build("test_bridge", "w");
+	if(g_test_app_val.test_bridge_id < 0){
+		printf("##### stream_bridge_build error!\n");
+		return -1;	
+	}
+	stream_bridge_register_data_free_cb(g_test_app_val.test_bridge_id, __stream_bridge_free_cb);
 
 	return 1;
 }

@@ -244,6 +244,7 @@ int packet_io_under_ddos_should_bypass(int thread_index);
 void update_under_ddos_stream_state(struct streaminfo *pstream);
 int packet_io_under_ddos_global_status(void);
 void pcap_dl_io_destroy(void);
+void pcap_dl_io_stop(void);
 void pcap_dl_io_device_alias_free(unsigned int target_id, char *dev_args);
 
 

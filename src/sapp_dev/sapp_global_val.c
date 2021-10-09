@@ -312,6 +312,8 @@ void sapp_gval_destroy(void)
 	SAPP_GLOBAL_FREE(pdata->data_memory_stat_log_relative);
 	SAPP_GLOBAL_FREE(pdata->data_memory_stat_log_absolute);
 
+	SAPP_GLOBAL_FREE(sapp_global_val->config.packet_io.input_bpf_filter);
+
 	SAPP_GLOBAL_FREE(sapp_global_val->config.library_file_path.libmarsio_file_path);
 	SAPP_GLOBAL_FREE(sapp_global_val->config.tools.pkt_dump.bpf_filter);
 	SAPP_GLOBAL_FREE(sapp_global_val->config.tools.pkt_dump.storge_path);

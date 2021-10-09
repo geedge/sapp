@@ -44,7 +44,7 @@ void destroy_pluginfo_elem_bus(stBusinessPlugInfo* plug_info)
 {
 	if(plug_info->plugname != NULL)
 	{
-		free(plug_info->plugname);
+		SAPP_GLOBAL_FREE(plug_info->plugname);
 		plug_info->plugname = NULL;
 	}
 

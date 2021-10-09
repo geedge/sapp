@@ -35,6 +35,7 @@ typedef enum{
 static char g_pcap_up_dev_name[DEV_NAME_STR_LEN] = "dumpfile"; /* if in parallel mode, use this arg */
 static char g_pcap_down_dev_name[DEV_NAME_STR_LEN];
 static char g_pcap_cap_filter[CAP_FILTER_STR_LEN];
+static struct bpf_program g_pcap_bpf_filter_bin;
 static int g_pcap_buf_queue_num = 10000;
 static int g_pcap_cap_mode = CAP_MODEL_PCAP_ONLINE;
 static int g_pcap_topology_mode = NET_CONN_PARALLEL;
@@ -56,7 +57,7 @@ static int pcap_device_down_mtu = 1500;
 static pcap_distmode_t g_pcap_distmode = PCAP_DISTMODE_OUTER_TUPLE2;
 
 static pthread_t g_pcap_io_pid_up, g_pcap_io_pid_down;
-
+static volatile int g_pcap_io_stop_flag_up, g_pcap_io_stop_flag_down; 
 extern sapp_global_t *sapp_global_val;
 extern int g_PollingFunNum;
 extern int g_use_MESA_sleep_sw;
@@ -724,20 +725,18 @@ send_again:
 
 static int pcap_set_filter(pcap_t *handle, const char *filter_str)
 {
-	struct bpf_program bpf_filter;
-
 	if((NULL == handle) || (NULL == filter_str) || ('\0' == *filter_str)){
 		return 0;
 	}
 	
-	if(pcap_compile(handle, &bpf_filter, (char *)filter_str, 1, 0) < 0)
-	{
+	if(pcap_compile(handle, &g_pcap_bpf_filter_bin, (char *)filter_str, 1, 0) < 0){
 		printf("Compile pcap filter '%s' error:%s\n", filter_str, pcap_geterr(handle));
 		return -1;
 	}
 
-	if(pcap_setfilter(handle, &bpf_filter) < 0){
+	if(pcap_setfilter(handle, &g_pcap_bpf_filter_bin) < 0){
 		printf("Set pcap filter '%s' error:%s\n", filter_str, pcap_geterr(handle));
+		pcap_freecode(&g_pcap_bpf_filter_bin);
 		return -1;
 	}
 
@@ -787,10 +786,20 @@ static void pcap_clear_pkt_queue_left(int thread_index)
 	int ret;
 	pkt_queue_t pkt_queue_node = {};
 	long recv_len;
+
+	while(0 == g_pcap_io_stop_flag_up){
+		sapp_usleep(1);
+	}
+
+	if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode){ /* 双网卡串联模式 */	
+		while(0 == g_pcap_io_stop_flag_down){
+			sapp_usleep(1);
+		}
+	}
 	
 	while(MESA_lqueue_get_count(work_thread_pool[thread_index].pkt_queue)){
-		pthread_mutex_lock(&work_thread_pool[thread_index].mutex);
 		recv_len = sizeof(pkt_queue_t);
+		pthread_mutex_lock(&work_thread_pool[thread_index].mutex);
 		ret = MESA_lqueue_get_head(work_thread_pool[thread_index].pkt_queue, &pkt_queue_node, &recv_len);
 		pthread_mutex_unlock(&work_thread_pool[thread_index].mutex);
 		if(ret < 0){
@@ -826,7 +835,7 @@ static void *__pcap_work_thread(void *arg)
 					sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[thread_num]);
 
 	while(sapp_get_current_state() < SAPP_STATE_PROCESSING){
-		sapp_usleep(1000);
+		sapp_usleep(1);
 	}
 
 	/* for perf optimize
@@ -901,6 +910,9 @@ static void *__pcap_work_thread(void *arg)
 
 		PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
 	}
+
+	/* pcap使用异步模式, 缓存队列中可能还有未处理的数据包 */
+	pcap_clear_pkt_queue_left(thread_num);
 
 	libsapp_destroy_env_per_thread(thread_num);
 
@@ -1367,6 +1379,7 @@ static void *pcap_io_thread(void *arg)
 	pcap_t *handle;
 	int pcap_ret;
 	char *no_use;
+	volatile int *stop_flag;
 
 #if(__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__ >= 480) /* 版本判断, 很多旧系统无法编译 */
 #ifdef _GNU_SOURCE
@@ -1381,8 +1394,10 @@ static void *pcap_io_thread(void *arg)
 
 	if(0 == (DIR_ROUTE_DOWN & route_dir)){
 		handle = pcap_up_handle;
+		stop_flag = &g_pcap_io_stop_flag_up;
 	}else{
 		handle = pcap_down_handle;
+		stop_flag = &g_pcap_io_stop_flag_down;
 	}
 
 	while(sapp_get_current_state() < SAPP_STATE_PROCESSING){
@@ -1411,6 +1426,8 @@ static void *pcap_io_thread(void *arg)
 		}
 	}
 
+	*stop_flag = 1;
+	sapp_usleep(10000);
 	if(g_pcap_exit_cb_fun){
 		(*g_pcap_exit_cb_fun)();
 	}
@@ -1555,10 +1572,8 @@ void pcap_dl_io_run(void)
 	return;
 }
 
-void pcap_dl_io_destroy(void)
+void pcap_dl_io_stop(void)
 {
-	int i;
-	
 	if(g_pcap_io_pid_up != 0){
 		pcap_breakloop(pcap_up_handle);
 		pthread_join(g_pcap_io_pid_up, NULL);
@@ -1568,6 +1583,12 @@ void pcap_dl_io_destroy(void)
 		pcap_breakloop(pcap_down_handle);
 		pthread_join(g_pcap_io_pid_down, NULL);
 	}
+}
+
+
+void pcap_dl_io_destroy(void)
+{
+	int i;
 
 	if(pcap_up_handle){
 		pcap_close(pcap_up_handle);
@@ -1579,11 +1600,10 @@ void pcap_dl_io_destroy(void)
 	}	
 
 	for(i = 0; i < g_pcap_work_thread_num; i++){
-		//pcap work threads 在 wait_for_all_io_threads() 函数中回收线程资源.
-		//pthread_join(work_thread_pool[i].work_tid, NULL);
-
-		/* 队列中可能还有未处理的数据 */
-		pcap_clear_pkt_queue_left(i);
+		while(MESA_lqueue_get_count(work_thread_pool[i].pkt_queue)){
+			sapp_usleep(1);
+		}
+		
 		MESA_lqueue_destroy(work_thread_pool[i].pkt_queue, NULL, NULL);
 		
 		pthread_cond_destroy(&work_thread_pool[i].cond);
@@ -1591,9 +1611,17 @@ void pcap_dl_io_destroy(void)
 		close(work_thread_pool[i].sd_raw_eth);
 		work_thread_pool[i].sd_raw_eth = -1;
 	}
+
+	if(g_pcap_cap_filter[0] != '\0'){
+		pcap_freecode(&g_pcap_bpf_filter_bin);
+		memset(g_pcap_cap_filter, 0, sizeof(g_pcap_cap_filter));
+	}
+
+	memset(g_pcap_up_dev_name, 0, sizeof(g_pcap_up_dev_name));
+	memset(g_pcap_down_dev_name, 0, sizeof(g_pcap_down_dev_name));
+	g_pcap_io_stop_flag_up = 0;
+	g_pcap_io_stop_flag_down = 0;
 }
-
-
 
 #ifdef __cplusplus
 }

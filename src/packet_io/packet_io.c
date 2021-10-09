@@ -1312,12 +1312,21 @@ void packet_io_clean_thread_context(int thread_seq)
 	pptp_per_thread_exit(thread_seq);
 }
 
+/* 退出sapp之前, 先停止捕获数据包 */
+void packet_io_stop(void)
+{
+	if(dl_io_fun_list.dl_io_stop){
+		dl_io_fun_list.dl_io_stop();
+	}
+}
+
 void packet_io_lib_destroy(void)
 {
 	if(dl_io_fun_list.dl_io_destroy){
 		dl_io_fun_list.dl_io_destroy();
 	}
 }
+
 
 int packet_io_init(int argc, char *argv[])
 {
@@ -1382,6 +1391,10 @@ int packet_io_init(int argc, char *argv[])
 	return 0;
 }
 
+void sapp_breakpad_destroy(void)
+{
+	breakpad_destroy(sapp_global_val->individual_fixed.breakpad);
+}
 
 void packet_io_exit(void)
 {	
@@ -1424,7 +1437,10 @@ void packet_io_exit(void)
 	global_stream_destroy();
 
 	sapp_dup_pkt_destroy();
-	
+
+	sapp_breakpad_destroy();
+
+	/****** 注意:释放全局变量要放在最后一行!! ******/
 	sapp_gval_destroy();
 
 	return;
