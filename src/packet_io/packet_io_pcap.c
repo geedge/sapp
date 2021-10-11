@@ -806,6 +806,12 @@ static void pcap_clear_pkt_queue_left(int thread_index)
 			continue;
 		}
 		if(PCAP_OP_FLAG_PKT == pkt_queue_node.op_flag){
+			ret = (*g_pcap_work_fun)(&(pkt_queue_node.raw_pkt), pkt_queue_node.raw_pkt.route_dir, thread_index);
+			/* 串联模式且返回值为PASS, 需要转发包 */
+			if((g_pcap_topology_mode & __NET_CONN_SERIAL) && (PASS == ret)){
+				pcap_forward_pkt(thread_index, (unsigned char *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data, 
+							pkt_queue_node.raw_pkt.__lib_raw_pkt_len, pkt_queue_node.raw_pkt.route_dir);
+			}		
 			PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
 		}
 	}
@@ -1380,6 +1386,7 @@ static void *pcap_io_thread(void *arg)
 	int pcap_ret;
 	char *no_use;
 	volatile int *stop_flag;
+	int exit_prog_flag = 0;
 
 #if(__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__ >= 480) /* 版本判断, 很多旧系统无法编译 */
 #ifdef _GNU_SOURCE
@@ -1422,6 +1429,7 @@ static void *pcap_io_thread(void *arg)
 			__pcap_nodify_work_thread(PCAP_OP_FLAG_EOF);
 			printf("pcap err, %s\n", pcap_geterr(handle));
 			sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
+			exit_prog_flag = 1;
 			break;//after call pcap_breakloop()
 		}
 	}
@@ -1430,6 +1438,9 @@ static void *pcap_io_thread(void *arg)
 	sapp_usleep(10000);
 	if(g_pcap_exit_cb_fun){
 		(*g_pcap_exit_cb_fun)();
+	}
+	if(exit_prog_flag){
+		exit(1);
 	}
 	
 	return NULL;
