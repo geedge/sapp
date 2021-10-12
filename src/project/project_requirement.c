@@ -240,6 +240,7 @@ static int project_req_conf_is_exist(const char *check_name)
 	FILE *fp;
 	char *preq_name;
 	int line_num = 0;
+	int section_is_exist = 0;
 
 	fp = fopen(ABBR_PROJECT_LIST_CONF_FILE, "r");
 	if(NULL == fp){
@@ -261,6 +262,7 @@ static int project_req_conf_is_exist(const char *check_name)
 		}
 
 		if(strncasecmp(preq_name, check_name, strlen(preq_name)) == 0){
+			section_is_exist = 1;
 			goto fun_exit;
 		}
 
@@ -271,7 +273,7 @@ static int project_req_conf_is_exist(const char *check_name)
 fun_exit:
 
 	fclose(fp);
-	return 0;
+	return section_is_exist;
 }
 
 

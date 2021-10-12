@@ -1394,17 +1394,17 @@ static void *pcap_io_thread(void *arg)
 #endif
 #endif
 
-	if(sapp_get_cla_raw("dumpfile-list", &no_use) >= 0){
-		pcap_io_dumpfile_list();
-		exit(0);
-	}
-
 	if(0 == (DIR_ROUTE_DOWN & route_dir)){
 		handle = pcap_up_handle;
 		stop_flag = &g_pcap_io_stop_flag_up;
 	}else{
 		handle = pcap_down_handle;
 		stop_flag = &g_pcap_io_stop_flag_down;
+	}
+
+	if(sapp_get_cla_raw("dumpfile-list", &no_use) >= 0){
+		pcap_io_dumpfile_list();
+		goto thread_exit;
 	}
 
 	while(sapp_get_current_state() < SAPP_STATE_PROCESSING){
@@ -1434,13 +1434,14 @@ static void *pcap_io_thread(void *arg)
 		}
 	}
 
+thread_exit:
 	*stop_flag = 1;
 	sapp_usleep(10000);
 	if(g_pcap_exit_cb_fun){
 		(*g_pcap_exit_cb_fun)();
 	}
 	if(exit_prog_flag){
-		exit(1);
+		exit(0);
 	}
 	
 	return NULL;
@@ -1585,14 +1586,17 @@ void pcap_dl_io_run(void)
 
 void pcap_dl_io_stop(void)
 {
-	if(g_pcap_io_pid_up != 0){
-		pcap_breakloop(pcap_up_handle);
-		pthread_join(g_pcap_io_pid_up, NULL);
-	}
-	
-	if(g_pcap_io_pid_down){
-		pcap_breakloop(pcap_down_handle);
-		pthread_join(g_pcap_io_pid_down, NULL);
+	char *no_use;
+	if(sapp_get_cla_raw("dumpfile-list", &no_use) < 0){
+		if(pcap_up_handle){
+			pcap_breakloop(pcap_up_handle);
+			pthread_join(g_pcap_io_pid_up, NULL);
+		}
+		
+		if(pcap_down_handle){
+			pcap_breakloop(pcap_down_handle);
+			pthread_join(g_pcap_io_pid_down, NULL);
+		}
 	}
 }
 
@@ -1600,15 +1604,18 @@ void pcap_dl_io_stop(void)
 void pcap_dl_io_destroy(void)
 {
 	int i;
+	char *no_use;
 
-	if(pcap_up_handle){
-		pcap_close(pcap_up_handle);
-		pcap_up_handle = NULL;
+	if(sapp_get_cla_raw("dumpfile-list", &no_use) < 0){
+		if(pcap_up_handle){
+			pcap_close(pcap_up_handle);
+			pcap_up_handle = NULL;
+		}
+		if(pcap_down_handle){
+			pcap_close(pcap_down_handle);
+			pcap_down_handle = NULL;
+		}	
 	}
-	if(pcap_down_handle){
-		pcap_close(pcap_down_handle);
-		pcap_down_handle = NULL;
-	}	
 
 	for(i = 0; i < g_pcap_work_thread_num; i++){
 		while(MESA_lqueue_get_count(work_thread_pool[i].pkt_queue)){
