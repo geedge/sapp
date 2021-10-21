@@ -918,7 +918,8 @@ static int calc_gtp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_st
 	if(raw_net_gtp_hdr->flags & (GTP_HDR_FLAG_SEQ_NUM | GTP_HDR_FLAG_N_PDU | GTP_HDR_FLAG_NEXT_EXT_HDR))
 	{
 		if(0 == sapp_global_val->config.protocol_feature.skip_gtp_S_PN_E_field_for_inject){
-        	sapp_runtime_log(RLOG_LV_FATAL, "calc_gtp_hdr_len error, inject GTP pkt not support SEQ or N-PDU or Extension header, you should set 'skip_gtp_S_PN_E_field_for_inject' to avoid this!");
+			sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+        	sapp_runtime_log(RLOG_LV_INFO, "calc_gtp_hdr_len error, inject GTP pkt not support SEQ or N-PDU or Extension header, you should set 'skip_gtp_S_PN_E_field_for_inject' to avoid this!");
         	return -1;
         }
     }
@@ -927,12 +928,14 @@ static int calc_gtp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_st
 		/* 如果GTP设置了非对称标记, 必须保证当前注入方向之前曾经有数据包 */
 		if(send_stream_dir == DIR_C2S){
 			if(0 == p_gtp_layer_addr->teid_c2s){
-				 sapp_runtime_log(RLOG_LV_FATAL, "inject dir:%d packet error, GTP addr is asymmetric, but stream dir is:%d", send_stream_dir, stream_pr->stream_public.dir);
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				 sapp_runtime_log(RLOG_LV_INFO, "inject dir:%d packet error, GTP addr is asymmetric, but stream dir is:%d", send_stream_dir, stream_pr->stream_public.dir);
 				 return -1;
 			}
 		}else{
 			if(0 == p_gtp_layer_addr->teid_s2c){
-				 sapp_runtime_log(RLOG_LV_FATAL, "inject dir:%d packet error, GTP addr is asymmetric, but stream dir is:%d", send_stream_dir, stream_pr->stream_public.dir);
+				 sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				 sapp_runtime_log(RLOG_LV_INFO, "inject dir:%d packet error, GTP addr is asymmetric, but stream dir is:%d", send_stream_dir, stream_pr->stream_public.dir);
 				 return -1;
 			}		
 		}
@@ -1239,6 +1242,7 @@ static int build_net_layer_ethernet(const struct streaminfo *top_stream, struct 
 		}		
 	}else{
 		if((top_stream->dir & send_stream_dir) == 0){
+			sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
 			sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_ethernet() error! ethernet[%d] asymmetric_addr_layer is enabled, but has not recv this dir packet!\n", stream_pr->layer_index);
 			return -1;
 		}
@@ -1540,7 +1544,8 @@ static int build_net_layer_vlan(struct streaminfo_private *stream_pr, int carry_
 				build_net_multilayer_vlan(in_stream_addr->s2c_addr_array, in_stream_addr->s2c_layer_num, (struct mesa_vlan_detail_hdr *)buf);
 				///memcpy(buf, in_stream_addr->s2c_addr_array, layer_len);
 			}else{
-				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_vlan() error, no c2s vlan addr, but asymmetric_addr_layer is set!\n");
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_vlan() error, no c2s vlan addr, but asymmetric_addr_layer is set!\n");
 				return -1;
 			}
 		}
@@ -1556,7 +1561,8 @@ static int build_net_layer_vlan(struct streaminfo_private *stream_pr, int carry_
 				//memcpy(buf, in_stream_addr->c2s_addr_array, layer_len);
 				build_net_multilayer_vlan(in_stream_addr->c2s_addr_array, in_stream_addr->c2s_layer_num, (struct mesa_vlan_detail_hdr *)buf);
 			}else{
-				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_vlan() error, no s2c vlan addr, but asymmetric_addr_layer is set!\n");
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_vlan() error, no s2c vlan addr, but asymmetric_addr_layer is set!\n");
 				return -1;
 			}
 		}
@@ -1778,7 +1784,8 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 					layer_len += sizeof(int);
 				}				
 			}else{
-				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_mpls() error, no c2s mpls addr, but asymmetric_addr_layer is set!\n");
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_mpls() error, no c2s mpls addr, but asymmetric_addr_layer is set!\n");
 				return -1;
 			}
 		}
@@ -1802,7 +1809,8 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 					layer_len += sizeof(int);
 				}
 			}else{
-				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_mpls() error, no s2c mpls addr, but asymmetric_addr_layer is set!\n");
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_mpls() error, no s2c mpls addr, but asymmetric_addr_layer is set!\n");
 				return -1;
 			}
 		}
@@ -1828,7 +1836,8 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
 	if(DIR_C2S == send_stream_dir){
 		if(0 == p_gtp_layer_addr->teid_c2s){
 			if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_GPRS_TUNNEL][stream_pr->layer_index] != 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_gtp() error, no c2s gtp addr, but asymmetric_addr_layer is set!\n");
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_gtp() error, no c2s gtp addr, but asymmetric_addr_layer is set!\n");
 				return -1;				
 			}else{
 				this_pkt_teid = p_gtp_layer_addr->teid_s2c;
@@ -1839,7 +1848,8 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
 	}else{
 		if(0 == p_gtp_layer_addr->teid_s2c){
 			if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_GPRS_TUNNEL][stream_pr->layer_index] != 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_gtp() error, no s2c gtp addr, but asymmetric_addr_layer is set!\n");
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_gtp() error, no s2c gtp addr, but asymmetric_addr_layer is set!\n");
 				return -1;				
 			}else{
 				this_pkt_teid = p_gtp_layer_addr->teid_c2s;
@@ -2445,13 +2455,15 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 		/* 因MPLS非对称问题,  calc_reserved_hdr_len()需要分不同方向计算, 与当前包同向发包 */
 		reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type, stream_pr->stream_public.curdir);
 		if((reserved_hdr_len < 0) || (-1 == low_net_layer_type)){
+			sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
 			sapp_runtime_log(RLOG_LV_INFO, "__do_kill_tcp() calc_reserved_hdr_len error !");
 			ret = -1;
 			goto fun_exit;
 		}
 		low_net_layer_type = get_eth_carry_layer_type(stream, stream_pr->stream_public.curdir);
 		if(low_net_layer_type < 0){
-			sapp_runtime_log(RLOG_LV_FATAL, "__do_kill_tcp(): can't get ethernet carry layer type");
+			sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+			sapp_runtime_log(RLOG_LV_INFO, "__do_kill_tcp(): can't get ethernet carry layer type");
 			ret = -1;
 			goto fun_exit;
 		}		
@@ -2461,7 +2473,7 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 	
 		send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
 
-		sapp_runtime_log(10, "before build_net_layer_pkt(), buf addr:%p, streamdir:%d, total layer len:%d", send_handle->send_buf, stream->curdir, reserved_hdr_len);
+		sapp_runtime_log(RLOG_LV_DEBUG, "before build_net_layer_pkt(), buf addr:%p, streamdir:%d, total layer len:%d", send_handle->send_buf, stream->curdir, reserved_hdr_len);
 		send_len = build_net_layer_pkt(stream, stream, stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 0, raw_pkt, stream->curdir);
 		if(send_len > 0){		
 			/* 修改错误判断逻辑, 构造失败不退出, 继续尝试反方向造包 */
@@ -2483,6 +2495,7 @@ static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int
 							stream_pr->stream_public.curdir,
 							stream_pr->stream_public.routedir, send_len);
 		}else{
+			sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
 			sapp_runtime_log(RLOG_LV_INFO, "do_kill_tcp()-->build_net_layer_pkt() error, send streamdir:%d, routedir:%d, send_len=%d\n", 
 							stream_pr->stream_public.curdir ^ DIR_DOUBLE,
 							stream_pr->stream_public.routedir, send_len);
@@ -3300,7 +3313,8 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	/* 因改变了某些回调函数的原始包类型为IP包头, 所以不需要插件传输原始包, 信息都存储于私有流结构体内 */
 	raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_routedir_reverse);
 	if(NULL == raw_pkt){
-		sapp_runtime_log(RLOG_LV_FATAL, "sapp_inject_pkt() error, not found raw_pkt!");
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+		sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_pkt() error, not found raw_pkt!");
 		return -1;
 	}
 
@@ -3318,18 +3332,20 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 
 	reserved_hdr_len = calc_reserved_hdr_len(inject_stream, &low_net_layer_type, send_stream_dir);
 	if(reserved_hdr_len < 0){
-		sapp_runtime_log(RLOG_LV_FATAL, "calc_reserved_hdr_len() error");
+		sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_pkt()->calc_reserved_hdr_len() error");
 		return -1;
 	}
 
 	low_net_layer_type = get_eth_carry_layer_type(raw_stream, send_stream_dir);
 	if(low_net_layer_type < 0){
-		sapp_runtime_log(RLOG_LV_FATAL, "sapp_inject_pkt(): can't get ethernet carry layer type");
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+		sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_pkt(): can't get ethernet carry layer type");
 		return -1;
 	}
 	
 	if(payload_len + reserved_hdr_len > MTU_MAX){
-		sapp_runtime_log(RLOG_LV_FATAL, "MESA_inject_pkt() error! payload_len too long:%d.\n", 
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+		sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_pkt() error! payload_len too long:%d.\n", 
 		                 payload_len + reserved_hdr_len);	
 		return -1;
 	}
@@ -3504,7 +3520,7 @@ int MESA_sendpacket_ethlayer(int thread_num,const char *data, int data_len, unsi
 
 	if(data_len > MTU_MAX)
 	{
-		sapp_runtime_log(30, "MESA_sendpacket_ethlayer(): data length:%d is more than MTU:%d\n", data_len, MTU_MAX);
+		sapp_runtime_log(RLOG_LV_INFO, "MESA_sendpacket_ethlayer(): data length:%d is more than MTU:%d\n", data_len, MTU_MAX);
 		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
 		return -1;
 	}
@@ -4205,7 +4221,8 @@ static int __MESA_sendpacket_iplayer_options(int thread_index,const char *data, 
 	
 	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
-		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
+		sapp_runtime_log(RLOG_LV_INFO, "call marsio_buff_malloc_global() failed!\n");
+		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
 		return -1;
 	}	
 	
@@ -4299,7 +4316,7 @@ int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t p
 	
 	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
-		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
+		sapp_runtime_log(RLOG_LV_INFO, "MESA_fakepacket_send_ipv4_options-> marsio_buff_malloc_global() failed!\n");
 		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
 		return -1;
 	}	
@@ -4455,7 +4472,7 @@ int MESA_fakepacket_send_tcp_options(const struct streaminfo *stream,
 	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
 		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
+		sapp_runtime_log(RLOG_LV_INFO, "MESA_fakepacket_send_tcp_options()-> marsio_buff_malloc_global() failed!\n");
 		return -1;
 	}	
 
@@ -4541,7 +4558,7 @@ int MESA_fakepacket_send_ipv6_tcp_options(const struct streaminfo *stream,
 	
 	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
-		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
+		sapp_runtime_log(RLOG_LV_INFO, "MESA_fakepacket_send_ipv6_tcp_options-> marsio_buff_malloc_global() failed!\n");
 		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
 		return -1;
 	}	
@@ -4705,7 +4722,7 @@ int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream,
 	
 	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
 	if(inner_ret < 0){
-		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
+		sapp_runtime_log(RLOG_LV_INFO, "MESA_fakepacket_send_ipv6_udp_options-> marsio_buff_malloc_global() failed!\n");
 		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
 		return -1;
 	}	

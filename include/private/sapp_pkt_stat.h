@@ -31,6 +31,8 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_RCV_DUP_TCP, /* 重复流量 */
 	SAPP_STAT_RCV_DUP_UDP, /* 重复流量 */
 
+	SAPP_STAT_DUP_IDENTIFY_ERR, /* 重复流量识别key添加错误 */
+
 	SAPP_STAT_RCV_UNKNOWN,
 	
 	/*************  send packet  *******************/

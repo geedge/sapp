@@ -911,7 +911,7 @@ retry:
 			goto retry; /* 被信号中断的IO调用需要重试 */
 		}else{
 			local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
-			sapp_runtime_log(RLOG_LV_FATAL, "packet_io_send_by_sys_routev4(): sendto error, %s\n", strerror(errno));
+			sapp_runtime_log(RLOG_LV_INFO, "packet_io_send_by_sys_routev4(): sendto error, %s\n", strerror(errno));
 			return ret;
 		}
 	}
@@ -946,7 +946,7 @@ static int packet_io_send_by_sys_routev6(MESA_send_handle *send_handle,int datal
 	
 	if(0 == g_ipv6_send_packet_enabled){
 		//printf("IPv6 module is not support! Please check 'sapp.toml->ipv6_send_packet_enabled'.\n");
-		sapp_runtime_log(RLOG_LV_FATAL, "IPv6 module is not support! Please check 'sapp.toml->ipv6_send_packet_enabled'.\n" );		
+		sapp_runtime_log(RLOG_LV_INFO, "IPv6 module is not support! Please check 'sapp.toml->ipv6_send_packet_enabled'.\n" );		
 		return -1;
 	}
 
@@ -979,7 +979,7 @@ retry:
 			goto retry; /* 被信号中断的IO调用需要重试 */
 		}else{
 			local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
-			sapp_runtime_log(RLOG_LV_FATAL,"packet_io_send_by_sys_routev6() sendto error, %s\n", strerror(errno));
+			sapp_runtime_log(RLOG_LV_INFO,"packet_io_send_by_sys_routev6() sendto error, %s\n", strerror(errno));
 			return ret;
 		}
 	}

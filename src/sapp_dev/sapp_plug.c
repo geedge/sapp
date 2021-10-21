@@ -213,6 +213,11 @@ void libsapp_destroy_env(void)
 		MESA_ATOMIC_SET(g_destory_env_done, 1);
 	}
 
+	if(NULL == sapp_global_val){
+		/* 可能已经调用过libsapp_destroy_env(), 或者libsapp_setup_env()失败了 */
+		return;
+	}
+
 	if(CAP_MODEL_PCAP_DUMPFILE == g_packet_io_cap_mode){
 		exit_process = 1;
 	}

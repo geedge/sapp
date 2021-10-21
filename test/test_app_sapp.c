@@ -3206,6 +3206,12 @@ char KEEP_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_p
 	return APP_STATE_GIVEME;
 }
 
+char DROP_STREAM_PKT(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
+{
+	return APP_STATE_DROPPKT;
+}
+
+
 char TCP_ENTRY(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
 	//test_project_add(a_tcp,pme,thread_seq,a_packet);

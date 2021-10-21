@@ -1123,7 +1123,7 @@ UINT16 net_layer_to_ethernet_protocol(int addr_type)
 
 		case ADDR_TYPE_TCP:
 		case ADDR_TYPE_UDP:
-			sapp_runtime_log(RLOG_LV_FATAL, "net_layer_to_ethernet_protocol(): Ethernet can't carry addr type:%d directly!\n", addr_type);
+			sapp_runtime_log(RLOG_LV_INFO, "net_layer_to_ethernet_protocol(): Ethernet can't carry addr type:%d directly!\n", addr_type);
 			//assert(0);
 			ether_type = -1;
 		break;
@@ -1142,7 +1142,7 @@ UINT16 net_layer_to_ethernet_protocol(int addr_type)
 
 		default:
 			/* to do, unknown type */
-			sapp_runtime_log(RLOG_LV_FATAL, "net_layer_to_ethernet_protocol(): unknown ethernet carry addr type:%d!\n", addr_type);
+			sapp_runtime_log(RLOG_LV_INFO, "net_layer_to_ethernet_protocol(): unknown ethernet carry addr type:%d!\n", addr_type);
 			ether_type = -1;
 		break;
 	}
@@ -1182,7 +1182,7 @@ UINT16 net_layer_to_ethernet_protocol_by_stream(const struct streaminfo *pstream
 
 		case ADDR_TYPE_TCP:
 		case ADDR_TYPE_UDP:
-			sapp_runtime_log(RLOG_LV_FATAL, "net_layer_to_ethernet_protocol_by_stream(): Ethernet can't carry addr type:%d directly!\n", addr_type);
+			sapp_runtime_log(RLOG_LV_INFO, "net_layer_to_ethernet_protocol_by_stream(): Ethernet can't carry addr type:%d directly!\n", addr_type);
 			//assert(0);
 			ether_type = -1;
 		break;
@@ -1201,7 +1201,7 @@ UINT16 net_layer_to_ethernet_protocol_by_stream(const struct streaminfo *pstream
 
 		default:
 			/* to do, unknown type */
-			sapp_runtime_log(RLOG_LV_FATAL, "net_layer_to_ethernet_protocol_by_stream(): unknown ethernet carry addr type:%d!\n", addr_type);
+			sapp_runtime_log(RLOG_LV_INFO, "net_layer_to_ethernet_protocol_by_stream(): unknown ethernet carry addr type:%d!\n", addr_type);
 			ether_type = -1;
 		break;
 	}

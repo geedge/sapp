@@ -91,6 +91,10 @@ static void field_stat2_update_metrics(void)
 
 	sapp_fs2_update_count(SAPP_STAT_RCV_LINE, cur_count[SAPP_STAT_RCV_LINE]);
 	sapp_fs2_update_length(SAPP_STAT_RCV_LINE, 8 *( cur_length[SAPP_STAT_RCV_LINE])); /* to bps, bit per second */
+
+	sapp_fs2_update_count(SAPP_STAT_SND_ERROR, cur_count[SAPP_STAT_SND_ERROR]);
+	sapp_fs2_update_length(SAPP_STAT_SND_ERROR, 8 *( cur_length[SAPP_STAT_SND_ERROR])); /* to bps, bit per second */
+
 	
 	sapp_fs2_update_count(SAPP_STAT_RCV_ETHERNET, cur_count[SAPP_STAT_RCV_ETHERNET]);
 	sapp_fs2_update_length(SAPP_STAT_RCV_ETHERNET, 8 *( cur_length[SAPP_STAT_RCV_ETHERNET])); /* to bps, bit per second */
@@ -115,6 +119,7 @@ static void field_stat2_update_metrics(void)
 
 	sapp_fs2_update_count(SAPP_STAT_RCV_DUP_TCP, cur_count[SAPP_STAT_RCV_DUP_TCP]);
 	sapp_fs2_update_length(SAPP_STAT_RCV_DUP_TCP, 8 *(cur_length[SAPP_STAT_RCV_DUP_TCP]));
+	sapp_fs2_update_count(SAPP_STAT_DUP_IDENTIFY_ERR, cur_count[SAPP_STAT_DUP_IDENTIFY_ERR]);
 	
 	sapp_fs2_update_length(SAPP_STAT_TCP_LOST_PKT, 8 *(cur_length[SAPP_STAT_TCP_LOST_PKT]));
 	sapp_fs2_update_count(SAPP_STAT_TCP_LOST_PKT_STREAM_NUM, cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM]);

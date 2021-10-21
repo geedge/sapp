@@ -59,7 +59,8 @@ int sapp_dup_pkt_mark_v4(int tid, const sapp_dup_pkt_key_v4_t *key)
 
 	ret = expiry_dablooms_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v4_t));
 	if(ret < 0){
-		sapp_runtime_log(RLOG_LV_FATAL, "sapp dup distinguish ipv4 pkt add bloom key error, %s", dup_pkt_key_ntop_v4(key,ntop_buf,sizeof(ntop_buf)));
+		sapp_global_val->mthread_volatile[tid]->sys_stat.count[SAPP_STAT_DUP_IDENTIFY_ERR]++;
+		sapp_runtime_log(RLOG_LV_INFO, "sapp dup distinguish ipv4 pkt add bloom key error, %s", dup_pkt_key_ntop_v4(key,ntop_buf,sizeof(ntop_buf)));
 	}else{
 		sapp_runtime_log(RLOG_LV_DEBUG, "sapp dup distinguish ipv4 pkt add bloom key succ, %s", dup_pkt_key_ntop_v4(key,ntop_buf,sizeof(ntop_buf)));
 	}
@@ -74,7 +75,8 @@ int sapp_dup_pkt_mark_v6(int tid, const sapp_dup_pkt_key_v6_t *key)
 
 	ret = expiry_dablooms_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v6_t));
 	if(ret < 0){
-		sapp_runtime_log(RLOG_LV_FATAL, "sapp dup distinguish ipv6 pkt add bloom key error, %s", dup_pkt_key_ntop_v6(key,ntop_buf,sizeof(ntop_buf)));
+		sapp_global_val->mthread_volatile[tid]->sys_stat.count[SAPP_STAT_DUP_IDENTIFY_ERR]++;
+		sapp_runtime_log(RLOG_LV_INFO, "sapp dup distinguish ipv6 pkt add bloom key error, %s", dup_pkt_key_ntop_v6(key,ntop_buf,sizeof(ntop_buf)));
 	}else{
 		sapp_runtime_log(RLOG_LV_DEBUG, "sapp dup distinguish ipv6 pkt add bloom key succ, %s", dup_pkt_key_ntop_v6(key,ntop_buf,sizeof(ntop_buf)));
 	}

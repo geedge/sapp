@@ -99,7 +99,9 @@ int vxlan_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_hd
 			if(ETH_P_IP == ntohs(addr_pr.inner_hdlc.protocol)){
 				ret = ipv4_entry(pstream_pr,next_layer_data,thread_num,routedir,raw_pkt, next_layer_offset);
 			}else{
-				sapp_runtime_log(RLOG_LV_FATAL, "vxlan etnry: unsupport HDLC protocol:0x%x\n", addr_pr.inner_hdlc.protocol);
+				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+=raw_pkt->raw_pkt_len;			
+				sapp_runtime_log(RLOG_LV_INFO, "vxlan etnry: unsupport HDLC protocol:0x%x\n", addr_pr.inner_hdlc.protocol);
 				ret = PASS;
 			}
 		}
@@ -112,14 +114,18 @@ int vxlan_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_hd
 			}else if(PPP_PROTOCOL_IPv6 == ntohs(addr_pr.inner_ppp.protocol)){
 				ret = ipv6_entry(pstream_pr,next_layer_data,thread_num,routedir,raw_pkt, next_layer_offset);
 			}else{
-				sapp_runtime_log(RLOG_LV_FATAL, "vxlan etnry: unsupport PPP protocol:0x%x\n", addr_pr.inner_ppp.protocol);
+				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+=raw_pkt->raw_pkt_len;			
+				sapp_runtime_log(RLOG_LV_INFO, "vxlan etnry: unsupport PPP protocol:0x%x\n", addr_pr.inner_ppp.protocol);
 				ret = PASS;
 			}
 		}
 		break;
 
 		default:
-			sapp_runtime_log(RLOG_LV_FATAL, "vxlan etnry: unsupport link type:%d\n", addr_pr.addr_public.link_type);
+			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+=raw_pkt->raw_pkt_len;			
+			sapp_runtime_log(RLOG_LV_INFO, "vxlan etnry: unsupport link type:%d\n", addr_pr.addr_public.link_type);
 			ret = PASS;
 		break;
 	}

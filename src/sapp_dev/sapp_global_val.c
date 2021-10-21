@@ -333,6 +333,7 @@ void sapp_gval_destroy(void)
 
 	memset((void *)sapp_global_val, 0xFE, sizeof(sapp_global_t));
 	free(sapp_global_val);
+	sapp_global_val = NULL;
 }
 
 

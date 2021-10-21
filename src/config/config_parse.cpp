@@ -1053,7 +1053,14 @@ static int parse_well_known_port_config(void)
 		sapp_memmove_for_blank_table(line_buf, sizeof(line_buf));
 		del_last_rn(line_buf, sizeof(line_buf));
 
-		if('[' == line_buf[0]){ /* 一个段落的起始 */
+		if('[' == line_buf[0]){ /* [] 一个段落的起始 */
+			if(port_array != NULL){
+				/* 上一个段落刚结束 */
+				update_well_known_port_array(last_section_proto, port_array, port_array_num);
+				port_array = NULL; 
+				port_array_num = 0;
+			}
+
 			if(strncasecmp("[TCP]", line_buf, strlen("TCP")) == 0){
 				last_section_proto = IPPROTO_TCP;
 			}else if(strncasecmp("[UDP]", line_buf, strlen("UDP")) == 0){
@@ -1062,14 +1069,6 @@ static int parse_well_known_port_config(void)
 				sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, onlye support TCP or UDP", ABBR_WELL_KNOWN_PORT_CONF_FILE); 
 				return -1;
 			}
-
-			if(port_array != NULL){
-				/* 上一个段落刚结束 */
-				update_well_known_port_array(last_section_proto, port_array, port_array_num);
-				port_array = 0; 
-				port_array_num = 0;
-			}
-
 			continue;
 		}
 		
@@ -1088,6 +1087,18 @@ static int parse_well_known_port_config(void)
 		update_well_known_port_array(last_section_proto, port_array, port_array_num);
 		port_array = 0; 
 		port_array_num = 0;
+	}
+
+	if(sapp_global_val->config.stream.tcp.well_known_ports_array){
+		for(i = 0; i < sapp_global_val->config.stream.tcp.well_known_ports_array_num; i++){
+			sapp_runtime_log(RLOG_LV_INFO, "these TCP ports are considered as server: %u", sapp_global_val->config.stream.tcp.well_known_ports_array[i]);
+		}
+	}
+
+	if(sapp_global_val->config.stream.udp.well_known_ports_array){
+		for(i = 0; i < sapp_global_val->config.stream.udp.well_known_ports_array_num; i++){
+			sapp_runtime_log(RLOG_LV_INFO, "these UDP ports are considered as server: %u", sapp_global_val->config.stream.udp.well_known_ports_array[i]);
+		}
 	}
 
 	fclose(fp);

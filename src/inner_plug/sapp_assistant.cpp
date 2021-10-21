@@ -1198,6 +1198,12 @@ static int sapp_fs2_init(void)
 		pfs_para->fs_id_length_array[SAPP_STAT_ETH_OUTBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Bit_Outbound");			
 	}
 
+	pfs_para->fs_id_count_array[SAPP_STAT_RCV_UNKNOWN] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Unknown_Pkt");
+	pfs_para->fs_id_length_array[SAPP_STAT_RCV_UNKNOWN] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Unknown_Bit");
+
+	pfs_para->fs_id_count_array[SAPP_STAT_SND_ERROR] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Snd_Err_Pkt");
+	//pfs_para->fs_id_length_array[SAPP_STAT_SND_ERROR] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Snd_Err_Bit");	 
+
 	pfs_para->fs_id_count_array[SAPP_STAT_RCV_IPV4] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ipv4_Pkt");
 	pfs_para->fs_id_length_array[SAPP_STAT_RCV_IPV4] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ipv4_Bit");
 
@@ -1211,6 +1217,8 @@ static int sapp_fs2_init(void)
     pfs_para->fs_id_length_array[SAPP_STAT_TCP_LOST_PKT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Lost_Bit");	
 	pfs_para->fs_id_count_array[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Lost_STM");	
 
+	pfs_para->fs_id_count_array[SAPP_STAT_DUP_IDENTIFY_ERR] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Key_Err"); /* dup重复包识别添加key错误计数 */	
+
     pfs_para->fs_id_count_array[SAPP_STAT_TCP_CLOSE_BY_TIMEOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Close_byT");	
 	pfs_para->fs_id_count_array[SAPP_STAT_TCP_CLOSE_BY_KICKOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Close_byK");	
 	
@@ -1221,9 +1229,6 @@ static int sapp_fs2_init(void)
 
     pfs_para->fs_id_count_array[SAPP_STAT_UDP_CLOSE_BY_TIMEOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Close_byT");	
 	pfs_para->fs_id_count_array[SAPP_STAT_UDP_CLOSE_BY_KICKOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Close_byK");	
-	
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_UNKNOWN] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Unknown_Pkt");
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_UNKNOWN] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Unknown_Bit");
 
 	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_NEW] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Link_New");
 	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DEL] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Link_Del");
