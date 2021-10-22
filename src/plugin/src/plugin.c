@@ -92,13 +92,13 @@ int stream_register_fun(int funtype,char (*x)(void), int);
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
-
 #include "plugin_proc.h"
 #include "plugin_platform.h"
 #include "plugin_protocol.h"
 #include "plugin_business.h"
 #include "plugin.h"
 #include "plugin_serial.h"
+
 
 extern stProtocolPlugInfo* g_protocol_plug_info;
 extern stBusinessPlugInfo* g_business_plug_info;
@@ -140,88 +140,11 @@ char* g_plugin_entryname[PLUGIN_MAX_ENTRYNUM] =
 int g_plugin_version_VERSION_20170511;
 
 
-typedef struct{
-	time_t init_time;
-	int init_state; /* <0: error; >= 0: succ */
-	long long time_spent_in_us;
-	const char *plug_path;
-}plugin_load_state_t;
-
-
-static plugin_load_state_t g_plugin_load_state[128];
-static int plugin_load_state_num = 0;
-
-
-static void plugin_load_state_update(int init_state, long long time_spent_in_us, const char *plug_path)
-{
-	if(plugin_load_state_num >= 128){
-		return;
-	}
-
-	g_plugin_load_state[plugin_load_state_num].init_time = time(NULL);
-	g_plugin_load_state[plugin_load_state_num].init_state = init_state;
-	if(init_state < 0){
-		g_plugin_load_state[plugin_load_state_num].time_spent_in_us = 0; /* 初始化失败记为0 */
-	}else{
-		g_plugin_load_state[plugin_load_state_num].time_spent_in_us = time_spent_in_us;
-	}
-	g_plugin_load_state[plugin_load_state_num].plug_path = sapp_strdup(plug_path);
-	
-	plugin_load_state_num++;
-}
-
-/* 对于qsort来说, item1,item2是每个数组成员的地址, 对于本例来说, 即指针的指针, 所以是plugin_load_state_t ** */
-static int qsort_compare_time_spent_cb(const void *item1, const void *item2)
-{
-	const plugin_load_state_t **load_state1 = (plugin_load_state_t **)item1;
-	const plugin_load_state_t **load_state2 = (plugin_load_state_t **)item2;
-	
-	return (int)((*load_state1)->time_spent_in_us - (*load_state2)->time_spent_in_us);
-}
-
-void sapp_plugin_load_state_output(void)
-{
-	int i;
-	plugin_load_state_t *ptr_plugin_load_state[128] = {};
-	char time_str[64];
-	FILE *fp;
-
-	fp = fopen(ABBR_LOAD_PLUG_STAT_LOG_DATA_FILE, "w+");
-	if(NULL == fp){
-		return;
-	}
-
-	for(i = 0; i < plugin_load_state_num; i++){
-		ptr_plugin_load_state[i] = &g_plugin_load_state[i];
-	}
-
-	qsort(ptr_plugin_load_state, plugin_load_state_num, sizeof(void *), qsort_compare_time_spent_cb);
-
-	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
-	fprintf(fp, "sapp load plugins statistics:\n");
-	fprintf(fp, "%20s %5s %13s %6s\n", "start_time", "state", "time_spent_us", "plugin_path");
-
-	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
-	for(i = 0; i < plugin_load_state_num; i++){
-		timet_to_str(ptr_plugin_load_state[i]->init_time, time_str, sizeof(time_str));
-		fprintf(fp, "%20s %5s %13lld %6s\n", time_str, 
-				(ptr_plugin_load_state[i]->init_state < 0) ? "\033[1;31;40mFAIL\033[0m":"\033[32mSUCC\033[0m", 
-				ptr_plugin_load_state[i]->time_spent_in_us, 
-				ptr_plugin_load_state[i]->plug_path);				
-	}	
-	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
-
-	if(fp){
-		fclose(fp);
-	}
-}
-
-
-static void record_time_start(struct timespec *start)
+static inline void __plug_record_time_start(struct timespec *start)
 {
     clock_gettime(CLOCK_MONOTONIC, start);
 }
-static long record_time_elapse_us(struct timespec *start)
+static inline long __plug_record_time_elapse_us(struct timespec *start)
 {
     struct timespec end;
     long elapsed = 0;
@@ -738,6 +661,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	int rec;
 	char buf_sofilename[PLUGIN_MAX_CONFLEN]={0};
 	char buf_funname[PLUGIN_MAX_CONFLEN]= {0};
+	char buf_plug_name[PLUGIN_MAX_CONFLEN]= {0};
 
 	void* filepoint = NULL;
 	int (*fun_init)() = NULL;
@@ -794,19 +718,26 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s load %s succ",filename,buf_funname);
 
 	}
+
+	MESA_load_profile_string_def(filename,SECTION_PLUGINFO,KEYWORD_PLUGNAME,buf_plug_name,PLUGIN_MAX_CONFLEN, "");
+	if(buf_plug_name[0] == '\0')
+	{
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME, "%s not found PLUGNAME",filename);
+	}
+			
 	struct timespec start;
 	long time_cost_us = 0;
-	record_time_start(&start);
+	__plug_record_time_start(&start);
 	rec = fun_init();
 	if(rec < 0)
 	{
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[1;31;40m%s\033[0m init error,don't load it",buf_sofilename);
-		plugin_load_state_update(-1, 0, buf_sofilename);
+		plugin_load_state_update(-1, 0, buf_sofilename, buf_plug_name);
 		goto plug_init_error;
 	}
 
-	time_cost_us = record_time_elapse_us(&start);
-	plugin_load_state_update(rec, time_cost_us, buf_sofilename);
+	time_cost_us = __plug_record_time_elapse_us(&start);
+	plugin_load_state_update(rec, time_cost_us, buf_sofilename, buf_plug_name);
 	MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[32m%s\033[0m init succ, using [\033[32m%lld\033[0m] us",buf_sofilename,time_cost_us);
 
 	//load FUNNAME_DESTROY
@@ -2057,6 +1988,8 @@ void plugctrl_destroy_all_plug(void)
 
 	MESA_destroy_runtime_log_handle(g_plugin_runtime_handle);
 	g_plugin_runtime_handle = NULL;
+
+
 }
 
 

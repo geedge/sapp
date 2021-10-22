@@ -1,6 +1,7 @@
 #include "sapp_api.h"
 #include "sapp_declaration.h"
 #include "sapp_private_api.h"
+#include "field_stat2.h"
 
 /*
     sapp挂载插件失败后，仅写错误日志，然后继续加载下一个插件，
@@ -35,6 +36,21 @@ struct plug_manage_key_t{
 	const char *plug_name;
 	const char *plug_entry_type;
 };
+
+typedef struct{
+	time_t init_time;
+	int init_state; /* <0: error; >= 0: succ */
+	long long time_spent_in_us;
+	const char *plug_path;
+	const char *plug_name;
+}plugin_load_state_t;
+
+
+static plugin_load_state_t g_plugin_load_state[SAPP_MAX_PLUG_ENTRY_NUM];
+static int plugin_load_state_num = 0;
+static void *g_plug_load_stat_fs2_handle;
+static int g_plug_load_stat_fs2_column_id;
+
 
 /* 
 	根据插件的名称和入口函数名称, 找到入口函数在内存中的地址.
@@ -81,10 +97,10 @@ int plug_mange_get_entry_id(const char *plug_name, const char *plug_entry_name)
 	}
 	this_entry_id = g_plug_global_entry_index;
 	g_plug_global_entry[this_entry_id].entry_id = this_entry_id;
-	g_plug_global_entry[this_entry_id].plug_name =  sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_name)+1);
+	g_plug_global_entry[this_entry_id].plug_name =  (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_name)+1);
 	strncpy((char *)g_plug_global_entry[this_entry_id].plug_name, plug_name, strlen(plug_name));
 	
-	g_plug_global_entry[this_entry_id].plug_entry_name =  sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_entry_name)+1);
+	g_plug_global_entry[this_entry_id].plug_entry_name =  (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_entry_name)+1);
 	strncpy((char *)g_plug_global_entry[this_entry_id].plug_entry_name, plug_entry_name, strlen(plug_entry_name));
 	g_plug_global_entry_index++;
 	
@@ -125,7 +141,7 @@ static MESA_htable_handle create_plug_necessary_htable(void)
 
 	/* key是字符串, MHO_CBFUN_KEY_COMPARE, MHO_CBFUN_KEY_TO_INDEX使用htable内置的默认函�?*/
 
-	MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  plug_necessary_htable_free_cb, sizeof(void *));	
+	MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  (void *)plug_necessary_htable_free_cb, sizeof(void *));	
 	
 	ret = MESA_htable_mature(htable);
 	
@@ -169,7 +185,7 @@ static MESA_htable_handle create_plug_uniq_htable(void)
 
 	/* key是字符串, MHO_CBFUN_KEY_COMPARE, MHO_CBFUN_KEY_TO_INDEX使用htable内置的默认函数即�?*/
 
-	MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  plug_uniq_htable_free_cb, sizeof(void *));	
+	MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  (void *)plug_uniq_htable_free_cb, sizeof(void *));	
 	
 	ret = MESA_htable_mature(htable);
 	
@@ -182,8 +198,8 @@ static unsigned int plug_manage_key_to_index_cb(const MESA_htable_handle table, 
 	const struct plug_manage_key_t *mg_key = (struct plug_manage_key_t *)key;	
 	unsigned int hash_index;
 
-	hash_index = BKDR_hash_algo(table, mg_key->plug_name, strlen(mg_key->plug_name));
-	hash_index += BKDR_hash_algo(table, mg_key->plug_entry_type, strlen(mg_key->plug_entry_type));
+	hash_index = BKDR_hash_algo(table, (unsigned char*)mg_key->plug_name, strlen(mg_key->plug_name));
+	hash_index += BKDR_hash_algo(table, (unsigned char*)mg_key->plug_entry_type, strlen(mg_key->plug_entry_type));
 
 	return hash_index;
 }
@@ -215,10 +231,10 @@ static uchar * plug_manage_key_dup_cb(const uchar *key, uint key_size)
 	const struct plug_manage_key_t *raw_mg_key = (struct plug_manage_key_t *)key;
 
 	new_mg_key = (struct plug_manage_key_t *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(struct plug_manage_key_t));
-	new_mg_key->plug_name = sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, strlen(raw_mg_key->plug_name)+1);
+	new_mg_key->plug_name = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, strlen(raw_mg_key->plug_name)+1);
 	strncpy((char *)new_mg_key->plug_name, raw_mg_key->plug_name, strlen(raw_mg_key->plug_name));
 	
-	new_mg_key->plug_entry_type = sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, strlen(raw_mg_key->plug_entry_type)+1);
+	new_mg_key->plug_entry_type = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, strlen(raw_mg_key->plug_entry_type)+1);
 	strncpy((char *)new_mg_key->plug_entry_type, raw_mg_key->plug_entry_type, strlen(raw_mg_key->plug_entry_type));
 
 	return (uchar *)new_mg_key;
@@ -302,7 +318,7 @@ int plugin_load_new_plug(const char *plug_name, const char *plug_path)
 	}
 
 	plug_info = (struct plug_uniq_t *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, sizeof(struct plug_uniq_t));
-	plug_info->plug_path = sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_path)+1);
+	plug_info->plug_path = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_path)+1);
 	strncpy((char *)plug_info->plug_path, plug_path, strlen(plug_path));
 	plug_info->is_necessary = plugin_is_necessary(plug_path);
 
@@ -375,6 +391,134 @@ static int plugin_parse_necessary_conf(void)
 	return 0;
 }
 
+
+
+void plugin_load_state_update(int init_state, long long time_spent_in_us, const char *plug_path, const char *plug_name)
+{
+	if(plugin_load_state_num >= SAPP_MAX_PLUG_ENTRY_NUM){
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"plugin_load_state_update() error, plug number overload, max support:%d", SAPP_MAX_PLUG_ENTRY_NUM);
+		return;
+	}
+
+	g_plugin_load_state[plugin_load_state_num].init_time = time(NULL);
+	g_plugin_load_state[plugin_load_state_num].init_state = init_state;
+	if(init_state < 0){
+		g_plugin_load_state[plugin_load_state_num].time_spent_in_us = 0; /* 初始化失败记为0 */
+	}else{
+		g_plugin_load_state[plugin_load_state_num].time_spent_in_us = time_spent_in_us;
+	}
+	g_plugin_load_state[plugin_load_state_num].plug_path = sapp_strdup(plug_path);
+	g_plugin_load_state[plugin_load_state_num].plug_name = sapp_strdup(plug_name);
+	
+	plugin_load_state_num++;
+}
+
+/* 对于qsort来说, item1,item2是每个数组成员的地址, 对于本例来说, 即指针的指针, 所以是plugin_load_state_t ** */
+static int qsort_compare_time_spent_cb(const void *item1, const void *item2)
+{
+	const plugin_load_state_t **load_state1 = (const plugin_load_state_t **)item1;
+	const plugin_load_state_t **load_state2 = (const plugin_load_state_t **)item2;
+	
+	return (int)((*load_state1)->time_spent_in_us - (*load_state2)->time_spent_in_us);
+}
+
+
+int sapp_plugin_load_state_fs2_init(void)
+{
+	int fs2_opt;
+	unsigned short fs_server_port;
+	
+	g_plug_load_stat_fs2_handle = FS_create_handle();
+
+	/*
+		prometheus相关的配置, 由  	   sapp_fs2_init() 初始化.
+	*/
+
+	fs2_opt = sapp_global_val->config.profiling.log.interval;
+	FS_set_para(g_plug_load_stat_fs2_handle, STAT_CYCLE, &fs2_opt, sizeof(int));	
+
+	fs2_opt = 1; /* 1:Rewrite ,2: Append.  */
+	FS_set_para(g_plug_load_stat_fs2_handle, PRINT_MODE, &fs2_opt, sizeof(int));
+
+	fs2_opt = 1;
+	FS_set_para(g_plug_load_stat_fs2_handle, PRINT_TRIGGER, &fs2_opt, sizeof(int));
+
+	if(sapp_global_val->config.profiling.log.local.enabled){
+		FS_set_para(g_plug_load_stat_fs2_handle, OUTPUT_DEVICE, "./fs2_plug_stat.log", strlen("./fs2_plug_stat.log") + 1); 
+	}
+	
+	FS_set_para(g_plug_load_stat_fs2_handle, APP_NAME, "plug_load", strlen("plug_load")+1);
+
+	if(sapp_global_val->config.profiling.log.remote.enabled){
+		FS_set_para(g_plug_load_stat_fs2_handle, STATS_SERVER_IP, (void *)sapp_global_val->config.profiling.log.remote.server_ip, strlen(sapp_global_val->config.profiling.log.remote.server_ip)+1);
+		fs_server_port = (unsigned short)sapp_global_val->config.profiling.log.remote.server_port;
+		FS_set_para(g_plug_load_stat_fs2_handle, STATS_SERVER_PORT, &fs_server_port, sizeof(short));
+	}
+
+	if(sapp_global_val->config.profiling.log.prometheus.enabled){
+		fs2_opt = 1;
+		FS_set_para(g_plug_load_stat_fs2_handle, OUTPUT_PROMETHEUS, &fs2_opt, sizeof(int));
+	}
+
+	/* 先注册列, 初始化后固定不变, 行以plug_name为单位动态注册, 动态增加 */
+	g_plug_load_stat_fs2_column_id = FS_register(g_plug_load_stat_fs2_handle, FS_STYLE_COLUMN, FS_CALC_CURRENT, "status");
+
+	FS_start(g_plug_load_stat_fs2_handle);
+
+	return 0;
+}
+
+
+int sapp_plug_stat_dynamic_register_fs2_line(const char *plug_name, int load_stats)
+{
+	/* 此处 fs2_line_id 仅用一次, 用临时变量就行了 */
+	int fs2_line_id = FS_register(g_plug_load_stat_fs2_handle, FS_STYLE_LINE, FS_CALC_CURRENT, plug_name);
+
+	FS_operate(g_plug_load_stat_fs2_handle, fs2_line_id, g_plug_load_stat_fs2_column_id, FS_OP_SET, load_stats);
+
+	return 0;
+}
+
+
+void sapp_plugin_load_state_output(void)
+{
+	int i;
+	plugin_load_state_t *ptr_plugin_load_state[128] = {};
+	char time_str[64];
+	FILE *fp;
+
+	fp = fopen(ABBR_LOAD_PLUG_STAT_LOG_DATA_FILE, "w+");
+	if(NULL == fp){
+		return;
+	}
+
+	for(i = 0; i < plugin_load_state_num; i++){
+		ptr_plugin_load_state[i] = &g_plugin_load_state[i];
+	}
+
+	qsort(ptr_plugin_load_state, plugin_load_state_num, sizeof(void *), qsort_compare_time_spent_cb);
+
+	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
+	fprintf(fp, "sapp load plugins statistics:\n");
+	fprintf(fp, "%20s %5s %13s %6s\n", "start_time", "state", "time_spent_us", "plugin_path");
+
+	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
+	for(i = 0; i < plugin_load_state_num; i++){
+		timet_to_str(ptr_plugin_load_state[i]->init_time, time_str, sizeof(time_str));
+		fprintf(fp, "%20s %5s %13lld %6s\n", time_str, 
+				(ptr_plugin_load_state[i]->init_state < 0) ? "\033[1;31;40mFAIL\033[0m":"\033[32mSUCC\033[0m", 
+				ptr_plugin_load_state[i]->time_spent_in_us, 
+				ptr_plugin_load_state[i]->plug_path);	
+		sapp_plug_stat_dynamic_register_fs2_line(g_plugin_load_state[i].plug_name, g_plugin_load_state[i].init_state);
+	}	
+	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
+
+	if(fp){
+		fclose(fp);
+	}
+}
+
+
 int plugin_manage_init(void)
 {
 	g_plug_necessary_htable = create_plug_necessary_htable();
@@ -395,6 +539,8 @@ int plugin_manage_init(void)
 	g_plug_global_entry[0].plug_name = sapp_strdup("inner_plug");
 	g_plug_global_entry[0].plug_entry_name = sapp_strdup("inner_entry");
 	g_plug_global_entry_index++;
+
+	sapp_plugin_load_state_fs2_init();
 
 	return 0;
 }
@@ -418,6 +564,17 @@ void plugin_manage_destroy(void)
 	}
 	memset(g_plug_global_entry, 0, sizeof(g_plug_global_entry));
 	g_plug_global_entry_index = 0;
+
+	for(i = 0; i < plugin_load_state_num; i++){
+		SAPP_GLOBAL_FREE(g_plugin_load_state[i].plug_path);
+		SAPP_GLOBAL_FREE(g_plugin_load_state[i].plug_name);
+	}
+	memset(g_plugin_load_state, 0, sizeof(g_plugin_load_state));
+	plugin_load_state_num = 0;
+
+	if(g_plug_load_stat_fs2_handle){
+		FS_stop(&g_plug_load_stat_fs2_handle);
+	}	
 }
 
 #ifdef __cplusplus

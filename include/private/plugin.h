@@ -120,6 +120,8 @@ int process_conf_entryname();
 int process_confelem_plugname(char* filename,int plugtype,char** plugname);
 int process_conflist(int plug_type);
 int plug_mange_get_entry_id(const char *plug_name, const char *plug_entry_name);
+int sapp_plugin_load_state_fs2_init(void);
+void plugin_load_state_update(int init_state, long long time_spent_in_us, const char *plug_path, const char *plug_name);
 
 
 #ifdef __cplusplus

@@ -14,7 +14,7 @@
 #define MTU_MAX 					2000
 #endif
 
-
+#define SAPP_MAX_PLUG_NUM		(128) /* 所有插件数量最大值 */
 #define SAPP_MAX_PLUG_ENTRY_NUM	(256) /* 所有插件的entry数量最大值 */
 
 #define STATS_STR_LEN	(32)
