@@ -39,7 +39,7 @@ struct plug_manage_key_t{
 
 typedef struct{
 	time_t init_time;
-	int init_state; /* <0: error; >= 0: succ */
+	int init_state; /* 0: error; 1: succ */
 	long long time_spent_in_us;
 	const char *plug_path;
 	const char *plug_name;
@@ -393,24 +393,50 @@ static int plugin_parse_necessary_conf(void)
 
 
 
+/*
+	此函数有可能在不同阶段被重复调用, 先查找有没有此插件的历史记录.
+*/
 void plugin_load_state_update(int init_state, long long time_spent_in_us, const char *plug_path, const char *plug_name)
 {
+	int i, index, bingo;
+
 	if(plugin_load_state_num >= SAPP_MAX_PLUG_ENTRY_NUM){
-		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"plugin_load_state_update() error, plug number overload, max support:%d", SAPP_MAX_PLUG_ENTRY_NUM);
+		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"plugin_load_state_update() error, plug number overload, max support:%d", SAPP_MAX_PLUG_ENTRY_NUM);	
 		return;
 	}
 
-	g_plugin_load_state[plugin_load_state_num].init_time = time(NULL);
-	g_plugin_load_state[plugin_load_state_num].init_state = init_state;
-	if(init_state < 0){
-		g_plugin_load_state[plugin_load_state_num].time_spent_in_us = 0; /* 初始化失败记为0 */
-	}else{
-		g_plugin_load_state[plugin_load_state_num].time_spent_in_us = time_spent_in_us;
+	bingo = 0;
+	index = -1;
+	for(i = 0; i < SAPP_MAX_PLUG_ENTRY_NUM; i++){
+		if((g_plugin_load_state[i].plug_path != NULL) && 
+		  (strncmp(g_plugin_load_state[i].plug_path, plug_path, strlen(plug_path)) == 0)){
+			index = i;
+			bingo = 1;
+			break;
+		}
 	}
-	g_plugin_load_state[plugin_load_state_num].plug_path = sapp_strdup(plug_path);
-	g_plugin_load_state[plugin_load_state_num].plug_name = sapp_strdup(plug_name);
-	
-	plugin_load_state_num++;
+
+	if(0 == bingo){
+		/* not found history, is new plug */
+		index = plugin_load_state_num;
+		plugin_load_state_num++;
+	}
+
+	g_plugin_load_state[index].init_time = time(NULL);
+
+	if(init_state < 0){
+		g_plugin_load_state[index].init_state = 0;
+		g_plugin_load_state[index].time_spent_in_us = 0; /* 初始化失败记为0 */
+	}else{
+		g_plugin_load_state[index].init_state = 1;
+		g_plugin_load_state[index].time_spent_in_us = time_spent_in_us;
+	}
+	if(0 == bingo){
+		g_plugin_load_state[index].plug_path = sapp_strdup(plug_path);
+		if(plug_name){
+			g_plugin_load_state[index].plug_name = sapp_strdup(plug_name);
+		}
+	}
 }
 
 /* 对于qsort来说, item1,item2是每个数组成员的地址, 对于本例来说, 即指针的指针, 所以是plugin_load_state_t ** */
@@ -468,11 +494,28 @@ int sapp_plugin_load_state_fs2_init(void)
 	return 0;
 }
 
-
-int sapp_plug_stat_dynamic_register_fs2_line(const char *plug_name, int load_stats)
+/* 
+	field stat注册名称时不允许用  "|:\n\r.\t<>[]#!@", 所以常见的字符里, 只能改成"_".
+*/
+static void sapp_plug_modify_char(char *str, int raw_char, int new_char)
 {
+	char *ptr;
+
+	while(ptr = strchr(str, raw_char)){
+		*ptr = (char)new_char;
+	}
+}
+
+
+int sapp_plug_stat_dynamic_register_fs2_line(const char *plug_path, long load_stats)
+{
+	char valid_fs2_plug_path[PATH_MAX];
+
+	strncpy(valid_fs2_plug_path, plug_path, PATH_MAX);
+	sapp_plug_modify_char(valid_fs2_plug_path, '.', '_');
+	
 	/* 此处 fs2_line_id 仅用一次, 用临时变量就行了 */
-	int fs2_line_id = FS_register(g_plug_load_stat_fs2_handle, FS_STYLE_LINE, FS_CALC_CURRENT, plug_name);
+	int fs2_line_id = FS_register(g_plug_load_stat_fs2_handle, FS_STYLE_LINE, FS_CALC_CURRENT, valid_fs2_plug_path);
 
 	FS_operate(g_plug_load_stat_fs2_handle, fs2_line_id, g_plug_load_stat_fs2_column_id, FS_OP_SET, load_stats);
 
@@ -509,7 +552,7 @@ void sapp_plugin_load_state_output(void)
 				(ptr_plugin_load_state[i]->init_state < 0) ? "\033[1;31;40mFAIL\033[0m":"\033[32mSUCC\033[0m", 
 				ptr_plugin_load_state[i]->time_spent_in_us, 
 				ptr_plugin_load_state[i]->plug_path);	
-		sapp_plug_stat_dynamic_register_fs2_line(g_plugin_load_state[i].plug_name, g_plugin_load_state[i].init_state);
+		sapp_plug_stat_dynamic_register_fs2_line(g_plugin_load_state[i].plug_path, g_plugin_load_state[i].init_state);
 	}	
 	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
 

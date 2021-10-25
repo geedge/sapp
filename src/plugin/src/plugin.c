@@ -732,12 +732,12 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	if(rec < 0)
 	{
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[1;31;40m%s\033[0m init error,don't load it",buf_sofilename);
-		plugin_load_state_update(-1, 0, buf_sofilename, buf_plug_name);
+		plugin_load_state_update(-1, 0, filename, buf_plug_name);
 		goto plug_init_error;
 	}
 
 	time_cost_us = __plug_record_time_elapse_us(&start);
-	plugin_load_state_update(rec, time_cost_us, buf_sofilename, buf_plug_name);
+	plugin_load_state_update(rec, time_cost_us, filename, buf_plug_name);
 	MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"\033[32m%s\033[0m init succ, using [\033[32m%lld\033[0m] us",buf_sofilename,time_cost_us);
 
 	//load FUNNAME_DESTROY
@@ -1357,6 +1357,10 @@ static int process_conflist_single(char* filename, int plug_type, char *wanted_s
 		else
 		{
 			rec = process_confelem_platform(buf_confname);
+		}
+
+		if(rec < 0){
+			plugin_load_state_update(rec, 0, buf_confname, NULL);
 		}
 	}
 
