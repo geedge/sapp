@@ -14,8 +14,6 @@ extern void del_last_rn(char *data, int max_len);
 extern int tcp_flow_stat_init(void);
 extern int G_UDP_FLOW_STAT_PROJECT_ID;
 
-#define PROJECT_REQ_MAX_PLUG_NUM			(128)
-
 enum pro_type_list{
 	PROGECT_REQ_VALUE_TYPE_SIMPLE_CHAR = 0,
 	PROGECT_REQ_VALUE_TYPE_SIMPLE_SHORT,
@@ -69,6 +67,15 @@ static int project_req_str_to_type_id(const char *project_req_val_type)
 	}
 
 	return pro_req_type;
+}
+
+const char *project_find_name_by_id(int project_id)
+{
+	if((project_id < 0) || (project_id >= G_PROJECT_PLUG_NUM)){
+		return NULL;
+	}
+
+	return G_PROJECT_REQ_MANAGE[project_id].project_req_name;
 }
 
 static int __project_find_id_by_name(const char *project_req_name, const char *project_req_val_type)
@@ -298,6 +305,9 @@ static int __project_req_add(struct streaminfo *stream, int project_req_id, long
 	}
 
 	pinfo[project_req_id].value = project_req_value;
+	if(0 == pinfo[project_req_id].valid_flag){
+		sapp_global_val->mthread_volatile[stream->threadnum]->sys_stat.count_project_in_use[project_req_id]++;
+	}
 	pinfo[project_req_id].valid_flag = 1;
 	
 	return 0;	
@@ -448,22 +458,20 @@ void project_requirement_destroy(int mem_use_type, int thread_num, void *pprojec
 	pinfo = (project_req_info_t *)(pproject);
 
 	for(i = 0; i < 	G_PROJECT_PLUG_NUM; i++){
+		if(pinfo[i].valid_flag != 0){
+			sapp_global_val->mthread_volatile[thread_num]->sys_stat.count_project_in_use[i]--;			
+		}
 		if(PROGECT_REQ_VALUE_TYPE_STRUCT == G_PROJECT_REQ_MANAGE[i].project_req_type){
 			if(pinfo[i].value != 0){
 				if(G_PROJECT_REQ_MANAGE[i].free_cb != NULL){
 					(*(G_PROJECT_REQ_MANAGE[i].free_cb))(thread_num, (void *)pinfo[i].value); /* 插件自己申请的内存无法统计  */
 				}
-#if 0				
-				else{
-					/* 没有注册清理函数, 默认把内存直接释放 */
-					dictator_free(thread_num, (void *)(pinfo[i].value));
-				}
-#endif				
 				pinfo[i].value = 0;
 			}
 		}else{
 			pinfo[i].value = -1;
 		}
+		pinfo[i].valid_flag = 0;
 	}
 
 	sapp_mem_free((sapp_mem_type_t)mem_use_type, thread_num, pproject);

@@ -19,6 +19,9 @@
 
 #define STATS_STR_LEN	(32)
 
+#define PROJECT_REQ_MAX_PLUG_NUM			(128)
+#define STREAM_BRIDGE_MAX_NUM  				(128)
+
 
 #endif
 

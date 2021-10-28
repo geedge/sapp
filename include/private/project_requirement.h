@@ -21,6 +21,8 @@ int raw_ip_frag_list_stream_detach(struct streaminfo *stream);
 void raw_frags_list_free_one(int thread_seq, void *project_req_value);
 raw_ipfrag_list_t *raw_ip_frag_list_move_pkt(struct streaminfo *stream);
 int frags_list_append(struct frag_ipq *ipq, const raw_pkt_t *raw_pkt, int type, int thread_num);
+const char *project_find_name_by_id(int project_id);
+
 
 #ifdef __cplusplus
 }

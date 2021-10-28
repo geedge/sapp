@@ -7,8 +7,6 @@ extern "C" {
 #include "MESA_htable.h"
 #include "MESA_list.h"
 
-#define STREAM_BRIDGE_MAX_NUM  (128)
-
 #define STREAM_BRIDGE_MAGIC_SUCC (0x62726765)  // "brge" 十六进制
 
 typedef struct{	
@@ -78,7 +76,17 @@ static MESA_htable_handle stream_bridge_name2id_htable_create(void)
 }
 
 
-static int stream_bridge_name2id(const char *bridge_name)
+const char *stream_bridge_id_to_name(int bridge_id)
+{
+	if((bridge_id < 0) || (bridge_id >= g_stream_bridge_actual_num)){
+		return NULL;
+	}
+
+	return g_stream_bridge_manage[bridge_id].bridge_name;
+}
+
+
+static int stream_bridge_name_to_id(const char *bridge_name)
 {
 	int *bridge_id;
 
@@ -144,6 +152,9 @@ void stream_bridge_destroy_per_stream(int mem_used_type, const struct streaminfo
 	bridge_array = (stream_bridge_item_t *)(pbridge);
 
 	for(i = 0; i < 	g_stream_bridge_actual_num; i++){
+		if(bridge_array[i].valid_flag != 0){
+			sapp_global_val->mthread_volatile[stream->threadnum]->sys_stat.count_bridge_in_use[i]--;
+		}	
 		if((g_stream_bridge_manage[i].async_data_free_cb) && (bridge_array[i].value != 0)){
 			g_stream_bridge_manage[i].async_data_free_cb(stream, i, (void *)(bridge_array[i].value));
 		}
@@ -165,7 +176,7 @@ int stream_bridge_build(const char *bridge_name, const char *rw_mode)
 		return -1;
 	}
 
-	bridge_id = stream_bridge_name2id(bridge_name);
+	bridge_id = stream_bridge_name_to_id(bridge_name);
 
 	if(bridge_id < 0){
 		if((strncasecmp(rw_mode, "r", 1) == 0) && (strnlen(rw_mode, 2) == 1)){
@@ -229,6 +240,9 @@ int stream_bridge_async_data_put(const struct streaminfo *stream, int bridge_id,
 	bridge_item_array = (stream_bridge_item_t *)stream_pr->stream_bridge;
 
 	bridge_item_array[bridge_id].value = (long long)data;
+	if(0 == bridge_item_array[bridge_id].valid_flag){
+		sapp_global_val->mthread_volatile[stream->threadnum]->sys_stat.count_bridge_in_use[bridge_id]++;
+	}
 	bridge_item_array[bridge_id].valid_flag = 1;
 
 	return 0;

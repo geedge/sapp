@@ -2485,56 +2485,50 @@ static int __checkip6pkt(const struct mesa_ip6_hdr * iph)
 	return 0;
 }
 
-char test_jump_layer(struct streaminfo *f_stream,unsigned char routedir,int thread_seq, const void *arg)
+char test_jump_layer_tcp_entry(struct streaminfo *stream,  void **pme, int thread_seq,void *a_packet)
+{
+	if(NULL == a_packet){
+		return APP_STATE_DROPME;
+	}
+	const void *next_hdr;
+	int raw_ip_layer_type;
+	const char *raw_ip_layer_string;
+	int expect_layer_type;
+	const char *expect_layer_string;
+	
+	if(ADDR_TYPE_IPV4 == stream->addr.addrtype){
+		raw_ip_layer_type = ADDR_TYPE_IPV4;
+		raw_ip_layer_string = "ipv4";
+	}else{
+		raw_ip_layer_type = ADDR_TYPE_IPV6;
+		raw_ip_layer_string = "ipv6";
+	}
+
+	if(STREAM_TYPE_TCP == stream->type){
+		expect_layer_type = ADDR_TYPE_TCP;
+		expect_layer_string = "tcp";
+	}else{
+		expect_layer_type = ADDR_TYPE_UDP;
+		expect_layer_string = "udp";
+	}
+
+	next_hdr = MESA_jump_layer(a_packet, raw_ip_layer_type, expect_layer_type);
+	if(next_hdr){
+		printf("bingo! jump to %s from %s succ!\n", expect_layer_string, raw_ip_layer_string);
+	}else{
+		printf("error! in tcp entry, jump to %s from %s fail!\n", expect_layer_string, raw_ip_layer_string);
+	}	
+
+	return APP_STATE_GIVEME;
+}
+
+char test_jump_layer_ip_entry(struct streaminfo *f_stream,unsigned char routedir,int thread_seq, const void *arg)
 {
 	const raw_pkt_t *raw_pkt = ((struct streaminfo_private*)f_stream)->raw_pkt;
 
 	if(NULL == raw_pkt){
 		return 0;
 	}
-
-#if 0
-	const struct mesa_arp_hdr *arphdr = (const struct mesa_arp_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_ARP);
-	if(arphdr){
-		printf("jump to ARP OK!\n");
-	}
-#endif
-
-#if 0
-	const struct mesa_ip4_hdr * iphdr = (const struct mesa_ip4_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_IPV4);
-	if(iphdr){
-		if(__checkip4pkt(iphdr) < 0){
-			assert(0);
-		}else{
-			printf("%s:%d: jump to ipv4 OK!\n", __FILE__, __LINE__);
-		}
-	}
-#endif
-
-#if 0
-	const struct mesa_ip6_hdr * ip6hdr = (const struct mesa_ip6_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_IPV6);
-	if(ip6hdr){
-		if(__checkip6pkt(ip6hdr) < 0){
-			assert(0);
-		}else{
-			printf("jump to ipv6 OK!\n");
-		}
-	}
-#endif
-
-#if 0
-	const struct mesa_udp_hdr * udphdr =  (const struct mesa_udp_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_UDP);
-	if(udphdr){
-		printf("jump to UDP OK!\n");
-	}	
-#endif
-
-#if 0
-	const struct mesa_tcp_hdr * tcphdr =  (const struct mesa_tcp_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, ADDR_TYPE_TCP);
-	if(tcphdr){
-		printf("jump to TCP OK!\n");
-	}	
-#endif
 
 	const struct mesa_ip4_hdr * iphdr, *iphdr_greedy;
 	const struct mesa_ip6_hdr * ip6hdr, *ip6hdr_greedy;

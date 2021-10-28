@@ -419,6 +419,8 @@ typedef struct{
 	unsigned long long length[SAPP_STAT_NUM_MAX]; /* 长度类, 如数据包总字节数 */
 	unsigned long long count_per_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
 	unsigned long long length_per_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
+	unsigned long long count_project_in_use[PROJECT_REQ_MAX_PLUG_NUM];
+	unsigned long long count_bridge_in_use[STREAM_BRIDGE_MAX_NUM];
 }sapp_gval_mthread_sys_stat_t;
 
 

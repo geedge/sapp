@@ -450,6 +450,7 @@ void global_sapp_timer_destroy(void);
 void gdev_keepalive_plug_destroy(void);
 void packet_io_device_alias_destroy(void);
 void sapp_dup_pkt_destroy(void);
+const char *stream_bridge_id_to_name(int bridge_id);
 
 
 

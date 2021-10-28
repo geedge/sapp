@@ -245,6 +245,7 @@ void sysinfo_output(void)
 	static unsigned long long history_count[SAPP_STAT_NUM_MAX];
 	static unsigned long long history_length[SAPP_STAT_NUM_MAX];
 	static sapp_gval_mthread_sys_stat_t history_threads_stat[SAPP_MAX_THREADS];
+	unsigned long long cur_project_in_use_array[PROJECT_REQ_MAX_PLUG_NUM] = {}, cur_bridge_in_use_array[STREAM_BRIDGE_MAX_NUM] = {};
 	
 	char s1[STATS_STR_LEN], s2[STATS_STR_LEN];
 	sapp_gval_mthread_t **mstat = sapp_global_val->mthread_volatile;
@@ -273,6 +274,18 @@ void sysinfo_output(void)
 			cur_length[j] +=  mstat[i]->sys_stat.length[j];		
 		}
 	}
+
+	for(i=0;i<g_packet_io_thread_num;i++){
+		for(j = 0; j < PROJECT_REQ_MAX_PLUG_NUM; j++){
+			cur_project_in_use_array[j] += mstat[i]->sys_stat.count_project_in_use[j];
+		}
+	}
+
+	for(i=0;i<g_packet_io_thread_num;i++){
+		for(j = 0; j < STREAM_BRIDGE_MAX_NUM; j++){
+			cur_bridge_in_use_array[j] += mstat[i]->sys_stat.count_bridge_in_use[j];
+		}
+	}	
 
 	fprintf(fp,"\n*********************** %s *********************\n", time_string);
 	fprintf(fp,"*********************** \033[41m%s\033[0m *************************\n", "sysinfo exactly");
@@ -466,13 +479,34 @@ void sysinfo_output(void)
 			cur_count[SAPP_STAT_UDP_STREAM_S2C_PKTS],
 			byte_convert_human(cur_count[SAPP_STAT_UDP_STREAM_S2C_BYTES],1,1,s1));
 
+	fprintf(fp,"----------------------------------------------------------------\n");	
+	unsigned long long total_project_num = 0;
+	fprintf(fp,"%10s %13s %s\n", "Project_ID", "In_Use_Number", "Project_Name");
+	for(i = 0; i < PROJECT_REQ_MAX_PLUG_NUM; i++){
+		if(cur_project_in_use_array[i] > 0){
+			fprintf(fp,"%10d %13llu %s\n", i, cur_project_in_use_array[i], project_find_name_by_id(i));
+			total_project_num += cur_project_in_use_array[i];
+		}
+	}
+	fprintf(fp,"%10s %13llu %s\n", "Total", total_project_num, "N/A");
+	
+	fprintf(fp,"----------------------------------------------------------------\n");
+	unsigned long long total_bridge_num = 0;
+	fprintf(fp,"%10s %13s %s\n", "Bridge_ID", "In_Use_Number", "Bridge_Name");
+	for(i = 0; i < STREAM_BRIDGE_MAX_NUM; i++){
+		if(cur_bridge_in_use_array[i] > 0){
+			fprintf(fp,"%10d %13llu %s\n", i, cur_bridge_in_use_array[i], stream_bridge_id_to_name(i));
+			total_bridge_num += cur_bridge_in_use_array[i];
+		}
+	}		
+	fprintf(fp,"%10s %13llu %s\n", "Total", total_bridge_num, "N/A");
+
 	fprintf(fp,"#################################################################\n");
 	fprintf(fp,"%-12s %12s %12s %12s %12s\n","SND-PKT", "total_pkt", "total_len","pps", "bps");
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "TCP_RST", cur_count[SAPP_STAT_SND_TCP_RST], byte_convert_human(cur_length[SAPP_STAT_SND_TCP_RST], 1, 1, s1),(cur_count[SAPP_STAT_SND_TCP_RST]-history_count[SAPP_STAT_SND_TCP_RST]), byte_convert_human((cur_length[SAPP_STAT_SND_TCP_RST]-history_length[SAPP_STAT_SND_TCP_RST]), 1,8,s2));
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "TCP_S/A", cur_count[SAPP_STAT_SND_TCP_SYNACK], byte_convert_human(cur_length[SAPP_STAT_SND_TCP_SYNACK], 1, 1, s1),(cur_count[SAPP_STAT_SND_TCP_SYNACK]-history_count[SAPP_STAT_SND_TCP_SYNACK]), byte_convert_human((cur_length[SAPP_STAT_SND_TCP_SYNACK]-history_length[SAPP_STAT_SND_TCP_SYNACK]),1,8,s2));
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "UDP", cur_count[SAPP_STAT_SND_UDP], byte_convert_human(cur_length[SAPP_STAT_SND_UDP],1,1,s1),(cur_count[SAPP_STAT_SND_UDP]-history_count[SAPP_STAT_SND_UDP]), byte_convert_human((cur_length[SAPP_STAT_SND_UDP]-history_length[SAPP_STAT_SND_UDP]),1,8,s2));
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "SEND-ERR", cur_count[SAPP_STAT_SND_ERROR], byte_convert_human(cur_length[SAPP_STAT_SND_ERROR],1,1,s1),(cur_count[SAPP_STAT_SND_ERROR]-history_count[SAPP_STAT_SND_ERROR]), byte_convert_human((cur_length[SAPP_STAT_SND_ERROR]-history_length[SAPP_STAT_SND_ERROR]),1,8,s2));
-
     fprintf(fp,"#################################################################\n\n");
 
 	field_stat2_update_metrics();
