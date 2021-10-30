@@ -219,7 +219,7 @@ int marsio_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 		return -1;
 	}
 
-	free(save_mem_ptr);
+	SAPP_GLOBAL_FREE(save_mem_ptr);
 
 	return 0;
 }
