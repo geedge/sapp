@@ -685,18 +685,21 @@ char ipv4_pkt_detail_entry(struct streaminfo *pstream,unsigned char routedir, in
 
 	if(IPPROTO_TCP == ihdr4->ip_p){
 		thdr = (struct mesa_tcp_hdr *)((char *)ihdr4 + ihdr4->ip_hl * 4);
-		printf("IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d\n", 
+		printf("IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d, routedir:%d\n", 
 				ip_src_str, ntohs(thdr->th_sport),
 				ip_dst_str, ntohs(thdr->th_dport),
-				ntohs(ihdr4->ip_id), ihdr4->ip_p);
+				ntohs(ihdr4->ip_id), ihdr4->ip_p,
+				routedir);
 	}else if(IPPROTO_UDP == ihdr4->ip_p){
 		uhdr = (struct mesa_udp_hdr *)((char *)ihdr4 + ihdr4->ip_hl * 4);
-		printf("IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d\n", 
+		printf("IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d,routedir:%d\n", 
 				ip_src_str, ntohs(uhdr->uh_sport),
 				ip_dst_str, ntohs(uhdr->uh_dport),
-				ntohs(ihdr4->ip_id), ihdr4->ip_p);		
+				ntohs(ihdr4->ip_id), ihdr4->ip_p,
+				routedir);		
 	}else{
-		printf("IP pkt: %s --> %s, ipid:%u, proto:%d\n", ip_src_str, ip_dst_str, ntohs(ihdr4->ip_id), ihdr4->ip_p);
+		printf("IP pkt: %s --> %s, ipid:%u, proto:%d, routedir:%d\n", 
+				ip_src_str, ip_dst_str, ntohs(ihdr4->ip_id), ihdr4->ip_p, routedir);
 	}
 	
 	return APP_STATE_GIVEME;
@@ -3323,7 +3326,7 @@ char IPv6_ENTRY(const struct streaminfo *pstream,unsigned char routedir,int thre
 	
 	inet_ntop(AF_INET6, &ip6h->ip6_src, ips, 128);
 	inet_ntop(AF_INET6, &ip6h->ip6_dst, ipd, 128);
-	printf("recv ip6 pkt, %s --> %s, protocol:%u\n", ips, ipd, ip6h->ip6_nxt_hdr);
+	printf("recv ip6 pkt, %s --> %s, protocol:%u, routedir:%d\n", ips, ipd, ip6h->ip6_nxt_hdr, routedir);
 
 	return APP_STATE_GIVEME;
 }

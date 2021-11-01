@@ -609,7 +609,10 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->__lib_raw_pkt_len = ptr_marsio_buff_datalen(rx_buff);
 	raw_pkt->raw_pkt_len = raw_pkt->__lib_raw_pkt_len;
 	raw_pkt->io_lib_pkt_reference = rx_buff;
-	raw_pkt->route_dir = mr_ctrlzone->route_dir;
+	/* 双臂模式dir根据网卡internal, external决定, 
+	   inline模式此时的dir无意义, 最终会在 packet_io_hook_input_vxlan() ,通过vxlan header更新routedir .
+	*/
+	raw_pkt->route_dir = dir;
 
 	if(unlikely(g_marsio_have_bpf == 1))
 	{
