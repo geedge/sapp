@@ -145,7 +145,6 @@ envelope_rpm:
     FEATURE_ID: 100
     APP_NAME_IN_RPM_SPEC: sapp
   script:
-    - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
     - export RPM_FULL_PATH=`ls $CI_PROJECT_DIR/build/*.rpm | grep -v debug | grep -v debuginfo | grep -v devel | head -n 1`
     - export | grep RPM_FULL_PATH
     - ls $RPM_FULL_PATH
@@ -167,7 +166,6 @@ upload_envelope_rpm:
     PULP3_REPO_NAME: platform-stable-x86_64.el7
     PULP3_DIST_NAME: platform-stable-x86_64.el7
   script:
-    - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
     - cd $CI_PROJECT_DIR/build/
     - ls -ahl *.rpm
     - cp ~/rpm_upload_tools.py ./
