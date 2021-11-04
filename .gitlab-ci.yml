@@ -8,6 +8,8 @@ variables:
 
 stages:
 - build
+- envelope
+- upload
 - test
 
 sapp_module_test:
@@ -136,3 +138,38 @@ release_build_release:
       - build/*.rpm
   only:
     - tags   
+    
+envelope_rpm:
+  stage: envelope
+  variables:
+    FEATURE_ID: 100
+    APP_NAME_IN_RPM_SPEC: sapp
+  script:
+    - export RPM_FULL_PATH=`ls $CI_PROJECT_DIR/build/*.rpm | grep -v debug | grep -v debuginfo | grep -v devel | head -n 1`
+    - export BIN_TO_PROTECT_IN_RPM="${INSTALL_PREFIX}/sapp"
+    - /root/rebuildrpm_and_envelope.sh $RPM_FULL_PATH $BIN_TO_PROTECT_IN_RPM $FEATURE_ID $APP_NAME_IN_RPM_SPEC
+  tags:
+    - envelope
+  artifacts:
+    name: "sapp-pr-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*-pr-*.rpm
+  only:
+    - tags
+  
+upload_envelope_rpm:
+  stage: upload
+  variables:
+    PULP3_REPO_NAME: platform-stable-x86_64.el7
+    PULP3_DIST_NAME: platform-stable-x86_64.el7
+  script:
+    - cd $CI_PROJECT_DIR/build/
+    - ls -ahl *.rpm
+    - cp ~/rpm_upload_tools.py ./
+    - python3 rpm_upload_tools.py ${PULP3_REPO_NAME} ${PULP3_DIST_NAME} *-pr-*.rpm
+    - rm -rf *.rpm
+  tags:
+    - share
+  only:
+    - tags
+
