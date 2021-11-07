@@ -1346,7 +1346,7 @@ static int __addr_pure_udp_n2p_fun(const struct layer_addr *paddr, char *buf, in
 static int __addr_vlan_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
 	const struct layer_addr_vlan *vlan_addr = paddr->vlan;
-	const struct mesa_vlan_hdr *vhdr;
+	//const struct mesa_vlan_hdr *vhdr;
 	int i;
 	unsigned short vlan_id;
 	char tmp_buf[32] = {};
@@ -1357,16 +1357,16 @@ static int __addr_vlan_n2p_fun(const struct layer_addr *paddr, char *buf, int bu
 
 	for(i = 0; i < max_layer_num; i++){
 		if(vlan_addr->c2s_layer_num >= i+1){
-			vhdr = (struct mesa_vlan_hdr *)&vlan_addr->c2s_addr_array[i];
-			vlan_id = ntohs(vhdr->pri_cfi_id) & VLAN_ID_MASK;
+			//vhdr = (struct mesa_vlan_hdr *)&vlan_addr->c2s_addr_array[i];
+			vlan_id = ntohs(vlan_addr->c2s_addr_array[i].VID);
 			snprintf(tmp_buf, 32, "%d", vlan_id);
 			strcat(vlan_addr_string, tmp_buf);
 		}else{
-			strcat(vlan_addr_string, "N/A");
+			strcat(vlan_addr_string, "N/A-");
 		}
 		if(vlan_addr->s2c_layer_num >= i+1){
-			vhdr = (struct mesa_vlan_hdr *)&vlan_addr->s2c_addr_array[i];
-			vlan_id = ntohs(vhdr->pri_cfi_id) & VLAN_ID_MASK;
+			//vhdr = (struct mesa_vlan_hdr *)&vlan_addr->s2c_addr_array[i];
+			vlan_id = ntohs(vlan_addr->s2c_addr_array[i].VID);
 			snprintf(tmp_buf, 32, "%d", vlan_id);
 			strcat(vlan_addr_string, tmp_buf);
 		}else{

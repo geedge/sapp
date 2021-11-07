@@ -192,7 +192,7 @@ struct layer_addr_gre
 
 #define VLAN_ID_MASK		(0x0FFF)
 #define VLAN_TAG_LEN 		(4)
-#define MAX_VLAN_ADDR_LAYER (2)
+#define MAX_VLAN_ADDR_LAYER (8)
 
 
 struct single_layer_vlan_addr{     /* refer to https://en.wikipedia.org/wiki/IEEE_802.1Q */
