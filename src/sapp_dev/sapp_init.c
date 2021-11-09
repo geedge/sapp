@@ -57,12 +57,18 @@ extern char gdev_keepalive_ip_entry(const struct streaminfo *pstream,unsigned ch
 extern char gdev_keepalive_udp_entry(const struct streaminfo *a_udp,  void **pme, int thread_seq, const void *ip_hdr);
 
 static int _check_exit_cap_mode;
+extern volatile unsigned long g_sapp_destory_env_done_val;
 static void forbid_call_exit_in_running_state(void)
 {
+	if(SAPP_DESTROY_DONE_FLAG == g_sapp_destory_env_done_val){
+		return;
+	}
+
 	if(_check_exit_cap_mode != CAP_MODEL_PCAP_DUMPFILE){
 		printf("\033[41mCall exit() in running state is forbidden!!\033[0m\n");
 		abort();
 	}
+	
 }
 
 /* 2016-09-22 lijia add, dictator在第一次被调用时有初始化代码, 防止多线程重入冲突, 平台先调用一次 */

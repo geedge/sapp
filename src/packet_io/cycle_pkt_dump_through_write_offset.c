@@ -52,7 +52,7 @@ extern int MESA_mkdir_p(const char *pathname, mode_t mode);
 //extern time_t g_CurrentTime;
 //extern int g_packet_io_thread_num;
 //extern int g_iThreadNum; /* for dual_stack, start */
-static char G_PKT_DUMP_ROOT_DIR[PATH_MAX]; /* 可以指定为/dev/shm, 速度快 */
+//static char G_PKT_DUMP_ROOT_DIR[PATH_MAX]; /* 可以指定为/dev/shm, 速度快 */
 static long G_PKT_DUMP_FILE_SIZE = 104857600; /* 默认100MB, 单线程 */
 int G_PKT_DUMP_SW = 0; /* 默认关闭 */
 int G_PKT_DUMP_MODE = PKT_DUMP_LOCAL_FILE; /* 默认是写到本地文件 */
@@ -696,7 +696,7 @@ static void __do_cycle_pkt_dump(int thread_seq, const raw_pkt_t *p_raw_pkt, enum
 		fclose(G_PKT_DUMP_FP[thread_seq]);
 		G_FILENAME_INDEX[thread_seq] ^= 1;
 		snprintf(dump_file_name, PATH_MAX, "%s/pid_%d.tid_%d.%d.pcap", 
-				G_PKT_DUMP_ROOT_DIR, getpid(), thread_seq, G_FILENAME_INDEX[thread_seq]);
+				pktdump_cfg->storge_path, getpid(), thread_seq, G_FILENAME_INDEX[thread_seq]);
 		G_PKT_DUMP_FP[thread_seq] = fopen(dump_file_name, "wb+"); 		
 		if(NULL == G_PKT_DUMP_FP[thread_seq]){
 			printf("open dumpfile: %s error!\n", dump_file_name);
@@ -976,6 +976,21 @@ static int cycle_pkt_dump_parse_per_thread_switch(char *config_str)
 #endif
 
 
+static int cycle_pkt_dump_get_cur_enable_thread(void)
+{
+	int i, sum = 0;
+	const sapp_config_tools_pktdump_t *pktdump_cfg = &sapp_global_val->config.tools.pkt_dump;
+
+	for(i = 0; i < MAX_THREAD_NUM; i++){
+		if(G_PKT_DUMP_PER_THREAD_SW != 0){
+			sum++;
+		}
+	}
+
+	return sum;
+}
+#if 0	
+
 static long cycle_pkt_dump_get_cur_files_size(void)
 {
 	FILE *fp;
@@ -1000,19 +1015,6 @@ static long cycle_pkt_dump_get_cur_files_size(void)
 	return cur_files_size;
 }
 
-static int cycle_pkt_dump_get_cur_enable_thread(void)
-{
-	int i, sum = 0;
-	const sapp_config_tools_pktdump_t *pktdump_cfg = &sapp_global_val->config.tools.pkt_dump;
-
-	for(i = 0; i < MAX_THREAD_NUM; i++){
-		if(G_PKT_DUMP_PER_THREAD_SW != 0){
-			sum++;
-		}
-	}
-
-	return sum;
-}
 /*
 	total_files_size: 此目录下总的.pcap包大小, 单位:Byte;
 	file_size_per_thread_by_conf: 单个线程最大文件大小, 单位:Byte;
@@ -1052,6 +1054,7 @@ static int cycle_pkt_dump_set_file_size(long total_files_size, long file_size_pe
 
 	return 0;
 }
+#endif
 
 static void pkt_dump_sig_ignore(int sig)
 {
@@ -1418,7 +1421,7 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 			return -1;	
 		}
 
-		G_PKT_DUMP_FILE_SIZE = pktdump_cfg->file_size_max_per_thread * 1024 * 1024 ;
+		G_PKT_DUMP_FILE_SIZE = (long)pktdump_cfg->file_size_max_per_thread * 1024L * 1024L ;
 #if 0		
 		MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_total_size", &total_files_size, 1000);
 		if(total_files_size < 1 || (unsigned int)total_files_size >= 1024*1000 /* 1000GB */){

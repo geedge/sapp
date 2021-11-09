@@ -27,10 +27,10 @@ int dpdk_init(int argc, char **argv);
 
 /*
 	这些变量不能放在sapp_global_val, 用于判断destroy进度状态的, destroy本身就是要free sapp_global_val变量的!
-	0:do nothing; 1:doing;  0x7FFFF:done
+	0:do nothing; 1:just doing;  SAPP_DESTROY_DONE_FLAG:done;
 */
 
-static volatile unsigned long g_destory_env_done;
+volatile unsigned long g_sapp_destory_env_done_val;
 static volatile unsigned long g_destory_env_per_thread_done[MAX_THREAD_NUM];
 
 
@@ -95,7 +95,7 @@ int libsapp_setup_env(int argc, char *argv[])
 {
 	int ret;
 
-	MESA_ATOMIC_SET(g_destory_env_done, 0);
+	MESA_ATOMIC_SET(g_sapp_destory_env_done_val, 0);
 	memset((void *)g_destory_env_per_thread_done, 0, sizeof(g_destory_env_per_thread_done));
 	
 	sapp_gval_init();
@@ -177,7 +177,7 @@ void libsapp_destroy_env_per_thread(int tseq)
 {
 	if(MESA_ATOMIC_INC(g_destory_env_per_thread_done[tseq]) != 1){ 
 		/* INC后不是1, 说明原来肯定不是0, 说明至少有一个线程正在做destroy操作, 阻塞等待, 直到结束为止 */
-		while(MESA_ATOMIC_READ(g_destory_env_per_thread_done[tseq]) != 0x7FFFF){
+		while(MESA_ATOMIC_READ(g_destory_env_per_thread_done[tseq]) != SAPP_DESTROY_DONE_FLAG){
 			sapp_usleep(100);
 		}
 		return;
@@ -186,7 +186,7 @@ void libsapp_destroy_env_per_thread(int tseq)
 	}
 
 	packet_io_clean_thread_context(tseq);
-	MESA_ATOMIC_SET(g_destory_env_per_thread_done[tseq], 0x7FFFF);
+	MESA_ATOMIC_SET(g_destory_env_per_thread_done[tseq], SAPP_DESTROY_DONE_FLAG);
 }
 
 
@@ -203,14 +203,14 @@ void libsapp_destroy_env(void)
 		此处靠变量控制一下先后逻辑顺序.
 	*/
 	
-	if(MESA_ATOMIC_INC(g_destory_env_done) != 1){ 
+	if(MESA_ATOMIC_INC(g_sapp_destory_env_done_val) != 1){ 
 		/* INC后不是1, 说明原来肯定不是0, 说明至少有一个线程正在做destroy操作, 阻塞等待, 直到结束为止 */
-		while(MESA_ATOMIC_READ(g_destory_env_done) != 0x7FFFF){
+		while(MESA_ATOMIC_READ(g_sapp_destory_env_done_val) != SAPP_DESTROY_DONE_FLAG){
 			sapp_usleep(100);
 		}
 		return;
 	}else{
-		MESA_ATOMIC_SET(g_destory_env_done, 1);
+		MESA_ATOMIC_SET(g_sapp_destory_env_done_val, 1);
 	}
 
 	if(NULL == sapp_global_val){
@@ -227,7 +227,7 @@ void libsapp_destroy_env(void)
 	wait_for_all_io_threads();
 	packet_io_exit();
 
-	MESA_ATOMIC_SET(g_destory_env_done, 0x7FFFF);
+	MESA_ATOMIC_SET(g_sapp_destory_env_done_val, SAPP_DESTROY_DONE_FLAG);
 
 	if(exit_process){
 		exit(0);

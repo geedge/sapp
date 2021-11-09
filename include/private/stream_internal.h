@@ -57,6 +57,8 @@
 
 #define RAW_PKT_MAGIC_NUM		(0xF1E2D3C4) /* 1:用于兼容旧项目, 在call_old构造旧数据结构时,识别原始包的来源; 2:安全性检测 */
 
+#define SAPP_DESTROY_DONE_FLAG  (0x7FFFFFFF)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
