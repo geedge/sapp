@@ -3234,6 +3234,7 @@ char IP_FRAG_ENTRY( struct streaminfo *stream,unsigned char routedir,int thread_
 	return APP_STATE_GIVEME;
 }
 
+
 enum anti_flood_stat_type{
 	ANTI_FLOOD_TCP_SYN = 0, 
 	ANTI_FLOOD_UDP_DNS,
@@ -3414,8 +3415,25 @@ static void __fake_project_free_cb(int thread_seq, void *project_req_value)
 	;
 }
 
+static void *test_app_thread(void *arg)
+{
+	while(1){
+		if((time(NULL) % 10) == 0){
+			printf("test thread: call libsapp_destroy_env()....\n");
+			libsapp_destroy_env();	
+			printf("test thread: libsapp_destroy_env() done!\n");
+			exit(0);		
+		}
+
+		sleep(1);
+	}
+
+	return NULL;
+}
+
 int CHAR_INIT()
 {
+	int i;
 	CHAR_CONFIG_INIT();
 
 	/* 仅可以在初始化时可以注册project */
@@ -3430,6 +3448,18 @@ int CHAR_INIT()
 		return -1;	
 	}
 	stream_bridge_register_data_free_cb(g_test_app_val.test_bridge_id, __stream_bridge_free_cb);
+
+	
+	if((g_test_app_val.ivalue1 > 0) 
+	 && (strncasecmp("test sapp destroy", g_test_app_val.str_value1, strlen("test sapp destroy")) == 0)){
+		printf("\033[1;31;40m Warning: etc/test_app.conf : enable 'test sapp destroy', maybe exit after N seconds....\033[0m\n ");
+		pthread_t pid;
+
+		for( i = 0; i < g_test_app_val.ivalue1; i++){
+			pthread_create(&pid, NULL, test_app_thread, NULL);
+			pthread_detach(pid);
+		}
+	}
 
 	return 1;
 }

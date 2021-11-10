@@ -57,10 +57,13 @@ extern char gdev_keepalive_ip_entry(const struct streaminfo *pstream,unsigned ch
 extern char gdev_keepalive_udp_entry(const struct streaminfo *a_udp,  void **pme, int thread_seq, const void *ip_hdr);
 
 static int _check_exit_cap_mode;
-extern volatile unsigned long g_sapp_destory_env_done_val;
+extern volatile unsigned long g_sapp_destory_env_running_state;
+extern volatile unsigned long g_sapp_destory_env_done_state;
+
 static void forbid_call_exit_in_running_state(void)
 {
-	if(SAPP_DESTROY_DONE_FLAG == g_sapp_destory_env_done_val){
+	/* 主动调用libsapp_destroy_env() 退出进程, 不告警  */
+	if(SAPP_DESTROY_DONE_FLAG == g_sapp_destory_env_done_state){
 		return;
 	}
 
