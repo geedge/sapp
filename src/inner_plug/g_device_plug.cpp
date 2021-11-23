@@ -94,10 +94,10 @@ typedef struct _gdev_keepalive_status_per_thread gdev_keepalive_status_per_threa
 static gdev_keepalive_status_per_thread_t GDEV_KEEPALIVE_STAT[MAX_THREAD_NUM];
 
 static void *gdev_keepalive_fs2_handle;
-static int g_dev_keepalive_flag = 1; /* 全局保活标志, 所有插件都不保活或者重要插件崩溃的情况 */
+static volatile int g_dev_keepalive_flag = 1; /* 全局保活标志, 所有插件都不保活或者重要插件崩溃的情况 */
 
 
-static struct gdev_keepalive_service_ctrl g_dev_keepalive_service_ctrl_array[MAX_VXLAN_SERVICE_NUM];/* 控制某类业务号是否保活  */ 
+static volatile struct gdev_keepalive_service_ctrl g_dev_keepalive_service_ctrl_array[MAX_VXLAN_SERVICE_NUM];/* 控制某类业务号是否保活  */ 
 
 //extern int g_packet_io_thread_num;
 //extern time_t g_CurrentTime;
@@ -938,7 +938,8 @@ char gdev_keepalive_udp_entry(const struct streaminfo *a_udp,  void **pme, int t
 	a_udp_pr = (const struct streaminfo_private *)a_udp;
 	kp_ret = gdev_keepalive_plug(a_udp_pr->raw_pkt, a_udp->threadnum, a_udp->routedir, GDEV_KEEPALIVE_TYPE_BFD);
 	if(kp_ret < 0){
-		entry_ret = APP_STATE_GIVEME; /* 因网络, socket等错误不能返回APP_STATE_DROPME, 否则DROP ME后再也拿不到保活请求包 */
+		/* 因网络, socket等错误不能返回APP_STATE_DROPME, 否则DROP ME后再也拿不到保活请求包, 但是插件可以通过gdev_keepalive_set_opt()关闭保活功能, 还是要返回DROPPKT, 不能把请求包回注 */
+		entry_ret = APP_STATE_GIVEME | APP_STATE_DROPPKT; 
 	}else{
 		entry_ret = APP_STATE_GIVEME | APP_STATE_DROPPKT; /* 保活包, 丢弃当前包 */
 	}
@@ -970,7 +971,7 @@ char gdev_keepalive_ip_entry(const struct streaminfo *pstream,unsigned char rout
 	pstream_pr = (const struct streaminfo_private *)pstream;
 	kp_ret = gdev_keepalive_plug(pstream_pr->raw_pkt, thread_seq, pstream->routedir, GDEV_KEEPALIVE_TYPE_ICMP);
 	if(kp_ret < 0){
-		entry_ret = APP_STATE_DROPME;
+		entry_ret = APP_STATE_DROPME | APP_STATE_DROPPKT;
 	}else{
 		entry_ret = APP_STATE_GIVEME | APP_STATE_DROPPKT; /* 保活包, 丢弃当前包 */
 	}
@@ -1060,7 +1061,7 @@ void gdev_keepalive_plug_destroy(void)
 	}
 
 	memset(GDEV_KEEPALIVE_STAT, 0, sizeof(GDEV_KEEPALIVE_STAT));
-	memset(g_dev_keepalive_service_ctrl_array, 0, sizeof(g_dev_keepalive_service_ctrl_array));
+	memset((void *)g_dev_keepalive_service_ctrl_array, 0, sizeof(g_dev_keepalive_service_ctrl_array));
 	g_dev_keepalive_flag = 1;
 	g_dev_keepalive_default_action = 1;
 }

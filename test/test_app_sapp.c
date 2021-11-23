@@ -1,6 +1,7 @@
 #include "stream.h"
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "gdev_keepalive.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -685,20 +686,20 @@ char ipv4_pkt_detail_entry(struct streaminfo *pstream,unsigned char routedir, in
 
 	if(IPPROTO_TCP == ihdr4->ip_p){
 		thdr = (struct mesa_tcp_hdr *)((char *)ihdr4 + ihdr4->ip_hl * 4);
-		printf("IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d, routedir:%d\n", 
+		printf("tid:%d, IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d, routedir:%d\n", thread_seq,
 				ip_src_str, ntohs(thdr->th_sport),
 				ip_dst_str, ntohs(thdr->th_dport),
 				ntohs(ihdr4->ip_id), ihdr4->ip_p,
 				routedir);
 	}else if(IPPROTO_UDP == ihdr4->ip_p){
 		uhdr = (struct mesa_udp_hdr *)((char *)ihdr4 + ihdr4->ip_hl * 4);
-		printf("IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d,routedir:%d\n", 
+		printf("tid:%d, IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d,routedir:%d\n", thread_seq,
 				ip_src_str, ntohs(uhdr->uh_sport),
 				ip_dst_str, ntohs(uhdr->uh_dport),
 				ntohs(ihdr4->ip_id), ihdr4->ip_p,
 				routedir);		
 	}else{
-		printf("IP pkt: %s --> %s, ipid:%u, proto:%d, routedir:%d\n", 
+		printf("tid:%d, IP pkt: %s --> %s, ipid:%u, proto:%d, routedir:%d\n", thread_seq,
 				ip_src_str, ip_dst_str, ntohs(ihdr4->ip_id), ihdr4->ip_p, routedir);
 	}
 	
@@ -3339,6 +3340,50 @@ char IPv6_RAW_ENTRY(const struct streaminfo *pstream, const void *this_hdr, cons
 }
 
 #endif
+
+static volatile int _g_enable_keepalive;
+static void *gdev_keepalive_control_thread(void *arg)
+{
+	SAPP_TLV_T option;
+	int ret;
+	
+	while(1){
+		if((time(NULL) % 10) <= 5){
+			_g_enable_keepalive = 0;
+			printf("gdev_keepalive_set_opt() disable keepalive.....\n");
+		}else{
+			_g_enable_keepalive = 1;
+			printf("gdev_keepalive_set_opt() enable  keepalive.....\n");
+		}
+
+		option.type = GDEV_KEEPALIVE_OPT_GLOBAL_SWITCH;
+		option.length = sizeof(int);
+		option.int_value = _g_enable_keepalive;
+
+		ret = gdev_keepalive_set_opt(&option);
+		if(ret < 0){
+			printf("gdev_keepalive_set_opt() -> GDEV_KEEPALIVE_OPT_GLOBAL_SWITCH error!\n");
+		}
+	
+		sleep(1);
+	}
+	return NULL;
+}
+
+char gdev_keepalive_control_entry(struct streaminfo *pstream,unsigned char routedir, int thread_seq,void *a_packet)
+{
+	
+	static volatile int __thread_created = 0;
+
+	if(0 == __thread_created){
+		pthread_t pid;
+		pthread_create(&pid, NULL, gdev_keepalive_control_thread, NULL);
+		__thread_created = 1;
+	}
+
+	return APP_STATE_GIVEME;
+}
+
 
 char arp_plug_entry(const struct streaminfo *pstream,unsigned char routedir,int thread_seq,  const void *arp_hdr)
 {
