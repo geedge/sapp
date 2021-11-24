@@ -556,6 +556,9 @@ found:
 		/*Adjust the ip flags*/
 		//((struct ip *)ipv4_qp->new_iph)->ip_off = 0x0040;
 		new_ip4h->ip_off = 0x0040;
+
+		sendpacket_do_checksum((unsigned char *)new_ip4h, IPPROTO_IP, sizeof(struct ip));
+		
 		return new_ip4h;
 	}	
 
