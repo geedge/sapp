@@ -377,6 +377,8 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 		pstream->opstate=OP_STATE_PENDING;
 		pstream->pktstate=OP_STATE_PENDING;
 
+		pstream->dir = pstream->curdir;
+
 		pstream_pr->has_duplicate_pkt = 0;
 		pstream_pr->stream_killed_flag = 0;
 		pdetail_pr->drop_stream_flag = 0;
