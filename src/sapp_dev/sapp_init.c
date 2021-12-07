@@ -334,12 +334,16 @@ int MESA_platform_init(int argc, char *argv[])
 	plugctrl_proc();
 
 	/* 2021-07-05, sapp_assistant_init()移动到plugctrl_proc()之后, 要用已加载插件所有entry的列表 */
-	sapp_assistant_init();
+	if(sapp_assistant_init() < 0){
+		return -1;
+	}
 
 	sapp_platform_finish_up(); /* 支持动态project tag注册, 必须在所有插件初始化完成后调用, 做一些平台初始化阶段的收尾工作 */
 	sapp_set_current_state(SAPP_STATE_PLUG_INITED);
 
 	sapp_set_current_state(SAPP_STATE_PKT_IO_INITED);
+
+	sapp_runtime_log(RLOG_LV_DEBUG, "sapp platform init success");
 
 	return 0;	
 }

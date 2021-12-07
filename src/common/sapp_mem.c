@@ -99,7 +99,8 @@ void *sapp_mem_calloc(sapp_mem_type_t type, int thread_seq, int size)
 
 #if USE_MEMPOOL
 	if(g_sapp_mem_use_dictator){
-		ptr = __dictator_malloc(thread_seq, size+sizeof(sapp_private_mem_t));	
+		ptr = __dictator_malloc(thread_seq, size+sizeof(sapp_private_mem_t));
+		memset(ptr, 0, size+sizeof(sapp_private_mem_t));
 	}else{
 		ptr = (char *)calloc(1, size+sizeof(sapp_private_mem_t));
 	}

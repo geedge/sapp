@@ -1041,9 +1041,9 @@ int sapp_independent_thread_init(void)
 
 int sapp_assistant_init(void)
 {
-	sapp_fs2_init();
+	int ret = sapp_fs2_init();
 	
-	return 0;
+	return ret;
 }
 
 
@@ -1093,6 +1093,10 @@ static int fs2_plug_entry_historgram_init(void *fs2_handle)
 								  1,                  //可追踪的最小值
 								  1000000,            //可追踪的最大值
 								  2);                 //精度，即小数点后几位，范围1~4
+		if(pfs_para->fs_latency_plug_entrg_id_array[i] < 0){
+			sapp_runtime_log(RLOG_LV_FATAL, "FS_register_histogram() error, plug name:%s", g_plug_global_entry[i].plug_entry_name);
+			return -1;
+		}
 	}
 
 	return 0;
@@ -1290,7 +1294,9 @@ static int sapp_fs2_init(void)
             }
 		}
 
-		fs2_plug_entry_historgram_init(fs2_handle);
+		if(fs2_plug_entry_historgram_init(fs2_handle) < 0){
+			return -1;
+		}
 	}
 	FS_start(fs2_handle);
 	

@@ -896,7 +896,7 @@ static void *__pcap_work_thread(void *arg)
 			polling_stream_timeout(thread_num);		
 			continue;
 		}else if(PCAP_OP_FLAG_EOF == pkt_queue_node.op_flag){
-			printf("[Info]free_thread_context success, tid:%d\n", thread_num);
+			sapp_runtime_log(RLOG_LV_INFO, "pcap work thread:%d, TID:%ld, recv EOF msg, thread stoping and exiting", thread_num, sapp_global_val->individual_fixed.thread_tid[thread_num]);
 			work_thread_pool[thread_num].op_status = PCAP_OP_FLAG_EOF;
 			break;
 		}
@@ -922,6 +922,8 @@ static void *__pcap_work_thread(void *arg)
 
 	libsapp_destroy_env_per_thread(thread_num);
 
+	sapp_runtime_log(RLOG_LV_INFO, "pcap work thread:%d, TID:%ld, thread exited", thread_num, sapp_global_val->individual_fixed.thread_tid[thread_num]);
+	
 exit:
 	return NULL;
 }
@@ -1417,6 +1419,7 @@ static void *pcap_io_thread(void *arg)
 		if(0 == pcap_ret){
 			if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
 				printf("\033[32m[Notice]process dumpfile over!\033[0m\n");
+				sapp_runtime_log(RLOG_LV_INFO, "pcap I/O thread: pcap_loop() finished, all packets have read to queue, send EOF msg to all work threads");
 				__pcap_nodify_work_thread(PCAP_OP_FLAG_EOF);
 				break;
 			}else{
@@ -1549,6 +1552,7 @@ int pcap_dl_io_init(int argc, char *argv[])
 	}else{
 		if(strncasecmp(dumpfile_speed_mode, "timestamp", strlen("timestamp")) == 0){
 			dumpfile_according_timestamp = 1;	
+			dumpfile_timestamp_diff_with_start = 0;/* 初始化设成0, 读取到第一个包时计算与pcap包的时间戳差值 */
 		}
 	}
 #endif

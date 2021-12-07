@@ -121,6 +121,7 @@ static const sapp_cmd_args_usage_t cmd_args_usage[] =
 						./sapp -f 'find /home/pcap -name *.pcap'"},
 	{"-g", "coredump", 	"no",NULL,	"generate coredump for test"},
 	{"-h", "help",		"no",NULL,	"show help message"},
+	{"-n", "not-exit",	"no",NULL,	"not exit in dumpfile mode after all packets have been processed"},
 	{"-p",  "dumpfile-speed",	"required",dumpfile_speed_check, "\n  \t\ttop-speed\tprocess packets as fast as possible, this is default behavior\n\t\ttimestamp\tprocess packets as pcap embedded timestamp interval"},
 	{"-r", "dumpfile-file", "required",NULL,	"read packets from which pcap file"},
 	{"-t", "test-config", "no",NULL,	"check validity of the configuration file"},
@@ -129,7 +130,7 @@ static const sapp_cmd_args_usage_t cmd_args_usage[] =
 };
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
-static const char *sapp_cla_short_options = "dhgvc:C:D:e:r:p:f:t";
+static const char *sapp_cla_short_options = "dhgvnc:C:D:e:r:p:f:t";
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const struct option sapp_cla_long_options[] = 
@@ -146,6 +147,7 @@ static const struct option sapp_cla_long_options[] =
 	{"example-config", 	required_argument,  NULL,      'e'},
 	{"coredump", 		no_argument,      	NULL,      'g'},
 	{"test-config",		no_argument,  		NULL,      't'},
+	{"not-exit",		no_argument,  		NULL,      'n'},
 	{NULL,          	0,      			NULL,      0}
 };
 
@@ -432,7 +434,6 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 {
 	int ret = 0;
 	int c;
-	int opt_index;
 	int cfg_root_dir_changed = 0;
 	const char *cmd_arg_cfg_root_dir;
 	int data_root_dir_changed = 0;
@@ -440,11 +441,12 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 	int cfg_main_entry_changed = 0;
 	const char *cmd_arg_cfg_main_entry;	
 	int option_array_index;
-
 	int test_config_flag = 0;
 
+	optind = 1; /* sapp支持不退出进程而重新初始化, 每次解析cmd args之前要把optind重置为1 */
+
 	while(1){
-		c = getopt_long(argc, argv, sapp_cla_short_options, sapp_cla_long_options, &opt_index);
+		c = getopt_long(argc, argv, sapp_cla_short_options, sapp_cla_long_options, NULL);
 		if(c == -1){
 			ret = 0;
 			break;	
@@ -499,6 +501,10 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 				sapp_init_breakpad_mini();
 				sapp_segv_generate();
 				continue;
+			break;
+
+			case 'n':
+				sapp_global_val->config.packet_io.not_exit_for_dumpfile_mode = 1;
 			break;
 
 			case 'r':

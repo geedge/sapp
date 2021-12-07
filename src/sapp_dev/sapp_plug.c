@@ -144,7 +144,6 @@ int libsapp_setup_env(int argc, char *argv[])
 		return -1;
 	}
 
-
 	MESA_platform_run();
 
 	sapp_wait_for_required_thread_starting();
@@ -220,7 +219,8 @@ void libsapp_destroy_env(void)
 		return;
 	}
 
-	if(CAP_MODEL_PCAP_DUMPFILE == g_packet_io_cap_mode){
+	if((CAP_MODEL_PCAP_DUMPFILE == g_packet_io_cap_mode)
+	 && (0 == sapp_global_val->config.packet_io.not_exit_for_dumpfile_mode)){
 		exit_process = 1;
 	}
 

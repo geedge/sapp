@@ -747,6 +747,8 @@ void packet_io_run(void)
 	pthread_create(&sapp_global_val->individual_fixed.thread_timer_event_id, NULL, sapp_time_event_thread ,NULL);
 
 	packet_io_under_ddos_run();
+
+	sapp_runtime_log(RLOG_LV_DEBUG, "sapp platform starting.....");
 	
 	dl_io_fun_list.dl_io_run();
 }

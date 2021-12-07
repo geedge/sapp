@@ -284,6 +284,7 @@ typedef struct{
 	unsigned char extract_linkdir_from_mac_bit_value; /* 从某个字节获取链路方向的bit值, 而不是index, 可以直接进行&运算 */
 
 	sapp_under_ddos_config_t under_ddos_config;
+	int not_exit_for_dumpfile_mode; /* 读包结束后不退出进程, 方便插件自测试, 多次循环读取多个包 */
 }sapp_config_packet_io_t;
 
 
