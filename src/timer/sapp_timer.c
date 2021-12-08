@@ -10,6 +10,7 @@ extern "C" {
 
 sapp_timer_handle sapp_get_platform_standalone_timer(void);
 static void *sapp_standalone_timer_check_timeout(void *arg);
+extern volatile int update_packet_io_status_sw;
 
 static inline int __st_is_platform_timer(void *h)
 {
@@ -444,6 +445,8 @@ void *sapp_time_event_thread(void *arg)
 	while(sapp_global_val->individual_volatile->current_state < SAPP_STATE_PROCESSING){
 		sapp_usleep(100);
 	}
+
+	update_packet_io_status_sw = 1;
 	
 	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state)
 	{

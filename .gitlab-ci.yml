@@ -28,6 +28,10 @@ sapp_module_test:
     - ifconfig
     - ip neigh show
     - ip -6 neigh show
+    - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+    - cp build/src/entry/sapp /home/mesasoft/sapp_run/sapp
+    - cp build/test/libsapp_devel.so /opt/MESA/lib
+    - ldconfig
     - cd /home/mesasoft/sapp_run
     - ulimit -c 0
     - ./sapp -r /home/mesasoft/benchmark_pcap/tcp/tcp_simple.pcap
@@ -55,6 +59,10 @@ branch_build_debug:
     BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
+  artifacts:
+    paths:
+    - build/src/entry/sapp
+    - build/test/libsapp_devel.so  
   except:
     - /^dev*.*$/i
     - /^rel*.*$/i
@@ -68,6 +76,10 @@ branch_build_release:
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
   extends: .build_by_travis
+  artifacts:
+    paths:
+    - build/src/entry/sapp
+    - build/test/libsapp_devel.so    
   except:
     - /^dev*.*$/i
     - /^rel*.*$/i
@@ -91,6 +103,8 @@ develop_build_debug:
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-debug"
     paths:
+      - build/src/entry/sapp
+      - build/test/libsapp_devel.so       
       - build/*.rpm
   only:
     - /^dev*.*$/i
@@ -114,6 +128,8 @@ develop_build_release:
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-release"
     paths:
+      - build/src/entry/sapp
+      - build/test/libsapp_devel.so      
       - build/*.rpm
   only:
     - /^dev*.*$/i
@@ -135,6 +151,8 @@ release_build_release:
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-release"
     paths:
+      - build/src/entry/sapp
+      - build/test/libsapp_devel.so      
       - build/*.rpm
   only:
     - tags   
@@ -157,6 +175,8 @@ envelope_rpm:
   artifacts:
     name: "sapp-pr-$CI_COMMIT_REF_NAME-release"
     paths:
+      - build/src/entry/sapp
+      - build/test/libsapp_devel.so      
       - build/*-pr-*.rpm
   only:
     - tags
