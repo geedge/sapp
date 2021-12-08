@@ -18,7 +18,7 @@ sapp_module_test:
     - yum makecache
     - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb 
     - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini libMESA_jump_layer
-    - yum install -y sapp gtest_sapp benchmark_pcap
+    - yum install -y sapp gtest_sapp benchmark_pcap sapp_benchmark
     - ls -l /opt/MESA/lib
     - echo "/opt/MESA/lib" >> /etc/ld.so.conf
     - ldconfig
