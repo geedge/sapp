@@ -28,9 +28,8 @@ sapp_module_test:
     - ifconfig
     - ip neigh show
     - ip -6 neigh show
-    - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
-    - cp build/src/entry/sapp /home/mesasoft/sapp_run/sapp
-    - cp build/test/libsapp_devel.so /opt/MESA/lib
+    - cp /builds/MESA_Platform/sapp/build/src/entry/sapp /home/mesasoft/sapp_run/sapp
+    - cp /builds/MESA_Platform/sapp/build/test/libsapp_devel.so /opt/MESA/lib
     - ldconfig
     - cd /home/mesasoft/sapp_run
     - ulimit -c 0
