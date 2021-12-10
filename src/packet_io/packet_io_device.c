@@ -62,7 +62,7 @@ static int parse_send_raw_pkt_conf(void)
 
 	fp = fopen(ABBR_SEND_RAW_PKT_CONF_FILE, "r");
 	if(NULL == fp){
-		printf("\033[41m[Error]open send raw pkt config file '%s' error!\033[0m\n", ABBR_SEND_RAW_PKT_CONF_FILE);
+		sapp_log(RLOG_LV_FATAL, 1, 1, "open send raw pkt config file '%s' error!\n", ABBR_SEND_RAW_PKT_CONF_FILE);
 		return -1;
 	}
 
@@ -81,7 +81,7 @@ static int parse_send_raw_pkt_conf(void)
 		tid = strtoul(section, NULL, 0);
 
 		if(tid > 1000){
-			printf("\033[33mWarning! in '%s', target_id is too large!\033[0m\n", ABBR_SEND_RAW_PKT_CONF_FILE);
+			sapp_log(RLOG_LV_INFO, 1, 1,"[Warning] in '%s', target_id is too large!\n", ABBR_SEND_RAW_PKT_CONF_FILE);
 			sleep(1);
 		}
 
@@ -90,7 +90,7 @@ static int parse_send_raw_pkt_conf(void)
 		while(g_packet_io_cap_mode != column_index){ /* 找到当前捕包模式对应的列 */
 			section = strtok_r(NULL, delim, &saveptr);
 			if(NULL == section){
-				printf("\033[41m[Error]packet_io_mode is %d, but in %s not found related args!\033[0m\n", g_packet_io_cap_mode, ABBR_SEND_RAW_PKT_CONF_FILE);
+				sapp_log(RLOG_LV_FATAL, 1, 1,"packet_io_mode is %d, but in %s not found related args!\n", g_packet_io_cap_mode, ABBR_SEND_RAW_PKT_CONF_FILE);
 				return -1;
 			}
 			column_index++;

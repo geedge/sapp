@@ -227,20 +227,20 @@ void sapp_mem_stat_output(void)
 	int stat_name_tuple_num = sizeof(mem_stat_name_tuple)/sizeof(mem_stat_name_tuple_t);
 	assert(stat_name_tuple_num == __SAPP_MEM_TYPE_MAX);
 	if(stat_name_tuple_num != __SAPP_MEM_TYPE_MAX){
-		printf("\033[1;31;40m[Error] sizeof(mem_stat_name_tuple) is not equal with __SAPP_MEM_TYPE_MAX  \033[0m\n");
+		sapp_printf("\033[1;31;40m[Error] sizeof(mem_stat_name_tuple) is not equal with __SAPP_MEM_TYPE_MAX  \033[0m\n");
 		exit(1);
 	}
 
 	for(stat_index = 0; stat_index < __SAPP_MEM_TYPE_MAX; stat_index++){
 		if((int)mem_stat_name_tuple[stat_index].mem_type != stat_index){
-			printf("\033[1;31;40m[Error] mem_stat_name_tuple[] array index:%d is not equal with mem_stat_name_tuple_t\033[0m\n", stat_index);
+			sapp_printf("\033[1;31;40m[Error] mem_stat_name_tuple[] array index:%d is not equal with mem_stat_name_tuple_t\033[0m\n", stat_index);
 			exit(1);
 		}
 	}
 	
 	fp = fopen(ABBR_MEMORY_STAT_LOG_DATA_FILE,"w+");
 	if(fp == NULL){
-		printf("\033[1;31;40mopen %s error, %s\033[0m\n", ABBR_MEMORY_STAT_LOG_DATA_FILE, strerror(errno));
+		sapp_printf("\033[1;31;40mopen %s error, %s\033[0m\n", ABBR_MEMORY_STAT_LOG_DATA_FILE, strerror(errno));
 		return;
 	}
 

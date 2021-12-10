@@ -231,7 +231,7 @@ thread_mem_pool_t* init_dictator(pthread_t tid)
 	pthread_attr_destroy(&(attr));
 	memset(boundary_marker,'d',D_MARKER_SIZE);
 #else
-	fprintf(stderr,"Using DICTATOR2 memory manager\n");
+	;//fprintf(stderr,"Using DICTATOR2 memory manager\n");
 #endif
 	return p_mempool;
 }

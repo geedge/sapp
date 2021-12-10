@@ -1439,10 +1439,8 @@ static void *pcap_io_thread(void *arg)
 
 thread_exit:
 	*stop_flag = 1;
-	sapp_usleep(10000);
-	if(g_pcap_exit_cb_fun){
-		(*g_pcap_exit_cb_fun)();
-	}
+	sapp_usleep(1000);
+	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
 	if(exit_prog_flag){
 		exit(0);
 	}
@@ -1498,7 +1496,7 @@ int pcap_dl_io_init(int argc, char *argv[])
 		pcap_up_handle = pcap_open_live(g_pcap_up_dev_name, PCAP_SNAPLEN_MAX,1,1,pcap_errbuf);
 		if(NULL == pcap_up_handle)
 		{
-			printf("\033[1;31;40m[Error]Can't open device:'%s', %s\033[0m\n", g_pcap_up_dev_name, pcap_errbuf);
+			sapp_printf_colorful(RLOG_LV_FATAL, "[Error]Can't open device:'%s', %s\n", g_pcap_up_dev_name, pcap_errbuf);
 			return -1;
 		}
 
@@ -1580,26 +1578,27 @@ void pcap_dl_io_run(void)
 	long dir_down = DIR_ROUTE_DOWN;
 	
 	pthread_create(&g_pcap_io_pid_up, NULL, pcap_io_thread, (void *)dir_up);
-
+	pthread_detach(g_pcap_io_pid_up);
+	
 	if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode){ /* 双网卡串联模式 */	
 		pthread_create(&g_pcap_io_pid_down, NULL, pcap_io_thread, (void *)dir_down);
+		pthread_detach(g_pcap_io_pid_down);
 	}
 
 	return;
 }
 
+/* pcap 模式可能被pcap_loop()阻塞, 需要主动调用pcap_breakloop()退出死循环状态 */
 void pcap_dl_io_stop(void)
 {
 	char *no_use;
 	if(sapp_get_cla_raw("dumpfile-list", &no_use) < 0){
 		if(pcap_up_handle){
 			pcap_breakloop(pcap_up_handle);
-			pthread_join(g_pcap_io_pid_up, NULL);
 		}
 		
 		if(pcap_down_handle){
 			pcap_breakloop(pcap_down_handle);
-			pthread_join(g_pcap_io_pid_down, NULL);
 		}
 	}
 }

@@ -916,7 +916,7 @@ int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname)
 			MESA_load_profile_string_nodef(filename,g_plugin_entryname[i],KEYWORD_FUNNAME,buf_funname,PLUGIN_MAX_CONFLEN);
 			if(buf_funname[0] == '\0')
 			{
-				printf("\033[1;31;40m[Error]%s has [%s] and %s,but no %s\033[0m\n", filename,g_plugin_entryname[i],KEYWORD_FUNFLAG,KEYWORD_FUNNAME);
+				sapp_printf("\033[1;31;40m[Error]%s has [%s] and %s,but no %s\033[0m\n", filename,g_plugin_entryname[i],KEYWORD_FUNFLAG,KEYWORD_FUNNAME);
 				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has [%s] and %s,but no %s",filename,g_plugin_entryname[i],KEYWORD_FUNFLAG,KEYWORD_FUNNAME);
 				return -1;
 			}
@@ -924,7 +924,7 @@ int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname)
 			fun_pointer = (char(*)())(dlsym(fp_dlopen,buf_funname));
 			if(fun_pointer == NULL)
 			{
-				printf("\033[1;31;40m[Error]%s has [%s],but not load %s from %s sofile\033[0m\n", filename,g_plugin_entryname[i],buf_funname,plugname);
+				sapp_printf("\033[1;31;40m[Error]%s has [%s],but not load %s from %s sofile\033[0m\n", filename,g_plugin_entryname[i],buf_funname,plugname);
 				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has [%s],but not load %s from %s sofile",filename,g_plugin_entryname[i],buf_funname,plugname);
 				return -1;
 			}
@@ -933,7 +933,7 @@ int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname)
 			ret=stream_register_fun(i,fun_pointer, plug_entry_id); 
 			if(ret==-1)
 			{
-				printf("\033[1;31;40m[Error]%s stream_register %s entry error\033[0m\n",filename,g_plugin_entryname[i]);
+				sapp_printf("\033[1;31;40m[Error]%s stream_register %s entry error\033[0m\n",filename,g_plugin_entryname[i]);
 				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME,"%s stream_register %s entry error!",filename,g_plugin_entryname[i]);
 			}
 			else
@@ -1242,7 +1242,7 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 			pluginfo_pro = get_propluginfo_name(entryname);
 			if(pluginfo_pro == NULL)
 			{
-				printf("\033[1;31;40m[Error]%s has %s entry,but ther is no  protocol plug %s\033[0m\n", filename,entryname,entryname);
+				sapp_printf("\033[1;31;40m[Error]%s has %s entry,but ther is no  protocol plug %s\033[0m\n", filename,entryname,entryname);
 				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has %s entry,but ther is no  protocol plug %s",filename,entryname,entryname);
 				return -1;
 			}
@@ -1257,7 +1257,7 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 			MESA_load_profile_string_nodef(filename,entryname,KEYWORD_FUNNAME,buf_funname,PLUGIN_MAX_CONFLEN);
 			if(buf_funname[0] =='\0')
 			{
-				printf("\033[1;31;40m[Error]%s has [%s] and %s,but no %s\033[0m\n", filename,entryname,KEYWORD_FUNFLAG,KEYWORD_FUNNAME);			
+				sapp_printf("\033[1;31;40m[Error]%s has [%s] and %s,but no %s\033[0m\n", filename,entryname,KEYWORD_FUNFLAG,KEYWORD_FUNNAME);			
 				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has [%s] and %s,but no %s",filename,entryname,KEYWORD_FUNFLAG,KEYWORD_FUNNAME);
 				return -1;
 			}
@@ -1265,7 +1265,7 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 			appentry = (char(*)(stSessionInfo* session_info,  void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet))(dlsym(file_point,buf_funname));
 			if(appentry == NULL)
 			{
-				printf("\033[1;31;40m[Error]%s has %s in [%s],not load from %s sofile\033[0m\n", filename,buf_funname,entryname,pluginfo_bus->plugname);
+				sapp_printf("\033[1;31;40m[Error]%s has %s in [%s],not load from %s sofile\033[0m\n", filename,buf_funname,entryname,pluginfo_bus->plugname);
 				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s has %s in [%s],not load from %s sofile",filename,buf_funname,entryname,pluginfo_bus->plugname);
 				return -1;
 			}
@@ -1274,7 +1274,7 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 			rec = stream_register_app(&(pluginfo_pro->fun_list),pluginfo_bus->plugid,appentry,flag, plug_entry_id);
 			if(rec < 0)
 			{
-				printf("\033[1;31;40m[Error]%s's %s stream_register_app() error\033[0m\n", pluginfo_bus->plugname,buf_funname);
+				sapp_printf("\033[1;31;40m[Error]%s's %s stream_register_app() error\033[0m\n", pluginfo_bus->plugname,buf_funname);
 				MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_FATAL, PLUGIN_LOGNAME,"%s's %s stream_register_app() error!",pluginfo_bus->plugname,buf_funname);
 				continue;
 			}

@@ -159,7 +159,7 @@ static int cfg_value_check_bind_mask(const sapp_config_check_t *sapp_cfg_check_a
 	int cfg_send_only_threads_num = atoi(raw_cfg_send_only_threads_value);
 	
 	if(bind_mask_array_num != cfg_worker_threads_num + cfg_send_only_threads_num){
-		printf("\033[41m[Error]sapp.toml->CPU->bind_mask value is not match sapp.toml->CPU->worker_threads + CPU->send_only_threads_max!\033[0m\n");
+		sapp_log(RLOG_LV_FATAL,1,1, "sapp.toml->CPU->bind_mask value is not match sapp.toml->CPU->worker_threads + CPU->send_only_threads_max!\n");
 		return -1;
 	}
 
@@ -176,12 +176,12 @@ static int cfg_value_check_stream_id_base_time(const sapp_config_check_t *sapp_c
 	}
 	
 	if(strptime(raw_cfg_value, "%Y-%m-%d %H:%M:%S", &local_tm) == NULL){
-		printf("\033[41m[Error]sapp.toml->STREAM->stream_id_base_time error, the pattern must like '1970-01-01 01:01:01' !\033[0m\n");
+		sapp_log(RLOG_LV_FATAL,1,1,"sapp.toml->STREAM->stream_id_base_time error, the pattern must like '1970-01-01 01:01:01'!\n");
 		return -1;
 	}
 	
 	if(mktime(&local_tm) > time(NULL)){
-		printf("\033[41m[Error]sapp.toml->STREAM.stream_id_base_time value error, is after current system time!\033[0m\n");
+		sapp_log(RLOG_LV_FATAL,1,1,"sapp.toml->STREAM.stream_id_base_time value error, is after current system time!\n");
 		return -1;
 	}
 
@@ -442,7 +442,7 @@ static int cfg_value_check_inject_mode(const sapp_config_check_t *sapp_cfg_check
 	if(strncasecmp(depend_cfg_value, "vxlan_by_inline_device", strlen("vxlan_by_inline_device")) == 0){
 		expect_cfg_index = cfg_get_index_by_key_name("inject_mode_inline_device_sport");
 		if((NULL == sapp_cfg_check_attr[expect_cfg_index].cfg_value ) && (this_cfg_index == expect_cfg_index)){
-			printf("\033[1;31;40m[Error]sapp.toml->inject_pkt_mode value is 'vxlan_by_inline_device', but not found '%s'!\033[0m\n", "inject_mode_inline_device_sport");
+			sapp_log(RLOG_LV_FATAL,1,1,"sapp.toml->inject_pkt_mode value is 'vxlan_by_inline_device', but not found '%s'!\n", "inject_mode_inline_device_sport");
 			return -1;
 		}
 	}
@@ -450,19 +450,19 @@ static int cfg_value_check_inject_mode(const sapp_config_check_t *sapp_cfg_check
 	if(strncasecmp(depend_cfg_value, "raw_ethernet_single_gateway", strlen("raw_ethernet_single_gateway")) == 0){
 		expect_cfg_index = cfg_get_index_by_key_name("inject_mode_single_gateway_device");
 		if((NULL == sapp_cfg_check_attr[expect_cfg_index].cfg_value ) && (this_cfg_index == expect_cfg_index)){
-			printf("\033[1;31;40m[Error]sapp.toml->inject_pkt_mode value is 'raw_ethernet_single_gateway', but not found '%s'!\033[0m\n", "inject_mode_single_gateway_device");
+			sapp_log(RLOG_LV_FATAL,1,1,"sapp.toml->inject_pkt_mode value is 'raw_ethernet_single_gateway', but not found '%s'!\n", "inject_mode_single_gateway_device");
 			return -1;
 		}
 
 		expect_cfg_index = cfg_get_index_by_key_name("inject_mode_single_gateway_src_mac");
 		if((NULL == sapp_cfg_check_attr[expect_cfg_index].cfg_value ) && (this_cfg_index == expect_cfg_index)){
-			printf("\033[1;31;40m[Error]sapp.toml->inject_pkt_mode value is 'raw_ethernet_single_gateway', but not found '%s'!\033[0m\n", "inject_mode_single_gateway_src_mac");
+			sapp_log(RLOG_LV_FATAL,1,1,"sapp.toml->inject_pkt_mode value is 'raw_ethernet_single_gateway', but not found '%s'!\n", "inject_mode_single_gateway_src_mac");
 			return -1;
 		}
 
 		expect_cfg_index = cfg_get_index_by_key_name("inject_mode_single_gateway_dst_mac");
 		if((NULL == sapp_cfg_check_attr[expect_cfg_index].cfg_value ) && (this_cfg_index == expect_cfg_index)){
-			printf("\033[1;31;40m[Error]sapp.toml->inject_pkt_mode value is 'raw_ethernet_single_gateway', but not found '%s'!\033[0m\n", "inject_mode_single_gateway_dst_mac");
+			sapp_log(RLOG_LV_FATAL,1,1,"sapp.toml->inject_pkt_mode value is 'raw_ethernet_single_gateway', but not found '%s'!\n", "inject_mode_single_gateway_dst_mac");
 			return -1;
 		}		
 	}	
@@ -502,9 +502,9 @@ static const char *sapp_cfg_get_value_from_attr_by_section_key(const sapp_config
 
 static void special_usage(void)
 {
-	printf("\033[1;31;40m[Error]open %s error!\033[0m\n", ABBR_CFG_FILE_MAIN_ENTRY);
-	printf("\033[1;31;40m[Error]This is sapp version4.2, use sapp.toml instead of main.conf!\033[0m\n");
-	printf("\033[1;31;40m[Error]You should run ./sapp -e to generate sapp.toml!\033[0m\n");
+	sapp_printf_colorful(RLOG_LV_FATAL,"open %s error!\n", ABBR_CFG_FILE_MAIN_ENTRY);
+	sapp_printf_colorful(RLOG_LV_FATAL,"This is sapp version4.2, use sapp.toml instead of main.conf!\n");
+	sapp_printf_colorful(RLOG_LV_FATAL,"You should run ./sapp -e to generate sapp.toml!\n");
 }
 
 static inline int is_file_exist(const char *filename)
@@ -559,13 +559,13 @@ void sapp_generate_example_config(const char *cfg_file_name, const char *sapp_ve
 
 	ret = stat(cfg_file_name, &file_stat);
 	if((ret >= 0) || (errno != ENOENT) || S_ISREG(file_stat.st_mode)){
-		printf("\033[1;31;40m[Error]file '%s' already exist!\033[0m\n", cfg_file_name);
+		sapp_printf_colorful(RLOG_LV_FATAL,"file '%s' already exist!\n", cfg_file_name);
 		return;
 	}
 
 	fp = fopen(cfg_file_name, "w+");
 	if(NULL == fp){
-		printf("\033[1;31;40m[Error]open %s error, %s!\033[0m\n", cfg_file_name, strerror(errno));
+		sapp_printf_colorful(RLOG_LV_FATAL,"open %s error, %s!\n", cfg_file_name, strerror(errno));
 		return;
 	}
 
@@ -596,7 +596,7 @@ static int pkt_dump_thread_id_convert(void)
 	for(i = 0; i < pdump->dump_thread_id_array_num; i++){
 		index = pdump->dump_thread_id_array[i];
 		if(index >= SAPP_MAX_THREADS){
-			sapp_log(30, ~0, ~0, "[Error]sapp.toml->PKT_DUMP->dump_thread_id value more than max CPU core number!");
+			sapp_log(RLOG_LV_FATAL,1,1,"sapp.toml->PKT_DUMP->dump_thread_id value more than max CPU core number!\n");
 			return -1;
 		}else{
 			pdump->dump_thread_id_mask[index] = 1;
@@ -635,12 +635,12 @@ static int parse_vlan_flipping_map_config(void)
 		mac_flip_enable = 0;
 		ret = sscanf(line_cont, "%u %u %u", &c_router_vlan_id, &i_router_vlan_id, &mac_flip_enable);
 		if(ret != 3){
-			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse vlan_flipping_cfg_file:%s, line:%s error!", ABBR_VLAN_FLIPPING_CONF_FILE, line_cont);
+			sapp_log(RLOG_LV_FATAL,1,1,"parse vlan_flipping_cfg_file:%s, line:%s error!", ABBR_VLAN_FLIPPING_CONF_FILE, line_cont);
 			fclose(fp);
 			return -1;
 		}
 		if(c_router_vlan_id>= 4096 || i_router_vlan_id >= 4096){
-			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse vlan_flipping_cfg_file:%s line:%s  error, vlan id must in range[1,4095]!", ABBR_VLAN_FLIPPING_CONF_FILE, line_cont);
+			sapp_log(RLOG_LV_FATAL,1,1, "parse vlan_flipping_cfg_file:%s line:%s  error, vlan id must in range[1,4095]!", ABBR_VLAN_FLIPPING_CONF_FILE, line_cont);
 			fclose(fp);
 			return -1;			
 		}
@@ -802,8 +802,7 @@ static int parse_asymmetric_addr_layer_config(void)
 		memset(&embed_layer, 0, sizeof(embed_layer));
 		ret = embed_layer_t_pton(line_cont, &embed_layer);
 		if(ret < 0){
-			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, inlavid:%s", 
-					ABBR_ASYM_LAYER_ADDR_CONF_FILE, line_cont); 
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "parse cfg_file:%s error, inlavid:%s", ABBR_ASYM_LAYER_ADDR_CONF_FILE, line_cont); 
 			fclose(fp);
 			return -1;
 		}
@@ -972,7 +971,7 @@ static int parse_stream_compare_layer_config(void)
 		memset(&embed_layer, 0, sizeof(embed_layer));
 		ret = embed_layer_t_pton(line_cont, &embed_layer);
 		if(ret < 0){
-			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse stream compare layer cfg_file:%s error, inlavid:%s", ABBR_STREAM_CMP_LAYER_CONF_FILE, line_cont); 
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "parse stream compare layer cfg_file:%s error, inlavid:%s", ABBR_STREAM_CMP_LAYER_CONF_FILE, line_cont); 
 			goto fun_exit;
 		}
 
@@ -1019,8 +1018,7 @@ static void update_well_known_port_array(int last_section_proto, unsigned short 
 		sapp_global_val->config.stream.udp.well_known_ports_array = port_array;
 		sapp_global_val->config.stream.udp.well_known_ports_array_num = port_array_num;
 	}else{
-		sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, onlye support TCP or UDP", ABBR_WELL_KNOWN_PORT_CONF_FILE); 
-		assert(0);
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "parse cfg_file:%s error, onlye support TCP or UDP", ABBR_WELL_KNOWN_PORT_CONF_FILE); 
 	}
 }
 
@@ -1066,7 +1064,7 @@ static int parse_well_known_port_config(void)
 			}else if(strncasecmp("[UDP]", line_buf, strlen("UDP")) == 0){
 				last_section_proto = IPPROTO_UDP;	
 			}else{
-				sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, onlye support TCP or UDP", ABBR_WELL_KNOWN_PORT_CONF_FILE); 
+				sapp_log(RLOG_LV_FATAL, ~0, ~0, "parse cfg_file:%s error, onlye support TCP or UDP", ABBR_WELL_KNOWN_PORT_CONF_FILE); 
 				return -1;
 			}
 			continue;
@@ -1074,7 +1072,7 @@ static int parse_well_known_port_config(void)
 		
 		tmpnum = atoi(line_buf);
 		if(tmpnum <=0 || tmpnum > 65535){
-			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, port value invalid:%s", ABBR_WELL_KNOWN_PORT_CONF_FILE, line_buf); 
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "parse cfg_file:%s error, port value invalid:%s", ABBR_WELL_KNOWN_PORT_CONF_FILE, line_buf); 
 			return -1;			
 		}
 
@@ -1189,7 +1187,7 @@ static int config_expression_convert(void)
 		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_TRANSPARENT;
 		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_SERIAL_2CARD;
 	}else{
-		sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]sapp.toml->PACKET_IO.depolyment.mode error, only support:%s!", "[mirror, inline, transparent]");
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->PACKET_IO.depolyment.mode error, only support:%s!", "[mirror, inline, transparent]");
 		return -1;
 	}
 
@@ -1199,7 +1197,7 @@ static int config_expression_convert(void)
 	}else if(strncasecmp(tmp_str, "vxlan", strlen("vxlan")) == 0){
 		pconfig->packet_io.packet_io_tunnel.overlay_mode_bin = OVERLAY_MODE_VXLAN;
 	}else{
-		sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]sapp.toml->overlay_mode error, unsupport : %s", tmp_str); 
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->overlay_mode error, unsupport : %s", tmp_str); 
 		return -1;
 	}
 
@@ -1210,33 +1208,33 @@ static int config_expression_convert(void)
 
 	ret = parse_vlan_flipping_map_config();
 	if(ret < 0){
-		sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]%s parse error", ABBR_VLAN_FLIPPING_CONF_FILE); 
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "%s parse error", ABBR_VLAN_FLIPPING_CONF_FILE); 
 		return- 1;
 	}
 
 	ret = parse_asymmetric_addr_layer_config();
 	if(ret < 0){
-		sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]%s parse error", ABBR_ASYM_LAYER_ADDR_CONF_FILE); 
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "%s parse error", ABBR_ASYM_LAYER_ADDR_CONF_FILE); 
 		return- 1;
 	}
 
 #if 0 /* 2021-05-06 lijia close, 非对称mpls改成动态插入streaminfo的方式解决, 不再需要创建空层. */			
 	ret = parse_asymmetric_presence_layer_config();
 	if(ret < 0){
-		sapp_log(30, ~0, ~0, "[Error]%s parse error", sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file); 
+		sapp_log(30, ~0, ~0, "%s parse error", sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file); 
 		return- 1;
 	}	
 #endif
 
 	ret = parse_stream_compare_layer_config();
 	if(ret < 0){
-		sapp_log(30, ~0, ~0, "[Error]%s parse error", ABBR_STREAM_CMP_LAYER_CONF_FILE); 
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "%s parse error", ABBR_STREAM_CMP_LAYER_CONF_FILE); 
 		return- 1;
 	}	
 	
 	ret = parse_well_known_port_config();
 	if(ret < 0){
-		sapp_log(30, ~0, ~0, "[Error]%s parse error", ABBR_WELL_KNOWN_PORT_CONF_FILE); 
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "%s parse error", ABBR_WELL_KNOWN_PORT_CONF_FILE); 
 		return- 1;
 	}	
 
@@ -1253,7 +1251,7 @@ static int config_expression_convert(void)
 	}else if(strncasecmp(tmp_str, "tun", strlen("tun")) == 0){
 		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_TUN;
 	}else{
-		sapp_log(30, ~0, ~0, "[Error]sapp.toml->type error, unsupport : %s", tmp_str); 
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->type error, unsupport : %s", tmp_str); 
 		return -1;
 	}
 
@@ -1266,26 +1264,26 @@ static int config_expression_convert(void)
 	}else if(strncasecmp("raw_ethernet_multi_gateway", pconfig->packet_io.inject_pkt_mode_string, strlen("raw_ethernet_multi_gateway")) == 0){
 		pconfig->packet_io.inject_pkt_mode = SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE;
 	}else{
-	  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->PACKET_IO.inject_pkt_mode error, only support:%s!", "[sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]");
+	  	sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->PACKET_IO.inject_pkt_mode error, only support:%s!", "[sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]");
 		return -1;		
 	}
 
 	if(strncasecmp(pconfig->packet_io.inject_pkt_mode_string, "raw_ethernet_single_gateway", strlen("raw_ethernet_single_gateway")) == 0){
 		if(MESA_mac_pton(pconfig->packet_io.inject_mode_single_gateway_dst_mac_string, ':', pconfig->packet_io.inject_mode_single_gateway_dst_mac) < 0){
-			sapp_log(30, ~0, ~0, "[Error]sapp.toml->[packet_io.feature]->inject_mode_single_gateway_dst_mac error: %s", pconfig->packet_io.inject_mode_single_gateway_dst_mac_string);
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->[packet_io.feature]->inject_mode_single_gateway_dst_mac error: %s", pconfig->packet_io.inject_mode_single_gateway_dst_mac_string);
 			return -1;	
 		}
 
 		if(MESA_get_dev_mac(pconfig->packet_io.inject_mode_single_gateway_device, (unsigned char *)pconfig->packet_io.inject_mode_single_gateway_src_mac) < 0){
-			sapp_log(20, ~0, ~0, "[Warning]can't get sapp.toml->[packet_io.feature]->inject_mode_single_gateway_device: '%s' mac address", pconfig->packet_io.inject_mode_single_gateway_device);
+			sapp_runtime_log(RLOG_LV_INFO, "[Warning]can't get sapp.toml->[packet_io.feature]->inject_mode_single_gateway_device: '%s' mac address", pconfig->packet_io.inject_mode_single_gateway_device);
 			
 			tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"inject_mode_single_gateway_src_mac", pconfig->packet_io.inject_mode_single_gateway_src_mac_string, sizeof(pconfig->packet_io.inject_mode_single_gateway_src_mac_string), "$");
 			if('$' == pconfig->packet_io.inject_mode_single_gateway_src_mac_string[0]){
-				sapp_log(30, ~0, ~0, "[Error]can't get local device '%s' mac address, and no valid inject_mode_single_gateway_src_mac", pconfig->packet_io.inject_mode_single_gateway_device);
+				sapp_log(RLOG_LV_FATAL, ~0, ~0, "can't get local device '%s' mac address, and no valid inject_mode_single_gateway_src_mac", pconfig->packet_io.inject_mode_single_gateway_device);
 				return -1;
 			}
 			if(MESA_mac_pton(pconfig->packet_io.inject_mode_single_gateway_src_mac_string, ':', pconfig->packet_io.inject_mode_single_gateway_src_mac) < 0){
-				sapp_log(30, ~0, ~0, "[Error]sapp.toml->[packet_io.feature]->inject_mode_single_gateway_src_mac error: %s", pconfig->packet_io.inject_mode_single_gateway_src_mac_string);
+				sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->[packet_io.feature]->inject_mode_single_gateway_src_mac error: %s", pconfig->packet_io.inject_mode_single_gateway_src_mac_string);
 				return -1;	
 			}			
 		}
@@ -1303,7 +1301,7 @@ static int config_expression_convert(void)
 	}
 
 	if(parse_extract_linkdir_from_mac_cfg() < 0){
-	    sapp_log(30, ~0, ~0, "[Error]sapp.toml->extract_linkdir_from_mac_in_mirror_mode format error, must like 'ether[4]:0'");
+	    sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->extract_linkdir_from_mac_in_mirror_mode format error, must like 'ether[4]:0'");
 		return -1;		
 	}
 
@@ -1314,15 +1312,15 @@ static int config_expression_convert(void)
 		sapp_global_val->config.stream.stream_id_base_time_t = 0;
 	}else{
 		if(strptime(sapp_global_val->config.stream.stream_id_base_time_str, "%Y-%m-%d %H:%M:%S", &ttm) == NULL){
-		  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->STREAM.stream_id_base_time format error, must like '1970-01-01 01:02:03'");
+		  	sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->STREAM.stream_id_base_time format error, must like '1970-01-01 01:02:03'");
 			return -1;
 		}
 		if(mktime(&ttm) > time(NULL)){
-		  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->STREAM.stream_id_base_time value error, is after current system time!");
+		  	sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->STREAM.stream_id_base_time value error, is after current system time!");
 			return -1;
 		}
 		if(time(NULL) - mktime(&ttm) > 268435456L){
-		  	sapp_log(30, ~0, ~0, "[Error]sapp.toml->STREAM.stream_id_base_time value error, sapp stream id support max time range is 8.5 year!");
+		  	sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->STREAM.stream_id_base_time value error, sapp stream id support max time range is 8.5 year!");
 			return -1;
 		}
 		sapp_global_val->config.stream.stream_id_base_time_t = mktime(&ttm);
@@ -1335,7 +1333,7 @@ static int config_expression_convert(void)
 		}else if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "udp_socket" ,strlen("udp_socket")) == 0){
 			pconfig->tools.pkt_dump.mode_bin = PKT_DUMP_UDP_SOCKET;
 		}else{
-			sapp_log(30, ~0, ~0, "[Error]TOOLS.PKT_DUMP.mode only support [storage, udp_socket]!");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "TOOLS.PKT_DUMP.mode only support [storage, udp_socket]!");
 			return -1;
 		}
 	}
@@ -1373,9 +1371,9 @@ static int get_user_intention(void)
 static inline void old_config_file_detect(const char *old_filename, const char *new_filename)
 {
 	if(is_file_exist(old_filename)){
-		sapp_log(30, ~0, ~0, "[Error]This is sapp v4.0, detect obsolete config file:\"%s\"! please use \"%s\" instead!", old_filename, new_filename);
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "This is sapp v4.0, detect obsolete config file:\"%s\"! please use \"%s\" instead!", old_filename, new_filename);
 		if(is_file_exist(new_filename)){
-			sapp_log(30, ~0, ~0, "You already have new config file:\"%s\", you must rename or delete obsolete file:\"%s\"!", new_filename, old_filename); 
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "You already have new config file:\"%s\", you must rename or delete obsolete file:\"%s\"!", new_filename, old_filename); 
 			//sapp_log(30, ~0, ~0, "Are you sure you are using new config file? 'y' or 'n':");
 			//if(0 == get_user_intention()){
 				exit(1);
@@ -1411,25 +1409,24 @@ static int config_sanity_check(void)
 	phony_stream_pr.layer_index = 0xF;
 	assert(SAPP_SUPPORT_LAYER_NUM_MAX == phony_stream_pr.layer_index); /* 用于判断无意中修改了layer_index或SAPP_SUPPORT_LAYER_NUM_MAX, 两个变量不一致的情况 */
 	if(SAPP_SUPPORT_LAYER_NUM_MAX != phony_stream_pr.layer_index){
-		sapp_log(30, ~0, ~0, "[Error]SAPP_SUPPORT_LAYER_NUM_MAX is:%d, but streaminfo_private->layer_index max is:%d", SAPP_SUPPORT_LAYER_NUM_MAX, phony_stream_pr.layer_index); 
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "SAPP_SUPPORT_LAYER_NUM_MAX is:%d, but streaminfo_private->layer_index max is:%d", SAPP_SUPPORT_LAYER_NUM_MAX, phony_stream_pr.layer_index); 
 		return -1;
 	}
 
 	/*******************************  CPU  ********************************/
 	cur_cpu_num = get_nprocs();
-	if(cur_cpu_num < pconfig->cpu.worker_threads){
-		printf("\033[33m[Warning]sapp.toml->CPU.worker_threads=%d more than current available processors:%d\033[0m\n", sapp_global_val->config.cpu.worker_threads, cur_cpu_num);		
+	if(cur_cpu_num < pconfig->cpu.worker_threads){	
 		sapp_log(20, 0, ~0, "[Warning]sapp.toml->CPU.worker_threads=%d more than current available processors:%d", sapp_global_val->config.cpu.worker_threads, cur_cpu_num); 	
 		sleep(1);
 	}
 
 	if(sapp_global_val->config.cpu.send_only_threads_max_num > INDEPENDENT_SEND_QUEUE_MAX_NUM){
-		sapp_log(30, ~0, ~0, "[Error]send_only_threads_max is:%d, but max support value is:%d", sapp_global_val->config.cpu.send_only_threads_max_num, INDEPENDENT_SEND_QUEUE_MAX_NUM); 
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "send_only_threads_max is:%d, but max support value is:%d", sapp_global_val->config.cpu.send_only_threads_max_num, INDEPENDENT_SEND_QUEUE_MAX_NUM); 
 		return -1;		
 	}
 
 	if(sapp_global_val->config.cpu.worker_threads + sapp_global_val->config.cpu.send_only_threads_max_num > INDEPENDENT_SEND_QUEUE_MAX_NUM){
-		sapp_log(30, ~0, ~0, "[Error]send_only_threads_max + worker_threads is:%d, but max support send queue is:%d", 
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "RLOG_LV_FATALsend_only_threads_max + worker_threads is:%d, but max support send queue is:%d", 
 				sapp_global_val->config.cpu.send_only_threads_max_num + sapp_global_val->config.cpu.worker_threads, 
 				INDEPENDENT_SEND_QUEUE_MAX_NUM); 
 		return -1;		
@@ -1437,8 +1434,8 @@ static int config_sanity_check(void)
 
 	if(pconfig->cpu.bind_mask_array_num > 0){ 
 		if(pconfig->cpu.worker_threads + pconfig->cpu.send_only_threads_max_num != pconfig->cpu.bind_mask_array_num){
-			printf("\033[41m[Error]etc/sapp.toml->CPU->bind_mask value is not match etc/sapp.toml->CPU->worker_threads + CPU->send_only_threads_max!\033[0m\n");
-			printf("\033[41m for example, worker_threads=4, send_only_threads_max=4, bind_mask should be [1,2,3,4,5,6,7,8].\033[0m\n");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0,"sapp.toml->CPU->bind_mask value is not match etc/sapp.toml->CPU->worker_threads + CPU->send_only_threads_max!\n");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0,"for example, worker_threads=4, send_only_threads_max=4, bind_mask should be [1,2,3,4,5,6,7,8]\n");
 			return -1;
 		}
 
@@ -1455,7 +1452,7 @@ static int config_sanity_check(void)
 	/*******************************  STREAM  ******************************/
 	if(pconfig->stream.tcp.inject.auto_remedy != 0){
 		if(pconfig->stream.tcp.inject.rst_num <= 0 || pconfig->stream.tcp.inject.rst_num >= 10){
-			sapp_log(30, ~0, ~0, "[Error]sapp.toml->stream.tcp.inject.rst.number=%d, is Illegal!", pconfig->stream.tcp.inject.rst_num);
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->stream.tcp.inject.rst.number=%d, is Illegal!", pconfig->stream.tcp.inject.rst_num);
 			return -1;
 		}
 	}
@@ -1472,7 +1469,7 @@ static int config_sanity_check(void)
 	  &&(strncasecmp(tmp_str, "inline", strlen("inline")) != 0)
 	  &&(strncasecmp(tmp_str, "transparent", strlen("transparent")) != 0)
 	  &&(strncasecmp(tmp_str, "dumpfile", strlen("dumpfile")) != 0)){
-	  	printf("\033[1;31;40m[Error]sapp.toml->PACKET_IO.depolyment.mode error, only support:%s!\033[0m\n", "[mirror, inline, transparent, dumpfile]");
+	  	sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->PACKET_IO.depolyment.mode error, only support:%s!\n", "[mirror, inline, transparent, dumpfile]");
 		return -1;
 	}
 
@@ -1481,21 +1478,21 @@ static int config_sanity_check(void)
 		 || (strlen(pconfig->packet_io.internal.interface.name) <= 0)
 		 ||(pconfig->packet_io.internal.interface.type_str[0] == '\0')
 		 || (strlen(pconfig->packet_io.internal.interface.type_str) <= 0)){
-			sapp_log(30, ~0, ~0, "depolyment_mode is transparent, must set internal interface parameters!");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "depolyment_mode is transparent, must set internal interface parameters!");
 			return -1;
 		}
 		if((pconfig->packet_io.external.interface.name[0] == '\0')
 		 || (strlen(pconfig->packet_io.external.interface.name) <= 0)
 		 ||(pconfig->packet_io.external.interface.type_str[0] == '\0')
 		 || (strlen(pconfig->packet_io.external.interface.type_str) <= 0)){
-			sapp_log(30, ~0, ~0, "depolyment_mode is transparent, must set external interface parameters!");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "depolyment_mode is transparent, must set external interface parameters!");
 			return -1;
 		}
 
 		if(strncasecmp(pconfig->packet_io.internal.interface.type_str,
 					   pconfig->packet_io.external.interface.type_str,
 					   strlen(pconfig->packet_io.internal.interface.type_str)) != 0){
-			sapp_log(30, ~0, ~0, "int transparent, internal and external interface type must be the same!");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "int transparent, internal and external interface type must be the same!");
 			return -1;
 		}
 	}
@@ -1503,16 +1500,16 @@ static int config_sanity_check(void)
 	if(pconfig->packet_io.under_ddos_config.enabled){
 		if(pconfig->packet_io.under_ddos_config.bypass_trigger_cpu_usage < 1.0
 		|| pconfig->packet_io.under_ddos_config.bypass_trigger_cpu_usage >= 100.0){
-			sapp_log(30, ~0, ~0, "[Error] [packet_io.under_ddos]->bypass_trigger_cpu_usage invalid!");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[packet_io.under_ddos]->bypass_trigger_cpu_usage invalid!");
 			return -1;		
 		}
 
 		if(pconfig->packet_io.under_ddos_config.factor_decrease_ratio >= 1.0000){
-			sapp_log(30, ~0, ~0, "[Error] [packet_io.under_ddos]->factor_decrease_ratio invalid, must smaller than 1.0!");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[packet_io.under_ddos]->factor_decrease_ratio invalid, must smaller than 1.0!");
 			return -1;					
 		}
 		if(pconfig->packet_io.under_ddos_config.factor_increase_ratio <= 1.0000){
-			sapp_log(30, ~0, ~0, "[Error] [packet_io.under_ddos]->factor_increase_ratio invalid, must bigger than 1.0!");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[packet_io.under_ddos]->factor_increase_ratio invalid, must bigger than 1.0!");
 			return -1;					
 		}		
 	}
@@ -1520,19 +1517,19 @@ static int config_sanity_check(void)
 	/*******************************  PKT_DUMP  ******************************/
 	if(pconfig->tools.pkt_dump.enabled != 0){
 		if(pconfig->tools.pkt_dump.dump_thread_id_array_num > pconfig->cpu.worker_threads){
-			sapp_log(30, ~0, ~0, "[Error] TOOLS.PKT_DUMP.dump_thread_id_array items more than CPU.worker_threads!");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "TOOLS.PKT_DUMP.dump_thread_id_array items more than CPU.worker_threads!");
 			return -1;
 		}
 
 		if((strncasecmp(pconfig->tools.pkt_dump.mode_str, "storage" ,strlen("storage")) != 0)
 	     && (strncasecmp(pconfig->tools.pkt_dump.mode_str, "udp_socket" ,strlen("udp_socket")) != 0)){
-			sapp_log(30, ~0, ~0, "[Error]TOOLS.PKT_DUMP.mode only support [storage, udp_socket]!");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "TOOLS.PKT_DUMP.mode only support [storage, udp_socket]!");
 			return -1;
 		}
 
 		if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "udp_socket" ,strlen("udp_socket")) == 0){
 			if(pconfig->tools.pkt_dump.command_port <=0 || pconfig->tools.pkt_dump.command_port > 65535){
-				sapp_log(30, ~0, ~0, "[Error] TOOLS.PKT_DUMP.command_port: %u invalid!", pconfig->tools.pkt_dump.command_port);
+				sapp_log(RLOG_LV_FATAL, ~0, ~0, "TOOLS.PKT_DUMP.command_port: %u invalid!", pconfig->tools.pkt_dump.command_port);
 				return -1;
 			}
 		}	
@@ -1719,7 +1716,8 @@ int sapp_parse_config(void)
 		exit(1);
 	}
 
-	sapp_log(RLOG_LV_INFO, ~0, ~0, "sapp use main config file: %s", ABBR_CFG_FILE_MAIN_ENTRY);
+	sapp_printf("sapp use main config file: %s\n", ABBR_CFG_FILE_MAIN_ENTRY);
+	sapp_runtime_log(RLOG_LV_INFO, "sapp use main config file: %s", ABBR_CFG_FILE_MAIN_ENTRY);
 	
 	pconfig = &sapp_global_val->config;
 
@@ -1967,7 +1965,7 @@ int sapp_parse_config(void)
 		exit(1);
 	}
 
-	sapp_log(10, 10, 10, "config parse success!");
+	sapp_runtime_log(RLOG_LV_INFO, "config parse success!");
 	
 	return 0;
 }

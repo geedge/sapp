@@ -122,15 +122,16 @@ static const sapp_cmd_args_usage_t cmd_args_usage[] =
 	{"-g", "coredump", 	"no",NULL,	"generate coredump for test"},
 	{"-h", "help",		"no",NULL,	"show help message"},
 	{"-n", "not-exit",	"no",NULL,	"not exit in dumpfile mode after all packets have been processed"},
-	{"-p",  "dumpfile-speed",	"required",dumpfile_speed_check, "\n  \t\ttop-speed\tprocess packets as fast as possible, this is default behavior\n\t\ttimestamp\tprocess packets as pcap embedded timestamp interval"},
+	{"-p", "dumpfile-speed",	"required",dumpfile_speed_check, "\n  \t\ttop-speed\tprocess packets as fast as possible, this is default behavior\n\t\ttimestamp\tprocess packets as pcap embedded timestamp interval"},
 	{"-r", "dumpfile-file", "required",NULL,	"read packets from which pcap file"},
+	{"-s", "silent", "no",NULL,	"silent mode, don't print anything to stdout, default is verbose"},
 	{"-t", "test-config", "no",NULL,	"check validity of the configuration file"},
 	{"-v", "version", 	"no",NULL,	"show platform version"},
 	{NULL,	NULL, NULL,NULL,NULL}
 };
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
-static const char *sapp_cla_short_options = "dhgvnc:C:D:e:r:p:f:t";
+static const char *sapp_cla_short_options = "dhgvnsc:C:D:e:r:p:f:t";
 
 /* 静态只读全局变量可以放在任何代码段, 无需在sapp_global_val里 */
 static const struct option sapp_cla_long_options[] = 
@@ -146,6 +147,7 @@ static const struct option sapp_cla_long_options[] =
 	{"dumpfile-speed",	required_argument,  NULL,      'p'},
 	{"example-config", 	required_argument,  NULL,      'e'},
 	{"coredump", 		no_argument,      	NULL,      'g'},
+	{"silent",			no_argument,  		NULL,      's'},
 	{"test-config",		no_argument,  		NULL,      't'},
 	{"not-exit",		no_argument,  		NULL,      'n'},
 	{NULL,          	0,      			NULL,      0}
@@ -430,6 +432,21 @@ void sapp_update_data_root_dir(const char *data_root_dir)
 }
 
 
+static void sapp_close_stdout(void)
+{
+#if 0
+	int null_fd = open("/dev/null", O_CREAT | O_RDWR); /* 消除sapp刷屏信息 */
+	if(null_fd > 0){
+		dup2(null_fd, STDOUT_FILENO);
+	}
+#else
+	if(stdout){
+		fclose(stdout);
+		stdout = fopen("/dev/null", "w");
+	}
+#endif	
+}
+
 int sapp_parse_cmd_args(int argc, char *argv[])
 {
 	int ret = 0;
@@ -523,6 +540,11 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 				store_cmd_args("dumpfile-list", optarg);
 				get_dumpfile_list_array(optarg);
 				continue;
+			break;
+
+			case 's':
+				sapp_global_val->cla.slient_mode = 1;
+				sapp_close_stdout();
 			break;
 
 			case 't':

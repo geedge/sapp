@@ -71,12 +71,13 @@ static void show_mesa_log(void)
 
 	for(i = 0; (i < sizeof(MESA_art_log)) && (MESA_art_log[i] != 0); i ++){
 		//putchar(MESA_log[i]);
-		printf("%c", MESA_art_log[i]);
+		sapp_printf("%c", MESA_art_log[i]);
 	}
-	printf("\n");
+	sapp_printf("\n");
 	sapp_runtime_log(30, "\n\n%s", MESA_art_log);	
 }
 
+/* 阻塞等待必要的线程启动完成 */
 static void sapp_wait_for_required_thread_starting(void)
 {
 	int tseq;
@@ -90,6 +91,17 @@ static void sapp_wait_for_required_thread_starting(void)
 	while(sapp_global_val->individual_fixed.thread_timer_event_id == 0){
 		sapp_usleep(10);
 	}
+}
+
+static void *sapp_monitor_thread(void *args)
+{
+	while(sapp_get_current_state() == SAPP_STATE_PROCESSING){
+		usleep(1000);
+	}
+
+	libsapp_destroy_env();
+
+	return NULL;
 }
 
 
@@ -148,14 +160,17 @@ int libsapp_setup_env(int argc, char *argv[])
 
 	sapp_wait_for_required_thread_starting();
 
-	//TODO: dumpfile模式读包完后后自动退出, 否则一直运行
-	//除非有信号, 或者在其他线程强行调用sapp_destroy_env()
-#if 0	
-	while((SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state)
-	 && (sapp_global_val->config.packet_io.depolyment_mode_bin)){
-		usleep(1);
-	}
-#endif 
+	/* 
+	   所有初始化和工作线程都创建完了, 
+	   让出cpu, 其他模块调用libsapp_setup_env()之后可以继续执行, 而不是被阻塞, 否则程序逻辑就很难处理.
+	   dumpfile模式读包完后后自动退出, 否则一直运行,
+	   或者在其他线程强行调用libsapp_destroy_env()
+	 */
+
+	pthread_t pid;
+	pthread_create(&pid, NULL, sapp_monitor_thread, NULL);
+	pthread_detach(pid);
+
 	return 0;
 }
 

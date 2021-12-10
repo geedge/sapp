@@ -1445,7 +1445,8 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 			printf("Catch SIGSEGV error!\n");	
 		}
 
-		sapp_log(20, 1, 1, "tools.pkt_dump enable, this maybe slow down performance!\n");
+		sapp_runtime_log(RLOG_LV_INFO,  "tools.pkt_dump enable, this maybe slow down performance!\n");
+		sapp_printf("tools.pkt_dump enable, this maybe slow down performance!\n");
 	}else{
 		ret = cycle_pkt_dump_socket_init();
 	}

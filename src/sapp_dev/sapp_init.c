@@ -88,10 +88,10 @@ static void sapp_dictator_init(void)
 		assert(tmp != NULL);
 		free(tmp);
 	}else{
-		printf("\033[33m[Warning]dictator is not enable, maybe slow down performance, please check 'sapp.toml -> dictator_enable'.\033[0m\n");
+		sapp_printf("\033[33m[Warning]dictator is not enable, maybe slow down performance, please check 'sapp.toml -> dictator_enable'.\033[0m\n");
 	}
 #else
-	printf("\033[33m[Warning]sapp is compiled without dictator.\033[0m\n");
+	sapp_printf("\033[33m[Warning]sapp is compiled without dictator.\033[0m\n");
 #endif	
 }
 
@@ -156,18 +156,18 @@ int MESA_platform_init(int argc, char *argv[])
 
 	MESA_load_profile_int_def("conf/main.conf","Module", "encapsulate_with_ddp", &g_encapsulate_with_ddp, 0);	
 	if(g_encapsulate_with_ddp != 0){
-		printf("\033[32m[Notice] '%s' is enable!\033[0m\n", "encapsulate_with_ddp");
+		sapp_printf("\033[32m[Notice] '%s' is enable!\033[0m\n", "encapsulate_with_ddp");
 		sleep(1);		
 	}	
 
 	MESA_load_profile_int_def("conf/main.conf","Module", "encapsulate_with_L2E", &g_encapsulate_with_L2E, 0);	
 	if(g_encapsulate_with_L2E != 0){
-		printf("\033[32m[Notice] '%s' is enable!\033[0m\n", "encapsulate_with_L2E");
+		sapp_printf("\033[32m[Notice] '%s' is enable!\033[0m\n", "encapsulate_with_L2E");
 		sleep(1);		
 	}	
 
 	if((g_encapsulate_with_ddp != 0) && (g_encapsulate_with_L2E != 0)){
-		printf("\033[1;31;40m[Error]g_encapsulate_with_ddp is conflict with g_encapsulate_with_L2E, can't enable simultaneously at all!\033[0m\n");
+		sapp_printf("\033[1;31;40m[Error]g_encapsulate_with_ddp is conflict with g_encapsulate_with_L2E, can't enable simultaneously at all!\033[0m\n");
 		return -1;
 	}
 	

@@ -67,7 +67,7 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *full_lib_path)
 
 	io_lib_handle = dlopen(full_lib_path, RTLD_LAZY | RTLD_GLOBAL);
 	if(NULL == io_lib_handle){
-		printf("\033[1;31;40m[Error]dlopen %s error, %s!\033[0m\n", full_lib_path, dlerror());
+		sapp_log(RLOG_LV_FATAL, 1, 1,"dlopen %s error, %s!\n", full_lib_path, dlerror());
 		return -1;
 	}
 
@@ -272,7 +272,7 @@ int packet_io_lib_load(int cap_mode)
 	char full_lib_path[PATH_MAX];
 	
 	if(cap_mode < 0 || cap_mode > __CAP_MODEL_MAX){
-		printf("\033[1;31;40m[Error]Unknown capture_mode:%d\033[0m\n", cap_mode);
+		sapp_log(RLOG_LV_FATAL, 1, 1,"Unknown capture_mode:%d\n", cap_mode);
 		return -1;
 	}
 	

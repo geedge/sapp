@@ -99,7 +99,7 @@ static int __project_find_id_by_name(const char *project_req_name, const char *p
 		}
 	}
 	if(NULL == preq_man || -1 == pro_req_id){
-		//printf("can't found project name:'%s' in %s\n", project_req_name, ABBR_PROJECT_LIST_CONF_FILE);
+		sapp_runtime_log(RLOG_LV_FATAL, "can't found project name:'%s' in %s\n", project_req_name, ABBR_PROJECT_LIST_CONF_FILE);
 		return -1;
 	}
 
@@ -264,7 +264,8 @@ static int project_req_conf_is_exist(const char *check_name)
 		
 		preq_name = strtok_r(line_buf, delim, &save_ptr);
 		if(NULL == preq_name){
-			printf("invalid conf in %s, line %d\n", ABBR_PROJECT_LIST_CONF_FILE, line_num);
+			sapp_printf("invalid conf in %s, line %d\n", ABBR_PROJECT_LIST_CONF_FILE, line_num);
+			sapp_runtime_log(RLOG_LV_INFO, "invalid conf in %s, line %d\n", ABBR_PROJECT_LIST_CONF_FILE, line_num);
 			goto fun_exit;
 		}
 

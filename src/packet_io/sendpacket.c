@@ -282,13 +282,13 @@ int MESA_get_dev_mac(const char *device, unsigned char mac[6])
     strncpy(ifr.ifr_ifrn.ifrn_name, device, sizeof(ifr.ifr_ifrn.ifrn_name));
     if(ioctl(fd, SIOCGIFHWADDR, &ifr) == -1) 
     {
-        printf("Cann't get hwaddr of %s:%s\n", device, strerror(errno));
+        //printf("Cann't get hwaddr of %s:%s\n", device, strerror(errno));
         goto err_exit;
     }
 
     if(ifr.ifr_hwaddr.sa_family != ARPHRD_ETHER)
     {
-		printf("'%s' is not ethernet interface!\n", device);
+		//printf("'%s' is not ethernet interface!\n", device);
 		goto err_exit;
     }
 
