@@ -44,7 +44,7 @@ sapp_module_test:
   tags:
   - share    
 
-sapp_module_test:
+sapp_coredump_analyze:
   stage: investigation
   script:
     - yum makecache
