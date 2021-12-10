@@ -11,10 +11,10 @@ stages:
 - envelope
 - upload
 - test
-- investigation
 
 sapp_module_test:
   stage: test
+  allow_failure: true
   script:
     - yum makecache
     - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb 
@@ -38,39 +38,15 @@ sapp_module_test:
     - ldd gtest_sapp_v4
     - ulimit -c unlimited
     - ./gtest_sapp_v4
+    - find . -name "core*" | head -n 1 | xargs -I {} ln -sf {} core
+    - echo "bt" > gdb_analyze_core.cmd
+    - echo "quit" >> gdb_analyze_core.cmd
+    - gdb ./gtest_sapp_v4 core --command=./gdb_analyze_core.cmd    
   artifacts:
     paths:
       - /home/mesasoft/sapp_run/core.*     
   tags:
   - share    
-
-sapp_coredump_analyze:
-  stage: investigation
-  script:
-    - yum makecache
-    - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb 
-    - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini libMESA_jump_layer
-    - yum install -y sapp gtest_sapp benchmark_pcap sapp_benchmark
-    - ls -l /opt/MESA/lib
-    - echo "/opt/MESA/lib" >> /etc/ld.so.conf
-    - ldconfig
-    - ldd /home/mesasoft/sapp_run/sapp
-    - ifconfig
-    - sysctl -w net.ipv6.conf.all.disable_ipv6=0
-    - ifconfig
-    - ip neigh show
-    - ip -6 neigh show
-    - cp /builds/MESA_Platform/sapp/build/src/entry/sapp /home/mesasoft/sapp_run/sapp
-    - cp /builds/MESA_Platform/sapp/build/test/libsapp_devel.so /opt/MESA/lib
-    - ldconfig
-    - cd /home/mesasoft/sapp_run
-    - find . -name "core*" | head -n 1 | xargs -I {} ln -sf {} core
-    - echo "bt" > gdb_analyze_core.cmd
-    - echo "quit" >> gdb_analyze_core.cmd
-    - gdb ./gtest_sapp_v4 core --command=./gdb_analyze_core.cmd
-  tags:
-  - share    
-  
   
 
 .build_by_travis:
