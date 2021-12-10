@@ -37,7 +37,7 @@ sapp_module_test:
     - ./sapp -r /home/mesasoft/benchmark_pcap/tcp/tcp_simple.pcap
     - ldd gtest_sapp_v4
     - ulimit -c unlimited
-    - ./gtest_sapp_v4
+    - ./gtest_sapp_v4 || FAILED=true
     - find . -name "core*" | head -n 1 | xargs -I {} ln -sf {} core
     - echo "bt" > gdb_analyze_core.cmd
     - echo "quit" >> gdb_analyze_core.cmd
