@@ -40,7 +40,10 @@ sapp_module_test:
     - ./gtest_sapp_v4 || FAILED=true
     - find . -name "core*" | head -n 1 | xargs -I {} ln -sf {} core
     - echo "bt" > gdb_analyze_core.cmd
-    - echo "quit" >> gdb_analyze_core.cmd
+    - echo "f 1"  >> gdb_analyze_core.cmd
+    - echo "p i"  >> gdb_analyze_core.cmd
+    - echo "p g_plug_global_entry[i]" >> gdb_analyze_core.cmd
+    - echo "quit" >> gdb_analyze_core.cmd 
     - gdb ./gtest_sapp_v4 core --command=./gdb_analyze_core.cmd    
   artifacts:
     paths:
