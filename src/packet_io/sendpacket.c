@@ -1893,6 +1893,7 @@ static int build_net_layer_ppp(struct streaminfo_private *stream_pr, int carry_l
 	return ppp_hdr_len;
 }
 
+#if 0
 static int build_net_layer_vxlan(struct streaminfo_private *stream_pr, int carry_layer_type,
 			int carry_layer_len, unsigned char *buf, UCHAR send_stream_dir, const raw_pkt_t *raw_pkt, const struct layer_addr_vxlan_private *raw_vxlan_hdr)
 {
@@ -1929,7 +1930,93 @@ static int build_net_layer_vxlan(struct streaminfo_private *stream_pr, int carry
 
 	return raw_vxlan_hdr->actual_total_len;
 }
+#else
 
+static void build_net_single_layer_vxlan(struct streaminfo_private *stream_pr, inline_vxlan_hdr_t *send_vxlan_hdr, const struct layer_addr_vxlan_private *raw_vxlan_hdr, UCHAR send_stream_dir)
+{
+	const struct single_layer_addr_vxlan *single_addr;
+
+	if(DIR_C2S == send_stream_dir){
+		single_addr = &raw_vxlan_hdr->addr_public.C2S_vxlan_addr;
+	}else{
+		single_addr = &raw_vxlan_hdr->addr_public.S2C_vxlan_addr;
+	}
+	
+	memset(send_vxlan_hdr, 0, sizeof(inline_vxlan_hdr_t));
+	send_vxlan_hdr->flags = 0x08;
+	send_vxlan_hdr->vlan_id_half_high = ntohs(single_addr->vlan_id) >> 4;
+	send_vxlan_hdr->vlan_id_half_low = ntohs(single_addr->vlan_id) & 0xF;
+	send_vxlan_hdr->link_layer_type = single_addr->link_type;
+	send_vxlan_hdr->link_id = single_addr->link_id;
+
+	if(DIR_C2S == send_stream_dir){
+		send_vxlan_hdr->dir = stream_pr->stream_c2s_route_dir;
+	}else{
+		send_vxlan_hdr->dir = stream_pr->stream_c2s_route_dir ^ 1;
+	}
+
+}
+
+static int build_net_layer_vxlan(struct streaminfo_private *stream_pr, int carry_layer_type,
+			int carry_layer_len, unsigned char *buf, UCHAR send_stream_dir, const raw_pkt_t *raw_pkt, const struct layer_addr_vxlan_private *raw_vxlan_hdr)
+
+{
+	const struct layer_addr_vxlan *in_stream_addr;
+	inline_vxlan_hdr_t *send_vxlan_hdr = (inline_vxlan_hdr_t *)buf;
+
+
+	in_stream_addr = (struct layer_addr_vxlan *)(stream_pr->stream_public.addr.vxlan);
+
+	if(DIR_C2S == send_stream_dir){
+		if(in_stream_addr->C2S_vxlan_addr.flag != 0){
+			build_net_single_layer_vxlan(stream_pr, send_vxlan_hdr, raw_vxlan_hdr, send_stream_dir);
+		}else{ 
+			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
+			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VXLAN][stream_pr->layer_index]){
+				build_net_single_layer_vxlan(stream_pr, send_vxlan_hdr, raw_vxlan_hdr, send_stream_dir ^ DIR_DOUBLE);
+			}else{
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_vxlan() error, no c2s vxlan addr, but asymmetric_addr_layer is set!\n");
+				return -1;
+			}
+		}
+	}else{
+		if(in_stream_addr->S2C_vxlan_addr.flag > 0){
+			build_net_single_layer_vxlan(stream_pr, send_vxlan_hdr, raw_vxlan_hdr, send_stream_dir);
+		}else{
+			/* 本侧没有地址, 取决于配置文件asymmetric_addr_layer是否可以用对侧地址 */
+			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VXLAN][stream_pr->layer_index]){
+				build_net_single_layer_vxlan(stream_pr, send_vxlan_hdr, raw_vxlan_hdr, send_stream_dir ^ DIR_DOUBLE);
+			}else{
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_vxlan() error, no s2c vxlan addr, but asymmetric_addr_layer is set!\n");
+				return -1;
+			}
+		}
+	}
+
+	/*
+		TODO: ppp, hdlc层也分c2s, s2c两个方向存储.
+	*/
+	if(VXLAN_ENCAP_HDLC == raw_vxlan_hdr->addr_public.C2S_vxlan_addr.link_type){
+		struct hdlc_net_hdr *snd_hdlc_hdr = (struct hdlc_net_hdr *)(buf + sizeof(inline_vxlan_hdr_t));
+		snd_hdlc_hdr->address = raw_vxlan_hdr->inner_hdlc.address;
+		snd_hdlc_hdr->control = raw_vxlan_hdr->inner_hdlc.control;
+		snd_hdlc_hdr->protocol = raw_vxlan_hdr->inner_hdlc.protocol;
+	}else if(VXLAN_ENCAP_PPP == raw_vxlan_hdr->addr_public.C2S_vxlan_addr.link_type){
+		struct layer_ppp_hdr *snd_ppp_hdr = (struct layer_ppp_hdr *)(buf + sizeof(inline_vxlan_hdr_t));
+		snd_ppp_hdr->address = raw_vxlan_hdr->inner_ppp.address;
+		snd_ppp_hdr->control = raw_vxlan_hdr->inner_ppp.control;
+		snd_ppp_hdr->protocol = raw_vxlan_hdr->inner_ppp.protocol;
+	}else{
+		;//ethernet, do nothing!
+	}
+	
+
+	return raw_vxlan_hdr->actual_total_len;
+
+}
+#endif
 
 static int build_net_layer_l2tp(const struct streaminfo *top_stream, struct streaminfo_private *stream_pr, int carry_layer_type,
 			int carry_layer_len, unsigned char *buf, unsigned char send_stream_dir, const raw_pkt_t *raw_pkt, int l2tp_raw_hdr_len)

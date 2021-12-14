@@ -824,6 +824,8 @@ err:
 }
 
 /* vxlan地址格式:  vlan_id-dir-link_id-link_type*/
+
+/* TODO: 按两个方向转换 */
 static int __addr_vxlan_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val)
 {
 	char *vxlan_struct_item;
@@ -835,31 +837,34 @@ static int __addr_vxlan_pton(char *addr_str, addr_continuous_bin_t *addr_bin_val
 	addr_bin_val->stream.addr.addrlen = sizeof(struct layer_addr_vxlan);	
 	addr_bin_val->stream.addr.paddr = addr_bin_val->addr_value;
 
+	/* C2S addr */
 	vxlan_struct_item = strtok_r(addr_str, delim, &save_ptr);
 	if(NULL == vxlan_struct_item){
 		return -1;
 	}
-	vxlan_bin_addr->vlan_id = strtol(vxlan_struct_item, NULL, 10);
+	vxlan_bin_addr->C2S_vxlan_addr.vlan_id = strtol(vxlan_struct_item, NULL, 10);
 
 	vxlan_struct_item = strtok_r(NULL, delim, &save_ptr);
 	if(NULL == vxlan_struct_item){
 		return -1;
 	}
-	vxlan_bin_addr->dir = strtol(vxlan_struct_item, NULL, 10);
+	vxlan_bin_addr->C2S_vxlan_addr.dir = strtol(vxlan_struct_item, NULL, 10);
 
 
 	vxlan_struct_item = strtok_r(NULL, delim, &save_ptr);
 	if(NULL == vxlan_struct_item){
 		return -1;
 	}
-	vxlan_bin_addr->link_id = strtol(vxlan_struct_item, NULL, 10);
+	vxlan_bin_addr->C2S_vxlan_addr.link_id = strtol(vxlan_struct_item, NULL, 10);
 
 	vxlan_struct_item = strtok_r(NULL, delim, &save_ptr);
 	if(NULL == vxlan_struct_item){
 		return -1;
 	}
-	vxlan_bin_addr->link_type = strtol(vxlan_struct_item, NULL, 10);
+	vxlan_bin_addr->C2S_vxlan_addr.link_type = strtol(vxlan_struct_item, NULL, 10);
 
+	/* TODO: S2C addr */
+	//////////////////////
 
 	return 0;
 }
@@ -1690,14 +1695,21 @@ static int __addr_openvpn_n2p_fun(const struct layer_addr *paddr, char *buf, int
 	return strlen(buf) + 1;
 }
 
-
+/*
+	格式:
+		<C2S_addr, S2C_addr>,
+		addr详细格式:
+		<vlan_id-dir-linkid-linktype, vlan_id-dir-linkid-link-type>
+*/
 static int __addr_vxlan_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
-	const struct layer_addr_vxlan *vxlan_addr = paddr->vxlan;
+	const struct single_layer_addr_vxlan *single_vxlan_addr = &paddr->vxlan->C2S_vxlan_addr;
 	int addr_len;
 
+	/* TODO: 按两个方向转换 */
+
 	/* 按vxlan结构体顺序排列 */
-	snprintf(buf, buf_len, "%u-%u-%u-%u", vxlan_addr->vlan_id, vxlan_addr->dir, vxlan_addr->link_id, vxlan_addr->link_type);
+	snprintf(buf, buf_len, "%u-%u-%u-%u", single_vxlan_addr->vlan_id, single_vxlan_addr->dir, single_vxlan_addr->link_id, single_vxlan_addr->link_type);
 
 	addr_len = strlen(buf) + 1; //add EOF
 

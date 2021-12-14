@@ -2826,6 +2826,26 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 			}
 			break;
 
+			case ADDR_TYPE_VXLAN:
+			{
+				if(ADDR_TYPE_VXLAN == pstream_pr->stream_public.addr.addrtype){
+					if(cur_dir == DIR_C2S){
+						memcpy(&pstream_pr->stream_public.addr.vxlan->C2S_vxlan_addr,
+						        &p_stack->stream_public.addr.vxlan->C2S_vxlan_addr,
+						        sizeof(p_stack->stream_public.addr.vxlan->C2S_vxlan_addr));
+					}
+					else{
+	                    memcpy(&pstream_pr->stream_public.addr.vxlan->S2C_vxlan_addr,
+	                           &p_stack->stream_public.addr.vxlan->C2S_vxlan_addr,  //注意, 这里固定用src方向!!
+	                           sizeof(p_stack->stream_public.addr.vxlan->S2C_vxlan_addr));             
+					}
+				}else{
+					sapp_runtime_log(RLOG_LV_INFO, "update_opposite_addr_info() error, current addrtype is vxlan, but pstream->addrtype is not vxlan!");
+				}
+
+			}
+			break;
+
 			default:	
 				/* 其他协议层不涉及C2S, S2C两个方向地址非对称问题 */
 				break;

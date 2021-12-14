@@ -369,12 +369,20 @@ struct layer_addr_mac_in_mac
 	UCHAR inner_src_mac[MAC_ADDR_LEN]; /* ÄÚ²ãmacµØÖ·, network order */
 };
 
-struct layer_addr_vxlan
+struct single_layer_addr_vxlan
 {
 	UINT16 vlan_id; /* network order */
+	UCHAR flag;
 	UCHAR dir;
 	UCHAR link_id;
 	UCHAR link_type;
+};
+
+
+struct layer_addr_vxlan
+{
+	struct single_layer_addr_vxlan C2S_vxlan_addr;
+	struct single_layer_addr_vxlan S2C_vxlan_addr;
 };
 
 
