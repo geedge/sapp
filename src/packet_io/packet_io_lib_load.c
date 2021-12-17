@@ -160,7 +160,7 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_device_alias = (void * (*)(unsigned int , char *))marsio_dl_io_device_alias;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_send_only_thread_init = (int (*)(void))marsio_dl_io_send_only_thread_init;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_free_send_handle = NULL;
-		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_destroy = NULL;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_destroy = marsio_dl_io_destroy;
 	}
 #endif 
 

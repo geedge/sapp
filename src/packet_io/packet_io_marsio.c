@@ -62,6 +62,7 @@ static char **g_mr4_down_device_name; /* 设备名称集合, meth0, meth1, meth2... */
 static struct mr_vdev **g_mr4_dev_up_handle_set, **g_mr4_dev_down_handle_set; /* 设备句柄集合 */
 static struct mr_sendpath **g_mr4_sendpath_up_set, **g_mr4_sendpath_down_set; /* 发包路径(句柄)集合 */
 static marsio4_io_handle *g_mario4_io_handle;
+static void *marsio_so_handle;
 
 #define MARSIO_BURST_PKT_MAX		(256)
 static int marsio4_burst_process_pkt_num = 32; /* 批处理包数量, 从pag.conf中获取 */
@@ -77,8 +78,11 @@ static void (*ptr_marsio_send_burst_flush)(struct mr_sendpath * sendpath, queue_
 static int (*ptr_marsio_init)(struct mr_instance * instance, const char * appsym);
 static struct mr_vdev * (*ptr_marsio_open_device)(struct mr_instance * instance,
     					const char * devsym, unsigned int nr_rxstream, unsigned int nr_txstream);
+static void (*ptr_marsio_close_device)(struct mr_vdev *vdev);    					
 static struct mr_sendpath * (*ptr_marsio_sendpath_create_by_vdev)(struct mr_vdev * dest_device);    
+static void (*ptr_marsio_sendpath_destory)(struct mr_sendpath * sendpath);
 static struct mr_instance * (*ptr_marsio_create)(void);
+static int (*ptr_marsio_destory)(struct mr_instance *instance);
 static int (*ptr_marsio_thread_init)(struct mr_instance * instance);
 static int (*ptr_marsio_recv_burst)(struct mr_vdev * vdev, queue_id_t qid, marsio_buff_t * mbufs[], int nr_mbufs);
 int (*ptr_marsio_send_burst)(struct mr_sendpath * sendpath,  queue_id_t qid, marsio_buff_t * mbufs[], int nr_mbufs);
@@ -93,10 +97,11 @@ char * (*ptr_marsio_buff_mtod)(marsio_buff_t *m);
 uint32_t (*ptr_marsio_buff_datalen)(marsio_buff_t *m);
 uint32_t (*ptr_marsio_buff_buflen)(marsio_buff_t *m);
 marsio_buff_t * (*ptr_marsio_buff_clone_with_options)(struct mr_instance * instance, marsio_buff_t * md, int socket_id, int thread_id, uint16_t options);
-
 int (*ptr_marsio_buff_get_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
 int (*ptr_marsio_buff_set_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
 int (*ptr_marsio_buff_unset_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type);
+
+
 
 
 static struct bpf_program MARSIO_BPF_FILTER[MAX_THREAD_NUM];
@@ -839,7 +844,7 @@ static void *marsio4_worker(void *arg)
 	*/
 	int polling_enabled = sapp_global_val->config.packet_io.polling_enabled;
 	
-	while(1){		
+	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state){	
 		if(marsio4_process_packet(tseq, &raw_pkt) > 0){
 			rcv_pkt_tims++;
 		}else{
@@ -878,11 +883,9 @@ static void *marsio4_worker(void *arg)
 
 static int marsio_dl_get_function_entry(void)
 {
-	void *marsio_so_handle;
-
 	marsio_so_handle = dlopen(ABBR_MARSIO_LIBRARY_FILE, RTLD_NOW | RTLD_LOCAL | RTLD_NODELETE);
 	if(NULL == marsio_so_handle){
-		printf("\033[1;31;40m[Error]dlopen '%s' failed!\033[0m\n", ABBR_MARSIO_LIBRARY_FILE);
+		printf("\033[1;31;40m[Error]dlopen '%s' failed, %s\033[0m\n", ABBR_MARSIO_LIBRARY_FILE, dlerror());
 		return -1;
 	}
 
@@ -895,6 +898,12 @@ static int marsio_dl_get_function_entry(void)
 	ptr_marsio_create = (struct mr_instance * (*)(void))dlsym(marsio_so_handle, "marsio_create");
 	if(NULL == ptr_marsio_create){
 		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_create", ABBR_MARSIO_LIBRARY_FILE);
+		return -1;
+	}
+
+	ptr_marsio_close_device = (void (*)(struct mr_vdev *vdev))dlsym(marsio_so_handle, "marsio_close_device");
+	if(NULL == ptr_marsio_close_device){
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_close_device", ABBR_MARSIO_LIBRARY_FILE);
 		return -1;
 	}
 
@@ -916,6 +925,12 @@ static int marsio_dl_get_function_entry(void)
 		return -1;
 	}
 
+	ptr_marsio_sendpath_destory = (void (*)(struct mr_sendpath * sendpath))dlsym(marsio_so_handle, "marsio_sendpath_destory");
+	if(NULL == ptr_marsio_sendpath_create_by_vdev){
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_sendpath_destory", ABBR_MARSIO_LIBRARY_FILE);
+		return -1;
+	}
+	
 	ptr_marsio_thread_init = (int (*)(struct mr_instance * instance))dlsym(marsio_so_handle, "marsio_thread_init");
 	if(NULL == ptr_marsio_thread_init){
 		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_thread_init", ABBR_MARSIO_LIBRARY_FILE);
@@ -1031,6 +1046,12 @@ static int marsio_dl_get_function_entry(void)
 		}		
 	}
 
+	ptr_marsio_destory = (int (*)(struct mr_instance *instance))dlsym(marsio_so_handle, "marsio_destory");
+	if(NULL == ptr_marsio_destory){
+		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_destory", ABBR_MARSIO_LIBRARY_FILE);
+		return -1;
+	}
+	
 	return 0;
 }
 
@@ -1111,33 +1132,8 @@ int marsio_dl_io_init(int argc, char *argv[])
 		}
 	}
 
-	g_mario4_io_handle = (marsio4_io_handle *)calloc(1, sizeof(marsio4_io_handle) * g_marsio4_work_thread_num);
+	g_mario4_io_handle = (marsio4_io_handle *)SAPP_GLOBAL_ALLOC(sizeof(marsio4_io_handle) * g_marsio4_work_thread_num);
 	ptr_marsio_option_set(sapp_marsio4_instance, MARSIO_OPT_THREAD_NUM, &g_marsio4_work_thread_num, sizeof(int));
-
-#if 0	
-	MESA_load_profile_string_def((char *)"conf/main.conf", (char *)"Module", (char *)"cpu_bind_core_mask", bind_mask_string, 128, "$");
-	if(bind_mask_string[0] == '$'){
-		marsio4_thread_bind_mask = 0;
-		printf("\033[33m[Warning]In marsio mode, not set main.conf->cpu_bind_core_mask value, maybe cause CPU preemption!\033[0m\n");
-		sleep(1);
-	}else if(strncmp("0x", bind_mask_string, 2) == 0){
-		marsio4_thread_bind_mask = strtoul(bind_mask_string, NULL, 16);
-		if(calc_integer_bit_num(marsio4_thread_bind_mask) != g_marsio4_work_thread_num){
-			printf("\033[41m[Error]main.conf->cpu_bind_core_mask value is not match main.conf->threadnum!\033[0m\n");
-			printf("\033[41m          main.conf->cpu_bind_core_mask bit numer must match main.conf->threadnum, \033[0m\n");
-			printf("\033[41m          for example, threadnum=8, core_mask shoule be 0xFF, 0xFF0, 0xFF00, etc.\033[0m\n");
-			printf("\033[41m          for example, threadnum=16, core_mask shoule be 0xFFFF, 0xFFFF0, 0xFFFF00, etc.\033[0m\n");
-			return -1;
-		}
-	}else if(atoi(bind_mask_string) == 0){
-		marsio4_thread_bind_mask = 0;
-		printf("\033[33m[Warning]In marsio mode, main.conf->cpu_bind_core_mask value is 0, same as not set, maybe cause CPU preemption!\033[0m\n");
-		sleep(1);
-	}else{
-		printf("\033[41m[Error]main.conf->cpu_bind_core_mask value incorrect!\033[0m\n");
-		return -1;
-	}
-#endif
 
 #if 0
 	if(marsio4_thread_bind_mask != 0){
@@ -1172,10 +1168,10 @@ int marsio_dl_io_init(int argc, char *argv[])
 
 	ptr_marsio_init(sapp_marsio4_instance, sapp_global_val->config.system.instance_name);
 
-	g_mr4_dev_up_handle_set = (struct mr_vdev **)malloc(sizeof(void *) * g_mr4_device_num);
-	g_mr4_dev_down_handle_set = (struct mr_vdev **)malloc(sizeof(void *) * g_mr4_device_num);	
-	g_mr4_sendpath_up_set = (struct mr_sendpath **)malloc(sizeof(void *) * g_mr4_device_num);	
-	g_mr4_sendpath_down_set = (struct mr_sendpath **)malloc(sizeof(void *) * g_mr4_device_num);	
+	g_mr4_dev_up_handle_set = (struct mr_vdev **)SAPP_GLOBAL_ALLOC(sizeof(void *) * g_mr4_device_num);
+	g_mr4_dev_down_handle_set = (struct mr_vdev **)SAPP_GLOBAL_ALLOC(sizeof(void *) * g_mr4_device_num);	
+	g_mr4_sendpath_up_set = (struct mr_sendpath **)SAPP_GLOBAL_ALLOC(sizeof(void *) * g_mr4_device_num);	
+	g_mr4_sendpath_down_set = (struct mr_sendpath **)SAPP_GLOBAL_ALLOC(sizeof(void *) * g_mr4_device_num);	
 
 	max_send_queue_num = sapp_global_val->config.cpu.worker_threads + sapp_global_val->config.cpu.send_only_threads_max_num;
 	
@@ -1218,6 +1214,30 @@ void marsio_dl_io_run(void)
 		assert(0 == ret);
 		sapp_global_val->individual_fixed.thread_obtain_id[i] = marsio4_work_tid[i];
 	}
+}
+
+void marsio_dl_io_destroy(void)
+{
+	int i;
+
+	for(i = 0; i < g_mr4_device_num; i++){	
+		ptr_marsio_close_device(g_mr4_dev_up_handle_set[i]);
+		ptr_marsio_sendpath_destory(g_mr4_sendpath_up_set[i]);
+		if(NET_CONN_SERIAL_2CARD == g_marsio4_topology_mode){	
+			ptr_marsio_close_device(g_mr4_dev_down_handle_set[i]);
+			ptr_marsio_sendpath_destory(g_mr4_sendpath_down_set[i]);
+		}
+	}
+
+	SAPP_GLOBAL_FREE(g_mr4_dev_up_handle_set);
+	SAPP_GLOBAL_FREE(g_mr4_sendpath_up_set);
+	SAPP_GLOBAL_FREE(g_mr4_dev_down_handle_set);
+	SAPP_GLOBAL_FREE(g_mr4_sendpath_down_set);
+
+	SAPP_GLOBAL_FREE(g_mario4_io_handle);
+	g_mr4_device_num = 0;
+
+	ptr_marsio_destory(sapp_marsio4_instance);
 }
 
 

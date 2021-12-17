@@ -454,7 +454,7 @@ struct __sapp_gval_individual_volatile{
 	volatile time_t current_time;
 	volatile long long current_time_ms;
 	volatile int current_state; /* refer to enum sapp_state_t  */
-	volatile int destory_env_done;
+	volatile int recv_signal_SIGTERM; /* 收到SIGTERM信号, 优雅的退出 */
 	sapp_mem_used_stat_t mem_used_stat; /* 全局变量或初始化就不变的内存 */
 }__attribute__ ((aligned (64)));
 typedef struct __sapp_gval_individual_volatile sapp_gval_individual_volatile_t;

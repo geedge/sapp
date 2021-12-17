@@ -416,7 +416,6 @@ enum sapp_state_t sapp_get_current_state(void);
 extern struct streaminfo_private *copy_stream_info_to_heap(int mem_used_type, const struct streaminfo_private *stack_stream, int reverse);
 enum addr_type_t addr_type_abbreviation_pton(const char *addr_type_abbreviation);
 const char *addr_type_abbreviation_ntop(enum addr_type_t addrtype);
-int sapp_identify_broad_multicast_init(void);
 
 int plugin_manage_init(void);
 void plugin_manage_destroy(void);

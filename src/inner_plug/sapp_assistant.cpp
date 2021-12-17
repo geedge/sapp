@@ -32,33 +32,6 @@ extern int MESA_get_dev_mac(const char *device, unsigned char mac[6]);
 void * (*dl_marsio_buff_ctrlzone)(void *m, uint8_t id);
 extern void * (*ptr_marsio_buff_ctrlzone)(marsio_buff_t *m, uint8_t id);
 
-int sapp_identify_broad_multicast_init(void)
-{
-#if 0
-	void *io_lib_handle;
-	
-	if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-#if LINK_MODE_DYNAMIC	
-		io_lib_handle = dlopen("./platform_lib/packet_io_marsio.so", RTLD_NOW | RTLD_GLOBAL);
-		if(NULL == io_lib_handle){
-			printf("\033[1;31;40m[Error]dlopen %s error, %s!\033[0m\n", "./platform_lib/packet_io_marsio.so", dlerror());
-			return -1;
-		}	
-		dl_marsio_buff_ctrlzone = (void * (*)(void *m, uint8_t id))dlsym(io_lib_handle, "marsio_buff_ctrlzone");
-		if(NULL == dl_marsio_buff_ctrlzone){
-			printf("\033[1;31;40m[Error]dlsym %s error, %s!\033[0m\n", "marsio_buff_ctrlzone", dlerror());
-			return -1;
-		}
-
-		/* 此处不要用dlclose(), 因为后续还要用dlopen打开packet_io_marsio.so,  */
-#else
-	dl_marsio_buff_ctrlzone = (void * (*)(void *m, uint8_t id))ptr_marsio_buff_ctrlzone;
-#endif
-	}
-#endif
-
-	return 0;
-}
 
 /* 识别是否隧道内部数据包           , 隧道内的包应该无条件转发/回注        */
 int sapp_identify_tunnel_inner_pkt(const raw_pkt_t *raw_pkt)

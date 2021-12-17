@@ -303,6 +303,8 @@ extern int marsio_dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun);
 extern int marsio_dl_io_get_version(void);
 extern void * marsio_dl_io_device_alias(unsigned int target_id, char *device_args);
 extern int marsio_dl_io_send_only_thread_init(void);
+extern void marsio_dl_io_destroy(void);
+
 /********************** marsio funcitons for dynamic link *********************/
 
 /********************** tun funcitons for dynamic link ***********************/

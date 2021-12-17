@@ -36,32 +36,23 @@ volatile unsigned long g_sapp_destory_env_done_state;
 static volatile unsigned long g_destory_env_per_thread_running_state[MAX_THREAD_NUM];
 
 
-static void signal_user_handler(int signo)
-{
-	//time_t last_time = time(NULL);
-	//while(time(NULL) < last_time + 10); /* wait 10 second, for DPDK IO module detect this process is not running */
-	signal(signo, SIG_DFL);
-	kill(getpid(), signo);
-}
-
 static void signal_hup_handler(int signo)
 {
 	printf("SIGHUP recviced!\n");
 	MESA_handle_runtime_log_reconstruction(NULL);
 }
 
+
+static void signal_term_handler(int signo)
+{
+	printf("SIGTERM recviced!\n");
+	sapp_global_val->individual_volatile->recv_signal_SIGTERM = 1;
+}
+
 static void signal_take_over(void)
 {
-	sapp_config_t *pconfig = &sapp_global_val->config;
 	signal(SIGHUP, signal_hup_handler);
-	if (0 == sapp_global_single.signal_take_over_sw && 0 == pconfig->tools.signal_handler.signal)
-	{
-		return;
-	}
-
-	signal(SIGUSR1, signal_user_handler);
-	signal(SIGUSR2, signal_user_handler);
-	//signal(pconfig->tools.signal_handler.signal, signal_handler);
+	signal(SIGTERM, signal_term_handler);
 }
 
 
@@ -93,10 +84,66 @@ static void sapp_wait_for_required_thread_starting(void)
 	}
 }
 
+static unsigned long long sapp_calc_line_pps(void)
+{
+	int i;
+	unsigned long long cur_count, pps_count;
+	static unsigned long long history_count = 0;
+
+	cur_count = 0;
+	for(i=0;i<g_packet_io_thread_num;i++){
+		cur_count += sapp_global_val->mthread_volatile[i]->sys_stat.count[SAPP_STAT_RCV_IPV4];
+		cur_count += sapp_global_val->mthread_volatile[i]->sys_stat.count[SAPP_STAT_RCV_IPV6];
+	}
+	
+	history_count = cur_count;
+	sleep(2);
+
+	cur_count = 0;
+	for(i=0;i<g_packet_io_thread_num;i++){
+		cur_count += sapp_global_val->mthread_volatile[i]->sys_stat.count[SAPP_STAT_RCV_IPV4];
+		cur_count += sapp_global_val->mthread_volatile[i]->sys_stat.count[SAPP_STAT_RCV_IPV6];
+	}
+
+	pps_count = cur_count - history_count;
+
+	return pps_count;
+}
+
+#include "stream_inc/gdev_keepalive.h"
+static void sapp_graceful_exit(void)
+{
+	if(0 == sapp_global_val->individual_volatile->recv_signal_SIGTERM){
+		return;
+	}
+
+	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	 && (OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)){
+		SAPP_TLV_T stop_keepalive_opt = {};
+		stop_keepalive_opt.type = GDEV_KEEPALIVE_OPT_GLOBAL_SWITCH;
+		stop_keepalive_opt.length = sizeof(int);
+		stop_keepalive_opt.int_value = 0;
+		gdev_keepalive_set_opt(&stop_keepalive_opt);
+		sapp_runtime_log(RLOG_LV_FATAL, "recv SIGTERM, for inline and vxlan mode, stop keepalive and waiting for all packet have been processed!\n");
+		
+		/* 关闭了保活, 会有几十毫秒的延时, inline设备才会真正认为功能端不在线了, 
+		   如果立刻结束进程, 很多流会丢包,
+		   一直检测, 直到没有数据包为止. 
+		*/
+		while(sapp_calc_line_pps() != 0);
+	}
+	
+	sapp_runtime_log(RLOG_LV_FATAL, "recv SIGTERM, graceful exit!\n");
+	libsapp_destroy_env();
+	_exit(0);
+}
+
+
 static void *sapp_monitor_thread(void *args)
 {
-	while(sapp_get_current_state() == SAPP_STATE_PROCESSING){
-		usleep(1000);
+	while(sapp_get_current_state() <= SAPP_STATE_PROCESSING){
+		sapp_graceful_exit();
+		usleep(10000);
 	}
 
 	libsapp_destroy_env();
@@ -182,8 +229,6 @@ static void wait_for_all_io_threads(void)
 	for(tseq = 0; tseq < g_packet_io_thread_num; tseq++){
 		pthread_join(sapp_global_val->individual_fixed.thread_obtain_id[tseq], NULL);
 	}
-
-	pthread_join(sapp_global_val->individual_fixed.thread_timer_event_id, NULL);
 
 	sapp_timer_destroy(sapp_global_val->individual_fixed.sapp_standalone_timer);
 }
