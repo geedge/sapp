@@ -76,7 +76,7 @@ int plugin_load_protocol(void)
 *****************************************************************************/
 void init_pluginfo_elem_pro(stProtocolPlugInfo** protocol_plug_info)
 {
-	stProtocolPlugInfo* plug_info = (stProtocolPlugInfo*)malloc(sizeof(stProtocolPlugInfo));
+	stProtocolPlugInfo* plug_info = (stProtocolPlugInfo*)SAPP_GLOBAL_ALLOC(sizeof(stProtocolPlugInfo));
 	memset(plug_info,0,sizeof(stProtocolPlugInfo));
 
 	*protocol_plug_info = plug_info;

@@ -1959,10 +1959,11 @@ extern stProtocolPlugInfo* g_protocol_plug_info;
 
 void plugctrl_destroy_all_plug(void)
 {
-	stBusinessPlugInfo *plug_info;
-	stProtocolPlugInfo *pro_plug_info;
+	stBusinessPlugInfo *plug_info, *plug_next;
+	stProtocolPlugInfo *pro_plug_info, *pro_plug_next;
 	int i;
 
+	/***** call all plugins destory callback fun *****/
 	plug_info = g_platform_plug_info;
 	while(plug_info){
 		if(plug_info->fun_destroy){
@@ -1987,12 +1988,41 @@ void plugctrl_destroy_all_plug(void)
 		plug_info = plug_info->next;
 	}	
 
+	/***** dlclose all plugins library handle  *****/
+	plug_info = g_business_plug_info;
+	while(plug_info){
+		dlclose(plug_info->filepoint);
+		plug_next = plug_info->next;
+		SAPP_GLOBAL_FREE(plug_info);
+		plug_info = plug_next;
+	}	
+	g_business_plug_info = NULL;
+	
+	pro_plug_info = g_protocol_plug_info;
+	while(pro_plug_info){
+		dlclose(pro_plug_info->filepoint);
+		pro_plug_next = pro_plug_info->next;
+		SAPP_GLOBAL_FREE(pro_plug_info);
+		pro_plug_info = pro_plug_next;
+	}	
+	g_protocol_plug_info = NULL;
+	
+	plug_info = g_platform_plug_info;
+	while(plug_info){
+		dlclose(plug_info->filepoint);
+		plug_next = plug_info->next;
+		SAPP_GLOBAL_FREE(plug_info);
+		plug_info = plug_next;
+	}	
+	g_platform_plug_info = NULL;
+
  	SAPP_GLOBAL_FREE(g_entryname_info->entryname);
  	SAPP_GLOBAL_FREE(g_entryname_info);
 
+	g_plugin_plugid = 0;
+	
 	MESA_destroy_runtime_log_handle(g_plugin_runtime_handle);
 	g_plugin_runtime_handle = NULL;
-
 
 }
 

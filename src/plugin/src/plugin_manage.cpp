@@ -564,6 +564,9 @@ void sapp_plugin_load_state_output(void)
 
 int plugin_manage_init(void)
 {
+	g_plug_global_entry_index = 0;
+	plugin_load_state_num = 0;
+	
 	g_plug_necessary_htable = create_plug_necessary_htable();
 	assert(g_plug_necessary_htable != NULL);
 	
