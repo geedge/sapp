@@ -880,6 +880,10 @@ static void *marsio4_worker(void *arg)
 	return NULL;
 }
 
+static void fake_marsio_buff_set_rehash_index(marsio_buff_t *m, uint32_t hash)
+{
+	return ;
+}
 
 static int marsio_dl_get_function_entry(void)
 {
@@ -988,7 +992,8 @@ static int marsio_dl_get_function_entry(void)
 	ptr_marsio_buff_set_rehash_index = (void (*)(marsio_buff_t *m, uint32_t hash))dlsym(marsio_so_handle, "marsio_buff_set_rehash_index");
 	if(NULL == ptr_marsio_buff_set_rehash_index){
 		printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_rehash_index", ABBR_MARSIO_LIBRARY_FILE);
-		return -1;
+		ptr_marsio_buff_set_rehash_index = fake_marsio_buff_set_rehash_index;
+		//return -1;
 	}
 
 	ptr_marsio_buff_mtod = (char * (*)(marsio_buff_t *m))dlsym(marsio_so_handle, "marsio_buff_mtod");
