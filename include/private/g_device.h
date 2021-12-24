@@ -14,13 +14,42 @@ extern "C" {
 /* 特殊设备使用的保活协议 */
 #define BFD_DEFAULT_PORT	(3784) /* 默认端口 */
 
-#define BFD_MSG_FLAGS_INIT 0x80
-#define BFD_MSG_FLAGS_DOWN 0x40
-#define BFD_MSG_FLAGS_UP 0xc0
+/* State Machine
+                             +--+
+                             |  | UP, ADMIN DOWN, TIMER
+                             |  V
+                     DOWN  +------+  INIT
+              +------------|      |------------+
+              |            | DOWN |            |
+              |  +-------->|      |<--------+  |
+              |  |         +------+         |  |
+              |  |                          |  |
+              |  |               ADMIN DOWN,|  |
+              |  |ADMIN DOWN,          DOWN,|  |
+              |  |TIMER                TIMER|  |
+              V  |                          |  V
+            +------+                      +------+
+       +----|      |                      |      |----+
+   DOWN|    | INIT |--------------------->|  UP  |    |INIT, UP
+       +--->|      | INIT, UP             |      |<---+
+            +------+                      +------+
+*/
+
+#define BFD_MSG_FLAGS_ADMIN_DOWN 0x00
+#define BFD_MSG_FLAGS_DOWN 0x01
+#define BFD_MSG_FLAGS_INIT 0x02
+#define BFD_MSG_FLAGS_UP 0x03
 
 typedef struct{
     unsigned char version_diag;
-    unsigned char flags;
+#if __BYTE_ORDER == __LITTLE_ENDIAN    
+    unsigned char flags:6;
+    unsigned char state:2;
+#elif __BYTE_ORDER == __BIG_ENDIAN    
+    unsigned char state:2;
+    unsigned char flags:6;
+#endif
+
     unsigned char detect_time_multiplier;
     unsigned char length;
     unsigned char my_discriminator[4]; /* 业务号, 猜测? */
