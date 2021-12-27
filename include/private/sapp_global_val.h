@@ -103,6 +103,7 @@ typedef struct{
 	sapp_config_stream_tcp_inject_t inject;
 	unsigned short *well_known_ports_array; /* 用于按data建连接确定server端 */
 	int well_known_ports_array_num;
+	int special_timeout_ratio;
 }sapp_config_stream_tcp_t;
 
 
@@ -113,6 +114,7 @@ typedef struct{
 	int meaningful_statistics_minimum_byte;	
 	unsigned short *well_known_ports_array; /* 用于新建连接确定server端, 比如4001->8000, 实际上是OICQ的C2S方向数据包,之前的版本会被误识别为S2C方向的 */
 	int well_known_ports_array_num;	
+	int special_timeout_ratio;
 }sapp_config_stream_udp_t;
 
 

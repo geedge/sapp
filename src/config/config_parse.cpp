@@ -1824,6 +1824,17 @@ int sapp_parse_config(void)
 
 	/*******************************  STREAM.TCP ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"max", (int *)&pconfig->stream.tcp.max, 50000);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"special_timeout_ratio", (int *)&pconfig->stream.tcp.special_timeout_ratio, 10);
+	if(pconfig->stream.tcp.special_timeout_ratio>100)
+	{
+		pconfig->stream.tcp.special_timeout_ratio = 100;
+	}
+	else if(pconfig->stream.tcp.special_timeout_ratio<0)
+	{
+		pconfig->stream.tcp.special_timeout_ratio = 0;
+	}
+	else
+	;
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"timeout", (int *)&pconfig->stream.tcp.timeout, 60);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"syn_mandatory", (int *)&pconfig->stream.tcp.syn_mandatory, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"reorder_pkt_max", (int *)&pconfig->stream.tcp.reorder_pkt_max, 5);
@@ -1844,6 +1855,17 @@ int sapp_parse_config(void)
 
 	/*******************************  STREAM.UDP ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"max", (int *)&pconfig->stream.udp.max, 5000);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"special_timeout_ratio", (int *)&pconfig->stream.udp.special_timeout_ratio, 20);
+	if(pconfig->stream.udp.special_timeout_ratio>100)
+	{
+		pconfig->stream.udp.special_timeout_ratio = 100;
+	}
+	else if(pconfig->stream.udp.special_timeout_ratio<0)
+	{
+		pconfig->stream.udp.special_timeout_ratio = 0;
+	}
+	else
+	;
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"timeout", (int *)&pconfig->stream.udp.timeout, 60);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"meaningful_statistics_minimum_pkt", (int *)&pconfig->stream.udp.meaningful_statistics_minimum_pkt, 3);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"meaningful_statistics_minimum_byte", (int *)&pconfig->stream.udp.meaningful_statistics_minimum_byte, 5);
@@ -2026,7 +2048,8 @@ static int cfg_value_need_be_check(const sapp_config_check_t *local_cfg_check_ar
 		return 1;
 	}	
 
-	if(this_cfg_check_attr->depend_id >= 1000){		
+	if(this_cfg_check_attr->depend_id >= 1000){
+		
 		depend_cfg_index = cfg_get_index_by_depend_id(this_cfg_check_attr->depend_id);
 
 		if((local_cfg_check_array[depend_cfg_index].cfg_value != NULL) 

@@ -61,6 +61,8 @@ extern sapp_global_t *sapp_global_val;
 #define g_packet_io_thread_num  sapp_global_val->config.cpu.worker_threads
 #define max_udp_stream_num		sapp_global_val->config.stream.udp.max
 #define max_tcp_stream_num		sapp_global_val->config.stream.tcp.max
+#define special_udp_timeout_ratio	sapp_global_val->config.stream.udp.special_timeout_ratio
+#define special_tcp_timeout_ratio	sapp_global_val->config.stream.tcp.special_timeout_ratio
 #define create_link_mode		sapp_global_val->individual_fixed.create_stream_mode
 #define g_iMaxRandVal			sapp_global_val->config.stream.tcp.inject.rst_signature_seed1
 #define g_iRandKey				sapp_global_val->config.stream.tcp.inject.rst_signature_seed2

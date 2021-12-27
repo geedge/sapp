@@ -340,7 +340,11 @@ int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned s
 			if(timeout < udp_reset_time){ /* 必须比全局默认值大, 且不能比之前设置的小 */
 				return -1;
 			}
-			if(sapp_global_mthread[pstream->threadnum].udp_stream_special_timeout_num >= udpstate_num[UDP_TWO_STATE]/5){
+			if(special_udp_timeout_ratio <= 0)
+			{
+				return -2;
+			}
+			if(sapp_global_mthread[pstream->threadnum].udp_stream_special_timeout_num >= udpstate_num[UDP_TWO_STATE]/(100/special_udp_timeout_ratio)){
 				return -2;
 			}
 			if(pstream_pr->timeout == udp_reset_time){ 
@@ -400,7 +404,11 @@ printf("##### serach udp timeout place, %ld.....\n", udp_times++);
 			if(timeout < link_default_nopkt_time){ /* 必须比全局默认值大, 且不能比之前设置的小 */
 				return -1;
 			}		
-			if(sapp_global_mthread[pstream->threadnum].tcp_stream_special_timeout_num >= tcpstate_num[TCP_DATA_STATE]/10){
+			if(special_tcp_timeout_ratio <= 0)
+			{
+				return -2;
+			}
+			if(sapp_global_mthread[pstream->threadnum].tcp_stream_special_timeout_num >= tcpstate_num[TCP_DATA_STATE]/(100/special_tcp_timeout_ratio)){
 				return -2;
 			}		
 			if(pstream_pr->timeout == link_default_nopkt_time){ 
