@@ -17,7 +17,7 @@ sapp_module_test:
   allow_failure: true
   script:
     - yum makecache
-    - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb 
+    - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb snappy
     - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini libMESA_jump_layer
     - yum install -y sapp gtest_sapp benchmark_pcap sapp_benchmark
     - ls -l /opt/MESA/lib
@@ -33,21 +33,33 @@ sapp_module_test:
     - cp /builds/MESA_Platform/sapp/build/test/libsapp_devel.so /opt/MESA/lib
     - ldconfig
     - cd /home/mesasoft/sapp_run
-    - ulimit -c 0
-    - ./sapp -r /home/mesasoft/benchmark_pcap/tcp/tcp_simple.pcap
     - ldd gtest_sapp_v4
     - ulimit -c unlimited
-    - ./gtest_sapp_v4 || FAILED=true
-    - find . -name "core*" | head -n 1 | xargs -I {} ln -sf {} core
-    - echo "bt" > gdb_analyze_core.cmd
-    - echo "f 1"  >> gdb_analyze_core.cmd
-    - echo "p i"  >> gdb_analyze_core.cmd
-    - echo "p g_plug_global_entry[i]" >> gdb_analyze_core.cmd
-    - echo "quit" >> gdb_analyze_core.cmd 
-    - gdb ./gtest_sapp_v4 core --command=./gdb_analyze_core.cmd    
-  artifacts:
-    paths:
-      - /home/mesasoft/sapp_run/core.*     
+    - ./gtest_sapp_v4 -f ipv4.*
+    - ./gtest_sapp_v4 -f ipv6.*
+    - ./gtest_sapp_v4 -f udp.*
+    - ./gtest_sapp_v4 -f tcpall.*
+    - ./gtest_sapp_v4 -f tcp.*
+    - ./gtest_sapp_v4 -f control.*
+    - ./gtest_sapp_v4 -f project.*
+    - ./gtest_sapp_v4 -f stream_bridge.*
+    - ./gtest_sapp_v4 -f tunnel.*
+    - ./gtest_sapp_v4 -f appstate.*
+    - ./gtest_sapp_v4 -f timer.*
+    - ./gtest_sapp_v4 -f inject.*
+    - ./gtest_sapp_v4 -f plug_ctrl.*
+    - ./gtest_sapp_v4 -f jump_layer.*
+    - ./gtest_sapp_v4 -f inline_mode.*
+    - ./gtest_sapp_v4 -f asymmetric.*
+    - ./gtest_sapp_v4 -f proxy.*
+    - ./gtest_sapp_v4 -f fake_marsio.*
+    - ./gtest_sapp_v4 -f transparent.*
+    - ./gtest_sapp_v4 -f hybrid.*
+    - ./gtest_sapp_v4 -f pkt_dump.*
+    - ./gtest_sapp_v4 -f benchmark_drop.*
+    - ./gtest_sapp_v4 -f benchmark_forward.*
+    - ./gtest_sapp_v4 -f benchmark_inject.*
+    
   tags:
   - share    
   
