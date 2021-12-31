@@ -2632,7 +2632,8 @@ static int deal_tcp_stream_dup_pkt_check(int tid, struct streaminfo_private *pst
 		is_dup_pkt = sapp_dup_pkt_identify_tcp(tid, pstream_pr, this_iphdr, this_tcphdr, need_add_bloom_filter);
 	}
 	
-	return is_dup_pkt; 
+	
+return is_dup_pkt; 
 
 }
 
@@ -2802,6 +2803,13 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		}
 #endif		
 		//return DROP; /* 2019-11-20 lijia modify, kill_tcp后默认行为不是DROP, 只发送rst包, 是否丢包取决于drop_stream_flag */
+	}
+
+	if(unlikely(pdetail_pr->drop_stream_flag != 0)){
+		sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, has been set drop flag, curdir:%d, return DROP.", 
+						printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+		lrustream(pindex_tcp);
+		return DROP;
 	}
 
 	/* 
