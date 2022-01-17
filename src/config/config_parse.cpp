@@ -1792,6 +1792,8 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.external.interface", (char *)"name", pconfig->packet_io.external.interface.name, NAME_MAX, "");
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"enabled", &pconfig->packet_io.polling_enabled, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"polling_priority", &pconfig->packet_io.polling_priority, 100);
+	
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"infinite_loop_enabled", &pconfig->packet_io.infinite_loop_enabled, 0);
 
 	/**  duplicate packet config **/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.original", (char *)"original_ipv4_tcp_enabled", &pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp, 0);

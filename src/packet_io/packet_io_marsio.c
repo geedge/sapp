@@ -843,7 +843,7 @@ static void *marsio4_worker(void *arg)
 	   频繁调用stream_process_polling()等函数, 此处先在函数外部判断一下是否需要调用.
 	*/
 	int polling_enabled = sapp_global_val->config.packet_io.polling_enabled;
-	
+	int infinite_loop_enabled = sapp_global_val->config.packet_io.infinite_loop_enabled;
 	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state){	
 		if(marsio4_process_packet(tseq, &raw_pkt) > 0){
 			rcv_pkt_tims++;
@@ -870,7 +870,10 @@ static void *marsio4_worker(void *arg)
 		}
 		
 		if(total_call_times >= 100){
-			marsio4_sleep(total_call_times, rcv_pkt_tims + polling_work_times);
+			if(likely(infinite_loop_enabled == 0))
+			{
+				marsio4_sleep(total_call_times, rcv_pkt_tims + polling_work_times);
+			}
 			total_call_times = 0;
 			rcv_pkt_tims = 0;
 			polling_work_times = 0;

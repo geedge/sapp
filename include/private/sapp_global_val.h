@@ -287,6 +287,7 @@ typedef struct{
 
 	sapp_under_ddos_config_t under_ddos_config;
 	int not_exit_for_dumpfile_mode; /* 读包结束后不退出进程, 方便插件自测试, 多次循环读取多个包 */
+	int infinite_loop_enabled;
 }sapp_config_packet_io_t;
 
 
