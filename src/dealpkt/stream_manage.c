@@ -2808,7 +2808,9 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 		                           sizeof(struct ethhdr));
 						}
 					}else{
-						sapp_runtime_log(RLOG_LV_INFO, "update_opposite_addr_info() error, current addrtype is ethernet, but pstream->addrtype is not ethernet!");
+						/* 继续在堆上streaminfo结构上查找 */
+						return update_opposite_addr_info(top_stream_pr, (struct streaminfo_private *) pstream_pr->pfather_pr,
+													(struct streaminfo_private *) p_stack, cur_dir);	
 					}
 				}
 			break;
