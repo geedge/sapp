@@ -120,8 +120,7 @@ develop_build_debug:
     PLATFORM_MODE: INLINE
     PACKAGE: 1
     UPLOAD: 1
-    ASAN_OPTION: ADDRESS
-    MEM_POOL: TCMALLOC
+    ASAN_OPTION: "OFF"
     TESTING_VERSION_BUILD: 1
     PULP3_REPO_NAME: platform-testing-x86_64.el7
     PULP3_DIST_NAME: platform-testing-x86_64.el7
@@ -146,7 +145,6 @@ develop_build_release:
     PACKAGE: 1
     UPLOAD: 1
     ASAN_OPTION: "OFF"
-    MEM_POOL: TCMALLOC
     TESTING_VERSION_BUILD: 1
     PULP3_REPO_NAME: platform-testing-x86_64.el7
     PULP3_DIST_NAME: platform-testing-x86_64.el7
