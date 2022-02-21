@@ -275,7 +275,6 @@ void packet_io_under_ddos_destroy(void)
 	}
 
 	cpu_limit_destroy(sapp_global_val->individual_fixed.under_ddos_handle);	
-	SAPP_GLOBAL_FREE(sapp_global_val->individual_fixed.under_ddos_handle);
 }
 
 #ifdef __cplusplus
