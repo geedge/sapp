@@ -58,7 +58,8 @@ sapp_module_test:
     - ./gtest_sapp_v4 -f pkt_dump.*
     - ./gtest_sapp_v4 -f benchmark_drop.*
     - ./gtest_sapp_v4 -f benchmark_forward.*
-    - ./gtest_sapp_v4 -f benchmark_inject.*
+    - ./gtest_sapp_v4 -f benchmark_inject.tcp*
+    - ./gtest_sapp_v4 -f benchmark_inject.inline_same_dir
     
   tags:
   - share    
