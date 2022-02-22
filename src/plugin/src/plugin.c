@@ -685,7 +685,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	else
 	{
 		//业务层插件符号表优先调用自己符号表
-		filepoint = dlopen(buf_sofilename,RTLD_LAZY|RTLD_DEEPBIND);
+		filepoint = dlopen(buf_sofilename,RTLD_LAZY|RTLD_DEEPBIND|RTLD_LOCAL);
 	}
 
 	if( filepoint == NULL ) 
