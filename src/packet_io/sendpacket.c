@@ -2444,7 +2444,11 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			const struct layer_addr_vxlan_private *vxaddr_pr = (struct layer_addr_vxlan_private *)stream_pr->stream_public.addr.paddr;
 			buf -= vxaddr_pr->actual_total_len;
 			this_layer_len = vxaddr_pr->actual_total_len;
-			build_net_layer_vxlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt, vxaddr_pr);
+			ret = build_net_layer_vxlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt, vxaddr_pr);
+			if(ret < 0){ 
+				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_vxlan() error!\n", printaddr(&top_stream->addr, stream->threadnum));
+				return -1;
+			}
 			carry_layer_type = ADDR_TYPE_VXLAN;		
 		}
 		break;
