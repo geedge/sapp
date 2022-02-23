@@ -34,7 +34,7 @@ sapp_module_test:
     - ldconfig
     - cd /home/mesasoft/sapp_run
     - ldd gtest_sapp_v4
-    - sed -i '14 i__log_test_sapp_benchmark_log.fatal    >stdout; other' etc/sapp_log.conf
+    - sed -i '14 i__log_test_sapp_benchmark_log.debug    >stdout; other' etc/sapp_log.conf
     - ulimit -c unlimited
     - ./gtest_sapp_v4 -f ipv4.*
     - ./gtest_sapp_v4 -f ipv6.*
