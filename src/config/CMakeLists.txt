@@ -17,7 +17,8 @@ add_definitions(-DPLATFORM_NSDPF_PAPP=1)
 add_definitions(-fPIC)
 
 #execute_process(COMMAND  echo "" > sapp.toml.hex.array.c ${CMAKE_SOURCE_DIR}/src/config)
-execute_process(COMMAND  xxd -i ${CMAKE_SOURCE_DIR}/bin/etc/sapp.toml  ${CMAKE_SOURCE_DIR}/src/config/sapp.toml.hex.array.c
-               COMMAND   sh  ${CMAKE_SOURCE_DIR}/src/config/replace.sh  ${CMAKE_SOURCE_DIR}/src/config/sapp.toml.hex.array.c)
+execute_process(COMMAND  xxd -i ${CMAKE_SOURCE_DIR}/bin/etc/sapp.toml  ${CMAKE_BINARY_DIR}/src/config/sapp.toml.hex.array.c)
+execute_process(COMMAND  bash "-c"  "sed -i '1 s/.*/const unsigned char _sapp_toml_sample_file_image[] = {/' ${CMAKE_BINARY_DIR}/src/config/sapp.toml.hex.array.c")
+execute_process(COMMAND  bash "-c"  "sed -i '$ s/.*/const int _sapp_toml_sample_file_image_len = sizeof(_sapp_toml_sample_file_image);/' ${CMAKE_BINARY_DIR}/src/config/sapp.toml.hex.array.c")
 
-add_library(config cmd_args.c config_parse.cpp sapp.toml.hex.array.c)
+add_library(config cmd_args.c config_parse.cpp ${CMAKE_BINARY_DIR}/src/config/sapp.toml.hex.array.c)
