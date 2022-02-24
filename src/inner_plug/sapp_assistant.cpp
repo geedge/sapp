@@ -1279,6 +1279,11 @@ static int sapp_fs2_init(void)
 
 void sapp_fs2_destroy(void)
 {
+	if(sapp_global_val->config.profiling.log.prometheus.enabled==1)
+	{
+		FS_library_destroy();
+	}
+
 	if(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle){
 		FS_stop(&sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle);
 		sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle = NULL;
