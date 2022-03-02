@@ -1416,7 +1416,10 @@ void packet_io_exit(void)
 
 	global_sapp_timer_destroy();
 	gdev_keepalive_plug_destroy();	
-	plugctrl_destroy_all_plug();
+	if(sapp_global_val->config.packet_io.destroy_all_plug_enabled == 1)
+	{
+		plugctrl_destroy_all_plug();
+	}
 	sendpacket_destroy(g_packet_io_thread_num);
 	packet_io_lib_destroy();
 	packet_io_device_alias_destroy();

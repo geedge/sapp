@@ -70,6 +70,7 @@
     ##extract_linkdir_from_mac_in_mirror_mode="ether[4]:0"  ## for Xj example
     extract_linkdir_from_mac_in_mirror_mode=""
    
+    destroy_all_plug_enabled = 1
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]
     mode=mirror
