@@ -1785,7 +1785,8 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"dumpfile_sleep_time_before_exit", &pconfig->packet_io.dumpfile_sleep_time_before_exit, 1);
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"extract_linkdir_from_mac_in_mirror_mode", pconfig->packet_io.extract_linkdir_from_mac_sntax_raw_string, sizeof(pconfig->packet_io.extract_linkdir_from_mac_sntax_raw_string), "");
 	
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"destroy_all_plug_enabled", (int *)&pconfig->packet_io.destroy_all_plug_enabled, 1);
+	MESA_load_profile_short_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"destroy_all_plug_enabled", &pconfig->packet_io.destroy_all_plug_enabled, 1);
+	MESA_load_profile_short_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"infinite_loop_enabled", &pconfig->packet_io.infinite_loop_enabled, 0);
 
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.depolyment", (char *)"mode", pconfig->packet_io.depolyment_mode_str, NAME_MAX, "mirror");
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.internal.interface", (char *)"type", pconfig->packet_io.internal.interface.type_str, NAME_MAX, "pcap");
@@ -1795,7 +1796,6 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"enabled", &pconfig->packet_io.polling_enabled, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"polling_priority", &pconfig->packet_io.polling_priority, 100);
 	
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"infinite_loop_enabled", (int *)&pconfig->packet_io.infinite_loop_enabled, 0);
 
 	/**  duplicate packet config **/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.original", (char *)"original_ipv4_tcp_enabled", &pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp, 0);

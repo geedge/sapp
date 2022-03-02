@@ -1957,7 +1957,7 @@ extern stBusinessPlugInfo* g_platform_plug_info;
 extern stBusinessPlugInfo* g_business_plug_info;
 extern stProtocolPlugInfo* g_protocol_plug_info;
 
-void plugctrl_destroy_all_plug(void)
+void plugctrl_destroy_all_plug()
 {
 	stBusinessPlugInfo *plug_info, *plug_next;
 	stProtocolPlugInfo *pro_plug_info, *pro_plug_next;
@@ -1965,29 +1965,34 @@ void plugctrl_destroy_all_plug(void)
 
 	/***** call all plugins destory callback fun *****/
 	plug_info = g_platform_plug_info;
-	while(plug_info){
-		if(plug_info->fun_destroy){
+	while (plug_info)
+	{
+		if (plug_info->fun_destroy)
+		{
 			plug_info->fun_destroy();
 		}
 		plug_info = plug_info->next;
 	}
 
 	pro_plug_info = g_protocol_plug_info;
-	while(pro_plug_info){
-		if(pro_plug_info->fun_destroy){
+	while (pro_plug_info)
+	{
+		if (pro_plug_info->fun_destroy)
+		{
 			pro_plug_info->fun_destroy();
 		}
 		pro_plug_info = pro_plug_info->next;
 	}
 
 	plug_info = g_business_plug_info;
-	while(plug_info){
-		if(plug_info->fun_destroy){
+	while (plug_info)
+	{
+		if (plug_info->fun_destroy)
+		{
 			plug_info->fun_destroy();
 		}
 		plug_info = plug_info->next;
-	}	
-
+	}
 	/***** dlclose all plugins library handle  *****/
 	plug_info = g_business_plug_info;
 	while(plug_info){
