@@ -404,13 +404,7 @@ static void sapp_watch_dog(void)
 	}
 	
 	/* 需要在sapp.servie 里加入配置:   WatchdogSec=10s */
-    if(sd_watchdog_enabled(0, NULL))
-    {
-	if(sapp_global_val->individual_volatile->current_state == SAPP_STATE_READY_TO_EXIT)
-	{
-        	sd_notify(0, check_result);
-	}
-	else
+	if (sd_watchdog_enabled(0, NULL))
 	{
 		for (thread_index = 0; thread_index < sapp_global_val->config.cpu.worker_threads; thread_index++)
 		{
@@ -432,7 +426,6 @@ static void sapp_watch_dog(void)
 
 		sd_notify(0, check_result);
 	}
-    }
     return;
 }
 
@@ -457,8 +450,12 @@ void *sapp_time_event_thread(void *arg)
 	}
 
 	update_packet_io_status_sw = 1;
-	
-	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state || SAPP_STATE_READY_TO_EXIT == sapp_global_val->individual_volatile->current_state)
+	if(SAPP_STATE_READY_TO_EXIT == sapp_global_val->individual_volatile->current_state)
+	{
+		sd_notify(0, "WATCHDOG_USEC=600000000");
+		return;
+	}
+	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state)
 	{
 		ABBR_CURRENT_TIME = time(NULL);
 		/*
