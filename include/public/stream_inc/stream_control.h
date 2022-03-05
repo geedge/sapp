@@ -204,6 +204,7 @@ enum sapp_state_t{
 	SAPP_STATE_PKT_IO_INITED,		
 	SAPP_STATE_PROCESSING,      /* 8 */
 	SAPP_STATE_READY_TO_EXIT,   /* 9,  pcap dumpfile mode, or recv custom signal */
+	SAPP_STATE_EXIT,
 };
 
 

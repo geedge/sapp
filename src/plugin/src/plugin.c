@@ -1963,12 +1963,14 @@ void plugctrl_destroy_all_plug()
 	stProtocolPlugInfo *pro_plug_info, *pro_plug_next;
 	int i;
 
+	sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, begin destory all plugin !");
 	/***** call all plugins destory callback fun *****/
 	plug_info = g_platform_plug_info;
 	while (plug_info)
 	{
 		if (plug_info->fun_destroy)
 		{
+			sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, platform, call [%s] destroy", plug_info->plugname);
 			plug_info->fun_destroy();
 		}
 		plug_info = plug_info->next;
@@ -1979,6 +1981,7 @@ void plugctrl_destroy_all_plug()
 	{
 		if (pro_plug_info->fun_destroy)
 		{
+			sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, protocol, call [%s] destroy", pro_plug_info->plugname);
 			pro_plug_info->fun_destroy();
 		}
 		pro_plug_info = pro_plug_info->next;
@@ -1989,13 +1992,17 @@ void plugctrl_destroy_all_plug()
 	{
 		if (plug_info->fun_destroy)
 		{
+			sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, business, call [%s] destroy", plug_info->plugname);
 			plug_info->fun_destroy();
 		}
 		plug_info = plug_info->next;
 	}
+
+	sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, begin dlcose all plugin !");
 	/***** dlclose all plugins library handle  *****/
 	plug_info = g_business_plug_info;
 	while(plug_info){
+		sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, business, dlcose [%s]", plug_info->plugname);
 		dlclose(plug_info->filepoint);
 		plug_next = plug_info->next;
 		SAPP_GLOBAL_FREE(plug_info);
@@ -2005,6 +2012,7 @@ void plugctrl_destroy_all_plug()
 	
 	pro_plug_info = g_protocol_plug_info;
 	while(pro_plug_info){
+		sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, protocol, dlcose [%s]", pro_plug_info->plugname);
 		dlclose(pro_plug_info->filepoint);
 		pro_plug_next = pro_plug_info->next;
 		SAPP_GLOBAL_FREE(pro_plug_info);
@@ -2014,6 +2022,7 @@ void plugctrl_destroy_all_plug()
 	
 	plug_info = g_platform_plug_info;
 	while(plug_info){
+		sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, platform, dlcose [%s]", plug_info->plugname);
 		dlclose(plug_info->filepoint);
 		plug_next = plug_info->next;
 		SAPP_GLOBAL_FREE(plug_info);
@@ -2028,6 +2037,7 @@ void plugctrl_destroy_all_plug()
 	
 	MESA_destroy_runtime_log_handle(g_plugin_runtime_handle);
 	g_plugin_runtime_handle = NULL;
+	sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, finish !");
 
 }
 

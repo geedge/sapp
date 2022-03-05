@@ -45,7 +45,7 @@ static void signal_hup_handler(int signo)
 
 static void signal_term_handler(int signo)
 {
-	printf("SIGTERM recviced!\n");
+	printf("signal_term_handler, SIGTERM recviced!\n");
 	sapp_global_val->individual_volatile->recv_signal_SIGTERM = 1;
 }
 
@@ -117,6 +117,8 @@ static void sapp_graceful_exit(void)
 		return;
 	}
 
+	sapp_runtime_log(RLOG_LV_FATAL, "graceful_exit begin!");
+
 	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
 	 && (OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)){
 		SAPP_TLV_T stop_keepalive_opt = {};
@@ -124,7 +126,7 @@ static void sapp_graceful_exit(void)
 		stop_keepalive_opt.length = sizeof(int);
 		stop_keepalive_opt.int_value = 0;
 		gdev_keepalive_set_opt(&stop_keepalive_opt);
-		sapp_runtime_log(RLOG_LV_FATAL, "recv SIGTERM, for inline and vxlan mode, stop keepalive and waiting for all packet have been processed!\n");
+		sapp_runtime_log(RLOG_LV_FATAL, "graceful_exit, for inline and vxlan mode, stop keepalive and waiting for all packet have been processed!");
 		
 		/* 关闭了保活, 会有几十毫秒的延时, inline设备才会真正认为功能端不在线了, 
 		   如果立刻结束进程, 很多流会丢包,
@@ -133,8 +135,9 @@ static void sapp_graceful_exit(void)
 		while(sapp_calc_line_pps() != 0);
 	}
 	
-	sapp_runtime_log(RLOG_LV_FATAL, "recv SIGTERM, graceful exit!\n");
+	sapp_runtime_log(RLOG_LV_FATAL, "graceful_exit clear keepalive done, begin libsapp_destroy_env!");
 	libsapp_destroy_env();
+	printf("sapp_graceful_exit end, call exit() !\n");
 	_exit(0);
 }
 
@@ -146,6 +149,7 @@ static void *sapp_monitor_thread(void *args)
 		usleep(10000);
 	}
 
+	sapp_runtime_log(RLOG_LV_FATAL, "sapp_monitor_thread  begin libsapp_destroy_env!\n");
 	libsapp_destroy_env();
 
 	return NULL;
@@ -264,7 +268,7 @@ void libsapp_destroy_env(void)
 		如果不做同步控制, 就double free了!!
 		此处靠引用计数控制一下先后逻辑顺序.
 	*/
-	
+	sapp_runtime_log(RLOG_LV_FATAL, "libsapp_destroy_env begin, try to sync exit state !");	
 	if(MESA_ATOMIC_INC(g_sapp_destory_env_running_state) != 1){ 
 		/* 初始化时是0, INC后不是1, 说明至少有另一个线程正在做destroy操作, 阻塞等待, 直到结束为止 */
 		MESA_ATOMIC_DEC(g_sapp_destory_env_running_state);
@@ -284,9 +288,15 @@ void libsapp_destroy_env(void)
 		exit_process = 1;
 	}
 
+	sapp_runtime_log(RLOG_LV_INFO, "libsapp_destroy_env excuting, set SAPP_STATE_READY_TO_EXIT !");	
 	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
+
+	sapp_runtime_log(RLOG_LV_INFO, "libsapp_destroy_env excuting, call packet_io_stop() !");	
 	packet_io_stop();
+	
+	sapp_runtime_log(RLOG_LV_INFO, "libsapp_destroy_env excuting, call wait_for_all_io_threads() !");	
 	wait_for_all_io_threads();
+	sapp_runtime_log(RLOG_LV_INFO, "libsapp_destroy_env excuting, call packet_io_exit() !");	
 	packet_io_exit();
 
 	/* 所有资源都free了, 减去引用计数 */
@@ -294,6 +304,7 @@ void libsapp_destroy_env(void)
 
 	MESA_ATOMIC_SET(g_sapp_destory_env_done_state, SAPP_DESTROY_DONE_FLAG);	
 	if(exit_process){
+		printf("libsapp_destroy_env end, call exit() !\n");	
 		exit(0);
 	}	
 }

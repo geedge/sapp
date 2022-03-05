@@ -1414,39 +1414,64 @@ void packet_io_exit(void)
 		SAPP_GLOBAL_FREE(g_send_buf_pool[i]);
 	}	
 
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call global_sapp_timer_destroy()!");
 	global_sapp_timer_destroy();
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call gdev_keepalive_plug_destroy()!");
 	gdev_keepalive_plug_destroy();	
 	if(sapp_global_val->config.packet_io.destroy_all_plug_enabled == 1)
 	{
+		sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call plugctrl_destroy_all_plug()!");
 		plugctrl_destroy_all_plug();
 	}
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call sendpacket_destroy()!");
 	sendpacket_destroy(g_packet_io_thread_num);
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call packet_io_lib_destroy()!");
 	packet_io_lib_destroy();
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call packet_io_device_alias_destroy()!");
 	packet_io_device_alias_destroy();
 
-	sapp_log_handle_destroy();
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call sapp_fs2_destroy()!");
 	sapp_fs2_destroy();
+
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call packet_io_under_ddos_destroy()!");
 	packet_io_under_ddos_destroy();
 
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call ipv4_frag_exit()!");
 	ipv4_frag_exit();
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call ipv6_frag_exit()!");
 	ipv6_frag_exit();
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call plugin_manage_destroy()!");
 	plugin_manage_destroy();
 
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call global_project_req_destroy()!");
 	global_project_req_destroy();
 
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call stream_bridge_destroy()!");
 	stream_bridge_destroy();
 
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call cycle_pkt_dump_destroy()!");
 	cycle_pkt_dump_destroy();
 
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call stream_destroy_plugin()!");
 	stream_destroy_plugin();
 
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call global_stream_destroy()!");
 	global_stream_destroy();
 
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call sapp_dup_pkt_destroy()!");
 	sapp_dup_pkt_destroy();
 
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call sapp_breakpad_destroy()!");
 	sapp_breakpad_destroy();
 
+	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call sapp_log_handle_destroy()!");
+	sapp_log_handle_destroy();
+
+	printf("packet_io_exit excuting, set SAPP_STATE_EXIT!");	
+	sapp_set_current_state(SAPP_STATE_EXIT);
+	usleep(100);
 	/****** 注意:释放全局变量要放在最后一行!! ******/
+	printf("packet_io_exit, call sapp_gval_destroy\n");
 	sapp_gval_destroy();
 
 	return;

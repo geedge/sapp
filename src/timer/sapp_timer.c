@@ -442,6 +442,7 @@ void *sapp_time_event_thread(void *arg)
 
 	last_log_time = time(NULL);
 
+	sapp_runtime_log(RLOG_LV_INFO, "sapp_time_event_thread, init!");
 	/* 为了避免在docker, 虚拟机, 内存不足的情况下, 此处不能用 current_state != SAPP_STATE_PROCESSING 判断条件 
        曾经出现过dumpfile模式仅读取一个pcap包, 瞬间就退出了, 导致此处死循环的问题!!
 	*/
@@ -449,12 +450,9 @@ void *sapp_time_event_thread(void *arg)
 		sapp_usleep(100);
 	}
 
+
 	update_packet_io_status_sw = 1;
-	if(SAPP_STATE_READY_TO_EXIT == sapp_global_val->individual_volatile->current_state)
-	{
-		sd_notify(0, "WATCHDOG_USEC=600000000");
-		return;
-	}
+	sapp_runtime_log(RLOG_LV_INFO, "sapp_time_event_thread, SAPP_STATE_PROCESSING state, loop start!");
 	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state)
 	{
 		ABBR_CURRENT_TIME = time(NULL);
@@ -478,7 +476,21 @@ void *sapp_time_event_thread(void *arg)
 		
 		sapp_usleep(10);
 	}
-	
+	if(sapp_global_val->individual_volatile->current_state >= SAPP_STATE_READY_TO_EXIT)
+	{
+		sapp_runtime_log(RLOG_LV_INFO, "sapp_time_event_thread, SAPP_STATE_READY_TO_EXIT state, keep sd_notify watchdog=1!");
+		while(sd_watchdog_enabled(0, NULL))
+		{
+			if (sapp_global_val->individual_volatile->current_state >= SAPP_STATE_EXIT)
+			{
+				sd_notify(0, "STOPPING=1");
+				printf("sapp_time_event_thread, state not SAPP_STATE_PROCESSING, loop end, thread exit!\n");
+				break;
+			}
+			sd_notify(0, "WATCHDOG=1");
+			usleep(10);
+		}
+	}
 	return NULL;
 }
 

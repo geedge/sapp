@@ -1442,6 +1442,7 @@ thread_exit:
 	sapp_usleep(1000);
 	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
 	if(exit_prog_flag){
+		printf("pcap_io_thread SAPP_STATE_READY_TO_EXIT, call exit() !\n");
 		exit(0);
 	}
 	
