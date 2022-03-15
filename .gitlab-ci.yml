@@ -363,7 +363,7 @@ release_build_release_for_centos8:
     UPLOAD: 1
     PULP3_REPO_NAME: platform-stable-x86_64.el8
     PULP3_DIST_NAME: platform-stable-x86_64.el8
-  extends: .build_by_travis_for_centos7
+  extends: .build_by_travis_for_centos8
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-release"
     paths:
