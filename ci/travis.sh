@@ -40,10 +40,13 @@ if [ -n "${INSTALL_DEPENDENCY_LIBRARY}" ]; then
 	source /etc/profile.d/framework.sh
 fi
 
-if [ $ASAN_OPTION ];then
+if [ $ASAN_OPTION ] && [ -f "/opt/rh/devtoolset-7/enable" ] ;then
 	source /opt/rh/devtoolset-7/enable
 fi
 
+if [ -f "/usr/lib64/libnsl.so.1" ]; then
+    cd /usr/lib64/; ln -fs libnsl.so.1 libnsl.so; cd -
+fi
 /usr/bin/xxd -v
 
 mkdir build || true
