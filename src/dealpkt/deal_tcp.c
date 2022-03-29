@@ -2805,13 +2805,6 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		//return DROP; /* 2019-11-20 lijia modify, kill_tcp后默认行为不是DROP, 只发送rst包, 是否丢包取决于drop_stream_flag */
 	}
 
-	if(unlikely(pdetail_pr->drop_stream_flag != 0)){
-		sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, has been set drop flag, curdir:%d, return DROP.", 
-						printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
-		lrustream(pindex_tcp);
-		return DROP;
-	}
-
 	/* 
 		2021-05-18 lijia close ipv6 dup pkt check:
 		IPv6因为没有Ipid字段, 无法区别真正的应用层重传和重复流量, 开启了会导致断网或者CT, 所以不支持!!!
@@ -2830,6 +2823,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	if(unlikely(pdetail_pr->drop_stream_flag != 0)){
 		sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, has been set drop flag, curdir:%d, return DROP.", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+		lrustream(pindex_tcp);
 		return DROP;
 	}
 
