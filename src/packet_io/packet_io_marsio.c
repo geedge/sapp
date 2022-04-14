@@ -100,7 +100,7 @@ marsio_buff_t * (*ptr_marsio_buff_clone_with_options)(struct mr_instance * insta
 int (*ptr_marsio_buff_get_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
 int (*ptr_marsio_buff_set_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
 int (*ptr_marsio_buff_unset_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type);
-
+marsio_buff_t *(*ptr_marsio_buff_malloc_smartoffload)(struct mr_vdev *vdev, const char * pkt, unsigned int pkt_len);
 
 
 
@@ -423,6 +423,19 @@ int marsio_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 	return ret;
 }
 
+int marsio_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt_len, unsigned char dir, int thread_num)
+{
+	if(ptr_marsio_buff_malloc_smartoffload!=NULL && ptr_marsio_send_burst_with_options!=NULL)
+	{
+		/* for all vxlan pkts, create an offload request */
+		marsio_buff_t * offload_request_buf = ptr_marsio_buff_malloc_smartoffload(g_mr4_dev_up_handle_set[device_index], pkt_ptr, pkt_len);
+
+		/* inject the offload request */
+		ptr_marsio_send_burst_with_options(g_mr4_sendpath_up_set[device_index], thread_num, &offload_request_buf, 1, MARSIO_SEND_OPT_CTRL);
+		return 1;
+	}
+	return 0;
+}
 
 void *marsio_dl_io_get_send_handle(int thread_seq)
 {
@@ -1052,7 +1065,13 @@ static int marsio_dl_get_function_entry(void)
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_unset_metadata", ABBR_MARSIO_LIBRARY_FILE);
 			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
 			sleep(1);
-		}		
+		}
+
+		ptr_marsio_buff_malloc_smartoffload = (marsio_buff_t * (*)(struct mr_vdev *vdev, const char *pkt, unsigned int pkt_len))dlsym(marsio_so_handle, "marsio_buff_malloc_smartoffload");
+		if(NULL == ptr_marsio_buff_malloc_smartoffload){
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_malloc_smartoffload", ABBR_MARSIO_LIBRARY_FILE);
+			sleep(1);
+		}
 	}
 
 	ptr_marsio_destory = (int (*)(struct mr_instance *instance))dlsym(marsio_so_handle, "marsio_destory");

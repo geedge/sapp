@@ -131,6 +131,11 @@ int pag_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 	return -1;
 }
 
+int pag_dl_io_smart_offload(int device_index, unsigned char *pkt_str, int pkt_len, unsigned char dir, int thread_num)
+{
+	return 0;
+}
+
 void *pag_dl_io_get_send_handle(int thread_num)
 {
 	pag_send_handle *send_handle = (pag_send_handle *)calloc(1, sizeof(pag_send_handle));

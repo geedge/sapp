@@ -29,8 +29,9 @@ extern int tcp_support_all;
 #define TCP_SYNFLOOD_DETECT_ON 0x01
 #define TCP_DATAFLOOD_DETECT_ON 0x02
 
-#define PASS             0x01
 #define DROP             0x00
+#define PASS             0x01
+
 #define UNORDER_MAX_NUM  (tcp_default_unorder) 
 
 //底层链接管理用状态定义

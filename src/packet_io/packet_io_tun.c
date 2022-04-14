@@ -185,6 +185,10 @@ send_again:
 	return ret;
 }
 
+int tun_dl_io_smart_offload(int device_index, unsigned char *pkt_str, int pkt_len, unsigned char dir, int thread_num)
+{
+	return 0;
+}
 
 int tun_dl_io_get_version(void)
 {

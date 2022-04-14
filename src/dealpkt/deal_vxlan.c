@@ -87,15 +87,15 @@ int vxlan_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_hd
 	pstream->threadnum=thread_num;
 
 	if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VXLAN][pstream_pr->layer_index] != 0){
-		pstream_pr->need_update_opposite_addr = 1;//两侧地址不一样，需要更新对侧信息
+		pstream_pr->need_update_opposite_addr = 1;//两侧地址不一样，需要更新对侧信�?
 	}else{
 		pstream_pr->need_update_opposite_addr = 0;
 	}
 
 	/*
-		vxlan ppp和hdlc字段基本不变, 不像ethernet, 涉及到反向发包, 要将mac地址颠倒方向.
+		vxlan ppp和hdlc字段基本不变, 不像ethernet, 涉及到反向发�? 要将mac地址颠倒方�?
 		所以不再创建一个新的streaminfo结构, 浪费内存也耗费CPU, 意义不大,
-		将hdlc, ppp的字段和vxlan合并, 类似ip层和tcp/udp的关系一样.
+		将hdlc, ppp的字段和vxlan合并, 类似ip层和tcp/udp的关系一�?
 	*/
 
 	switch(addr_pr.addr_public.C2S_vxlan_addr.link_type){

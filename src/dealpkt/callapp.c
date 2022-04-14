@@ -277,9 +277,6 @@ int stream_register_overlay_udp(STREAM_CB_FUN_T x)
 	lijia 2015-01-12 add this_iphdr, 
 	如果是IP分片重组的包, 必须显式的传递IP包头, 否则只传raw_hdr, 无法获取重组后的IP包头.
 */
-#if 0
-int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const void *raw_pkt,int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate)
-#else
 char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo *a_stream,const void *transport_hdr,int thread_seq,const void *a_packet)
 {
 	char rec;
@@ -407,11 +404,64 @@ static void plug_entry_kick_out_tot_list(StreamFunInfo *list_head, struct stream
 	ptcpdetail_pr->link_state = saved_linkstate;
 }
 
+static int stream_set_offload_flag(struct streaminfo *pstream)
+{
+	if(STREAM_TYPE_TCP == pstream->type)
+	{
+		struct tcpdetail_private *tcp_pdetail_pr=(struct tcpdetail_private*)(pstream->pdetail);
+		tcp_pdetail_pr->offload_stream_flag=1;
+	}
+	else if(STREAM_TYPE_UDP == pstream->type)
+	{
+		struct udpdetail_private *udp_pdetail_pr=(struct udpdetail_private*)(pstream->pdetail);
+		udp_pdetail_pr->offload_stream_flag=1;
+	}
+	else
+	{
+		sapp_runtime_log(RLOG_LV_FATAL, "%s,stream_set_offload_flag() OFFLOAD_STREAM error: stream type is not tcp or udp!\n", printaddr(&pstream->addr, pstream->threadnum));
+	}
 
-//add end
-int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
+	return 0;
+}
+
+static int copy_funcation_from_entry_to_stream(StreamFunInfo **oneStreamFunInfo, stFunArray *oneEntry, UCHAR thread_num)
+{
+	StreamFunInfo *pFunInfo=(*oneStreamFunInfo);
+	if(pFunInfo==NULL)
+	{
+		pFunInfo=(StreamFunInfo *)sapp_mem_malloc(SAPP_MEM_DYN_PLUG_CTRL, thread_num, sizeof(StreamFunInfo));
+		*oneStreamFunInfo=pFunInfo;
+	}
+	
+	pFunInfo->appState=APP_STATE_GIVEME;
+	pFunInfo->pAppInfo=NULL;
+	pFunInfo->funtype=oneEntry->funtype;
+	pFunInfo->pfun=oneEntry->pfun;
+	pFunInfo->entry_id=oneEntry->entry_id;
+	pFunInfo->next=NULL;
+
+	return 0;
+}
+
+static int call_streamentry(struct streaminfo *a_stream, const void *this_iphdr, const void *transport_hdr, const void *raw_pkt, StreamFunInfo *pFunInfo)
+{
+	//add by lqy 20141230
+	//注意如下的只有是stream_raw类型的函数，函数调用不一样
+	if(is_raw_cb(pFunInfo->funtype))
+	{
+		pFunInfo->appState=plugin_call_streamentry(CALL_FUN_TYPE_RAW,pFunInfo,a_stream,transport_hdr,a_stream->threadnum,raw_pkt);
+
+	}
+	else
+	{
+		pFunInfo->appState=plugin_call_streamentry(CALL_FUN_TYPE_NORAW,pFunInfo,a_stream,NULL,a_stream->threadnum,this_iphdr);
+	}
+
+	return pFunInfo->appState;
+}
+
+int stream_state_pending(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
 				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate)
-#endif
 {
 	int i=0;
 	int ret=PASS;
@@ -421,289 +471,264 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 	UCHAR threadnum = a_stream->threadnum;
 	UCHAR local_app_ret;
 	int break_flag = 0;
+	int all_givestate=1;
 
-	if(funnum==0)
+	pFunList = (StreamFunInfo*)(*apme);
+
+	for(i=0;i<funnum;i++)
 	{
-		*opstate= OP_STATE_CLOSE;
-		return ret;
-	}
+		break_flag = 0;
+		copy_funcation_from_entry_to_stream(&pFunInfo, &pfunAarry[i], threadnum);
+		local_app_ret=call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, pFunInfo);
 
-#if 0
-	/* 2014-12-31 lijia add, 获取下层IP地址, 如有代理流, 需要跳过 */
-	real_stream = skip_proxy_phony_stream(a_stream->pfather);
-	if(raw_pkt){ /* 超时淘汰流时, a_packet为NULL */
-		related_iphdr = get_this_layer_header(real_stream);
-	}
-#endif
-
-	if(*opstate == OP_STATE_PENDING )
-	{
-		pFunList = (StreamFunInfo*)( *apme);
-
-		for(i=0;i<funnum;i++)
+		if(local_app_ret&APP_STATE_DROPME)
 		{
-			break_flag = 0;
-			if(pFunInfo==NULL)
-			{
-				pFunInfo=(StreamFunInfo *)sapp_mem_malloc(SAPP_MEM_DYN_PLUG_CTRL, threadnum,sizeof(StreamFunInfo));
-			}
-			pFunInfo->appState=APP_STATE_GIVEME;
-			pFunInfo->pAppInfo=NULL;
-			pFunInfo->funtype=pfunAarry[i].funtype;
-			pFunInfo->pfun=pfunAarry[i].pfun;
-			pFunInfo->entry_id=pfunAarry[i].entry_id;
-			pFunInfo->next=NULL;
-			//add by lqy 20141230
-			//注意如下的只有是stream_raw类型的函数，函数调用不一样
-			//if(pFunInfo->funtype>FUN_TYPE_IPV6_RAW)
-			if(is_raw_cb(pFunInfo->funtype)){
-//20170525 liuyang modify
-//				pFunInfo->appState=((SAPP_STREAM_FUN_T)pFunInfo->pfun)(a_stream,transport_hdr,raw_pkt,&(pFunInfo->pAppInfo));
-				pFunInfo->appState= plugin_call_streamentry(CALL_FUN_TYPE_RAW,pFunInfo,a_stream,transport_hdr,threadnum,raw_pkt);
-
-			}else{
-#if 0 // IIEFD_DUAL_STACK
-				/*  */
-				if(judge_pure_ipv4_stack(a_stream, 	this_iphdr) == 1){
-					/* 纯IPv4流量, 跳过sapp插件 */
-					if((void *)&calltcpApp_old == (void *)pFunInfo->pfun){
-						pFunInfo->appState=((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),a_stream->threadnum, this_iphdr);
-					}
-				}else{
-					if((void *)&calltcpApp_old != (void *)pFunInfo->pfun){
-						pFunInfo->appState=((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),a_stream->threadnum, this_iphdr);
-					}
-				}
-#else			
-//				pFunInfo->appState=((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),threadnum, this_iphdr);
-				pFunInfo->appState= plugin_call_streamentry(CALL_FUN_TYPE_NORAW,pFunInfo,a_stream,NULL,threadnum,this_iphdr);
-#endif
-			}
-			local_app_ret = pFunInfo->appState;
-
-			if(!(pFunInfo->appState&APP_STATE_DROPME))
-			{
-				/* 2019-11-15 lijia add for plug kill other */
-				if(local_app_ret & APP_STATE_KILL_OTHER){
-					plug_entry_kick_out_tot_list(pFunList, a_stream);
-					pFunList = NULL; /* 将其余插件全部CLOSE, 只剩当前插件 */
-				}
-
-				if(pFunList==NULL)
-				{
-					pFunList=pFunInfo;
-				}
-				else
-				{
-					pPrev->next=pFunInfo;
-				}
-				
-				pPrev=pFunInfo;
-				pFunInfo=NULL;
-			}else{
-				/* 2019-11-15 lijia add for plug kill other */
-				if(local_app_ret & APP_STATE_KILL_OTHER){
-					/* 当前插件返回了DROPME, 且KILL_OTHER, 说明所有插件都结束 */
-					plug_entry_kick_out_tot_list(pFunList, a_stream);
-					pFunList = NULL;
-					*apme = NULL; /* 2020-05-08 lijia modify */
-					break;
-				}
-			}
-				
 			/* 2019-11-15 lijia add for plug kill other */
-			if(local_app_ret & (APP_STATE_KILL_FOLLOW | APP_STATE_KILL_OTHER)){
-				/* 如果在pending阶段, KILL FOLLOW直接退出循环即可 */
-				break_flag = 1;
-			}
-			
-			if(local_app_ret & APP_STATE_DROPPKT)	
+			if(local_app_ret & APP_STATE_KILL_OTHER)
 			{
-				ret=DROP;
-				break_flag = 1; 
-			}		
-			if(break_flag){//2020-09-10 lijia add, 后续插件不调用
+				/* 当前插件返回了DROPME, 且KILL_OTHER, 说明所有插件都结束 */
+				plug_entry_kick_out_tot_list(pFunList, a_stream);
+				pFunList = NULL;
+				*apme = NULL; /* 2020-05-08 lijia modify */
+				all_givestate=0;
 				break;
 			}
 		}
-		
-		//不需要再次送入包的fun，在这里释放
-		if(pFunInfo!=NULL)
+		else
 		{
-			sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, threadnum,pFunInfo);
-			pFunInfo = NULL;		
+			/* 2019-11-15 lijia add for plug kill other */
+			if(local_app_ret & APP_STATE_KILL_OTHER)
+			{
+				plug_entry_kick_out_tot_list(pFunList, a_stream);
+				pFunList = NULL; /* 将其余插件全部CLOSE, 只剩当前插件 */
+			}
+
+			if(local_app_ret & APP_STATE_GIVESTATE)
+			{
+				pFunInfo->appState=APP_STATE_GIVESTATE;
+			}
+			else
+			{
+				all_givestate=0;
+			}
+
+			if(pFunList==NULL)
+			{
+				pFunList=pFunInfo;
+			}
+			else
+			{
+				pPrev->next=pFunInfo;
+			}
+			
+			pPrev=pFunInfo;
+			pFunInfo=NULL;
 		}
 
-		//有需要再次送包的回调函数
-		if(pFunList!=NULL)
+		if(local_app_ret & APP_STATE_DROPPKT)	
 		{
-			*apme = pFunList;
-			*opstate= OP_STATE_DATA;
+			ret=DROP;
+			break; 
+		}	
+
+		/* 2019-11-15 lijia add for plug kill other */
+		if(local_app_ret & (APP_STATE_KILL_FOLLOW | APP_STATE_KILL_OTHER))
+		{
+			/* 如果在pending阶段, KILL FOLLOW直接退出循环即可 */
+			break;
+		}
+	}
+	
+	//不需要再次送入包的fun，在这里释放
+	if(pFunInfo!=NULL)
+	{
+		sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, threadnum,pFunInfo);
+		pFunInfo = NULL;		
+	}
+
+	if(all_givestate==1)	//所有插件DROPME，或者均设置GIVESTATE状态
+	{
+		stream_set_offload_flag(a_stream);
+	}
+	
+	//有需要再次送包的回调函数
+	if(pFunList!=NULL)
+	{
+		*apme = pFunList;
+		*opstate= OP_STATE_DATA;
+	}
+	else
+	{
+		*opstate= OP_STATE_CLOSE;
+	}
+	
+	return ret;
+}
+
+static int stream_state_data(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
+				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate)
+{
+	int ret=PASS;
+	UCHAR local_app_ret;
+	int break_flag = 0;
+	int all_givestate=1;
+	StreamFunInfo *pFunList=NULL;
+	StreamFunInfo *pFunInfo=NULL;
+	StreamFunInfo *pNext=NULL,*pPrev=NULL;
+
+	pFunList = (StreamFunInfo *)*apme;	
+	pFunInfo=pFunList;
+	pPrev=NULL;
+	while(pFunInfo)
+	{
+		break_flag = 0;			
+		local_app_ret=call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, pFunInfo);
+		if(pFunInfo->appState&APP_STATE_DROPME)
+		{
+			if(pPrev==NULL)
+			{
+				pFunList=pFunInfo->next;
+				*apme= pFunList;
+			}	
+			else
+			{
+				pPrev->next=pFunInfo->next;
+			}
+			pNext=pFunInfo->next;
+			sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,a_stream->threadnum,pFunInfo);
+			pFunInfo=pNext;
+
+			if(local_app_ret & APP_STATE_KILL_FOLLOW)
+			{
+				plug_entry_kick_out_tot_list(pNext, a_stream);
+				if(NULL == pPrev)
+				{
+					/* 当前插件在第一个, KILL_FOLLOW &    APP_STATE_DROPME相当于全部插件DROPME*/
+					pFunList = NULL; /* 全部插件CLOSE */
+					*apme = NULL; /* 2020-05-08 lijia modify */
+				}
+				else
+				{
+					pPrev->next = NULL;
+				}
+			/* 2019-11-15 lijia add for plug kill other */
+			}
+			else if(local_app_ret & APP_STATE_KILL_OTHER)
+			{
+				plug_entry_kick_out_tot_list(pFunList, a_stream);
+				pFunList = NULL; /* 全部插件CLOSE */
+				*apme = NULL; /* 2020-05-08 lijia modify */
+			}
 		}
 		else
 		{
-			*opstate= OP_STATE_CLOSE;
-		}
-		return ret;
-	
-	}
-	
-	pFunList = (StreamFunInfo *)*apme;
-	//如果已经没有要处理的函数了
-	if(pFunList==NULL) 
-	{
-		*opstate= OP_STATE_CLOSE;
-		return ret;
-	}
-	
-	if( *opstate==OP_STATE_DATA)
-	{
-		pFunInfo=pFunList;
-		pPrev=NULL;
-		while(pFunInfo)
-		{
-			break_flag = 0;
-			//add by lqy 20141230
-			//注意如下的只有是stream_raw类型的函数，函数调用不一样
-			//if(pFunInfo->funtype>FUN_TYPE_IPV6_RAW)
-			if(is_raw_cb(pFunInfo->funtype)){
-//				pFunInfo->appState=((SAPP_STREAM_FUN_T)pFunInfo->pfun)(a_stream,transport_hdr,raw_pkt,&(pFunInfo->pAppInfo));
-				pFunInfo->appState= plugin_call_streamentry(CALL_FUN_TYPE_RAW,pFunInfo,a_stream,transport_hdr,threadnum,raw_pkt);
-			}else{
-#if 0 //IIEFD_DUAL_STACK
-				/*  */
-				if(judge_pure_ipv4_stack(a_stream, 	this_iphdr) == 1){
-					/* 纯IPv4流量, 跳过sapp插件 */
-					if((void *)&calltcpApp_old == (void *)pFunInfo->pfun){
-						pFunInfo->appState=((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),a_stream->threadnum, this_iphdr);
-					}
-				}else{
-					if((void *)&calltcpApp_old != (void *)pFunInfo->pfun){
-						pFunInfo->appState=((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),a_stream->threadnum, this_iphdr);
-					}
-				}
-#else				
-//				pFunInfo->appState=((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),threadnum,this_iphdr);
-				pFunInfo->appState= plugin_call_streamentry(CALL_FUN_TYPE_NORAW,pFunInfo,a_stream,NULL,threadnum,this_iphdr);
-#endif
-			}
-			local_app_ret = pFunInfo->appState;
-			
-			if(pFunInfo->appState&APP_STATE_DROPME)
-			{
+			/* 2019-11-15 lijia add for plug kill other */
+			if(local_app_ret & APP_STATE_KILL_OTHER){
+				/* 把当前plug info从链表中先移除 */
 				if(pPrev==NULL)
 				{
 					pFunList=pFunInfo->next;
-					*apme= pFunList;
-				}	
+				}
 				else
 				{
 					pPrev->next=pFunInfo->next;
 				}
-				pNext=pFunInfo->next;
-				sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,threadnum,pFunInfo);
-				pFunInfo=pNext;
+				/* 把剩余的全CLOSE */
+				plug_entry_kick_out_tot_list(pFunList, a_stream);
+				
+				pFunList = pFunInfo;
+				pFunList->next = NULL;
+				*apme= pFunList;
+			}
+			else if(local_app_ret & APP_STATE_KILL_FOLLOW)
+			{
+				plug_entry_kick_out_tot_list(pFunInfo->next, a_stream);
+				pFunInfo->next = NULL;
+			}
 
-				if(local_app_ret & APP_STATE_KILL_FOLLOW){
-					plug_entry_kick_out_tot_list(pNext, a_stream);
-					if(NULL == pPrev){
-						/* 当前插件在第一个, KILL_FOLLOW &    APP_STATE_DROPME相当于全部插件DROPME*/
-						pFunList = NULL; /* 全部插件CLOSE */
-						*apme = NULL; /* 2020-05-08 lijia modify */
-					}else{
-						pPrev->next = NULL;
-					}
-				/* 2019-11-15 lijia add for plug kill other */
-				}else if(local_app_ret & APP_STATE_KILL_OTHER){
-					plug_entry_kick_out_tot_list(pFunList, a_stream);
-					pFunList = NULL; /* 全部插件CLOSE */
-					*apme = NULL; /* 2020-05-08 lijia modify */
-				}
+			if(local_app_ret & APP_STATE_GIVESTATE)
+			{
+				pFunInfo->appState=APP_STATE_GIVESTATE;
 			}
 			else
 			{
-				/* 2019-11-15 lijia add for plug kill other */
-				if(local_app_ret & APP_STATE_KILL_OTHER){
-					/* 把当前plug info从链表中先移除 */
-					if(pPrev==NULL){
-						pFunList=pFunInfo->next;
-					}else{
-						pPrev->next=pFunInfo->next;
-					}
-					/* 把剩余的全CLOSE */
-					plug_entry_kick_out_tot_list(pFunList, a_stream);
-					
-					pFunList = pFunInfo;
-					pFunList->next = NULL;
-					*apme= pFunList;
-				}else if(local_app_ret & APP_STATE_KILL_FOLLOW){
-					plug_entry_kick_out_tot_list(pFunInfo->next, a_stream);
-					pFunInfo->next = NULL;
-				}
-				
-				pPrev=pFunInfo;
-				pFunInfo=pFunInfo->next;
+				all_givestate=0;
 			}
+			
+			pPrev=pFunInfo;
+			pFunInfo=pFunInfo->next;
+		}
 
-			/* 2019-11-15 lijia add for plug kill other */
-			if(local_app_ret & (APP_STATE_KILL_FOLLOW | APP_STATE_KILL_OTHER)){
-				break_flag = 1;
-			}
-			if(local_app_ret&APP_STATE_DROPPKT)	
+		if(local_app_ret&APP_STATE_DROPPKT)	
+		{
+			ret=DROP;	
+			break;
+		}
+
+		/* 2019-11-15 lijia add for plug kill other */
+		if(local_app_ret & (APP_STATE_KILL_FOLLOW | APP_STATE_KILL_OTHER))
+		{
+			break;
+		}
+	}
+
+	//处理过程中大家都不需要了
+	if(pFunList==NULL)
+	{
+		*opstate = OP_STATE_CLOSE;
+	}	
+
+	if(all_givestate==1)	//所有插件DROPME，或者均设置GIVESTATE状态
+	{
+		stream_set_offload_flag(a_stream);
+	}
+
+	return ret;
+}
+
+
+//add end
+int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
+				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate)
+{
+	int ret=PASS;
+	StreamFunInfo *pFunInfo=NULL;
+	StreamFunInfo *pNext=NULL;
+
+	if(funnum==0)
+	{
+		stream_set_offload_flag(a_stream);
+		*opstate= OP_STATE_CLOSE;
+		return ret;
+	}
+
+	switch(*opstate)
+	{
+		case	OP_STATE_PENDING:
+			return stream_state_pending(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate);
+			break;
+		case	OP_STATE_DATA:	
+			if(*apme==NULL) //如果已经没有要处理的函数了
 			{
-				ret=DROP;	
-				break_flag = 1;
-			}
-
-			if(break_flag){
+				*opstate= OP_STATE_CLOSE;
 				break;
 			}
-		}
-
-		//处理过程中大家都不需要了
-		if(pFunList==NULL)
-		{
-			*opstate = OP_STATE_CLOSE;
-		}	
-	}
-	//链接关闭,清除状态
-	else if(*opstate == OP_STATE_CLOSE) 
-	{
-		pFunInfo=pFunList;
-		while(pFunInfo)
-		{
-			break_flag = 0;
-			//add by lqy 20141230
-			//注意如下的只有是stream_raw类型的函数，函数调用不一样
-			//if(pFunInfo->funtype>FUN_TYPE_IPV6_RAW)
-			if(is_raw_cb(pFunInfo->funtype)){
-//			((SAPP_STREAM_FUN_T)pFunInfo->pfun)(a_stream,transport_hdr,raw_pkt,&(pFunInfo->pAppInfo));
-			plugin_call_streamentry(CALL_FUN_TYPE_RAW,pFunInfo,a_stream,transport_hdr,threadnum,raw_pkt);
-
-			}else{
-#if 0 //IIEFD_DUAL_STACK
-				/*  */
-				if(judge_pure_ipv4_stack(a_stream, 	this_iphdr) == 1){
-					/* 纯IPv4流量, 跳过sapp插件 */
-					if((void *)&calltcpApp_old == (void *)pFunInfo->pfun){
-						pFunInfo->appState=((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),a_stream->threadnum, this_iphdr);
-					}
-				}else{
-					if((void *)&calltcpApp_old != (void *)pFunInfo->pfun){
-						pFunInfo->appState=((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),a_stream->threadnum, this_iphdr);
-					}
+			return stream_state_data(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate);
+			break;
+		case	OP_STATE_CLOSE: //链接关闭,清除状态
+				pFunInfo=(StreamFunInfo *)(*apme);
+				while(pFunInfo)
+				{
+					call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, pFunInfo);
+					pNext=pFunInfo->next;
+					sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,a_stream->threadnum,pFunInfo);
+					
+					pFunInfo=pNext;
 				}
-#else				
-//				((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),threadnum,this_iphdr);
-				plugin_call_streamentry(CALL_FUN_TYPE_NORAW,pFunInfo,a_stream,NULL,threadnum,this_iphdr);
-#endif
-			}
-			pNext=pFunInfo->next;
-			sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,threadnum,pFunInfo);
-			
-			pFunInfo=pNext;
-		}
-		*apme=NULL;
+				*apme=NULL;
+			break;
+		default:
+			break;
 	}
 	
 	return ret;
@@ -738,36 +763,12 @@ int stream_process_udp_single(struct streaminfo *a_udp,const void * a_packet,voi
 	return ret;
 }
 
-#if 0
-/* 2015-12-24 lijia add, 更新tcpdetail数据计数 */
-static inline void stream_update_tcp_data_count(struct streaminfo *a_tcp)
-{
-	struct tcpdetail *ptcpdetail = a_tcp->ptcpdetail;
-
-	if(NULL == ptcpdetail->pdata){
-		return;
-	}
-
-	if(DIR_C2S == a_tcp->curdir){
-		ptcpdetail->server_data_pkt_num++;
-		ptcpdetail->server_data_bytes += ptcpdetail->datalen;
-	}else{
-		ptcpdetail->client_data_pkt_num++;
-		ptcpdetail->client_data_bytes += ptcpdetail->datalen;
-	}
-}
-#endif
-
 /*
 	lijia 2015-01-12 modify, add this_iphdr, 
 	如果是IP分片重组的包, 必须显式的传递IP包头, 否则只传raw_hdr, 无法获取重组后的IP包头.
 */
-#if 0
-int stream_process_tcp(struct streaminfo *a_tcp, const raw_pkt_t * a_packet,void **apme,unsigned char *popstate)
-#else
 int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const void *transport_hdr, 
 						const raw_pkt_t * raw_pkt,void **apme,unsigned char *popstate)
-#endif
 {
 	int ret;
 	struct streaminfo_private *a_tcp_pr = (struct streaminfo_private *)a_tcp;
@@ -821,12 +822,9 @@ int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const v
 	lijia 2015-01-12 modify, add this_iphdr, 
 	如果是IP分片重组的包, 必须显式的传递IP包头, 否则只传raw_hdr, 无法获取重组后的IP包头.
 */
-#if 0
-int stream_process_udp(struct streaminfo *a_udp,const raw_pkt_t * a_packet,void **apme,unsigned char *popstate)
-#else
+
 int stream_process_udp(struct streaminfo *a_udp, const void *this_iphdr, const void *transport_hdr, 
 						const raw_pkt_t * raw_pkt,void **apme,unsigned char *popstate)
-#endif
 {
 	int ret;
 	struct streaminfo_private *a_udp_pr = (struct streaminfo_private *)a_udp;
@@ -878,12 +876,9 @@ int stream_process_overlay_udp(struct streaminfo *a_udp, const void *this_iphdr,
 	lijia 2015-01-12 modify, add this_iphdr, 
 	如果是IP分片重组的包, 必须显式的传递IP包头, 否则只传raw_hdr, 无法获取重组后的IP包头.
 */
-#if 0
-int stream_process_tcp_allpkt(struct streaminfo *a_tcp,const raw_pkt_t *a_packet,void **apme,unsigned char *popstate)
-#else
+
 int stream_process_tcp_allpkt(struct streaminfo *a_tcp,const void *this_iphdr, const void *transport_hdr, 
 							const raw_pkt_t *raw_pkt, void **apme,unsigned char *popstate)
-#endif
 {
 	int ret;
 	struct streaminfo_private *a_tcp_pr = (struct streaminfo_private *)a_tcp;
@@ -903,18 +898,10 @@ int stream_process_tcp_allpkt(struct streaminfo *a_tcp,const void *this_iphdr, c
 	return ret;
 }
 
-#if 0  /* 20160928 lijia modify, iphdr */	
-int stream_process_tcp_takeover(struct streaminfo *a_tcp, const void * raw_pkt)
-{
-	return  g_StreamTcpTakeover(a_tcp,NULL,a_tcp->threadnum, raw_pkt);
-}
-#else
 int stream_process_tcp_takeover(struct streaminfo *a_tcp, const void * iphdr)
 {
 	return  g_StreamTcpTakeover(a_tcp,NULL,a_tcp->threadnum, iphdr);
 }
-#endif
-
 
 int stream_process_ipv4(struct streaminfo *pfstream, const struct ip* this_layer_hdr,
 				int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt)
@@ -1174,39 +1161,6 @@ void idle_polling_call(int thread_seq)
 	return;
 }
 
-#if 0 /* 改用查表实现 */
-static inline int is_raw_cb(int cb_type)
-{
-	int ret;
-	
-	switch(cb_type){
-		case FUN_TYPE_IPV4:
-		case FUN_TYPE_IPV4_FRAG:
-	   	case FUN_TYPE_IPV6:
-	   	case FUN_TYPE_IPV6_FRAG:
-	   	case FUN_TYPE_TCP:	
-	   	case FUN_TYPE_TCPALL:	
-	   	case FUN_TYPE_UDP:
-	   		ret = 0;
-	   	break;
-	   	
-	   	case FUN_TYPE_IPV4_RAW:
-	   	case FUN_TYPE_IPV4_FRAG_RAW:
-	   	case FUN_TYPE_IPV6_RAW:	
-	   	case FUN_TYPE_IPV6_FRAG_RAW:	
-	   	case FUN_TYPE_TCP_RAW:	
-	   	case FUN_TYPE_TCPALL_RAW:	
-	   	case FUN_TYPE_UDP_RAW:
-	   		ret = 1;
-	   	break;
-
-	   	default:
-	   		assert(0);
-	}
-
-	return ret;
-}
-#else
 typedef struct 
 {
 	enum fun_type_t funtype;
@@ -1237,8 +1191,6 @@ static inline int is_raw_cb(int cb_type)
 	assert(cb_type < __FUN_TYPE_MAX);
 	return g_raw_cb_fun_identify_array[cb_type].is_raw;
 }
-#endif
-
 
 
 #ifdef IIEFD_DUAL_STACK

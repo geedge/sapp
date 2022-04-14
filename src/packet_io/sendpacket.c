@@ -4924,6 +4924,19 @@ int sapp_forward_current_pkt(const struct streaminfo *stream, unsigned int targe
 }
 
 
+int MESA_send_smart_offload(const struct streaminfo *pstream, const void *raw_pkt, int thread_num)
+{
+	const raw_pkt_t *_raw_pkt=(raw_pkt_t *)raw_pkt;
+
+	MESA_send_handle *send_handle = packet_io_get_send_handle(thread_num);
+	
+	return dl_io_fun_list.dl_io_smart_offload(_raw_pkt->device_index, 
+										(unsigned char *)_raw_pkt->__lib_raw_pkt_data,
+										_raw_pkt->__lib_raw_pkt_len,
+										pstream->routedir,
+										thread_num);
+}
+
 #ifdef __cplusplus
 }
 #endif

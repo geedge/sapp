@@ -222,8 +222,9 @@ struct tcpdetail_private
 	UCHAR  tcpstateflag;	   // 用于记录tcp的会话SYN相关状态
 	UCHAR  link_state;		   // 链接的状态
 	UCHAR  creat_mod;
-	UINT16 tcpoverlen;		// modify by lqy 20150225, 记录当前包与上一个包的重叠tcp长度；
-	UINT16 pad;			
+	UINT16 tcpoverlen;		// modify by lqy 20150225, 记录当前包与上一个包的重叠tcp长度；	
+	UCHAR  offload_stream_flag; //2022-04-13 liuxueli add, 作用域是整个stream
+	UCHAR  pad;			
 	/* ===8 bytes=== */
 	
 	struct half_tcpstream *pclient;  //到client的TCP连接信息
@@ -252,7 +253,8 @@ struct udpdetail_private
 	struct udpdetail udpdetail_public;
 	void   *apme;		  //应用层上下文
 	struct udp_flow_stat *flow_stat; /* 2015-12-28 lijia add, udpdetail中的详细计数(64bit), 实际内存分配和释放由project模块完成, 可能为NULL */
-	UCHAR  drop_stream_flag; //2020-06-02 lijia add, 语义同DROPPKT, 只不过作用域是整个stream
+	UCHAR  drop_stream_flag; //2020-06-02 lijia add, 语义同DROPPKT, 只不过作用域是整个stream	
+	UCHAR  offload_stream_flag; //2022-04-13 liuxueli add, 作用域是整个stream
 };	
 
 /* 2015-02-26 lijia add, for stream-addr-list ntop, pton */

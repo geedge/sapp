@@ -246,6 +246,7 @@ int packet_io_under_ddos_global_status(void);
 void pcap_dl_io_destroy(void);
 void pcap_dl_io_stop(void);
 void pcap_dl_io_device_alias_free(unsigned int target_id, char *dev_args);
+extern int pcap_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt_len, unsigned char dir, int thread_num);
 
 
 /********************** pcap funcitons for dynamic link ***********************/
@@ -275,6 +276,7 @@ extern int pag_dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun);
 extern int pag_dl_io_get_version(void);
 extern void * pag_dl_io_device_alias(unsigned int target_id, char *device_args);
 extern void pcap_dl_io_free_send_handle(int thread_seq, void *_handle);
+extern int pag_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt_len, unsigned char dir, int thread_num);
 
 /********************** pag funcitons for dynamic link ***********************/
 
@@ -304,6 +306,7 @@ extern int marsio_dl_io_get_version(void);
 extern void * marsio_dl_io_device_alias(unsigned int target_id, char *device_args);
 extern int marsio_dl_io_send_only_thread_init(void);
 extern void marsio_dl_io_destroy(void);
+extern int marsio_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt_len, unsigned char dir, int thread_num);
 
 /********************** marsio funcitons for dynamic link *********************/
 
@@ -330,6 +333,8 @@ extern int tun_dl_io_register_cb(PACKET_IO_CB_T fun);
 extern int tun_dl_io_register_exit_cb(PACKET_IO_EXIT_CB_T exit_fun); 
 extern int tun_dl_io_get_version(void);
 extern void * tun_dl_io_device_alias(unsigned int target_id, char *device_args);
+extern int tun_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt_len, unsigned char dir, int thread_num);
+
 
 /********************** tun funcitons for dynamic link ***********************/
 

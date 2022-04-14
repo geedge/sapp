@@ -609,6 +609,13 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			return PASS;
 		}
 
+		if(dealipv4udppkt_dup_check(pstream->threadnum, pstream_pr, pdetail_pr, is_overlay_udp_layer, this_iphdr, udph) != 0){
+			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
+			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
+			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
+			return PASS;
+		}
+
 		/* 2014-11-15 lijia add, for udp serial kill udp */
 		if(unlikely(a_index->stream.stream_killed_flag != 0)){
 			return DROP;
@@ -617,14 +624,12 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		if(unlikely(pdetail_pr->drop_stream_flag != 0)){ /* 2020-06-02 lijia add */
 			return DROP;
 		}
-
-		if(dealipv4udppkt_dup_check(pstream->threadnum, pstream_pr, pdetail_pr, is_overlay_udp_layer, this_iphdr, udph) != 0){
-			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
-			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
-			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
+#if 1
+		/* 2022-04-13 liuxueli add, for udp offload stream  */
+		if(unlikely(pdetail_pr->offload_stream_flag != 0)){
 			return PASS;
 		}
-
+#endif
 		if(pstream->curdir==DIR_S2C){
 			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* 当前方向的第一个包, 尝试更新底层隧道的单向地址信息(如MPLS, GTP) */
 				try_to_update_addr_info = 1;
@@ -661,6 +666,10 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			return ret;
 		}else{		
 			ret=stream_process_udp(pstream,(const void *)this_iphdr, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate)); 
+			if(pdetail_pr->offload_stream_flag!=0)
+			{
+				MESA_send_smart_offload(pstream, (const void *)raw_pkt, thread_num);
+			}
 			udp_cleardata(pstream);
 		}
      }
@@ -814,16 +823,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			return PASS;
 		}
 
-		/* 2014-11-15 lijia add, for udp serial kill udp */
-		if(unlikely(a_index->stream.stream_killed_flag != 0)){
-			return DROP;
-		}
-
-		if(unlikely(pdetail_pr->drop_stream_flag != 0)){ /* 2020-06-02 lijia add */
-			return DROP;
-		}
-
-/* 
+		/* 
 	2021-05-18 lijia close ipv6 original dup pkt check:
 	IPv6因为没有Ipid字段, 无法区别真正的应用层重传和重复流量, 开启了会导致断网或者CT, 所以不支持原始流量识别!
 
@@ -838,6 +838,20 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
 			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
 			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
+			return PASS;
+		}
+
+		/* 2014-11-15 lijia add, for udp serial kill udp */
+		if(unlikely(a_index->stream.stream_killed_flag != 0)){
+			return DROP;
+		}
+
+		if(unlikely(pdetail_pr->drop_stream_flag != 0)){ /* 2020-06-02 lijia add */
+			return DROP;
+		}
+
+		/* 2022-04-13 liuxueli add, for udp offload stream  */
+		if(unlikely(pdetail_pr->offload_stream_flag != 0)){
 			return PASS;
 		}
 
@@ -871,6 +885,10 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 		ret=stream_process_udp(pstream,(const void *)a_packet, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));  
+		if(pdetail_pr->offload_stream_flag!=0)
+		{
+			MESA_send_smart_offload(pstream, (const void *)raw_pkt, thread_num);
+		}
 		udp_cleardata(pstream);
 	}
 

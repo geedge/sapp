@@ -114,7 +114,8 @@ typedef struct{
 	void (*dl_io_free_send_handle)(int thread_seq, void *handle);
 	void (*dl_io_destroy)(void);
 	void (*dl_io_stop)(void);
-	void (*dl_io_device_alias_free)(unsigned int target_id, char *device_args);
+	void (*dl_io_device_alias_free)(unsigned int target_id, char *device_args);	
+	int (*dl_io_smart_offload)(int device_index, unsigned char *pkt_ptr, int pkt_len, unsigned char dir, int thread_num);
 }dl_io_fun_list_t;
 
 /* 以下函数必须调用, 传入正确参数才能正常运行 */

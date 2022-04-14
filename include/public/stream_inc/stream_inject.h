@@ -94,6 +94,7 @@ int MESA_rst_tcp(struct streaminfo *stream, struct rst_tcp_para *paras, int para
 int MESA_kill_tcp_feedback(struct streaminfo *stream, const void *raw_pkt, char *feedback_buf, int *feedback_buf_len);
 int MESA_kill_tcp_synack_feedback(struct streaminfo *stream, const void *raw_pkt, char *feedback_buf, int *feedback_buf_len);
 int MESA_kill_connection_feedback(struct streaminfo *stream, const void *raw_pkt, char *feedback_buf, int *feedback_buf_len);
+int MESA_send_smart_offload(const struct streaminfo *pstream, const void *raw_pkt, int thread_num);
 
 /* 
 	CHN : 反向route_dir函数, 为了兼容papp;

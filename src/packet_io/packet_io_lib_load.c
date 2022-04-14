@@ -132,6 +132,7 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		dl_io_fun_list_static_link[cap_mode].dl_io_destroy = pcap_dl_io_destroy;
 		dl_io_fun_list_static_link[cap_mode].dl_io_stop = pcap_dl_io_stop;
 		dl_io_fun_list_static_link[cap_mode].dl_io_device_alias_free = pcap_dl_io_device_alias_free;
+		dl_io_fun_list_static_link[cap_mode].dl_io_smart_offload = pcap_dl_io_smart_offload;
 	}
 #endif
 
@@ -161,6 +162,7 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_send_only_thread_init = (int (*)(void))marsio_dl_io_send_only_thread_init;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_free_send_handle = NULL;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_destroy = marsio_dl_io_destroy;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_smart_offload = marsio_dl_io_smart_offload;
 	}
 #endif 
 
@@ -186,7 +188,8 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		dl_io_fun_list_static_link[CAP_MODEL_PAG].dl_io_register_cb = (int (*)(PACKET_IO_CB_T fun))pag_dl_io_register_cb;
 		//dl_io_fun_list_static_link[CAP_MODEL_PAG].dl_io_register_exit_cb = (int (*)(PACKET_IO_EXIT_CB_T exit_fun))pag_dl_io_register_exit_cb;
 		dl_io_fun_list_static_link[CAP_MODEL_PAG].dl_io_get_version = (int (*)(void))pag_dl_io_get_version;
-		//dl_io_fun_list_static_link[CAP_MODEL_PAG].dl_io_device_alias = (void * (*)(unsigned int , char *))pag_dl_io_device_alias;
+		//dl_io_fun_list_static_link[CAP_MODEL_PAG].dl_io_device_alias = (void * (*)(unsigned int , char *))pag_dl_io_device_alias;		
+		dl_io_fun_list_static_link[CAP_MODEL_PAG].dl_io_smart_offload = (int (*)(void))pag_dl_io_smart_offload;
 	}
 #endif 
 
@@ -211,7 +214,8 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_register_cb = (int (*)(PACKET_IO_CB_T fun))tun_dl_io_register_cb;
 		//dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_register_exit_cb = (int (*)(PACKET_IO_EXIT_CB_T exit_fun))pag_dl_io_register_exit_cb;
 		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_get_version = (int (*)(void))tun_dl_io_get_version;
-		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_device_alias = (void * (*)(unsigned int , char *))tun_dl_io_device_alias;
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_device_alias = (void * (*)(unsigned int , char *))tun_dl_io_device_alias;		
+		dl_io_fun_list_static_link[CAP_MODEL_TUN].dl_io_smart_offload = (void * (*)(unsigned int , char *))tun_dl_io_smart_offload;
 #endif 
 
 

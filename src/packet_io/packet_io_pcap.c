@@ -719,6 +719,10 @@ send_again:
 	return ret;
 }
 
+int pcap_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt_len, unsigned char dir, int thread_num)
+{
+	return 0;
+}
 
 /************************  funcitons for dynamic link *************************/
 
