@@ -2710,6 +2710,24 @@ char stream_bridge_tcpall_entry(struct streaminfo *pstream,void **pme, int threa
 	return APP_STATE_GIVEME;
 }
 
+char vxlan_inject_tcp_entry(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
+{
+	if(a_tcp->ptcpdetail->pdata && a_tcp->ptcpdetail->datalen)
+	{
+		struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)a_packet;
+		int ret = sapp_inject_pkt(a_tcp, SIO_EXCLUDE_THIS_LAYER_HDR, a_packet, ntohs(ip4hdr->ip_len), 0);
+		printf("polling inject pkt dir = 0: %s, ret = %d \n", printaddr(&a_tcp->addr, thread_seq), ret);
+
+		ret = sapp_inject_pkt(a_tcp, SIO_EXCLUDE_THIS_LAYER_HDR, a_packet, ntohs(ip4hdr->ip_len), 1);
+		printf("polling inject pkt dir = 1: %s, ret = %d \n", printaddr(&a_tcp->addr, thread_seq), ret);
+	}
+	
+	//ret = sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, a_packet, ntohs(ip4hdr->ip_len), 1);
+//	printf("polling inject pkt dir = 1: %s, ret = %d \n", printaddr(&stream->addr, thread_seq), ret);
+	
+	return APP_STATE_GIVEME;
+}
+
 
 char UDP_ENTRY(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {

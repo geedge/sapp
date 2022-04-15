@@ -1948,13 +1948,14 @@ static void build_net_single_layer_vxlan(struct streaminfo_private *stream_pr, i
 	send_vxlan_hdr->vlan_id_half_low = ntohs(single_addr->vlan_id) & 0xF;
 	send_vxlan_hdr->link_layer_type = single_addr->link_type;
 	send_vxlan_hdr->link_id = single_addr->link_id;
-
+	send_vxlan_hdr->dir = single_addr->dir;     //20220415 liuxueli for TSG-10227
+#if 0  //20220415 liuxueli for TSG-10227
 	if(DIR_C2S == send_stream_dir){
 		send_vxlan_hdr->dir = stream_pr->stream_c2s_route_dir;
 	}else{
 		send_vxlan_hdr->dir = stream_pr->stream_c2s_route_dir ^ 1;
 	}
-
+#endif
 }
 
 static int build_net_layer_vxlan(struct streaminfo_private *stream_pr, int carry_layer_type,
