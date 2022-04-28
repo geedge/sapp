@@ -626,7 +626,8 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		}
 #if 1
 		/* 2022-04-13 liuxueli add, for udp offload stream  */
-		if(unlikely(pdetail_pr->offload_stream_flag != 0)){
+		if(unlikely(pdetail_pr->offload_stream_flag != 0 && is_overlay_udp_layer==0)){
+			MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
 			return PASS;
 		}
 #endif
@@ -852,6 +853,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 
 		/* 2022-04-13 liuxueli add, for udp offload stream  */
 		if(unlikely(pdetail_pr->offload_stream_flag != 0)){
+			MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
 			return PASS;
 		}
 

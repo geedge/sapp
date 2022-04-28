@@ -2805,6 +2805,10 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 					ret = PASS;
 				}else{
 					ret = tcp_process_newstreambydata(pindex_tcp,this_iphdr, this_tcphdr,tcplen,raw_pkt);
+					if(pdetail_pr->offload_stream_flag!=0)
+					{
+						MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
+					}
 				}
 			}
 			}
@@ -2880,6 +2884,12 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		lrustream(pindex_tcp);
 		return DROP;
 	}
+
+	if(unlikely(pdetail_pr->offload_stream_flag != 0)){
+		MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
+		return PASS;
+	}
+
 
 	if(pstream->curdir==DIR_S2C)
 	{
@@ -2991,6 +3001,11 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		else if(pstream->stream_state==TCP_NOUSE_STATE)
 		{
 			ret=tcp_deal_nouse_stream(pindex_tcp,this_iphdr,raw_pkt,this_tcphdr,tcplen);
+		}
+
+		if(pdetail_pr->offload_stream_flag!=0)
+		{
+			MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
 		}
 	}
 	
