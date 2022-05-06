@@ -524,6 +524,8 @@ static inline int is_file_exist(const char *filename)
 	return ret;
 }
 
+static void update_overlay_vxlan_layer_set(void);
+
 /* 对于相同类型的配置, 命令行参数优先, 覆盖sapp.toml中的配置 */
 void sapp_cla_override_cfg_file(void)
 {
@@ -541,6 +543,10 @@ void sapp_cla_override_cfg_file(void)
 		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
 		strncpy(pconfig->packet_io.internal.interface.type_str, "pcap", NAME_MAX);
 		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_PCAP_DUMPFILE;
+		if(OVERLAY_MODE_VXLAN == pconfig->packet_io.packet_io_tunnel.overlay_mode_bin)
+		{
+			update_overlay_vxlan_layer_set();
+		}
 	}
 
 	if (sapp_get_cla_raw("dumpfile-file", &cmd_args) >= 0)

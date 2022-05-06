@@ -3161,7 +3161,7 @@ struct streaminfo_private *copy_stream_info_to_heap(int mem_used_type,const stru
 
 int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_pkt_t *rawpkt)
 {
-	if(DEPOLYMENT_MODE_INLINE != sapp_global_val->config.packet_io.depolyment_mode_bin){
+	if(DEPOLYMENT_MODE_INLINE != sapp_global_val->config.packet_io.depolyment_mode_bin && CAP_MODEL_PCAP_DUMPFILE != sapp_global_val->config.packet_io.internal.interface.type_bin){
 		return 0;
 	}
 
