@@ -601,6 +601,9 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		if(sapp_global_val->config.packet_io.extract_linkdir_from_mac_enabled != 0){
 			packet_io_hook_input_mirror((raw_pkt_t *)p_raw_pkt, dir, thread_num);
 		}
+		if(OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin && CAP_MODEL_PCAP_DUMPFILE == sapp_global_val->config.packet_io.internal.interface.type_bin){
+			packet_io_hook_input((raw_pkt_t *)p_raw_pkt, dir, thread_num);
+		}
 	}
 
 	local_sys_stat->count[SAPP_STAT_RCV_RAW]++;

@@ -197,7 +197,7 @@ static int packet_io_hook_input_vxlan(raw_pkt_t *raw_pkt, unsigned char dir, int
 		return -1;
 	}
 	
-	if(vxlan_packet_is_myself(raw_pkt) != 0){
+	if(vxlan_packet_is_myself(raw_pkt) != 0 || CAP_MODEL_PCAP_DUMPFILE == sapp_global_val->config.packet_io.internal.interface.type_bin){
 		vxlan_hdr = (inline_vxlan_hdr_t *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_udp_hdr));
 		raw_pkt->is_overlay_pkt = 1; /* vxlan */
 		raw_pkt->route_dir = vxlan_hdr->dir;
@@ -238,10 +238,6 @@ int packet_io_hook_input_mirror(raw_pkt_t *raw_pkt, unsigned char dir, int threa
 	const unsigned char *p_mac_addr;
 
 	p_mac_addr = (unsigned char *)raw_pkt->raw_pkt_data;
-
-	if(OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin && CAP_MODEL_PCAP_DUMPFILE == sapp_global_val->config.packet_io.internal.interface.type_bin){
-		packet_io_hook_input_vxlan(raw_pkt, dir, thread_num);
-	}
 
 	if(p_mac_addr[sapp_global_val->config.packet_io.extract_linkdir_from_mac_byte_index] & sapp_global_val->config.packet_io.extract_linkdir_from_mac_bit_value){
 		raw_pkt->route_dir = 1;
