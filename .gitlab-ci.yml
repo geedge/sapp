@@ -46,11 +46,11 @@ stages:
   tags:
     - share
 
-sapp_module_test_for_centos7:
+.setup_test_env_for_centos7:
   stage: test
   image: $BUILD_IMAGE_CENTOS7
   allow_failure: true
-  script:
+  before_script:
     - yum makecache
     - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb snappy
     - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini libMESA_jump_layer
@@ -72,35 +72,6 @@ sapp_module_test_for_centos7:
     - sed -i '14 i__log_test_sapp_benchmark_log.debug    >stdout; other' etc/sapp_log.conf
     - sed -i '11 i__log_runtimelog.info    >stdout; other' etc/sapp_log.conf
     - ulimit -c unlimited
-#using module v2.0
-    - ./gtest_sapp_v4 -f tcpall.*
-    - ./gtest_sapp_v4 -f control.*
-    - ./gtest_sapp_v4 -f project.*
-    - ./gtest_sapp_v4 -f stream_bridge.*
-    - ./gtest_sapp_v4 -f tunnel.*
-    - ./gtest_sapp_v4 -f inject.*
-    - ./gtest_sapp_v4 -f plug_ctrl.*
-    - ./gtest_sapp_v4 -f jump_layer.*
-    - ./gtest_sapp_v4 -f inline_mode.*
-    - ./gtest_sapp_v4 -f fake_marsio.*
-    - ./gtest_sapp_v4 -f hybrid.*
-#using module v2.0
-    - ./gtest_sapp_v4 -f ipv4.*
-    - ./gtest_sapp_v4 -f ipv6.*
-    - ./gtest_sapp_v4 -f udp.*
-    - ./gtest_sapp_v4 -f tcp.*
-    - ./gtest_sapp_v4 -f appstate.*
-    - ./gtest_sapp_v4 -f timer.*
-    - ./gtest_sapp_v4 -f proxy.*
-    - ./gtest_sapp_v4 -f asymmetric.*
-    - ./gtest_sapp_v4 -f transparent.*
-    - ./gtest_sapp_v4 -f pkt_dump.*
-#using module v3.0
-    - ./gtest_sapp_v4 -f benchmark_drop.*
-    - ./gtest_sapp_v4 -f benchmark_forward.*
-    - ./gtest_sapp_v4 -f benchmark_inject.tcp*
-    - ./gtest_sapp_v4 -f benchmark_inject.inline_same_dir
-#    - ./gtest_sapp_v4 -f benchmark_inject.inline_reverse_dir
   dependencies:
     - branch_build_debug_for_centos7
     - branch_build_release_for_centos7
@@ -108,70 +79,119 @@ sapp_module_test_for_centos7:
     - develop_build_release_for_centos7
     - release_build_release_for_centos7
   tags:
-  - share    
+    - share    
 
-sapp_module_test_for_centos8:
+
+benchmark_test_for_centos7:
   stage: test
-  image: $BUILD_IMAGE_CENTOS8
-  allow_failure: true
+  extends: .setup_test_env_for_centos7
   script:
-    - sh +x ./ci/update-el8-repo.sh
-    - yum makecache
-    - dnf --enablerepo=powertools install -y libnsl
-    - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb snappy
-    - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini libMESA_jump_layer
-    - yum install -y sapp gtest_sapp benchmark_pcap sapp_benchmark
-    - ls -l /opt/MESA/lib
-    - echo "/opt/MESA/lib" >> /etc/ld.so.conf
-    - ldconfig
-    - ldd /home/mesasoft/sapp_run/sapp
-    - ifconfig
-    - sysctl -w net.ipv6.conf.all.disable_ipv6=0
-    - ifconfig
-    - ip neigh show
-    - ip -6 neigh show
-    - cp /builds/MESA_Platform/sapp/build/src/entry/sapp /home/mesasoft/sapp_run/sapp
-    - cp /builds/MESA_Platform/sapp/build/test/libsapp_devel.so /opt/MESA/lib
-    - ldconfig
     - cd /home/mesasoft/sapp_run
-    - ldd gtest_sapp_v4
-    - sed -i '14 i__log_test_sapp_benchmark_log.debug    >stdout; other' etc/sapp_log.conf
-    - sed -i '11 i__log_runtimelog.info    >stdout; other' etc/sapp_log.conf
-    - ulimit -c unlimited
-    - ./gtest_sapp_v4 -f ipv4.*
-    - ./gtest_sapp_v4 -f ipv6.*
-    - ./gtest_sapp_v4 -f udp.*
-    - ./gtest_sapp_v4 -f tcpall.*
-    - ./gtest_sapp_v4 -f tcp.*
+#run module v2.0 with death test
     - ./gtest_sapp_v4 -f control.*
-    - ./gtest_sapp_v4 -f project.*
-    - ./gtest_sapp_v4 -f stream_bridge.*
-    - ./gtest_sapp_v4 -f tunnel.*
-    - ./gtest_sapp_v4 -f appstate.*
-    - ./gtest_sapp_v4 -f timer.*
-    - ./gtest_sapp_v4 -f inject.*
-    - ./gtest_sapp_v4 -f plug_ctrl.*
-    - ./gtest_sapp_v4 -f jump_layer.*
-    - ./gtest_sapp_v4 -f inline_mode.*
-    - ./gtest_sapp_v4 -f asymmetric.*
-    - ./gtest_sapp_v4 -f proxy.*
     - ./gtest_sapp_v4 -f fake_marsio.*
-    - ./gtest_sapp_v4 -f transparent.*
-    - ./gtest_sapp_v4 -f hybrid.*
-    - ./gtest_sapp_v4 -f pkt_dump.*
+#run module v3.0
     - ./gtest_sapp_v4 -f benchmark_drop.*
     - ./gtest_sapp_v4 -f benchmark_forward.*
     - ./gtest_sapp_v4 -f benchmark_inject.tcp*
     - ./gtest_sapp_v4 -f benchmark_inject.inline_same_dir
-    - ./gtest_sapp_v4 -f benchmark_inject.inline_reverse_dir
-  dependencies:
-    - branch_build_debug_for_centos8
-    - branch_build_release_for_centos8
-    - develop_build_debug_for_centos8
-    - develop_build_release_for_centos8
-    - release_build_release_for_centos8
-  tags:
-  - share    
+#    - ./gtest_sapp_v4 -f benchmark_inject.inline_reverse_dir
+
+inline_test_for_centos7:
+  stage: test
+  extends: .setup_test_env_for_centos7
+  script:
+    - cd /home/mesasoft/sapp_run
+#run module v2.0 with death test
+    - ./gtest_sapp_v4 -f inline_mode.*
+
+basic_test_for_centos7:
+  stage: test
+  extends: .setup_test_env_for_centos7
+  script:
+    - cd /home/mesasoft/sapp_run
+#run module v2.0 immediately
+    - ./gtest_sapp_v4 -f ipv4.*
+    - ./gtest_sapp_v4 -f ipv6.*
+    - ./gtest_sapp_v4 -f udp.*
+    - ./gtest_sapp_v4 -f tcp.*
+    - ./gtest_sapp_v4 -f appstate.*
+    - ./gtest_sapp_v4 -f timer.*
+    - ./gtest_sapp_v4 -f proxy.*
+    - ./gtest_sapp_v4 -f asymmetric.*
+    - ./gtest_sapp_v4 -f pkt_dump.*
+    - ./gtest_sapp_v4 -f tcpall.*
+    - ./gtest_sapp_v4 -f project.*
+    - ./gtest_sapp_v4 -f stream_bridge.*
+    - ./gtest_sapp_v4 -f tunnel.*
+    - ./gtest_sapp_v4 -f plug_ctrl.*
+    - ./gtest_sapp_v4 -f jump_layer.*
+    - ./gtest_sapp_v4 -f hybrid.*
+    - ./gtest_sapp_v4 -f inject.*
+    - ./gtest_sapp_v4 -f transparent.*
+
+# sapp_module_test_for_centos8:
+#   stage: test
+#   image: $BUILD_IMAGE_CENTOS8
+#   allow_failure: true
+#   script:
+#     - sh +x ./ci/update-el8-repo.sh
+#     - yum makecache
+#     - dnf --enablerepo=powertools install -y libnsl
+#     - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb snappy
+#     - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini libMESA_jump_layer
+#     - yum install -y sapp gtest_sapp benchmark_pcap sapp_benchmark
+#     - ls -l /opt/MESA/lib
+#     - echo "/opt/MESA/lib" >> /etc/ld.so.conf
+#     - ldconfig
+#     - ldd /home/mesasoft/sapp_run/sapp
+#     - ifconfig
+#     - sysctl -w net.ipv6.conf.all.disable_ipv6=0
+#     - ifconfig
+#     - ip neigh show
+#     - ip -6 neigh show
+#     - cp /builds/MESA_Platform/sapp/build/src/entry/sapp /home/mesasoft/sapp_run/sapp
+#     - cp /builds/MESA_Platform/sapp/build/test/libsapp_devel.so /opt/MESA/lib
+#     - ldconfig
+#     - cd /home/mesasoft/sapp_run
+#     - ldd gtest_sapp_v4
+#     - sed -i '14 i__log_test_sapp_benchmark_log.debug    >stdout; other' etc/sapp_log.conf
+#     - sed -i '11 i__log_runtimelog.info    >stdout; other' etc/sapp_log.conf
+#     - ulimit -c unlimited
+#     - ./gtest_sapp_v4 -f ipv4.*
+#     - ./gtest_sapp_v4 -f ipv6.*
+#     - ./gtest_sapp_v4 -f udp.*
+#     - ./gtest_sapp_v4 -f tcpall.*
+#     - ./gtest_sapp_v4 -f tcp.*
+#     - ./gtest_sapp_v4 -f control.*
+#     - ./gtest_sapp_v4 -f project.*
+#     - ./gtest_sapp_v4 -f stream_bridge.*
+#     - ./gtest_sapp_v4 -f tunnel.*
+#     - ./gtest_sapp_v4 -f appstate.*
+#     - ./gtest_sapp_v4 -f timer.*
+#     - ./gtest_sapp_v4 -f inject.*
+#     - ./gtest_sapp_v4 -f plug_ctrl.*
+#     - ./gtest_sapp_v4 -f jump_layer.*
+#     - ./gtest_sapp_v4 -f inline_mode.*
+#     - ./gtest_sapp_v4 -f asymmetric.*
+#     - ./gtest_sapp_v4 -f proxy.*
+#     - ./gtest_sapp_v4 -f fake_marsio.*
+#     - ./gtest_sapp_v4 -f transparent.*
+#     - ./gtest_sapp_v4 -f hybrid.*
+#     - ./gtest_sapp_v4 -f pkt_dump.*
+#     - ./gtest_sapp_v4 -f benchmark_drop.*
+#     - ./gtest_sapp_v4 -f benchmark_forward.*
+#     - ./gtest_sapp_v4 -f benchmark_inject.tcp*
+#     - ./gtest_sapp_v4 -f benchmark_inject.inline_same_dir
+#     - ./gtest_sapp_v4 -f benchmark_inject.inline_reverse_dir
+#   dependencies:
+#     - branch_build_debug_for_centos8
+#     - branch_build_release_for_centos8
+#     - develop_build_debug_for_centos8
+#     - develop_build_release_for_centos8
+#     - release_build_release_for_centos8
+#   tags:
+#   - share    
 
 branch_build_debug_for_centos7:
   stage: build
