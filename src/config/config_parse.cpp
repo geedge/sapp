@@ -1765,7 +1765,7 @@ int sapp_parse_config(void)
 
 	/*******************************  packet_io.overlay_tunnel_definition ******************************/
 	
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"overlay_tunnel_definition", (char *)"l2_l3_tunnel_support", &pconfig->packet_io.packet_io_tunnel.l2_l3_tunnel_support, 0);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"overlay_tunnel_definition", (char *)"l2_l3_tunnel_support", &pconfig->packet_io.packet_io_tunnel.l2_l3_tunnel_support, 1);
 
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"overlay_tunnel_definition", (char *)"overlay_mode", pconfig->packet_io.packet_io_tunnel.overlay_mode_string, NAME_MAX, "none");
 
