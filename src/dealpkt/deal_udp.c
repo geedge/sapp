@@ -37,6 +37,7 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 	ulen = ntohs (udph->uh_ulen);
 	datalen =ulen - sizeof (struct mesa_udp_hdr);
 	pdetail->lastmtime=(long)g_CurrentTime;
+	a_udp_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
 	
 	if(a_udp->curdir==DIR_C2S)
 	{
@@ -200,6 +201,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	pstream_udp_pr->global_stream_id = get_global_stream_id(threadnum);
 	pstream_udp_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 	pdetail->lastmtime=g_CurrentTime;
+	pstream_udp_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
 	pstream_udp_pr->timeout=udp_reset_time;
 
 	if(pstream_udp_pr->under_ddos_bypass){
@@ -470,7 +472,8 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
 	    is_dup_pkt = sapp_dup_pkt_identify_udp_v4(tid, pstream_pr, this_iphdr, udph, need_add_bloom_filter);
 	}
 	
-	return is_dup_pkt; 
+	
+return is_dup_pkt; 
 }
 
 int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_iphdr,

@@ -734,6 +734,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pdetail_pr->C2S_first_ack_seq = ntohl (this_tcphdr->th_ack);
 	}
 	pdetail->lastmtime=g_CurrentTime;	
+	pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 	pdetail_pr->link_state=STREAM_LINK_JUST_EST;	
 	pstream->stream_state=TCP_SYN_STATE;
 
@@ -954,8 +955,9 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
                 pstream->pktstate=OP_STATE_PENDING;
         }	
 	pdetail->createtime=g_CurrentTime;	
-	pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
 	pdetail->lastmtime=g_CurrentTime;
+	pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
+	pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
 	pdetail_pr->link_state=STREAM_LINK_DATA;	
 
 	if(pstream_pr->under_ddos_bypass){
@@ -2310,6 +2312,8 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 
 
 	pdetail->lastmtime=(long)g_CurrentTime;
+	pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
+
 	
 	tcp_deal_ack(pstream,this_tcphdr);
 
@@ -2397,8 +2401,6 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 				根据在线统计值, 四元组重用两个连接的时间间隔一般在分钟级.
 			*/
 			if(tcp_tuple4_reuse(pstream, pdetail_pr, this_tcphdr) == 0){
-//			if(pdetail->lastmtime + 3 > (UINT64)g_CurrentTime){
-				//printf("###### recv syn, but not tcp reuse, close return PASS for test!!\n");
 				return PASS;
 			}
 	   }
@@ -2895,6 +2897,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		call_tcpall_after_reset = 1;		
 	}
 	pdetail->lastmtime=g_CurrentTime;
+	pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
 
 	pstream->addr.pkttype = PKT_TYPE_NORMAL;//add by lqy 20151222, init pkttype
 	pdetail_pr->tcpoverlen=0;//add by lqy 20150325

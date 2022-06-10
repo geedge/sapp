@@ -189,6 +189,7 @@ struct streaminfo_private
 	*/
 	unsigned long long global_stream_id; 
 	unsigned long long stream_create_timestamp_ms; 
+	unsigned long long stream_lastupdate_timestamp_ms; 
 	/* ===8 bytes=== */
 	unsigned char layer_index:4; /* 表示当前层的计数, 从最底层开始,一般是ethernet开始, 从0开始计数, 4bit最多支持15层嵌套, 也能防止隧道嵌套攻击(目前还没捕到过包) */
 	unsigned char create_dir_by_well_known_port:1;  /* UDP或TCP按data建连接, 命中well_known_port规则, 而不是按大端口是客户端原则创建流 */

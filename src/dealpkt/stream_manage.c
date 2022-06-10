@@ -351,53 +351,6 @@ int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned s
 				/* 允许插件多次设置超时时间, 当前流第一次设置超时时间记录计数 */
 				sapp_global_mthread[pstream->threadnum].udp_stream_special_timeout_num++;
 			}
-#if 0			
-			lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->udpList[pstream->stream_state]);
-			if(lru_list_root->head == lru_list_root->tail){ /* 当前仅剩最后一个流, 无需移动 */
-				ret = 0;
-				goto done;
-			}
-
-			/* before-insert : head->tmp_index->tail */
-
-			assert(lru_list_root->head);
-			assert(lru_list_root->tail);	
-			__do_streamleavlist(pindex, lru_list_root); /* 从原位置摘除 */
-			assert(lru_list_root->head);
-			assert(lru_list_root->tail);
-			/* 
-			   如果当前流设置的新超时时间, 比LRU末尾的流剩余时间(无包到达时间)还长, 
-			   换句话说, 就是离淘汰此流的时间也比LRU末尾的流要滞后, 
-			   所以需要向tail(时间更新的)方向移动 .
-			 */
-			/* after-insert : head->pindex->tmp_index->tail, 插在tmp_index之前 */
-long udp_times = 0;
-			tmp_index = lru_list_root->tail; /* 新设的timeout值大, 从不易被淘汰端, 即tail节点开始比较 */
-			while(tmp_index 
-			  && (tmp_index->stream.timeout != 0) /* timeout默认为0的流, 即没设超时时间, 可认为是无限大 */
-			  && (timeout < (g_CurrentTime - tmp_index->stream.stream_public.pudpdetail->lastmtime))){
-printf("##### serach udp timeout place, %ld.....\n", udp_times++);			  
-				tmp_index = tmp_index->prev;
-			}			
-
-			/* 插入新位置 */
-			if(NULL == tmp_index){ /* 一直找到最后一个节点, pindex应该做为新的head */
-				lru_list_root->head->prev = pindex;
-				pindex->next = lru_list_root->head;
-				lru_list_root->head = pindex;
-				pindex->prev = NULL;
-			}else{			
-				if(tmp_index->prev){
-					tmp_index->prev->next = pindex;
-				}else{
-					lru_list_root->head = pindex; /* 作为head节点 */
-				}
-				pindex->prev = tmp_index->prev;
-				tmp_index->prev = pindex;
-				pindex->next = tmp_index;
-			}
-			lru_list_root->cnt++; /* 在__do_streamleavlist()中减1, 此处恢复计数 */
-#endif			
 		}
 		else if (STREAM_TYPE_TCP==pstream->type)
 		{
@@ -415,50 +368,6 @@ printf("##### serach udp timeout place, %ld.....\n", udp_times++);
 				/* 允许插件多次设置超时时间, 当前流第一次设置超时时间记录计数 */
 				sapp_global_mthread[pstream->threadnum].tcp_stream_special_timeout_num++;
 			}
-#if 0			
-			lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->tcpList[pstream->stream_state]);
-			if(lru_list_root->head == lru_list_root->tail){ /* 当前仅剩最后一个流, 无需移动 */
-				ret = 0;
-				goto done;
-			}
-			
-			assert(lru_list_root->head);
-			assert(lru_list_root->tail);	
-			__do_streamleavlist(pindex, lru_list_root); /* 从原位置摘除, 此处不能直接使用streamleavlist, 复用部分代码 */
-			assert(lru_list_root->head);
-			assert(lru_list_root->tail);	
-			/* 
-			   如果当前流设置的新超时时间, 比LRU末尾的流剩余时间(无包到达时间)还长, 
-			   换句话说, 就是离淘汰此流的时间也比LRU末尾的流要滞后, 
-			   所以需要向tail(时间更新的)方向移动 .
-			   */	
-long tcp_times = 0;
-			tmp_index = lru_list_root->tail;
-			while(tmp_index 
-			  && (tmp_index->stream.timeout != 0) /* timeout默认为0的流, 即没设超时时间, 可认为是无限大 */
-			  && (timeout < (g_CurrentTime - tmp_index->stream.stream_public.ptcpdetail->lastmtime))){
-printf("##### serach tcp timeout place, %ld.....\n", tcp_times);			
-				tmp_index = tmp_index->prev;
-			}	
-		
-			/* 插入新位置 */
-			if(NULL == tmp_index){ /* 一直找到最后一个节点, pindex应该做为新的head */
-				lru_list_root->head->prev = pindex;
-				pindex->next = lru_list_root->head;
-				lru_list_root->head = pindex;
-				pindex->prev = NULL;
-			}else{			
-				if(tmp_index->prev){
-					tmp_index->prev->next = pindex;
-				}else{
-					lru_list_root->head = pindex; /* 作为head节点 */
-				}
-				pindex->prev = tmp_index->prev;
-				tmp_index->prev = pindex;
-				pindex->next = tmp_index;
-			}
-			lru_list_root->cnt++; /* 在__do_streamleavlist()中减1, 此处恢复计数 */
-#endif	
 		}else{
 			goto err; /* 仅支持TCP和UDP流 */
 		}
@@ -477,24 +386,6 @@ printf("##### serach tcp timeout place, %ld.....\n", tcp_times);
 err:
 	return -1;
 }
-#if 0
-void udp_set_stream_resettime(unsigned short timeout)
-{
-	udp_reset_time=timeout;
-}
-#endif
-
-#if 0
-void udp_set_stream_timeout(unsigned short timeout)//2014-12-25 lijia add, 兼容旧平台, xj_fd
-{
-	udp_reset_time=(unsigned short)timeout;
-}
-
-void udp_set_stream_resettime(unsigned short timeout)
-{
-	udp_reset_time=(unsigned short)timeout;
-}#endif
-#endif
 
 int udp_set_stream_num(int udp1,int udp2,int udp3)
 {
