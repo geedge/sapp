@@ -36,9 +36,7 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 
 	ulen = ntohs (udph->uh_ulen);
 	datalen =ulen - sizeof (struct mesa_udp_hdr);
-	pdetail->lastmtime=(long)g_CurrentTime;
-	a_udp_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
-	
+
 	if(a_udp->curdir==DIR_C2S)
 	{
 		pdetail->serverpktnum++;	
@@ -611,6 +609,9 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		//pstream->addr.pktipfragtype = pstream->stream_public.addr.pktipfragtype; /* 2015-11-04 lijia add, IP分片类型更新 */
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 
+		pstream->pudpdetail->lastmtime=(long)g_CurrentTime;
+		pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
+
 		if(pstream_pr->under_ddos_bypass){
 			local_sys_stat->count[SAPP_STAT_UDP_BYPASS_PKTS]++;
 			local_sys_stat->length[SAPP_STAT_UDP_BYPASS_BYTES]+= ulen;					
@@ -808,6 +809,9 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);		
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
+
+		pstream->pudpdetail->lastmtime=(long)g_CurrentTime;
+		pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
 
 		if(pstream_pr->under_ddos_bypass){
 			local_sys_stat->count[SAPP_STAT_UDP_BYPASS_PKTS]++;
