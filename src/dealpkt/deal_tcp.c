@@ -2781,8 +2781,6 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	pdetail_pr =(struct tcpdetail_private*)(pstream->pdetail);
 	pdetail =(struct tcpdetail *)(&pdetail_pr->tcpdetail_public);
 
-	pdetail->lastmtime=g_CurrentTime;
-	pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
 
 	/* ddos bypass优先级最高 */
 	if(pstream_pr->under_ddos_bypass){
@@ -2828,6 +2826,8 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	if(unlikely(pdetail_pr->drop_stream_flag != 0)){
 		sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, has been set drop flag, curdir:%d, return DROP.", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+		pdetail->lastmtime = g_CurrentTime;
+		pstream_pr->stream_lastupdate_timestamp_ms = sapp_global_val->individual_volatile->current_time_ms;
 		lrustream(pindex_tcp);
 		return DROP;
 	}
@@ -2900,6 +2900,8 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		call_tcpall_after_reset = 1;		
 	}
 
+	pdetail->lastmtime=g_CurrentTime;
+	pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
 	pstream->addr.pkttype = PKT_TYPE_NORMAL;//add by lqy 20151222, init pkttype
 	pdetail_pr->tcpoverlen=0;//add by lqy 20150325
 	
