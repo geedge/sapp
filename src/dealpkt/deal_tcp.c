@@ -2788,29 +2788,34 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 				}
 #endif				
 				//end of add by yw to detect dataflood attack			
-			pindex_tcp=tcp_add_new_stream_bydata(pindex,this_tcphdr,tcplen,CTREAT_LINK, raw_pkt);
-			
-			if(likely(pindex_tcp != NULL))
-			{
-				pstream_pr = &pindex_tcp->stream;
-				pstream = &pstream_pr->stream_public;
-				pstream_pr->raw_pkt = raw_pkt;  //add by lijia 20171206
-				//add by lqy 20150114 新建立的链接必须先调用all函数
-				if(pstream_pr->under_ddos_bypass){
-					local_sys_stat->count[SAPP_STAT_TCP_BYPASS_STREAM]++;
-					local_sys_stat->count[SAPP_STAT_TCP_BYPASS_PKTS]++;
-					local_sys_stat->length[SAPP_STAT_TCP_BYPASS_BYTES]+= tcplen;	
-					cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
-					sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream:%s under ddos bypass!", printaddr(&pstream->addr, pstream->threadnum));			
-					ret = PASS;
-				}else{
-					ret = tcp_process_newstreambydata(pindex_tcp,this_iphdr, this_tcphdr,tcplen,raw_pkt);
-					if(pdetail_pr->offload_stream_flag!=0)
+				pindex_tcp=tcp_add_new_stream_bydata(pindex,this_tcphdr,tcplen,CTREAT_LINK, raw_pkt);
+				
+				if(likely(pindex_tcp != NULL))
+				{
+					pstream_pr = &pindex_tcp->stream;
+					pstream = &pstream_pr->stream_public;
+					pstream_pr->raw_pkt = raw_pkt;  //add by lijia 20171206
+					//add by lqy 20150114 新建立的链接必须先调用all函数
+					if(pstream_pr->under_ddos_bypass)
 					{
+						local_sys_stat->count[SAPP_STAT_TCP_BYPASS_STREAM]++;
+						local_sys_stat->count[SAPP_STAT_TCP_BYPASS_PKTS]++;
+						local_sys_stat->length[SAPP_STAT_TCP_BYPASS_BYTES]+= tcplen;	
+						cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
+						sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream:%s under ddos bypass!", printaddr(&pstream->addr, pstream->threadnum));			
+						ret = PASS;
+					}else
+					{
+						ret = tcp_process_newstreambydata(pindex_tcp,this_iphdr, this_tcphdr,tcplen,raw_pkt);
+					}
+
+					pdetail_pr =(struct tcpdetail_private*)(pstream->pdetail);
+					if(pdetail_pr->offload_stream_flag==(SMART_OFFLOAD_FLAG_TCP|SMART_OFFLOAD_FLAG_TCPALL))
+					{
+						local_sys_stat->count[SAPP_STAT_TCP_OFFLOAD_STREAM]++;
 						MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
 					}
 				}
-			}
 			}
 			return ret;
 		}		
@@ -2884,12 +2889,6 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		lrustream(pindex_tcp);
 		return DROP;
 	}
-
-	if(unlikely(pdetail_pr->offload_stream_flag != 0)){
-		MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
-		return PASS;
-	}
-
 
 	if(pstream->curdir==DIR_S2C)
 	{
@@ -2971,10 +2970,19 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	}
 	else
 	{
+		if(pdetail_pr->offload_stream_flag==(SMART_OFFLOAD_FLAG_TCP|SMART_OFFLOAD_FLAG_TCPALL))
+		{
+			local_sys_stat->count[SAPP_STAT_TCP_OFFLOAD_PKTS]++;
+			local_sys_stat->length[SAPP_STAT_TCP_OFFLOAD_BYTES]+= tcplen;
+
+			MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);		
+			return PASS;
+		}
+		
 		if(pstream->stream_state==TCP_DATA_STATE)
 		{
 			//ret=tcp_deal_data_stream(pindex_tcp,rawippkt,iplen,this_tcphdr,tcplen);			
-			ret=tcp_deal_data_stream(pindex_tcp,this_iphdr, raw_pkt,this_tcphdr,tcplen);	
+			ret=tcp_deal_data_stream(pindex_tcp,this_iphdr, raw_pkt,this_tcphdr,tcplen);
 		}	
 		else if(pstream->stream_state==TCP_SYN_STATE)
 		{
@@ -3001,11 +3009,6 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		else if(pstream->stream_state==TCP_NOUSE_STATE)
 		{
 			ret=tcp_deal_nouse_stream(pindex_tcp,this_iphdr,raw_pkt,this_tcphdr,tcplen);
-		}
-
-		if(pdetail_pr->offload_stream_flag!=0)
-		{
-			MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
 		}
 	}
 	
@@ -3039,6 +3042,12 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			ret = retAll;
 			goto fun_exit;
 		}
+	}
+
+	if(pdetail_pr->offload_stream_flag==(SMART_OFFLOAD_FLAG_TCP|SMART_OFFLOAD_FLAG_TCPALL) && DROP!=ret)
+	{
+		local_sys_stat->count[SAPP_STAT_TCP_OFFLOAD_STREAM]++;
+		MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);		
 	}
 
 fun_exit:    

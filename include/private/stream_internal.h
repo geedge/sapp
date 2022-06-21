@@ -59,6 +59,7 @@
 
 #define SAPP_DESTROY_DONE_FLAG  (0x7FFFFFFF)
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif

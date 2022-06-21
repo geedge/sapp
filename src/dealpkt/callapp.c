@@ -404,17 +404,17 @@ static void plug_entry_kick_out_tot_list(StreamFunInfo *list_head, struct stream
 	ptcpdetail_pr->link_state = saved_linkstate;
 }
 
-static int stream_set_offload_flag(struct streaminfo *pstream)
+static int stream_set_offload_flag(struct streaminfo *pstream, unsigned char smart_offload_flag)
 {
 	if(STREAM_TYPE_TCP == pstream->type)
 	{
 		struct tcpdetail_private *tcp_pdetail_pr=(struct tcpdetail_private*)(pstream->pdetail);
-		tcp_pdetail_pr->offload_stream_flag=1;
+		tcp_pdetail_pr->offload_stream_flag|=smart_offload_flag;
 	}
 	else if(STREAM_TYPE_UDP == pstream->type)
 	{
 		struct udpdetail_private *udp_pdetail_pr=(struct udpdetail_private*)(pstream->pdetail);
-		udp_pdetail_pr->offload_stream_flag=1;
+		udp_pdetail_pr->offload_stream_flag|=smart_offload_flag;
 	}
 	else
 	{
@@ -461,7 +461,7 @@ static int call_streamentry(struct streaminfo *a_stream, const void *this_iphdr,
 }
 
 int stream_state_pending(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
-				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate)
+				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate, unsigned char smart_offload_flag)
 {
 	int i=0;
 	int ret=PASS;
@@ -471,7 +471,6 @@ int stream_state_pending(struct streaminfo *a_stream,const void *this_iphdr, con
 	UCHAR threadnum = a_stream->threadnum;
 	UCHAR local_app_ret;
 	int break_flag = 0;
-	int all_givestate=1;
 
 	pFunList = (StreamFunInfo*)(*apme);
 
@@ -490,7 +489,6 @@ int stream_state_pending(struct streaminfo *a_stream,const void *this_iphdr, con
 				plug_entry_kick_out_tot_list(pFunList, a_stream);
 				pFunList = NULL;
 				*apme = NULL; /* 2020-05-08 lijia modify */
-				all_givestate=0;
 				break;
 			}
 		}
@@ -506,10 +504,6 @@ int stream_state_pending(struct streaminfo *a_stream,const void *this_iphdr, con
 			if(local_app_ret & APP_STATE_GIVESTATE)
 			{
 				pFunInfo->appState=APP_STATE_GIVESTATE;
-			}
-			else
-			{
-				all_givestate=0;
 			}
 
 			if(pFunList==NULL)
@@ -546,32 +540,41 @@ int stream_state_pending(struct streaminfo *a_stream,const void *this_iphdr, con
 		pFunInfo = NULL;		
 	}
 
-	if(all_givestate==1)	//所有插件DROPME，或者均设置GIVESTATE状态
-	{
-		stream_set_offload_flag(a_stream);
-	}
 	
 	//有需要再次送包的回调函数
 	if(pFunList!=NULL)
 	{
 		*apme = pFunList;
 		*opstate= OP_STATE_DATA;
+
+		pNext=pFunList;
+		while(pNext)	//所有插件DROPME，或者均设置GIVESTATE状态
+		{
+			if(pNext->appState!=APP_STATE_GIVESTATE)
+			{
+				return ret;
+			}
+
+			pNext=pNext->next;
+		}
+
+		stream_set_offload_flag(a_stream, smart_offload_flag);
 	}
 	else
 	{
-		*opstate= OP_STATE_CLOSE;
+		*opstate= OP_STATE_CLOSE;	
+		stream_set_offload_flag(a_stream, smart_offload_flag);
 	}
 	
 	return ret;
 }
 
 static int stream_state_data(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
-				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate)
+				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate, unsigned char smart_offload_flag)
 {
 	int ret=PASS;
 	UCHAR local_app_ret;
 	int break_flag = 0;
-	int all_givestate=1;
 	StreamFunInfo *pFunList=NULL;
 	StreamFunInfo *pFunInfo=NULL;
 	StreamFunInfo *pNext=NULL,*pPrev=NULL;
@@ -650,10 +653,6 @@ static int stream_state_data(struct streaminfo *a_stream,const void *this_iphdr,
 			{
 				pFunInfo->appState=APP_STATE_GIVESTATE;
 			}
-			else
-			{
-				all_givestate=0;
-			}
 			
 			pPrev=pFunInfo;
 			pFunInfo=pFunInfo->next;
@@ -675,13 +674,23 @@ static int stream_state_data(struct streaminfo *a_stream,const void *this_iphdr,
 	//处理过程中大家都不需要了
 	if(pFunList==NULL)
 	{
-		*opstate = OP_STATE_CLOSE;
+		*opstate = OP_STATE_CLOSE;	
+		stream_set_offload_flag(a_stream, smart_offload_flag);
 	}	
 
-	if(all_givestate==1)	//所有插件DROPME，或者均设置GIVESTATE状态
+	pNext=pFunList;
+	while(pNext)	//所有插件DROPME，或者均设置GIVESTATE状态
 	{
-		stream_set_offload_flag(a_stream);
+		if(pNext->appState!=APP_STATE_GIVESTATE)
+		{
+			return ret;
+		}
+	
+		pNext=pNext->next;
 	}
+
+	//所有插件DROPME，或者均设置GIVESTATE状态	
+	stream_set_offload_flag(a_stream, smart_offload_flag);
 
 	return ret;
 }
@@ -689,7 +698,7 @@ static int stream_state_data(struct streaminfo *a_stream,const void *this_iphdr,
 
 //add end
 int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
-				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate)
+				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate, unsigned char smart_offload_flag)
 {
 	int ret=PASS;
 	StreamFunInfo *pFunInfo=NULL;
@@ -697,7 +706,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 
 	if(funnum==0)
 	{
-		stream_set_offload_flag(a_stream);
+		stream_set_offload_flag(a_stream, smart_offload_flag);
 		*opstate= OP_STATE_CLOSE;
 		return ret;
 	}
@@ -705,7 +714,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 	switch(*opstate)
 	{
 		case	OP_STATE_PENDING:
-			return stream_state_pending(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate);
+			return stream_state_pending(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate, smart_offload_flag);
 			break;
 		case	OP_STATE_DATA:	
 			if(*apme==NULL) //如果已经没有要处理的函数了
@@ -713,7 +722,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 				*opstate= OP_STATE_CLOSE;
 				break;
 			}
-			return stream_state_data(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate);
+			return stream_state_data(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate, smart_offload_flag);
 			break;
 		case	OP_STATE_CLOSE: //链接关闭,清除状态
 				pFunInfo=(StreamFunInfo *)(*apme);
@@ -801,7 +810,7 @@ int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const v
 #endif	
 
 	a_tcp_pr->packet_io_context = 1;
-	ret = stream_process(a_tcp, this_iphdr, transport_hdr, raw_pkt,g_StreamTcpFunNum, g_StreamTcpFun,apme,popstate);	
+	ret = stream_process(a_tcp, this_iphdr, transport_hdr, raw_pkt,g_StreamTcpFunNum, g_StreamTcpFun,apme,popstate, SMART_OFFLOAD_FLAG_TCP);	
 	a_tcp_pr->packet_io_context = 0;
 	
 #if (0 == HIGH_PERF)		
@@ -840,7 +849,7 @@ int stream_process_udp(struct streaminfo *a_udp, const void *this_iphdr, const v
 #endif
 
 	a_udp_pr->packet_io_context = 1;
-	ret = stream_process(a_udp, this_iphdr, transport_hdr,raw_pkt,g_StreamUdpFunNum, g_StreamUdpFun,apme,popstate);
+	ret = stream_process(a_udp, this_iphdr, transport_hdr, raw_pkt, g_StreamUdpFunNum, g_StreamUdpFun, apme, popstate, SMART_OFFLOAD_FLAG_UDP);
 	a_udp_pr->packet_io_context = 0;
 	
 #if (0 == HIGH_PERF)		
@@ -865,7 +874,7 @@ int stream_process_overlay_udp(struct streaminfo *a_udp, const void *this_iphdr,
 
 
 	a_udp_pr->packet_io_context = 1;
-	ret = stream_process(a_udp, this_iphdr, transport_hdr,raw_pkt,g_OverlayUdpFunNum, g_OverlayUdpFun,apme,popstate);
+	ret = stream_process(a_udp, this_iphdr, transport_hdr, raw_pkt, g_OverlayUdpFunNum, g_OverlayUdpFun, apme, popstate, SMART_OFFLOAD_FLAG_UNKNOWN);
 	a_udp_pr->packet_io_context = 0;
 	
 	return ret;
@@ -888,7 +897,7 @@ int stream_process_tcp_allpkt(struct streaminfo *a_tcp,const void *this_iphdr, c
 #endif
 
 	a_tcp_pr->packet_io_context = 1;
-	ret = stream_process(a_tcp, this_iphdr, transport_hdr, raw_pkt,g_StreamTcpAllFunNum, g_StreamTcpAllFun,apme,popstate);
+	ret = stream_process(a_tcp, this_iphdr, transport_hdr, raw_pkt, g_StreamTcpAllFunNum, g_StreamTcpAllFun, apme, popstate, SMART_OFFLOAD_FLAG_TCPALL);
 	a_tcp_pr->packet_io_context = 0;
 	
 #if (0 == HIGH_PERF)		

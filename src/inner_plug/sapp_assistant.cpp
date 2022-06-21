@@ -1248,6 +1248,14 @@ static int sapp_fs2_init(void)
 	pfs_para->fs_id_count_array[SAPP_STAT_UDP_BYPASS_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bypass_Pkt");
 	pfs_para->fs_id_length_array[SAPP_STAT_UDP_BYPASS_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bypass_Bit");
 
+	pfs_para->fs_id_count_array[SAPP_STAT_TCP_OFFLOAD_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Offload_STM");	
+	pfs_para->fs_id_count_array[SAPP_STAT_TCP_OFFLOAD_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Offload_Pkt");
+	pfs_para->fs_id_length_array[SAPP_STAT_TCP_OFFLOAD_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Offload_Bit");
+
+	pfs_para->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_STM");	
+	pfs_para->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Pkt");
+	pfs_para->fs_id_length_array[SAPP_STAT_UDP_OFFLOAD_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Bit");
+
 	
 	if(unlikely(g_timestamp_record_sw))
 	{

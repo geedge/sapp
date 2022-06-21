@@ -175,6 +175,14 @@ static void field_stat2_update_metrics(void)
 	sapp_fs2_update_count(SAPP_STAT_UDP_BYPASS_STREAM,  cur_count[SAPP_STAT_UDP_BYPASS_STREAM]);
 	sapp_fs2_update_count(SAPP_STAT_UDP_BYPASS_PKTS,  cur_count[SAPP_STAT_UDP_BYPASS_PKTS]);
 	sapp_fs2_update_length(SAPP_STAT_UDP_BYPASS_BYTES,  cur_length[SAPP_STAT_UDP_BYPASS_BYTES]);	
+
+	sapp_fs2_update_count(SAPP_STAT_TCP_OFFLOAD_STREAM,  cur_count[SAPP_STAT_TCP_OFFLOAD_STREAM]);
+	sapp_fs2_update_count(SAPP_STAT_TCP_OFFLOAD_PKTS,  cur_count[SAPP_STAT_TCP_OFFLOAD_PKTS]);
+	sapp_fs2_update_length(SAPP_STAT_TCP_OFFLOAD_BYTES,  cur_length[SAPP_STAT_TCP_OFFLOAD_BYTES]);
+
+	sapp_fs2_update_count(SAPP_STAT_UDP_OFFLOAD_STREAM,  cur_count[SAPP_STAT_UDP_OFFLOAD_STREAM]);
+	sapp_fs2_update_count(SAPP_STAT_UDP_OFFLOAD_PKTS,  cur_count[SAPP_STAT_UDP_OFFLOAD_PKTS]);
+	sapp_fs2_update_length(SAPP_STAT_UDP_OFFLOAD_BYTES,  cur_length[SAPP_STAT_UDP_OFFLOAD_BYTES]);
 }
 
 static void sysinfo_output_per_layer_stat(FILE *fp)

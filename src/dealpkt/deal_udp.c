@@ -1035,4 +1035,3 @@ char udp_teredo_identify_entry(const struct streaminfo *pstream, const void *thi
 #ifdef __cplusplus
 }
 #endif
-

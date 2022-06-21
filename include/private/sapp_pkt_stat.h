@@ -180,6 +180,15 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_UDP_BYPASS_STREAM,
 	SAPP_STAT_UDP_BYPASS_PKTS,
 	SAPP_STAT_UDP_BYPASS_BYTES,	
+
+	SAPP_STAT_TCP_OFFLOAD_STREAM,
+	SAPP_STAT_TCP_OFFLOAD_PKTS,
+	SAPP_STAT_TCP_OFFLOAD_BYTES,
+	SAPP_STAT_UDP_OFFLOAD_STREAM,
+	SAPP_STAT_UDP_OFFLOAD_PKTS,
+	SAPP_STAT_UDP_OFFLOAD_BYTES,	
+
+	
 	/*************  memory stat  *******************/
 
 	/************** Maximum Value Definition *******/
