@@ -455,14 +455,20 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 		{
 			((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
 			tcp_free_stream(pindex, NULL, NULL, NULL);
+			return 2;
+			
 		}
 		else
 		{
 			pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_TIMEOUT;
 			udp_free_stream(pindex);
+			return 2;
 		}
 	}
-	return 0;
+	else
+	{
+		return 0;
+	}
 }
 
 /*
@@ -487,14 +493,14 @@ int lrustream(struct streamindex *pindex)
 		plist=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->tcpList[pstream->stream_state]);
 
 	}
-	if(g_CurrentTime > plist->last_check_timer_s)
+	//if(g_CurrentTime > plist->last_check_timer_s)
 	{
-		if (1 == del_stream_by_time(plist, pindex))
+		int ret  = del_stream_by_time(plist, pindex);
+		plist->last_check_timer_s = g_CurrentTime;
+		if (1 == ret)
 		{
-			plist->last_check_timer_s = g_CurrentTime;
 			return 1;
 		}
-		plist->last_check_timer_s = g_CurrentTime;
 	}
 	long set_timeout = pindex->stream.timeout;
 	if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
@@ -2522,7 +2528,8 @@ int polling_stream_timeout(int tid)
 
 	for(i = UDP_ONE_STATE; i < MAX_UDP_STATE; i++){
 		plist=&(G_MESA_GLOBAL_STREAM[tid]->udpList[i]);
-		if(g_CurrentTime > plist->last_check_timer_s && plist->cnt > 0){ 
+		//if(g_CurrentTime > plist->last_check_timer_s && plist->cnt > 0){ 
+		if( plist->cnt > 0){ 
 			ret = del_stream_by_time(plist, NULL);
 			if(ret > 0){
 				has_work = POLLING_STATE_WORK;
@@ -2533,7 +2540,8 @@ int polling_stream_timeout(int tid)
 
 	for(i = TCP_SYN_STATE; i < MAX_TCP_STATE; i++){
 		plist=&(G_MESA_GLOBAL_STREAM[tid]->tcpList[i]);
-		if(g_CurrentTime > plist->last_check_timer_s && plist->cnt > 0){ /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
+		//if(g_CurrentTime > plist->last_check_timer_s && plist->cnt > 0){ /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
+		if(plist->cnt > 0){ /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
 			ret = del_stream_by_time(plist, NULL);
 			if(ret > 0){
 				has_work = POLLING_STATE_WORK;
