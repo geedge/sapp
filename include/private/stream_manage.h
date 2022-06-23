@@ -3,10 +3,6 @@
 
 #include "stream_internal.h" 
 
-#if USE_RBTREE_INSTEAD_LIST
-#include "rbtree.h"
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -72,12 +68,8 @@ struct streamindex
 {
 	struct streamindex *prev;
 	struct streamindex *next;
-#if USE_RBTREE_INSTEAD_LIST
-	struct rb_node rb;
-#else
 	struct streamindex *phashprev;
 	struct streamindex *phashnext;
-#endif	
 	struct streaminfo_private stream;
 };
 
@@ -95,21 +87,11 @@ struct stream_list
 
 struct global_stream
 {
-#if USE_RBTREE_INSTEAD_LIST
-	struct rb_root *tcp_rb_root_table;
-#else
 	struct streamindex **tcp_stream_table;
 	unsigned short  *tcp_stream_talbe_hash_count; /* lijia comment: 一个HASH_Slot下冲突链表元素个数 */
-#endif
-
 	struct stream_list tcpList[MAX_TCP_STATE];
-
-#if USE_RBTREE_INSTEAD_LIST
-	struct rb_root *udp_rb_root_table;
-#else
 	struct streamindex **udp_stream_table;
 	unsigned short  *udp_stream_talbe_hash_count;/* lijia comment: 一个HASH_Slot下冲突链表元素个数 */
-#endif
 
 	struct stream_list udpList[MAX_UDP_STATE];
 

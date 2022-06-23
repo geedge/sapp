@@ -57,9 +57,6 @@ int sapp_packet_io_v = 20161101;
 int sapp_packet_io_v = 20170407;
 #endif
 
-//int g_sapp_log_level = 20;
-///void *g_sapp_log_handle;
-
 #define STREAM_ONCE_DEL_NUM 1000
 void packet_io_status_stream_hash_update(int thread_seq, unsigned long hash_list_num);
 void packet_io_status_stream_update(int tid, UCHAR stream_type, UCHAR stream_state,  int action);
@@ -89,12 +86,7 @@ static int init_stream_detail(struct global_stream *g_stream)
 
 		//add by lqy限制每次换出最大数目为100
 		g_stream->tcpList[i].sift_out_cnt=g_stream->tcpList[i].max_cnt/50+1;
-#if 0		
-		if(g_stream->tcpList[i].sift_out_cnt>100)
-			g_stream->tcpList[i].sift_out_cnt=100;		
-#else
 		g_stream->tcpList[i].sift_out_cnt=1; /* lijia modify, 减少单包延时太长, 每次只淘汰一个 */		
-#endif
 		g_stream->tcpList[i].cnt=0;
 	}	
 	for(i=0;i<MAX_UDP_STATE;i++)
@@ -102,25 +94,13 @@ static int init_stream_detail(struct global_stream *g_stream)
 		g_stream->udpList[i].max_cnt=udpstate_num[i];
 		//add by lqy限制每次换出最大数目为100
 		g_stream->udpList[i].sift_out_cnt=g_stream->udpList[i].max_cnt/50+1;
-#if 0			
-		if(g_stream->udpList[i].sift_out_cnt>100)
-			g_stream->udpList[i].sift_out_cnt=100;		
-#else
 		g_stream->udpList[i].sift_out_cnt=1; /* lijia modify, 减少单包延时太长, 每次只淘汰一个 */			
-#endif
 		g_stream->udpList[i].cnt=0;
 	}	
  	g_stream->freeList.max_cnt=tcp_stream_table_size+udp_stream_table_size;
 	g_stream->freeList.cnt=0;
 
 	//预先分配hash指针
-#if USE_RBTREE_INSTEAD_LIST
-	g_stream->tcp_rb_root_table = (struct rb_root *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,tcp_stream_table_size * sizeof (struct rb_root));
-	memset(g_stream->tcp_rb_root_table, 0, tcp_stream_table_size * sizeof (struct rb_root));
-
-	g_stream->udp_rb_root_table = (struct rb_root *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,tcp_stream_table_size * sizeof (struct rb_root));
-	memset(g_stream->udp_rb_root_table, 0, tcp_stream_table_size * sizeof (struct rb_root));
-#else
 	g_stream->tcp_stream_table = (struct streamindex **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,tcp_stream_table_size * sizeof (char *));
     memset (g_stream->tcp_stream_table, 0, tcp_stream_table_size* sizeof (char *));
     g_stream->udp_stream_table = (struct streamindex **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,udp_stream_table_size * sizeof (char *));
@@ -130,7 +110,6 @@ static int init_stream_detail(struct global_stream *g_stream)
     memset (g_stream->tcp_stream_talbe_hash_count, 0, tcp_stream_table_size* sizeof (short));
     g_stream->udp_stream_talbe_hash_count = (unsigned short *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,udp_stream_table_size*  sizeof (short));
     memset (g_stream->udp_stream_talbe_hash_count, 0, udp_stream_table_size* sizeof (short));
-#endif
 	
     g_stream->freeList.head=(struct  streamindex *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,(g_stream->freeList.max_cnt) * sizeof (struct streamindex));
     memset(g_stream->freeList.head, 0,(g_stream->freeList.max_cnt) * sizeof (struct streamindex));
@@ -215,8 +194,6 @@ static void stream_timeout_shift_lrulist(struct streamindex *pindex, unsigned sh
 	struct stream_list *lru_list_root;
 	const struct streaminfo *pstream = &pindex->stream.stream_public;
 	
-//long search_times = 0;
-
 	if(STREAM_TYPE_TCP == pindex->stream.stream_public.type){
 		global_default_timeout = link_default_nopkt_time;
 		lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->tcpList[pstream->stream_state]);
@@ -523,7 +500,6 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 
 
 
-//struct streamindex *malloc_streamindex(int threadnum)
 struct streamindex *malloc_and_copy_streamindex(int threadnum, struct streamindex *pindex_stack)
 {
 	struct streamindex *pindex=NULL;
@@ -612,7 +588,6 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 	{
 		sapp_runtime_log(RLOG_LV_FATAL, "del_stream_by_time() error! stream->type is:%d, not TCP or UDP.\n", pstream->type);	
 		return -1;
-		//assert(0);
 	}
 
 	//如果设定了超时时间，并且已经超时
@@ -626,17 +601,6 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 			}			
 			return 1;
 		}	
-#if 0	 /* 2016-12-15 lijia close, 链表相关操作在tcp_free_stream()做, 此处两次会造成指针混乱, 内存泄漏, 或其他未知BUG */	
-		if(pindex->next!=NULL)
-		{
-			pindex->next->prev =NULL;
-			plist->head= pindex->next;
-		}
-		else
-		{
-			plist->head=plist->tail=NULL;
-		}
-#endif		
 		if (STREAM_TYPE_TCP==pstream->type)
 		{
 			((struct tcpdetail_private *)(pstream->pdetail))->link_state=STREAM_LINK_TIMEOUT;
@@ -680,7 +644,6 @@ int lrustream(struct streamindex *pindex)
 		}
 	}
 	
-//	if ( plist->cnt > STREAM_ONCE_DEL_NUM &&
 	if(plist->tail && (plist->tail != pindex)) /* 如果当前节点不在链表最新处, LRU */
 	 {
 		next = pindex->next;
@@ -701,73 +664,6 @@ int lrustream(struct streamindex *pindex)
 	
 	return 0;
 }
-
-#if (0 == USE_LINUX_KERNEL_HASH_ALGO)
-static int mkstreamhash_single(struct streaminfo_private *pstream_pr, int maxsize)
-{
-	char addr_hash_buf[MTU_MAX];
-	char *hdata;
-	struct streaminfo *this_stream = &pstream_pr->stream_public;
-	struct layer_addr *saddr = &this_stream->addr;
-
-	/* lijia comment, 计算hash时使用同一种方向, 即"src>=dst" */
-
-	/* 四元组特殊, 用作一个整体, 此时只能看ip的方向, 端口信息无法通过指针回溯回去, 固不再使用 */
-	if(0 == pstream_pr->layer_dir){
-		memcpy(addr_hash_buf, saddr->paddr, this_stream->addr.addrlen);
-		reverse_addr((void *)addr_hash_buf, saddr->addrtype);
-		hdata = (char *)&addr_hash_buf[0];
-	}else{
-		hdata = (char *)(saddr->paddr);
-	}
-	
-	return mkaddrhash(hdata, this_stream->addr.addrlen) % maxsize;
-}
-
-
-int mkstreamhash_new(struct streaminfo_private *pstream_pr, int maxsize)
-{
-	int hash = 0;
-	struct streaminfo *this_stream = &pstream_pr->stream_public;
-
-	switch(this_stream->addr.addrtype){
-		case __ADDR_TYPE_IP_PAIR_V4:
-		case __ADDR_TYPE_IP_PAIR_V6:
-		case ADDR_TYPE_VLAN:
-		case ADDR_TYPE_MAC:
-		case ADDR_TYPE_PPPOE_SES:
-		case ADDR_TYPE_L2TP:  
-			hash = mkstreamhash_single(pstream_pr, maxsize);
-		break;
-
-		case ADDR_TYPE_IPV4:
-		case ADDR_TYPE_IPV6:		
-		case ADDR_TYPE_TCP:
-		case ADDR_TYPE_UDP:
-#if 0		
-			/* 
-			    TCP和UDP协议较特殊, 如果只用本层的端口计算HASH, 冲突率太高, 
-			    需要加上fstream中的IP地址, 使用四元组一起计算.
-			*/
-			hash = mkstreamhash_dual(this_stream, maxsize);
-#else
-			hash = mkstreamhash_new((struct streaminfo_private *)this_stream->pfather, maxsize);
-#endif
-		break;
-		break;
-		
-		default:
-			//printf("Unknown addr type:%d!", this_stream->addr.addrtype);
-			sapp_runtime_log(RLOG_LV_FATAL, "mkstreamhash_new() Unknown addr type:%d.\n", this_stream->addr.addrtype);	
-			//assert(0);
-			return -1;
-		break;
-	}
-
-	return hash;
-}
-#endif
-
 
 /*
 	MPLS层地址不像ipv4,ipv6,tcp,udp那样, 收到任意一个包可以推断另一侧的地址,
@@ -1527,14 +1423,12 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 	while(phead!=NULL)
 	{  
 		pshead_pr=&(phead->stream);	
-#if USE_LINUX_KERNEL_HASH_ALGO	
 		/* 2015-12-14 lijia add, 先通过第二个HASH值预先判断是否相等, 如果HASH不同, 地址肯定不同 */
 		if(pshead_pr->hash_slave != psinsert_pr->hash_slave){
 			phead=phead->phashnext;
 			hash_list_num++;
 			continue;
 		}
-#endif
 		result=checkstreamorder(&plinkhead->stream, pshead_pr,psinsert_pr, &heap_streaminfo_skip_layer_num, &stack_streaminfo_skip_layer_num);
 		if(result==0){
 			res = phead;
@@ -1562,132 +1456,6 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 extern int stream_make_hash(struct streaminfo_private *stream_pr, unsigned int maxsize);
 #endif
 
-#if USE_RBTREE_INSTEAD_LIST
-extern void rb_sapp_insert(struct streamindex *new_sapp_node, struct rb_root *root);
-extern struct streamindex *rb_sapp_search(struct streamindex *new_sapp_node, struct rb_root *rbroot, unsigned int hash_index);
-extern  void rb_sapp_erase(struct streamindex *new_sapp_node, struct rb_root *root);
-
-
-struct streamindex *findstreamindex(struct streamindex *pindex, const raw_pkt_t *raw_pkt)
-{
-	struct streamindex **phashstream=NULL;
-	struct streamindex *a_index=NULL;
-	struct streaminfo_private *pstream_pr = &(pindex->stream);
-	struct streaminfo *ptmp=&pstream_pr->stream_public;
-	struct streaminfo *a_stream=NULL;
-	UCHAR threadnum = ptmp->threadnum;
-	UCHAR stream_type = ptmp->type;
-	unsigned int hash_max;
-	unsigned int hash_index;
-	unsigned short elemcount=0;
-	struct global_stream *this_thread_stream = G_MESA_GLOBAL_STREAM[threadnum];
-	struct rb_root *rb_root_table;
-
-	if (STREAM_TYPE_TCP== stream_type)
-	{
-		rb_root_table = this_thread_stream->tcp_rb_root_table;
-		hash_max=tcp_stream_table_size;
-	}	
-	else if(STREAM_TYPE_UDP==stream_type)
-	{
-		rb_root_table = this_thread_stream->udp_rb_root_table;
-		hash_max=udp_stream_table_size;
-	}
-
-#if IOMODE_DPDK
-	if(raw_pkt->hd_hash != 0){ /* 2016-05-05 lijia add, 底层硬件提供HASH */
-		hash_index = raw_pkt->hd_hash % hash_max;;
-	}
-	else /* 软件计算HASH值 */
-#endif
-
-	{
-#if USE_LINUX_KERNEL_HASH_ALGO
-		hash_index=stream_make_hash(&(pindex->stream), (unsigned int)hash_max);
-#else
-		hash_index=mkstreamhash_new(&(pindex->stream), hash_max);
-#endif	
-	}
-
-	if(NULL == rb_root_table[hash_index].rb_node){ /* 2015-12-14 lijia add, HASH表当前SLOT并没有流, 直接返回 */
-		ptmp->hash_index = hash_index; /* 保存计算得到的HASH值 */
-		return NULL;
-	}
-
-	a_index = rb_sapp_search(pindex, &rb_root_table[hash_index], hash_index);
-
-	if (likely(a_index!=NULL)){
-		pstream_pr = &(a_index->stream);
- 		a_stream=&(pstream_pr->stream_public);
-#if 0 /* 2014-12-18 */		
-		if(a_stream->dirreverse==1)
-#else
-		if(pstream_pr->stream_dir != 1)
-#endif
-		{
-			if(ptmp->curdir==DIR_C2S)
-				a_stream->curdir=DIR_S2C;
-			else
-				a_stream->curdir=DIR_C2S;
-		}
-		else
-		{
-			a_stream->curdir=ptmp->curdir;
-		}
-		a_stream->routedir=ptmp->routedir;
-		
-		return a_index;
-	}
-	else 
-	{
-		ptmp->hash_index=hash_index;
-	}
-
-	return NULL;
-}
-
-void hash_add_stream(struct streamindex *pindex)
-{
-	struct streaminfo *ptmp = &pindex->stream.stream_public;
-	UCHAR threadnum = ptmp->threadnum;
-	struct rb_root *rb_root_table;
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
-
-	if (STREAM_TYPE_TCP==ptmp->type)
-	 {
-		rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->tcp_rb_root_table;
-		local_sys_stat->count[SAPP_STAT_TCP_STREAM_NEW]++;
-	 }	
-	else if(STREAM_TYPE_UDP==ptmp->type)
-    {
-		rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->udp_rb_root_table;
-   		local_sys_stat->count[SAPP_STAT_UDP_STREAM_NEW]++;
-    } 
-	 
-	rb_sapp_insert(pindex, &rb_root_table[ptmp->hash_index]);	
-}
-
-void hash_del_stream(struct streamindex *pindex)
-{
-	struct streaminfo *ptmp = &pindex->stream.stream_public;
-	UCHAR threadnum = ptmp->threadnum;
-	struct rb_root *rb_root_table;
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
-
-	if (STREAM_TYPE_TCP==ptmp->type)
-	 {
-	 	rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->tcp_rb_root_table;
- 	 	  local_sys_stat->count[SAPP_STAT_TCP_STREAM_DEL]++;
-	 }	
-	else if(STREAM_TYPE_UDP==ptmp->type)
-    {
-		rb_root_table = G_MESA_GLOBAL_STREAM[threadnum]->udp_rb_root_table;
-   		local_sys_stat->count[SAPP_STAT_UDP_STREAM_DEL]++;
-    } 
-	 
-	rb_sapp_erase(pindex, &rb_root_table[ptmp->hash_index]);	
-}
-#else
 /*
 //本函数内做了的事情
 //1) 判定是否存在流
@@ -1722,20 +1490,10 @@ struct streamindex *findstreamindex(struct streamindex *pindex, const raw_pkt_t 
 		assert(0);
          }
 
-#if IOMODE_DPDK
-	if(raw_pkt->hd_hash != 0){ /* 2016-05-05 lijia add, 底层硬件提供HASH */
-		hash_index = raw_pkt->hd_hash % hash_max;
-	}
-
-	else /* 软件计算HASH值 */
-#endif	
 
 	{
-#if USE_LINUX_KERNEL_HASH_ALGO
 		hash_index=stream_make_hash(&(pindex->stream), (unsigned int)hash_max);
-#else
-		hash_index=mkstreamhash_new(&(pindex->stream), hash_max);
-#endif	
+	
 	}
 
 	if(STREAM_TYPE_UDP==stream_type)
@@ -1752,17 +1510,7 @@ struct streamindex *findstreamindex(struct streamindex *pindex, const raw_pkt_t 
 		return NULL;
 	}
 	
-      //ptmp->hash_index=hash_index;
-
-#if 0
-     a_index= findandsethashindex(phashstream[hash_index],pindex);
-#elif 0
-	a_index=findandsethashindex_binsearch(elemcount,phashstream[hash_index],pindex);
-#elif 0
-	a_index= findandsethashindex_20141217(phashstream[hash_index],pindex, elemcount);
-#else
 	a_index = findandsethashindex_lru(phashstream[hash_index],pindex);
-#endif
 
 	if (likely(a_index!=NULL)){
 	
@@ -1792,11 +1540,7 @@ struct streamindex *findstreamindex(struct streamindex *pindex, const raw_pkt_t 
 			
 		pstream_pr = &(a_index->stream);
  		a_stream=&(pstream_pr->stream_public);
-#if 0 /* 2014-12-18 */		
-		if(a_stream->dirreverse==1)
-#else
 		if(pstream_pr->stream_dir != 1)
-#endif
 		{
 			if(ptmp->curdir==DIR_C2S)
 				a_stream->curdir=DIR_S2C;
@@ -1848,24 +1592,12 @@ void hash_add_stream(struct streamindex *pindex)
      }
 	 
 	
-#if 1 /* 放在HASH-Slot第一个位置 */
+	 /* 放在HASH-Slot第一个位置 */
 	   if(phashstream[hash_index]!=NULL)
 		phashstream[hash_index]->phashprev=pindex;
 	   pindex->phashnext=phashstream[hash_index];
 	   phashstream[hash_index] = pindex;
-#else
-	 //adjust by lqy 20120803 在查找过程中已经确定了插入位置
-	if(pindex->phashprev==NULL)
-	{
-		phashstream[pindex->stream.stream_public.hash_index] = pindex;
-	}	
-	else
-	{	
-		pindex->phashprev->phashnext=pindex;
-	}
-	if(pindex->phashnext!=NULL)
-	    		pindex->phashnext->phashprev=pindex;
-#endif	
+
 	pelementcount[hash_index]++;
 
 	/* TCP, UDP新建流时都会调用此函数, 所以把ddos检测放到此处,
@@ -2009,60 +1741,7 @@ void hash_del_stream(struct streamindex *pindex)
 	pindex->phashnext=pindex->phashprev=NULL;
 
 	pelementcount[ptmp->hash_index]--;
-	/*
-	//for test;
-	ptmindex=phashstream[pindex->hash_index] ;
-	for(i=0;i<pelementcount[pindex->hash_index];i++)
-	{
-		assert(ptmindex!=NULL);
-                if(ptmindex->hash_index !=pindex->hash_index)
-                  assert(0);
-                ptmindex=ptmindex->phashnext;
-	}
-	*/
-
-	/* 2014-10-15 lijia modify, 此处free后, 插件获取不到地址, 移动到tcp_free_stream()的最后面 */
-	//free_heap_stream_info(pindex->stream.pfather);
 }
-
-#endif
-
-#if 0
-void freeall_stream(int threadcount)
-{
-	struct global_stream *g_stream;
-	struct stream_list *plist;
-	struct streamindex *pindex;
-	int i,j;
-	for( i = 0; i < threadcount; i++)
-	{
-		  g_stream=G_MESA_GLOBAL_STREAM[i];
-		  for(j=0;j<MAX_TCP_STATE;j++)
-		 {
-		 	plist=&(g_stream->tcpList[j]);
-			while(plist->cnt>0)
-			{
-				pindex = plist->head;
-				del_stream(pindex);
-			}
-		  }	
-	  	  for(j=0;j<MAX_UDP_STATE;j++)
-		 {
-		 	plist=&(g_stream->udpList[j]);
-			while(plist->cnt>0)
-			{
-				pindex = plist->head;
-				del_stream(pindex);
-			}
-		  }
-
-	}
-	
-	sleep(1);
-	printf("All stream has been freed!\n");
-//_exit(0);
-}
-#endif
 
 
 int show_stream_state(int threadcount)
@@ -2389,68 +2068,6 @@ int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *p
 	return 0;
 }
 
-#if 0
-void reverse_addr_new(void *addr, int addrtype)
-{
-	UINT16 tmp_ushort;
-	UINT32 tmp_uint;
-	
-	switch(addrtype){
-		case ADDR_TYPE_IPV4:
-		//case __ADDR_TYPE_IP_PAIR_V4:
-		{
-			struct layer_addr_ipv4 *ip4_addr = (struct layer_addr_ipv4 *)addr;
-			tmp_uint = ip4_addr->saddr;
-			ip4_addr->saddr = ip4_addr->daddr;
-			ip4_addr->daddr = tmp_uint;
-			tmp_ushort = ip4_addr->source;
-			ip4_addr->source =  ip4_addr->dest;
-			ip4_addr->dest = tmp_ushort;
-		}
-		break;
-
-		case ADDR_TYPE_IPV6:
-		//case __ADDR_TYPE_IP_PAIR_V6:
-		{
-			struct layer_addr_ipv6 *ip6_addr = (struct layer_addr_ipv6 *)addr;
-			UCHAR tmp[16]; 
-			memcpy(tmp, ip6_addr->saddr, IPV6_ADDR_LEN);
-			memcpy(ip6_addr->saddr, ip6_addr->daddr, IPV6_ADDR_LEN);
-			memcpy(ip6_addr->daddr, tmp, IPV6_ADDR_LEN);
-			tmp_ushort = ip6_addr->source;
-			ip6_addr->source =  ip6_addr->dest;
-			ip6_addr->dest = tmp_ushort;
-		}
-		break;
-		
-		case ADDR_TYPE_TCP:
-		case ADDR_TYPE_UDP:
-		{
-			struct layer_addr_tcp *tcp_addr = (struct layer_addr_tcp *)addr;
-			tmp_ushort = tcp_addr->source;
-			tcp_addr->source =  tcp_addr->dest;
-			tcp_addr->dest = tmp_ushort;
-		}	
-		break;
-
-		case ADDR_TYPE_MAC: /* 2015-06-15 lijia add, 木马检测设备需求 */
-		{
-			struct layer_addr_mac *mac_addr = (struct layer_addr_mac *)addr;
-			UCHAR tmp_mac[MAC_ADDR_LEN];
-			memcpy(tmp_mac, mac_addr->src_mac, MAC_ADDR_LEN);
-			memcpy(mac_addr->src_mac, mac_addr->dst_mac, MAC_ADDR_LEN);
-			memcpy(mac_addr->dst_mac, tmp_mac, MAC_ADDR_LEN);
-		}	
-		break;
-
-		default:
-			/* 其他地址类型, 如VLAN, L2TP等, 无方向性特征, 无需转换 */
-			return;
-	}
-
-	return;
-}
-#endif
 
 void free_thread_stream(int thread_seq)
 {
@@ -2478,15 +2095,6 @@ void free_thread_stream(int thread_seq)
 			del_stream(pindex, STREAM_CLOSE_REASON_DUMPFILE);
 		}
 	  }
-
-#if HASH_COLLIDE_CALC
-	printf("================ hash-collide-statistics =================\n");
-
-	for(j = 0; j < HASH_COLLIDE_LIST_NUM_MAX; j++){
-		printf("hash-collide-list-num:%d, \t times:%d\n", j, __hash_colliede_num[j]);
-	}
-	printf("================ hash-collide-statistics =================\n");
-#endif
 
 }
 
@@ -2989,58 +2597,6 @@ struct streaminfo_private *copy_stream_info_to_heap_single_layer(int mem_used_ty
    因为之前的reverse的定义其实有局限性, 表示当前层地址跟'大地址是客户端'规则是否一致, 是否需要翻转,
    但是mpls, gtp等协议地址是单向的, reverse的规则不好使.
  */
-#if 0
-struct streaminfo_private *copy_stream_info_to_heap(const struct streaminfo_private *stack_stream_pr, int reverse)
-{
-	struct streaminfo_private *heap_stream_pr = NULL;
-	void *heap_addr;
-	struct streaminfo *heap_stream;
-	const struct streaminfo *stack_stream;
-	struct streaminfo_private *pfather_pr;
-
-	if(NULL == stack_stream_pr){
-		return NULL;
-	}
-
-	stack_stream = &(stack_stream_pr->stream_public);
-
-	heap_stream_pr = (struct streaminfo_private *)dictator_malloc(stack_stream->threadnum, sizeof(struct streaminfo_private));
-	memcpy(heap_stream_pr, stack_stream_pr, sizeof(struct streaminfo_private));
-	heap_stream = &(heap_stream_pr->stream_public);
-
-	heap_stream_pr->pfather_pr = copy_stream_info_to_heap((const struct streaminfo_private *)stack_stream_pr->pfather_pr, reverse);
-	pfather_pr = stack_stream_pr->pfather_pr;
-	if((pfather_pr != NULL)
-	  && (DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
-	  && (g_overlay_layer_set[pfather_pr->stream_public.addr.addrtype][pfather_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay层的pfather设为NULL, 插件不可见 */
-		heap_stream->pfather = NULL;
-	}else{
-		heap_stream->pfather = (struct streaminfo *)heap_stream_pr->pfather_pr;
-	}
-			
-	heap_addr = dictator_malloc(stack_stream->threadnum, stack_stream->addr.addrlen);
-	memset(heap_addr, 0, stack_stream->addr.addrlen);
-
-	/* 上层地址翻转, 且不是overlay层,才能反向copy地址    	   */	
-	if(reverse){
-		heap_stream_pr->dirreverse=1;
-		heap_stream_pr->stream_dir = 1 ^ heap_stream_pr->layer_dir; /* lijia comment, 与"src>=dst"默认规则不一致 */
-		heap_stream_pr->stream_c2s_route_dir = 1 ^ heap_stream_pr->stream_c2s_route_dir; 
-		//reverse_addr_new(heap_addr, heap_stream->addr.addrtype);
-		/* 地址COPY时, 如果需要反转, 直接反向COPY, 不要先memcpy, 再交换地址源、目的的顺序 */
-		addr_reverse_memcpy(stack_stream_pr, heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrtype, stack_stream->addr.addrlen);
-	}else{
-		heap_stream_pr->stream_dir = heap_stream_pr->layer_dir;
-		memcpy(heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrlen);
-	}
-	
-	heap_stream->addr.paddr = heap_addr;
-	heap_stream->addr.addrlen = stack_stream->addr.addrlen;
-	heap_stream->addr.addrtype = stack_stream->addr.addrtype;
-	
-	return (struct streaminfo_private *)heap_stream;
-}
-#else
 struct streaminfo_private *copy_stream_info_to_heap(int mem_used_type,const struct streaminfo_private *stack_stream_pr, int reverse)
 {
 	struct streaminfo_private *heap_stream_pr;
@@ -3066,7 +2622,6 @@ struct streaminfo_private *copy_stream_info_to_heap(int mem_used_type,const stru
 	
 	return heap_stream_pr;
 }
-#endif
 
 int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_pkt_t *rawpkt)
 {
@@ -3099,11 +2654,6 @@ int polling_stream_timeout(int tid)
 {
 	struct stream_list *plist=NULL;
 	int i, ret, has_work = 0;
-#if 0
-	if(0 == sapp_global_val->config.packet_io.polling_enabled){
-		return POLLING_STATE_IDLE;
-	}
-#endif	
 
 	for(i = UDP_ONE_STATE; i < MAX_UDP_STATE; i++){
 		plist=&(G_MESA_GLOBAL_STREAM[tid]->udpList[i]);
@@ -3216,12 +2766,6 @@ int sapp_dup_pkt_identify_udp_v6(int tid, struct streaminfo_private *pstream_pr,
 		pstream_pr->has_duplicate_pkt = 1;
 	}
 	
-#if 0 /* ipv6 仅检查sapp自身注入的数据包, 不支持原始包重复检查, 也不加入bloom filter */
-	else{
-		sapp_dup_pkt_mark_v6(tid, &dup_bloom_key);
-	}
-#endif
-
 	return is_dup_pkt;
 }
 
@@ -3510,4 +3054,3 @@ void global_stream_destroy(void)
 #ifdef __cplusplus
 }
 #endif
-
