@@ -2005,6 +2005,11 @@ void plugctrl_destroy_all_plug()
 		sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, business, dlcose [%s]", plug_info->plugname);
 		dlclose(plug_info->filepoint);
 		plug_next = plug_info->next;
+		if(plug_info->plugname != NULL)
+		{
+			SAPP_GLOBAL_FREE(plug_info->plugname);
+			plug_info->plugname = NULL;
+		}
 		SAPP_GLOBAL_FREE(plug_info);
 		plug_info = plug_next;
 	}	
@@ -2015,6 +2020,11 @@ void plugctrl_destroy_all_plug()
 		sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, protocol, dlcose [%s]", pro_plug_info->plugname);
 		dlclose(pro_plug_info->filepoint);
 		pro_plug_next = pro_plug_info->next;
+		if(pro_plug_info->plugname != NULL)
+		{
+			SAPP_GLOBAL_FREE(pro_plug_info->plugname);
+			pro_plug_info->plugname = NULL;
+		}
 		SAPP_GLOBAL_FREE(pro_plug_info);
 		pro_plug_info = pro_plug_next;
 	}	
@@ -2025,6 +2035,11 @@ void plugctrl_destroy_all_plug()
 		sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, platform, dlcose [%s]", plug_info->plugname);
 		dlclose(plug_info->filepoint);
 		plug_next = plug_info->next;
+		if(plug_info->plugname != NULL)
+		{
+			SAPP_GLOBAL_FREE(plug_info->plugname);
+			plug_info->plugname = NULL;
+		}
 		SAPP_GLOBAL_FREE(plug_info);
 		plug_info = plug_next;
 	}	

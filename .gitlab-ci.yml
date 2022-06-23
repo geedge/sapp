@@ -101,7 +101,7 @@ benchmark_test_for_centos7:
     - ./gtest_sapp_v4 -f benchmark_forward.*
     - ./gtest_sapp_v4 -f benchmark_inject.tcp*
     - ./gtest_sapp_v4 -f benchmark_inject.inline_same_dir
-#    - ./gtest_sapp_v4 -f benchmark_inject.inline_reverse_dir
+    - ./gtest_sapp_v4 -f benchmark_inject.inline_reverse_dir
 
 inline_test_for_centos7:
   stage: test

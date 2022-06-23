@@ -112,7 +112,7 @@ static int init_stream_detail(struct global_stream *g_stream)
 	STAILQ_INIT(&g_stream->freeList);
 	g_stream->__freeList_real_head = (struct stream_index_list_item *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, (max_cnt) * sizeof(struct stream_index_list_item));
 	memset(g_stream->__freeList_real_head, 0, (max_cnt) * sizeof(struct stream_index_list_item));
-	for(i = 0; i < max_cnt - 1; i++)
+	for(i = 0; i < max_cnt; i++)
 	{
 		g_stream->__freeList_real_head[i].index.stream.stream_public.stream_index=i;	
 		STAILQ_INSERT_TAIL(&g_stream->freeList, g_stream->__freeList_real_head+i, entries);
@@ -323,10 +323,10 @@ static struct streaminfo *del_stream(struct streamindex *pindex, unsigned char c
 static inline void __do_streamleavlist(struct streamindex *pindex,struct stream_list *plist)
 {
 
-	if (timeout_pending(&(pindex->timeout)))
-	{
+	//if (timeout_pending(&(pindex->timeout)))
+	//{
 		timeouts_del(plist->timer, &pindex->timeout);
-	}
+	//}
 	plist->cnt -= 1;
 
 	return;
@@ -345,7 +345,7 @@ void streamleavlist(struct streamindex *pindex,struct stream_list *plist)
 void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 {
 	int timeout_reason = STREAM_CLOSE_REASON_TIMEOUT;
-	if(plist->cnt >= plist->max_cnt-1 && plist->cnt > 0)
+	if(plist->cnt >= plist->max_cnt -1 && plist->cnt > 0)
 	{
 		timeouts_update(plist->timer, g_CurrentTime);
 		struct timeout *t = timeouts_get(plist->timer);
@@ -408,7 +408,8 @@ void free_streamindex(int threadnum,struct streamindex *pindex)
 	struct global_stream *g_stream=G_MESA_GLOBAL_STREAM[threadnum];
 	if(STAILQ_EMPTY(&g_stream->freeList))
 	{
-		STAILQ_INSERT_HEAD(&g_stream->freeList, (struct stream_index_list_item *)pindex, entries);
+		assert(0);
+		STAILQ_INSERT_TAIL(&g_stream->freeList, (struct stream_index_list_item *)pindex, entries);
 	}
 	else
 	{

@@ -8,6 +8,13 @@ extern "C" {
 #endif
 
 
+#define DEBUG_PRINT  0
+#if DEBUG_PRINT
+#define DPRINT(fmt, args...)    DPRINT(fmt, ## args)
+#else
+#define DPRINT(fmt, args...)    /* Don't do anything in release builds */
+#endif
+
 static int test_tcp_flow_id = -1;
 static unsigned short phony_protocol_plugid; 
 
@@ -39,7 +46,7 @@ char test_gtp_volatile_addr_entry(struct streaminfo *pstream,void **pme, int thr
 	char addr_list_str[1024];
 
 	if(stream_addr_list_ntop(pstream, addr_list_str, sizeof(addr_list_str)) < 0){
-		printf("stream_addr_list_ntop() error!\n");
+		DPRINT("stream_addr_list_ntop() error!\n");
 		return -1;
 	}
 
@@ -49,11 +56,11 @@ char test_gtp_volatile_addr_entry(struct streaminfo *pstream,void **pme, int thr
 			return APP_STATE_DROPME;
 		}
 		
-		printf("gtp layer pending: %s\n", addr_list_str);
+		DPRINT("gtp layer pending: %s\n", addr_list_str);
 	}else if(pstream->opstate== OP_STATE_CLOSE){
-		printf("gtp layer close  : %s\n", addr_list_str);
+		DPRINT("gtp layer close  : %s\n", addr_list_str);
 	}else{
-		printf("gtp layer data   : %s\n", addr_list_str);
+		DPRINT("gtp layer data   : %s\n", addr_list_str);
 	}
 
 	return APP_STATE_GIVEME;
@@ -112,9 +119,9 @@ static void show_hierarchical_layer_stat(void)
 			if(g_hierarchical_layer_stat[i][layer_index].addrtype <= 0){
 				break;
 			}
-			printf("%s-", addr_type_to_prefix((enum addr_type_t )g_hierarchical_layer_stat[i][layer_index].addrtype));
+			DPRINT("%s-", addr_type_to_prefix((enum addr_type_t )g_hierarchical_layer_stat[i][layer_index].addrtype));
 		}
-		printf("\b\n");
+		DPRINT("\b\n");
 	}
 }
 
@@ -137,7 +144,7 @@ char hierarchical_embed_layer_entry(struct streaminfo *pstream,void **pme, int t
 	struct hierarchical_layer stream_hierarchical_layer_stat[MAX_LAYER_DEPTH] = {};
 	int layer_num;
 	if(0 != thread_seq){
-		printf("hierarchical_embed_layer_entry only support one thread!\n");
+		DPRINT("hierarchical_embed_layer_entry only support one thread!\n");
 		return APP_STATE_DROPME;
 	}
 
@@ -158,20 +165,20 @@ char hierarchical_embed_layer_entry(struct streaminfo *pstream,void **pme, int t
 #if TEST_SAPP_API
 char phony_biz_test(stSessionInfo* session_info,  void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet)
 {
-	//printf("I am biz plug, from pro info: %s\n", session_info->buf);
+	//DPRINT("I am biz plug, from pro info: %s\n", session_info->buf);
 
 	if(SESSION_STATE_PENDING & session_info->session_state){
 		*pme = malloc(10);
-		printf("session_info:%p, pme:%p, state:%d\n", session_info,*pme, session_info->session_state);
+		DPRINT("session_info:%p, pme:%p, state:%d\n", session_info,*pme, session_info->session_state);
 	}
 
 	if(SESSION_STATE_CLOSE & session_info->session_state){
-		printf("session_info:%p, pme:%p, state:%d\n", session_info,*pme, session_info->session_state);
+		DPRINT("session_info:%p, pme:%p, state:%d\n", session_info,*pme, session_info->session_state);
 		free(*pme);
 	}
 
 	if(SESSION_STATE_DATA & session_info->session_state){
-		printf("session_info:%p, pme:%p, state:%d\n", session_info,*pme, session_info->session_state);
+		DPRINT("session_info:%p, pme:%p, state:%d\n", session_info,*pme, session_info->session_state);
 	}
 
 	return PROT_STATE_GIVEME;
@@ -206,7 +213,7 @@ char phony_protocol_test(struct streaminfo *a_tcp,  void **pme, int thread_seq,v
 	stinfo.buflen = strlen("hello!\n");
 	stinfo.prot_flag = 0xFFFF;
 
-	printf("I am protocol plug\n");
+	DPRINT("I am protocol plug\n");
 	PROT_PROCESS(&stinfo, &biz_pme, thread_seq, a_tcp, a_packet);
 
 	return APP_STATE_GIVEME;
@@ -222,17 +229,17 @@ char print_vxlan_info(struct streaminfo *a_tcp,  void **pme, int thread_seq,void
 	if(OP_STATE_PENDING == a_tcp->opstate || OP_STATE_CLOSE == a_tcp->opstate){
 		ret = MESA_get_stream_opt(a_tcp, MSO_STREAM_VXLAN_INFO, &vinfo, &opt_val_len);
 		if(ret < 0){
-			printf("get vxlan info error!\n");
+			DPRINT("get vxlan info error!\n");
 		}else{
-			printf("OPSTATE:%d, tuple4:%s, vxlan info:\n", a_tcp->opstate, printaddr(&a_tcp->addr, thread_seq));
-			printf("\tencap_type:%d\n", vinfo.encap_type);
-			printf("\tntrance_id:%d\n", vinfo.entrance_id);
-			printf("\tdev_id:%d\n", vinfo.dev_id);
-			printf("\tlink_id:%d\n", vinfo.link_id);
-			printf("\tlink_dir:%d\n", vinfo.link_dir);
+			DPRINT("OPSTATE:%d, tuple4:%s, vxlan info:\n", a_tcp->opstate, printaddr(&a_tcp->addr, thread_seq));
+			DPRINT("\tencap_type:%d\n", vinfo.encap_type);
+			DPRINT("\tntrance_id:%d\n", vinfo.entrance_id);
+			DPRINT("\tdev_id:%d\n", vinfo.dev_id);
+			DPRINT("\tlink_id:%d\n", vinfo.link_id);
+			DPRINT("\tlink_dir:%d\n", vinfo.link_dir);
 
-			printf("\tinner_smac:%s\n", vinfo.inner_smac);
-			printf("\tinner_dmac:%s\n", vinfo.inner_dmac);
+			DPRINT("\tinner_smac:%s\n", vinfo.inner_smac);
+			DPRINT("\tinner_dmac:%s\n", vinfo.inner_dmac);
 		}
 	}
 
@@ -247,7 +254,7 @@ char print_stream_tunnel_type(struct streaminfo *a_tcp,  void **pme, int thread_
 
 	MESA_get_stream_opt(a_tcp, MSO_STREAM_TUNNEL_TYPE, &tunnel_type, &opt_val_len);
 	if(tunnel_type != 0){
-		printf("stream tunnel type:%d\n", tunnel_type);
+		DPRINT("stream tunnel type:%d\n", tunnel_type);
 	}
 
 	return APP_STATE_DROPME;
@@ -256,7 +263,7 @@ char test_get_this_layer_header(struct streaminfo *a_tcp,  void **pme, int threa
 {
 	struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)get_this_layer_header(a_tcp);
 
-	printf("iphdr:%p, ip->v=%d, ip->hl=%d, ip->len=%u\n", ip4hdr, ip4hdr->ip_v, ip4hdr->ip_hl*4, ntohs(ip4hdr->ip_len));
+	DPRINT("iphdr:%p, ip->v=%d, ip->hl=%d, ip->len=%u\n", ip4hdr, ip4hdr->ip_v, ip4hdr->ip_hl*4, ntohs(ip4hdr->ip_len));
 
 	return APP_STATE_GIVEME;
 }
@@ -267,9 +274,9 @@ static void test_get_tcp_opts_show_detail(struct tcp_option *opt_array, int optn
 
 	for(i = 0; i < optnum; i++){
 		if(opt_array[i].len > 0){
-			printf("\ttype:%d, len:%d, value:%llu\n", opt_array[i].type, opt_array[i].len, opt_array[i].long_value);
+			DPRINT("\ttype:%d, len:%d, value:%llu\n", opt_array[i].type, opt_array[i].len, opt_array[i].long_value);
 		}else{
-			printf("\ttype:%d, len:%d,  no value\n", opt_array[i].type, opt_array[i].len);
+			DPRINT("\ttype:%d, len:%d,  no value\n", opt_array[i].type, opt_array[i].len);
 		}	
 	}
 }
@@ -294,7 +301,7 @@ char test_get_pkt_tcp_opts(struct streaminfo *a_tcp,  void **pme, int thread_seq
 	
 	ret = MESA_get_tcp_pkt_opts((const struct tcphdr *)tcph, to, 20);
 	if(ret > 0){
-		printf("MESA_get_tcp_pkt_opts OK:\n");
+		DPRINT("MESA_get_tcp_pkt_opts OK:\n");
 		test_get_tcp_opts_show_detail(to, ret);
 	}
 
@@ -308,9 +315,9 @@ static void test_get_tcp_opts_show_ext_detail(struct tcp_option_ext *opt_array, 
 
 	for(i = 0; i < optnum; i++){
 		if(opt_array[i].len > 0){
-			printf("\ttype:%d, len:%d, value:%llu\n", opt_array[i].type, opt_array[i].len, opt_array[i].long_value);
+			DPRINT("\ttype:%d, len:%d, value:%llu\n", opt_array[i].type, opt_array[i].len, opt_array[i].long_value);
 		}else{
-			printf("\ttype:%d, len:%d,  no value\n", opt_array[i].type, opt_array[i].len);
+			DPRINT("\ttype:%d, len:%d,  no value\n", opt_array[i].type, opt_array[i].len);
 		}	
 	}
 }
@@ -334,7 +341,7 @@ char test_get_pkt_tcp_opts_ext(struct streaminfo *a_tcp,  void **pme, int thread
 	
 	ret = MESA_get_tcp_pkt_opts_ext((const struct tcphdr *)tcph, to, 32);
 	if(ret > 0){
-		printf("MESA_get_tcp_pkt_opts_ext OK:\n");
+		DPRINT("MESA_get_tcp_pkt_opts_ext OK:\n");
 		test_get_tcp_opts_show_ext_detail(to, ret);
 	}
 
@@ -349,7 +356,7 @@ char test_tcp_uni_stream_stats(struct streaminfo *a_tcp,  void **pme, int thread
 	if(-1 == test_tcp_flow_id){
 		test_tcp_flow_id = project_customer_register("tcp_flow_stat", "struct");
 		if(-1 == test_tcp_flow_id){
-			printf("'tcp_flow_stat' is disable, no statistics\n");
+			DPRINT("'tcp_flow_stat' is disable, no statistics\n");
 		}
 	}
 	
@@ -360,7 +367,7 @@ char test_tcp_uni_stream_stats(struct streaminfo *a_tcp,  void **pme, int thread
 		}
 
 		raw_pdetail=(struct tcpdetail *)a_tcp->pdetail;
-		printf("from-detail: server pkt=%d, count=%d, client pkt=%d, count=%d\n",
+		DPRINT("from-detail: server pkt=%d, count=%d, client pkt=%d, count=%d\n",
 			raw_pdetail->serverpktnum,   raw_pdetail->serverbytes,
 			raw_pdetail->clientpktnum,    raw_pdetail->clientbytes);
 
@@ -368,18 +375,18 @@ char test_tcp_uni_stream_stats(struct streaminfo *a_tcp,  void **pme, int thread
 			/* 2015-12-29 lijia add */
 			tflow_project = (struct tcp_flow_stat *)project_req_get_struct(a_tcp, test_tcp_flow_id);
 			if(tflow_project){
-				printf("from-project: server pkt=%u, count=%lu, client pkt=%u, count=%lu\n",
+				DPRINT("from-project: server pkt=%u, count=%lu, client pkt=%u, count=%lu\n",
 					tflow_project->C2S_data_pkt,tflow_project->C2S_data_byte,
 					tflow_project->S2C_data_pkt, tflow_project->S2C_data_byte);		
 			}
 		}
 		
 		if((raw_pdetail->serverbytes && raw_pdetail->clientbytes) == 0){
-			printf("stream-detail: %s\n", printaddr(&a_tcp->addr, thread_seq));
+			DPRINT("stream-detail: %s\n", printaddr(&a_tcp->addr, thread_seq));
 		}
 
 		if((tflow_project->C2S_data_byte && tflow_project->S2C_data_byte) == 0){
-			printf("stream-project: %s\n", printaddr(&a_tcp->addr, thread_seq));
+			DPRINT("stream-project: %s\n", printaddr(&a_tcp->addr, thread_seq));
 		}
 		
 	}
@@ -398,32 +405,32 @@ char test_get_stream_tcp_opts(struct streaminfo *a_tcp,  void **pme, int thread_
 	int len = sizeof(int);
 	ret = MESA_get_stream_opt(a_tcp, MSO_TCP_ISN_C2S, &isn, &len);	
 	if(ret >= 0){
-		printf("MESA_get_stream_opt() MSO_TCP_ISN_C2S, %u!\n", isn);
+		DPRINT("MESA_get_stream_opt() MSO_TCP_ISN_C2S, %u!\n", isn);
 	}else{
-		printf("MESA_get_stream_opt() MSO_TCP_ISN_C2S error!\n");
+		DPRINT("MESA_get_stream_opt() MSO_TCP_ISN_C2S error!\n");
 		abort();
 	}
 	ret = MESA_get_stream_opt(a_tcp, MSO_TCP_ISN_S2C, &isn, &len);	
 	if(ret >= 0){
-		printf("MESA_get_stream_opt() MSO_TCP_ISN_S2C, %u!\n", isn);
+		DPRINT("MESA_get_stream_opt() MSO_TCP_ISN_S2C, %u!\n", isn);
 	}else{
-		printf("MESA_get_stream_opt() MSO_TCP_ISN_S2C error!\n");
+		DPRINT("MESA_get_stream_opt() MSO_TCP_ISN_S2C error!\n");
 		abort();
 	}
 	ret = MESA_get_stream_opt(a_tcp, MSO_TCP_SYN_OPT, &opt_array, &opt_num);
 	if(ret >= 0){
-		printf("stream:%p, SYN-OPTS:\n", a_tcp);
+		DPRINT("stream:%p, SYN-OPTS:\n", a_tcp);
 		test_get_tcp_opts_show_detail(opt_array, opt_num);
 	}else{
-		printf("MESA_get_stream_opt() MSO_TCP_SYN_OPT error!\n");
+		DPRINT("MESA_get_stream_opt() MSO_TCP_SYN_OPT error!\n");
 	}
 
 	ret = MESA_get_stream_opt(a_tcp, MSO_TCP_SYNACK_OPT, &opt_array, &opt_num);
 	if(ret >= 0){
-		printf("stream:%p, SYNACK-OPTS:\n", a_tcp);
+		DPRINT("stream:%p, SYNACK-OPTS:\n", a_tcp);
 		test_get_tcp_opts_show_detail(opt_array, opt_num);
 	}else{
-		printf("MESA_get_stream_opt() MSO_TCP_SYNACK_OPT error!\n");
+		DPRINT("MESA_get_stream_opt() MSO_TCP_SYNACK_OPT error!\n");
 	}	
 
 	return APP_STATE_DROPME;
@@ -450,7 +457,7 @@ char test_set_stream_timeout(struct streaminfo *pstream,  void **pme, int thread
 			tout_val = 11;
 			ret = MESA_set_stream_opt(pstream, MSO_TIMEOUT, &tout_val, sizeof(short));
 			if(ret < 0){
-				printf("stream:%p, MESA_set_stream_opt error:\n", pstream);
+				DPRINT("stream:%p, MESA_set_stream_opt error:\n", pstream);
 				return APP_STATE_DROPME;
 			}			
 		}
@@ -460,7 +467,7 @@ char test_set_stream_timeout(struct streaminfo *pstream,  void **pme, int thread
 			tout_val = 22;
 			ret = MESA_set_stream_opt(pstream, MSO_TIMEOUT, &tout_val, sizeof(short));
 			if(ret < 0){
-				printf("stream:%p, MESA_set_stream_opt error:\n", pstream);
+				DPRINT("stream:%p, MESA_set_stream_opt error:\n", pstream);
 				return APP_STATE_DROPME;
 			}			
 		}		
@@ -470,9 +477,9 @@ char test_set_stream_timeout(struct streaminfo *pstream,  void **pme, int thread
 		opt_len = sizeof(char);
 		ret = MESA_get_stream_opt(pstream, MSO_STREAM_CLOSE_REASON, &close_reason, &opt_len);
 		if(ret >= 0){
-			printf("stream: %p %s closed, reason: %d!\n", pstream, printaddr(&pstream->addr, thread_seq), close_reason);
+			DPRINT("stream: %p %s closed, reason: %d!\n", pstream, printaddr(&pstream->addr, thread_seq), close_reason);
 		}else{
-			printf("stream: %p %s closed!\n", pstream, printaddr(&pstream->addr, thread_seq));
+			DPRINT("stream: %p %s closed!\n", pstream, printaddr(&pstream->addr, thread_seq));
 		}
 	}
 
@@ -504,16 +511,16 @@ char test_sapp_get_platform_opt(struct streaminfo *pstream,  void **pme, int thr
 	sapp_get_platform_opt(SPO_TOTAL_OUTBOUND_PKT, &totpkt_out, &opt_len);
 
 
-	printf("tot recv pkt by sapp_get_platform_opt is:%llu\n", totpkt);
+	DPRINT("tot recv pkt by sapp_get_platform_opt is:%llu\n", totpkt);
 
-	printf("tot recv byte by sapp_get_platform_opt is:%llu\n", totbyte);
+	DPRINT("tot recv byte by sapp_get_platform_opt is:%llu\n", totbyte);
 
-	printf("curtime-str by sapp_get_platform_opt is:%s\n", time_str);
+	DPRINT("curtime-str by sapp_get_platform_opt is:%s\n", time_str);
 
-	printf("randnum by sapp_get_platform_opt is:%llu\n", rand_num);
+	DPRINT("randnum by sapp_get_platform_opt is:%llu\n", rand_num);
 
-	printf("tot recv inbound pkt by sapp_get_platform_opt is:%llu\n", totpkt_in);
-	printf("tot recv outbound pkt by sapp_get_platform_opt is:%llu\n", totpkt_out);
+	DPRINT("tot recv inbound pkt by sapp_get_platform_opt is:%llu\n", totpkt_in);
+	DPRINT("tot recv outbound pkt by sapp_get_platform_opt is:%llu\n", totpkt_out);
 	
 
 	return APP_STATE_GIVEME;
@@ -546,7 +553,7 @@ char test_get_stream_in_out_bound(struct streaminfo *pstream,  void **pme, int t
 		ret = MESA_get_stream_opt(pstream, MSO_TOTAL_OUTBOUND_BYTE, &outound_stat[1], &opt_len);
 		assert(ret >= 0);		
 
-		printf("stream: %s, inbound: %llu, %llu, outbound: %llu, %llu\n", printaddr(&pstream->addr, thread_seq), 
+		DPRINT("stream: %s, inbound: %llu, %llu, outbound: %llu, %llu\n", printaddr(&pstream->addr, thread_seq), 
 				inound_stat[0], inound_stat[1], outound_stat[0], outound_stat[1]);
 	}
 	
@@ -590,8 +597,8 @@ char test_stream_with_platform_in_out_traffic(struct streaminfo *pstream,  void 
 		//MESA_get_stream_opt(pstream, MSO_TOTAL_OUTBOUND_BYTE, &stream_totbyte_out, &opt_len);	
 		MESA_get_stream_opt(pstream, MSO_TOTAL_OUTBOUND_BYTE_RAW, &stream_totbyte_out, &opt_len);	
 
-		printf("stream  : pkt_in:%llu, pkt_out:%llu, byte_in:%llu, byte_out:%llu\n", stream_totpkt_in, stream_totpkt_out, stream_totbyte_in, stream_totbyte_out);
-		printf("platform: pkt_in:%llu, pkt_out:%llu, byte_in:%llu, byte_out:%llu\n", platform_totpkt_in, platform_totpkt_out, platform_totbyte_in, platform_totbyte_out);
+		DPRINT("stream  : pkt_in:%llu, pkt_out:%llu, byte_in:%llu, byte_out:%llu\n", stream_totpkt_in, stream_totpkt_out, stream_totbyte_in, stream_totbyte_out);
+		DPRINT("platform: pkt_in:%llu, pkt_out:%llu, byte_in:%llu, byte_out:%llu\n", platform_totpkt_in, platform_totpkt_out, platform_totbyte_in, platform_totbyte_out);
 	}
 
 	return APP_STATE_GIVEME;	
@@ -609,26 +616,26 @@ int test_sapp_get_device_opt(const char *device)
 	opt_len = 6;
 	ret = sapp_get_device_opt(device, SDO_MAC_ADDR, dev_mac, &opt_len);
 	if(ret < 0){
-		printf("sapp_get_device_opt->%s : SDO_MAC_ADDR error!\n ", device);
+		DPRINT("sapp_get_device_opt->%s : SDO_MAC_ADDR error!\n ", device);
 	}else{
-		printf("sapp_get_device_opt->%s : SDO_MAC_ADDR: %02x, %02x, %02x, %02x, %02x, %02x\n", device, dev_mac[0],dev_mac[1],dev_mac[2],dev_mac[3],dev_mac[4],dev_mac[5]);
+		DPRINT("sapp_get_device_opt->%s : SDO_MAC_ADDR: %02x, %02x, %02x, %02x, %02x, %02x\n", device, dev_mac[0],dev_mac[1],dev_mac[2],dev_mac[3],dev_mac[4],dev_mac[5]);
 	}
 
 	opt_len = 4;
 	ret = sapp_get_device_opt(device, SDO_IPV4_ADDR, &dev_ipaddr, &opt_len);
 	if(ret < 0){
-		printf("sapp_get_device_opt->%s : SDO_IPV4_ADDR error!\n ",device);
+		DPRINT("sapp_get_device_opt->%s : SDO_IPV4_ADDR error!\n ",device);
 	}else{
 		char ipstr[16];
 		inet_ntop(AF_INET, &dev_ipaddr, ipstr,16);
-		printf("sapp_get_device_opt->%s : SDO_IPV4_ADDR: %s\n", device, ipstr);
+		DPRINT("sapp_get_device_opt->%s : SDO_IPV4_ADDR: %s\n", device, ipstr);
 	}
 	opt_len = 4;
 	ret = sapp_get_device_opt(device, SDO_MTU, &dev_mtu, &opt_len);	
 	if(ret < 0){
-		printf("sapp_get_device_opt->%s : SDO_MTU error!\n ", device);
+		DPRINT("sapp_get_device_opt->%s : SDO_MTU error!\n ", device);
 	}else{
-		printf("sapp_get_device_opt->%s : SDO_MTU: %d\n", device, dev_mtu);
+		DPRINT("sapp_get_device_opt->%s : SDO_MTU: %d\n", device, dev_mtu);
 	}
 }
 
@@ -666,7 +673,7 @@ static int check_ipv4_hdr(const struct mesa_ip4_hdr * iph)
 char testIPFragApp_1(struct streaminfo *pstream,unsigned char routedir, int thread_seq,void *a_packet)
 {
 	static int testcount;
-	printf("ip_frag_entry test %d\n",testcount++);
+	DPRINT("ip_frag_entry test %d\n",testcount++);
 	return APP_STATE_GIVEME;
 }
 
@@ -686,20 +693,20 @@ char ipv4_pkt_detail_entry(struct streaminfo *pstream,unsigned char routedir, in
 
 	if(IPPROTO_TCP == ihdr4->ip_p){
 		thdr = (struct mesa_tcp_hdr *)((char *)ihdr4 + ihdr4->ip_hl * 4);
-		printf("tid:%d, IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d, routedir:%d\n", thread_seq,
+		DPRINT("tid:%d, IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d, routedir:%d\n", thread_seq,
 				ip_src_str, ntohs(thdr->th_sport),
 				ip_dst_str, ntohs(thdr->th_dport),
 				ntohs(ihdr4->ip_id), ihdr4->ip_p,
 				routedir);
 	}else if(IPPROTO_UDP == ihdr4->ip_p){
 		uhdr = (struct mesa_udp_hdr *)((char *)ihdr4 + ihdr4->ip_hl * 4);
-		printf("tid:%d, IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d,routedir:%d\n", thread_seq,
+		DPRINT("tid:%d, IP pkt: %s:%u --> %s:%u, ipid:%u, proto:%d,routedir:%d\n", thread_seq,
 				ip_src_str, ntohs(uhdr->uh_sport),
 				ip_dst_str, ntohs(uhdr->uh_dport),
 				ntohs(ihdr4->ip_id), ihdr4->ip_p,
 				routedir);		
 	}else{
-		printf("tid:%d, IP pkt: %s --> %s, ipid:%u, proto:%d, routedir:%d\n", thread_seq,
+		DPRINT("tid:%d, IP pkt: %s --> %s, ipid:%u, proto:%d, routedir:%d\n", thread_seq,
 				ip_src_str, ip_dst_str, ntohs(ihdr4->ip_id), ihdr4->ip_p, routedir);
 	}
 	
@@ -711,14 +718,14 @@ char ipv4_pkt_detail_entry(struct streaminfo *pstream,unsigned char routedir, in
 char testIPApp_1(struct streaminfo *pstream,unsigned char routedir, int thread_seq,void *a_packet)
 {
 	static int testcount;
-	printf("ip_entry test %d\n",testcount++);
+	DPRINT("ip_entry test %d\n",testcount++);
 	return APP_STATE_GIVEME;
 }
 
 char testIPv6App_1(struct streaminfo *pstream,unsigned char routedir, int thread_seq,void *a_packet)
 {
 	static int testcount;
-	printf("ip_v6 test %d\n",testcount++);
+	DPRINT("ip_v6 test %d\n",testcount++);
 	return APP_STATE_GIVEME;
 }
 
@@ -746,7 +753,7 @@ char testudpApp_1(struct streaminfo *pstream,void **pme, int thread_seq,void *a_
 	if(-1 == test_udp_flow_id){
 		test_udp_flow_id = project_customer_register(PROJECT_REQ_UDP_FLOW, "struct");
 		if(-1 == test_udp_flow_id){
-			printf("'udp_flow_stat' is disable, no statistics\n");
+			DPRINT("'udp_flow_stat' is disable, no statistics\n");
 		}
 	}
 
@@ -774,30 +781,30 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 	if(pstream->opstate==OP_STATE_CLOSE)
 	{
 		if(pdetail != NULL){
-			printf("%20s: %s, %llu, ", "UdpallstreaM-inter", printaddr(&(pstream->addr), pstream->threadnum), test_get_stream_id(pstream));
-			printf("server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, datalen=%u, ",
+			DPRINT("%20s: %s, %llu, ", "UdpallstreaM-inter", printaddr(&(pstream->addr), pstream->threadnum), test_get_stream_id(pstream));
+			DPRINT("server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, datalen=%u, ",
 				pdetail->serverpktnum, pdetail->serverbytes,
 				pdetail->clientpktnum,pdetail->clientbytes, pdetail->datalen);
-			printf("total-pkt=%d, ", pdetail->serverpktnum + pdetail->clientpktnum);
-			printf("total-count=%u\n", pdetail->serverbytes + pdetail->clientbytes);       
+			DPRINT("total-pkt=%d, ", pdetail->serverpktnum + pdetail->clientpktnum);
+			DPRINT("total-count=%u\n", pdetail->serverbytes + pdetail->clientbytes);       
 		}
 		
-		printf("%20s: %s, ", "udpallstream-plug", printaddr(&(pstream->addr),	pstream->threadnum));
-		printf("server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, datalen=%u, ",
+		DPRINT("%20s: %s, ", "udpallstream-plug", printaddr(&(pstream->addr),	pstream->threadnum));
+		DPRINT("server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, datalen=%u, ",
 			plug_stat->C2S_pkt,plug_stat->C2S_byte,
 			plug_stat->S2C_pkt,plug_stat->S2C_byte, pdetail->datalen);
-		printf("total-pkt=%d, ", plug_stat->C2S_pkt + plug_stat->S2C_pkt);
-		printf("total-count=%u\n", plug_stat->C2S_byte+plug_stat->S2C_byte);
+		DPRINT("total-pkt=%d, ", plug_stat->C2S_pkt + plug_stat->S2C_pkt);
+		DPRINT("total-count=%u\n", plug_stat->C2S_byte+plug_stat->S2C_byte);
                 free(*pme);
 
 		struct udp_flow_stat *flow_project = (struct udp_flow_stat *)project_req_get_struct(pstream, test_udp_flow_id);
 		if(flow_project != NULL){
-			printf("%20s: %s, ", "UdpallstreaM-project", printaddr(&(pstream->addr),	pstream->threadnum));
-			printf("server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, datalen=%u, ",
+			DPRINT("%20s: %s, ", "UdpallstreaM-project", printaddr(&(pstream->addr),	pstream->threadnum));
+			DPRINT("server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, datalen=%u, ",
 				flow_project->C2S_pkt,flow_project->C2S_byte,
 				flow_project->S2C_pkt,flow_project->S2C_byte, pdetail->datalen);
-			printf("total-pkt=%d, ", flow_project->C2S_pkt + flow_project->S2C_pkt);
-			printf("total-count=%u\n", flow_project->C2S_byte+flow_project->S2C_byte);       
+			DPRINT("total-pkt=%d, ", flow_project->C2S_pkt + flow_project->S2C_pkt);
+			DPRINT("total-count=%u\n", flow_project->C2S_byte+flow_project->S2C_byte);       
 		}
 	}
 	return APP_STATE_GIVEME;
@@ -831,7 +838,7 @@ char tcp_data_dump(struct streaminfo *pstream,void **pme, int thread_seq,void *a
 	if(pstream->opstate== OP_STATE_PENDING){
 		inet_ntop(AF_INET, &pstream->addr.tuple4_v4->saddr, sip_str, 20);
 		inet_ntop(AF_INET, &pstream->addr.tuple4_v4->daddr, dip_str, 20);
-		snprintf(file_name, 128, "%s_%u_%s_%u.T%ld.dump", 
+		snDPRINT(file_name, 128, "%s_%u_%s_%u.T%ld.dump", 
 				sip_str, ntohs(pstream->addr.tuple4_v4->source), 
 				dip_str, ntohs(pstream->addr.tuple4_v4->dest),
 				(long)time(NULL)); 
@@ -858,11 +865,11 @@ char test_print_mac(struct streaminfo *pstream,void **pme, int thread_seq,void *
 
 	if(pstream->opstate== OP_STATE_PENDING)
 	{
-		printf("tcpstream: %s, ",printaddr(&(pstream->addr),	pstream->threadnum));
+		DPRINT("tcpstream: %s, ",printaddr(&(pstream->addr),	pstream->threadnum));
 		while(pstream){
 			if(pstream->addr.addrtype == ADDR_TYPE_MAC){
 				struct layer_addr_mac *mac_addr = (struct layer_addr_mac *)pstream->addr.mac;
-				printf("smac: %02x-%02x-%02x-%02x-%02x-%02x,  dmac: %02x-%02x-%02x-%02x-%02x-%02x\n",
+				DPRINT("smac: %02x-%02x-%02x-%02x-%02x-%02x,  dmac: %02x-%02x-%02x-%02x-%02x-%02x\n",
 				         mac_addr->src_addr.h_source[0], mac_addr->src_addr.h_source[1], mac_addr->src_addr.h_source[2], 
 				         mac_addr->src_addr.h_source[3], mac_addr->src_addr.h_source[4], mac_addr->src_addr.h_source[5], 
 				         mac_addr->src_addr.h_dest[0], mac_addr->src_addr.h_dest[1], mac_addr->src_addr.h_dest[2], 
@@ -885,7 +892,7 @@ static void sapp_timer_test_cbfun(sapp_timer_handle h, sapp_timer_event ev, int 
 
 	gettimeofday(&curt, NULL);
 
-	printf("tid:%d, tcpstream %s  timeout: %ld.%ld \n",
+	DPRINT("tid:%d, tcpstream %s  timeout: %ld.%ld \n",
 			pstream->threadnum, 
 			printaddr(&(pstream->addr),pstream->threadnum),
 			curt.tv_sec, curt.tv_usec);
@@ -934,7 +941,7 @@ char on_tcp_sapp_timer_test(struct streaminfo *pstream,void **pme, int thread_se
 		if(pstream->opstate== OP_STATE_CLOSE){
 			th = sapp_get_platform_timer(pstream->threadnum);
 			sapp_timer_del(th, tev);
-			printf("tid:%d, tcpstream close: %s, del timer\n",pstream->threadnum, printaddr(&(pstream->addr),pstream->threadnum));
+			DPRINT("tid:%d, tcpstream close: %s, del timer\n",pstream->threadnum, printaddr(&(pstream->addr),pstream->threadnum));
 			return APP_STATE_DROPME;
 		}
 	}
@@ -952,7 +959,7 @@ char testtcpApp_2(struct streaminfo *pstream,void **pme, int thread_seq,void *a_
 	if(-1 == test_tcp_flow_id){
 		test_tcp_flow_id = project_customer_register("tcp_flow_stat", "struct");
 		if(-1 == test_tcp_flow_id){
-			printf("'tcp_flow_stat' is disable, no statistics\n");
+			DPRINT("'tcp_flow_stat' is disable, no statistics\n");
 		}
 	}
 	
@@ -976,9 +983,9 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 	
 	if(pstream->opstate== OP_STATE_CLOSE)
 	{	
-		printf("%17s: %s, ","tcpstream-plug", printaddr(&(pstream->addr),	pstream->threadnum));
-		//printf("%17s: %s, ","tcpstream-plug", printaddr_r(&(pstream->addr),	addr_str_buf, 1024));
-		printf("final_dir=%d, server pkt=%d, count=%d, client pkt=%d, count=%d\n",
+		DPRINT("%17s: %s, ","tcpstream-plug", printaddr(&(pstream->addr),	pstream->threadnum));
+		//DPRINT("%17s: %s, ","tcpstream-plug", printaddr_r(&(pstream->addr),	addr_str_buf, 1024));
+		DPRINT("final_dir=%d, server pkt=%d, count=%d, client pkt=%d, count=%d\n",
 			pstream->dir,
 			raw_pdetail->serverpktnum,   raw_pdetail->serverbytes,
 			raw_pdetail->clientpktnum,    raw_pdetail->clientbytes);
@@ -987,8 +994,8 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 		/* 2015-12-29 lijia add */
 		struct tcp_flow_stat *tflow_inter = ((struct tcpdetail_private *)pstream->pdetail)->flow_stat;
 		if(tflow_inter){
-			printf("%17s: %s, %llu,", "TcpstreaM-inter", printaddr(&(pstream->addr), pstream->threadnum), test_get_stream_id(pstream));
-			printf("opstate=%d, server pkt=%u, count=%lu, client pkt=%u, count=%lu\n",
+			DPRINT("%17s: %s, %llu,", "TcpstreaM-inter", printaddr(&(pstream->addr), pstream->threadnum), test_get_stream_id(pstream));
+			DPRINT("opstate=%d, server pkt=%u, count=%lu, client pkt=%u, count=%lu\n",
 				pstream->opstate,
 				tflow_inter->C2S_data_pkt,tflow_inter->C2S_data_byte,
 				tflow_inter->S2C_data_pkt, tflow_inter->S2C_data_byte);		
@@ -998,8 +1005,8 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 			/* 2015-12-29 lijia add */
 			struct tcp_flow_stat *tflow_project = (struct tcp_flow_stat *)project_req_get_struct(pstream, test_tcp_flow_id);
 			if(tflow_project){
-				printf("%17s: %s, ", "TcpstreaM-project", printaddr(&(pstream->addr),	pstream->threadnum));
-				printf("opstate=%d, server pkt=%u, count=%lu, client pkt=%u, count=%lu\n",
+				DPRINT("%17s: %s, ", "TcpstreaM-project", printaddr(&(pstream->addr),	pstream->threadnum));
+				DPRINT("opstate=%d, server pkt=%u, count=%lu, client pkt=%u, count=%lu\n",
 					pstream->opstate,
 					tflow_project->C2S_data_pkt,tflow_project->C2S_data_byte,
 					tflow_project->S2C_data_pkt, tflow_project->S2C_data_byte);		
@@ -1060,30 +1067,30 @@ char tcpentry_vlink_info(struct streaminfo *pstream,void **pme, int thread_seq,v
 		}
 		ret = get_rawpkt_opt_from_streaminfo(pstream, RAW_PKT_GET_VXLAN_LINK_DIR, &link_dir);
 		if(ret < 0){
-			printf("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VXLAN_LINK_DIR error!\n");
+			DPRINT("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VXLAN_LINK_DIR error!\n");
 			return APP_STATE_DROPME;
 		}
 		ret = get_rawpkt_opt_from_streaminfo(pstream, RAW_PKT_GET_VIRTUAL_LINK_ID, &vlink_id);
 		if(ret < 0){
-			printf("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VIRTUAL_LINK_ID error!\n");
+			DPRINT("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VIRTUAL_LINK_ID error!\n");
 			return APP_STATE_DROPME;
 		}	
 
 		ret = get_rawpkt_opt_from_streaminfo(pstream, RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC, inline_dev_mac);
 		if(ret < 0){
-			printf("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC error!\n");
+			DPRINT("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC error!\n");
 			return APP_STATE_DROPME;
 		}	
 
 		ret = get_rawpkt_opt_from_streaminfo(pstream, RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC, local_dev_mac);
 		if(ret < 0){
-			printf("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC error!\n");
+			DPRINT("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC error!\n");
 			return APP_STATE_DROPME;
 		}	
 
 		ret = get_rawpkt_opt_from_streaminfo(pstream, RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC, local_dev_mac);
 		if(ret < 0){
-			printf("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC error!\n");
+			DPRINT("tcpentry_vlink_info(): get_rawpkt_opt_from_streaminfo of RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC error!\n");
 			return APP_STATE_DROPME;
 		}	
 		
@@ -1094,22 +1101,22 @@ char tcpentry_vlink_info(struct streaminfo *pstream,void **pme, int thread_seq,v
 
 		ehdr = (struct mesa_ethernet_hdr *)((char *)a_packet - 14);
 
-		printf("--------------------------------------------link info-----------------------------------------\n");
-		printf("outer mac:%02x-%02x-%02x-%02x-%02x-%02x -> %02x-%02x-%02x-%02x-%02x-%02x\n",
+		DPRINT("--------------------------------------------link info-----------------------------------------\n");
+		DPRINT("outer mac:%02x-%02x-%02x-%02x-%02x-%02x -> %02x-%02x-%02x-%02x-%02x-%02x\n",
 				inline_dev_mac[0], inline_dev_mac[1],inline_dev_mac[2],inline_dev_mac[3],inline_dev_mac[4],inline_dev_mac[5],
 				local_dev_mac[0],local_dev_mac[1],local_dev_mac[2],local_dev_mac[3],local_dev_mac[4],local_dev_mac[5]);
 		
-		printf("inner mac:%02x-%02x-%02x-%02x-%02x-%02x -> %02x-%02x-%02x-%02x-%02x-%02x\n",
+		DPRINT("inner mac:%02x-%02x-%02x-%02x-%02x-%02x -> %02x-%02x-%02x-%02x-%02x-%02x\n",
 				ehdr->ether_shost[0], ehdr->ether_shost[1], ehdr->ether_shost[2], ehdr->ether_shost[3], ehdr->ether_shost[4], ehdr->ether_shost[5], 
 				ehdr->ether_dhost[0],ehdr->ether_dhost[1],ehdr->ether_dhost[2],ehdr->ether_dhost[3],ehdr->ether_dhost[4],ehdr->ether_dhost[5]);
-		printf("inner ip: %s->%s\n", srcstr, dststr);
-		printf("link_dir:%d, mrzcpd_vlink_id:%lld\n", link_dir, vlink_id);
+		DPRINT("inner ip: %s->%s\n", srcstr, dststr);
+		DPRINT("link_dir:%d, mrzcpd_vlink_id:%lld\n", link_dir, vlink_id);
 
-		printf("--------------------------------------------------------------------------------------------\n");
+		DPRINT("--------------------------------------------------------------------------------------------\n");
 
 	}
 #else
-	printf("tcpentry_vlink_info(): not compile in marsio mode, do nothing!\n");
+	DPRINT("tcpentry_vlink_info(): not compile in marsio mode, do nothing!\n");
 #endif	
     return APP_STATE_DROPME;
 }
@@ -1126,7 +1133,7 @@ char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq,voi
 	if(-1 == test_tcpall_flow_id){
 		test_tcpall_flow_id = project_customer_register("tcp_flow_stat", "struct");
 		if(-1 == test_tcpall_flow_id){
-			printf("'tcp_flow_stat' is disable, no statistics\n");
+			DPRINT("'tcp_flow_stat' is disable, no statistics\n");
 		}		
 	}
 	
@@ -1151,26 +1158,26 @@ char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq,voi
 
 	if(pstream->pktstate== OP_STATE_CLOSE)
 	{	
-		printf("%20s: %s, ", "tcpallstream-plug", printaddr(&(pstream->addr),	pstream->threadnum));
-		//printf("index=%d,state=%d ",*(int*)((char *)(pstream)-8),*(char *)((char *)(pstream)-4));
-		printf("out:%d, final_dir=%d server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, ",
+		DPRINT("%20s: %s, ", "tcpallstream-plug", printaddr(&(pstream->addr),	pstream->threadnum));
+		//DPRINT("index=%d,state=%d ",*(int*)((char *)(pstream)-8),*(char *)((char *)(pstream)-4));
+		DPRINT("out:%d, final_dir=%d server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, ",
 		pdetail_pr->link_state, pstream->dir,
 		tcpallflow->C2S_all_pkt, tcpallflow->C2S_all_byte,
 		tcpallflow->S2C_all_pkt, tcpallflow->S2C_all_byte);
-		printf("total-pkt=%u, ", tcpallflow->C2S_all_pkt + tcpallflow->S2C_all_pkt);
-		printf("total-count=%lu\n", tcpallflow->C2S_all_byte + tcpallflow->S2C_all_byte);
+		DPRINT("total-pkt=%u, ", tcpallflow->C2S_all_pkt + tcpallflow->S2C_all_pkt);
+		DPRINT("total-count=%lu\n", tcpallflow->C2S_all_byte + tcpallflow->S2C_all_byte);
 		free(*pme);
 
 		/* 2015-12-29 lijia add */
 		struct tcp_flow_stat *tflow_inter = pdetail_pr->flow_stat;
 		if(tflow_inter){
-			printf("%20s: %s, %llu", "TcpallstreaM-inter", printaddr(&(pstream->addr),	pstream->threadnum), test_get_stream_id(pstream));
-			printf("out:%d, pktstate=%d, opstate=%d, server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, ",
+			DPRINT("%20s: %s, %llu", "TcpallstreaM-inter", printaddr(&(pstream->addr),	pstream->threadnum), test_get_stream_id(pstream));
+			DPRINT("out:%d, pktstate=%d, opstate=%d, server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, ",
 				pdetail_pr->link_state,pstream->pktstate,pstream->opstate,
 				tflow_inter->C2S_all_pkt,tflow_inter->C2S_all_byte,
 				tflow_inter->S2C_all_pkt, tflow_inter->S2C_all_byte);	
-			printf("total-pkt=%u, ", tflow_inter->C2S_all_pkt + tflow_inter->S2C_all_pkt);
-			printf("total-count=%lu\n", tflow_inter->C2S_all_byte + tflow_inter->S2C_all_byte);				
+			DPRINT("total-pkt=%u, ", tflow_inter->C2S_all_pkt + tflow_inter->S2C_all_pkt);
+			DPRINT("total-count=%lu\n", tflow_inter->C2S_all_byte + tflow_inter->S2C_all_byte);				
 		}
 
 
@@ -1178,13 +1185,13 @@ char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq,voi
 			/* 2015-12-29 lijia add */
 			struct tcp_flow_stat *tflow_project = (struct tcp_flow_stat *)project_req_get_struct(pstream, test_tcpall_flow_id);
 			if(tflow_project){
-				printf("%20s: %s, ", "TcpallstreaM-project", printaddr(&(pstream->addr),	pstream->threadnum));
-				printf("out:%d, pktstate=%d, opstate=%d, server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, ",
+				DPRINT("%20s: %s, ", "TcpallstreaM-project", printaddr(&(pstream->addr),	pstream->threadnum));
+				DPRINT("out:%d, pktstate=%d, opstate=%d, server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, ",
 					pdetail_pr->link_state,pstream->pktstate,pstream->opstate,
 					tflow_project->C2S_all_pkt,tflow_project->C2S_all_byte,
 					tflow_project->S2C_all_pkt, tflow_project->S2C_all_byte);	
-				printf("total-pkt=%u, ", tflow_project->C2S_all_pkt + tflow_project->S2C_all_pkt);
-				printf("total-count=%lu\n", tflow_project->C2S_all_byte + tflow_project->S2C_all_byte);				
+				DPRINT("total-pkt=%u, ", tflow_project->C2S_all_pkt + tflow_project->S2C_all_pkt);
+				DPRINT("total-count=%lu\n", tflow_project->C2S_all_byte + tflow_project->S2C_all_byte);				
 			}
 		}
 	}
@@ -1275,16 +1282,16 @@ char test_allpkt_v4_len(struct streaminfo *pstream,void **pme, int thread_seq,vo
 		if(isprint==1)
 		{
 		  if(type==STREAM_TYPE_TCP) 
-			printf("tcpallstream:");
+			DPRINT("tcpallstream:");
 		  else 
-			printf("udpallstream:");
-		 printf(" %s ",printaddr(&(pstream->addr),  pstream->threadnum));
-                //printf("index=%d,state=%d ",*(int*)((char *)(pstream)-8),*(char *)((char *)(pstream)-4));
-                printf("out:%d,pktstate=%d,opstate=%d,server pkt=%d, count=%d,client pkt=%d,count=%d, datalen=%d,lostlen=%d",
+			DPRINT("udpallstream:");
+		 DPRINT(" %s ",printaddr(&(pstream->addr),  pstream->threadnum));
+                //DPRINT("index=%d,state=%d ",*(int*)((char *)(pstream)-8),*(char *)((char *)(pstream)-4));
+                DPRINT("out:%d,pktstate=%d,opstate=%d,server pkt=%d, count=%d,client pkt=%d,count=%d, datalen=%d,lostlen=%d",
                 pdetail_pr->link_state,pstream->pktstate,pstream->opstate,pdetail->serverpktnum,pdetail->serverbytes,
                 pdetail->clientpktnum,pdetail->clientbytes,pdetail->datalen,pdetail->lostlen);
-                printf(" \t total pkt= %d,datalen=%d",(p->pktnum),p->payloadlen);
-                printf("\n");
+                DPRINT(" \t total pkt= %d,datalen=%d",(p->pktnum),p->payloadlen);
+                DPRINT("\n");
 		}
                 free(*pme);
         }
@@ -1323,7 +1330,7 @@ static char test_project_read_ipv4_frag_list(struct streaminfo *pstream,void **p
 	if(0 == __init_flag){
 		project_id = project_customer_register("ipv4_frag_list", PROJECT_VAL_TYPE_STRUCT);
 		if(project_id < 0){
-			printf("test_project_add error, 'ipv4_frag_list' is not enable!\n");
+			DPRINT("test_project_add error, 'ipv4_frag_list' is not enable!\n");
 			exit(0);
 		}
 		__init_flag = 1;
@@ -1332,13 +1339,13 @@ static char test_project_read_ipv4_frag_list(struct streaminfo *pstream,void **p
 	if(OP_STATE_DATA == pstream->opstate){
 		frag_head = (raw_ipfrag_list_t *)project_req_get_struct(pstream, project_id);		
 		if(frag_head){
-			printf("stream-%p frag len: ", pstream);
+			DPRINT("stream-%p frag len: ", pstream);
 			while(frag_head){
 				tmp = frag_head->next;
-				printf("%d, ",  frag_head->pkt_len);
+				DPRINT("%d, ",  frag_head->pkt_len);
 				frag_head = tmp;
 			}
-			printf("\n");
+			DPRINT("\n");
 		}
 	}
 
@@ -1357,14 +1364,14 @@ static void print_tuple4(struct streaminfo *stream)
 		struct stream_tuple4_v4 *tuple_v4 = (struct stream_tuple4_v4 *)(stream->addr.paddr);
 		inet_ntop(AF_INET, &tuple_v4->saddr, ip1, 16);
 		inet_ntop(AF_INET, &tuple_v4->daddr, ip2, 16);
-		printf("tuple4_v4 is:%s:%u -- %s:%u\n", ip1, ntohs(tuple_v4->source),
+		DPRINT("tuple4_v4 is:%s:%u -- %s:%u\n", ip1, ntohs(tuple_v4->source),
 			 ip2, ntohs(tuple_v4->dest));
 	}else{
 		char ip1[128], ip2[128];
 		struct stream_tuple4_v6 *tuple_v6 = (struct stream_tuple4_v6 *)(stream->addr.paddr);;
 		inet_ntop(AF_INET6, tuple_v6->saddr, ip1, 128);
 		inet_ntop(AF_INET6, tuple_v6->daddr, ip2, 128);
-		printf("tuple4_v6 is:%s:%u -- %s:%u\n", ip1, ntohs(tuple_v6->source),
+		DPRINT("tuple4_v6 is:%s:%u -- %s:%u\n", ip1, ntohs(tuple_v6->source),
 			 ip2, ntohs(tuple_v6->dest));
 	}
 
@@ -1392,11 +1399,11 @@ static int check_rst_ip_old (unsigned int sip_net_order, unsigned int dip_net_or
 {
         unsigned short window_compute;
         if (sip_net_order == INADDR_NONE) {
-                fprintf (stderr, "source IP wrong.\n");
+                fDPRINT (stderr, "source IP wrong.\n");
                 return -1;
         }
         if (dip_net_order == INADDR_NONE) {
-                fprintf (stderr, "destination IP wrong.\n");
+                fDPRINT (stderr, "destination IP wrong.\n");
                 return -1;
         }
 
@@ -1436,9 +1443,9 @@ static char test_rst_pkt(struct streaminfo *pstream,unsigned char routedir,int t
 	}
 
 	if(check_rst_ip_old(ip4_hdr->ip_src.s_addr, ip4_hdr->ip_dst.s_addr, ntohs(ip4_hdr->ip_id),ntohs(tcp_hdr->th_win), 65535, 13) == 1){
-		printf("@@@MESA RST pkt!\n");
+		DPRINT("@@@MESA RST pkt!\n");
 	}else{
-		printf("### recv RST, but not MESA RST pkt!\n");
+		DPRINT("### recv RST, but not MESA RST pkt!\n");
 	}
 
 	return 1;
@@ -1459,13 +1466,13 @@ char test_ipv4_frag(const struct streaminfo *pstream,unsigned char routedir,int 
 
 	
 	if(((flags & IPv4_FRAG_MF) != 0) || (offset != 0)) {
-		//printf("recv a ipv4 frag pkt!\n");
+		//DPRINT("recv a ipv4 frag pkt!\n");
 	}
 
 	/* ffff.pcap, 5698811 */
 	ip_pkt_tot++;
 	if(ip_pkt_tot > 5680000){
-		printf("recv ip pkt tot:%ld\n", ip_pkt_tot);
+		DPRINT("recv ip pkt tot:%ld\n", ip_pkt_tot);
 	}
 	
 	return APP_STATE_GIVEME;	
@@ -1473,7 +1480,7 @@ char test_ipv4_frag(const struct streaminfo *pstream,unsigned char routedir,int 
 
 char test_ipv6_frag(const struct streaminfo *pstream,unsigned char routedir,int thread_seq,  const void *ipv4_hdr)
 {
-	printf("recv a ipv6 frag pkt!\n");
+	DPRINT("recv a ipv6 frag pkt!\n");
 	return APP_STATE_GIVEME;	
 }
 
@@ -1489,10 +1496,10 @@ char test_layer_addr_prefix_ntop(const struct streaminfo *stream,void **pme, int
 
 		while(tmp != NULL){
 			addr_type_ntop_str = layer_addr_prefix_ntop(tmp);
-			printf("%s ",  addr_type_ntop_str);		
+			DPRINT("%s ",  addr_type_ntop_str);		
 			tmp = tmp->pfather;
 		}
-		printf("\n");
+		DPRINT("\n");
 	}
 	return APP_STATE_GIVEME;
 }
@@ -1511,37 +1518,37 @@ char test_get_rawpkt_options(struct streaminfo *stream,void **pme, int thread_se
 	if(ret >= 0){
 		char tmp_ip_str[32];
 		inet_ntop(AF_INET, &gdev_ip, tmp_ip_str, 32);
-		printf("[debug], test_get_rawpkt_options get gdev-ip:%s\n", tmp_ip_str);
+		DPRINT("[debug], test_get_rawpkt_options get gdev-ip:%s\n", tmp_ip_str);
 	}else{
-		printf("[error], test_get_rawpkt_options GDEV_IP error\n");
+		DPRINT("[error], test_get_rawpkt_options GDEV_IP error\n");
 	}
 
 	ret = get_rawpkt_opt_from_streaminfo(stream, RAW_PKT_GET_VXLAN_ID, &vxlan_id);
 	if(ret >= 0){
-		printf("[debug], test_get_rawpkt_options get vlan-id:%d\n", vxlan_id);
+		DPRINT("[debug], test_get_rawpkt_options get vlan-id:%d\n", vxlan_id);
 	}else{
-		printf("[error], test_get_rawpkt_options VXLAN_ID error\n");
+		DPRINT("[error], test_get_rawpkt_options VXLAN_ID error\n");
 	}
 
 	ret = get_rawpkt_opt_from_streaminfo(stream, RAW_PKT_GET_VXLAN_VPNID, &vpn_id);
 	if(ret >= 0){
-		printf("[debug], test_get_rawpkt_options get VPNID:%d\n", ntohl(vpn_id)); /* to host order */
+		DPRINT("[debug], test_get_rawpkt_options get VPNID:%d\n", ntohl(vpn_id)); /* to host order */
 	}else{
-		printf("[error], test_get_rawpkt_options VPNID error\n");
+		DPRINT("[error], test_get_rawpkt_options VPNID error\n");
 	}
 	
 	service_id = vxlan_id_map_to_service_id(ntohl(vxlan_id));
-	printf("service id from vxlan_id: %u\n", service_id);
+	DPRINT("service id from vxlan_id: %u\n", service_id);
 	
 	ret = get_rawpkt_opt_from_streaminfo(stream, RAW_PKT_GET_VXLAN_SPORT, &vxlan_sport);
 	if(ret >= 0){
-		printf("[debug], test_get_rawpkt_options get sport:%u\n", ntohs(vxlan_sport));
+		DPRINT("[debug], test_get_rawpkt_options get sport:%u\n", ntohs(vxlan_sport));
 	}else{
-		printf("[error], test_get_rawpkt_options VXLAN_SPORT error\n");
+		DPRINT("[error], test_get_rawpkt_options VXLAN_SPORT error\n");
 	}
 
 	service_id = vxlan_sport_map_to_service_id(ntohs(vxlan_sport));
-	printf("service id from sport: %u\n", service_id);
+	DPRINT("service id from sport: %u\n", service_id);
 	
 	return APP_STATE_GIVEME;
 }
@@ -1551,10 +1558,10 @@ char test_layer_index(const struct streaminfo *stream,void **pme, int thread_seq
 	const struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
 
 	while(stream_pr){
-		printf(" --- layer_index:%d, addr_type:%d, addr_ntop:%s\n", stream_pr->layer_index, stream_pr->stream_public.addr.addrtype, layer_addr_ntop(&stream_pr->stream_public));
+		DPRINT(" --- layer_index:%d, addr_type:%d, addr_ntop:%s\n", stream_pr->layer_index, stream_pr->stream_public.addr.addrtype, layer_addr_ntop(&stream_pr->stream_public));
 		stream_pr = (struct streaminfo_private *)stream_pr->stream_public.pfather;
 	}
-	printf(" --- \n");
+	DPRINT(" --- \n");
 	return APP_STATE_DROPME;
 }
 
@@ -1568,10 +1575,10 @@ char test_stream_addr_list_ntop(const struct streaminfo *stream,void **pme, int 
 	if(OP_STATE_CLOSE == stream->opstate){
 		ret = stream_addr_list_ntop(stream, addr_list_str, 4096);
 		if(ret < 0){
-			printf("stream_addr_list_ntop ret = %d\n", ret);
+			DPRINT("stream_addr_list_ntop ret = %d\n", ret);
 			assert(0);
 		}
-		printf("addr-list len is:\t%d, value:\t%s\n", ret, addr_list_str);
+		DPRINT("addr-list len is:\t%d, value:\t%s\n", ret, addr_list_str);
 	}
 
 	return APP_STATE_GIVEME;
@@ -1588,13 +1595,13 @@ char test_inet_addr_list_addr(const struct streaminfo *stream,void **pme, int th
 	if(OP_STATE_CLOSE == stream->opstate){
 		ret = stream_addr_list_ntop(stream, addr_list_str, 4096);
 		if(ret < 0){
-			printf("stream_addr_list_ntop ret = %d\n", ret);
+			DPRINT("stream_addr_list_ntop ret = %d\n", ret);
 			assert(0);
 		}
-		printf("    raw-addr-list len is:\t%d, value:\t%s\n", ret, addr_list_str);
+		DPRINT("    raw-addr-list len is:\t%d, value:\t%s\n", ret, addr_list_str);
 		ret = stream_addr_list_pton(addr_list_str, recover_stream, sizeof(struct streaminfo)*32, stream->threadnum);
 		if(ret < 0){
-			printf("stream_addr_list_pton ret = %d\n", ret);
+			DPRINT("stream_addr_list_pton ret = %d\n", ret);
 			assert(0);
 		}		
 
@@ -1602,13 +1609,13 @@ char test_inet_addr_list_addr(const struct streaminfo *stream,void **pme, int th
 
 		ret =  stream_addr_list_ntop(recover_stream, addr_list_str_recover, 4096);
 		if(ret < 0){
-			printf("stream_addr_list_ntop ret = %d\n", ret);
+			DPRINT("stream_addr_list_ntop ret = %d\n", ret);
 			assert(0);
 		}		
-		printf("recover-addr-list len is:\t%d, value:\t%s\n", ret, addr_list_str_recover);
+		DPRINT("recover-addr-list len is:\t%d, value:\t%s\n", ret, addr_list_str_recover);
 
 		if(strncasecmp(addr_list_str, addr_list_str_recover, 4096) != 0){
-			printf("stream_addr_list not name!\n");
+			DPRINT("stream_addr_list not name!\n");
 		}
 	}
 
@@ -1688,7 +1695,7 @@ char test_kill_connection( struct streaminfo *stream,void **pme, int thread_seq,
 			inet_ntop(AF_INET, &tuple_v4->saddr, ip1, 16);
 			inet_ntop(AF_INET, &tuple_v4->daddr, ip2, 16);
 			MESA_kill_connection((struct streaminfo *)stream, raw_pkt);
-			printf("Kill connection: ,%s:%u -- %s:%u\n", ip1, ntohs(tuple_v4->source),
+			DPRINT("Kill connection: ,%s:%u -- %s:%u\n", ip1, ntohs(tuple_v4->source),
 				 ip2, ntohs(tuple_v4->dest));
 		}
 	}
@@ -1714,7 +1721,7 @@ char test_kill_tcp_syn_ack(struct streaminfo *stream,void **pme, int thread_seq,
 			inet_ntop(AF_INET, &tuple_v4->saddr, ip1, 16);
 			inet_ntop(AF_INET, &tuple_v4->daddr, ip2, 16);
 			MESA_kill_tcp_synack(stream, raw_pkt);
-			printf("Send fake SYN/ACK: ,%s:%u -- %s:%u\n", ip1, ntohs(tuple_v4->source),
+			DPRINT("Send fake SYN/ACK: ,%s:%u -- %s:%u\n", ip1, ntohs(tuple_v4->source),
 				 ip2, ntohs(tuple_v4->dest));
 		}
 	
@@ -1730,7 +1737,7 @@ char test_send_pkt(struct streaminfo *stream,void **pme, int thread_seq,const vo
 
 	iphdr = (struct ip *)raw_pkt;
 	if(iphdr->ip_v != 4){
-		printf("not ipv4!\n");
+		DPRINT("not ipv4!\n");
 	}
 	MESA_sendpacket_ethlayer(stream->threadnum, (char *)raw_pkt-14, 14+ntohs(iphdr->ip_len), 0);
 
@@ -1883,12 +1890,12 @@ char test_inject_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,co
 
 		  	payload_char_len = SAPP_MIN(g_test_app_val.ivalue1, 4096);
 		  	payload_buf[payload_char_len] = '\0';
-		  	snprintf(payload_with_html_buf, sizeof(payload_with_html_buf), "<html><head>%s</head></html>", payload_buf);
+		  	snDPRINT(payload_with_html_buf, sizeof(payload_with_html_buf), "<html><head>%s</head></html>", payload_buf);
 
 			total_payload_len = strlen(payload_with_html_buf);
-			snprintf(fake_http_send_buf, sizeof(fake_http_send_buf), fake_http_pattern, total_payload_len, payload_with_html_buf);
+			snDPRINT(fake_http_send_buf, sizeof(fake_http_send_buf), fake_http_pattern, total_payload_len, payload_with_html_buf);
 		  	
-		  	printf("found key 'hijack', send fake http response, len=%d\n", total_payload_len);
+		  	DPRINT("found key 'hijack', send fake http response, len=%d\n", total_payload_len);
 			//MESA_inject_pkt(stream, fake_http_data, sizeof(fake_http_data), raw_pkt, stream->routedir ^ 1);
 			sapp_inject_pkt(stream, SIO_DEFAULT, fake_http_send_buf, strlen(fake_http_send_buf), stream->routedir ^ 1);
 			//test_inject_tcp_pkt_with_this_hdr(stream, pme, thread_seq, raw_pkt);
@@ -1934,9 +1941,9 @@ static int send_by_sapp_inject_pkt(struct streaminfo *a_tcp, const struct mesa_i
 	struct mesa_ip4_hdr *send_ip4hdr = (struct mesa_ip4_hdr *)http_hijack_buf;
 	struct mesa_tcp_hdr *send_thdr = (struct mesa_tcp_hdr *)((char *)send_ip4hdr + sizeof(struct mesa_ip4_hdr)); //no options
 
-	int hdr_len = snprintf(http_hijack_buf+sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), 
+	int hdr_len = snDPRINT(http_hijack_buf+sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), 
 	                   1500, HIJACK_RESPONSE_HDR, strlen(HIJACK_RESPONSE_BODY));
-	int body_len = snprintf(http_hijack_buf+sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr)+hdr_len, 
+	int body_len = snDPRINT(http_hijack_buf+sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr)+hdr_len, 
 	                   1500-hdr_len, "%s", HIJACK_RESPONSE_BODY);
 
 	http_hijack_len = sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr) + hdr_len + body_len;
@@ -1991,9 +1998,9 @@ char MESA_inject_pkt_for_l2_l3_tcp(struct streaminfo *stream,void **pme, int thr
 			//看到第一个get包后, 反向发送一个虚假应答
 			ret = MESA_inject_pkt(stream, modify_inject_data_s2c, 1460, raw_pkt, stream->routedir ^ 1); 
 			if(ret < 0){
-				printf("%s, MESA_inject_pkt S2C error!\n", printaddr(&stream->addr, thread_seq));
+				DPRINT("%s, MESA_inject_pkt S2C error!\n", printaddr(&stream->addr, thread_seq));
 			}else{
-				printf("%s, MESA_inject_pkt S2C succ:%d\n", printaddr(&stream->addr, thread_seq), ret);
+				DPRINT("%s, MESA_inject_pkt S2C succ:%d\n", printaddr(&stream->addr, thread_seq), ret);
 			}	
 
 			if(stream->ptcpdetail->serverpktnum <= 3){
@@ -2029,16 +2036,16 @@ char MESA_inject_pkt_for_l2_l3_tcpall(struct streaminfo *stream,void **pme, int 
 	 && (stream->ptcpdetail->datalen == 0)){ /* 只在三次握手刚刚完成后, 收到ACK包发送一次get请求,否则序号对不上 */
 		inet_ntop(AF_INET, &stream->addr.tuple4_v4->daddr, server_ip, 32);
 
-		sprintf(raw_data_c2s, modify_inject_data_c2s, server_ip);
+		sDPRINT(raw_data_c2s, modify_inject_data_c2s, server_ip);
 		if(strlen(raw_data_c2s) != 197){
-			printf("MESA_inject_pkt_for_l2_l3_tcpall(), C2S inject len is not 197, %s\n", strlen(raw_data_c2s)); //要与仪表造的流量长度一致, 后续的SEQ才能不乱
+			DPRINT("MESA_inject_pkt_for_l2_l3_tcpall(), C2S inject len is not 197, %s\n", strlen(raw_data_c2s)); //要与仪表造的流量长度一致, 后续的SEQ才能不乱
 			return APP_STATE_DROPME;
 		}		
 		ret = MESA_inject_pkt(stream, raw_data_c2s, strlen(raw_data_c2s), raw_pkt, stream->routedir);
 		if(ret < 0){
-			printf("%s, MESA_inject_pkt C2S error!\n", printaddr(&stream->addr, thread_seq));
+			DPRINT("%s, MESA_inject_pkt C2S error!\n", printaddr(&stream->addr, thread_seq));
 		}else{
-			printf("%s, MESA_inject_pkt C2S succ:%d\n",printaddr(&stream->addr, thread_seq), ret);
+			DPRINT("%s, MESA_inject_pkt C2S succ:%d\n",printaddr(&stream->addr, thread_seq), ret);
 		}
 		ret_flag = APP_STATE_DROPPKT;
 	}
@@ -2058,8 +2065,8 @@ char test_sapp_inject_http(stSessionInfo* session_info, void **param, int thread
 		case HTTP_MESSAGE_URL:
 			if(memmem((char*)session_info->buf, session_info->buflen, "hijack", strlen("hijack"))){
 				send_by_sapp_inject_pkt(a_tcp, (struct mesa_ip4_hdr *)a_packet);
-				//printf("----hit key, hijack it!!\n");
-				printf("hijack stream: %s, URL: %s\n", printaddr(&a_tcp->addr, thread_seq), (char*)session_info->buf);
+				//DPRINT("----hit key, hijack it!!\n");
+				DPRINT("hijack stream: %s, URL: %s\n", printaddr(&a_tcp->addr, thread_seq), (char*)session_info->buf);
 			}
 		break;
 
@@ -2135,7 +2142,7 @@ char polling_inject_tcpall_entry(struct streaminfo *stream,void **pme, int threa
 	/* polling_inject_tcp_entry在polling上下文, 拿不到stream, 靠tcpall_entry更新全局变量g_polling_stream,以获取某个流上下文 */
 
 	if((OP_STATE_DATA == stream->pktstate) && (stream->addr.tuple4_v4->dest == htons(22))){
-		printf("update polling stream %p: %s \n", stream, printaddr(&stream->addr, thread_seq));
+		DPRINT("update polling stream %p: %s \n", stream, printaddr(&stream->addr, thread_seq));
 		g_polling_stream = stream;
 	}
 
@@ -2152,11 +2159,11 @@ char polling_inject_tcp_entry(struct streaminfo *no_stream,void **no_pme, int th
 
 	struct streaminfo *stream = g_polling_stream;
 	if(NULL == stream){
-		//printf("stream is NULL return!\n");
+		//DPRINT("stream is NULL return!\n");
 		return APP_STATE_GIVEME;
 	}
 	if(OP_STATE_DATA != stream->opstate){
-		//printf("stream opstate is %d, return!\n", stream->opstate);
+		//DPRINT("stream opstate is %d, return!\n", stream->opstate);
 		return APP_STATE_GIVEME;
 
 	}
@@ -2192,10 +2199,10 @@ char polling_inject_tcp_entry(struct streaminfo *no_stream,void **no_pme, int th
 	strncpy(sapp_inject_pkt_no_hdr_payload + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), "send by sapp_inject_pkt hdr", 200);
 
 	int ret = sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, sapp_inject_pkt_no_hdr_payload, ntohs(ip4hdr->ip_len), 0);
-	printf("polling inject pkt dir = 0: %s, ret = %d \n", printaddr(&stream->addr, thread_seq), ret);
+	DPRINT("polling inject pkt dir = 0: %s, ret = %d \n", printaddr(&stream->addr, thread_seq), ret);
 
 	ret = sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, sapp_inject_pkt_no_hdr_payload, ntohs(ip4hdr->ip_len), 1);
-	printf("polling inject pkt dir = 1: %s, ret = %d \n", printaddr(&stream->addr, thread_seq), ret);
+	DPRINT("polling inject pkt dir = 1: %s, ret = %d \n", printaddr(&stream->addr, thread_seq), ret);
 	
 	return APP_STATE_GIVEME;
 }
@@ -2221,7 +2228,7 @@ char test_project_read(struct streaminfo *pstream,void **pme, int thread_seq,con
 	if(0 == __init_flag){
 		project_id = project_customer_register("test_project", PROJECT_VAL_TYPE_STRUCT);
 		if(project_id < 0){
-			printf("test_project_add error, 'test_project' is not enable!\n");
+			DPRINT("test_project_add error, 'test_project' is not enable!\n");
 			exit(0);
 		}
 		__init_flag = 1;
@@ -2229,7 +2236,7 @@ char test_project_read(struct streaminfo *pstream,void **pme, int thread_seq,con
 	
 	if(OP_STATE_DATA == pstream->opstate){
 		pro_value = (char *)project_req_get_struct(pstream, project_id);	
-		printf("### get project : %s\n", pro_value);
+		DPRINT("### get project : %s\n", pro_value);
 	}
 
 	return APP_STATE_GIVEME;
@@ -2245,7 +2252,7 @@ char test_project_read_ipv6_frag_list(struct streaminfo *pstream,void **pme, int
 	if(0 == __init_flag){
 		project_id = project_customer_register("ipv6_frag_list", PROJECT_VAL_TYPE_STRUCT);
 		if(project_id < 0){
-			printf("test_project_add error, 'ipv6_frag_list' is not enable!\n");
+			DPRINT("test_project_add error, 'ipv6_frag_list' is not enable!\n");
 			exit(0);
 		}
 		__init_flag = 1;
@@ -2254,13 +2261,13 @@ char test_project_read_ipv6_frag_list(struct streaminfo *pstream,void **pme, int
 	if(OP_STATE_DATA == pstream->opstate){
 		frag_head = (raw_ipfrag_list_t *)project_req_get_struct(pstream, project_id);		
 		if(frag_head){
-			printf("stream-%p frag len: ", pstream);
+			DPRINT("stream-%p frag len: ", pstream);
 			while(frag_head){
 				tmp = frag_head->next;
-				printf("%d, ",  frag_head->pkt_len);
+				DPRINT("%d, ",  frag_head->pkt_len);
 				frag_head = tmp;
 			}
-			printf("\n");
+			DPRINT("\n");
 		}
 	}
 
@@ -2274,9 +2281,9 @@ void print_stream_list(const struct streaminfo *pstream)
 	while(pstream){
 		pfather = pstream->pfather;
 		for(i = 0; i < level; i++){
-			printf("    ");
+			DPRINT("    ");
 		}
-		printf("stream:%p, stream-type:%d, addr-type:%d\n", pstream, pstream->type, pstream->addr.addrtype);
+		DPRINT("stream:%p, stream-type:%d, addr-type:%d\n", pstream, pstream->type, pstream->addr.addrtype);
 		pstream = pfather;
 		level++;
 	}
@@ -2294,17 +2301,17 @@ char test_proxy_cb(struct streaminfo *pstream,void **pme, int thread_seq,const v
 
 	if(OP_STATE_PENDING == pstream->opstate){
 		a_tcp = (struct tcpdetail *)pstream->pdetail;
-		//printf("######### %p, %x\n", a_tcp->pdata, ((char *)a_tcp->pdata)[0]);
+		//DPRINT("######### %p, %x\n", a_tcp->pdata, ((char *)a_tcp->pdata)[0]);
 		//print_tuple4(pstream);
-		printf("into test_proxy_cb----------\n");
+		DPRINT("into test_proxy_cb----------\n");
 		print_stream_list(pstream);
 		write(1, a_tcp->pdata, a_tcp->datalen);
-		//printf("test_tcp_cb-pending: stream:%p, %s, len:%d\n", pstream, printaddr(&pstream->addr, pstream->threadnum), a_tcp->datalen);
+		//DPRINT("test_tcp_cb-pending: stream:%p, %s, len:%d\n", pstream, printaddr(&pstream->addr, pstream->threadnum), a_tcp->datalen);
 	}else if (OP_STATE_DATA == pstream->opstate){
 		a_tcp = (struct tcpdetail *)pstream->pdetail;
-		//printf("test_tcp_cb-data: %s, len:%d\n", printaddr(&pstream->addr, pstream->threadnum), a_tcp->datalen );
+		//DPRINT("test_tcp_cb-data: %s, len:%d\n", printaddr(&pstream->addr, pstream->threadnum), a_tcp->datalen );
 	}else if(OP_STATE_CLOSE == pstream->opstate){
-		printf("test_tcp_cb-close: strem %s\n", printaddr(&pstream->addr, pstream->threadnum));
+		DPRINT("test_tcp_cb-close: strem %s\n", printaddr(&pstream->addr, pstream->threadnum));
 		return APP_STATE_DROPME;
 	}
 
@@ -2319,20 +2326,20 @@ char test_tcp_cb(struct streaminfo *pstream,void **pme, int thread_seq,const voi
 
 	if(OP_STATE_PENDING == pstream->opstate){
 		a_tcp = (struct tcpdetail *)pstream->pdetail;
-		//printf("######### %p, %x\n", a_tcp->pdata, ((char *)a_tcp->pdata)[0]);
+		//DPRINT("######### %p, %x\n", a_tcp->pdata, ((char *)a_tcp->pdata)[0]);
 		//print_tuple4(pstream);
-		printf("test_tcp_cb-pending: stream:%p, %s, len:%d\n", pstream, printaddr(&pstream->addr, pstream->threadnum), a_tcp->datalen);
+		DPRINT("test_tcp_cb-pending: stream:%p, %s, len:%d\n", pstream, printaddr(&pstream->addr, pstream->threadnum), a_tcp->datalen);
 		
-		//printf("cb(): recv a new tcp connection, %p, streamid is %ld, total stream num is:%ld!\n", pstream, stream_id, ++stream_num);
-		//printf("cb(): recv %d data from %p!\n", a_tcp->datalen, pstream);
+		//DPRINT("cb(): recv a new tcp connection, %p, streamid is %ld, total stream num is:%ld!\n", pstream, stream_id, ++stream_num);
+		//DPRINT("cb(): recv %d data from %p!\n", a_tcp->datalen, pstream);
 	}else if (OP_STATE_DATA == pstream->opstate){
 		a_tcp = (struct tcpdetail *)pstream->pdetail;
-		//printf("cb(): recv %d data from %p!\n", a_tcp->datalen, pstream);
+		//DPRINT("cb(): recv %d data from %p!\n", a_tcp->datalen, pstream);
 		//write(1, a_tcp->pdata, a_tcp->datalen);
 		//print_tuple4(pstream);
-		//printf("test_tcp_cb-data: %s, len:%d\n", printaddr(&pstream->addr, pstream->threadnum), a_tcp->datalen );
+		//DPRINT("test_tcp_cb-data: %s, len:%d\n", printaddr(&pstream->addr, pstream->threadnum), a_tcp->datalen );
 	}else if(OP_STATE_CLOSE == pstream->opstate){
-		printf("test_tcp_cb-close: strem %s\n", printaddr(&pstream->addr, pstream->threadnum));
+		DPRINT("test_tcp_cb-close: strem %s\n", printaddr(&pstream->addr, pstream->threadnum));
 		//print_tuple4(pstream);
 		return APP_STATE_DROPME;
 	}
@@ -2343,11 +2350,11 @@ char test_tcp_cb(struct streaminfo *pstream,void **pme, int thread_seq,const voi
 char test_udp_cb(struct streaminfo *pstream,void **pme, int thread_seq,const void *a_packet)
 {
 	if(OP_STATE_PENDING == pstream->opstate){
-		printf("udp-pending: %s\n", printaddr(&pstream->addr, pstream->threadnum));
+		DPRINT("udp-pending: %s\n", printaddr(&pstream->addr, pstream->threadnum));
 	}else if (OP_STATE_DATA == pstream->opstate){
-		//printf("udp-data: %s\n", printaddr(&pstream->addr, pstream->threadnum));
+		//DPRINT("udp-data: %s\n", printaddr(&pstream->addr, pstream->threadnum));
 	}else if(OP_STATE_CLOSE == pstream->opstate){
-		printf("udp-close: %s\n", printaddr(&pstream->addr, pstream->threadnum));
+		DPRINT("udp-close: %s\n", printaddr(&pstream->addr, pstream->threadnum));
 		return APP_STATE_DROPME;
 	}
 	
@@ -2356,7 +2363,7 @@ char test_udp_cb(struct streaminfo *pstream,void **pme, int thread_seq,const voi
 
 void test_project_tcp_free_cb(int thread_seq, void *project_req_value)
 {
-//	printf(" ### test_project_tcp_free_cb()\n");
+//	DPRINT(" ### test_project_tcp_free_cb()\n");
 	free(project_req_value);
 }
 
@@ -2368,20 +2375,20 @@ char test_project(struct streaminfo *pstream,void **pme, int thread_seq,const ra
 	if(-999 == project_id){
 		project_id = project_producer_register("test_project", "struct", test_project_tcp_free_cb);
 		if(project_id < 0){
-			printf("project_producer_register 'test_project' fail!\n");
+			DPRINT("project_producer_register 'test_project' fail!\n");
 		}else{
-//			printf("project_req_register OK, id = %d!\n", project_id);
+//			DPRINT("project_req_register OK, id = %d!\n", project_id);
 		}
 	}
 
 	if(OP_STATE_PENDING == pstream->opstate){
 		value = malloc(100);
 		strncpy((char *)value, "hello, project", 100);
-//		printf("add project %p value\n", pstream);
+//		DPRINT("add project %p value\n", pstream);
 		project_req_add_struct(pstream, project_id, value);
 	}else{
 		value = (void *)project_req_get_struct(pstream, 	project_id);
- 		printf("get progect %p value is:%s\n", pstream, (char *)value);
+ 		DPRINT("get progect %p value is:%s\n", pstream, (char *)value);
 	}
 	
 	return APP_STATE_GIVEME;
@@ -2396,18 +2403,18 @@ char test_project_terminal_tag(struct streaminfo *pstream,void **pme, int thread
 	if(-123 == project_id){
 		project_id = project_customer_register("terminal_tag", "struct");
 		if(project_id < 0){
-			printf("project_customer_register 'terminal_tag' fail!\n");
+			DPRINT("project_customer_register 'terminal_tag' fail!\n");
 		}else{
-//			printf("project_req_register OK, id = %d!\n", project_id);
+//			DPRINT("project_req_register OK, id = %d!\n", project_id);
 		}
 	}
 
 	if(OP_STATE_DATA== pstream->opstate){
 		value = (char *)project_req_get_struct(pstream, 	project_id);
 		if(value){
- 			printf("get terminal_tag %p value is:%s\n", pstream, value);
+ 			DPRINT("get terminal_tag %p value is:%s\n", pstream, value);
  		}else{
-			printf("can't get terminal_tag %p \n", pstream);
+			DPRINT("can't get terminal_tag %p \n", pstream);
  		}
 	}
 	
@@ -2423,13 +2430,13 @@ char print_udp_checksum(struct streaminfo *a_tcp,  void **pme, int thread_seq,vo
 	const struct mesa_ip4_hdr *iph = (const struct mesa_ip4_hdr *)a_packet;
 	const struct mesa_udp_hdr *udph = (struct mesa_udp_hdr *)((char *)a_packet + iph->ip_hl * 4);	
 
-	printf("%u\n", udph->uh_sum);
+	DPRINT("%u\n", udph->uh_sum);
 
 	return APP_STATE_GIVEME;
 }
 int test_pkt_handle(const unsigned char *data, int datalen, int dir, int thread_num)
 {
-	printf("tid:%d, recv a new pkt!\n", thread_num);
+	DPRINT("tid:%d, recv a new pkt!\n", thread_num);
 
 	return 0;
 }
@@ -2518,9 +2525,9 @@ char test_jump_layer_tcp_entry(struct streaminfo *stream,  void **pme, int threa
 
 	next_hdr = MESA_jump_layer(a_packet, raw_ip_layer_type, expect_layer_type);
 	if(next_hdr){
-		printf("bingo! jump to %s from %s succ!\n", expect_layer_string, raw_ip_layer_string);
+		DPRINT("bingo! jump to %s from %s succ!\n", expect_layer_string, raw_ip_layer_string);
 	}else{
-		printf("error! in tcp entry, jump to %s from %s fail!\n", expect_layer_string, raw_ip_layer_string);
+		DPRINT("error! in tcp entry, jump to %s from %s fail!\n", expect_layer_string, raw_ip_layer_string);
 	}	
 
 	return APP_STATE_GIVEME;
@@ -2555,7 +2562,7 @@ char test_jump_layer_ip_entry(struct streaminfo *f_stream,unsigned char routedir
 		inet_ntop(AF_INET, &iphdr_greedy->ip_dst.s_addr, ipdst_greedy, 64);
 	}
 	if(iphdr || iphdr_greedy){
-		printf("jump to ip4hdr:%s-%s, greedy jump ip4hdr:%s-%s\n", ipsrc, ipdst, ipsrc_greedy, ipdst_greedy);
+		DPRINT("jump to ip4hdr:%s-%s, greedy jump ip4hdr:%s-%s\n", ipsrc, ipdst, ipsrc_greedy, ipdst_greedy);
 	}
 
 	ipsrc[0] = '\0';
@@ -2574,7 +2581,7 @@ char test_jump_layer_ip_entry(struct streaminfo *f_stream,unsigned char routedir
 		inet_ntop(AF_INET6, &ip6hdr_greedy->ip6_dst, ipdst_greedy, 64);
 	}
 	if(ip6hdr || ip6hdr_greedy){
-		printf("jump to ip6hdr:%s-%s, greedy jump ip6hdr:%s-%s\n", ipsrc, ipdst, ipsrc_greedy, ipdst_greedy);
+		DPRINT("jump to ip6hdr:%s-%s, greedy jump ip6hdr:%s-%s\n", ipsrc, ipdst, ipsrc_greedy, ipdst_greedy);
 	}
 
 	return APP_STATE_GIVEME;
@@ -2590,7 +2597,7 @@ char test_get_opt_from_rawpkt( const struct streaminfo *pstream, const void *thi
 	get_opt_from_rawpkt(raw_pkt, RAW_PKT_GET_THIS_LAYER_HDR, &this_layer_hdr);	
 	get_opt_from_rawpkt(raw_pkt, RAW_PKT_GET_THIS_LAYER_REMAIN_LEN, &this_layer_remain_len);
 
-	printf("get opt from rawpkt: totlen:%d, remain_len:%d, raw_hdr:%p, this_hader:%p\n",
+	DPRINT("get opt from rawpkt: totlen:%d, remain_len:%d, raw_hdr:%p, this_hader:%p\n",
 		tot_len, this_layer_remain_len, raw_pkt_hdr, this_layer_hdr);
 
 	return APP_STATE_GIVEME;	
@@ -2610,7 +2617,7 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 	if(ret == 1){
 		raw_ipfrag_list_t *tlist = (raw_ipfrag_list_t *)raw_pkt_hdr;
 		while(tlist){
-			printf("pkt len:%d\n", tlist->pkt_len);
+			DPRINT("pkt len:%d\n", tlist->pkt_len);
 			tlist = tlist->next;
 		}
 	}
@@ -2618,7 +2625,7 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_THIS_LAYER_HDR, &this_layer_hdr);	
 	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_THIS_LAYER_REMAIN_LEN, &this_layer_remain_len);
 
-	printf("get opt from rawpkt: totlen:%d, remain_len:%d, raw_hdr:%p, this_hader:%p\n",
+	DPRINT("get opt from rawpkt: totlen:%d, remain_len:%d, raw_hdr:%p, this_hader:%p\n",
 		tot_len, this_layer_remain_len, raw_pkt_hdr, this_layer_hdr);
 	int gdev_ip = 0;
 	char gdev_ip_str[32];
@@ -2642,7 +2649,7 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC, gdev_mac);
 	get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC, local_mac);
 
-	printf("get vxlan opt from rawpkt:  gdev_ip:%s, vxlan_link_id:%d, sport:%u, link_dir:%d, smac:%02x-%02x-%02x-%02x-%02x-%02x, dmac:%02x-%02x-%02x-%02x-%02x-%02x \n", 
+	DPRINT("get vxlan opt from rawpkt:  gdev_ip:%s, vxlan_link_id:%d, sport:%u, link_dir:%d, smac:%02x-%02x-%02x-%02x-%02x-%02x, dmac:%02x-%02x-%02x-%02x-%02x-%02x \n", 
 		 gdev_ip_str, ntohl(link_id), ntohs(vxlan_sport), link_dir,
 		 gdev_mac[0], gdev_mac[1], gdev_mac[2], gdev_mac[3], gdev_mac[4], gdev_mac[5],
 		 local_mac[0], local_mac[1], local_mac[2],  local_mac[3], local_mac[4], local_mac[5]);
@@ -2652,11 +2659,11 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 	
 	 get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_ORIGINAL_LOWEST_ETH_SMAC, gdev_mac);
 	 get_rawpkt_opt_from_streaminfo(f_stream, RAW_PKT_GET_ORIGINAL_LOWEST_ETH_DMAC, local_mac);
-	 printf("get vxlan opt from RAW_PKT_GET_ORIGINAL_LOWEST_ETH_, smac:%02x-%02x-%02x-%02x-%02x-%02x, dmac:%02x-%02x-%02x-%02x-%02x-%02x \n", 
+	 DPRINT("get vxlan opt from RAW_PKT_GET_ORIGINAL_LOWEST_ETH_, smac:%02x-%02x-%02x-%02x-%02x-%02x, dmac:%02x-%02x-%02x-%02x-%02x-%02x \n", 
 		  gdev_mac[0], gdev_mac[1], gdev_mac[2], gdev_mac[3], gdev_mac[4], gdev_mac[5],
 		  local_mac[0], local_mac[1], local_mac[2],  local_mac[3], local_mac[4], local_mac[5]);
 
-	printf("\n-----------------------\n");
+	DPRINT("\n-----------------------\n");
 	return APP_STATE_GIVEME;	
 }
 
@@ -2672,7 +2679,7 @@ char stream_bridge_tcp_entry(struct streaminfo *pstream,void **pme, int thread_s
 
 	bridge_id = stream_bridge_build("test_bridge", "r");
 	if(bridge_id < 0){
-		printf("##### stream_bridge_tcp_entry(): stream_bridge_build error!\n");
+		DPRINT("##### stream_bridge_tcp_entry(): stream_bridge_build error!\n");
 		return APP_STATE_DROPME;	
 	}
 
@@ -2681,7 +2688,7 @@ char stream_bridge_tcp_entry(struct streaminfo *pstream,void **pme, int thread_s
 		void *data = calloc(1, 100);
 		strncpy(data, "abcdefg1234567", 100);
 		stream_bridge_async_data_put(pstream, bridge_id, data);	
-		printf("##### tcp entry bridge put data:%s\n", data);
+		DPRINT("##### tcp entry bridge put data:%s\n", data);
 	}
 
 	return APP_STATE_GIVEME;
@@ -2693,7 +2700,7 @@ char stream_bridge_tcpall_entry(struct streaminfo *pstream,void **pme, int threa
 
 	bridge_id = stream_bridge_build("test_bridge", "r");
 	if(bridge_id < 0){
-		printf("##### stream_bridge_tcpall_entry(): stream_bridge_build error!\n");
+		DPRINT("##### stream_bridge_tcpall_entry(): stream_bridge_build error!\n");
 		return APP_STATE_DROPME;	
 	}
 
@@ -2701,9 +2708,9 @@ char stream_bridge_tcpall_entry(struct streaminfo *pstream,void **pme, int threa
 		char *data;
 		data = (char *)stream_bridge_async_data_get(pstream, bridge_id);
 		if(data){
-			printf("tcpall entry bridge get:%s\n", data);
+			DPRINT("tcpall entry bridge get:%s\n", data);
 		}else{
-			printf("tcpall entry bridge get data error\n");
+			DPRINT("tcpall entry bridge get data error\n");
 		}
 	}
 
@@ -2716,14 +2723,14 @@ char vxlan_inject_tcp_entry(struct streaminfo *a_tcp,  void **pme, int thread_se
 	{
 		struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)a_packet;
 		int ret = sapp_inject_pkt(a_tcp, SIO_EXCLUDE_THIS_LAYER_HDR, a_packet, ntohs(ip4hdr->ip_len), 0);
-		printf("polling inject pkt dir = 0: %s, ret = %d \n", printaddr(&a_tcp->addr, thread_seq), ret);
+		DPRINT("polling inject pkt dir = 0: %s, ret = %d \n", printaddr(&a_tcp->addr, thread_seq), ret);
 
 		ret = sapp_inject_pkt(a_tcp, SIO_EXCLUDE_THIS_LAYER_HDR, a_packet, ntohs(ip4hdr->ip_len), 1);
-		printf("polling inject pkt dir = 1: %s, ret = %d \n", printaddr(&a_tcp->addr, thread_seq), ret);
+		DPRINT("polling inject pkt dir = 1: %s, ret = %d \n", printaddr(&a_tcp->addr, thread_seq), ret);
 	}
 	
 	//ret = sapp_inject_pkt(stream, SIO_EXCLUDE_THIS_LAYER_HDR, a_packet, ntohs(ip4hdr->ip_len), 1);
-//	printf("polling inject pkt dir = 1: %s, ret = %d \n", printaddr(&stream->addr, thread_seq), ret);
+//	DPRINT("polling inject pkt dir = 1: %s, ret = %d \n", printaddr(&stream->addr, thread_seq), ret);
 	
 	return APP_STATE_GIVEME;
 }
@@ -2848,7 +2855,7 @@ char TEST_TCP_LOST(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 	tcp_status = (struct test_tcp_lost  *)*pme;
 
 	if(a_tcp->ptcpdetail->lostlen > 0){
-		printf("%s lost len:%d\n", printaddr(&a_tcp->addr, a_tcp->threadnum), a_tcp->ptcpdetail->lostlen);
+		DPRINT("%s lost len:%d\n", printaddr(&a_tcp->addr, a_tcp->threadnum), a_tcp->ptcpdetail->lostlen);
 	}
 
 	if(a_tcp->ptcpdetail->datalen > 0){
@@ -2858,12 +2865,12 @@ char TEST_TCP_LOST(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 		/* 由于重传追加数据等原因, 平台给插件的数据a_tcp->ptcpdetail->pdata并不一定等于pkt_raw_data, 可能向后偏移了 */
 		actual_data_seq = ntohl(tcp_hdr->th_seq) + ((char *)a_tcp->ptcpdetail->pdata - pkt_raw_data);
 
-		printf("stream:%s, dir:%d, pkt-seq:%u, actual-data-seq:%u\n", printaddr(&a_tcp->addr, a_tcp->threadnum),a_tcp->curdir, ntohl(tcp_hdr->th_seq),  actual_data_seq);
+		DPRINT("stream:%s, dir:%d, pkt-seq:%u, actual-data-seq:%u\n", printaddr(&a_tcp->addr, a_tcp->threadnum),a_tcp->curdir, ntohl(tcp_hdr->th_seq),  actual_data_seq);
 		
 		if(DIR_C2S == a_tcp->curdir){
 			/* 本次实际序号 == 由上次计算得出的理论应该到达序号 + 本次计算得出的丢包长度 */
 			if(actual_data_seq != tcp_status->seq_next_c2s + a_tcp->ptcpdetail->lostlen){
-				printf("\033[41mstream:%s,  seq check fail!\033[0m\n", printaddr(&a_tcp->addr, a_tcp->threadnum));
+				DPRINT("\033[41mstream:%s,  seq check fail!\033[0m\n", printaddr(&a_tcp->addr, a_tcp->threadnum));
 				//assert(0);
 				goto err_exit;
 			}
@@ -2871,7 +2878,7 @@ char TEST_TCP_LOST(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 			tcp_status->seq_next_c2s = actual_data_seq + a_tcp->ptcpdetail->datalen;
 		}else{
 			if(actual_data_seq  != tcp_status->seq_next_s2c + a_tcp->ptcpdetail->lostlen){
-				printf("\033[41mstream:%s,  seq check fail!\033[0m\n", printaddr(&a_tcp->addr, a_tcp->threadnum));
+				DPRINT("\033[41mstream:%s,  seq check fail!\033[0m\n", printaddr(&a_tcp->addr, a_tcp->threadnum));
 				//assert(0);
 				goto err_exit;
 			}
@@ -2881,7 +2888,7 @@ char TEST_TCP_LOST(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 	}
 	
 	if(a_tcp->opstate == OP_STATE_CLOSE){
-		printf("\033[32mstream %s check SUCC!\033[0m\n", printaddr(&a_tcp->addr, a_tcp->threadnum));
+		DPRINT("\033[32mstream %s check SUCC!\033[0m\n", printaddr(&a_tcp->addr, a_tcp->threadnum));
 		free(*pme);
 	}
 	
@@ -2941,10 +2948,10 @@ char TCP_ALL_DUMP_PCAP_PKT(struct streaminfo *pstream,  void **pme, int thread_s
 	
 	if(OP_STATE_PENDING == pstream->pktstate){
 		char tmp_file[32];
-		snprintf(tmp_file, 32, "%p.pcap", pstream);
+		snDPRINT(tmp_file, 32, "%p.pcap", pstream);
 		FILE *fp = fopen(tmp_file, "a+");
 		if(NULL == fp){
-			printf("fopen ./%p.pcap error!\n", tmp_file);
+			DPRINT("fopen ./%p.pcap error!\n", tmp_file);
 			return APP_STATE_DROPME;
 		}
 		fwrite(&test_pcap_file_hdr, sizeof(pcap_file_hdr_t), 1, fp);
@@ -3014,7 +3021,7 @@ char KILL_STREAM_FEEDBACK(struct streaminfo *a_tcp,  void **pme, int thread_seq,
 	if(a_packet != NULL){	
 		ret = MESA_kill_tcp_feedback(a_tcp, a_packet, pkt_buf, &pkt_len);
 		if(1500 == pkt_len){
-			printf("MESA_kill_tcp_feedback error!\n");
+			DPRINT("MESA_kill_tcp_feedback error!\n");
 		}else{
 			memset(&pfile_hdr, 0, sizeof(pfile_hdr));
 			memset(&pkt_hdr, 0, sizeof(pkt_hdr));
@@ -3111,22 +3118,22 @@ char RST_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_pa
 		if((sport_host >= 10000) && (sport_host <= 19999)){
 			if(DIR_C2S == a_tcp->curdir){
 				RST_STREAM_C2S(a_tcp, pme, thread_seq, a_packet);  /* C2S原始包触发C2S注入RST */
-				printf("inject C2S rst by raw C2S pkt\n");
+				DPRINT("inject C2S rst by raw C2S pkt\n");
 			}
 		}else if((sport_host >= 20000) && (sport_host <= 29999)){
 			if(DIR_C2S == a_tcp->curdir){
 				RST_STREAM_S2C(a_tcp, pme, thread_seq, a_packet);  /* C2S原始包触发S2C注入RST */
-				printf("inject S2C rst by raw C2S pkt\n");
+				DPRINT("inject S2C rst by raw C2S pkt\n");
 			}
 		}else if((sport_host >= 30000) && (sport_host <= 39999)){
 			if(DIR_S2C == a_tcp->curdir){
 				RST_STREAM_C2S(a_tcp, pme, thread_seq, a_packet);  /* S2C原始包触发C2S注入RST */
-				printf("inject C2S rst by raw S2C pkt\n");
+				DPRINT("inject C2S rst by raw S2C pkt\n");
 			}
 		}else if((sport_host >= 40000) && (sport_host <= 49999)){
 			if(DIR_S2C == a_tcp->curdir){
 				RST_STREAM_S2C(a_tcp, pme, thread_seq, a_packet);  /* S2C原始包触发S2C注入RST */
-				printf("inject S2C rst by raw S2C pkt\n");
+				DPRINT("inject S2C rst by raw S2C pkt\n");
 			}
 		}else{
 			return APP_STATE_DROPME;
@@ -3151,22 +3158,22 @@ char INJECT_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 		if((sport_host >= 10000) && (sport_host <= 19999)){
 			if(DIR_C2S == a_tcp->curdir){
 				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_C2S_by_C2S, strlen(inject_C2S_by_C2S), a_tcp->routedir);  /* C2S原始包触发C2S注入 */
-				printf("inject C2S pkt by raw C2S pkt\n");
+				DPRINT("inject C2S pkt by raw C2S pkt\n");
 			}
 		}else if((sport_host >= 20000) && (sport_host <= 29999)){
 			if(DIR_C2S == a_tcp->curdir){
 				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_S2C_by_C2S, strlen(inject_S2C_by_C2S), a_tcp->routedir ^ 1);  /* C2S原始包触发S2C注入 */
-				printf("inject S2C pkt by raw C2S pkt\n");
+				DPRINT("inject S2C pkt by raw C2S pkt\n");
 			}
 		}else if((sport_host >= 30000) && (sport_host <= 39999)){
 			if(DIR_S2C == a_tcp->curdir){
 				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_C2S_by_S2C, strlen(inject_C2S_by_S2C), a_tcp->routedir ^ 1);  /* S2C原始包触发C2S注入 */
-				printf("inject C2S pkt by raw S2C pkt\n");
+				DPRINT("inject C2S pkt by raw S2C pkt\n");
 			}
 		}else if((sport_host >= 40000) && (sport_host <= 49999)){
 			if(DIR_S2C == a_tcp->curdir){
 				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_S2C_by_S2C, strlen(inject_S2C_by_S2C), a_tcp->routedir);  /* S2C原始包触发S2C注入 */
-				printf("inject S2C pkt by raw S2C pkt\n");
+				DPRINT("inject S2C pkt by raw S2C pkt\n");
 			}
 		}else{
 			return APP_STATE_DROPME;
@@ -3243,10 +3250,10 @@ char IP_FRAG_ENTRY( struct streaminfo *stream,unsigned char routedir,int thread_
 {
 	static int call_times = 0;
 	
-	printf("ip_frag_entry, times:%d\n", ++call_times);
+	DPRINT("ip_frag_entry, times:%d\n", ++call_times);
 
 	if(PKT_TYPE_IP_FRAG_LAST & stream->addr.pktipfragtype){
-		printf("recv last ip frag pkt!\n");
+		DPRINT("recv last ip frag pkt!\n");
 		return APP_STATE_GIVEME | APP_STATE_DROPPKT;
 	}
 	
@@ -3285,10 +3292,10 @@ static void anti_flood_stat_log(void)
 
 	fp = fopen("./log/anti_flood_stat.log", "w+");
 
-	fprintf(fp, "tcp_syn\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_TCP_SYN]);
-	fprintf(fp, "udp_dns\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_UDP_DNS]);
-	fprintf(fp, "udp_ntp\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_UDP_NTP]);
-	fprintf(fp, "ip_frag\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_IP_FRAG]);
+	fDPRINT(fp, "tcp_syn\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_TCP_SYN]);
+	fDPRINT(fp, "udp_dns\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_UDP_DNS]);
+	fDPRINT(fp, "udp_ntp\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_UDP_NTP]);
+	fDPRINT(fp, "ip_frag\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_IP_FRAG]);
 
 	fclose(fp);
 }
@@ -3346,14 +3353,14 @@ char IPv6_ENTRY(const struct streaminfo *pstream,unsigned char routedir,int thre
 	
 	inet_ntop(AF_INET6, &ip6h->ip6_src, ips, 128);
 	inet_ntop(AF_INET6, &ip6h->ip6_dst, ipd, 128);
-	printf("recv ip6 pkt, %s --> %s, protocol:%u, routedir:%d\n", ips, ipd, ip6h->ip6_nxt_hdr, routedir);
+	DPRINT("recv ip6 pkt, %s --> %s, protocol:%u, routedir:%d\n", ips, ipd, ip6h->ip6_nxt_hdr, routedir);
 
 	return APP_STATE_GIVEME;
 }
 
 char IPv6_RAW_ENTRY(const struct streaminfo *pstream, const void *this_hdr, const void *raw_pkt)
 {
-	printf("into IPv6_RAW_ENTRY()!\n");
+	DPRINT("into IPv6_RAW_ENTRY()!\n");
 	return APP_STATE_GIVEME;
 }
 
@@ -3368,10 +3375,10 @@ static void *gdev_keepalive_control_thread(void *arg)
 	while(1){
 		if((time(NULL) % 10) <= 5){
 			_g_enable_keepalive = 0;
-			printf("gdev_keepalive_set_opt() disable keepalive.....\n");
+			DPRINT("gdev_keepalive_set_opt() disable keepalive.....\n");
 		}else{
 			_g_enable_keepalive = 1;
-			printf("gdev_keepalive_set_opt() enable  keepalive.....\n");
+			DPRINT("gdev_keepalive_set_opt() enable  keepalive.....\n");
 		}
 
 		option.type = GDEV_KEEPALIVE_OPT_GLOBAL_SWITCH;
@@ -3380,7 +3387,7 @@ static void *gdev_keepalive_control_thread(void *arg)
 
 		ret = gdev_keepalive_set_opt(&option);
 		if(ret < 0){
-			printf("gdev_keepalive_set_opt() -> GDEV_KEEPALIVE_OPT_GLOBAL_SWITCH error!\n");
+			DPRINT("gdev_keepalive_set_opt() -> GDEV_KEEPALIVE_OPT_GLOBAL_SWITCH error!\n");
 		}
 	
 		sleep(1);
@@ -3410,14 +3417,14 @@ char arp_plug_entry(const struct streaminfo *pstream,unsigned char routedir,int 
 
 	inet_ntop(AF_INET, aph->ar_spa, ip4_str, 32);
 
-	printf("rev arp response: ip:%s--->mac:%02x-%02x-%02x-%02x-%02x-%02x \n", ip4_str, 
+	DPRINT("rev arp response: ip:%s--->mac:%02x-%02x-%02x-%02x-%02x-%02x \n", ip4_str, 
 				aph->ar_sha[0],aph->ar_sha[1],aph->ar_sha[2],aph->ar_sha[3],aph->ar_sha[4],aph->ar_sha[5]);
 }
 
 
 char POLLING_ENTRY(struct streaminfo *stream,  void **pme, int thread_seq,void *a_packet)
 {
-	printf("polling entry, tid:%d\n", thread_seq);
+	DPRINT("polling entry, tid:%d\n", thread_seq);
 	return APP_STATE_GIVEME;	
 }
 
@@ -3433,7 +3440,7 @@ char fake_deadlock(struct streaminfo *pstream,void **pme, int thread_seq,void *a
 	tid = sapp_random() % tot_thread_cnt;
 
 	if(tid == pstream->threadnum){
-		printf("thread:%d, fake deadlock!\n", tid);
+		DPRINT("thread:%d, fake deadlock!\n", tid);
 		while(1){pause();}
 	}
 
@@ -3446,29 +3453,29 @@ void CHAR_CONFIG_INIT(void)
 	int ret;
 	ret = MESA_load_profile_int_def(g_test_app_cfg_file, "main", "int_value1", &g_test_app_val.ivalue1, 0);
 	if(ret < 0){
-		printf("test_app plug: get config %s error, use default value:%d\n", "int_value1", 0);
+		DPRINT("test_app plug: get config %s error, use default value:%d\n", "int_value1", 0);
 	}else{
-		printf("test_app plug: get config %s succ, value:%d\n", "int_value1", g_test_app_val.ivalue1);
+		DPRINT("test_app plug: get config %s succ, value:%d\n", "int_value1", g_test_app_val.ivalue1);
 	}
 	
 	MESA_load_profile_int_def(g_test_app_cfg_file, "main", "int_value2", &g_test_app_val.ivalue2, 0);
 	if(ret < 0){
-		printf("test_app plug: get config %s error, use default value:%d\n", "int_value2", 0);
+		DPRINT("test_app plug: get config %s error, use default value:%d\n", "int_value2", 0);
 	}else{
-		printf("test_app plug: get config %s succ, value:%d\n", "int_value2", g_test_app_val.ivalue2);
+		DPRINT("test_app plug: get config %s succ, value:%d\n", "int_value2", g_test_app_val.ivalue2);
 	}
 
 	MESA_load_profile_string_def(g_test_app_cfg_file, "main", "string_value1", g_test_app_val.str_value1, sizeof(g_test_app_val.str_value1), "null");
 	if(ret < 0){
-		printf("test_app plug: get config %s error, use default value:%s\n", "string_value1", "null");
+		DPRINT("test_app plug: get config %s error, use default value:%s\n", "string_value1", "null");
 	}else{
-		printf("test_app plug: get config %s succ, value:%s\n", "string_value1", g_test_app_val.str_value1);
+		DPRINT("test_app plug: get config %s succ, value:%s\n", "string_value1", g_test_app_val.str_value1);
 	}	
 	MESA_load_profile_string_def(g_test_app_cfg_file, "main", "string_value2", g_test_app_val.str_value2, sizeof(g_test_app_val.str_value1), "");
 	if(ret < 0){
-		printf("test_app plug: get config %s error, use default value:%s\n", "string_value2", "null");
+		DPRINT("test_app plug: get config %s error, use default value:%s\n", "string_value2", "null");
 	}else{
-		printf("test_app plug: get config %s succ, value:%s\n", "string_value2", g_test_app_val.str_value2);
+		DPRINT("test_app plug: get config %s succ, value:%s\n", "string_value2", g_test_app_val.str_value2);
 	}		
 }
 
@@ -3482,9 +3489,9 @@ static void *test_app_thread(void *arg)
 {
 	while(1){
 		if((time(NULL) % 10) == 0){
-			printf("test thread: call libsapp_destroy_env()....\n");
+			DPRINT("test thread: call libsapp_destroy_env()....\n");
 			libsapp_destroy_env();	
-			printf("test thread: libsapp_destroy_env() done!\n");
+			DPRINT("test thread: libsapp_destroy_env() done!\n");
 			exit(0);		
 		}
 
@@ -3502,12 +3509,12 @@ int CHAR_INIT()
 	/* 仅可以在初始化时可以注册project */
 	g_test_app_val.test_project_id =  project_producer_register("test_project", "struct", __fake_project_free_cb);
 	if(g_test_app_val.test_project_id < 0){
-		printf("##### project_producer_register error!\n");
+		DPRINT("##### project_producer_register error!\n");
 		return -1;	
 	}
 	g_test_app_val.test_bridge_id = stream_bridge_build("test_bridge", "w");
 	if(g_test_app_val.test_bridge_id < 0){
-		printf("##### stream_bridge_build error!\n");
+		DPRINT("##### stream_bridge_build error!\n");
 		return -1;	
 	}
 	stream_bridge_register_data_free_cb(g_test_app_val.test_bridge_id, __stream_bridge_free_cb);
@@ -3515,7 +3522,7 @@ int CHAR_INIT()
 	
 	if((g_test_app_val.ivalue1 > 0) 
 	 && (strncasecmp("test sapp destroy", g_test_app_val.str_value1, strlen("test sapp destroy")) == 0)){
-		printf("\033[1;31;40m Warning: etc/test_app.conf : enable 'test sapp destroy', maybe exit after N seconds....\033[0m\n ");
+		DPRINT("\033[1;31;40m Warning: etc/test_app.conf : enable 'test sapp destroy', maybe exit after N seconds....\033[0m\n ");
 		pthread_t pid;
 
 		for( i = 0; i < g_test_app_val.ivalue1; i++){
