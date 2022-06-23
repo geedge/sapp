@@ -1560,7 +1560,11 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	}
 
 	free_polling_inject_context(SAPP_MEM_DYN_TCP_POLLING_RAW_PKT, pstream_pr); //2020-06-08 lijia add, for memory leak
-	
+
+	if (pstream_pr->timeout > link_default_nopkt_time)
+	{ /* 链接独有超时时间, 减少计数 */
+		sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
+	}
 	if(this_tcphdr->th_flags & TH_SYN){
 		tcp_add_new_stream_bysyn(pindex,this_iphdr,this_tcphdr,datalen,REUSE_OLD_LINK,raw_pkt);
 		ret = 1;
@@ -1575,9 +1579,6 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 			{
 				sapp_mem_free(SAPP_MEM_DYN_TCP_DETAIL, threadnum,pstream->pdetail);
 				pstream->pdetail=NULL;
-			}			
-			if(pstream_pr->timeout > link_default_nopkt_time){ /* 链接独有超时时间, 减少计数 */
-				sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
 			}			
 			free_heap_stream_info(SAPP_MEM_DYN_TCP_STREAM, pstream, 0);
 			free_streamindex(threadnum,pindex);
