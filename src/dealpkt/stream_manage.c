@@ -57,6 +57,8 @@ int sapp_packet_io_v = 20161101;
 int sapp_packet_io_v = 20170407;
 #endif
 
+#define MAX_DEFALUT_TIMEOUT_S 86400
+
 #define STREAM_ONCE_DEL_NUM 1000
 void packet_io_status_stream_hash_update(int thread_seq, unsigned long hash_list_num);
 void packet_io_status_stream_update(int tid, UCHAR stream_type, UCHAR stream_state,  int action);
@@ -73,64 +75,54 @@ int tcp_support_all=TCP_SUPPORT_ENTRYALL_ON;
 int tcp_dataflood_pktlen=5;
 struct global_stream **G_MESA_GLOBAL_STREAM;
 
-extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX]; 
-
+extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
 
 static int init_stream_detail(struct global_stream *g_stream)
 {
-	int i=0;
-	memset(g_stream,0,sizeof(struct global_stream));
-	for(i=0;i<MAX_TCP_STATE;i++)
+	int i = 0;
+	memset(g_stream, 0, sizeof(struct global_stream));
+	for (i = 0; i < MAX_TCP_STATE; i++)
 	{
-		g_stream->tcpList[i].max_cnt=tcpstate_num[i];
+		g_stream->tcpList[i].max_cnt = tcpstate_num[i];
+		g_stream->tcpList[i].cnt = 0;
+		g_stream->tcpList[i].timer = timeouts_open(0, &g_stream->tcpList[i].timer_error);
+	}
+	for (i = 0; i < MAX_UDP_STATE; i++)
+	{
+		g_stream->udpList[i].max_cnt = udpstate_num[i];
+		g_stream->udpList[i].cnt = 0;
+		g_stream->udpList[i].timer = timeouts_open(0, &g_stream->udpList[i].timer_error);
+	}
 
-		//add by lqy限制每次换出最大数目为100
-		g_stream->tcpList[i].sift_out_cnt=g_stream->tcpList[i].max_cnt/50+1;
-		g_stream->tcpList[i].sift_out_cnt=1; /* lijia modify, 减少单包延时太长, 每次只淘汰一个 */		
-		g_stream->tcpList[i].cnt=0;
-	}	
-	for(i=0;i<MAX_UDP_STATE;i++)
-	{
-		g_stream->udpList[i].max_cnt=udpstate_num[i];
-		//add by lqy限制每次换出最大数目为100
-		g_stream->udpList[i].sift_out_cnt=g_stream->udpList[i].max_cnt/50+1;
-		g_stream->udpList[i].sift_out_cnt=1; /* lijia modify, 减少单包延时太长, 每次只淘汰一个 */			
-		g_stream->udpList[i].cnt=0;
-	}	
- 	g_stream->freeList.max_cnt=tcp_stream_table_size+udp_stream_table_size;
-	g_stream->freeList.cnt=0;
 
 	//预先分配hash指针
-	g_stream->tcp_stream_table = (struct streamindex **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,tcp_stream_table_size * sizeof (char *));
-    memset (g_stream->tcp_stream_table, 0, tcp_stream_table_size* sizeof (char *));
-    g_stream->udp_stream_table = (struct streamindex **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,udp_stream_table_size * sizeof (char *));
-    memset (g_stream->udp_stream_table, 0, udp_stream_table_size* sizeof (char *));
-   //记录hash的状态
-    g_stream->tcp_stream_talbe_hash_count = (unsigned short *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,tcp_stream_table_size*  sizeof (short));
-    memset (g_stream->tcp_stream_talbe_hash_count, 0, tcp_stream_table_size* sizeof (short));
-    g_stream->udp_stream_talbe_hash_count = (unsigned short *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,udp_stream_table_size*  sizeof (short));
-    memset (g_stream->udp_stream_talbe_hash_count, 0, udp_stream_table_size* sizeof (short));
-	
-    g_stream->freeList.head=(struct  streamindex *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1,(g_stream->freeList.max_cnt) * sizeof (struct streamindex));
-    memset(g_stream->freeList.head, 0,(g_stream->freeList.max_cnt) * sizeof (struct streamindex));
-    for (i = 0; i < g_stream->freeList.max_cnt-1; i++)
-    {
-    	g_stream->freeList.head[i].next= &(g_stream->freeList.head[i + 1]);
-		g_stream->freeList.head[i+1].prev=&(g_stream->freeList.head[i]);
-		//g_stream->freeList.index=i; // 为每个链接增加一个全局索引号
-		 //adjust by lqy 20150113
-		g_stream->freeList.head[i].stream.stream_public.stream_index=i;	
-    }
-    g_stream->freeList.head[g_stream->freeList.max_cnt-1].next=NULL;
-	 //adjust by lqy 20150113
-	g_stream->freeList.head[g_stream->freeList.max_cnt-1].stream.stream_public.stream_index=i;	    
-    g_stream->freeList.cnt=g_stream->freeList.max_cnt;
-    g_stream->freeList.tail= &(g_stream->freeList.head[g_stream->freeList.max_cnt-1]);	
+	g_stream->tcp_stream_table = (struct streamindex **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, tcp_stream_table_size * sizeof(char *));
+	memset(g_stream->tcp_stream_table, 0, tcp_stream_table_size * sizeof(char *));
+	g_stream->udp_stream_table = (struct streamindex **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, udp_stream_table_size * sizeof(char *));
+	memset(g_stream->udp_stream_table, 0, udp_stream_table_size * sizeof(char *));
+	//记录hash的状态
+	g_stream->tcp_stream_talbe_hash_count = (unsigned short *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, tcp_stream_table_size * sizeof(short));
+	memset(g_stream->tcp_stream_talbe_hash_count, 0, tcp_stream_table_size * sizeof(short));
+	g_stream->udp_stream_talbe_hash_count = (unsigned short *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, udp_stream_table_size * sizeof(short));
+	memset(g_stream->udp_stream_talbe_hash_count, 0, udp_stream_table_size * sizeof(short));
 
-	g_stream->freeList.__real_head = g_stream->freeList.head;
-    return 0;
+	int max_cnt = tcp_stream_table_size + udp_stream_table_size;
+
+	//预先分配stream_index池
+	STAILQ_INIT(&g_stream->freeList);
+	g_stream->__freeList_real_head = (struct stream_index_list_item *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, (max_cnt) * sizeof(struct stream_index_list_item));
+	memset(g_stream->__freeList_real_head, 0, (max_cnt) * sizeof(struct stream_index_list_item));
+	for(i = 0; i < max_cnt - 1; i++)
+	{
+		g_stream->__freeList_real_head[i].index.stream.stream_public.stream_index=i;	
+		STAILQ_INSERT_TAIL(&g_stream->freeList, g_stream->__freeList_real_head+i, entries);
+	}
+	g_stream->__freeList_real_head[max_cnt -1].index.stream.stream_public.stream_index=max_cnt -1;	
+
+	g_stream->freeList_max_cnt = max_cnt;
+	g_stream->freeList_cnt = max_cnt;
+	return 0;
 }
-
 
 int tcp_set_flood_detect_model(int model)
 {
@@ -202,81 +194,13 @@ static void stream_timeout_shift_lrulist(struct streamindex *pindex, unsigned sh
 		lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->udpList[pstream->stream_state]);
 	}
 
-	if(lru_list_root->head == lru_list_root->tail){ /* 当前仅剩最后一个流, 无需移动 */
+	if(lru_list_root->cnt == 1){ /* 当前仅剩最后一个流, 无需移动 */
 		return;
 	}
 
-	assert(lru_list_root->head);
-	assert(lru_list_root->tail);	
 	__do_streamleavlist(pindex, lru_list_root); /* 从原位置摘除 */
-	assert(lru_list_root->head);
-	assert(lru_list_root->tail);
 		
-	if(global_default_timeout > 0){
-		/* 
-		    如果设置了全局超时时间, 新增的节点应该从tail->head方向遍历,
-             因为新增的节点超时时间长, 而且是当前流在设置, 肯定比所有默认的流, 以及大多数曾设置过超时的流更晚超时.   
-		*/
-		/* 
-		   如果当前流设置的新超时时间, 比LRU末尾的流剩余时间(无包到达时间)还长, 
-		   换句话说, 就是离淘汰此流的时间也比LRU末尾的流要滞后, 
-		   所以需要向tail(时间更新的)方向移动 .
-		 */
-		/* after-insert : head->pindex->tmp_index->tail, 插在tmp_index之前 */
-		tmp_index = lru_list_root->tail; /* 新设的timeout值大, 从不易被淘汰端, 即tail节点开始比较 */
-		while(tmp_index 
-		  && (new_timeout < (tmp_index->stream.timeout -(g_CurrentTime -stream_get_detail_last_mtime(tmp_index))))){ /* 新的超时时间 < tmp流的剩余生存时间 */
-//printf("##### serach udp timeout place, %ld.....\n", search_times++);			  
-			tmp_index = tmp_index->prev;
-		}			
-
-		/* 插入新位置 */
-		if(NULL == tmp_index){ /* 从tail开始一直找到最后一个节点, pindex应该做为新的head */
-			lru_list_root->head->prev = pindex;
-			pindex->next = lru_list_root->head;
-			lru_list_root->head = pindex;
-			pindex->prev = NULL;
-		}else{			
-			if(tmp_index->prev){
-				tmp_index->prev->next = pindex;
-			}else{
-				lru_list_root->head = pindex; /* 作为head节点 */
-			}
-			pindex->prev = tmp_index->prev;
-			tmp_index->prev = pindex;
-			pindex->next = tmp_index;
-		}
-	}else{
-		/* 
-		    如果没有设置了全局超时时间, 可认为默认超时时间时无限长, 仅靠流表满之后才强制淘汰已有流.
-		    那么新增的节点应该从head->tail方向遍历,
-             因为新增的节点超时时间最长也就65535秒, 肯定比现有的流更早超时.   
-		*/
-		tmp_index = lru_list_root->head; /* 新设的timeout比默认0更容易被淘汰 */
-		while(tmp_index 
-		  && (tmp_index->stream.timeout != 0) /* 之前某个流也单独设置了超时时间 */
-		  && (new_timeout > (tmp_index->stream.timeout - (g_CurrentTime -stream_get_detail_last_mtime(tmp_index))))){ /* 新的超时时间 > tmp流的剩余生存时间 */
-//printf("##### serach udp timeout place, %ld.....\n", search_times++);			  
-			tmp_index = tmp_index->next;
-		}		
-
-		/* 插入新位置 */
-		if(NULL == tmp_index){ /* 从head开始一直找到最后一个节点, pindex应该做为新的tail */
-			lru_list_root->tail->next = pindex;
-			pindex->prev = lru_list_root->tail;
-			lru_list_root->tail = pindex;
-			pindex->next = NULL;
-		}else{			
-			if(tmp_index->prev){
-				tmp_index->prev->next = pindex;
-			}else{
-				lru_list_root->head = pindex; /* 作为head节点 */
-			}
-			pindex->prev = tmp_index->prev;
-			tmp_index->prev = pindex;
-			pindex->next = tmp_index;
-		}		
-	}
+	timeouts_update(lru_list_root->timer, g_CurrentTime);
 
 	lru_list_root->cnt++; /* 在__do_streamleavlist()中减1, 此处恢复计数 */
 	return;
@@ -401,29 +325,12 @@ static struct streaminfo *del_stream(struct streamindex *pindex, unsigned char c
 
 static inline void __do_streamleavlist(struct streamindex *pindex,struct stream_list *plist)
 {
-	if(pindex->prev != NULL)
+
+	if (timeout_pending(&(pindex->timeout)))
 	{
-		pindex->prev->next = pindex->next;
+		timeouts_del(plist->timer, &pindex->timeout);
+		plist->cnt -= 1;
 	}
-	else
-	{
-		plist->head=pindex->next;
-		if(plist->head!=NULL)
-			plist->head->prev = NULL;
-	}
-	if(pindex->next != NULL)
-	{
-		pindex->next->prev = pindex->prev;
-	}
-	else
-	{
-		plist->tail = pindex->prev;
-		if(plist->tail!=NULL)
-			plist->tail->next = NULL;
-	}
-	pindex->next= NULL;   /* NOTE: 此处应置空, 后续可能还有addlist操作 */
-	pindex->prev = NULL; /* NOTE: 此处应置空, 后续可能还有addlist操作 */
-	plist->cnt--;
 
 	return;
 }
@@ -440,59 +347,34 @@ void streamleavlist(struct streamindex *pindex,struct stream_list *plist)
 
 void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 {
-	struct streamindex *tmpstream;
-	struct streaminfo *pstream=(struct streaminfo *)(&(pindex->stream));
-	if((plist->head != NULL) && (plist->cnt >= plist->max_cnt-1))
+	int timeout_reason = STREAM_CLOSE_REASON_TIMEOUT;
+	if(plist->cnt >= plist->max_cnt-1 && plist->cnt > 0)
 	{
-		//每次淘汰总大小的2%
-		//istreamdelnum=plist->max_cnt/50+1;
-		//adjust by lqy 20140810
-		//istreamdelnum=plist->sift_out_cnt;
-
-		/* 
-			2017-06-07 lijia add,
-			先判断当前LRU末尾的流是否到了超时时间, 可能是保护IM等包数少、时间长的流 
-			风险: 如果全局默认是60秒, 但因为流数太多, 都没到达超时时间, 怎么办? 
-
-			使用组合条件, if(pstream->timtout > defalut) && (g_current - lastmtime < pstream->timtout)
-			
-		*/
-		tmpstream = plist->head;
-
-		while(tmpstream){
-			if(STREAM_TYPE_TCP == tmpstream->stream.stream_public.type){
-				/* 当前流独有超时时间比默认全局的大, 且还没有超时, 不能淘汰! */
-				if((tmpstream->stream.timeout > link_default_nopkt_time)
-				 && (g_CurrentTime - tmpstream->stream.stream_public.ptcpdetail->lastmtime < tmpstream->stream.timeout)){
-					tmpstream = tmpstream->next;
-				 }else{
-					del_stream(tmpstream, STREAM_CLOSE_REASON_LRUOUT);
-					break;
-				 }	
-			}else{
-				if((tmpstream->stream.timeout > udp_reset_time)
-				 && (g_CurrentTime - tmpstream->stream.stream_public.pudpdetail->lastmtime < tmpstream->stream.timeout)){
-					tmpstream = tmpstream->next;
-				 }else{
-					del_stream(tmpstream, STREAM_CLOSE_REASON_LRUOUT);
-					break;
-				 }	
-			}
+		timeouts_update(plist->timer, g_CurrentTime);
+		struct timeout *t = timeouts_get(plist->timer);
+		if(t == NULL)
+		{
+			struct timeouts_it it_all;
+			TIMEOUTS_IT_INIT(&it_all, TIMEOUTS_ALL);
+			t = timeouts_next(plist->timer, &it_all);
+			timeout_reason = STREAM_CLOSE_REASON_LRUOUT;
+			assert(t!=NULL);
 		}
+		struct streamindex *pindex_tmp = container_of(t, struct streamindex, timeout);
+		sapp_runtime_log(RLOG_LV_DEBUG, "streamaddlist trggier timeout, reason:%d,  thread:%d, timer_count:%d, create_time:%ld, lastmtime:%ld!",
+				 timeout_reason,
+				 pindex->stream.stream_public.threadnum,
+				 pindex_tmp->stream.stream_public.ptcpdetail->createtime,
+				 pindex_tmp->stream.stream_public.ptcpdetail->lastmtime);
+		timeouts_del(plist->timer, &pindex_tmp->timeout);
+		del_stream(pindex_tmp, timeout_reason);
 	}
 	
-	pindex->prev = plist->tail;
-	pindex->next= NULL;
-	if(plist->tail != NULL)
-	{
-		plist->tail->next = pindex;
-		plist->tail = pindex;
-	}
-	else
-	{
-		plist->tail = pindex;
-		plist->head = pindex;
-	}
+	struct streaminfo *pstream=(struct streaminfo *)(&(pindex->stream));
+	long set_timeout = pindex->stream.timeout;
+	if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
+	timeout_init(&pindex->timeout, TIMEOUT_ABS);
+	timeouts_add(plist->timer, &pindex->timeout, set_timeout+g_CurrentTime);
 	plist->cnt++;
 
 	update_stream_status(pstream->threadnum, pstream->type, pstream->stream_state, 1);
@@ -505,15 +387,15 @@ struct streamindex *malloc_and_copy_streamindex(int threadnum, struct streaminde
 	struct streamindex *pindex=NULL;
 	struct global_stream *g_stream=G_MESA_GLOBAL_STREAM[threadnum];
 
-	pindex =g_stream->freeList.head;
-
-	g_stream->freeList.index=pindex->stream.stream_public.stream_index;//add by lqy 20150113
-	g_stream->freeList.head=pindex->next;
-	g_stream->freeList.cnt--;
+	struct stream_index_list_item *list_item = STAILQ_FIRST(&g_stream->freeList);
+	pindex = &list_item->index;
+	UINT32 index = pindex->stream.stream_public.stream_index;
+	STAILQ_REMOVE_HEAD(&g_stream->freeList, entries);
+	g_stream->freeList_cnt--;
 		
 	memcpy(pindex,pindex_stack,sizeof(struct streamindex));
 
-	pindex->stream.stream_public.stream_index=g_stream->freeList.index;
+	pindex->stream.stream_public.stream_index=index;
 
 	pindex->stream.stream_killed_flag = 0;
 	pindex->stream.hash_not_head_times = 0;
@@ -528,24 +410,16 @@ struct streamindex *malloc_and_copy_streamindex(int threadnum, struct streaminde
 void free_streamindex(int threadnum,struct streamindex *pindex)
 {
 	struct global_stream *g_stream=G_MESA_GLOBAL_STREAM[threadnum];
-	//free(pindex);
-	if(g_stream->freeList.tail==NULL)
+	if(STAILQ_EMPTY(&g_stream->freeList))
 	{
-		assert(0);
-		pindex->prev=NULL;
-		pindex->next=NULL;
-		g_stream->freeList.tail=pindex;
-		g_stream->freeList.head=pindex;
+		STAILQ_INSERT_HEAD(&g_stream->freeList, (struct stream_index_list_item *)pindex, entries);
 	}
 	else
 	{
-		g_stream->freeList.tail->next=pindex;
-		pindex->prev=g_stream->freeList.tail;
-		pindex->next=NULL;
-		g_stream->freeList.tail=pindex;
+		STAILQ_INSERT_TAIL(&g_stream->freeList, (struct stream_index_list_item *)pindex, entries);
 		
 	}
-	g_stream->freeList.cnt++;
+	g_stream->freeList_cnt++;
 	
 }
 
@@ -562,57 +436,35 @@ void free_streamindex(int threadnum,struct streamindex *pindex)
 */
 int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index)
 {
-	struct streamindex *pindex;
-	struct streaminfo_private *pstream_pr;
-	struct streaminfo *pstream;
-	long lastmtime;
 
-	pindex=plist->head;
-	pstream_pr=(&(pindex->stream));
+	timeouts_update(plist->timer, g_CurrentTime);
+	struct timeout *t = timeouts_get(plist->timer);
+	if (t != NULL)
+	{
+		struct streamindex *pindex = container_of(t, struct streamindex, timeout);
+		struct streaminfo_private *pstream_pr = &(pindex->stream);
+		struct streaminfo *pstream = &(pstream_pr->stream_public);
 
-	if(0 == pstream_pr->timeout){ /* 未开启超时淘汰 */
-		return 0 ;		
-	}
-	
-	pstream=&pstream_pr->stream_public;
-	
-	if(STREAM_TYPE_UDP==pstream->type)
-	{
-		lastmtime=((struct udpdetail *)(pstream->pdetail))->lastmtime;
-	}
-	else if (STREAM_TYPE_TCP==pstream->type)
-	{
-		lastmtime=((struct tcpdetail *)(pstream->pdetail))->lastmtime;
-	}
-	else
-	{
-		sapp_runtime_log(RLOG_LV_FATAL, "del_stream_by_time() error! stream->type is:%d, not TCP or UDP.\n", pstream->type);	
-		return -1;
-	}
-
-	//如果设定了超时时间，并且已经超时
-	if(unlikely(g_CurrentTime-lastmtime > pstream_pr->timeout))
-	{
-		if(pindex == current_drive_index){ /* 当前包所在的流超时, 说明之前很长时间没有包到来, 此时不用free, 而是返回1, 再调用reset */
-			if (STREAM_TYPE_TCP==pstream->type)
+		if (pindex == current_drive_index)
+		{ /* 当前包所在的流超时, 说明之前很长时间没有包到来, 此时不用free, 而是返回1, 再调用reset */
+			if (STREAM_TYPE_TCP == pstream->type)
 			{
 				/* 2016-12-15 lijia add, 超时reset之前, 先要设置link_state */
-				((struct tcpdetail_private *)(pstream->pdetail))->link_state=STREAM_LINK_TIMEOUT;
-			}			
+				((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
+			}
 			return 1;
-		}	
-		if (STREAM_TYPE_TCP==pstream->type)
+		}
+		if (STREAM_TYPE_TCP == pstream->type)
 		{
-			((struct tcpdetail_private *)(pstream->pdetail))->link_state=STREAM_LINK_TIMEOUT;
-			tcp_free_stream(pindex, NULL,NULL,NULL);
+			((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
+			tcp_free_stream(pindex, NULL, NULL, NULL);
 		}
 		else
 		{
 			pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_TIMEOUT;
 			udp_free_stream(pindex);
-		}		
+		}
 	}
-
 	return 0;
 }
 
@@ -644,23 +496,9 @@ int lrustream(struct streamindex *pindex)
 		}
 	}
 	
-	if(plist->tail && (plist->tail != pindex)) /* 如果当前节点不在链表最新处, LRU */
-	 {
-		next = pindex->next;
-		prev = pindex->prev;
-		if(next) next->prev = prev;
-		if(prev) prev->next = next;	
-		plist->tail->next = pindex ;
-		pindex->prev = plist->tail;
-		pindex->next = NULL;
-		plist->tail= pindex;
-
-		if(plist->head == pindex) 
-		{
-			plist->head = next;
-			plist->head->prev = NULL;
-		}
-	}
+	long set_timeout = pindex->stream.timeout;
+	if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
+	timeouts_add(plist->timer, &pindex->timeout, g_CurrentTime+set_timeout);
 	
 	return 0;
 }
@@ -2075,25 +1913,54 @@ void free_thread_stream(int thread_seq)
 	struct stream_list *plist;
 	struct streamindex *pindex;
 	int j;
+	int all_done = 0;
+	struct timeout *t = NULL;
+	struct timeouts_it it_all;
 	
 	  g_stream=G_MESA_GLOBAL_STREAM[thread_seq];
 	  for(j=0;j<MAX_TCP_STATE;j++)
 	 {
 	 	plist=&(g_stream->tcpList[j]);
-		while(plist->cnt>0)
+		sapp_runtime_log(RLOG_LV_INFO, "free_thread_stream thread:%d, TCP_STATE[%d], timer_count:%d, current state:%d!", thread_seq, j , plist->cnt, sapp_get_current_state());
+		TIMEOUTS_IT_INIT(&it_all, TIMEOUTS_ALL);
+		all_done=0;
+		while(!all_done)
 		{
-			pindex = plist->head;
-			del_stream(pindex, STREAM_CLOSE_REASON_DUMPFILE);
+			t = timeouts_next(plist->timer, &it_all);
+			if(t)
+			{
+				pindex = container_of(t, struct streamindex, timeout);
+				timeouts_del(plist->timer, &pindex->timeout);
+				del_stream(pindex, STREAM_CLOSE_REASON_DUMPFILE);
+			}
+			else
+			{
+				all_done = 1;
+			}
 		}
+		timeouts_close(plist->timer);
 	  }	
   	  for(j=0;j<MAX_UDP_STATE;j++)
 	 {
 	 	plist=&(g_stream->udpList[j]);
-		while(plist->cnt>0)
+		sapp_runtime_log(RLOG_LV_INFO, "free_thread_stream thread:%d, UDP_STATE[%d], timer_count:%d, current state:%d!", thread_seq, j ,plist->cnt, sapp_get_current_state());
+		all_done=0;
+		TIMEOUTS_IT_INIT(&it_all, TIMEOUTS_ALL);
+		while(!all_done)
 		{
-			pindex = plist->head;
-			del_stream(pindex, STREAM_CLOSE_REASON_DUMPFILE);
+			t = timeouts_next(plist->timer, &it_all);
+			if(t)
+			{
+				pindex = container_of(t, struct streamindex, timeout);
+				timeouts_del(plist->timer, &pindex->timeout);
+				del_stream(pindex, STREAM_CLOSE_REASON_DUMPFILE);
+			}
+			else
+			{
+				all_done = 1;
+			}
 		}
+		timeouts_close(plist->timer);
 	  }
 
 }
@@ -2657,21 +2524,23 @@ int polling_stream_timeout(int tid)
 
 	for(i = UDP_ONE_STATE; i < MAX_UDP_STATE; i++){
 		plist=&(G_MESA_GLOBAL_STREAM[tid]->udpList[i]);
-		if(plist->head){ /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
+		if(g_CurrentTime > plist->last_check_timer_s && plist->cnt > 0){ 
 			ret = del_stream_by_time(plist, NULL);
 			if(ret > 0){
 				has_work = POLLING_STATE_WORK;
 			}
+			plist->last_check_timer_s = g_CurrentTime;
 		}
 	}
 
 	for(i = TCP_SYN_STATE; i < MAX_TCP_STATE; i++){
 		plist=&(G_MESA_GLOBAL_STREAM[tid]->tcpList[i]);
-		if(plist->head){ /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
+		if(g_CurrentTime > plist->last_check_timer_s && plist->cnt > 0){ /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
 			ret = del_stream_by_time(plist, NULL);
 			if(ret > 0){
 				has_work = POLLING_STATE_WORK;
 			}
+			plist->last_check_timer_s = g_CurrentTime;
 		}
 	}
 
@@ -3038,11 +2907,10 @@ void global_stream_destroy(void)
 		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM[tseq]->udp_stream_table);
 		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM[tseq]->tcp_stream_talbe_hash_count);
 		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM[tseq]->udp_stream_talbe_hash_count);
-		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM[tseq]->freeList.__real_head);
+		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM[tseq]->__freeList_real_head);
 
 		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM[tseq]);
 	}
-	
 	sapp_mem_free(SAPP_MEM_FIX_GLOBAL_STREAM, -1, G_MESA_GLOBAL_STREAM);
 	G_MESA_GLOBAL_STREAM = NULL;
 	

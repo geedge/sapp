@@ -660,18 +660,18 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		如果连接重置, 最好不使用原来的streamindex结构, free后再申请一个新的,
 		故意使streamindex地址与原来不一样, 主要便于DEBUG.
 	 */
-	   pindex_tcp=pindex;
-		pstream_pr = &pindex_tcp->stream;
-		pstream = &pstream_pr->stream_public;	   
-	   pdetail_pr = (struct tcpdetail_private *)pstream->pdetail;
-	   pdetail=(struct tcpdetail *)pdetail_pr;
-		//add by lqy 20150107, 重置计数
-		if(createdir==DIR_S2C)
-		{
-			pdetail->clientpktnum=1;
-			pdetail->clientbytes=datalen;
-			pdetail->serverpktnum=0;
-			pdetail->serverbytes=0;
+	 pindex_tcp = pindex;
+	 pstream_pr = &pindex_tcp->stream;
+	 pstream = &pstream_pr->stream_public;
+	 pdetail_pr = (struct tcpdetail_private *)pstream->pdetail;
+	 pdetail = (struct tcpdetail *)pdetail_pr;
+	 // add by lqy 20150107, 重置计数
+	 if (createdir == DIR_S2C)
+	 {
+		 pdetail->clientpktnum = 1;
+		 pdetail->clientbytes = datalen;
+		 pdetail->serverpktnum = 0;
+		 pdetail->serverbytes = 0;
 		}
 		else if(createdir==DIR_C2S)
 		{
@@ -733,6 +733,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		//pdetail->serverpkt++; //adjust by lqy 20140515 只有新建时计数
 		pdetail_pr->C2S_first_ack_seq = ntohl (this_tcphdr->th_ack);
 	}
+	pstream_pr->timeout=link_default_nopkt_time;
 	pdetail->lastmtime=g_CurrentTime;	
 	pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 	pdetail_pr->link_state=STREAM_LINK_JUST_EST;	
@@ -1150,21 +1151,12 @@ static void tcp_free_half(struct half_tcpstream *phalf,int threadnum)
 /* 快速验证pindex是否在plist中 */
 static int inline stream_in_timeout_list(const struct streamindex *pindex, const struct stream_list *plist)
 {
-	if(plist->cnt <= 1){
-		/* 只有一个元素时, head==tail==pindex */
-		if(plist->head == pindex){
-			return 1;
-		}else{
-			return 0;
-		}
-	}else{
-		/* 多个元素时, next和prev必定有一个不为NULL */
-		if((NULL == pindex->next) &&(NULL == pindex->prev)){
-			return 0;
-		}
+	if(timeout_pending(&(pindex->timeout)))
+	{
+		return 1;
 	}
+	return 0;
 
-	return 1;
 }
 
 static void tcp_change_stream_tonouse(struct streamindex *pindex)

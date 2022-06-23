@@ -138,8 +138,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 #if (0 == USE_RBTREE_INSTEAD_LIST)
 	pindex_udp->phashprev = NULL;
 #endif	
-	pindex_udp->next = NULL;
-	pindex_udp->prev = NULL;
+
 	pindex_udp->stream.dirreverse = 0;
 
 	pstream_udp_pr = &pindex_udp->stream;
@@ -177,14 +176,8 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[UDP_ONE_STATE]);
 	pstream_udp->stream_state=UDP_ONE_STATE;
 
-#if USE_RBTREE_INSTEAD_LIST
-	/* note:
-		因为插入rbtree时需要和现有其他流做比较, 用以确定插入left还是right分支,
-		对于本流来说, layer_dir自身没有意义了, 但要用于和其他流比较地址大小, 
-		所以将layer_dir = 1;
-	*/
-	pstream_udp_pr->layer_dir = 1;
-#endif		
+	pstream_udp_pr->timeout=udp_reset_time;
+
 	hash_add_stream(pindex_udp);
 	streamaddlist(pindex_udp,plist);
 
@@ -199,8 +192,6 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	pstream_udp_pr->global_stream_id = get_global_stream_id(threadnum);
 	pstream_udp_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 	pdetail->lastmtime=g_CurrentTime;
-	pstream_udp_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
-	pstream_udp_pr->timeout=udp_reset_time;
 
 	if(pstream_udp_pr->under_ddos_bypass){
 		/* bypass状态不调用任何插件, 后续的project,   bridge,初始化half_stream等操作都可以忽略了 */

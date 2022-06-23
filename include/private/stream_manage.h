@@ -2,6 +2,7 @@
 #define _STREAM_MANAGE_H_ 
 
 #include "stream_internal.h" 
+#include "timeout.h" 
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,8 +67,7 @@ struct stream_status{ /* 2014-03-31 lijia add */
 
 struct streamindex
 {
-	struct streamindex *prev;
-	struct streamindex *next;
+	struct timeout timeout;
 	struct streamindex *phashprev;
 	struct streamindex *phashnext;
 	struct streaminfo_private stream;
@@ -76,14 +76,22 @@ struct streamindex
 
 struct stream_list
 {
-	struct streamindex *__real_head; /* 初始化后不变, 仅用于最后free */
-	struct streamindex *head; /* 删除淘汰从head开始, 即oldest */
-	struct streamindex *tail; /* 新节点做为tail, 即newest */
 	int cnt;
 	int max_cnt;
-	int sift_out_cnt;  //换出阈值
-	int index;	//全局索引	
+	int index;	//全局索引
+	int pad;	
+	struct timeouts *timer;
+	long last_check_timer_s;
+	timeout_error_t timer_error;
 };
+
+struct stream_index_list_item
+{
+	struct streamindex index;
+	STAILQ_ENTRY(stream_index_list_item) entries;
+};
+
+STAILQ_HEAD(STREAM_INDEX_LIST,stream_index_list_item);
 
 struct global_stream
 {
@@ -95,7 +103,10 @@ struct global_stream
 
 	struct stream_list udpList[MAX_UDP_STATE];
 
-	struct stream_list freeList;
+	struct STREAM_INDEX_LIST freeList;
+	struct stream_index_list_item *__freeList_real_head;
+	int freeList_cnt;
+	int freeList_max_cnt;
 };
 
 typedef struct _stStreamFunInfo
