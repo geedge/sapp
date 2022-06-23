@@ -183,13 +183,12 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     return ret;
 }
 
-
+//仅识别GTP-U协议，用于进行隧道处理
 static int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned int udp_payload_len)
 {
     if (udp_payload_len >= sizeof(struct gtp_hdr))
     {
         unsigned int gtp_u = (2152);
-        unsigned int gtp_c = (2123);
         unsigned int gtp_v0 = (3386);
 
         unsigned short dest = 0, source = 0;
@@ -203,24 +202,24 @@ static int identify_gtp(const struct streaminfo *pstream,const char *payload, un
             source = ntohs(pstream->addr.ipv4->source);
         }
 
-        if ((source == gtp_u) || (dest == gtp_u) || (source == gtp_c)
-            || (dest == gtp_c) || (source == gtp_v0) || (dest == gtp_v0)) {
+        if ((source == gtp_u) || (dest == gtp_u) || ((source == gtp_v0) || (dest == gtp_v0))) {
             struct gtp_hdr *gtp = (struct gtp_hdr *) payload;
             unsigned short gtp_version = (gtp->flags & 0xE0) >> 5;
-
-            if(gtp_version == 0){
-            	sapp_runtime_log(20, "GTP v0 is obsoleted, not support!\n");
-				return 0;
-            }else if(gtp_version == 1) {
+            if ((gtp_version == 0) || (gtp_version == 1))
+            {
                 unsigned short message_len = ntohs(gtp->len);
                 /* NOTE: gtp->len不包括gtp头部固定长度(8字节), 只包括扩展头部和负载 */
                 if (message_len == (udp_payload_len - sizeof(struct gtp_hdr))) {
-                    return 1;
+                    if(gtp_version == 1)
+                    {
+                        return 1;
+                    }
+                    else
+                    {
+                        sapp_runtime_log(20, "not support GTP v%d yet!\n", gtp_version); 
+                        return 0;
+                    }
                 }
-            }else{
-            	//TODO
-            	sapp_runtime_log(20, "not support GTP v%d yet!\n", gtp_version);
-				return 0;
             }
         }
     }
@@ -234,33 +233,12 @@ static int identify_gtp(const struct streaminfo *pstream,const char *payload, un
 */
 char udp_gtp_identify_entry(const struct streaminfo *pstream, const void *this_hdr, const void *raw_pkt, void **pme)
 {
-#if 0
-	if(pstream->addr.addrtype == ADDR_TYPE_IPV4)
-	{
-		if(ntohs(pstream->addr.tuple4_v4->dest) == GPRS_TUNNEL_PORT && ntohs(pstream->addr.tuple4_v4->source) == GPRS_TUNNEL_PORT)
-        {
-            struct streaminfo_private *pstream_pr = (struct streaminfo_private *)pstream;
-            pstream_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNEL_GPRS_TUNNEL;
-        }
-	}
-    else if(pstream->addr.addrtype == ADDR_TYPE_IPV6)
-    {
-        if(ntohs(pstream->addr.tuple4_v6->dest) == GPRS_TUNNEL_PORT && ntohs(pstream->addr.tuple4_v6->source) == GPRS_TUNNEL_PORT)
-        {
-            struct streaminfo_private *pstream_pr = (struct streaminfo_private *)pstream;
-            pstream_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNEL_GPRS_TUNNEL;
-        }
-    }
-    else
-        ;
-#else
     struct streaminfo_private *pstream_pr = (struct streaminfo_private *)pstream;
     if(1 == identify_gtp(pstream, (char *)this_hdr+sizeof(struct mesa_udp_hdr), 
     					pstream_pr->raw_pkt->raw_pkt_len - ((const char *)this_hdr - (const char*)pstream_pr->raw_pkt->raw_pkt_data) - sizeof(struct mesa_udp_hdr)))
     {
         pstream_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNEL_GPRS_TUNNEL;
     }
-#endif
 	return APP_STATE_DROPME; /* 每个流只看第一个包, 不管是否GTP隧道, 后续都不再处理了 */
 }
 

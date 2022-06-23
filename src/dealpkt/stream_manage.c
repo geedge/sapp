@@ -198,11 +198,8 @@ static void stream_timeout_shift_lrulist(struct streamindex *pindex, unsigned sh
 		return;
 	}
 
-	__do_streamleavlist(pindex, lru_list_root); /* 从原位置摘除 */
-		
-	timeouts_update(lru_list_root->timer, g_CurrentTime);
+	timeouts_add(lru_list_root->timer, &pindex->timeout, new_timeout+g_CurrentTime);
 
-	lru_list_root->cnt++; /* 在__do_streamleavlist()中减1, 此处恢复计数 */
 	return;
 }
 
@@ -329,8 +326,8 @@ static inline void __do_streamleavlist(struct streamindex *pindex,struct stream_
 	if (timeout_pending(&(pindex->timeout)))
 	{
 		timeouts_del(plist->timer, &pindex->timeout);
-		plist->cnt -= 1;
 	}
+	plist->cnt -= 1;
 
 	return;
 }
@@ -366,7 +363,6 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 				 pindex->stream.stream_public.threadnum,
 				 pindex_tmp->stream.stream_public.ptcpdetail->createtime,
 				 pindex_tmp->stream.stream_public.ptcpdetail->lastmtime);
-		timeouts_del(plist->timer, &pindex_tmp->timeout);
 		del_stream(pindex_tmp, timeout_reason);
 	}
 	
@@ -483,19 +479,22 @@ int lrustream(struct streamindex *pindex)
 	if(STREAM_TYPE_UDP==pstream->type)
 	{
 		plist=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->udpList[pstream->stream_state]);
-		if(1 == del_stream_by_time(plist, pindex)){
-			return 1;
-		}
+
 	}
 	else if (STREAM_TYPE_TCP==pstream->type)
 	{
 		plist=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->tcpList[pstream->stream_state]);
-		/* 2015-06-10 lijia modify, UDP使用udp_reset_stream_bytime()淘汰 */
-		if(1 ==  del_stream_by_time(plist, pindex)){
+
+	}
+	if(g_CurrentTime > plist->last_check_timer_s)
+	{
+		if (1 == del_stream_by_time(plist, pindex))
+		{
+			plist->last_check_timer_s = g_CurrentTime;
 			return 1;
 		}
+		plist->last_check_timer_s = g_CurrentTime;
 	}
-	
 	long set_timeout = pindex->stream.timeout;
 	if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
 	timeouts_add(plist->timer, &pindex->timeout, g_CurrentTime+set_timeout);
@@ -1930,7 +1929,6 @@ void free_thread_stream(int thread_seq)
 			if(t)
 			{
 				pindex = container_of(t, struct streamindex, timeout);
-				timeouts_del(plist->timer, &pindex->timeout);
 				del_stream(pindex, STREAM_CLOSE_REASON_DUMPFILE);
 			}
 			else
@@ -1952,7 +1950,6 @@ void free_thread_stream(int thread_seq)
 			if(t)
 			{
 				pindex = container_of(t, struct streamindex, timeout);
-				timeouts_del(plist->timer, &pindex->timeout);
 				del_stream(pindex, STREAM_CLOSE_REASON_DUMPFILE);
 			}
 			else

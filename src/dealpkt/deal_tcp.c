@@ -1151,7 +1151,7 @@ static void tcp_free_half(struct half_tcpstream *phalf,int threadnum)
 /* 快速验证pindex是否在plist中 */
 static int inline stream_in_timeout_list(const struct streamindex *pindex, const struct stream_list *plist)
 {
-	if(timeout_pending(&(pindex->timeout)))
+	if(timeout_pending((struct timeout *)&(pindex->timeout)))
 	{
 		return 1;
 	}

@@ -19,6 +19,8 @@ int set_vxlan_addr(const void *this_layer_hdr, struct layer_addr_vxlan_private *
 	addr_pr->addr_public.C2S_vxlan_addr.vlan_id = htons((vlan_id_high<<4) | vlan_id_low);
 	addr_pr->addr_public.C2S_vxlan_addr.flag = vxlan_hdr->flags;
 
+	memset(&addr_pr->addr_public.S2C_vxlan_addr, 0, sizeof(addr_pr->addr_public.S2C_vxlan_addr));
+
 	addr_pr->actual_total_len = sizeof(inline_vxlan_hdr_t);
 
 	switch(addr_pr->addr_public.C2S_vxlan_addr.link_type){
