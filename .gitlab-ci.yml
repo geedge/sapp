@@ -81,9 +81,6 @@ stages:
   dependencies:
     - branch_build_debug_for_centos7
     - branch_build_release_for_centos7
-    - develop_build_debug_for_centos7
-    - develop_build_release_for_centos7
-    - release_build_release_for_centos7
   tags:
     - share    
 
