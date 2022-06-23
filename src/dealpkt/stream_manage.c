@@ -347,7 +347,11 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 	int timeout_reason = STREAM_CLOSE_REASON_TIMEOUT;
 	if(plist->cnt >= plist->max_cnt -1 && plist->cnt > 0)
 	{
-		timeouts_update(plist->timer, g_CurrentTime);
+		if(plist->last_update_timer_s < g_CurrentTime)
+		{
+			timeouts_update(plist->timer, g_CurrentTime);
+			plist->last_update_timer_s = g_CurrentTime;
+		}
 		struct timeout *t = timeouts_get(plist->timer);
 		if(t == NULL)
 		{
@@ -434,7 +438,11 @@ void free_streamindex(int threadnum,struct streamindex *pindex)
 int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index)
 {
 
-	timeouts_update(plist->timer, g_CurrentTime);
+	if(plist->last_update_timer_s < g_CurrentTime)
+	{
+		timeouts_update(plist->timer, g_CurrentTime);
+		plist->last_update_timer_s = g_CurrentTime;
+	}
 	struct timeout *t = timeouts_get(plist->timer);
 	if (t != NULL)
 	{
@@ -496,7 +504,6 @@ int lrustream(struct streamindex *pindex)
 	//if(g_CurrentTime > plist->last_check_timer_s)
 	{
 		int ret  = del_stream_by_time(plist, pindex);
-		plist->last_check_timer_s = g_CurrentTime;
 		if (1 == ret)
 		{
 			return 1;
@@ -2528,25 +2535,21 @@ int polling_stream_timeout(int tid)
 
 	for(i = UDP_ONE_STATE; i < MAX_UDP_STATE; i++){
 		plist=&(G_MESA_GLOBAL_STREAM[tid]->udpList[i]);
-		//if(g_CurrentTime > plist->last_check_timer_s && plist->cnt > 0){ 
 		if( plist->cnt > 0){ 
 			ret = del_stream_by_time(plist, NULL);
 			if(ret > 0){
 				has_work = POLLING_STATE_WORK;
 			}
-			plist->last_check_timer_s = g_CurrentTime;
 		}
 	}
 
 	for(i = TCP_SYN_STATE; i < MAX_TCP_STATE; i++){
 		plist=&(G_MESA_GLOBAL_STREAM[tid]->tcpList[i]);
-		//if(g_CurrentTime > plist->last_check_timer_s && plist->cnt > 0){ /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
 		if(plist->cnt > 0){ /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
 			ret = del_stream_by_time(plist, NULL);
 			if(ret > 0){
 				has_work = POLLING_STATE_WORK;
 			}
-			plist->last_check_timer_s = g_CurrentTime;
 		}
 	}
 

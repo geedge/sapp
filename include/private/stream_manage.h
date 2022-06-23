@@ -79,7 +79,7 @@ struct stream_list
 	int cnt;
 	int max_cnt;
 	struct timeouts *timer;
-	long last_check_timer_s;
+	long last_update_timer_s;
 	timeout_error_t timer_error;
 };
 

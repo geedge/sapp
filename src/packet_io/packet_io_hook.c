@@ -239,6 +239,9 @@ int packet_io_hook_input_mirror(raw_pkt_t *raw_pkt, unsigned char dir, int threa
 
 	p_mac_addr = (unsigned char *)raw_pkt->raw_pkt_data;
 
+	if(OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin && CAP_MODEL_PCAP_DUMPFILE == sapp_global_val->config.packet_io.internal.interface.type_bin){
+		packet_io_hook_input_vxlan(raw_pkt, dir, thread_num);
+	}
 	if(p_mac_addr[sapp_global_val->config.packet_io.extract_linkdir_from_mac_byte_index] & sapp_global_val->config.packet_io.extract_linkdir_from_mac_bit_value){
 		raw_pkt->route_dir = 1;
 	}else{

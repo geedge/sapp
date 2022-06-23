@@ -647,6 +647,10 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 
 		if(is_overlay_udp_layer != 0){
+			if(ulen < sizeof(struct ethhdr) + sizeof(struct layer_addr_vxlan_private))
+			{
+				return DROP;
+			}
 			ret = stream_process_overlay_udp(pstream,(const void *)this_iphdr, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
 			if(DROP == ret){
 				return DROP;

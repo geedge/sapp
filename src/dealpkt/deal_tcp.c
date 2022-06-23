@@ -152,28 +152,46 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 
 	while(opt_len > 0){
 		parsed_opt = 0;
+		int opsize=0;
 		memset(out_raw_result, 0, sizeof(struct tcp_option));
-		
-		switch(*opt){
-			case TCP_OPT_EOL: /* 无实际意义, 不记录在选项总数里 */
-				goto done;
-			break;
 
-			case TCP_OPT_NOP: /* 无实际意义, 不记录在选项总数里 */
-				opt++;
-				opt_len--;
-			break;
+		switch (*opt)
+		{
+		case TCP_OPT_EOL: /* 无实际意义, 不记录在选项总数里 */
+			return opt_num;
 
+		case TCP_OPT_NOP: /* 无实际意义, 不记录在选项总数里 */
+			opt++;
+			opt_len--; /* Ref: RFC 793 section 3.1 */
+			continue;
+		default:
+			if (opt_len < 2)
+			{
+				return -1;
+			}
+			opsize = opt[1];
+			if (opsize < 2) /* "silly options" */
+			{
+				return -1;
+			}
+			if (opsize > opt_len)
+			{
+				return -1;
+			}
+			switch (*opt)
+			{
 			case TCP_OPT_MSS:
-				if(opt_num >= res_num){
+				if (opt_num >= res_num)
+				{
 					goto err;
 				}
 				out_raw_result->type = TCP_OPT_MSS;
 				opt++;
-				
+
 				out_raw_result->len = *opt;
 				opt++;
-				if(out_raw_result->len != 4){
+				if (out_raw_result->len != 4)
+				{
 					goto err;
 				}
 				out_raw_result->len -= 2;
@@ -182,10 +200,11 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 				parsed_opt = 1;
 
 				opt_len -= 4;
-			break;
+				break;
 
 			case TCP_OPT_WIN_SCALE:
-				if(opt_num >= res_num){
+				if (opt_num >= res_num)
+				{
 					goto err;
 				}
 				out_raw_result->type = TCP_OPT_WIN_SCALE;
@@ -193,43 +212,48 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 
 				out_raw_result->len = *opt;
 				opt++;
-				if(out_raw_result->len != 3){
+				if (out_raw_result->len != 3)
+				{
 					goto err;
-				}	
+				}
 				out_raw_result->len -= 2;
 				out_raw_result->char_value = *opt;
 				opt++;
-				parsed_opt = 1;	
+				parsed_opt = 1;
 
 				opt_len -= 3;
-			break;
+				break;
 
 			case TCP_OPT_SACK:
-				if(opt_num >= res_num){
+				if (opt_num >= res_num)
+				{
 					goto err;
 				}
 				out_raw_result->type = TCP_OPT_SACK;
 				opt++;
 				out_raw_result->len = *opt;
 				opt++;
-				if(out_raw_result->len != 2){
+				if (out_raw_result->len != 2)
+				{
 					goto err;
 				}
 				out_raw_result->len -= 2;
 				out_raw_result->char_value = 1; /* SACK实际没有值, 此处赋值仅为了便于外部插件使用 */
 				opt_len -= 2;
 				parsed_opt = 1;
-			break;
+				break;
 
 			case TCP_OPT_TIME_STAMP:
-				if(opt_num >= res_num){
+				if (opt_num >= res_num)
+				{
 					goto err;
-				}	
+				}
 				out_raw_result->type = TCP_OPT_TIME_STAMP;
 				opt++;
 				out_raw_result->len = *opt;
 				opt++;
-				if(out_raw_result->len != 10){
+				if (out_raw_result->len != 10)
+				{
 					goto err;
 				}
 				out_raw_result->len -= 2;
@@ -240,7 +264,7 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 
 				opt_len -= 10;
 				parsed_opt = 1;
-			break;
+				break;
 
 			/* 可以识别但暂不处理的选项, 跳过 */
 			case TCP_OPT_SACK_EDGE:
@@ -250,47 +274,50 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 			{
 				/*  */
 				int this_opt_len;
-				
-				if(opt_len <= 1){ /* 当前选项长度为0, 或剩余选项长度只有一个字节, 但选项类型非0非1, 错误包! */
+
+				if (opt_len <= 1)
+				{ /* 当前选项长度为0, 或剩余选项长度只有一个字节, 但选项类型非0非1, 错误包! */
 					goto err;
 				}
 				this_opt_len = opt[1];
-				if((this_opt_len <= 0) || (this_opt_len > opt_len)){
+				if ((this_opt_len <= 0) || (this_opt_len > opt_len))
+				{
 					goto err;
 				}
 				opt_len -= this_opt_len;
-				opt += this_opt_len; 
+				opt += this_opt_len;
 				parsed_opt = 0;
 			}
 			break;
-			
+
 			default:
 			{
 				int this_opt_len;
-				
-				if(opt_len <= 1){ /* 当前选项长度为0, 或剩余选项长度只有一个字节, 但选项类型非0非1, 错误包! */
+
+				if (opt_len <= 1)
+				{ /* 当前选项长度为0, 或剩余选项长度只有一个字节, 但选项类型非0非1, 错误包! */
 					goto err;
 				}
 				this_opt_len = opt[1];
-				if((this_opt_len <= 0) || (this_opt_len > opt_len)){
+				if ((this_opt_len <= 0) || (this_opt_len > opt_len))
+				{
 					goto err;
 				}
 				opt_len -= this_opt_len;
-				opt += this_opt_len; 
+				opt += this_opt_len;
 				parsed_opt = 0;
 			}
-			break;
+			}
 		}
 
-		if(parsed_opt){
+		if (parsed_opt)
+		{
 			out_raw_result++;
 			opt_num++;
 		}
 	}
 
-done:
 	return opt_num;
-
 err:
 	return -1;
 }
@@ -324,28 +351,46 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 
 	while(opt_len > 0){
 		parsed_opt = 0;
+		int opsize=0;
 		memset(out_raw_result, 0, sizeof(struct tcp_option_ext));
-		
-		switch(*opt){
-			case TCP_OPT_EOL: /* 无实际意义, 不记录在选项总数里 */
-				goto done;
-			break;
 
-			case TCP_OPT_NOP: /* 无实际意义, 不记录在选项总数里 */
-				opt++;
-				opt_len--;
-			break;
+		switch (*opt)
+		{
+		case TCP_OPT_EOL: /* 无实际意义, 不记录在选项总数里 */
+			return opt_num;
 
+		case TCP_OPT_NOP: /* 无实际意义, 不记录在选项总数里 */
+			opt++;
+			opt_len--; /* Ref: RFC 793 section 3.1 */
+			continue;
+		default:
+			if (opt_len < 2)
+			{
+				return -1;
+			}
+			opsize = opt[1];
+			if (opsize < 2) /* "silly options" */
+			{
+				return -1;
+			}
+			if (opsize > opt_len)
+			{
+				return -1;
+			}
+			switch (*opt)
+			{
 			case TCP_OPT_MSS:
-				if(opt_num >= res_num){
+				if (opt_num >= res_num)
+				{
 					goto err;
 				}
 				out_raw_result->type = TCP_OPT_MSS;
 				opt++;
-				
+
 				out_raw_result->len = *opt;
 				opt++;
-				if(out_raw_result->len !=4){
+				if (out_raw_result->len != 4)
+				{
 					goto err;
 				}
 				out_raw_result->len -= 2;
@@ -354,10 +399,11 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 				parsed_opt = 1;
 
 				opt_len -= 4;
-			break;
+				break;
 
 			case TCP_OPT_WIN_SCALE:
-				if(opt_num >= res_num){
+				if (opt_num >= res_num)
+				{
 					goto err;
 				}
 				out_raw_result->type = TCP_OPT_WIN_SCALE;
@@ -365,43 +411,48 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 
 				out_raw_result->len = *opt;
 				opt++;
-				if(out_raw_result->len != 3){
+				if (out_raw_result->len != 3)
+				{
 					goto err;
-				}	
+				}
 				out_raw_result->len -= 2;
 				out_raw_result->char_value = *opt;
 				opt++;
-				parsed_opt = 1;	
+				parsed_opt = 1;
 
 				opt_len -= 3;
-			break;
+				break;
 
 			case TCP_OPT_SACK:
-				if(opt_num >= res_num){
+				if (opt_num >= res_num)
+				{
 					goto err;
 				}
 				out_raw_result->type = TCP_OPT_SACK;
 				opt++;
 				out_raw_result->len = *opt;
 				opt++;
-				if(out_raw_result->len != 2){
+				if (out_raw_result->len != 2)
+				{
 					goto err;
 				}
 				out_raw_result->len -= 2;
 				out_raw_result->char_value = 1; /* SACK实际没有值, 此处赋值仅为了便于外部插件使用 */
 				opt_len -= 2;
 				parsed_opt = 1;
-			break;
+				break;
 
 			case TCP_OPT_TIME_STAMP:
-				if(opt_num >= res_num){
+				if (opt_num >= res_num)
+				{
 					goto err;
-				}	
+				}
 				out_raw_result->type = TCP_OPT_TIME_STAMP;
 				opt++;
 				out_raw_result->len = *opt;
 				opt++;
-				if(out_raw_result->len != 10){
+				if (out_raw_result->len != 10)
+				{
 					goto err;
 				}
 				out_raw_result->len -= 2;
@@ -412,13 +463,14 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 
 				opt_len -= 10;
 				parsed_opt = 1;
-			break;
+				break;
 
 			case TCP_OPT_MULTI_PATH_TCP:
 			{
-				if(opt_num >= res_num){
+				if (opt_num >= res_num)
+				{
 					goto err;
-				}	
+				}
 				out_raw_result->type = TCP_OPT_MULTI_PATH_TCP;
 				opt++;
 				out_raw_result->len = *opt;
@@ -428,7 +480,7 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 
 				opt += out_raw_result->len;
 				opt_len -= out_raw_result->len + 2;
-				parsed_opt = 1;				
+				parsed_opt = 1;
 			}
 			break;
 
@@ -439,36 +491,41 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 			{
 				/*  */
 				int this_opt_len;
-				
-				if(opt_len <= 1){ /* 当前选项长度为0, 或剩余选项长度只有一个字节, 但选项类型非0非1, 错误包! */
+
+				if (opt_len <= 1)
+				{ /* 当前选项长度为0, 或剩余选项长度只有一个字节, 但选项类型非0非1, 错误包! */
 					goto err;
 				}
 				this_opt_len = opt[1];
-				if((this_opt_len <= 0) || (this_opt_len > opt_len)){
+				if ((this_opt_len <= 0) || (this_opt_len > opt_len))
+				{
 					goto err;
 				}
 				opt_len -= this_opt_len;
-				opt += this_opt_len; 
+				opt += this_opt_len;
 				parsed_opt = 0;
 			}
 			break;
-			
+
 			default:
 			{
 				int this_opt_len;
-				
-				if(opt_len <= 1){ /* 当前选项长度为0, 或剩余选项长度只有一个字节, 但选项类型非0非1, 错误包! */
+
+				if (opt_len <= 1)
+				{ /* 当前选项长度为0, 或剩余选项长度只有一个字节, 但选项类型非0非1, 错误包! */
 					goto err;
 				}
 				this_opt_len = opt[1];
-				if((this_opt_len <= 0) || (this_opt_len > opt_len)){
+				if ((this_opt_len <= 0) || (this_opt_len > opt_len))
+				{
 					goto err;
 				}
 				opt_len -= this_opt_len;
-				opt += this_opt_len; 
+				opt += this_opt_len;
 				parsed_opt = 0;
 			}
 			break;
+			}
 		}
 
 		if(parsed_opt){
@@ -477,7 +534,6 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 		}
 	}
 
-done:
 	return opt_num;
 
 err:
