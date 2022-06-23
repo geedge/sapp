@@ -8,9 +8,9 @@ extern "C" {
 #endif
 
 
-#define DEBUG_PRINT  0
+#define DEBUG_PRINT  1
 #if DEBUG_PRINT
-#define DPRINT(fmt, args...)    DPRINT(fmt, ## args)
+#define DPRINT(fmt, args...)    printf(fmt, ## args)
 #else
 #define DPRINT(fmt, args...)    /* Don't do anything in release builds */
 #endif
