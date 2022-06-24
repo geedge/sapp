@@ -24,13 +24,13 @@ add_library(sapp_devel SHARED sapp_devel.cpp)
 target_link_libraries(sapp_devel -Wl,--whole-archive sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
 			config inner_plug gdev_assistant sapp_assistant plugctrl project timer dictator2 
 			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
-			MESA_sleep dpdk_ip_hash  cpu_limit libevent-static libdabloom-static -Wl,--no-whole-archive)
+			MESA_sleep dpdk_ip_hash  cpu_limit timeout libevent-static libdabloom-static -Wl,--no-whole-archive)
 
 add_library(sapp_devel_static STATIC sapp_devel.cpp)
 target_link_libraries(sapp_devel sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
 			config inner_plug gdev_assistant sapp_assistant plugctrl project timer dictator2 
 			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
-			MESA_sleep dpdk_ip_hash  cpu_limit libevent-static libdabloom-static)
+			MESA_sleep dpdk_ip_hash  cpu_limit timeout libevent-static libdabloom-static)
 set_target_properties(sapp_devel_static PROPERTIES OUTPUT_NAME sapp_devel)
 
 
