@@ -2242,3 +2242,263 @@ extern "C" void hybrid_all_dataset_destroy(void)
 	}
 }
 
+gtest_plug_stat_t gtest_tcpall_offload_stat1;
+
+
+extern "C" char tcpall_offload_1st_givestate_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
+{
+	struct tcpdetail *pdetail=(struct tcpdetail *)pstream->pdetail;
+
+	if(OP_STATE_PENDING == pstream->pktstate)
+	{
+		/* pending状态重置计数 */
+		memset(&gtest_tcpall_offload_stat1, 0, sizeof(gtest_tcpall_offload_stat1));	
+	}
+
+	if(pstream->pktstate == OP_STATE_CLOSE)
+	{
+		if((2 == gtest_tcpall_offload_stat1.C2S_all_pkt)
+		 &&(0 == gtest_tcpall_offload_stat1.C2S_all_byte)
+		 &&(2 == gtest_tcpall_offload_stat1.S2C_all_pkt)
+		 &&(21 == gtest_tcpall_offload_stat1.S2C_all_byte))
+		{
+		 	if((37 == pdetail->clientpktnum)
+			 &&(11345 == pdetail->clientbytes)
+			 &&(31 == pdetail->serverpktnum)
+			 &&(2329 == pdetail->serverbytes))
+			{
+		 		SAPP_PLUG_LOG(RLOG_LV_INFO, "tcpall.offload", "\033[32m tcpall_simple() test succ!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_SUCC);
+		 	}
+			else
+			{
+				SAPP_PLUG_LOG(RLOG_LV_FATAL, "tcpall.offload","\033[1;31;40mtcpall_simple: check data error!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
+		}
+		else
+		{
+			SAPP_PLUG_LOG(RLOG_LV_FATAL, "tcpall.offload","\033[1;31;40mtcpall_simple: check data error!\033[0m\n");
+			sendto_test_result(GTEST_SAPP_ERR);
+		}
+	}
+	else
+	{
+		if(DIR_C2S == pstream->curdir)
+		{
+			gtest_tcpall_offload_stat1.C2S_all_pkt++;
+			gtest_tcpall_offload_stat1.C2S_all_byte += pdetail->datalen;
+		}
+		else
+		{
+			gtest_tcpall_offload_stat1.S2C_all_pkt++;
+			gtest_tcpall_offload_stat1.S2C_all_byte += pdetail->datalen;
+		}
+
+		printf("tcpall_pkt_stat, curdir:%d, data_len:%d,c2s_pkt:%d, c2s_bytes:%d, s2c_pkt:%d, s2c_bytes:%d\n",
+				pstream->curdir,
+				pdetail->datalen,
+				gtest_tcpall_offload_stat1.C2S_all_pkt,
+				gtest_tcpall_offload_stat1.C2S_all_byte,
+				gtest_tcpall_offload_stat1.S2C_all_pkt,
+				gtest_tcpall_offload_stat1.S2C_all_byte
+			);
+	}
+	
+	return APP_STATE_GIVESTATE;
+}
+
+gtest_plug_stat_t gtest_tcpall_offload_stat2;
+
+extern "C" char tcpall_offload_2st_giveme_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
+{
+	struct tcpdetail *pdetail=(struct tcpdetail *)pstream->pdetail;
+
+	if(OP_STATE_PENDING == pstream->pktstate){
+		/* pending状态重置计数 */
+		memset(&gtest_tcpall_offload_stat2, 0, sizeof(gtest_tcpall_offload_stat2));	
+	}
+
+	if(pstream->pktstate == OP_STATE_CLOSE)
+	{
+		if((31 == gtest_tcpall_offload_stat2.C2S_all_pkt)
+		 &&(2329 == gtest_tcpall_offload_stat2.C2S_all_byte)
+		 &&(37 == gtest_tcpall_offload_stat2.S2C_all_pkt)
+		 &&(11345 == gtest_tcpall_offload_stat2.S2C_all_byte))
+		{
+		 	if((37 == pdetail->clientpktnum)
+			 &&(11345 == pdetail->clientbytes)
+			 &&(31 == pdetail->serverpktnum)
+			 &&(2329 == pdetail->serverbytes))
+			{
+		 		SAPP_PLUG_LOG(RLOG_LV_INFO, "tcpall.offload", "\033[32m tcpall_simple() test succ!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_SUCC);
+		 	}
+			else
+			{
+				SAPP_PLUG_LOG(RLOG_LV_FATAL, "tcpall.offload","\033[1;31;40mtcpall_simple: check data error!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
+		}
+		else
+		{
+			SAPP_PLUG_LOG(RLOG_LV_FATAL, "tcpall.offload","\033[1;31;40mtcpall_simple: check data error!\033[0m\n");
+			sendto_test_result(GTEST_SAPP_ERR);
+		}
+	}
+	else
+	{
+		if(DIR_C2S == pstream->curdir)
+		{
+			gtest_tcpall_offload_stat2.C2S_all_pkt++;
+			gtest_tcpall_offload_stat2.C2S_all_byte += pdetail->datalen;
+		}
+		else
+		{
+			gtest_tcpall_offload_stat2.S2C_all_pkt++;
+			gtest_tcpall_offload_stat2.S2C_all_byte += pdetail->datalen;
+		}
+
+		printf("tcpall_pkt_stat, curdir:%d, data_len:%d,c2s_pkt:%d, c2s_bytes:%d, s2c_pkt:%d, s2c_bytes:%d\n",
+					pstream->curdir,
+					pdetail->datalen,
+					gtest_tcpall_offload_stat2.C2S_all_pkt,
+					gtest_tcpall_offload_stat2.C2S_all_byte,
+					gtest_tcpall_offload_stat2.S2C_all_pkt,
+					gtest_tcpall_offload_stat2.S2C_all_byte
+				);
+	}
+	
+	return APP_STATE_GIVEME;
+}
+
+
+gtest_plug_stat_t gtest_tcp_offload_stat1;
+
+
+extern "C" char tcp_offload_1st_givestate_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
+{
+	struct tcpdetail *pdetail=(struct tcpdetail *)pstream->pdetail;
+
+	if(OP_STATE_PENDING == pstream->pktstate){
+		/* pending状态重置计数 */
+		memset(&gtest_tcp_offload_stat1, 0, sizeof(gtest_tcp_offload_stat1));	
+	}
+
+	if(pstream->pktstate == OP_STATE_CLOSE)
+	{
+		if((2 == gtest_tcp_offload_stat1.C2S_all_pkt)
+		 &&(0 == gtest_tcp_offload_stat1.C2S_all_byte)
+		 &&(2 == gtest_tcp_offload_stat1.S2C_all_pkt)
+		 &&(21 == gtest_tcp_offload_stat1.S2C_all_byte))
+		{
+		 	if((37 == pdetail->clientpktnum)
+			 &&(11345 == pdetail->clientbytes)
+			 &&(31 == pdetail->serverpktnum)
+			 &&(2329 == pdetail->serverbytes))
+			{
+		 		SAPP_PLUG_LOG(RLOG_LV_INFO, "tcpall.offload", "\033[32m tcpall_simple() test succ!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_SUCC);
+		 	}
+			else
+			{
+				SAPP_PLUG_LOG(RLOG_LV_FATAL, "tcpall.offload","\033[1;31;40mtcpall_simple: check data error!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
+		}
+		else
+		{
+			SAPP_PLUG_LOG(RLOG_LV_FATAL, "tcpall.offload","\033[1;31;40mtcpall_simple: check data error!\033[0m\n");
+			sendto_test_result(GTEST_SAPP_ERR);
+		}
+	}
+	else
+	{
+		if(DIR_C2S == pstream->curdir)
+		{
+			gtest_tcp_offload_stat1.C2S_all_pkt++;
+			gtest_tcp_offload_stat1.C2S_all_byte += pdetail->datalen;
+		}
+		else
+		{
+			gtest_tcp_offload_stat1.S2C_all_pkt++;
+			gtest_tcp_offload_stat1.S2C_all_byte += pdetail->datalen;
+		}
+
+		printf("tcpall_pkt_stat, curdir:%d, data_len:%d,c2s_pkt:%d, c2s_bytes:%d, s2c_pkt:%d, s2c_bytes:%d\n",
+				pstream->curdir,
+				pdetail->datalen,
+				gtest_tcp_offload_stat1.C2S_all_pkt,
+				gtest_tcp_offload_stat1.C2S_all_byte,
+				gtest_tcp_offload_stat1.S2C_all_pkt,
+				gtest_tcp_offload_stat1.S2C_all_byte
+			);
+	}
+	
+	return APP_STATE_GIVESTATE;
+}
+
+gtest_plug_stat_t gtest_tcp_offload_stat2;
+
+extern "C" char tcp_offload_2st_giveme_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
+{
+	struct tcpdetail *pdetail=(struct tcpdetail *)pstream->pdetail;
+
+	if(OP_STATE_PENDING == pstream->pktstate){
+		/* pending状态重置计数 */
+		memset(&gtest_tcp_offload_stat2, 0, sizeof(gtest_tcp_offload_stat2));	
+	}
+
+	if(pstream->pktstate == OP_STATE_CLOSE)
+	{
+		if((31 == gtest_tcp_offload_stat2.C2S_all_pkt)
+		 &&(2329 == gtest_tcp_offload_stat2.C2S_all_byte)
+		 &&(37 == gtest_tcp_offload_stat2.S2C_all_pkt)
+		 &&(11345 == gtest_tcp_offload_stat2.S2C_all_byte))
+		{
+		 	if((37 == pdetail->clientpktnum)
+			 &&(11345 == pdetail->clientbytes)
+			 &&(31 == pdetail->serverpktnum)
+			 &&(2329 == pdetail->serverbytes))
+			{
+		 		SAPP_PLUG_LOG(RLOG_LV_INFO, "tcpall.offload", "\033[32m tcpall_simple() test succ!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_SUCC);
+		 	}
+			else
+			{
+				SAPP_PLUG_LOG(RLOG_LV_FATAL, "tcpall.offload","\033[1;31;40mtcpall_simple: check data error!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
+		}
+		else
+		{
+			SAPP_PLUG_LOG(RLOG_LV_FATAL, "tcpall.offload","\033[1;31;40mtcpall_simple: check data error!\033[0m\n");
+			sendto_test_result(GTEST_SAPP_ERR);
+		}
+	}
+	else
+	{
+		if(DIR_C2S == pstream->curdir)
+		{
+			gtest_tcp_offload_stat2.C2S_all_pkt++;
+			gtest_tcp_offload_stat2.C2S_all_byte += pdetail->datalen;
+		}
+		else
+		{
+			gtest_tcp_offload_stat2.S2C_all_pkt++;
+			gtest_tcp_offload_stat2.S2C_all_byte += pdetail->datalen;
+		}
+
+		printf("tcpall_pkt_stat, curdir:%d, data_len:%d,c2s_pkt:%d, c2s_bytes:%d, s2c_pkt:%d, s2c_bytes:%d\n",
+					pstream->curdir,
+					pdetail->datalen,
+					gtest_tcp_offload_stat2.C2S_all_pkt,
+					gtest_tcp_offload_stat2.C2S_all_byte,
+					gtest_tcp_offload_stat2.S2C_all_pkt,
+					gtest_tcp_offload_stat2.S2C_all_byte
+				);
+	}
+	
+	return APP_STATE_GIVEME;
+}
+

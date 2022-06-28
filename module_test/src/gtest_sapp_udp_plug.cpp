@@ -14,7 +14,7 @@ int gtest_udp_tot_stream_num = 0;
 static gtest_plug_stat_t gtest_udp_stat;
 
 /*
-	UDP流还原基本结果测试, 
+	UDP流还原基本结果测�? 
 	与第三方开源DPI对比: 
 		https://github.com/DanieleDeSensi/peafowl 
 */
@@ -76,7 +76,7 @@ extern "C" char udp_link_c2s_1pkt_entry(struct streaminfo *pstream,void **pme, i
 		 &&(pstream->addr.tuple4_v4->daddr == server_ip)){
 			 if((1 == pstream->pudpdetail->serverpktnum)
 			 &&(31 == pstream->pudpdetail->serverbytes)){
-				;//go on, 在udp_link_check_result_tcp_entry()里检查其他计数
+				;//go on, 在udp_link_check_result_tcp_entry()里检查其他计�?
 			 }else{
 			 	printf("\033[1;31;40mudp_link_c2s_1pkt_entry: check data error!\033[0m\n");
 				gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
@@ -99,7 +99,7 @@ extern "C" char udp_link_c2s_10pkt_entry(struct streaminfo *pstream,void **pme, 
 		 &&(pstream->addr.tuple4_v4->daddr == server_ip)){
 			 if((10 == pstream->pudpdetail->serverpktnum)
 			 &&(2510 == pstream->pudpdetail->serverbytes)){
-				;//go on, 在udp_link_check_result_tcp_entry()里检查其他计数
+				;//go on, 在udp_link_check_result_tcp_entry()里检查其他计�?
 			 }else{
 			 	printf("\033[1;31;40mudp_link_c2s_1pkt_entry: check data error!\033[0m\n");
 				gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
@@ -122,7 +122,7 @@ extern "C" char udp_link_s2c_1pkt_entry(struct streaminfo *pstream,void **pme, i
 		 &&(pstream->addr.tuple4_v4->daddr == server_ip)){
 			 if((1 == pstream->pudpdetail->clientpktnum)
 			 &&(39 == pstream->pudpdetail->clientbytes)){
-				;//go on, 在udp_link_check_result_tcp_entry()里检查其他计数
+				;//go on, 在udp_link_check_result_tcp_entry()里检查其他计�?
 			 }else{
 			 	printf("\033[1;31;40mudp_link_c2s_1pkt_entry: check data error!\033[0m\n");
 				gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
@@ -145,7 +145,7 @@ extern "C" char udp_link_s2c_10pkt_entry(struct streaminfo *pstream,void **pme, 
 		 &&(pstream->addr.tuple4_v4->daddr == server_ip)){
 			 if((10 == pstream->pudpdetail->clientpktnum)
 			 &&(2694 == pstream->pudpdetail->clientbytes)){
-				;//go on, 在udp_link_check_result_tcp_entry()里检查其他计数
+				;//go on, 在udp_link_check_result_tcp_entry()里检查其他计�?
 			 }else{
 			 	printf("\033[1;31;40mudp_link_c2s_1pkt_entry: check data error!\033[0m\n");
 				gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
@@ -189,7 +189,7 @@ static char *get_file_md5sum(const char *filename, char *md5sum, int buflen)
 extern sapp_global_t *sapp_global_val; 
 
 /*
-	排在udp_entry之后, 用于udp超时后比较udp的统计计数.
+	排在udp_entry之后, 用于udp超时后比较udp的统计计�?
 */
 extern "C" char udp_link_check_result_tcp_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
@@ -290,7 +290,7 @@ extern "C" char udp_dup_pkt_check(struct streaminfo *pstream,void **pme, int thr
 
 
 static FILE *hybrid_stream_log_fp;
-/* 原始日志gtest_sapp_hybrid_tcp.log的二进制内容, 随着sapp的更新和修改, 以后新打印出来的日志应该与这个完全一样!! */
+/* 原始日志gtest_sapp_hybrid_tcp.log的二进制内容, 随着sapp的更新和修改, 以后新打印出来的日志应该与这个完全一�?! */
 const static unsigned char hybrid_pure_udp_log_bin[] = 
 {
 0x73,0x74,0x72,0x65,0x61,0x6D,0x3A,0x31,0x39,0x32,0x2E,0x31,0x36,0x38,0x2E,0x33,
@@ -1201,7 +1201,7 @@ extern "C" char cheat_l2tp_dup_check_entry(struct streaminfo *pstream,void **pme
 	}
 	
 	if(pstream->opstate == OP_STATE_CLOSE){
-		if(this_plug_call_times != 4){ /* l2tp_cheat_dup_dns.pcap 实际有4个数据包, 并不是重复的 */
+		if(this_plug_call_times != 4){ /* l2tp_cheat_dup_dns.pcap 实际�?个数据包, 并不是重复的 */
 			printf("\033[1;31;40m cheat_l2tp_dup_check_entry() check error, expect 4 pkt, but actual is:%d\033[0m\n", this_plug_call_times);
 			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);			
 		}else{
@@ -1230,7 +1230,7 @@ extern "C" char cheat_gtp_dup_check_entry(struct streaminfo *pstream,void **pme,
 	}
 	
 	if(pstream->opstate == OP_STATE_CLOSE){
-		if(this_plug_call_times != 5){ /* gtp_cheat_dup_dns.pcap 实际有5个数据包, 并不是重复的 */
+		if(this_plug_call_times != 5){ /* gtp_cheat_dup_dns.pcap 实际�?个数据包, 并不是重复的 */
 			printf("\033[1;31;40m cheat_gtp_dup_check_entry() check error, expect 5 pkt, but actual is:%d\033[0m\n", this_plug_call_times);
 			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);			
 		}else{
@@ -1243,9 +1243,9 @@ extern "C" char cheat_gtp_dup_check_entry(struct streaminfo *pstream,void **pme,
 }
 
 /*
-	原始四元组是4013->8000, 但8000实际上是服务端,
-	按之前的"大端口是客户端"原则, 首包会被认为是S2C方向, 源IP是223.166.151.98,
-	设置了well_known_port.conf之后, 应该是C2S方向, 源IP是192.168.36.103.
+	原始四元组是4013->8000, �?000实际上是服务�?
+	按之前的"大端口是客户�?原则, 首包会被认为是S2C方向, 源IP�?23.166.151.98,
+	设置了well_known_port.conf之后, 应该是C2S方向, 源IP�?92.168.36.103.
 */
 extern "C" char udp_well_known_port_v4_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
@@ -1285,9 +1285,9 @@ extern "C" char udp_well_known_port_v4_entry(struct streaminfo *pstream,void **p
 }
 
 /*
-	原始四元组是45072->45678, 但45678实际上是服务端,
-	按之前的"大端口是客户端"原则, 首包会被认为是S2C方向, 源IP是2001::192:168:40:161,
-	设置了well_known_port.conf之后, 应该是C2S方向, 源IP是2001::192:168:40:162
+	原始四元组是45072->45678, �?5678实际上是服务�?
+	按之前的"大端口是客户�?原则, 首包会被认为是S2C方向, 源IP�?001::192:168:40:161,
+	设置了well_known_port.conf之后, 应该是C2S方向, 源IP�?001::192:168:40:162
 */
 extern "C" char udp_well_known_port_v6_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
@@ -1381,6 +1381,143 @@ extern "C" char udp_timeout_reset_entry(struct streaminfo *pstream,void **pme, i
 	return APP_STATE_GIVEME;
 }
 
+static gtest_plug_stat_t gtest_udp_offload_stat1;
+
+extern "C" char udp_offload_1st_givestate_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
+{
+	struct udpdetail *pdetail = (struct udpdetail *)pstream->pdetail;
+
+	if(pstream->opstate == OP_STATE_PENDING){
+		memset(&gtest_udp_offload_stat1, 0, sizeof(gtest_udp_offload_stat1));
+	}
+	
+	if(pstream->opstate == OP_STATE_CLOSE){
+		if(0 != gtest_udp_offload_stat1.C2S_all_pkt){
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+			printf("\033[1;31;40mudp_offload_1st_entry() error, C2S_all_pkt is:%u, but expect %d\033[0m\n", gtest_udp_offload_stat1.C2S_all_pkt, 0);
+			return APP_STATE_DROPME;
+		}
+		if(0 != gtest_udp_offload_stat1.C2S_all_byte){
+			printf("\033[1;31;40mudp_offload_1st_entry() error, C2S_all_byte is:%llu, but expect %d\033[0m\n", gtest_udp_offload_stat1.C2S_all_byte, 0);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+			return APP_STATE_DROPME;
+		}		
+		if(1 != gtest_udp_offload_stat1.S2C_all_pkt){
+			printf("\033[1;31;40mudp_offload_1st_entry() error, S2C_all_pkt is:%u, but expect %d\033[0m\n", gtest_udp_offload_stat1.S2C_all_pkt, 1);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+			return APP_STATE_DROPME;
+		}	
+		if(147 != gtest_udp_offload_stat1.S2C_all_byte){
+			printf("\033[1;31;40mudp_offload_1st_entry() error, S2C_all_byte is:%llu, but expect %d\033[0m\n", gtest_udp_offload_stat1.S2C_all_byte, 147);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+			return APP_STATE_DROPME;
+		}
+
+		if(665 != pdetail->clientpktnum){
+		 printf("\033[1;31;40mudp_offload_1st_entry() error, C2S_all_pkt is:%u, but expect %d\033[0m\n", pdetail->clientpktnum, 665);
+		 gtest_set_libsapp_devel_result(GTEST_SAPP_ERR); 
+		 return APP_STATE_DROPME;
+		}
+
+		if(49383 != pdetail->clientbytes){
+		 printf("\033[1;31;40mudp_offload_1st_entry() error, C2S_all_byte is:%llu, but expect %d\033[0m\n", pdetail->clientbytes, 49383);
+		 gtest_set_libsapp_devel_result(GTEST_SAPP_ERR); 
+		 return APP_STATE_DROPME;
+		}		 
+		if(647 != pdetail->serverpktnum){
+		 printf("\033[1;31;40mudp_offload_1st_entry() error, S2C_all_pkt is:%u, but expect %d\033[0m\n", pdetail->serverpktnum, 647);
+		 gtest_set_libsapp_devel_result(GTEST_SAPP_ERR); 
+		 return APP_STATE_DROPME;
+		}	 
+		if(140937 != pdetail->serverbytes){
+		 printf("\033[1;31;40mudp_offload_1st_entry() error, S2C_all_byte is:%llu, but expect %d\033[0m\n", pdetail->serverbytes, 140937);
+		 gtest_set_libsapp_devel_result(GTEST_SAPP_ERR); 
+		 return APP_STATE_DROPME;
+		}
+
+		printf("\033[32m udp.offload test success!\033[0m\n");
+		gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
+	}else{
+		if(DIR_C2S == pstream->curdir){
+			gtest_udp_offload_stat1.C2S_all_pkt++;
+			gtest_udp_offload_stat1.C2S_all_byte += pdetail->datalen;
+		}else{
+			gtest_udp_offload_stat1.S2C_all_pkt++;
+			gtest_udp_offload_stat1.S2C_all_byte += pdetail->datalen;
+		}
+	}
+	
+	return APP_STATE_GIVESTATE;
+}
+
+static gtest_plug_stat_t gtest_udp_offload_stat2;
+
+extern "C" char udp_offload_2st_giveme_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
+{
+	struct udpdetail *pdetail = (struct udpdetail *)pstream->pdetail;
+
+	if(pstream->opstate == OP_STATE_PENDING){
+		memset(&gtest_udp_offload_stat2, 0, sizeof(gtest_udp_offload_stat2));
+	}
+	
+	if(pstream->opstate == OP_STATE_CLOSE){
+		if(647 != gtest_udp_offload_stat2.C2S_all_pkt){
+			printf("\033[1;31;40mudp_offload_2st_entry() error, C2S_all_pkt is:%u, but expect %d\033[0m\n", gtest_udp_offload_stat2.C2S_all_pkt, 647);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+			return APP_STATE_DROPME;
+		}
+		if(140937 != gtest_udp_offload_stat2.C2S_all_byte){
+			printf("\033[1;31;40mudp_offload_2st_entry() error, C2S_all_byte is:%llu, but expect %d\033[0m\n", gtest_udp_offload_stat2.C2S_all_byte, 140937);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+			return APP_STATE_DROPME;
+		}		
+		if(665 != gtest_udp_offload_stat2.S2C_all_pkt){
+			printf("\033[1;31;40mudp_offload_2st_entry() error, S2C_all_pkt is:%u, but expect %d\033[0m\n", gtest_udp_offload_stat2.S2C_all_pkt, 665);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+			return APP_STATE_DROPME;
+		}	
+		if(49383 != gtest_udp_offload_stat2.S2C_all_byte){
+			printf("\033[1;31;40mudp_offload_2st_entry() error, S2C_all_byte is:%llu, but expect %d\033[0m\n", gtest_udp_offload_stat2.S2C_all_byte, 49383);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+			return APP_STATE_DROPME;
+		}	
+
+		if(665 != pdetail->clientpktnum){
+		 printf("\033[1;31;40mudp_offload_2st_entry() error, C2S_all_pkt is:%u, but expect %d\033[0m\n", pdetail->clientpktnum, 665);
+		 gtest_set_libsapp_devel_result(GTEST_SAPP_ERR); 
+		 return APP_STATE_DROPME;
+		}
+
+		if(49383 != pdetail->clientbytes){
+		 printf("\033[1;31;40mudp_offload_2st_entry() error, C2S_all_byte is:%llu, but expect %d\033[0m\n", pdetail->clientbytes, 49383);
+		 gtest_set_libsapp_devel_result(GTEST_SAPP_ERR); 
+		 return APP_STATE_DROPME;
+		}		 
+		if(647 != pdetail->serverpktnum){
+		 printf("\033[1;31;40mudp_offload_2st_entry() error, S2C_all_pkt is:%u, but expect %d\033[0m\n", pdetail->serverpktnum, 647);
+		 gtest_set_libsapp_devel_result(GTEST_SAPP_ERR); 
+		 return APP_STATE_DROPME;
+		}	 
+		if(140937 != pdetail->serverbytes){
+		 printf("\033[1;31;40mudp_offload_2st_entry() error, S2C_all_byte is:%llu, but expect %d\033[0m\n", pdetail->serverbytes, 140937);
+		 gtest_set_libsapp_devel_result(GTEST_SAPP_ERR); 
+		 return APP_STATE_DROPME;
+		}
+
+		printf("\033[32m udp.offload test success!\033[0m\n");
+		gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
+	}else{
+		if(DIR_C2S == pstream->curdir){
+			gtest_udp_offload_stat2.C2S_all_pkt++;
+			gtest_udp_offload_stat2.C2S_all_byte += pdetail->datalen;
+		}else{
+			gtest_udp_offload_stat2.S2C_all_pkt++;
+			gtest_udp_offload_stat2.S2C_all_byte += pdetail->datalen;
+		}
+	}
+	
+	return APP_STATE_GIVEME;
+}
 
 #endif
 

@@ -24,7 +24,7 @@ int g_slient_mode = 0;
 
 const char *for_test_sapp_version = "4.2.68_c9193fe";
 
-static int g_libsapp_devel_res = GTEST_SAPP_ERR; /* 使用lisapp_devel.so在同一个进程内运行的测试结果 */
+static int g_libsapp_devel_res = GTEST_SAPP_ERR; /* 使用lisapp_devel.so在同一个进程内运行的测试结�?*/
 int gtest_set_libsapp_devel_result(int res_value)
 {
 	g_libsapp_devel_res = res_value;
@@ -170,7 +170,7 @@ void call_libsapp_devel_online_mode(void)
 	while(sapp_get_current_state() != SAPP_STATE_PROCESSING){
 		usleep(100);
 	}
-	sleep(3); /* TODO: 此处不用超时, 而是靠一个标志位或特定状态 */
+	sleep(3); /* TODO: 此处不用超时, 而是靠一个标志位或特定状�?*/
 	libsapp_destroy_env();
 
 }
@@ -319,6 +319,20 @@ TEST(udp, tuple4_reuse)
 {
 	udp_tuple4_reuse_test();
 	ASSERT_EQ(gtest_get_libsapp_devel_result(), GTEST_SAPP_SUCC);
+}
+
+#define udp_offload_givestate_entry 1
+TEST(offload, udp_givestate_entry)
+{
+	udp_givestate_entry_offload_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
+}
+
+#define udp_offload_givestate_and_giveme_entry 1
+TEST(offload, udp_givestate_and_giveme_entry)
+{
+	udp__givestate_and_giveme_entry_offload_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 
 
@@ -535,6 +549,38 @@ TEST(tcp, gtp_with_seq_and_ext)
 TEST(tcp, gtp_without_seq_and_ext)
 {
 	gtp_without_seq_and_ext_tcp_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
+}
+
+
+/*************************** TCPALL simple Test ********************************/
+#define _tcpall_offload_givestate_entry 1  // for SI symbol view
+TEST(offload, tcpall_givestate_entry)
+{
+	tcpall_offload_givestate_entry_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
+}
+
+/*************************** TCPALL simple Test ********************************/
+#define _tcpall_offload_givestate_and_giveme_entry_run_entry 1  // for SI symbol view
+TEST(offload, tcpall_givestate_and_giveme_entry)
+{
+	tcpall_offload_givestate_and_giveme_entry_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
+}
+
+#define _tcp_offload_givestate_entry 1  // for SI symbol view
+TEST(offload, tcp_givestate_entry)
+{
+	tcp_offload_givestate_entry_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
+}
+
+/*************************** TCPALL simple Test ********************************/
+#define _tcp_offload_givestate_and_giveme_entry 1  // for SI symbol view
+TEST(offload, tcp_givestate_and_giveme_entry)
+{
+	tcp_offload_givestate_and_giveme_entry_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 
@@ -1226,7 +1272,7 @@ TEST(timer, simple)
 /********************* inject rst packet Test ***********************/
 #if SAPP_V4 //rst_tcp only support in sapp-v4.0
 
-#if 0 /* 改成用sapp_benchmark框架测试, 不需要写代码、不用重新编译 */
+#if 0 /* 改成用sapp_benchmark框架测试, 不需要写代码、不用重新编�?*/
 #define inject_rst_packet_test_v4 1  // for SI symbol view
 TEST(inject, rst_pkt_v4)
 {
@@ -1237,7 +1283,7 @@ TEST(inject, rst_pkt_v4)
 
 /********************* inject  rst packet Test ***********************/
 #define inject_rst_packet_test_v6 1  // for SI symbol view
-#if 0 /* 改成用sapp_benchmark框架测试, 不需要写代码、不用重新编译 */
+#if 0 /* 改成用sapp_benchmark框架测试, 不需要写代码、不用重新编�?*/
 TEST(inject, rst_pkt_v6)
 {
 	MESA_rst_tcp_test_v6_run();
@@ -1943,7 +1989,7 @@ TEST(proxy, simple)
 #define _proxy_kill_tcp 1   
 /* 
 	TODO:
-		使用libsapp_devel实测, 两个用例不能顺序执行, 疑似与解析层dlopen有关系, 暂未定位原因, 待解决!!!!
+		使用libsapp_devel实测, 两个用例不能顺序执行, 疑似与解析层dlopen有关�? 暂未定位原因, 待解�?!!!
 */
 #if 0 
 TEST(proxy, kill_tcp)
@@ -2065,7 +2111,7 @@ TEST(fake_marsio, vlan_flip_and_symmetric_mpls1vs2)
 #define _fake_marsio_vlan_mac_flip_inject_no_asymmetric 1   
 TEST(fake_marsio, vlan_mac_flip_inject_no_asymmetric)
 {
-	/* 别着急! 不是BUG!
+	/* 别着�? 不是BUG!
 	   这个测试用例就是应该错的 !!!
 	*/
 	EXPECT_EXIT(fake_marsio_vlan_mac_flipping_inject_run(0), testing::KilledBySignal(SIGABRT),  "index:4, mac addr error");

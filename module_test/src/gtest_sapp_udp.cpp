@@ -69,11 +69,11 @@ void udp_link_c2s_10pkt_run(void)
 
 	set_pcap_dumpfile("for_gtest_only/udp/udp_C2S_10.pcap");
 
-	/* udp_C2S_10.pcap测试包需要4个驱动包, 把第一个了连接淘汰, 因为lrustream只淘汰当前stream_state的链表,
+	/* udp_C2S_10.pcap测试包需�?个驱动包, 把第一个了连接淘汰, 因为lrustream只淘汰当前stream_state的链�?
 		第一个包是UDP_ONE,
 		第二个包是UDP_TWO,
-		第三个包是UDP_MORE, 在lrustream之后才更新状态, 但是还没来得及淘汰第一个连接,
-		第四个包是UDP_MORE,且把第一个连接淘汰.
+		第三个包是UDP_MORE, 在lrustream之后才更新状�? 但是还没来得及淘汰第一个连�?
+		第四个包是UDP_MORE,且把第一个连接淘�?
 	*/
 	ASSERT_EQ(file_md5_checksum("dumpfile", "ff140c986f5d412d6cd234f1b44024fa"),0);
 
@@ -139,7 +139,7 @@ void udp_dup_pkt_identify_run(void)
 
 	update_plugin_inf("UDP", "udp_dup_pkt_check");
 
-	/* 此pcap包一共有9个包,前两个和后两个是人为制造的重复包, 插件应该只收到7个包才是对的 */	
+	/* 此pcap包一共有9个包,前两个和后两个是人为制造的重复�? 插件应该只收�?个包才是对的 */	
 	set_pcap_dumpfile("for_gtest_only/duplicate_packet/udp_dup.pcap");
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "d3641c8f301e78006d7cdb199538e73b"),0);
@@ -148,7 +148,7 @@ void udp_dup_pkt_identify_run(void)
 }
 
 /*
-期待的 gtest_sapp_hybrid_stream.log 日志内容:
+期待�?gtest_sapp_hybrid_stream.log 日志内容:
 
 
 stream:192.168.36.103.54275>224.0.0.252.5355,c2s_pkt:1,c2s_byte:21,s2c_pkt:0,s2c_byte:0
@@ -309,7 +309,7 @@ void hybrid_pure_udp_run(void)
 
 	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "gtest_sapp_slave_init", "hybrid_udp_destroy", "UDP", "hybrid_pure_udp_entry");
 
-	/* hybrid混合包测试用例不开启重复流量检测 */
+	/* hybrid混合包测试用例不开启重复流量检�?*/
 	update_config_file("etc/sapp.toml", "inject_all_enabled", "0");
 	update_config_file("etc/sapp.toml", "original_ipv4_tcp_enabled", "0");
 	update_config_file("etc/sapp.toml", "original_ipv4_udp_enabled", "0");
@@ -327,7 +327,7 @@ void hybrid_pure_udp_run(void)
 
 /*
 	l2tp_cheat_dup_dns.pcap这包, 外层l2tp的ipid, udp-check都是0, 但是内层ipid,udp-check, dns trans id确实是不一样的,
-	所以, 不能被识别成是重复流量.
+	所�? 不能被识别成是重复流�?
 */
 void cheat_l2tp_dup_dns_run(void)
 {
@@ -347,7 +347,7 @@ void cheat_l2tp_dup_dns_run(void)
 
 /*
 	gtp_cheat_dup_dns.pcap这包, 外层gtp的ipid, udp-check都是0, 但是内层ipid,udp-check, dns trans id确实是不一样的,
-	所以, 不能被识别成是重复流量.
+	所�? 不能被识别成是重复流�?
 */
 void cheat_gtp_dup_dns_run(void)
 {
@@ -425,7 +425,7 @@ void udp_tuple4_reuse_test(void)
 	
 	update_plugin_inf("UDP", "udp_timeout_reset_entry");
 
-	/* 这个pcap包10秒后会超时, 被sapp分成两个流处理 */
+	/* 这个pcap�?0秒后会超�? 被sapp分成两个流处�?*/
 	set_pcap_dumpfile("for_gtest_only/udp/udp_timeout_reuse.pcap");
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "b7c83190ac89dd081a6235aafe9ed096"),0);
@@ -435,6 +435,32 @@ void udp_tuple4_reuse_test(void)
 	call_libsapp_devel_for_dumpfile_timestamp();	
 }
 
+void udp_givestate_entry_offload_run(void)
+{
+	set_default_config();
+	
+	update_plugin_inf("UDP", "udp_offload_1st_givestate_entry");
+
+	set_pcap_dumpfile("udp/udp_simple.pcap");
+
+	ASSERT_EQ(file_md5_checksum("dumpfile", "328951b2b04af765e6a0a7fe34ee29ad"),0);
+	
+	call_libsapp_devel_for_dumpfile_topspeed();
+}
+
+void udp__givestate_and_giveme_entry_offload_run(void)
+{
+	set_default_config();
+	
+	update_plugin_inf("UDP", "udp_offload_1st_givestate_entry");
+	update_plugin_inf("UDP", "udp_offload_2st_giveme_entry");
+
+	set_pcap_dumpfile("udp/udp_simple.pcap");
+
+	ASSERT_EQ(file_md5_checksum("dumpfile", "328951b2b04af765e6a0a7fe34ee29ad"),0);
+	
+	call_libsapp_devel_for_dumpfile_topspeed();
+}
 
 #endif
 
