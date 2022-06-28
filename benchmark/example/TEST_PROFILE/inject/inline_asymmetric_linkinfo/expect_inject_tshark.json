@@ -1,0 +1,114 @@
+[
+	{
+		"_source": {
+			"layers": {
+				"eth": {
+					"eth.dst": "90:00:00:91:40:46",
+					"eth.src": "0a:0a:0a:0a:00:10",
+					"eth.type": "0x00000800"
+				},
+				"ip": {
+					"ip.version": "4",
+					"ip.hdr_len": "20",
+					"ip.dsfield": "0x00000000",
+					"ip.dsfield_tree": {
+						"ip.dsfield.dscp": "0",
+						"ip.dsfield.ecn": "0"
+					},
+					"ip.len": "90",
+					"ip.flags": "0x00004000",
+					"ip.frag_offset": "0",
+					"ip.proto": "17",
+					"ip.checksum.status": "2",
+					"ip.src": "10.10.0.16",
+					"ip.dst": "10.252.22.1"
+				},
+				"udp": {
+					"udp.srcport": "55091",
+					"udp.dstport": "4789",
+					"udp.length": "70",
+					"udp.checksum.status": "3",
+					"udp.stream": "0"
+				},
+				"vxlan": {
+					"vxlan.flags": "0x00000800",
+					"vxlan.flags_tree": {
+						"vxlan.flag_g": "0",
+						"vxlan.flag_d": "0",
+						"vxlan.flag_i": "1",
+						"vxlan.flag_a": "0",
+						"vxlan.flags_reserved": "0x00000000"
+					},
+					"vxlan.gbp": "0",
+					"vxlan.vni": "11",
+					"vxlan.reserved8": "0"
+				},
+				"eth": {
+					"eth.dst": "54:39:df:c8:3b:2c",
+					"eth.dst_tree": {
+						"eth.dst_resolved": "54:39:df:c8:3b:2c",
+						"eth.dst.oui": "5519839",
+						"eth.addr": "54:39:df:c8:3b:2c",
+						"eth.addr_resolved": "54:39:df:c8:3b:2c",
+						"eth.addr.oui": "5519839",
+						"eth.dst.lg": "0",
+						"eth.lg": "0",
+						"eth.dst.ig": "0",
+						"eth.ig": "0"
+					},
+					"eth.src": "ac:85:3d:9a:e2:92",
+					"eth.src_tree": {
+						"eth.src_resolved": "ac:85:3d:9a:e2:92",
+						"eth.src.oui": "11306301",
+						"eth.addr": "ac:85:3d:9a:e2:92",
+						"eth.addr_resolved": "ac:85:3d:9a:e2:92",
+						"eth.addr.oui": "11306301",
+						"eth.src.lg": "0",
+						"eth.lg": "0",
+						"eth.src.ig": "0",
+						"eth.ig": "0"
+					},
+					"eth.type": "0x00000800"
+				},
+				"ip": {
+					"ip.version": "4",
+					"ip.hdr_len": "20",
+					"ip.dsfield": "0x00000000",
+					"ip.dsfield_tree": {
+						"ip.dsfield.dscp": "0",
+						"ip.dsfield.ecn": "0"
+					},
+					"ip.len": "40",
+					"ip.flags": "0x00004000",
+					"ip.proto": "6",
+					"ip.checksum.status": "2",
+					"ip.src": "72.52.94.234",
+					"ip.src_host": "72.52.94.234",
+					"ip.dst": "10.49.167.27",
+					"ip.dst_host": "10.49.167.27"
+				},
+				"tcp": {
+					"tcp.srcport": "443",
+					"tcp.dstport": "32858",
+					"tcp.stream": "0",
+					"tcp.len": "0",
+					"tcp.seq_raw": "3349593052",
+					"tcp.ack_raw": "3793398335",
+					"tcp.hdr_len": "20",
+					"tcp.flags": "0x00000004",
+					"tcp.flags_tree": {
+						"tcp.flags.res": "0",
+						"tcp.flags.ns": "0",
+						"tcp.flags.cwr": "0",
+						"tcp.flags.ecn": "0",
+						"tcp.flags.urg": "0",
+						"tcp.flags.ack": "0",
+						"tcp.flags.push": "0",
+						"tcp.flags.reset": "1",
+						"tcp.flags.syn": "0"
+					}
+				}
+			}
+		}
+	}
+]

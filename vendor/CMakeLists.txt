@@ -48,5 +48,3 @@ add_dependencies(libdabloom-static libdabloom)
 set_property(TARGET libdabloom-static PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/libdablooms.a)
 set_property(TARGET libdabloom-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
 
-
-

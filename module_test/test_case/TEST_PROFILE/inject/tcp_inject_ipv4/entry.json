@@ -1,0 +1,70 @@
+{	
+	"benchmark_pcap_root_dir": "./TEST_PCAP/inject/tcp_inject_ipv4",
+	"benchmark_pcap_filename": "tcp_double_stream.pcap",
+	"benchmark_pcap_md5sum": "4703292a60051e9292329f57b7cf53d8",
+	
+	"_comment_": "注意: 如果不写sapp_config_template, 会使用rpm -i sapp.rpm 首次安装时的默认配置",
+	"config_file_template":{
+		"_comment1_": "MESA_prof_load_pattern: [section] key=value 形式",
+		"MESA_prof_load_pattern": 
+		[
+			{"file_name":"./etc/sapp.toml",
+			 "file_content": 
+			    [
+					{"section":"overlay_tunnel_definition", "key": "overlay_mode", "value": "none"},
+					{"section":"packet_io.depolyment", "key": "mode", "value": "mirror"},
+					{"section":"packet_io.feature", "key": "inject_pkt_mode", "value":"sys_route"},
+					{"section":"packet_io.internal.interface", "key": "type", "value":"pcap"},
+					{"section":"packet_io.internal.interface", "key": "name", "value":"tap0"},
+					{"section":"stream.tcp.inject.rst", "key": "auto_remedy", "value":"0"},
+					{"section":"stream.tcp", "key": "syn_mandatory", "value":"0"}
+				]
+			},
+			{"file_name":"plug/business/gtest_sapp/gtest_sapp.inf",
+			 "file_content": 
+			    [
+					{"section":"PLUGINFO", "key": "PLUGNAME", "value":"gtest_sapp"},
+					{"section":"PLUGINFO", "key": "SO_PATH", "value":".\\x2Fplug\\x2Fbusiness\\x2Fgtest_sapp\\x2Flibgtest_sapp.so"},
+					{"section":"PLUGINFO", "key": "INIT_FUNC", "value":"gtest_sapp_slave_init"},
+					{"section":"PLUGINFO", "key": "DESTROY_FUNC", "value":"gtest_sapp_slave_destroy"},
+					{"section":"TCP", "key": "FUNC_NAME", "value":"RST_STREAM_TCP_C2S_and_S2C"}
+				]
+			}
+		],
+		
+		"_comment2_": "注意raw_pattern不处理特殊格式, 内容要写成一行, 如果需要换行, 自行增加\n符 ",
+		"raw_pattern": 
+		[
+			{"file_name":"plug/conflist.inf",
+			 "file_content": "[platform]\n[protocol]\n[business]\n./plug/business/gtest_sapp/gtest_sapp.inf\n"
+			},
+			{"file_name":"etc/asymmetric_addr_layer.conf",
+			 "file_content": "ethernet[*]\nvlan[*]\nmpls[*]\ngtp[*]\n"
+			}			
+		]
+	},
+	"_comment3_": "在启动sapp之前的自定义shell命令, 用于配置一些运行环境, 顺序执行",
+	"start_pre_command":[
+		"ifconfig tap0 169.254.169.169/16 up",
+		"arp -s 169.254.1.1 00:11:22:33:44:55 -i tap0",
+		"arp -s 169.254.254.254 00:11:22:33:44:66 -i tap0"
+	],
+	"_comment4_": "在sapp结束之后的自定义shell命令, 比如分析一些运行时产生的日志,判断处理结果是否正确, 顺序执行",
+	"stop_post_command":[
+		"echo success"
+	],	
+	"inject": {
+		"_comment_": "inject_trigger_pkt_index,表示在第几个包之后, 会触发插件注入包动作, 可以同时注入多个数据包, 所以此处要用数组, 比如MESA_kill_tcp()会发送双向2个RST包",	
+		"inject_trigger_pkt_index": 4,	
+		"packet_detail": [
+			{
+				"inject_pkt_dir_reverse": 1,
+				"packet_detail_json_file": "./TEST_PROFILE/inject/tcp_inject_ipv4/expect_inject_tshark_c2s.json"
+			},
+			{
+				"inject_pkt_dir_reverse": 0,
+				"packet_detail_json_file": "./TEST_PROFILE/inject/tcp_inject_ipv4/expect_inject_tshark_s2c.json"
+			}			
+		]
+	}
+}

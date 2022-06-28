@@ -1,0 +1,9 @@
+*.log
+*.o
+*.so
+*.a
+*.o
+build/*
+.vscode/
+./doc
+cmake-build-*/

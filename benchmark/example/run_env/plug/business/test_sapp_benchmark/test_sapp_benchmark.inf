@@ -1,0 +1,9 @@
+[PLUGINFO]
+PLUGNAME=test_sapp_benchmark
+SO_PATH=./plug/business/test_sapp_benchmark/test_benchmark_plug.so
+INIT_FUNC=CHAR_INIT
+
+[TCP_ALL]
+FUNC_FLAG=ALL
+FUNC_NAME=PKT_DELAY_ENTRY
+

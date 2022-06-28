@@ -1,0 +1,263 @@
+###################################################################################################
+# NOTE:                                                                                           #
+#    The format of this file is toml (https://github.com/cktan/tomlc99)                           #
+#    to make vim editor display colorful and human readable,                                      #
+#    you can create a symbolic links named sapp.ini to sapp.toml, ln -sf sapp.toml sapp.ini       #
+###################################################################################################
+
+[SYSTEM]
+    instance_name = "sapp_v4.2"
+
+[CPU]
+    worker_threads=1
+    send_only_threads_max=0
+### note, bind_mask, if you do not want to bind thread to special CPU core, keep it empty as []
+### there are two different grammars:
+### toml array format: bind_mask=[1,2,3,4,5,11,12,13,14,15]
+### MESA_load_profile range format: bind_mask="1-5,11-15"
+    bind_mask=[]
+
+[MEM]
+    dictator_enable=1
+
+[PACKET_IO]
+    [overlay_tunnel_definition]
+### note, since 2020-10-01, L2-L3 tunnel(VLAN,MPLS,PPPOE,etc.) is process and offload by mrtunnat, 	
+### after 2020-10-01, sapp support L2-L3 tunnel(VLAN,MPLS,PPPOE,etc.) without mrtunnat.
+    l2_l3_tunnel_support=0
+
+### note, optional value is [none, vxlan]
+    overlay_mode=none
+
+    [packet_io.feature]
+### note, used to represent inbound or outbound direction value,
+### because it comes from Third party device, so it needs to be specified manually,
+### if inbound_route_dir=1, then outbound_route_dir=0, vice versa,
+### in other words, outbound_route_dir = 1 ^ inbound_route_dir;
+    inbound_route_dir=1
+
+### note, BSD_packet_filter, if you do not want to set any filter rule, keep it empty as ""
+    BSD_packet_filter=""
+
+### note, same as tcpdump -Q/-P arg, possible values are `in', `out' and `inout', default is "in"
+    pcap_capture_direction="in"
+
+### note, support two mode: "inner_tuple2", "outer_tuple2"
+    pcap_distmode="inner_tuple2"
+
+### note, depolyment.mode options: [sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]
+### sys_route: send ip(ipv6) packet by system route table, this is default mode in mirror mode;
+### vxlan_by_inline_device: encapsulation inject packet with vxlan, and then send to inline device by udp socket.
+### raw_ethernet_single_gateway: send layer2 ethernet packet to specific gateway in same broadcast domain. 
+### raw_ethernet_multi_gateway: send layer2 ethernet packet to multiple gateway in same broadcast domain. 
+    inject_pkt_mode=sys_route
+
+### note, this config is valid if inject_pkt_mode==vxlan_by_inline_device, means udp socket src port.
+    inject_mode_inline_device_sport=54789
+
+### note, this config is valid if inject_pkt_mode==raw_ethernet_single_gateway.
+    inject_mode_single_gateway_device="eth1"
+### inject_mode_single_gateway_src_mac has lower priority than get smac from inject_mode_single_gateway_device
+    inject_mode_single_gateway_src_mac="00:11:22:77:88:99"
+    inject_mode_single_gateway_dst_mac="00:11:22:33:44:55"
+
+    dumpfile_sleep_time_before_exit=0
+
+### note, for example, dst mac is 01:12:34:56:78:90, src src is 02:AA:BB:CC:DD:EE:FF, 
+### ether[0] is 0x01, dst mac first octet, ether[1] is 0x12, dst mac second octet,
+### ether[6] is 0x02, src mac first octet, ether[11] is 0xFF, src mac sixth octet.
+### the bit field is from 0 to 7, the 0 is least significant bit, the 7 is most significant bit.
+    ##extract_linkdir_from_mac_in_mirror_mode="ether[4]:0"  ## for Xj example
+    extract_linkdir_from_mac_in_mirror_mode=""
+   
+### note, depolyment.mode options: [mirror, inline, transparent]
+    [packet_io.depolyment]
+    mode=mirror
+
+### note, interface.type options: [pag, pcap, marsio, tun]
+### receive from internal interface, route dir is 0,
+### receive from external interface, route dir is 1.
+    [packet_io.internal.interface]
+    type=pcap
+    name="lo"
+
+    [packet_io.external.interface]
+    type=pcap
+    name=lo
+    
+    [packet_io.polling]
+    enabled=1    
+### note, polling_priority = call sapp_recv_pkt every call polling_entry times,     
+    polling_priority=1
+
+    [packet_io.under_ddos]
+### note, to reduce impact of ddos attack,set some stream bypass, all plugins will not process these streams   
+    stream_bypass_enabled=0
+### note, cpu usage value is percent, for example, config value is 85, means 85%, valid range: [1,100]    
+### sapp change to bypass state immediately when realtime cpu usage > bypass_trigger_cpu_usage
+    bypass_trigger_cpu_usage=85    
+### note, unit of get_cpu_usage_interval is milliseconds(ms)     
+    get_cpu_usage_interval=500
+### note, use the average of the last $smooth_avg_window times as current realtime value 
+    smooth_avg_window=2
+
+    decrease_ratio="0.95"
+    increase_ratio="1.005"
+### note, unit of bypass_observe_time is second(s)     
+    recovery_observe_time=30
+
+
+[PROTOCOL_FEATURE]
+    ipv6_decapsulation_enabled=1
+    ipv6_send_packet_enabled=1
+    tcp_drop_pure_ack_pkt=0
+    tcp_syn_option_parse_enabled=1 
+    skip_not_ip_layer_over_eth=0
+    skip_gtp_S_PN_E_field_for_inject=0
+
+[DUPLICATE_PKT]
+[dup_pkt.traffic.original]
+    original_ipv4_tcp_enabled=1
+    original_ipv4_udp_enabled=0
+### note, can't distinguish between duplicate traffic and application retransmit traffic for IPv6 packets,
+### so not support IPv6 original duplicate traffic check.
+
+[dup_pkt.traffic.inject]
+    inject_all_enabled=1
+
+[dup_pkt.parameters]
+    bloom_capacity=1000000
+    bloom_error_rate=0.00001
+    bloom_timeout=10
+
+
+[STREAM]
+### note, stream_id_base_time format is "%Y-%m-%d %H:%M:%S" 
+    stream_id_base_time="2021-01-01 00:00:00"
+    [stream.tcp]
+    max=10000
+    timeout=60
+    syn_mandatory=1
+    reorder_pkt_max=32
+    analyse_option_enabled=1
+    tuple4_reuse_time_interval=30
+
+    meaningful_statistics_minimum_pkt=3
+    meaningful_statistics_minimum_byte=5
+    
+        [stream.tcp.inject]
+        link_mss=1460
+
+        [stream.tcp.inject.rst]
+        auto_remedy=1
+        number=1
+        signature_enabled=1
+        signature_seed1=65535
+        signature_seed2=13
+        remedy_kill_tcp_by_inline_device=0
+
+    [stream.udp]
+    max=10000
+    timeout=60
+    meaningful_statistics_minimum_pkt=3
+    meaningful_statistics_minimum_byte=5
+
+[PROFILING]
+[profiling.pkt_latency]
+    enabled=0
+    accurate_enable=0
+### note, threshold unit is microseconds (us)
+    threshold=100000
+
+    [profiling.sanity_check]
+    raw_pkt_broken_enabled=0
+    symbol_conflict_enabled=0
+  
+    [profiling.log]
+    level=20
+    interval=1
+    
+        [profiling.log.local]
+        enabled=1
+### note, if "file_truncate_open_enabled=1", file will be truncated, otherwise open the file for appending.	 
+        file_truncate_enabled = 1
+     
+        [profiling.log.remote]
+        enabled=1
+        server_ip="127.0.0.1"
+        server_port=8126
+
+        [profiling.log.remote.field_stat2]
+### note, is valid when "remote_send_out_type=field_stat2"	 
+### note, metric_type option value: [default, json]
+        metric_type = default
+        app_name=sapp
+
+        [profiling.log.prometheus]
+        prometheus_enabled=1
+        prometheus_port=9273
+        prometheus_url_path="/metrics"
+     
+[TOOLS]
+    [tools.pkt_dump]
+    enabled=1
+### note, mode options value:[storage, udp_socket]
+    mode=udp_socket
+    BSD_packet_filter=""
+   
+        [tools.pkt_dump.threads]
+### note, if you want enable pkt dump in all thread, set dump_thread_all_enabled=1, then 'dump_thread_id' is obsoleted.
+###       if dump_thread_all_enabled=0, then use dump_thread_id to specify separate specified thread index.
+        all_threads_enabled=1
+   
+### note, dump_thread_id start from 0, max is CPU.worker_threads-1
+        dump_thread_id=[0,1,2,3,4]
+   
+        [tools.pkt_dump.udp]
+        command_port=12345
+        pkt_dump_ratio=30
+
+        [tools.pkt_dump.storage]
+### note, file path must be double quotation mark extension, for example,  path="/dev/shm/pkt_dump"
+        path="/dev/shm/pkt_dump"
+### note, file size unit: MB
+        file_size_max_per_thread=10000 
+
+[breakpad]
+    disable_coredump=0
+    enable_breakpad=0
+    breakpad_minidump_dir="/tmp/crashreport"
+    enable_breakpad_upload=0
+    breakpad_upload_url="http://127.0.0.1/"
+    breakpad_upload_tools="/opt/MESA/bin/minidump_upload"
+
+
+### note:
+### These configurations format is complex and difficult to describe with toml grammar,
+### so, create a independent secondary config file to description specific information.
+
+[SECONDARY_CONFIG_LINK]
+    cfg_file_sapp_log="etc/sapp_log.conf"
+    cfg_file_plug_list="plug/conflist.inf"
+    cfg_file_project_list="etc/project_list.conf"
+    cfg_file_entrylist="etc/entrylist.conf"
+    cfg_file_send_raw_pkt="etc/send_raw_pkt.conf"
+    cfg_file_vxlan_sport_map="etc/vxlan_sport_service_map.conf"
+    cfg_file_inline_device="etc/gdev.conf"
+    cfg_file_necessary_plug_list="etc/necessary_plug_list.conf"
+    cfg_file_stream_compare_layer="etc/stream_compare_layer.conf"
+    cfg_file_vlan_flipping="etc/vlan_flipping_map.conf"
+    cfg_file_asymmetric_addr_layer="etc/asymmetric_addr_layer.conf"
+    cfg_file_well_known_port="etc/well_known_port.conf"
+
+[SECONDARY_DATA_LINK]
+    data_file_sysinfo_log="sysinfo.log"
+    data_file_field_stat_log="fs2_sysinfo.log"
+    data_file_inline_keepalive_log="gdev_keeplive_status.log"
+    data_file_load_plugin_stat_log="load_plugin_stat.log"
+    data_file_under_ddos_stat_log="under_ddos_stat.log"
+    data_file_memory_stat_log="memory_used_stat.log"
+
+[LIBRARY_LINK]
+    marsio_library_path="./lib/libgtest_fake_marsio.so"
+

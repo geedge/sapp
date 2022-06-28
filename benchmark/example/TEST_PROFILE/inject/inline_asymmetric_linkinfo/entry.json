@@ -1,0 +1,61 @@
+{	
+	"benchmark_pcap_root_dir": "./TEST_PCAP",
+	"benchmark_pcap_filename": "vxlan_asymmetric_linkinfo.pcap",
+	"benchmark_pcap_md5sum": "bd88c46ae17b79e11af605d5386cb690",
+	
+	"_comment_": "注意: 如果不写sapp_config_template, 会使用rpm -i sapp.rpm 首次安装时的默认配置",
+	"config_file_template":{
+		"_comment1_": "MESA_prof_load_pattern: [section] key=value 形式",
+		"MESA_prof_load_pattern": 
+		[
+			{"file_name":"./etc/sapp.toml",
+			 "file_content": 
+			    [
+					{"section":"overlay_tunnel_definition", "key": "l2_l3_tunnel_support", "value": "1"},
+					{"section":"overlay_tunnel_definition", "key": "overlay_mode", "value": "vxlan"},								
+					{"section":"packet_io.depolyment", "key": "mode", "value": "inline"},
+					{"section":"packet_io.internal.interface", "key": "type", "value":"pcap"},
+					{"section":"packet_io.internal.interface", "key": "name", "value":"tap0"},
+					{"section":"stream.tcp", "key": "syn_mandatory", "value":"0"}
+				]
+			},
+			{"file_name":"etc/gdev.conf",
+			 "file_content": 
+			    [
+					{"section":"Module", "key": "sendto_gdev_ip", "value":"10.10.0.16"}
+				]
+			},			
+			{"file_name":"plug/business/gtest_sapp/gtest_sapp.inf",
+			 "file_content": 
+			    [
+					{"section":"PLUGINFO", "key": "PLUGNAME", "value":"gtest_sapp"},
+					{"section":"PLUGINFO", "key": "INIT_FUNC", "value":"SAPP_BENCHMARK_INIT"},
+					{"section":"PLUGINFO", "key": "DESTROY_FUNC", "value":"SAPP_BENCHMARK_DESTROY"},					
+					{"section":"TCP", "key": "FUNC_NAME", "value":"RST_STREAM_S2C"},
+					{"section":"PLUGINFO", "key": "SO_PATH", "value":".\\x2Fplug\\x2Fbusiness\\x2Fgtest_sapp\\x2Ftest_benchmark_plug.so"}
+				]
+			}
+		],
+		
+		"_comment2_": "注意raw_pattern不处理特殊格式, 内容要写成一行, 如果需要换行, 自行增加\n符 ",
+		"raw_pattern": 
+		[
+			{"file_name":"plug/conflist.inf",
+			 "file_content": "[platform]\n[protocol]\n[business]\n./plug/business/gtest_sapp/gtest_sapp.inf\n"
+			},
+			{"file_name":"etc/asymmetric_addr_layer.conf",
+			 "file_content": "ethernet[*]\nvlan[*]\nvxlan[*]\nmpls[*]\ngtp[*]\n"
+			}			
+		]
+	},
+	"inject": {
+		"_comment_": "inject_trigger_pkt_index,表示在第几个包之后, 会触发插件注入包动作, 可以同时注入多个数据包, 所以此处要用数组, 比如MESA_kill_tcp()会发送双向2个RST包",	
+		"inject_trigger_pkt_index": 4,	
+		"packet_detail": [
+			{
+				"inject_pkt_dir_reverse": 0,
+				"packet_detail_json_file": "./TEST_PROFILE/inject/inline_asymmetric_linkinfo/expect_inject_tshark.json"
+			}
+		]
+	}
+}

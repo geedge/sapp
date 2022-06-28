@@ -1,0 +1,274 @@
+variables:
+  GIT_STRATEGY: "clone"
+  BUILD_PADDING_PREFIX: /tmp/padding_for_CPACK_RPM_BUILD_SOURCE_DIRS_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX/
+  BUILD_IMAGE_CENTOS7: "git.mesalab.cn:7443/mesa_platform/build-env:master"
+  BUILD_IMAGE_CENTOS8: "git.mesalab.cn:7443/mesa_platform/build-env:rockylinux"
+  INSTALL_DEPENDENCY_LIBRARY: vim-common sapp-devel zlib-devel systemd-devel libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel framework_env libMESA_handle_logger-devel libbreakpad_mini-devel libMESA_jump_layer libMESA_jump_layer-devel
+  INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
+  SYMBOL_TARGET: sapp_benchmark
+
+stages:
+- build
+- test
+
+google_test_for_centos7:
+  stage: test
+  image: $BUILD_IMAGE_CENTOS7
+  extends: .build_before_script
+  script:
+    - export LIBRARY_PATH=/home/mesasoft/sapp_run/lib/:$LIBRARY_PATH
+    - export LD_LIBRARY_PATH=/home/mesasoft/sapp_run/lib/:$LD_LIBRARY_PATH
+    - yum makecache
+    - ./ci/travis.sh
+    - yum -y install framework_env sapp sapp-devel libMESA_jump_layer libMESA_field_stat2 libMESA_prof_load libMESA_handle_logger libbreakpad_mini libMESA_htable libcjson snappy
+    - mkdir -p /home/mesasoft/sapp_run
+    - mkdir -p $BUILD_PADDING_PREFIX/$CI_PROJECT_NAMESPACE/
+    - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+    - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+    - pwd
+    - ls
+    - cp /home/mesasoft/sapp_run/lib/libsapp_devel.so /opt/MESA/lib
+    - cp build/src/libsapp_benchmark.so /opt/MESA/lib
+    - cp -r example/run_env/plug /home/mesasoft/sapp_run/
+    - find / -name "test_sapp_benchmark"
+    - cp /builds/MESA_Platform/sapp_benchmark/build/example/test_sapp_benchmark  /home/mesasoft/sapp_run/
+    - cp /builds/MESA_Platform/sapp_benchmark/build/example/test_benchmark_plug.so /opt/MESA/lib
+    - find / -name "*test_benchmark_plug.so"
+    - mkdir -p /home/mesasoft/sapp_run/plug/business/gtest_sapp
+    - cp /builds/MESA_Platform/sapp_benchmark/build/example/test_benchmark_plug.so /home/mesasoft/sapp_run/plug/business/gtest_sapp/
+    - cp -r example/TEST_PCAP /home/mesasoft/sapp_run/
+    - cp -r example/TEST_PROFILE /home/mesasoft/sapp_run/
+    - mkdir -p /opt/MESA/bin
+    - cp vendor/tshark_v3.2.17/tshark /opt/MESA/bin/tshark
+    - chmod +x /opt/MESA/bin/tshark
+    - echo "/opt/MESA/lib" >> /etc/ld.so.conf
+    - ldconfig
+    - cd /home/mesasoft/sapp_run/
+    - cat etc/asymmetric_addr_layer.conf
+    - ulimit -c 0
+    - ./test_sapp_benchmark
+  dependencies:
+    - branch_build_debug_for_centos7
+    - branch_build_release_for_centos7
+    - develop_build_release_for_centos7
+    - release_build_release_for_centos7
+  tags:
+  - share
+  
+google_test_for_centos8:
+  stage: test
+  image: $BUILD_IMAGE_CENTOS8
+  extends: .build_before_script
+  script:
+    - export LIBRARY_PATH=/home/mesasoft/sapp_run/lib/:$LIBRARY_PATH
+    - export LD_LIBRARY_PATH=/home/mesasoft/sapp_run/lib/:$LD_LIBRARY_PATH
+    - yum makecache
+    - ./ci/travis.sh
+    - yum -y install framework_env sapp sapp-devel libMESA_jump_layer libMESA_field_stat2 libMESA_prof_load libMESA_handle_logger libbreakpad_mini libMESA_htable libcjson snappy
+    - mkdir -p /home/mesasoft/sapp_run
+    - mkdir -p $BUILD_PADDING_PREFIX/$CI_PROJECT_NAMESPACE/
+    - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+    - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+    - pwd
+    - ls
+    - cp /home/mesasoft/sapp_run/lib/libsapp_devel.so /opt/MESA/lib
+    - cp build/src/libsapp_benchmark.so /opt/MESA/lib
+    - cp -r example/run_env/plug /home/mesasoft/sapp_run/
+    - find / -name "test_sapp_benchmark"
+    - cp /builds/MESA_Platform/sapp_benchmark/build/example/test_sapp_benchmark  /home/mesasoft/sapp_run/
+    - cp /builds/MESA_Platform/sapp_benchmark/build/example/test_benchmark_plug.so /opt/MESA/lib
+    - find / -name "*test_benchmark_plug.so"
+    - mkdir -p /home/mesasoft/sapp_run/plug/business/gtest_sapp
+    - cp /builds/MESA_Platform/sapp_benchmark/build/example/test_benchmark_plug.so /home/mesasoft/sapp_run/plug/business/gtest_sapp/
+    - cp -r example/TEST_PCAP /home/mesasoft/sapp_run/
+    - cp -r example/TEST_PROFILE /home/mesasoft/sapp_run/
+    - mkdir -p /opt/MESA/bin
+    - cp vendor/tshark_v3.2.17/tshark /opt/MESA/bin/tshark
+    - chmod +x /opt/MESA/bin/tshark
+    - echo "/opt/MESA/lib" >> /etc/ld.so.conf
+    - ldconfig
+    - cd /home/mesasoft/sapp_run/
+    - cat etc/asymmetric_addr_layer.conf
+    - ulimit -c 0
+    - ./test_sapp_benchmark
+  dependencies:
+    - branch_build_debug_for_centos8
+    - branch_build_release_for_centos8
+    - develop_build_release_for_centos8
+    - release_build_release_for_centos8
+  tags:
+  - share
+    
+.build_before_script:
+  before_script:
+    - mkdir -p $BUILD_PADDING_PREFIX/$CI_PROJECT_NAMESPACE/
+    - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+    - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+    - sed -i 's/\/8\//\/7\//g' /etc/yum.repos.d/repo.internal.geedge.net.repo  
+    - yum makecache
+    - chmod +x ./ci/travis.sh
+    - yum install -y elfutils-libelf-devel
+
+.build_by_travis_for_centos7:
+  stage: build
+  image: $BUILD_IMAGE_CENTOS7
+  extends: .build_before_script
+  script:
+    - yum install -y libmnl-devel
+    - yum install -y libnfnetlink-devel
+    - export LIBRARY_PATH=/home/mesasoft/sapp_run/lib/:$LIBRARY_PATH
+    - export LD_LIBRARY_PATH=/home/mesasoft/sapp_run/lib/:$LD_LIBRARY_PATH
+    - yum makecache
+    - ./ci/travis.sh
+    - cd build
+    - pwd
+    - ls
+    - find . -name "*sapp_benchmark*"
+  tags:
+    - share
+
+.build_by_travis_for_centos8:
+  stage: build
+  image: $BUILD_IMAGE_CENTOS8
+  extends: .build_before_script
+  script:
+    - dnf --enablerepo=powertools install -y libmnl-devel
+    - dnf --enablerepo=powertools install -y libnfnetlink-devel
+    - export LIBRARY_PATH=/home/mesasoft/sapp_run/lib/:$LIBRARY_PATH
+    - export LD_LIBRARY_PATH=/home/mesasoft/sapp_run/lib/:$LD_LIBRARY_PATH
+    - yum makecache
+    - ./ci/travis.sh
+    - cd build
+    - pwd
+    - ls
+    - find . -name "*sapp_benchmark*"
+  tags:
+    - share
+
+branch_build_debug_for_centos7:
+  stage: build
+  extends: .build_by_travis_for_centos7
+  variables:
+    BUILD_TYPE: Debug
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
+  except:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+    - tags
+
+branch_build_release_for_centos7:
+  stage: build
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+
+  extends: .build_by_travis_for_centos7
+  except:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+    - tags
+
+develop_build_release_for_centos7:
+  stage: build
+  extends: .build_by_travis_for_centos7
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    PACKAGE: 1
+    UPLOAD: 1
+    ASAN_OPTION: "OFF"
+    PULP3_REPO_NAME: platform-testing-x86_64.el7
+    PULP3_DIST_NAME: platform-testing-x86_64.el7
+  artifacts:
+    paths:
+    - build/example/test_sapp_benchmark
+    - build/example/test_benchmark_plug.so
+    - build/src/libsapp_benchmark.so
+    - build/*.rpm
+  only:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+
+release_build_release_for_centos7:
+  stage: build
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    PACKAGE: 1
+    UPLOAD: 1
+    PULP3_REPO_NAME: platform-stable-x86_64.el7
+    PULP3_DIST_NAME: platform-stable-x86_64.el7
+  extends: .build_by_travis_for_centos7
+  artifacts:
+    paths:
+    - build/example/test_sapp_benchmark
+    - build/example/test_benchmark_plug.so
+    - build/src/libsapp_benchmark.so
+    - build/*.rpm
+  only:
+    - tags   
+
+branch_build_debug_for_centos8:
+  stage: build
+  extends: .build_by_travis_for_centos8
+  variables:
+    BUILD_TYPE: Debug
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
+  except:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+    - tags
+
+branch_build_release_for_centos8:
+  stage: build
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+
+  extends: .build_by_travis_for_centos8
+  except:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+    - tags
+
+develop_build_release_for_centos8:
+  stage: build
+  extends: .build_by_travis_for_centos8
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    PACKAGE: 1
+    UPLOAD: 1
+    ASAN_OPTION: "OFF"
+    PULP3_REPO_NAME: platform-testing-x86_64.el8
+    PULP3_DIST_NAME: platform-testing-x86_64.el8
+  artifacts:
+    paths:
+    - build/example/test_sapp_benchmark
+    - build/example/test_benchmark_plug.so
+    - build/src/libsapp_benchmark.so
+    - build/*.rpm
+  only:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+
+release_build_release_for_centos8:
+  stage: build
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    PACKAGE: 1
+    UPLOAD: 1
+    PULP3_REPO_NAME: platform-stable-x86_64.el8
+    PULP3_DIST_NAME: platform-stable-x86_64.el8
+  extends: .build_by_travis_for_centos7
+  artifacts:
+    paths:
+    - build/example/test_sapp_benchmark
+    - build/example/test_benchmark_plug.so
+    - build/src/libsapp_benchmark.so
+    - build/*.rpm
+  only:
+    - tags   

@@ -1,0 +1,8 @@
+[PLUGINFO]
+PLUGNAME=gtest
+SO_PATH=./plug/business/gtest/gtest_plug.so
+INIT_FUNC=gtest_init
+
+[TCP]
+FUNC_FLAG=ALL
+FUNC_NAME=tcp_simple

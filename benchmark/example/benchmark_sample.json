@@ -1,0 +1,107 @@
+{
+	"_comment_": " 此测试框架可用于sapp和相关业务插件, 尽量避免每个模块重复劳动 ",
+	"_comment_": " 为了方便和wireshark比较, 所有的数据包序号 pkt_index都从1开始, 而不是C语言数组从0开始 ",
+	"_comment_": " 测试总共分为四个大模块: 'in', 'forward', 'inject', 'control' ",
+	"_comment_": " input: 用于测试输入的数据包, 使用layer_index和addr_detail指定每层协议的地址信息 ",
+	"_comment_": " forward: 用于测试转发的数据包, 默认行为都是PASS, 只有DROP动作需要精确指定drop_pkt_index ",
+	"_comment_": " inject: 用于测试插件主动注入的数据包, 为了避免每层都要写复杂的addr_detail, 可以指定inject_compare_base_index, 将某个原始包作为基准, 与注入的包比较, 分为同向和反向 ",
+	"_comment_": " inject: 某些不影响网络传输的参数, 或者注入包与原始包不一定相同的参数, 如ip-ttl, ip-id, tcp-win, 以及数据包长度字段默认不参与比较 ",
+	"_comment_": " inject: 某些地址字段与原始包不一样, 可以独立设置, IP数据包长度, TCP.Flags等",
+	"_comment_": " inject: 比如根据tcp-syn包触发了一个tsp-rst包, 注入包的ip地址和tcp端口可以与原始包比较, 但是TCP.Flags需要显式设置 ",
+	"_comment_": " control: 用于指定回放包的参数, 比如增加延时等 ",
+	"_comment_": " 检查单个数据包格式的json另存到文件packet_detail_json_file, 否则都粘贴在一起, 嵌套多层很复杂",
+	
+	"benchmark_pcap_root_dir": "/home/lijia/run/benchmark_pcap",
+	"benchmark_pcap_filename": "tcp/xxxx.pcap",
+	"benchmark_pcap_md5sum": "abcdef12345xxxx",
+	
+	"_comment1_": "注意: 如果不写sapp_config_template, 会使用rpm -i sapp.rpm 首次安装时的默认配置",
+	"config_file_template":{
+		"_comment1_": "MESA_prof_load_pattern: [section] key=value 形式",
+		"MESA_prof_load_pattern": 
+		[
+			{"file_name":"./etc/sapp.toml",
+			 "file_content": 
+			    [
+					{"section":"packet_io.depolyment", "key": "mode", "value": "inline"},
+					{"section":"packet_io.external.interface", "key": "type", "value":"pcap"},
+					{"section":"packet_io.external.interface", "key": "name", "value":"tap0"},
+					{"section":"stream.tcp", "key": "syn_mandatory", "value":"0"}
+				]
+			},
+			{"file_name":"etc/gdev.conf",
+			 "file_content": 
+			    [
+					{"section":"Module", "key": "sendto_gdev_ip", "value":"10.3.36.1"}
+				]
+			},			
+			{"file_name":"plug/business/test_app/test_app.inf",
+			 "file_content": 
+			    [
+					{"section":"TCP_ALL", "key": "FUNC_NAME", "value":"RST_STREAM_C2S"}
+				]
+			}
+		],
+		
+		"_comment2_": "注意raw_pattern不处理特殊格式, 内容要写成一行, 如果需要换行, 自行增加\n符 ",
+		"raw_pattern": 
+		[
+			{"file_name":"plug/conflist.inf",
+			 "file_content": "[platform]\n[protocol]\n[business]\n./plug/business/test_app/test_app.inf\n"
+			},
+			{"file_name":"etc/asymmetric_addr_layer.conf",
+			 "file_content": "ethernet[*]\nvlan[*]\nmpls[*]\ngtp[*]\n"
+			}			
+		]
+	},
+	"control": {
+		"delay": [
+			"_comment_": "表示在回放第几个包之前先usleep一会, 人为制造超时, 单位:毫秒, 第一个包delay其实没意义",
+			{"pkt_index": 3, "delay_before_replay":3000},
+			{"pkt_index": 5, "delay_before_replay":5000}
+		]
+	},
+	"forward": {
+		"drop"{
+			"pkt_index":[1,2,3]
+		},
+		"packet_detail": [
+			{
+				"pkt_index": 1,
+				"packet_detail_json_file": "./pkt1.tshark.json"
+			},
+			{
+				"pkt_index": 2,
+				"packet_detail_json_file": "./pkt2.tshark.json"
+			}
+		]
+	},
+	"inject": {
+		"_comment_": "inject_trigger_pkt_index,表示在第几个包之后, 会触发插件注入包动作, 可以同时注入多个数据包, 所以此处要用数组, 比如MESA_kill_tcp()会发送双向2个RST包",	
+		"inject_trigger_pkt_index": 1,	
+		"packet_detail": [
+			{
+				"inject_pkt_dir_reverse": 0,
+				"packet_detail_json_file": "./inject_same.tshark.json1"
+			},
+			{
+				"inject_pkt_dir_reverse": 1,
+				"packet_detail_json_file": "./inject_same.tshark.json2"
+			}
+		]
+	},
+	"input": {
+		"packet_detail": [
+			{
+				"pkt_index": 1,
+				"packet_detail_json_file": "./pkt1.tshark.json"
+			},
+			{
+				"pkt_index": 2,
+				"packet_detail_json_file": "./pkt2.tshark.json"
+			}
+		],
+		"_comment_": "stream只支持一个pcap包对应一个流, 如果测试多个流要将pcap拆分, stream相关结构与tshark无关, 自定义格式",
+		"stream_detail_json_file": "./stream.tshark.json"
+	}
+}

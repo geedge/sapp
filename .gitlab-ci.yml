@@ -3,7 +3,7 @@ variables:
   BUILD_PADDING_PREFIX: /tmp/padding_for_CPACK_RPM_BUILD_SOURCE_DIRS_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX/
   BUILD_IMAGE_CENTOS7: "git.mesalab.cn:7443/mesa_platform/build-env:master"
   BUILD_IMAGE_CENTOS8: "git.mesalab.cn:7443/mesa_platform/build-env:rockylinux"
-  INSTALL_DEPENDENCY_LIBRARY: libunwind gperftools mrzcpd numactl-devel zlib-devel librdkafka-devel systemd-devel libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libbreakpad_mini-devel vim-common libMESA_jump_layer-devel libMESA_jump_layer sapp_benchmark 
+  INSTALL_DEPENDENCY_LIBRARY: libunwind gperftools mrzcpd numactl-devel zlib-devel librdkafka-devel systemd-devel libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libbreakpad_mini-devel vim-common libMESA_jump_layer-devel libMESA_jump_layer sapp_benchmark sapp_benchmark-devel
   SYMBOL_TARGET: sapp
   INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
 
@@ -51,10 +51,14 @@ stages:
   image: $BUILD_IMAGE_CENTOS7
   allow_failure: true
   before_script:
+    - mkdir -p $BUILD_PADDING_PREFIX/$CI_PROJECT_NAMESPACE/
+    - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+    - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
     - yum makecache
     - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb snappy
     - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini libMESA_jump_layer
-    - yum install -y sapp gtest_sapp benchmark_pcap sapp_benchmark
+    - yum install -y sapp benchmark_pcap gtest-devel zlib-devel
+    - yum install -y framework_env; source /etc/profile.d/framework.sh
     - ls -l /opt/MESA/lib
     - echo "/opt/MESA/lib" >> /etc/ld.so.conf
     - ldconfig
@@ -64,14 +68,16 @@ stages:
     - ifconfig
     - ip neigh show
     - ip -6 neigh show
-    - cp /builds/MESA_Platform/sapp/build/src/entry/sapp /home/mesasoft/sapp_run/sapp
-    - cp /builds/MESA_Platform/sapp/build/test/libsapp_devel.so /opt/MESA/lib
+    - cd build; make test; 
+    - ln -fs /home/mesasoft/benchmark_pcap/ benchmark_pcap; 
+    - cd -
     - ldconfig
-    - cd /home/mesasoft/sapp_run
+    - cd build/testing/
     - ldd gtest_sapp_v4
     - sed -i '14 i__log_test_sapp_benchmark_log.debug    >stdout; other' etc/sapp_log.conf
     - sed -i '11 i__log_runtimelog.info    >stdout; other' etc/sapp_log.conf
     - ulimit -c unlimited
+    - cd -
   dependencies:
     - branch_build_debug_for_centos7
     - branch_build_release_for_centos7
@@ -86,7 +92,7 @@ benchmark_test_for_centos7:
   stage: test
   extends: .setup_test_env_for_centos7
   script:
-    - cd /home/mesasoft/sapp_run
+    - cd build/testing/
 #run module v2.0 with death test
     - ./gtest_sapp_v4 -f control.*
     - ./gtest_sapp_v4 -f fake_marsio.*
@@ -101,7 +107,7 @@ inline_test_for_centos7:
   stage: test
   extends: .setup_test_env_for_centos7
   script:
-    - cd /home/mesasoft/sapp_run
+    - cd build/testing/
 #run module v2.0 with death test
     - ./gtest_sapp_v4 -f inline_mode.*
 
@@ -109,7 +115,7 @@ basic_test_for_centos7:
   stage: test
   extends: .setup_test_env_for_centos7
   script:
-    - cd /home/mesasoft/sapp_run
+    - cd build/testing/
 #run module v2.0 immediately
     - ./gtest_sapp_v4 -f ipv4.*
     - ./gtest_sapp_v4 -f ipv6.*
@@ -141,8 +147,7 @@ branch_build_debug_for_centos7:
     MEM_POOL: DICTATOR
   artifacts:
     paths:
-    - build/src/entry/sapp
-    - build/test/libsapp_devel.so  
+    - build/*
   except:
     - /^dev*.*$/i
     - /^rel*.*$/i
@@ -159,8 +164,7 @@ branch_build_release_for_centos7:
   extends: .build_by_travis_for_centos7
   artifacts:
     paths:
-    - build/src/entry/sapp
-    - build/test/libsapp_devel.so    
+    - build/*   
   except:
     - /^dev*.*$/i
     - /^rel*.*$/i
@@ -184,9 +188,7 @@ develop_build_debug_for_centos7:
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-debug"
     paths:
-      - build/src/entry/sapp
-      - build/test/libsapp_devel.so       
-      - build/*.rpm
+      - build/*
   only:
     - /^dev*.*$/i
     - /^rel*.*$/i
@@ -209,9 +211,7 @@ develop_build_release_for_centos7:
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-release"
     paths:
-      - build/src/entry/sapp
-      - build/test/libsapp_devel.so      
-      - build/*.rpm
+      - build/*
   only:
     - /^dev*.*$/i
     - /^rel*.*$/i
@@ -232,9 +232,7 @@ release_build_release_for_centos7:
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-release"
     paths:
-      - build/src/entry/sapp
-      - build/test/libsapp_devel.so      
-      - build/*.rpm
+      - build/*
   only:
     - tags   
 
@@ -248,8 +246,7 @@ branch_build_debug_for_centos8:
     MEM_POOL: DICTATOR
   artifacts:
     paths:
-    - build/src/entry/sapp
-    - build/test/libsapp_devel.so  
+    - build/*
   except:
     - /^dev*.*$/i
     - /^rel*.*$/i
@@ -266,8 +263,7 @@ branch_build_release_for_centos8:
   extends: .build_by_travis_for_centos8
   artifacts:
     paths:
-    - build/src/entry/sapp
-    - build/test/libsapp_devel.so    
+    - build/*  
   except:
     - /^dev*.*$/i
     - /^rel*.*$/i
@@ -291,9 +287,7 @@ develop_build_debug_for_centos8:
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-debug"
     paths:
-      - build/src/entry/sapp
-      - build/test/libsapp_devel.so       
-      - build/*.rpm
+      - build/*
   only:
     - /^dev*.*$/i
     - /^rel*.*$/i
@@ -316,9 +310,7 @@ develop_build_release_for_centos8:
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-release"
     paths:
-      - build/src/entry/sapp
-      - build/test/libsapp_devel.so      
-      - build/*.rpm
+      - build/*
   only:
     - /^dev*.*$/i
     - /^rel*.*$/i
@@ -339,9 +331,7 @@ release_build_release_for_centos8:
   artifacts:
     name: "sapp-$CI_COMMIT_REF_NAME-release"
     paths:
-      - build/src/entry/sapp
-      - build/test/libsapp_devel.so      
-      - build/*.rpm
+      - build/*
   only:
     - tags  
 

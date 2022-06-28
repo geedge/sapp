@@ -18,39 +18,25 @@ add_definitions(-fPIC)
 LINK_DIRECTORIES(/opt/MESA/lib)
 LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/test)
 
-add_custom_command(OUTPUT  libtest_phony.a
-        COMMAND rm -f *.o
-        COMMAND ar -x ${CMAKE_BINARY_DIR}/src/dealpkt/libdealpkt.a
-        COMMAND ar -x ${CMAKE_BINARY_DIR}/src/packet_io/libpacket_io.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_marsio.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_pcap.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/common/libcommon.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/config/libconfig.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/inner_plug/libinner_plug.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/inner_plug/libgdev_assistant.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/inner_plug/libsapp_assistant.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/plugin/libplugctrl.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/project/libproject.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/timer/libtimer.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/dictator2/src/libdictator2.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/md5/libmd5.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/symbol_check/libsymbol_check.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/tomlc99_wrap/libtomlc99_wrap.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/MESA_socket_wrap/src/libMESA_socket_wrap.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/timestamp_record/libtimestamp_record.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/MESA_sleep/libMESA_sleep.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/dpdk_rte_hash/libdpdk_ip_hash.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/sapp_dev/libsapp_dev.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/src/support/cpu_limit/libcpu_limit.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/vendor/libdabloom/lib/libdablooms.a
-		COMMAND ar -x ${CMAKE_BINARY_DIR}/vendor/libevent/lib/libevent.a 
-		
-		COMMAND ar -rc libsapp_devel.a  *.o
-		COMMAND g++ -fPIC -shared -o libsapp_devel.so  *.o
-        )
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/sapp_devel.cpp "")
+
+add_library(sapp_devel SHARED sapp_devel.cpp)
+target_link_libraries(sapp_devel -Wl,--whole-archive sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
+			config inner_plug gdev_assistant sapp_assistant plugctrl project timer dictator2 
+			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
+			MESA_sleep dpdk_ip_hash  cpu_limit libevent-static libdabloom-static -Wl,--no-whole-archive)
+
+add_library(sapp_devel_static STATIC sapp_devel.cpp)
+target_link_libraries(sapp_devel sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
+			config inner_plug gdev_assistant sapp_assistant plugctrl project timer dictator2 
+			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
+			MESA_sleep dpdk_ip_hash  cpu_limit libevent-static libdabloom-static)
+set_target_properties(sapp_devel_static PROPERTIES OUTPUT_NAME sapp_devel)
+
+
 
 add_library(test_app_sapp SHARED test_app_sapp.c)
-add_executable(test_sapp_dev test_sapp_dev.c libtest_phony.a)
+add_executable(test_sapp_dev test_sapp_dev.c)
 target_link_libraries(test_sapp_dev sapp_devel)
 
 target_link_libraries(test_sapp_dev nsl pthread dl m pcap systemd MESA_htable MESA_handle_logger MESA_prof_load  MESA_field_stat2 breakpad_mini MESA_jump_layer)

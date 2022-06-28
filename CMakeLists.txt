@@ -181,6 +181,8 @@ add_subdirectory(./src/entry)
 add_subdirectory(./test)
 add_subdirectory(./service)
 add_subdirectory(./tools)
+add_subdirectory(./benchmark)
+add_subdirectory(./module_test)
 
 enable_testing()
 add_subdirectory(./ctest)

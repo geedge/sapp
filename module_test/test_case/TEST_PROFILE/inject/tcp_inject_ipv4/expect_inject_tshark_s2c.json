@@ -1,0 +1,29 @@
+[
+  {
+    "_source": {
+      "layers": {
+        "eth": {
+          "eth.dst": "00:11:22:33:44:55",
+          "eth.type": "0x00000800"
+        },
+        "ip": {
+          "ip.version": "4",
+          "ip.hdr_len": "20",
+          "ip.len": "40",
+		  "ip.proto": "6",
+          "ip.src": "169.254.254.254",
+          "ip.dst": "169.254.1.1"
+        },
+        "tcp": {
+          "tcp.srcport": "22",
+          "tcp.dstport": "58725",
+          "tcp.len": "0",
+          "tcp.seq_raw": "2046996969",
+          "tcp.ack_raw": "2587138324",
+          "tcp.hdr_len": "20",
+          "tcp.flags": "0x00000004"
+        }
+      }
+    }
+  }
+]

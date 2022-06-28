@@ -1,0 +1,198 @@
+variables:
+  GIT_STRATEGY: "clone"
+  BUILD_PADDING_PREFIX: /tmp/padding_for_CPACK_RPM_BUILD_SOURCE_DIRS_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX/
+  BUILD_IMAGE_CENTOS7: "git.mesalab.cn:7443/mesa_platform/build-env:master"
+  BUILD_IMAGE_CENTOS8: "git.mesalab.cn:7443/mesa_platform/build-env:rockylinux"
+  INSTALL_DEPENDENCY_LIBRARY: sapp-devel sapp sapp_benchmark-devel sapp_benchmark gtest-devel zlib-devel librdkafka-devel systemd-devel libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel framework_env  libMESA_handle_logger-devel libMESA_handle_logger  libbreakpad_mini-devel libMESA_jump_layer libMESA_jump_layer-devel
+  INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
+  SYMBOL_TARGET: gtest_sapp 
+
+stages:
+- build
+#- test
+
+#sapp_module_test_for_centos7:
+#  stage: test
+#  image: $BUILD_IMAGE_CENTOS7
+#  script:
+#    - yum makecache
+#    - mkdir -p /home/mesasoft; cd /home/mesasoft
+#    - yum install $INSTALL_DEPENDENCY_LIBRARY gtest_sapp -y
+#    - source /etc/profile.d/framework.sh
+#    - cd /home/mesasoft/sapp_run
+#    - cp lib/libsapp_devel.so /opt/MESA/lib/
+#    - ./gtest_sapp_v4
+#  tags:
+#  - share    
+#  
+#sapp_module_test_for_centos8:
+#  stage: test
+#  image: $BUILD_IMAGE_CENTOS8
+#  script:
+#    - yum makecache
+#    - mkdir -p /home/mesasoft; cd /home/mesasoft 
+#    - yum install $INSTALL_DEPENDENCY_LIBRARY gtest_sapp -y
+#    - source /etc/profile.d/framework.sh
+#    - cd /home/mesasoft/sapp_run
+#    - cp lib/libsapp_devel.so /opt/MESA/lib/
+#    - ./gtest_sapp_v4
+#  tags:
+#  - share  
+
+.build_by_travis_for_centos7:
+  before_script:
+  - mkdir -p $BUILD_PADDING_PREFIX/$CI_PROJECT_NAMESPACE/
+  - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+  - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+  - chmod +x ./ci/travis.sh
+  script:
+  - yum makecache
+  - ./ci/travis.sh
+  - cd build
+  tags:
+  - share
+
+.build_by_travis_for_centos8:
+  before_script:
+  - mkdir -p $BUILD_PADDING_PREFIX/$CI_PROJECT_NAMESPACE/
+  - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+  - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+  - chmod +x ./ci/travis.sh
+  script:
+  - yum makecache
+  - ./ci/travis.sh
+  - cd build
+  tags:
+  - share
+
+branch_build_debug_for_centos7:
+  stage: build
+  image: $BUILD_IMAGE_CENTOS7
+  extends: .build_by_travis_for_centos7
+  variables:
+    BUILD_TYPE: Debug
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
+  except:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+    - tags
+
+branch_build_releas_for_centos7:
+  stage: build
+  image: $BUILD_IMAGE_CENTOS7
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+
+  extends: .build_by_travis_for_centos7
+  except:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+    - tags
+
+
+develop_build_release_for_centos7:
+  stage: build
+  image: $BUILD_IMAGE_CENTOS7
+  extends: .build_by_travis_for_centos7
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    PACKAGE: 1
+    UPLOAD: 1
+    ASAN_OPTION: "OFF"
+    PULP3_REPO_NAME: platform-testing-x86_64.el7
+    PULP3_DIST_NAME: platform-testing-x86_64.el7
+  artifacts:
+    name: "gtest_sapp-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*.rpm
+  only:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+
+
+release_build_release_for_centos7:
+  stage: build
+  image: $BUILD_IMAGE_CENTOS7
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    PACKAGE: 1
+    UPLOAD: 1
+    PULP3_REPO_NAME: platform-stable-x86_64.el7
+    PULP3_DIST_NAME: platform-stable-x86_64.el7
+  extends: .build_by_travis_for_centos7
+  artifacts:
+    name: "gtest_sapp-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*.rpm
+  only:
+    - tags   
+
+branch_build_debug_for_centos8:
+  stage: build
+  image: $BUILD_IMAGE_CENTOS8
+  extends: .build_by_travis_for_centos8
+  variables:
+    BUILD_TYPE: Debug
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
+  except:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+    - tags
+
+branch_build_releas_for_centos8:
+  stage: build
+  image: $BUILD_IMAGE_CENTOS8
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+
+  extends: .build_by_travis_for_centos8
+  except:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+    - tags
+
+
+develop_build_release_for_centos8:
+  stage: build
+  image: $BUILD_IMAGE_CENTOS8
+  extends: .build_by_travis_for_centos8
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    PACKAGE: 1
+    UPLOAD: 1
+    ASAN_OPTION: "OFF"
+    PULP3_REPO_NAME: platform-testing-x86_64.el8
+    PULP3_DIST_NAME: platform-testing-x86_64.el8
+  artifacts:
+    name: "gtest_sapp-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*.rpm
+  only:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+
+
+release_build_release_for_centos8:
+  stage: build
+  image: $BUILD_IMAGE_CENTOS8
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    PACKAGE: 1
+    UPLOAD: 1
+    PULP3_REPO_NAME: platform-stable-x86_64.el8
+    PULP3_DIST_NAME: platform-stable-x86_64.el8
+  extends: .build_by_travis_for_centos8
+  artifacts:
+    name: "gtest_sapp-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*.rpm
+  only:
+    - tags   

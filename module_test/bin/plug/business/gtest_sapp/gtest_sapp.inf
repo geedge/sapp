@@ -1,0 +1,8 @@
+[PLUGINFO]
+PLUGNAME=gtest
+SO_PATH=./plug/business/gtest_sapp/libgtest_sapp.so
+INIT_FUNC=gtest_sapp_slave_init
+
+[TCP]
+FUNC_FLAG=ALL
+FUNC_NAME=tcp_simple

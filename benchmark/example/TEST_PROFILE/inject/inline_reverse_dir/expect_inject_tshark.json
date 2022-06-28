@@ -1,0 +1,62 @@
+[
+  {
+    "_source": {
+      "layers": {
+        "eth": {
+          "eth.dst": "34:0a:98:d8:57:08",
+          "eth.src": "02:1b:a6:1a:dd:b9",
+          "eth.type": "0x00000800"
+        },
+        "ip": {
+          "ip.version": "4",
+          "ip.hdr_len": "20",
+          "ip.len": "90",
+		  "ip.proto": "17",
+          "ip.src": "10.3.36.1",
+          "ip.dst": "10.3.127.1"
+        },
+        "udp": {
+          "udp.srcport": "51344",
+          "udp.dstport": "4789",
+          "udp.length": "70"
+        },
+        "vxlan": {
+          "vxlan.flags": "0x00000800",
+          "vxlan.flags_tree": {
+            "vxlan.flag_g": "0",
+            "vxlan.flag_d": "0",
+            "vxlan.flag_i": "1",
+            "vxlan.flag_a": "0",
+            "vxlan.flags_reserved": "0x00000000"
+          },
+          "vxlan.gbp": "0",
+          "vxlan.vni": "499718",
+          "vxlan.reserved8": "0"
+        },
+        "eth": {
+          "eth.src": "c4:b8:b4:4a:1f:d1",
+          "eth.dst": "c4:b8:b4:4a:1f:cf",
+          "eth.type": "0x00000800"
+        },
+        "ip": {
+          "ip.version": "4",
+          "ip.hdr_len": "20",
+          "ip.len": "40",
+          "ip.proto": "6",
+          "ip.dst": "10.11.36.125",
+          "ip.src": "34.192.179.92"
+        },
+        "tcp": {
+          "tcp.srcport": "80",
+          "tcp.dstport": "56499",
+          "tcp.len": "0",
+          "tcp.seq": "1",
+          "tcp.ack": "1515465566",
+          "tcp.hdr_len": "20",
+          "tcp.flags": "0x00000004"
+        }
+      }
+    }
+  }
+
+]

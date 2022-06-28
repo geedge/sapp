@@ -1,0 +1,28 @@
+[
+  {
+    "_source": {
+      "layers": {
+        "eth": {
+          "eth.dst": "00:11:22:33:44:55",
+          "eth.type": "0x000086dd"
+        },
+		"ipv6": {
+          "ipv6.version": "6",
+          "ipv6.plen": "20",
+          "ipv6.nxt": "6",
+          "ipv6.src": "2001:da8:205:1::210",
+          "ipv6.dst": "2001:da8:205:1::102"
+        },
+        "tcp": {
+          "tcp.srcport": "80",
+          "tcp.dstport": "44426",
+          "tcp.len": "0",
+          "tcp.seq_raw": "4058458399",
+          "tcp.ack_raw": "3152770609",
+          "tcp.hdr_len": "20",
+          "tcp.flags": "0x00000004"
+        }
+      }
+    }
+  }
+]
