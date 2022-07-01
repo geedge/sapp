@@ -5,6 +5,7 @@ include_directories(${PROJECT_SOURCE_DIR}/module_test/include)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/include/private)
 include_directories(${PROJECT_SOURCE_DIR}/include/public)
+include_directories(${PROJECT_SOURCE_DIR}/include/support)
 include_directories(${PROJECT_SOURCE_DIR}/include/public/stream_inc)
 
 add_definitions(-DSAPP_V4=1)
