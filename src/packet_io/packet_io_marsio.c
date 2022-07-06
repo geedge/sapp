@@ -607,7 +607,6 @@ static int marsio4_pkt_forward(int tid, struct mr_sendpath * sendpath, marsio_bu
 static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *raw_pkt, unsigned char dir)
 {
 	int ret;
-	struct mr_tunnat_ctrlzone *mr_ctrlzone = (struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone(rx_buff, 0); /* index */
 
 	raw_pkt->__lib_raw_pkt_data = ptr_marsio_buff_mtod(rx_buff);
 	raw_pkt->raw_pkt_data = raw_pkt->__lib_raw_pkt_data;
@@ -631,6 +630,7 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	}
 
 	if(0 == sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support){
+		struct mr_tunnat_ctrlzone *mr_ctrlzone = (struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone(rx_buff, 0); /* index */
 		raw_pkt->is_overlay_pkt = mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD;
 	}else{
 		raw_pkt->is_overlay_pkt = 0; /* 无mrtunnat时, 刚收到包还不确定, 靠packet_io_hook决定是否是overlay的包 */
@@ -643,7 +643,8 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->overlay_layer_bytes = 0;
 	raw_pkt->drop_current_pkt_flag = 0;
 
-	ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, mr_ctrlzone->route_dir, tid);
+	//ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, mr_ctrlzone->route_dir, tid);
+	ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, dir, tid);
 	
 	return ret;
 }
