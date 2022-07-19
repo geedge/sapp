@@ -4926,6 +4926,29 @@ int sapp_forward_current_pkt(const struct streaminfo *stream, unsigned int targe
 
 int MESA_send_smart_offload(const struct streaminfo *pstream, const void *raw_pkt, int thread_num)
 {
+	if(pstream==NULL || pstream->pdetail==NULL)
+	{
+		return -1;
+	}
+	
+	switch(pstream->type)
+	{
+		case	STREAM_TYPE_TCP:
+			if(sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_pkt>=(pstream->ptcpdetail->serverpktnum+pstream->ptcpdetail->clientpktnum))
+			{
+				return 0;
+			}
+			break;
+		case	STREAM_TYPE_UDP:
+			if(sapp_global_val->config.stream.udp.meaningful_statistics_minimum_pkt>=(pstream->pudpdetail->serverpktnum+pstream->pudpdetail->clientpktnum))
+			{
+				return 0;
+			}
+			break;
+		default:
+			return -1;
+	}
+
 	const raw_pkt_t *_raw_pkt=(raw_pkt_t *)raw_pkt;
 
 	MESA_send_handle *send_handle = packet_io_get_send_handle(thread_num);

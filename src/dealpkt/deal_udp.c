@@ -139,6 +139,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	pindex_udp->phashprev = NULL;
 #endif	
 
+
 	pindex_udp->stream.dirreverse = 0;
 
 	pstream_udp_pr = &pindex_udp->stream;
@@ -624,13 +625,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		if(unlikely(pdetail_pr->drop_stream_flag != 0)){ /* 2020-06-02 lijia add */
 			return DROP;
 		}
-#if 1
-		/* 2022-04-13 liuxueli add, for udp offload stream  */
-		if(unlikely(pdetail_pr->offload_stream_flag != 0 && is_overlay_udp_layer==0)){
-			MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
-			return PASS;
-		}
-#endif
+
 		if(pstream->curdir==DIR_S2C){
 			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* 当前方向的第一个包, 尝试更新底层隧道的单向地址信息(如MPLS, GTP) */
 				try_to_update_addr_info = 1;
@@ -659,21 +654,37 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			}
 			ret = stream_process_overlay_udp(pstream,(const void *)this_iphdr, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
 			if(DROP == ret){
+
 				return DROP;
 			}
 			ret = vxlan_entry(stack_stream_pr, (char *)udph+sizeof(struct mesa_udp_hdr), thread_num, routedir, raw_pkt, next_layer_offset);
 			udp_cleardata(pstream);
 			/* overlay UDP层不再继续后续的隧道检测 */
 			return ret;
-		}else{		
-			ret=stream_process_udp(pstream,(const void *)this_iphdr, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate)); 
-			if(pdetail_pr->offload_stream_flag!=0)
+		}
+		else
+		{	
+			/* 2022-04-13 liuxueli add, for udp offload stream  */
+			if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP && pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON && DROP!=ret)
 			{
-				MESA_send_smart_offload(pstream, (const void *)raw_pkt, thread_num);
+				local_sys_stat->count[SAPP_STAT_UDP_OFFLOAD_PKTS]++;
+				local_sys_stat->length[SAPP_STAT_UDP_OFFLOAD_BYTES]+= ulen;
+				MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
+				return PASS;
 			}
+			
+			ret=stream_process_udp(pstream,(const void *)this_iphdr, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate)); 
 			udp_cleardata(pstream);
 		}
+		
      }
+	
+	if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP && pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON && DROP!=ret)
+	{
+		local_sys_stat->count[SAPP_STAT_UDP_OFFLOAD_STREAM]++;
+		MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
+		return PASS;
+	}
      
 #if (COMPAT_PAPP_FOR_BENCHMARK == 0)
 	if(unlikely(DROP == ret)){ /* 插件返回DROP不再进行后续处理 */
@@ -851,12 +862,6 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			return DROP;
 		}
 
-		/* 2022-04-13 liuxueli add, for udp offload stream  */
-		if(unlikely(pdetail_pr->offload_stream_flag != 0)){
-			MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
-			return PASS;
-		}
-
 		if(pstream->curdir==DIR_S2C){
 			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* 当前方向的第一个包, 尝试更新底层隧道的单向地址信息(如MPLS, GTP) */
 				try_to_update_addr_info = 1;
@@ -882,16 +887,29 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 /* IP, UDP层合并后, 不再更新UDP层的offset_to_raw_pkt_hdr */
 #if 0
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
-#endif		
+#endif
+
+		/* 2022-04-13 liuxueli add, for udp offload stream  */
+		if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP && pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON && DROP!=ret)
+		{
+			local_sys_stat->count[SAPP_STAT_UDP_OFFLOAD_PKTS]++;
+			local_sys_stat->length[SAPP_STAT_UDP_OFFLOAD_BYTES]+= ulen;
+			MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
+			return PASS;
+		}
+	
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)a_packet;
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
-		ret=stream_process_udp(pstream,(const void *)a_packet, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));  
-		if(pdetail_pr->offload_stream_flag!=0)
-		{
-			MESA_send_smart_offload(pstream, (const void *)raw_pkt, thread_num);
-		}
+		ret=stream_process_udp(pstream,(const void *)a_packet, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate)); 
 		udp_cleardata(pstream);
+	}
+
+	if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP && pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON && DROP!=ret)
+	{
+		local_sys_stat->count[SAPP_STAT_UDP_OFFLOAD_STREAM]++;
+		MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
+		return PASS;
 	}
 
 	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_L2TP){

@@ -429,7 +429,11 @@ int marsio_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt
 	{
 		/* for all vxlan pkts, create an offload request */
 		marsio_buff_t * offload_request_buf = ptr_marsio_buff_malloc_smartoffload(g_mr4_dev_up_handle_set[device_index], pkt_ptr, pkt_len);
-
+		if(offload_request_buf==NULL)
+		{
+			return 0;
+		}
+		
 		/* inject the offload request */
 		ptr_marsio_send_burst_with_options(g_mr4_sendpath_up_set[device_index], thread_num, &offload_request_buf, 1, MARSIO_SEND_OPT_CTRL);
 		return 1;
@@ -1044,6 +1048,12 @@ static int marsio_dl_get_function_entry(void)
 		//go on
 	}
 
+	ptr_marsio_buff_malloc_smartoffload = (marsio_buff_t * (*)(struct mr_vdev *vdev, const char *pkt, unsigned int pkt_len))dlsym(marsio_so_handle, "marsio_buff_malloc_smartoffload");
+	if(NULL == ptr_marsio_buff_malloc_smartoffload){
+		printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_malloc_smartoffload", ABBR_MARSIO_LIBRARY_FILE);
+		sleep(1);
+	}
+
 	/* for vlan flipping */
 	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
 		ptr_marsio_buff_get_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_get_metadata");
@@ -1064,12 +1074,6 @@ static int marsio_dl_get_function_entry(void)
 		if(NULL == ptr_marsio_buff_unset_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_unset_metadata", ABBR_MARSIO_LIBRARY_FILE);
 			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
-			sleep(1);
-		}
-
-		ptr_marsio_buff_malloc_smartoffload = (marsio_buff_t * (*)(struct mr_vdev *vdev, const char *pkt, unsigned int pkt_len))dlsym(marsio_so_handle, "marsio_buff_malloc_smartoffload");
-		if(NULL == ptr_marsio_buff_malloc_smartoffload){
-			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_malloc_smartoffload", ABBR_MARSIO_LIBRARY_FILE);
 			sleep(1);
 		}
 	}
