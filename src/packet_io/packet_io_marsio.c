@@ -683,7 +683,7 @@ static unsigned char gdev_route_dir(const marsio_buff_t * rx_buff)
 
 static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 {
-	int i,j, pkt_num = 0;
+	int i,j,k, pkt_num = 0;
 	marsio_buff_t * rx_buff[MARSIO_BURST_PKT_MAX]; /* 多个设备之间是串行获取, 太少则性能低, 太多则相对延时高 */
 	int rcv_res, hand_res;
 
@@ -696,7 +696,13 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 			rcv_res = ptr_marsio_recv_burst(g_mr4_dev_up_handle_set[i], tid, rx_buff, marsio4_burst_process_pkt_num);
 			if(rcv_res > 0){
 				raw_pkt->device_index = i;
-				for(j = 0; j < rcv_res; j++){
+				__builtin_prefetch(ptr_marsio_buff_mtod(rx_buff[0]));
+			
+				for(j = 0, k = 1; j < rcv_res; j++, k++){
+					if(k < rcv_res) {
+						__builtin_prefetch(ptr_marsio_buff_mtod(rx_buff[k]));
+					}
+					
 					marsio4_pkt_hand(tid, rx_buff[j], raw_pkt, DIR_ROUTE_UP); /* 并联模式不关心返回值 */
 				}
 				pkt_num += rcv_res;
