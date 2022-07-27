@@ -665,11 +665,15 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		else
 		{	
 			/* 2022-04-13 liuxueli add, for udp offload stream  */
-			if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP && pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON && DROP!=ret)
+			if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
+				&& pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON 
+				&& DROP!=ret 
+				&& (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
 			{
 				local_sys_stat->count[SAPP_STAT_UDP_OFFLOAD_PKTS]++;
 				local_sys_stat->length[SAPP_STAT_UDP_OFFLOAD_BYTES]+= ulen;
 				MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
+				pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
 				return PASS;
 			}
 			
@@ -679,10 +683,14 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		
      }
 	
-	if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP && pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON && DROP!=ret)
+	if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
+		&& pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON 
+		&& DROP!=ret
+		&& (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
 	{
 		local_sys_stat->count[SAPP_STAT_UDP_OFFLOAD_STREAM]++;
 		MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
+		pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
 		return PASS;
 	}
      
@@ -890,11 +898,15 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 #endif
 
 		/* 2022-04-13 liuxueli add, for udp offload stream  */
-		if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP && pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON && DROP!=ret)
+		if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
+			&& pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON 
+			&& DROP!=ret
+			&& (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
 		{
 			local_sys_stat->count[SAPP_STAT_UDP_OFFLOAD_PKTS]++;
 			local_sys_stat->length[SAPP_STAT_UDP_OFFLOAD_BYTES]+= ulen;
 			MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
+			pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
 			return PASS;
 		}
 	
@@ -905,10 +917,14 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		udp_cleardata(pstream);
 	}
 
-	if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP && pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON && DROP!=ret)
+	if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
+		&& pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON 
+		&& DROP!=ret
+		&& (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
 	{
 		local_sys_stat->count[SAPP_STAT_UDP_OFFLOAD_STREAM]++;
 		MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
+		pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
 		return PASS;
 	}
 

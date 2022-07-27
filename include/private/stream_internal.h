@@ -211,11 +211,7 @@ struct tcpdetail_private
 	/* ---8 bytes-- */
 	UCHAR  multisynflag:2;	  // multi syn
 	UCHAR  ignore_rst_fin:1;  //不会因rst, fin结束, 只能因超时或lru结束
-#if 0	
-	UCHAR  tcpall_valid_after_kill:1;  //kill_tcp后, TCPALL插件依然有效, 继续处理后续数据包
-#else
 	UCHAR  drop_stream_flag:1; //2019-11-20 lijia add, 语义同DROPPKT, 只不过作用域是整个stream
-#endif
 	UCHAR  auto_remedy_flag:1;	  //是否启用FD补救
 	UCHAR  needackflag:1;	  //需要上传ack报文
 	UCHAR  takeoverflag:1;
@@ -227,6 +223,7 @@ struct tcpdetail_private
 	UCHAR  offload_stream_flag; //2022-04-13 liuxueli add, 作用域是整个stream
 	UCHAR  pad;			
 	/* ===8 bytes=== */
+	time_t offload_stream_timestamp_s;
 	
 	struct half_tcpstream *pclient;  //到client的TCP连接信息
 	struct half_tcpstream *pserver;  //到 server的TCP连接信息
@@ -256,6 +253,8 @@ struct udpdetail_private
 	struct udp_flow_stat *flow_stat; /* 2015-12-28 lijia add, udpdetail中的详细计数(64bit), 实际内存分配和释放由project模块完成, 可能为NULL */
 	UCHAR  drop_stream_flag; //2020-06-02 lijia add, 语义同DROPPKT, 只不过作用域是整个stream	
 	UCHAR  offload_stream_flag; //2022-04-13 liuxueli add, 作用域是整个stream
+	UCHAR pad[6];
+	time_t offload_stream_timestamp_s;
 };	
 
 /* 2015-02-26 lijia add, for stream-addr-list ntop, pton */

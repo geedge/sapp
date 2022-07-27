@@ -2810,10 +2810,11 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 					}
 
 					pdetail_pr =(struct tcpdetail_private*)(pstream->pdetail);
-					if(pdetail_pr->offload_stream_flag==(SMART_OFFLOAD_FLAG_TCP|SMART_OFFLOAD_FLAG_TCPALL))
+					if(pdetail_pr->offload_stream_flag==(SMART_OFFLOAD_FLAG_TCP|SMART_OFFLOAD_FLAG_TCPALL) && (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
 					{
 						local_sys_stat->count[SAPP_STAT_TCP_OFFLOAD_STREAM]++;
 						MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
+						pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
 					}
 				}
 			}
@@ -2970,12 +2971,13 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	}
 	else
 	{
-		if(pdetail_pr->offload_stream_flag==(SMART_OFFLOAD_FLAG_TCP|SMART_OFFLOAD_FLAG_TCPALL))
+		if(pdetail_pr->offload_stream_flag==(SMART_OFFLOAD_FLAG_TCP|SMART_OFFLOAD_FLAG_TCPALL) && (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
 		{
 			local_sys_stat->count[SAPP_STAT_TCP_OFFLOAD_PKTS]++;
 			local_sys_stat->length[SAPP_STAT_TCP_OFFLOAD_BYTES]+= tcplen;
 
 			MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);		
+			pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
 			return PASS;
 		}
 		
@@ -3044,10 +3046,11 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		}
 	}
 
-	if(pdetail_pr->offload_stream_flag==(SMART_OFFLOAD_FLAG_TCP|SMART_OFFLOAD_FLAG_TCPALL) && DROP!=ret)
+	if(pdetail_pr->offload_stream_flag==(SMART_OFFLOAD_FLAG_TCP|SMART_OFFLOAD_FLAG_TCPALL) && DROP!=ret && (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
 	{
 		local_sys_stat->count[SAPP_STAT_TCP_OFFLOAD_STREAM]++;
-		MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);		
+		MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);	
+		pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
 	}
 
 fun_exit:    
