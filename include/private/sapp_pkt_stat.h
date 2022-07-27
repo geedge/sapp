@@ -157,7 +157,8 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_UDP_STREAM_TOTAL_S2C_BYTES,/* 全部UDP流统计 */
 	SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_BYTES,	/* 全部UDP流统计 */	
 
-	SAPP_STAT_HASH_LIST_MAX,
+	SAPP_STAT_TCP_HASH_LIST_MAX,
+	SAPP_STAT_UDP_HASH_LIST_MAX,
 
 	SAPP_STAT_TCP_CLOSE_BY_FIN,     /* 如果挂载了TCP_ALL插件, 其实没这个状态, 不是超时就是被强制踢出 */
 	SAPP_STAT_TCP_CLOSE_BY_RST,     /* 如果挂载了TCP_ALL插件, 其实没这个状态, 不是超时就是被强制踢出 */

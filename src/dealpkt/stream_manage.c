@@ -1289,9 +1289,17 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 		phead=phead->phashnext;
 		hash_list_num++;
 	}
-
-	if(unlikely(hash_list_num > local_sys_stat->count[SAPP_STAT_HASH_LIST_MAX])){
-		local_sys_stat->count[SAPP_STAT_HASH_LIST_MAX] = hash_list_num;
+	if(plinkhead->stream.stream_public.type == STREAM_TYPE_UDP)
+	{
+		if(unlikely(hash_list_num > local_sys_stat->count[SAPP_STAT_UDP_HASH_LIST_MAX])){
+			local_sys_stat->count[SAPP_STAT_UDP_HASH_LIST_MAX] = hash_list_num;
+		}
+	}
+	else if(plinkhead->stream.stream_public.type == STREAM_TYPE_TCP)
+	{
+		if(unlikely(hash_list_num > local_sys_stat->count[SAPP_STAT_TCP_HASH_LIST_MAX])){
+			local_sys_stat->count[SAPP_STAT_TCP_HASH_LIST_MAX] = hash_list_num;
+		}
 	}
 
 	if((res != NULL) && (stack_streaminfo_skip_layer_num > heap_streaminfo_skip_layer_num)){

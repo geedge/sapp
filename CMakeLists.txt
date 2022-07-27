@@ -8,6 +8,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(Version)
 
 set(CMAKE_MACOSX_RPATH 0)
+set(CMAKE_EXPORT_COMPILECOMMANDS ON)
 
 # see here: https://github.com/PointCloudLibrary/pcl/issues/3680
 # when this is fixed, we can remove the following 3 lines.

@@ -358,17 +358,17 @@ void sysinfo_output(void)
 				(mstat[i]->sys_stat.count[SAPP_STAT_TCP_STREAM_DEL]-history_threads_stat[i].count[SAPP_STAT_TCP_STREAM_DEL]),
 				mstat[i]->sys_stat.count[SAPP_STAT_TCP_STREAM_NEW],
 				mstat[i]->sys_stat.count[SAPP_STAT_TCP_STREAM_DEL],
-				mstat[i]->sys_stat.count[SAPP_STAT_HASH_LIST_MAX],
+				mstat[i]->sys_stat.count[SAPP_STAT_TCP_HASH_LIST_MAX],
 				sapp_global_mthread[i].tcp_stream_special_timeout_num);
 	}
 
 	fprintf(fp,"\n|----------------------------------------- UDP statistics detail ---------------------------------------|\n");
-	fprintf(fp,"%3s%6s %3s %-27s %-19s %-20s %-20s\n", "", "", "", "|-----------Current---------|", "|------Realtime-----|",
-	        "|--From-of-startup--|", "|----Special----|");
-	fprintf(fp,"%3s %6s %3s %8s %9s %10s %10s %10s %10s %9s %17s\n", "seq", "tid", "PSR", "link-one", "link-two", "link-more", "link-new/s",
-			"link-del/s", "stream-num", "reset-num", "special-timeout");
+	fprintf(fp,"%3s%6s %3s %-27s %-19s %-27s %-27s\n", "", "", "", "|-----------Current---------|", "|------Realtime-----|",
+		"|--------From-of-startup---------|", "|----Special----|");
+	fprintf(fp,"%3s %6s %3s %8s %9s %10s %10s %10s %10s %9s %13s %17s\n", "seq", "tid", "PSR", "link-one", "link-two", "link-more", "link-new/s",
+			"link-del/s", "stream-num", "reset-num", "hash-list-max",  "special-timeout");
 	for(i = 0; i < g_packet_io_thread_num; i++){	
-		fprintf(fp, "%3d %6ld %3d %8llu %9llu %10llu %10llu %10llu %10llu %9llu %13d\n",
+		fprintf(fp, "%3d %6ld %3d %8llu %9llu %10llu %10llu %10llu %10llu %9llu %13llu %13d\n",
 				i, 
 				sapp_global_val->individual_fixed.thread_tid[i],
 				sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[i],
@@ -379,6 +379,7 @@ void sysinfo_output(void)
 				(mstat[i]->sys_stat.count[SAPP_STAT_UDP_STREAM_DEL]-history_threads_stat[i].count[SAPP_STAT_UDP_STREAM_DEL]),
 				mstat[i]->sys_stat.count[SAPP_STAT_UDP_STREAM_NEW],
 				mstat[i]->sys_stat.count[SAPP_STAT_UDP_STREAM_RESET],
+				mstat[i]->sys_stat.count[SAPP_STAT_UDP_HASH_LIST_MAX],
 				sapp_global_mthread[i].udp_stream_special_timeout_num);
 	}
 
