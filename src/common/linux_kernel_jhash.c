@@ -5,7 +5,6 @@ extern "C" {
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
-#if USE_LINUX_KERNEL_HASH_ALGO
 
 
 #ifndef u32
@@ -186,7 +185,7 @@ u32 sapp_jhash_4words(u32 a, u32 b, u32 c, u32 initval, u32 *out_val)
 }
 
 
-int stream_make_hash(struct streaminfo_private *stream_pr, unsigned int maxsize)
+int stream_make_jhash(struct streaminfo_private *stream_pr, unsigned int maxsize)
 {
 	unsigned int a, b;
 	unsigned short c, d;
@@ -249,7 +248,6 @@ int stream_make_hash(struct streaminfo_private *stream_pr, unsigned int maxsize)
 	return hash_val % maxsize;
 #endif	
 }
-#endif
 
 
 

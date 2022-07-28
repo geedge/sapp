@@ -101,6 +101,16 @@ add_definitions(-DIOMODE_PCAP=1)
 #    set(CAPTURE_DEFINITIONS -DONLY_PCAP -DIOMODE_PCAP)
 #endif()
 
+set(DIST_MODE "JHASH" CACHE STRING
+    "DIST_MODE set Tuple4 hash algorithm chosen by the user, using JHASH in linux kernel as default")
+set_property(CACHE DIST_MODE PROPERTY STRINGS JHASH CRCHASH)
+message(STATUS "DIST_MODE='${DIST_MODE}'")
+if(DIST_MODE MATCHES "JHASH")
+	add_definitions(-DUSE_LINUX_KERNEL_HASH_ALGO=1)
+else()
+	add_definitions(-DUSE_LINUX_KERNEL_HASH_ALGO=0)
+endif()
+
 if(CAPTURE_MODE MATCHES "PAG")
 	set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_PAG)
 endif()

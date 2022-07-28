@@ -1049,7 +1049,7 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 
 disp:
 	//hash = pcap_dispatch_hash(disp_arg1, disp_arg2, 0xFEEDBEAF); 
-	hash = dpdk_rte_ip_hash(disp_arg1, disp_arg2, disp_addrlen);
+	hash = dpdk_rte_crc_hash(disp_arg1, disp_arg2, disp_addrlen, 0);
 	hash %=  g_pcap_work_thread_num;
 
 	return hash;

@@ -1311,9 +1311,6 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 
 
 
-#if USE_LINUX_KERNEL_HASH_ALGO
-extern int stream_make_hash(struct streaminfo_private *stream_pr, unsigned int maxsize);
-#endif
 
 /*
 //本函数内做了的事情
@@ -1349,11 +1346,13 @@ struct streamindex *findstreamindex(struct streamindex *pindex, const raw_pkt_t 
 		assert(0);
          }
 
-
-	{
-		hash_index=stream_make_hash(&(pindex->stream), (unsigned int)hash_max);
-	
-	}
+#if USE_LINUX_KERNEL_HASH_ALGO
+	extern int stream_make_jhash(struct streaminfo_private *stream_pr, unsigned int maxsize);
+	hash_index=stream_make_jhash(&(pindex->stream), (unsigned int)hash_max);
+#else
+	extern int stream_make_rte_crchash(struct streaminfo_private *stream_pr, unsigned int maxsize);
+	hash_index=stream_make_rte_crchash(&(pindex->stream), (unsigned int)hash_max);
+#endif
 
 	if(STREAM_TYPE_UDP==stream_type)
 	{
@@ -2727,9 +2726,8 @@ int find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *t
 {
 	const struct global_stream *this_thread_stream = G_MESA_GLOBAL_STREAM[thread_index];
 	struct streamindex **phashstream=NULL;
-	unsigned int hash_index, hash_max, no_use_slave_hash;
-	unsigned int a,b,c,d;
 	struct streamindex *stream_hash_head = NULL;
+	unsigned int hash_index, hash_max, no_use_slave_hash;
 	int ret, match_layer_dir; /* 输入的四元组与大端口做为源的规则一致 */
 	int tot_found_stream_num = 0;
 
@@ -2751,6 +2749,11 @@ int find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *t
 		return -1;
 	}
 
+
+	
+#if USE_LINUX_KERNEL_HASH_ALGO	
+	unsigned int a,b;
+	unsigned short c,d;
 	/* 此处参考函数: set_transport_addr() 	  ,大端口作为客户端 */
 	if(ntohs(tuplev4->source) > ntohs(tuplev4->dest)){
 		a = tuplev4->saddr;
@@ -2781,8 +2784,24 @@ int find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *t
 			match_layer_dir = 0;
 		}
 	}
-	
 	hash_index = sapp_jhash_4words(a,b,c,d, &no_use_slave_hash) % hash_max;
+#else
+extern unsigned int tuple4_v4_make_crc_hash(const struct stream_tuple4_v4 *tuple4_v4);
+	hash_index = tuple4_v4_make_crc_hash(tuplev4) % hash_max;
+	if(ntohs(tuplev4->source) > ntohs(tuplev4->dest)){
+		match_layer_dir = 1;
+	}else{
+		if(unlikely(tuplev4->source == tuplev4->dest)){
+			if(ntohl(tuplev4->saddr) > ntohl(tuplev4->daddr)){
+				match_layer_dir = 1;
+			}else{
+				match_layer_dir = 0;
+			}
+		}else{
+			match_layer_dir = 0;
+		}
+	}
+#endif
 	stream_hash_head = phashstream[hash_index];
 
 	while(stream_hash_head != NULL){
@@ -2811,7 +2830,6 @@ int find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *t
 	const struct global_stream *this_thread_stream = G_MESA_GLOBAL_STREAM[thread_index];
 	struct streamindex **phashstream=NULL;
 	unsigned int hash_index, hash_max, no_use_slave_hash;
-	unsigned int a,b,c,d;
 	struct streamindex *stream_hash_head = NULL;
 	int ret, match_layer_dir; /* 输入的四元组与大端口做为源的规则一致 */
 	int tot_found_stream_num = 0;
@@ -2830,6 +2848,8 @@ int find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *t
 		return -1;
 	}
 
+#if USE_LINUX_KERNEL_HASH_ALGO
+	unsigned int a,b,c,d;
 	/* 此处参考函数: set_transport_addr() 	  ,大端口作为客户端 */
 	if(ntohs(tuple4_v6->source) > ntohs(tuple4_v6->dest)){
 		memcpy(&a, &tuple4_v6->saddr[12], sizeof(int));
@@ -2862,6 +2882,23 @@ int find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *t
 	}
 	
 	hash_index = sapp_jhash_4words(a,b,c,d, &no_use_slave_hash) % hash_max;
+#else
+extern unsigned int tuple4_v6_make_crc_hash(const struct stream_tuple4_v6 *tuple4_v6);
+	hash_index = tuple4_v6_make_crc_hash(tuple4_v6) % hash_max;
+	if(ntohs(tuple4_v6->source) > ntohs(tuple4_v6->dest)){
+		match_layer_dir = 1;
+	}else{
+		if(unlikely(tuple4_v6->source == tuple4_v6->dest)){
+			if(memcmp(tuple4_v6->saddr, tuple4_v6->daddr, IPV6_ADDR_LEN) >= 0){
+				match_layer_dir = 1;
+			}else{
+				match_layer_dir = 0;
+			}
+		}else{
+			match_layer_dir = 0;
+		}
+	}	
+#endif
 	stream_hash_head = phashstream[hash_index];
 
 

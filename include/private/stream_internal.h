@@ -22,7 +22,7 @@
 #define IP_PORT_UNION_VERSION			(1) /* 是否将IP-PORT合并 */
 #define COMPAT_PAPP_FOR_BENCHMARK	(0) /* 2015-01-07 lijia add, 同papp对比结果时, 临时关闭嵌套、各种隧道协议, 否则不一致 */
 #define USE_RBTREE_INSTEAD_LIST		(0) /* 当HASH冲突时, 使用红黑树代替链表, 避免特殊情况下遍历 */
-#define USE_LINUX_KERNEL_HASH_ALGO	(1) /* 使用LINUX内核HASH算法 */
+//#define USE_LINUX_KERNEL_HASH_ALGO	(1) /* 使用LINUX内核HASH算法 */
 
 #define SAPP_INSECTICIDE				(0) /* 杀虫(DEBUG)临时开关, 在遇到莫名其妙的BUG时临时启用, 尽早发现问题, 早死早超生 */
 
