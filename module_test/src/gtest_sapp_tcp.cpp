@@ -822,7 +822,7 @@ void tcpall_offload_givestate_and_giveme_entry_run(void)
 void tcp_offload_givestate_entry_run(void)
 {
 	set_default_config();
-	update_plugin_inf("TCP_ALL", "tcp_offload_1st_givestate_entry");
+	update_plugin_inf("TCP", "tcp_offload_1st_givestate_entry");
 
 	set_pcap_dumpfile("tcp/tcp_simple.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "df138740a6a22ca9c977052f21f7a470"),0);
@@ -833,8 +833,8 @@ void tcp_offload_givestate_entry_run(void)
 void tcp_offload_givestate_and_giveme_entry_run(void)
 {
 	set_default_config();
-	update_plugin_inf("TCP_ALL", "tcp_offload_1st_givestate_entry");
-	update_plugin_inf("TCP_ALL", "tcp_offload_2st_giveme_entry");
+	update_plugin_inf("TCP", "tcp_offload_1st_givestate_entry");
+	update_plugin_inf("TCP", "tcp_offload_2st_giveme_entry");
 	
 	set_pcap_dumpfile("tcp/tcp_simple.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "df138740a6a22ca9c977052f21f7a470"),0);

@@ -2257,10 +2257,10 @@ extern "C" char tcpall_offload_1st_givestate_entry(struct streaminfo *pstream,vo
 
 	if(pstream->pktstate == OP_STATE_CLOSE)
 	{
-		if((2 == gtest_tcpall_offload_stat1.C2S_all_pkt)
+		if((1 == gtest_tcpall_offload_stat1.C2S_all_pkt)
 		 &&(0 == gtest_tcpall_offload_stat1.C2S_all_byte)
-		 &&(2 == gtest_tcpall_offload_stat1.S2C_all_pkt)
-		 &&(21 == gtest_tcpall_offload_stat1.S2C_all_byte))
+		 &&(0 == gtest_tcpall_offload_stat1.S2C_all_pkt)
+		 &&(0 == gtest_tcpall_offload_stat1.S2C_all_byte))
 		{
 		 	if((37 == pdetail->clientpktnum)
 			 &&(11345 == pdetail->clientbytes)
@@ -2380,21 +2380,21 @@ extern "C" char tcp_offload_1st_givestate_entry(struct streaminfo *pstream,void 
 {
 	struct tcpdetail *pdetail=(struct tcpdetail *)pstream->pdetail;
 
-	if(OP_STATE_PENDING == pstream->pktstate){
+	if(OP_STATE_PENDING == pstream->opstate){
 		/* pending状态重置计数 */
 		memset(&gtest_tcp_offload_stat1, 0, sizeof(gtest_tcp_offload_stat1));	
 	}
 
-	if(pstream->pktstate == OP_STATE_CLOSE)
+	if(pstream->opstate == OP_STATE_CLOSE)
 	{
-		if((2 == gtest_tcp_offload_stat1.C2S_all_pkt)
+		if((0 == gtest_tcp_offload_stat1.C2S_all_pkt)
 		 &&(0 == gtest_tcp_offload_stat1.C2S_all_byte)
-		 &&(2 == gtest_tcp_offload_stat1.S2C_all_pkt)
+		 &&(1 == gtest_tcp_offload_stat1.S2C_all_pkt)
 		 &&(21 == gtest_tcp_offload_stat1.S2C_all_byte))
 		{
 		 	if((37 == pdetail->clientpktnum)
 			 &&(11345 == pdetail->clientbytes)
-			 &&(31 == pdetail->serverpktnum)
+			 &&(30 == pdetail->serverpktnum)
 			 &&(2329 == pdetail->serverbytes))
 			{
 		 		SAPP_PLUG_LOG(RLOG_LV_INFO, "tcpall.offload", "\033[32m tcpall_simple() test succ!\033[0m\n");
@@ -2444,21 +2444,21 @@ extern "C" char tcp_offload_2st_giveme_entry(struct streaminfo *pstream,void **p
 {
 	struct tcpdetail *pdetail=(struct tcpdetail *)pstream->pdetail;
 
-	if(OP_STATE_PENDING == pstream->pktstate){
+	if(OP_STATE_PENDING == pstream->opstate){
 		/* pending状态重置计数 */
 		memset(&gtest_tcp_offload_stat2, 0, sizeof(gtest_tcp_offload_stat2));	
 	}
 
-	if(pstream->pktstate == OP_STATE_CLOSE)
+	if(pstream->opstate == OP_STATE_CLOSE)
 	{
-		if((31 == gtest_tcp_offload_stat2.C2S_all_pkt)
+		if((16 == gtest_tcp_offload_stat2.C2S_all_pkt)
 		 &&(2329 == gtest_tcp_offload_stat2.C2S_all_byte)
-		 &&(37 == gtest_tcp_offload_stat2.S2C_all_pkt)
+		 &&(30 == gtest_tcp_offload_stat2.S2C_all_pkt)
 		 &&(11345 == gtest_tcp_offload_stat2.S2C_all_byte))
 		{
 		 	if((37 == pdetail->clientpktnum)
 			 &&(11345 == pdetail->clientbytes)
-			 &&(31 == pdetail->serverpktnum)
+			 &&(30 == pdetail->serverpktnum)
 			 &&(2329 == pdetail->serverbytes))
 			{
 		 		SAPP_PLUG_LOG(RLOG_LV_INFO, "tcpall.offload", "\033[32m tcpall_simple() test succ!\033[0m\n");

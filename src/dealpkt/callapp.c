@@ -574,7 +574,6 @@ static int stream_state_data(struct streaminfo *a_stream,const void *this_iphdr,
 {
 	int ret=PASS;
 	UCHAR local_app_ret;
-	int break_flag = 0;
 	StreamFunInfo *pFunList=NULL;
 	StreamFunInfo *pFunInfo=NULL;
 	StreamFunInfo *pNext=NULL,*pPrev=NULL;
@@ -584,7 +583,12 @@ static int stream_state_data(struct streaminfo *a_stream,const void *this_iphdr,
 	pPrev=NULL;
 	while(pFunInfo)
 	{
-		break_flag = 0;			
+		if(pFunInfo->appState==APP_STATE_GIVESTATE)
+		{
+			pFunInfo=pFunInfo->next;
+			continue;
+		}
+		
 		local_app_ret=call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, pFunInfo);
 		if(pFunInfo->appState&APP_STATE_DROPME)
 		{
