@@ -1075,6 +1075,41 @@ static int fs2_plug_entry_historgram_init(void *fs2_handle)
 	return 0;
 }
 
+void sapp_fs2_set_tcp_unorder_historgram(int thead_seq, long long unorder_num)
+{
+    if(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle != NULL){
+        FS_operate(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle, 
+        		   sapp_global_val->individual_fixed.field_stat2_para.fs_tcp_unorder_id_array[thead_seq], 
+        		   0, FS_OP_SET, unorder_num);
+    }
+}
+
+static int fs2_tcp_unorder_historgram_init(void *fs2_handle)
+{
+    int i;
+    sapp_gval_individual_fixed_fs_t *pfs_para = &sapp_global_val->individual_fixed.field_stat2_para;
+    char histogram_name[16];
+    /* 0保留给sapp内置插件, index从1开始 */
+    for (i = 1; i < g_packet_io_thread_num; i++)
+    {
+    	sprintf(histogram_name, "OoO_num(tid_%d)", i);
+        pfs_para->fs_tcp_unorder_id_array[i] =
+            FS_register_histogram(fs2_handle,                             // Field Stat句柄
+                                  FS_CALC_SPEED,                          //输出累计值或瞬时值
+                                  histogram_name, //统计项名称，字符串
+                                  1,                                      //可追踪的最小值
+                                  65536,                                //可追踪的最大值
+                                  2);                                     //精度，即小数点后几位，范围1~4
+        if (pfs_para->fs_tcp_unorder_id_array[i] < 0)
+        {
+            sapp_runtime_log(RLOG_LV_FATAL, "FS_fs2_tcp_unorder_historgram_init() error, name:%s",
+                             histogram_name);
+            return -1;
+        }
+    }
+
+    return 0;
+}
 
 /************************ C++ compiler **************************************/
 static int sapp_fs2_init(void)
@@ -1256,30 +1291,35 @@ static int sapp_fs2_init(void)
 	pfs_para->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Pkt");
 	pfs_para->fs_id_length_array[SAPP_STAT_UDP_OFFLOAD_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Bit");
 
-	
-	if(unlikely(g_timestamp_record_sw))
-	{
-		for(int i = 0; i < g_packet_io_thread_num; i++)
-		{
-			char histogram_name[16];
-			sprintf(histogram_name, "tid_%d(ns)", i);
-			pfs_para->fs_latency_id_array[i] = FS_register_histogram(fs2_handle,  //Field Stat句柄
-								  FS_CALC_SPEED,    //输出累计值或瞬时值
-								  histogram_name,     //统计项名称，字符串
-								  1,                  //可追踪的最小值
-								  1000000,            //可追踪的最大值
-								  2);                 //精度，即小数点后几位，范围1~4
-			if(send_historgram == 0)
+    if (fs2_tcp_unorder_historgram_init(fs2_handle) < 0)
+    {
+        return -1;
+    }
+    
+    if (unlikely(g_timestamp_record_sw))
+    {
+        for (int i = 0; i < g_packet_io_thread_num; i++)
+        {
+            char histogram_name[16];
+            sprintf(histogram_name, "TD_ns(tid_%d)", i);
+            pfs_para->fs_latency_id_array[i] = FS_register_histogram(fs2_handle,     // Field Stat句柄
+                                                                     FS_CALC_SPEED,  //输出累计值或瞬时值
+                                                                     histogram_name, //统计项名称，字符串
+                                                                     1,              //可追踪的最小值
+                                                                     1000000,        //可追踪的最大值
+                                                                     2); //精度，即小数点后几位，范围1~4
+            if (send_historgram == 0)
             {
                 FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &pfs_para->fs_latency_id_array[i], sizeof(int));
             }
-		}
+        }
 
-		if(fs2_plug_entry_historgram_init(fs2_handle) < 0){
-			return -1;
-		}
-	}
-	FS_start(fs2_handle);
+        if (fs2_plug_entry_historgram_init(fs2_handle) < 0)
+        {
+            return -1;
+        }
+    }
+    FS_start(fs2_handle);
 	
 	return 0;
 }

@@ -101,6 +101,7 @@ void sapp_fs2_update_count(int field_index, unsigned  long long value);
 void sapp_fs2_update_length(int field_index, unsigned  long long value);
 void sapp_fs2_set_latency(int thead_seq, long long time_cost);
 void sapp_fs2_set_plug_entry_latency(int entry_id, long long time_cost);
+void sapp_fs2_set_tcp_unorder_historgram(int thead_seq, long long unorder_num);
 int sapp_independent_thread_init(void);
 
 void sapp_gval_init(void);

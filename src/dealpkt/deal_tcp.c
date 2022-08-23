@@ -1174,6 +1174,7 @@ static void tcp_free_half(struct half_tcpstream *phalf,int threadnum)
 {
   struct buf_unorder *plist,*ptmp;
   plist = phalf->unorderlist;
+  sapp_fs2_set_tcp_unorder_historgram(threadnum, phalf->unorder_cnt);
   while (plist)
   {
  #if 0 

@@ -395,6 +395,7 @@ typedef struct{
 	int fs_id_length_array[SAPP_STAT_NUM_MAX];
 	int fs_latency_id_array[SAPP_MAX_THREADS];
 	int fs_latency_plug_entrg_id_array[SAPP_MAX_PLUG_ENTRY_NUM];
+	int fs_tcp_unorder_id_array[SAPP_MAX_THREADS];
 }sapp_gval_individual_fixed_fs_t; /* field stat info */
 
 typedef struct{
