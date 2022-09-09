@@ -1395,7 +1395,7 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 			pkt_ret = stream_process_tcp_allpkt(pstream, this_ip_hdr, transport_hdr, raw_pkt,&(pdetail_pr->pAllpktpme),&(pstream->pktstate));  
 #else
 			/* 2017-12-13 lijia modify, TCPALL改为先调用, 所以在tcp_free_stream中, 最后只向TCPALL插件传递流CLOSE状态, 不再给原始包, 指针固定为NULL, 否则就重复了 */
-			pkt_ret = stream_process_tcp_allpkt(pstream, NULL, NULL, NULL, &(pdetail_pr->pAllpktpme),&(pstream->pktstate)); 
+			pkt_ret = stream_process_tcp_allpkt(pstream, this_ip_hdr, transport_hdr, raw_pkt, &(pdetail_pr->pAllpktpme),&(pstream->pktstate)); 
 #endif
 			pdetail_pr->pAllpktpme=NULL;
 	}
