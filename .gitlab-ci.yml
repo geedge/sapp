@@ -3,7 +3,11 @@ variables:
   BUILD_PADDING_PREFIX: /tmp/padding_for_CPACK_RPM_BUILD_SOURCE_DIRS_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX/
   BUILD_IMAGE_CENTOS7: "git.mesalab.cn:7443/mesa_platform/build-env:master"
   BUILD_IMAGE_CENTOS8: "git.mesalab.cn:7443/mesa_platform/build-env:rockylinux"
-  INSTALL_DEPENDENCY_LIBRARY: libunwind gperftools mrzcpd numactl-devel zlib-devel librdkafka-devel systemd-devel libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libbreakpad_mini-devel vim-common libMESA_jump_layer-devel libMESA_jump_layer sapp_benchmark sapp_benchmark-devel
+  INSTALL_DEPENDENCY_LIBRARY: 
+    libunwind gperftools numactl-devel zlib-devel librdkafka-devel systemd-devel jemalloc jemalloc-devel vim-common 
+    libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env 
+    libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libbreakpad_mini-devel  mrzcpd
+    libMESA_jump_layer-devel libMESA_jump_layer
   SYMBOL_TARGET: sapp
   INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
 
@@ -57,7 +61,7 @@ stages:
     - yum makecache
     - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb snappy
     - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini libMESA_jump_layer
-    - yum install -y sapp benchmark_pcap gtest-devel zlib-devel
+    - yum install -y sapp benchmark_pcap gtest-devel zlib-devel jemalloc
     - yum install -y framework_env; source /etc/profile.d/framework.sh
     - ls -l /opt/MESA/lib
     - echo "/opt/MESA/lib" >> /etc/ld.so.conf
@@ -145,7 +149,7 @@ branch_build_debug_for_centos7:
     BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: DICTATOR
+    MEM_POOL: JEMALLOC
   artifacts:
     paths:
     - build/*
@@ -161,7 +165,7 @@ branch_build_release_for_centos7:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: DICTATOR
+    MEM_POOL: JEMALLOC
   extends: .build_by_travis_for_centos7
   artifacts:
     paths:
@@ -179,7 +183,7 @@ develop_build_debug_for_centos7:
     BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: DICTATOR
+    MEM_POOL: JEMALLOC
     PACKAGE: 1
     UPLOAD: 1
     ASAN_OPTION: "OFF"
@@ -202,7 +206,7 @@ develop_build_release_for_centos7:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: DICTATOR
+    MEM_POOL: JEMALLOC
     PACKAGE: 1
     UPLOAD: 1
     ASAN_OPTION: "OFF"
@@ -224,7 +228,7 @@ release_build_release_for_centos7:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: DICTATOR
+    MEM_POOL: JEMALLOC
     PACKAGE: 1
     UPLOAD: 1
     PULP3_REPO_NAME: platform-stable-x86_64.el7
@@ -244,7 +248,7 @@ branch_build_debug_for_centos8:
     BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: DICTATOR
+    MEM_POOL: JEMALLOC
   artifacts:
     paths:
     - build/*
@@ -260,7 +264,7 @@ branch_build_release_for_centos8:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: DICTATOR
+    MEM_POOL: JEMALLOC
   extends: .build_by_travis_for_centos8
   artifacts:
     paths:
@@ -278,7 +282,7 @@ develop_build_debug_for_centos8:
     BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: DICTATOR
+    MEM_POOL: JEMALLOC
     PACKAGE: 1
     UPLOAD: 1
     ASAN_OPTION: "OFF"
@@ -301,7 +305,7 @@ develop_build_release_for_centos8:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: DICTATOR
+    MEM_POOL: JEMALLOC
     PACKAGE: 1
     UPLOAD: 1
     ASAN_OPTION: "OFF"
@@ -323,7 +327,7 @@ release_build_release_for_centos8:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: DICTATOR
+    MEM_POOL: JEMALLOC
     PACKAGE: 1
     UPLOAD: 1
     PULP3_REPO_NAME: platform-stable-x86_64.el8

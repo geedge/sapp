@@ -48,3 +48,20 @@ add_dependencies(libdabloom-static libdabloom)
 set_property(TARGET libdabloom-static PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/libdablooms.a)
 set_property(TARGET libdabloom-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
 
+## jemalloc
+ExternalProject_Add(libjemalloc PREFIX libjemalloc
+        URL ${CMAKE_CURRENT_SOURCE_DIR}/jemalloc-5.3.0.tar.gz
+        URL_MD5 594dd8e0a1e8c1ef8a1b210a1a5aff5b
+        CONFIGURE_COMMAND ./autogen.sh --prefix=<INSTALL_DIR>
+        BUILD_COMMAND make
+		BUILD_IN_SOURCE 1
+        INSTALL_COMMAND make install prefix=<INSTALL_DIR>)
+
+ExternalProject_Get_Property(libjemalloc INSTALL_DIR)
+file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
+
+add_library(libjemalloc-static STATIC IMPORTED GLOBAL)
+add_dependencies(libjemalloc-static libjemalloc)
+set_property(TARGET libjemalloc-static PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/libjemalloc.a)
+set_property(TARGET libjemalloc-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
+

@@ -126,7 +126,7 @@ if(CAPTURE_MODE MATCHES "TUN")
 endif()
 
 # Memory Allocator
-set(MEM_POOL "DICTATOR" CACHE STRING
+set(MEM_POOL "JEMALLOC" CACHE STRING
     " set mem alloc chosen by the user, using DICTATOR as default")
 set_property(CACHE MEM_POOL PROPERTY STRINGS OFF DICTATOR DICTATOR_DEBUG
     TCMALLOC TCMALLOC_MINI JEMALLOC)
@@ -141,7 +141,7 @@ elseif(MEM_POOL MATCHES "TCMALLOC_MINI")
 elseif(MEM_POOL MATCHES "TCMALLOC")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 elseif(MEM_POOL MATCHES "JEMALLOC")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 endif()
 
 
