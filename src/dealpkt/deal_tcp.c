@@ -2753,7 +2753,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 					local_sys_stat->count[SAPP_STAT_TCP_BYPASS_PKTS]++;
 					local_sys_stat->length[SAPP_STAT_TCP_BYPASS_BYTES]+= tcplen;
 					cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
-					sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream:%s under ddos bypass!", printaddr(&pstream->addr, pstream->threadnum));
+					sapp_runtime_log(RLOG_LV_INFO, "TCP stream:%s under ddos bypass!", printaddr(&pstream->addr, pstream->threadnum));
 					ret = PASS;
 				}else{
 					ret=tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);
@@ -2803,7 +2803,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 						local_sys_stat->count[SAPP_STAT_TCP_BYPASS_PKTS]++;
 						local_sys_stat->length[SAPP_STAT_TCP_BYPASS_BYTES]+= tcplen;	
 						cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
-						sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream:%s under ddos bypass!", printaddr(&pstream->addr, pstream->threadnum));			
+						sapp_runtime_log(RLOG_LV_INFO, "TCP stream:%s under ddos bypass!", printaddr(&pstream->addr, pstream->threadnum));			
 						ret = PASS;
 					}else
 					{
