@@ -81,7 +81,8 @@ static int guess_l2tp_ppp_layer_len(const unsigned char *maybe_l2tp_ppp_hdr)
 			break;
 		}
 	}else{
-		if((0x21 == maybe_l2tp_ppp_hdr[0]) || (0x57 == maybe_l2tp_ppp_hdr[0])){
+		if((0x21 == maybe_l2tp_ppp_hdr[0]) || (0x57 == maybe_l2tp_ppp_hdr[0])){
+
 			ppp_layer_len = 1; /* 省略了control, address字段, 只有一个字节的协议号, 参考: http://www2.ic.uff.br/~michael/kr1999/5-datalink/5_08-ppp.htm#[RFC%201662]  */
 		}
 	}
@@ -408,7 +409,7 @@ static int guess_if_l2tpv2(const struct streaminfo *a_udp, const struct mesa_udp
 	/* TODO 2, 暂时只处理L2TPv2版本, L2TPv3待添加 */
 	if(2 != pl2tphdrv2->version){
 		if(3 == pl2tphdrv2->version){
-			sapp_runtime_log(RLOG_LV_INFO, "recv l2tp version3 packet, but not support yet, TODO!\n");
+			sapp_runtime_log(RLOG_LV_DEBUG, "recv l2tp version3 packet, but not support yet, TODO!");
 		}
 		return 0;
 	}

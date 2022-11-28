@@ -1019,22 +1019,22 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 		break;
 
 		case IPPROTO_L2TPV3:
-			sapp_runtime_log(RLOG_LV_INFO, "recv ipv4 carry L2TPv3, not support yet!\n");
+			sapp_runtime_log(RLOG_LV_DEBUG, "recv ipv4 carry L2TPv3, not support yet!");
 			ret = PASS;
 		break;
 
 		case IPPROTO_ESP:
-			sapp_runtime_log(RLOG_LV_INFO, "ipv4_layer recv IPPROTO_ESP, not support yet!\n");
+			sapp_runtime_log(RLOG_LV_DEBUG, "ipv4_layer recv IPPROTO_ESP, not support yet!");
 			ret = PASS;
 		break;
 		
 		case IPPROTO_SCTP:
-			sapp_runtime_log(RLOG_LV_INFO, "ipv4_layer recv IPPROTO_SCTP, not support yet!\n");
+			sapp_runtime_log(RLOG_LV_DEBUG, "ipv4_layer recv IPPROTO_SCTP, not support yet!");
 			ret = PASS;
 		break;
 
 		case IPPROTO_IGMP:
-			sapp_runtime_log(RLOG_LV_INFO, "ipv4_layer recv IPPROTO_IGMP, not support yet!\n");
+			sapp_runtime_log(RLOG_LV_DEBUG, "ipv4_layer recv IPPROTO_IGMP, not support yet!");
 			ret = PASS;		
 		break;
 
@@ -1042,7 +1042,7 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 			/* unknown protocol */	
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;		
-			sapp_runtime_log(RLOG_LV_INFO, "unsupport Ipv4 protocol:%u, pkt seq:%llu\n", a_packet->ip_p,local_sys_stat->count[SAPP_STAT_RCV_LINE]);
+			sapp_runtime_log(RLOG_LV_DEBUG, "unsupport Ipv4 protocol:%u, pkt seq:%llu", a_packet->ip_p,local_sys_stat->count[SAPP_STAT_RCV_LINE]);
 		break;
 	}
 	
