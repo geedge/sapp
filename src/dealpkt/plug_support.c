@@ -4,6 +4,7 @@
 */
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "stream_inc/stream_base.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1191,7 +1192,10 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 
 			if(0 == pdetail_pr->iclientseq){
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_ISN_S2C error: can't get SYN/ACK seq!\n",printaddr(&pstream->addr, pstream->threadnum));
+				if(pstream->dir != DIR_C2S)
+				{
+					sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_ISN_S2C error: can't get SYN/ACK seq!\n",printaddr(&pstream->addr, pstream->threadnum));
+				}
 				break;
 			}
 

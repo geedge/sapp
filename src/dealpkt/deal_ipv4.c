@@ -10,6 +10,7 @@
   
 */
 
+#include <MESA_handle_logger.h>
 #include <sysinfo.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -875,7 +876,7 @@ int ipv4_frag_init(int thread_count, uint32 hash_size)
 		g_ipv4_frag_manage[i].frag_hash_table = ipv4_frag_htable_create();
 		if(NULL == g_ipv4_frag_manage[i].frag_hash_table){
 			printf("ipv4_frag_init(): MESA_htable_create fail!\n");
-			sapp_runtime_log(30, "ipv4_frag_init(): MESA_htable_create fail!\n");
+			sapp_runtime_log(RLOG_LV_FATAL, "ipv4_frag_init(): MESA_htable_create fail!");
 			goto err;
 		}
 #else
@@ -930,7 +931,7 @@ static inline int checkipv4pkt(const struct mesa_ip4_hdr * iph, const raw_pkt_t 
 		|| (iph->ip_hl < 5) 
 		|| (iph->ip_v != 4)
 		|| (pkt_declare_len < iph->ip_hl << 2)){	
-		sapp_runtime_log(20, "ipv4 packet check error: pkt length, hdr len, or version error\n");
+		sapp_runtime_log(RLOG_LV_DEBUG, "ipv4 packet check error: pkt length, hdr len, or version error, pkt_declare_len:%d, pkt_actual_len:%d", pkt_declare_len, pkt_actual_len);
 		return -1;
 	}
 
@@ -957,7 +958,7 @@ static inline int checkipv4pkt(const struct mesa_ip4_hdr * iph, const raw_pkt_t 
 #else
 	ip_proto = iph->ip_p;
 	if(ip_proto >= 0x8F){ /* IP协议字段大于0x8f的目前不合法 */
-		sapp_runtime_log(20, "ipv4 packet check error: unknow proto: %u\n", ip_proto);
+		sapp_runtime_log(RLOG_LV_DEBUG, "ipv4 packet check error: unknow proto: %u", ip_proto);
 		return -1;
 	}
 #endif
