@@ -29,6 +29,7 @@ typedef struct{
 	//struct event *libev_event[SAPP_MAX_THREADS+1];
 	pthread_t effective_thread_pid;
 	int effective_thread_index;
+	int event_cnt;
 
 	//int thread_cnt; /* sapp平台实际并发线程数, 如果有stand_alone线程, 则固定存储于最后一个index, 即SAPP_TIMER_MAX_THREADS */	
 }sapp_timer_handle_inner_t;

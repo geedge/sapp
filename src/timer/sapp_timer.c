@@ -124,7 +124,7 @@ int sapp_timer_add(sapp_timer_handle sth, sapp_timer_event stev)
 	}else{
 		ret = __st_timer_add_offline(inner_h, inner_ev);
 	}
-
+	inner_h->event_cnt+=1;
 	return ret;
 }
 
@@ -153,6 +153,7 @@ int sapp_timer_del(sapp_timer_handle sth, sapp_timer_event stev)
 		free(inner_ev);
 	}
 
+	inner_h->event_cnt-=1;
 	return 0;
 }
 
@@ -217,6 +218,11 @@ void __st_pkt_proc_context_check_timeout(int tid)
 		return;
 	}
 	
+	if(inner_h->event_cnt <= 0)
+	{
+		return;
+	}
+
 	if(0 == MESA_ATOMIC_READ(inner_h->running)){
 		return;
 	}	
