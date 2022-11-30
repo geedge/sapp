@@ -652,7 +652,7 @@ int pptp_protocol_init(void)
 
 void pptp_protocol_destroy(void)
 {
-	;
+	g_pptp_plugid = 0;
 }
 
 
