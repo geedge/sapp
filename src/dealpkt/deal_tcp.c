@@ -746,7 +746,10 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 
 		/* 连接重置, 重新判断一下ddos 状态 */
-		pstream_pr->under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
+		if(pstream_pr->create_dir_by_well_known_port != 1)
+		{
+			pstream_pr->under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
+		}
 	}
 
 	/* 2014-07-31 LiJia add, for set one stream unorder number */
@@ -963,7 +966,10 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);	
 
 		/* 链接复用, 重新判断一下ddos 状态 */
-		pstream_pr->under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);		
+		if(pstream_pr->create_dir_by_well_known_port != 1)
+		{
+			pstream_pr->under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
+		}
 	}
 
 	pstream->dir=createdir;
@@ -1003,15 +1009,15 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	pstream_pr->timeout=link_default_nopkt_time;
 	pdetail_pr->creat_mod=TCP_CTEAT_LINK_BYDATA;	
 	pstream->opstate=OP_STATE_PENDING;
-	if(tcp_support_all==TCP_SUPPORT_ENTRYALL_OFF) //by lqy 20141213
-        {
-                pstream->pktstate=OP_STATE_CLOSE;
-        }
-        else
-        {
-                pstream->pktstate=OP_STATE_PENDING;
-        }	
-	pdetail->createtime=g_CurrentTime;	
+    if (tcp_support_all == TCP_SUPPORT_ENTRYALL_OFF) // by lqy 20141213
+    {
+        pstream->pktstate = OP_STATE_CLOSE;
+    }
+    else
+    {
+        pstream->pktstate = OP_STATE_PENDING;
+    }
+    pdetail->createtime=g_CurrentTime;	
 	pdetail->lastmtime=g_CurrentTime;
 	pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
 	pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;

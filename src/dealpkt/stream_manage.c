@@ -1461,7 +1461,10 @@ void hash_add_stream(struct streamindex *pindex)
 	/* TCP, UDP新建流时都会调用此函数, 所以把ddos检测放到此处,
 		但是切记不要放到streamaddlist()函数, 因为同一个流切换不同状态时, 可能会调用streamaddlist()好几次.
 	*/
-	pindex->stream.under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
+	if(pindex->stream.create_dir_by_well_known_port != 1)
+	{
+		pindex->stream.under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
+	}
 
 	pindex->stream.global_stream_id = get_global_stream_id(threadnum);
 }
