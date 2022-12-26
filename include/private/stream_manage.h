@@ -2,6 +2,7 @@
 #define _STREAM_MANAGE_H_ 
 
 #include "stream_internal.h" 
+#include "stream_register.h"
 #include "timeout.h" 
 
 #ifdef __cplusplus
@@ -117,7 +118,7 @@ struct global_stream
 typedef struct _stStreamFunInfo
 {
 	char appState;
-	int funtype;/* 2014-12-31 lqy add */
+	enum fun_type_t funtype;/* 2014-12-31 lqy add */
 	int entry_id; /* 全局唯一的id, 用于每个插件入口函数的执行时间统计 */
 	char (*pfun)(void);
 	void *pAppInfo;

@@ -1,6 +1,8 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 
+#include "stream_register.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,7 +59,7 @@ static int g_OverlayUdpFunNum=0;
 static stFunArray g_OverlayUdpFun[MAX_FUN_NUM];
 
 
-static inline int is_raw_cb(int cb_type);
+static inline int is_raw_cb(enum fun_type_t cb_type);
 
 extern int G_TCP_FLOW_STAT_PROJECT_ID;
 
@@ -73,7 +75,7 @@ extern void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pk
 /* 2014-12-31 lqy add 
 	TODO, 这些内置插件没有destroy接口.
 */
-int stream_register_funtoArray(int funtype,char (*x)(void),stFunArray *pArrary,int *pNum, int plug_entry_id)
+int stream_register_funtoArray(enum fun_type_t funtype,char (*x)(void),stFunArray *pArrary,int *pNum, int plug_entry_id)
 {
 	if(*pNum>=MAX_FUN_NUM)
 	{
@@ -89,7 +91,7 @@ int stream_register_funtoArray(int funtype,char (*x)(void),stFunArray *pArrary,i
 	return 0;
 }
 
-int stream_register_fun(int funtype,char (*x)(void), int plug_entry_id)
+int stream_register_fun(enum fun_type_t funtype,char (*x)(void), int plug_entry_id)
 {
 	int ret=0;
 	switch(funtype)
@@ -1199,7 +1201,7 @@ const static  raw_cb_fun_identify_t g_raw_cb_fun_identify_array[__FUN_TYPE_MAX] 
 	
 };
 
-static inline int is_raw_cb(int cb_type)
+static inline int is_raw_cb(enum fun_type_t cb_type)
 {
 	assert(cb_type < __FUN_TYPE_MAX);
 	return g_raw_cb_fun_identify_array[cb_type].is_raw;

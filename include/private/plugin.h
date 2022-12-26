@@ -113,7 +113,7 @@ typedef struct {
 extern plug_global_entry_t g_plug_global_entry[SAPP_MAX_PLUG_ENTRY_NUM];
 extern int g_plug_global_entry_index;
 extern void* g_plugin_runtime_handle;
-extern int stream_register_fun(int funtype,char (*x)(void), int entry_id);
+extern int stream_register_fun(enum fun_type_t funtype,char (*x)(void), int entry_id);
 
 void plugin_call_flagstate();
 int process_conf_entryname();

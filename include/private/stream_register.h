@@ -31,7 +31,7 @@ enum fun_type_t{
 
 typedef struct _stFunArray
 {
-	int funtype; /* 从ip头开始, or 真正的原始包 */
+	enum fun_type_t funtype; /* 从ip头开始, or 真正的原始包 */
 	int entry_id; /* 全局唯一的id, 用于每个插件入口函数的执行时间统计 */
 	union
 	{
@@ -59,7 +59,7 @@ int stream_register_ipv6 (IPv6_CB_FUN_T fun);
 int stream_register_ip_frag (IPv4_CB_FUN_T x);
 int stream_register_ipv6_frag(IPv6_CB_FUN_T fun);
 
-int stream_register_fun(int funtype,char (*x)(void), int entry_id);
+int stream_register_fun(enum fun_type_t funtype,char (*x)(void), int entry_id);
 
 //业务层回调接口
 char PROT_PROCESS(stSessionInfo* session_info,  void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet);
