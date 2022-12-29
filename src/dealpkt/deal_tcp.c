@@ -3104,7 +3104,8 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 	}
 
 	pstream->type=STREAM_TYPE_TCP;
-	set_transport_addr(pstream, !(this_tcphdr->th_flags & TH_SYN), this_tcphdr->th_sport, this_tcphdr->th_dport);
+	//set_transport_addr(pstream, !(this_tcphdr->th_flags & TH_SYN), this_tcphdr->th_sport, this_tcphdr->th_dport);
+	set_transport_addr(pstream, 1, this_tcphdr->th_sport, this_tcphdr->th_dport);
 
 	pstream->addr.pkttype = PKT_TYPE_NORMAL;//add by lqy 20151222, init pkttype
 	
