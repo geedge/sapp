@@ -86,7 +86,9 @@ struct stream_list
 {
 	int cnt;
 	int max_cnt;
-	struct timeouts *timer;
+	struct timeouts *streamindex_timer;
+	struct timeouts *user_define_timer;
+	long user_define_timer_cnt;
 	long last_update_timer_s;
 	timeout_error_t timer_error;
 };
@@ -117,9 +119,13 @@ struct global_stream
 
 typedef struct _stStreamFunInfo
 {
+	struct timeout timeout;
+	const struct streaminfo *pstream;
+	int set_timer_s;
+	int entry_id; /* 全局唯一的id, 用于每个插件入口函数的执行时间统计 */
+	char pad[7];
 	char appState;
 	enum fun_type_t funtype;/* 2014-12-31 lqy add */
-	int entry_id; /* 全局唯一的id, 用于每个插件入口函数的执行时间统计 */
 	char (*pfun)(void);
 	void *pAppInfo;
 	struct _stStreamFunInfo *next;

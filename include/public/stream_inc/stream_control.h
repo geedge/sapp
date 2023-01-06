@@ -46,6 +46,7 @@ enum MESA_stream_opt{
 	MSO_DROP_CURRENT_PKT,  /* opt_val type must be int, value only be [0,1], notice the difference between MSO_DROP_CURRENT_PKT and MSO_DROP_STREAM, MSO_DROP_CURRENT_PKT only discard current packet, but MSO_DROP_STREAM discard all subsequent packets of stream  */
 	MSO_HAVE_DUP_PKT,  /* opt_val type must be int, value only be [0, 1, -2], if the current stream found duplicate packets ? 0:no; 1:yes; -2: not sure */
 	MSO_STREAM_LASTUPDATE_TIMESTAMP_MS,/* latest pkt arrive timestamp of this stream, opt_val type must be unsigned long long  */
+	MSO_STREAM_TIMER,
 	__MSO_MAX,
 };
 
@@ -127,6 +128,13 @@ struct max_unorder_opt{
 	unsigned short stream_dir; /* refer to stream_base.h, DIR_C2S, DIR_S2C, DIR_DOUBLE */
 	unsigned short max_unorder_val;
 };
+
+
+enum stream_timer_return_value{
+	 KEEP = 0,
+	 DROP = 1,
+};
+
 
 #define MAX_TCP_OPT_LEN	(38) /* TCP头部长度最长为60字节, 去除标准头部剩余选项部分最长40字节, 选项数据部分最长38字节 */
 #define MAX_TCP_OPT_NUM	(20) /* 单个TCP包最大选项数量 */

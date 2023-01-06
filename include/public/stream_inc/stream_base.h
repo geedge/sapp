@@ -83,7 +83,7 @@ enum addr_type_t{
 /* CHN : 应用层看到的链接状态定义 */
 /* ENG : stream state for protocol or business plug*/
 #define OP_STATE_PENDING   0
-#define _OP_STATE_OBSOLETE 1  /* is obsolete */
+#define OP_STATE_TIMER 1  /* is obsolete */
 #define OP_STATE_CLOSE     2
 #define OP_STATE_DATA      3
 

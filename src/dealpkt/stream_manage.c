@@ -85,13 +85,15 @@ static int init_stream_detail(struct global_stream *g_stream)
 	{
 		g_stream->tcpList[i].max_cnt = tcpstate_num[i];
 		g_stream->tcpList[i].cnt = 0;
-		g_stream->tcpList[i].timer = timeouts_open(0, &g_stream->tcpList[i].timer_error);
+		g_stream->tcpList[i].streamindex_timer = timeouts_open(0, &g_stream->tcpList[i].timer_error);
+		g_stream->tcpList[i].user_define_timer = timeouts_open(0, &g_stream->tcpList[i].timer_error);
 	}
 	for (i = 0; i < MAX_UDP_STATE; i++)
 	{
 		g_stream->udpList[i].max_cnt = udpstate_num[i];
 		g_stream->udpList[i].cnt = 0;
-		g_stream->udpList[i].timer = timeouts_open(0, &g_stream->udpList[i].timer_error);
+		g_stream->udpList[i].streamindex_timer = timeouts_open(0, &g_stream->udpList[i].timer_error);
+		g_stream->udpList[i].user_define_timer = timeouts_open(0, &g_stream->udpList[i].timer_error);
 	}
 
 
@@ -198,7 +200,7 @@ static void stream_timeout_shift_lrulist(struct streamindex *pindex, unsigned sh
 		return;
 	}
 
-	timeouts_add(lru_list_root->timer, &pindex->timeout, new_timeout+g_CurrentTime);
+	timeouts_add(lru_list_root->streamindex_timer, &pindex->timeout, new_timeout+g_CurrentTime);
 
 	return;
 }
@@ -325,7 +327,7 @@ static inline void __do_streamleavlist(struct streamindex *pindex,struct stream_
 
 	//if (timeout_pending(&(pindex->timeout)))
 	//{
-		timeouts_del(plist->timer, &pindex->timeout);
+		timeouts_del(plist->streamindex_timer, &pindex->timeout);
 	//}
 	plist->cnt -= 1;
 
@@ -349,15 +351,15 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 	{
 		if(plist->last_update_timer_s < g_CurrentTime)
 		{
-			timeouts_update(plist->timer, g_CurrentTime);
+			timeouts_update(plist->streamindex_timer, g_CurrentTime);
 			plist->last_update_timer_s = g_CurrentTime;
 		}
-		struct timeout *t = timeouts_get(plist->timer);
+		struct timeout *t = timeouts_get(plist->streamindex_timer);
 		if(t == NULL)
 		{
 			struct timeouts_it it_all;
 			TIMEOUTS_IT_INIT(&it_all, TIMEOUTS_ALL);
-			t = timeouts_next(plist->timer, &it_all);
+			t = timeouts_next(plist->streamindex_timer, &it_all);
 			timeout_reason = STREAM_CLOSE_REASON_LRUOUT;
 			assert(t!=NULL);
 		}
@@ -374,7 +376,7 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 	long set_timeout = pindex->stream.timeout;
 	if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
 	timeout_init(&pindex->timeout, TIMEOUT_ABS);
-	timeouts_add(plist->timer, &pindex->timeout, set_timeout+g_CurrentTime);
+	timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout+g_CurrentTime);
 	plist->cnt++;
 
 	update_stream_status(pstream->threadnum, pstream->type, pstream->stream_state, 1);
@@ -440,13 +442,17 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 
 	if(plist->last_update_timer_s < g_CurrentTime)
 	{
-		timeouts_update(plist->timer, g_CurrentTime);
+		timeouts_update(plist->streamindex_timer, g_CurrentTime);
+		if(true == timeouts_pending(plist->streamindex_timer))
+		{
+			timeouts_update(plist->user_define_timer, g_CurrentTime);
+		}
 		plist->last_update_timer_s = g_CurrentTime;
 	}
-	struct timeout *t = timeouts_get(plist->timer);
+	struct timeout *t = timeouts_get(plist->streamindex_timer);
 	if (t != NULL)
 	{
-		struct streamindex *pindex = container_of(t, struct streamindex, timeout);
+		struct streamindex *pindex = (struct streamindex *)sapp_get_struct_header(t, struct streamindex, timeout);
 		struct streaminfo_private *pstream_pr = &(pindex->stream);
 		struct streaminfo *pstream = &(pstream_pr->stream_public);
 
@@ -473,10 +479,32 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 			return 2;
 		}
 	}
-	else
+	if(timeouts_pending(plist->streamindex_timer))
 	{
-		return 0;
+		t = timeouts_get(plist->user_define_timer);
+		if (t != NULL)
+		{
+			StreamFunInfo *funinfo = (StreamFunInfo *)sapp_get_struct_header(t, StreamFunInfo, timeout);
+			struct streaminfo *tstream = (struct streaminfo *)funinfo->pstream;
+			unsigned char saved_op_state = tstream->opstate;
+			unsigned char saved_pkt_state = tstream->pktstate;
+			tstream->opstate = OP_STATE_TIMER;
+			tstream->pktstate = OP_STATE_TIMER;
+			int app_ret = call_streamentry(funinfo->pstream, NULL, NULL, NULL, funinfo);
+			tstream->opstate = saved_op_state;
+			tstream->pktstate = saved_pkt_state;
+
+			if(app_ret == APP_STATE_GIVEME)
+			{
+				timeouts_add(plist->user_define_timer, t, funinfo->set_timer_s+g_CurrentTime);
+			}
+			else
+			{
+				plist->user_define_timer_cnt -= 1;
+			}
+		}
 	}
+		return 0;
 }
 
 /*
@@ -511,7 +539,7 @@ int lrustream(struct streamindex *pindex)
 	}
 	long set_timeout = pindex->stream.timeout;
 	if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
-	timeouts_add(plist->timer, &pindex->timeout, g_CurrentTime+set_timeout);
+	timeouts_add(plist->streamindex_timer, &pindex->timeout, g_CurrentTime+set_timeout);
 	
 	return 0;
 }
@@ -1949,7 +1977,7 @@ void free_thread_stream(int thread_seq)
 		all_done=0;
 		while(!all_done)
 		{
-			t = timeouts_next(plist->timer, &it_all);
+			t = timeouts_next(plist->streamindex_timer, &it_all);
 			if(t)
 			{
 				pindex = container_of(t, struct streamindex, timeout);
@@ -1960,7 +1988,9 @@ void free_thread_stream(int thread_seq)
 				all_done = 1;
 			}
 		}
-		timeouts_close(plist->timer);
+		timeouts_close(plist->streamindex_timer);
+		assert(!timeouts_pending(plist->user_define_timer));
+		timeouts_close(plist->user_define_timer);
 	  }	
   	  for(j=0;j<MAX_UDP_STATE;j++)
 	 {
@@ -1970,7 +2000,7 @@ void free_thread_stream(int thread_seq)
 		TIMEOUTS_IT_INIT(&it_all, TIMEOUTS_ALL);
 		while(!all_done)
 		{
-			t = timeouts_next(plist->timer, &it_all);
+			t = timeouts_next(plist->streamindex_timer, &it_all);
 			if(t)
 			{
 				pindex = container_of(t, struct streamindex, timeout);
@@ -1981,7 +2011,9 @@ void free_thread_stream(int thread_seq)
 				all_done = 1;
 			}
 		}
-		timeouts_close(plist->timer);
+		timeouts_close(plist->streamindex_timer);
+		assert(!timeouts_pending(plist->user_define_timer));
+		timeouts_close(plist->user_define_timer);
 	  }
 
 }

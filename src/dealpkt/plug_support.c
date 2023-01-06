@@ -640,6 +640,8 @@ static inline unsigned long long __get_stream_opt_traffic(int cltype, int iotype
 
 	return tval;
 }
+
+
 int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt opt, void *opt_val, int opt_val_len)
 {
 	int ret = -1;
@@ -784,6 +786,35 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			}
 		}
 		break;
+		case (int)MSO_STREAM_TIMER:
+		{
+			if(sizeof(int) != opt_val_len){
+				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_set_stream_opt() MSO_TIMEOUT error:opt_val_len invalid, must be sizeof(short)\n",printaddr(&pstream->addr, pstream->threadnum));
+				ret = -1;
+				break;
+			}
+			unsigned int set_timer_s = *((unsigned short *)opt_val);
+			struct stream_list *lru_list_root;
+			struct streaminfo_private *pstream_pr=(struct streaminfo_private *)pstream;
+			StreamFunInfo *funinfo = (StreamFunInfo *)pstream_pr->cur_plugin_cb_func;
+			funinfo->pstream = pstream;
+			funinfo->set_timer_s = set_timer_s;
+			if(STREAM_TYPE_TCP != pstream->type)
+			{
+				lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->tcpList[pstream->stream_state]);	
+			}
+			else
+			{
+				lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->udpList[pstream->stream_state]);
+			}
+			if(false == timeout_pending(&funinfo->timeout))
+			{
+				timeout_init(&funinfo->timeout, TIMEOUT_ABS);
+			}
+			timeouts_add(lru_list_root->user_define_timer, &funinfo->timeout, set_timer_s+g_CurrentTime);
+			lru_list_root->user_define_timer_cnt+=1;
+		}
+		break;		
 		
 		default:
 			sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_set_stream_opt() error: unsupport MESA_stream_opt type:%d!\n", printaddr(&pstream->addr, pstream->threadnum), (int)opt);

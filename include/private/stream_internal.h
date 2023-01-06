@@ -144,6 +144,7 @@ struct streaminfo_private
 	struct streaminfo stream_public;
 	struct streaminfo_private *pfather_pr; /* 真实流量的上层流指针, 包括了vxlan等封装层, stream_public.pfather是给业务插件看的,不包括vxlan层的 */
 	/* 以下变量为平台内部私有, 对外不可见 */
+	void *cur_plugin_cb_func;
 	void   *pproject;		//每个工程可以自定义使用；
 
 	/* ---8 bytes-- */

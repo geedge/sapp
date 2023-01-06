@@ -285,6 +285,7 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 	struct timespec before_ts, after_ts;
 	long long time_spent_ns;
 	char debug_raw_pkt_string[256];
+	struct streaminfo_private *pstream_pr=(struct streaminfo_private *)a_stream;
 
 #if SAPP_INSECTICIDE
 	const struct streaminfo_private *stream_pr = (const struct streaminfo_private *)a_stream;
@@ -300,10 +301,12 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 
 	if(type==CALL_FUN_TYPE_RAW)
 	{
+		pstream_pr->cur_plugin_cb_func = (void *)pFunInfo;
 		rec=((SAPP_STREAM_FUN_T)pFunInfo->pfun)(a_stream,transport_hdr,a_packet,&(pFunInfo->pAppInfo));
 	}
 	else
 	{
+		pstream_pr->cur_plugin_cb_func = (void *)pFunInfo;
 		rec=((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),thread_seq, a_packet);
 	}
 
@@ -445,7 +448,7 @@ static int copy_funcation_from_entry_to_stream(StreamFunInfo **oneStreamFunInfo,
 	return 0;
 }
 
-static int call_streamentry(struct streaminfo *a_stream, const void *this_iphdr, const void *transport_hdr, const void *raw_pkt, StreamFunInfo *pFunInfo)
+int call_streamentry(struct streaminfo *a_stream, const void *this_iphdr, const void *transport_hdr, const void *raw_pkt, StreamFunInfo *pFunInfo)
 {
 	//add by lqy 20141230
 	//注意如下的只有是stream_raw类型的函数，函数调用不一样
@@ -736,6 +739,17 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 				{
 					call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, pFunInfo);
 					pNext=pFunInfo->next;
+					struct stream_list *lru_list_root;
+					if(STREAM_TYPE_TCP != a_stream->type)
+					{
+						lru_list_root=&(G_MESA_GLOBAL_STREAM[a_stream->threadnum]->tcpList[a_stream->stream_state]);	
+					}
+					else
+					{
+						lru_list_root=&(G_MESA_GLOBAL_STREAM[a_stream->threadnum]->udpList[a_stream->stream_state]);
+					}
+					timeouts_del(lru_list_root->user_define_timer ,&pFunInfo->timeout);
+					lru_list_root->user_define_timer_cnt-=1;
 					sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,a_stream->threadnum,pFunInfo);
 					
 					pFunInfo=pNext;
