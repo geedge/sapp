@@ -87,8 +87,6 @@ struct stream_list
 	int cnt;
 	int max_cnt;
 	struct timeouts *streamindex_timer;
-	struct timeouts *user_define_timer;
-	long user_define_timer_cnt;
 	long last_update_timer_s;
 	timeout_error_t timer_error;
 };
@@ -106,15 +104,19 @@ struct global_stream
 	struct streamindex **tcp_stream_table;
 	unsigned short  *tcp_stream_talbe_hash_count; /* lijia comment: 一个HASH_Slot下冲突链表元素个数 */
 	struct stream_list tcpList[MAX_TCP_STATE];
+
 	struct streamindex **udp_stream_table;
 	unsigned short  *udp_stream_talbe_hash_count;/* lijia comment: 一个HASH_Slot下冲突链表元素个数 */
-
 	struct stream_list udpList[MAX_UDP_STATE];
 
 	struct STREAM_INDEX_LIST freeList;
 	struct stream_index_list_item *__freeList_real_head;
 	int freeList_cnt;
 	int freeList_max_cnt;
+
+	struct timeouts *user_define_timer;
+	long user_define_timer_cnt;
+	timeout_error_t timer_error;
 };
 
 typedef struct _stStreamFunInfo

@@ -53,7 +53,7 @@ static inline void update_stream_list_raw_pkt_pointer(struct streaminfo_private 
 void addr_reverse_memcpy(const struct streaminfo_private *stack_pr,void *daddr, const void *saddr, int addrtype, int addrlen);
 int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *pstream_stack, int reverse);
 void iterate_stream_list(const struct streaminfo *stream);
-int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index);
+int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index, int thread_id);
 
 //int g_kill_tcp_remedy_sw = 0; /* 2016-06-21 lijia add, 是否进行FD补救 */
 
@@ -1264,7 +1264,7 @@ static void tcp_change_stream_tonouse(struct streamindex *pindex)
 	   无法将TCP_NOUSE_STATE状态下的流淘汰出去,
 	   所以此处再扫描一次TCP_NOUSE_STATE的超时流.
 	 */
-	del_stream_by_time(plist, pindex);
+	del_stream_by_time(plist, pindex, threadnum);
 }
 
 

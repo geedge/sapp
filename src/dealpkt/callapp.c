@@ -739,20 +739,10 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 				{
 					call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, pFunInfo);
 					pNext=pFunInfo->next;
-					struct stream_list *lru_list_root;
-					if(STREAM_TYPE_TCP != a_stream->type)
-					{
-						lru_list_root=&(G_MESA_GLOBAL_STREAM[a_stream->threadnum]->tcpList[a_stream->stream_state]);	
-					}
-					else
-					{
-						lru_list_root=&(G_MESA_GLOBAL_STREAM[a_stream->threadnum]->udpList[a_stream->stream_state]);
-					}
-
 					if(timeout_pending(&pFunInfo->timeout))
 					{
-						timeouts_del(lru_list_root->user_define_timer ,&pFunInfo->timeout);
-						lru_list_root->user_define_timer_cnt-=1;
+						timeouts_del(G_MESA_GLOBAL_STREAM[a_stream->threadnum]->user_define_timer ,&pFunInfo->timeout);
+						G_MESA_GLOBAL_STREAM[a_stream->threadnum]->user_define_timer_cnt-=1;
 					}
 					sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,a_stream->threadnum,pFunInfo);
 					

@@ -130,7 +130,7 @@ static int update_hierarchical_layer_stat(const struct hierarchical_layer *strea
 {
 	int i;
 	
-	if(search_g_hierarchical_layer_stat(stream_hierarchical_layer_stat) == 0){ //不存�? 是新的流结构
+	if(search_g_hierarchical_layer_stat(stream_hierarchical_layer_stat) == 0){ //不存�? �?新的流结�?
 		memcpy(&g_hierarchical_layer_stat[hierarchical_layer_stat_num], stream_hierarchical_layer_stat, sizeof(struct hierarchical_layer) * MAX_LAYER_DEPTH);
 		hierarchical_layer_stat_num++;
 		show_hierarchical_layer_stat();
@@ -483,6 +483,30 @@ char test_set_stream_timeout(struct streaminfo *pstream,  void **pme, int thread
 		}
 	}
 
+	return APP_STATE_GIVEME;	
+}
+
+char test_set_stream_timer(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
+{
+	int ret;
+	int tout_val;
+	int opt_len;
+	
+	if(pstream->pktstate== OP_STATE_PENDING){
+			tout_val = 1;
+			ret = MESA_set_stream_opt(pstream, MSO_STREAM_TIMER, &tout_val, sizeof(int));
+			if(ret < 0){
+				DPRINT("stream:%p, MESA_set_stream_opt error:\n", pstream);
+				return APP_STATE_DROPME;
+			}			
+			DPRINT("stream: %p %s set timer at %llu!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
+	}
+	if(pstream->pktstate == OP_STATE_TIMER){
+		DPRINT("stream timeup: %p %s at %llu!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
+	}
+	if(pstream->pktstate == OP_STATE_CLOSE){
+		DPRINT("stream close: %p %s at %llu!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
+	}
 	return APP_STATE_GIVEME;	
 }
 
@@ -1017,7 +1041,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 }
 
 
-/* 关于网络相关字段, 均为网络�? network order */
+/* 关于网络相关字�??, 均为网络�? network order */
 struct __test_inline_vxlan_hdr{
 	unsigned char flags;
 
@@ -1025,12 +1049,12 @@ struct __test_inline_vxlan_hdr{
 #if 0	
 	unsigned char reserved[3];
 #else
-	unsigned char nat_type; /* 复用�?个保留字�? 表示NAT类型 */
+	unsigned char nat_type; /* 复用�?�?保留字�?? 表示NAT类型 */
 	unsigned char reserved[2];
 #endif
 	/*--------int delim -------*/
 	unsigned char vlan_id_half_high;
-	unsigned char link_layer_type : 4; /* 二层报文封装格式 */
+	unsigned char link_layer_type : 4; /* 二层报文封�?�格�? */
 	unsigned char vlan_id_half_low : 4;
 	unsigned int dir : 1;
 	unsigned int link_id : 6;
@@ -1822,7 +1846,7 @@ static void test_inject_tcp_pkt_with_this_hdr(struct streaminfo *stream,void **p
 	raw_thdr = (struct mesa_tcp_hdr *)((char *)raw_ihdr + raw_ihdr->ip_hl*4);
 	raw_tcp_payload_len = ntohs(raw_ihdr->ip_len) - raw_ihdr->ip_hl*4 - raw_thdr->th_off * 4;
 
-	/* 当前包是C2S方向的GET, �?要回复一个虚假的S2C方向的RESPONSE */
+	/* 当前包是C2S方向的GET, �?要回复一�?虚假的S2C方向的RESPONSE */
 	send_ihdr = (struct mesa_ip4_hdr *)pkt_header_payload;
 	send_thdr = (struct mesa_tcp_hdr *)((char *)send_ihdr + sizeof(struct mesa_ip4_hdr));
 

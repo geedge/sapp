@@ -25,6 +25,7 @@
 */
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "timeout.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -81,19 +82,18 @@ static int init_stream_detail(struct global_stream *g_stream)
 {
 	int i = 0;
 	memset(g_stream, 0, sizeof(struct global_stream));
+	g_stream->user_define_timer = timeouts_open(0, &g_stream->timer_error);
 	for (i = 0; i < MAX_TCP_STATE; i++)
 	{
 		g_stream->tcpList[i].max_cnt = tcpstate_num[i];
 		g_stream->tcpList[i].cnt = 0;
 		g_stream->tcpList[i].streamindex_timer = timeouts_open(0, &g_stream->tcpList[i].timer_error);
-		g_stream->tcpList[i].user_define_timer = timeouts_open(0, &g_stream->tcpList[i].timer_error);
 	}
 	for (i = 0; i < MAX_UDP_STATE; i++)
 	{
 		g_stream->udpList[i].max_cnt = udpstate_num[i];
 		g_stream->udpList[i].cnt = 0;
 		g_stream->udpList[i].streamindex_timer = timeouts_open(0, &g_stream->udpList[i].timer_error);
-		g_stream->udpList[i].user_define_timer = timeouts_open(0, &g_stream->udpList[i].timer_error);
 	}
 
 
@@ -437,15 +437,16 @@ void free_streamindex(int threadnum,struct streamindex *pindex)
 	modify by lqy 20150612
 	超时删除从链表头部开始，一次删除		
 */
-int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index)
+int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index, int thread_id)
 {
-
+	int ret = 0;
+	struct global_stream *g_stream = G_MESA_GLOBAL_STREAM[thread_id];
 	if(plist->last_update_timer_s < g_CurrentTime)
 	{
 		timeouts_update(plist->streamindex_timer, g_CurrentTime);
-		if(true == timeouts_pending(plist->streamindex_timer))
+		if(g_stream->user_define_timer_cnt > 0)
 		{
-			timeouts_update(plist->user_define_timer, g_CurrentTime);
+			timeouts_update(g_stream->user_define_timer, g_CurrentTime);
 		}
 		plist->last_update_timer_s = g_CurrentTime;
 	}
@@ -463,25 +464,25 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 				/* 2016-12-15 lijia add, 超时reset之前, 先要设置link_state */
 				((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
 			}
-			return 1;
+			ret =  1;
 		}
 		if (STREAM_TYPE_TCP == pstream->type)
 		{
 			((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
 			tcp_free_stream(pindex, NULL, NULL, NULL);
-			return 2;
+			ret =  2;
 			
 		}
 		else
 		{
 			pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_TIMEOUT;
 			udp_free_stream(pindex);
-			return 2;
+			ret =  2;
 		}
 	}
-	if(timeouts_pending(plist->streamindex_timer))
+	if(g_stream->user_define_timer_cnt > 0)
 	{
-		t = timeouts_get(plist->user_define_timer);
+		t = timeouts_get(g_stream->user_define_timer);
 		if (t != NULL)
 		{
 			StreamFunInfo *funinfo = (StreamFunInfo *)sapp_get_struct_header(t, StreamFunInfo, timeout);
@@ -496,15 +497,15 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 
 			if(app_ret == APP_STATE_GIVEME)
 			{
-				timeouts_add(plist->user_define_timer, t, funinfo->set_timer_s+g_CurrentTime);
+				timeouts_add(g_stream->user_define_timer, t, funinfo->set_timer_s+g_CurrentTime);
 			}
 			else
 			{
-				plist->user_define_timer_cnt -= 1;
+				g_stream->user_define_timer_cnt -= 1;
 			}
 		}
 	}
-		return 0;
+	return ret;
 }
 
 /*
@@ -531,7 +532,7 @@ int lrustream(struct streamindex *pindex)
 	}
 	//if(g_CurrentTime > plist->last_check_timer_s)
 	{
-		int ret  = del_stream_by_time(plist, pindex);
+		int ret  = del_stream_by_time(plist, pindex, pstream->threadnum);
 		if (1 == ret)
 		{
 			return 1;
@@ -1969,6 +1970,7 @@ void free_thread_stream(int thread_seq)
 	struct timeouts_it it_all;
 	
 	  g_stream=G_MESA_GLOBAL_STREAM[thread_seq];
+	  timeouts_close(g_stream->user_define_timer);
 	  for(j=0;j<MAX_TCP_STATE;j++)
 	 {
 	 	plist=&(g_stream->tcpList[j]);
@@ -1989,8 +1991,6 @@ void free_thread_stream(int thread_seq)
 			}
 		}
 		timeouts_close(plist->streamindex_timer);
-		assert(!timeouts_pending(plist->user_define_timer));
-		timeouts_close(plist->user_define_timer);
 	  }	
   	  for(j=0;j<MAX_UDP_STATE;j++)
 	 {
@@ -2012,8 +2012,6 @@ void free_thread_stream(int thread_seq)
 			}
 		}
 		timeouts_close(plist->streamindex_timer);
-		assert(!timeouts_pending(plist->user_define_timer));
-		timeouts_close(plist->user_define_timer);
 	  }
 
 }
@@ -2578,7 +2576,7 @@ int polling_stream_timeout(int tid)
 	for(i = UDP_ONE_STATE; i < MAX_UDP_STATE; i++){
 		plist=&(G_MESA_GLOBAL_STREAM[tid]->udpList[i]);
 		if( plist->cnt > 0){ 
-			ret = del_stream_by_time(plist, NULL);
+			ret = del_stream_by_time(plist, NULL, tid);
 			if(ret > 0){
 				has_work = POLLING_STATE_WORK;
 			}
@@ -2588,7 +2586,7 @@ int polling_stream_timeout(int tid)
 	for(i = TCP_SYN_STATE; i < MAX_TCP_STATE; i++){
 		plist=&(G_MESA_GLOBAL_STREAM[tid]->tcpList[i]);
 		if(plist->cnt > 0){ /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
-			ret = del_stream_by_time(plist, NULL);
+			ret = del_stream_by_time(plist, NULL, tid);
 			if(ret > 0){
 				has_work = POLLING_STATE_WORK;
 			}

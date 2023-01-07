@@ -799,20 +799,13 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			StreamFunInfo *funinfo = (StreamFunInfo *)pstream_pr->cur_plugin_cb_func;
 			funinfo->pstream = pstream;
 			funinfo->set_timer_s = set_timer_s;
-			if(STREAM_TYPE_TCP != pstream->type)
-			{
-				lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->tcpList[pstream->stream_state]);	
-			}
-			else
-			{
-				lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->udpList[pstream->stream_state]);
-			}
 			if(false == timeout_pending(&funinfo->timeout))
 			{
 				timeout_init(&funinfo->timeout, TIMEOUT_ABS);
 			}
-			timeouts_add(lru_list_root->user_define_timer, &funinfo->timeout, set_timer_s+g_CurrentTime);
-			lru_list_root->user_define_timer_cnt+=1;
+			timeouts_add(G_MESA_GLOBAL_STREAM[pstream->threadnum]->user_define_timer, &funinfo->timeout, set_timer_s+g_CurrentTime);
+			G_MESA_GLOBAL_STREAM[pstream->threadnum]->user_define_timer_cnt+=1;
+			ret = 0;
 		}
 		break;		
 		
