@@ -434,7 +434,7 @@ static int copy_funcation_from_entry_to_stream(StreamFunInfo **oneStreamFunInfo,
 	StreamFunInfo *pFunInfo=(*oneStreamFunInfo);
 	if(pFunInfo==NULL)
 	{
-		pFunInfo=(StreamFunInfo *)sapp_mem_malloc(SAPP_MEM_DYN_PLUG_CTRL, thread_num, sizeof(StreamFunInfo));
+		pFunInfo=(StreamFunInfo *)sapp_mem_calloc(SAPP_MEM_DYN_PLUG_CTRL, thread_num, sizeof(StreamFunInfo));
 		*oneStreamFunInfo=pFunInfo;
 	}
 	
@@ -748,8 +748,12 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 					{
 						lru_list_root=&(G_MESA_GLOBAL_STREAM[a_stream->threadnum]->udpList[a_stream->stream_state]);
 					}
-					timeouts_del(lru_list_root->user_define_timer ,&pFunInfo->timeout);
-					lru_list_root->user_define_timer_cnt-=1;
+
+					if(timeout_pending(&pFunInfo->timeout))
+					{
+						timeouts_del(lru_list_root->user_define_timer ,&pFunInfo->timeout);
+						lru_list_root->user_define_timer_cnt-=1;
+					}
 					sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,a_stream->threadnum,pFunInfo);
 					
 					pFunInfo=pNext;
