@@ -489,8 +489,8 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 			struct streaminfo *tstream = (struct streaminfo *)funinfo->pstream;
 			unsigned char saved_op_state = tstream->opstate;
 			unsigned char saved_pkt_state = tstream->pktstate;
-			tstream->opstate = OP_STATE_TIMER;
-			tstream->pktstate = OP_STATE_TIMER;
+			tstream->opstate = OP_STATE_TIMED;
+			tstream->pktstate = OP_STATE_TIMED;
 			int app_ret = call_streamentry(funinfo->pstream, NULL, NULL, NULL, funinfo);
 			tstream->opstate = saved_op_state;
 			tstream->pktstate = saved_pkt_state;

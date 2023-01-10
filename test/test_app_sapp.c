@@ -501,7 +501,7 @@ char test_set_stream_timer(struct streaminfo *pstream,  void **pme, int thread_s
 			}			
 			DPRINT("stream: %p %s set timer at %llu!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
 	}
-	if(pstream->pktstate == OP_STATE_TIMER){
+	if(pstream->pktstate == OP_STATE_TIMED){
 		DPRINT("stream timeup: %p %s at %llu!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
 	}
 	if(pstream->pktstate == OP_STATE_CLOSE){
