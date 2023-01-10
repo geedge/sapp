@@ -3,10 +3,13 @@
 
 #include <pthread.h>
 #include <netinet/in.h>
+#include <limits.h>
 #include "sapp_pkt_stat.h"
 #include "sapp_limits.h"
 #include "sapp_mem.h"
 #include "stream_inc/stream_base.h"
+#include "packet_io.h"
+#include "sapp_cla_private.h"
 
 enum pkt_dump_mode{
 	PKT_DUMP_LOCAL_FILE		=	1, 

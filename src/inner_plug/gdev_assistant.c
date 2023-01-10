@@ -4,6 +4,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 #include "support/grule.h"
 #include "support/MESA_socket_wrap.h"
 

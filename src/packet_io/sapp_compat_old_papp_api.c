@@ -9,6 +9,7 @@ extern "C" {
 #endif
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 #ifndef GSERIAL_PLUGID_MAX
 #define GSERIAL_PLUGID_MAX 	(64)

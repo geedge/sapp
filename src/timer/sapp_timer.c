@@ -1,6 +1,7 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 #include "public/sapp_timer.h"
+#include "sapp_declaration.h"
 #include "support/event2/event.h"
 #include <systemd/sd-daemon.h>
 

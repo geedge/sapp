@@ -5,6 +5,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 extern int ipv4_entry(struct streaminfo_private *pfstream, const void *this_layer_data, int thread_num, 
 			unsigned char routedir, const raw_pkt_t *raw_pkt, int);

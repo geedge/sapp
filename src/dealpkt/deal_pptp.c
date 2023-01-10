@@ -4,6 +4,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 unsigned short g_pptp_plugid = 0;
 MESA_htable_handle *g_pptp_htable_array; /* 内存申请和HASH创建由协议解析插件在初始化阶段完成 */

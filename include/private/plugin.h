@@ -5,6 +5,7 @@
 #include "stream.h"
 #include "sapp_limits.h"
 #include "sapp_mem.h"
+#include "stream_register.h"
 
 #ifdef __cplusplus
 extern "C" {

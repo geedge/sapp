@@ -25,6 +25,8 @@
 */
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
+#include "stream_inc/stream_base.h"
 #include "timeout.h"
 
 #ifdef __cplusplus
@@ -184,7 +186,6 @@ static inline UINT64 stream_get_detail_last_mtime(const struct streamindex *pind
 static void stream_timeout_shift_lrulist(struct streamindex *pindex, unsigned short new_timeout)
 {
 	unsigned short global_default_timeout;
-	struct streamindex *tmp_index;
 	struct stream_list *lru_list_root;
 	const struct streaminfo *pstream = &pindex->stream.stream_public;
 	
@@ -426,6 +427,7 @@ void free_streamindex(int threadnum,struct streamindex *pindex)
 	
 }
 
+extern int call_streamentry(struct streaminfo *a_stream, const void *this_iphdr, const void *transport_hdr, const void *raw_pkt, StreamFunInfo *pFunInfo);
 //add by lqy 20141203
 //检测链表尾部的最后一个链接是否超时，如果超时则淘汰之
 
@@ -457,29 +459,31 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 		struct streaminfo_private *pstream_pr = &(pindex->stream);
 		struct streaminfo *pstream = &(pstream_pr->stream_public);
 
-		if (pindex == current_drive_index)
-		{ /* 当前包所在的流超时, 说明之前很长时间没有包到来, 此时不用free, 而是返回1, 再调用reset */
-			if (STREAM_TYPE_TCP == pstream->type)
-			{
-				/* 2016-12-15 lijia add, 超时reset之前, 先要设置link_state */
-				((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
-			}
-			ret =  1;
-		}
-		if (STREAM_TYPE_TCP == pstream->type)
-		{
-			((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
-			tcp_free_stream(pindex, NULL, NULL, NULL);
-			ret =  2;
-			
-		}
-		else
-		{
-			pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_TIMEOUT;
-			udp_free_stream(pindex);
-			ret =  2;
-		}
-	}
+        if (pindex == current_drive_index)
+        { /* 当前包所在的流超时, 说明之前很长时间没有包到来, 此时不用free, 而是返回1, 再调用reset */
+            if (STREAM_TYPE_TCP == pstream->type)
+            {
+                /* 2016-12-15 lijia add, 超时reset之前, 先要设置link_state */
+                ((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
+            }
+            ret = 1;
+        }
+        else
+        {
+            if (STREAM_TYPE_TCP == pstream->type)
+            {
+                ((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
+                tcp_free_stream(pindex, NULL, NULL, NULL);
+                ret = 2;
+            }
+            else
+            {
+                pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_TIMEOUT;
+                udp_free_stream(pindex);
+                ret = 2;
+            }
+        }
+    }
 	if(g_stream->user_define_timer_cnt > 0)
 	{
 		t = timeouts_get(g_stream->user_define_timer);
@@ -491,7 +495,7 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 			unsigned char saved_pkt_state = tstream->pktstate;
 			tstream->opstate = OP_STATE_TIMED;
 			tstream->pktstate = OP_STATE_TIMED;
-			int app_ret = call_streamentry(funinfo->pstream, NULL, NULL, NULL, funinfo);
+			int app_ret = call_streamentry((struct streaminfo *)funinfo->pstream, NULL, NULL, NULL, funinfo);
 			tstream->opstate = saved_op_state;
 			tstream->pktstate = saved_pkt_state;
 
@@ -516,7 +520,6 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 int lrustream(struct streamindex *pindex)
 {
 	struct stream_list *plist=NULL;
-	struct streamindex * next,*prev;
 	struct streaminfo_private *pstream_pr=&(pindex->stream);
 	struct streaminfo *pstream = &pstream_pr->stream_public;
 	
@@ -864,7 +867,6 @@ static void update_outer_ipv4addr_for_gtp_tunnel(const struct streaminfo_private
 	struct streaminfo_private *pheap_gtp_stream_pr, struct streaminfo_private *pstack_gtp_stream_pr,
 	struct streaminfo_private *pheap_ip_stream_pr, struct streaminfo_private *pstack_ip_stream_pr, unsigned char cur_pkt_dir)
 {
-	int ret;
 	int addr_has_changed = 0;
 	const struct stream_tuple4_v4 *stack_tuple4addr = pstack_ip_stream_pr->stream_public.addr.tuple4_v4;
 	struct stream_tuple4_v4 *heap_tuple4addr = pheap_ip_stream_pr->stream_public.addr.tuple4_v4;
@@ -901,7 +903,8 @@ static void update_outer_ipv4addr_for_gtp_tunnel(const struct streaminfo_private
 		char ip_after_src_str[INET_ADDRSTRLEN], ip_after_dst_str[INET_ADDRSTRLEN];
 		unsigned int before_teid_c2s, before_teid_s2c, after_teid_c2s, after_teid_s2c;
 		
-		if(addr_has_changed){
+		//if(addr_has_changed)
+		{
 			before_teid_c2s = ntohl(pheap_gtp_stream_pr->stream_public.addr.gtp->teid_c2s);
 			before_teid_s2c = ntohl(pheap_gtp_stream_pr->stream_public.addr.gtp->teid_s2c);
 		
@@ -946,7 +949,6 @@ static void update_outer_ipv6addr_for_gtp_tunnel(const struct streaminfo_private
 	struct streaminfo_private *pheap_gtp_stream_pr, struct streaminfo_private *pstack_gtp_stream_pr,
 	struct streaminfo_private *pheap_ip_stream_pr, struct streaminfo_private *pstack_ip_stream_pr, unsigned char cur_pkt_dir)
 {
-	int ret;
 	int addr_has_changed = 0;
 	const struct stream_tuple4_v6 *stack_tuple6addr = pstack_ip_stream_pr->stream_public.addr.tuple4_v6;
 	struct stream_tuple4_v6 *heap_tuple6addr = pheap_ip_stream_pr->stream_public.addr.tuple4_v6;
@@ -983,7 +985,8 @@ static void update_outer_ipv6addr_for_gtp_tunnel(const struct streaminfo_private
 		char ip_after_src_str[INET_ADDRSTRLEN], ip_after_dst_str[INET_ADDRSTRLEN];
 		unsigned int before_teid_c2s, before_teid_s2c, after_teid_c2s, after_teid_s2c;
 		
-		if(addr_has_changed){
+		//if(addr_has_changed)
+		{
 			before_teid_c2s = ntohl(pheap_gtp_stream_pr->stream_public.addr.gtp->teid_c2s);
 			before_teid_s2c = ntohl(pheap_gtp_stream_pr->stream_public.addr.gtp->teid_s2c);
 		
@@ -1508,122 +1511,152 @@ void hash_del_stream(struct streamindex *pindex)
 	UCHAR threadnum = ptmp->threadnum;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
 
-	if(STREAM_TYPE_UDP==ptmp->type)
-     {
-         phashstream=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_table;
-		pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_talbe_hash_count;
-		local_sys_stat->count[SAPP_STAT_UDP_STREAM_DEL]++;
-		   if(ptmp->pudpdetail->clientpktnum+ptmp->pudpdetail->serverpktnum >= sapp_global_val->config.stream.udp.meaningful_statistics_minimum_pkt
-			 && ptmp->pudpdetail->clientbytes+ptmp->pudpdetail->serverbytes >= sapp_global_val->config.stream.udp.meaningful_statistics_minimum_byte)
-	       {		
-			   if(ptmp->dir == DIR_DOUBLE)
-			   {
-				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_DOUBLE]++;
-				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_DOUBLE_PKTS]+=(ptmp->pudpdetail->clientpktnum+ptmp->pudpdetail->serverpktnum);
-				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_DOUBLE_BYTES]+=(ptmp->pudpdetail->clientbytes+ptmp->pudpdetail->serverbytes);
-			   }
-			   else if(ptmp->dir == DIR_C2S)
-			   {
-				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_C2S]++;
-				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_C2S_PKTS]+=(ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
-				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_C2S_BYTES]+=(ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
-			   }
-			   else if(ptmp->dir == DIR_S2C)
-			   {
-				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_S2C]++;
-				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_S2C_PKTS]+=(ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
-				   local_sys_stat->count[SAPP_STAT_UDP_STREAM_S2C_BYTES]+=(ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
-			   }		
-	     }
-		   if(ptmp->dir == DIR_DOUBLE)
-		   {
-			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE]++;
-			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_PKTS] += (ptmp->pudpdetail->clientpktnum + ptmp->pudpdetail->serverpktnum);
-			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_BYTES] += (ptmp->pudpdetail->clientbytes + ptmp->pudpdetail->serverbytes);
-		   }
-		   else if(ptmp->dir == DIR_C2S)
-		   {
-			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_C2S]++;
-			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_C2S_PKTS] += (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
-			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_C2S_BYTES] += (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
-		   }
-		   else if(ptmp->dir == DIR_S2C)
-		   {
-			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_S2C]++;
-			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_S2C_PKTS] += (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
-			   local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_S2C_BYTES] += (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
-		   }		     
-     }
-	 else if (STREAM_TYPE_TCP==ptmp->type)
-	 {
-	 	const struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private*)(ptmp->pdetail);
-          phashstream=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_table;
- 		  pelementcount=G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_talbe_hash_count;
- 		   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DEL]++;
+    if (STREAM_TYPE_UDP == ptmp->type)
+    {
+        phashstream = G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_table;
+        pelementcount = G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_talbe_hash_count;
+        local_sys_stat->count[SAPP_STAT_UDP_STREAM_DEL]++;
+        if (ptmp->pudpdetail->clientpktnum + ptmp->pudpdetail->serverpktnum >=
+                sapp_global_val->config.stream.udp.meaningful_statistics_minimum_pkt &&
+            ptmp->pudpdetail->clientbytes + ptmp->pudpdetail->serverbytes >=
+                sapp_global_val->config.stream.udp.meaningful_statistics_minimum_byte)
+        {
+            if (ptmp->dir == DIR_DOUBLE)
+            {
+                local_sys_stat->count[SAPP_STAT_UDP_STREAM_DOUBLE]++;
+                local_sys_stat->count[SAPP_STAT_UDP_STREAM_DOUBLE_PKTS] +=
+                    (ptmp->pudpdetail->clientpktnum + ptmp->pudpdetail->serverpktnum);
+                local_sys_stat->count[SAPP_STAT_UDP_STREAM_DOUBLE_BYTES] +=
+                    (ptmp->pudpdetail->clientbytes + ptmp->pudpdetail->serverbytes);
+            }
+            else if (ptmp->dir == DIR_C2S)
+            {
+                local_sys_stat->count[SAPP_STAT_UDP_STREAM_C2S]++;
+                local_sys_stat->count[SAPP_STAT_UDP_STREAM_C2S_PKTS] +=
+                    (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+                local_sys_stat->count[SAPP_STAT_UDP_STREAM_C2S_BYTES] +=
+                    (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
+            }
+            else if (ptmp->dir == DIR_S2C)
+            {
+                local_sys_stat->count[SAPP_STAT_UDP_STREAM_S2C]++;
+                local_sys_stat->count[SAPP_STAT_UDP_STREAM_S2C_PKTS] +=
+                    (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+                local_sys_stat->count[SAPP_STAT_UDP_STREAM_S2C_BYTES] +=
+                    (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
+            }
+        }
+        if (ptmp->dir == DIR_DOUBLE)
+        {
+            local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE]++;
+            local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_PKTS] +=
+                (ptmp->pudpdetail->clientpktnum + ptmp->pudpdetail->serverpktnum);
+            local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_BYTES] +=
+                (ptmp->pudpdetail->clientbytes + ptmp->pudpdetail->serverbytes);
+        }
+        else if (ptmp->dir == DIR_C2S)
+        {
+            local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_C2S]++;
+            local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_C2S_PKTS] +=
+                (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+            local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_C2S_BYTES] +=
+                (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
+        }
+        else if (ptmp->dir == DIR_S2C)
+        {
+            local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_S2C]++;
+            local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_S2C_PKTS] +=
+                (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+            local_sys_stat->count[SAPP_STAT_UDP_STREAM_TOTAL_S2C_BYTES] +=
+                (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
+        }
+    }
+    else if (STREAM_TYPE_TCP == ptmp->type)
+    {
+        const struct tcpdetail_private *pdetail_pr = (struct tcpdetail_private *)(ptmp->pdetail);
+        phashstream = G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_table;
+        pelementcount = G_MESA_GLOBAL_STREAM[threadnum]->tcp_stream_talbe_hash_count;
+        local_sys_stat->count[SAPP_STAT_TCP_STREAM_DEL]++;
 
- 		   if(pdetail_pr->has_lost_pkt_flag != 0){
-				local_sys_stat->count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM]++;
- 		   }
- 		   
- 		   if(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum >= sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_pkt
- 		    && ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes >= sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_byte)
-           {
-               if(ptmp->dir == DIR_DOUBLE)
-               {
-                   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE]++;
-				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE_PKTS]+=(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum);
-				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE_BYTES]+=(ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes );
-               }
-               else if(ptmp->dir == DIR_C2S)
-               {
-                   local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S]++;
-				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S_PKTS]+=(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum);
-				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S_BYTES]+=(ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes );
-               }
-               else if(ptmp->dir == DIR_S2C)
-               {
-                   local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C]++;
-				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C_PKTS]+=(ptmp->ptcpdetail->clientpktnum+ptmp->ptcpdetail->serverpktnum);
-				   local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C_BYTES]+=(ptmp->ptcpdetail->clientbytes+ptmp->ptcpdetail->serverbytes );
-               }
-               else
-                   ;
-           }
-           
-		   if(ptmp->dir == DIR_DOUBLE)
-		   {
-			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE]++;
-			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_PKTS] += (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
-			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_BYTES] += (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
-		   }
-		   else if(ptmp->dir == DIR_C2S)
-		   {
-			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_C2S]++;
-			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_C2S_PKTS] += (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
-			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_C2S_BYTES] += (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
-		   }
-		   else if(ptmp->dir == DIR_S2C)
-		   {
-			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_S2C]++;
-			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_S2C_PKTS] += (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
-			   local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_S2C_BYTES] += (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
-		   }
-           
-	 }else{
-      	phashstream = NULL;
-       	pelementcount = 0;
-		assert(0);
-     }
-         
-	 if(pindex->phashprev!=NULL)
-	 {
-	 	pindex->phashprev->phashnext=pindex->phashnext;
-	 }
-	 else
-	 {
-	 	phashstream[ptmp->hash_index] = pindex->phashnext;	
-	 }
-	if(pindex->phashnext!=NULL)
+        if (pdetail_pr->has_lost_pkt_flag != 0)
+        {
+            local_sys_stat->count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM]++;
+        }
+
+        if (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum >=
+                sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_pkt &&
+            ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes >=
+                sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_byte)
+        {
+            if (ptmp->dir == DIR_DOUBLE)
+            {
+                local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE]++;
+                local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE_PKTS] +=
+                    (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+                local_sys_stat->count[SAPP_STAT_TCP_STREAM_DOUBLE_BYTES] +=
+                    (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
+            }
+            else if (ptmp->dir == DIR_C2S)
+            {
+                local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S]++;
+                local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S_PKTS] +=
+                    (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+                local_sys_stat->count[SAPP_STAT_TCP_STREAM_C2S_BYTES] +=
+                    (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
+            }
+            else if (ptmp->dir == DIR_S2C)
+            {
+                local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C]++;
+                local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C_PKTS] +=
+                    (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+                local_sys_stat->count[SAPP_STAT_TCP_STREAM_S2C_BYTES] +=
+                    (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
+            }
+            else
+                ;
+        }
+
+        if (ptmp->dir == DIR_DOUBLE)
+        {
+            local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE]++;
+            local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_PKTS] +=
+                (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+            local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_BYTES] +=
+                (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
+        }
+        else if (ptmp->dir == DIR_C2S)
+        {
+            local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_C2S]++;
+            local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_C2S_PKTS] +=
+                (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+            local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_C2S_BYTES] +=
+                (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
+        }
+        else if (ptmp->dir == DIR_S2C)
+        {
+            local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_S2C]++;
+            local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_S2C_PKTS] +=
+                (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum);
+            local_sys_stat->count[SAPP_STAT_TCP_STREAM_TOTAL_S2C_BYTES] +=
+                (ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes);
+        }
+    }
+    else
+    {
+        phashstream = NULL;
+        pelementcount = 0;
+        assert(0);
+    }
+
+    if (pindex->phashprev != NULL)
+    {
+        pindex->phashprev->phashnext = pindex->phashnext;
+    }
+    else
+    {
+        phashstream[ptmp->hash_index] = pindex->phashnext;
+    }
+    if(pindex->phashnext!=NULL)
 	{
 		pindex->phashnext->phashprev=pindex->phashprev;
 	}
@@ -1833,7 +1866,6 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
 
 		case ADDR_TYPE_MAC: /* 2015-06-15 lijia add, 木马检测设备需求 */
 		{
-			unsigned char tmp_mac_addr[ETH_ALEN];
 			const struct layer_addr_mac *cur_stack_mac_saddr = (const struct layer_addr_mac *) saddr;
 			struct layer_addr_mac *heap_stream_mac_daddr = (struct layer_addr_mac *) daddr;
 				
@@ -2466,7 +2498,6 @@ struct streaminfo_private *copy_stream_info_to_heap_single_layer(int mem_used_ty
 	void *heap_addr;
 	struct streaminfo *heap_stream;
 	const struct streaminfo *stack_stream;
-	struct streaminfo_private *pfather_pr;
 
 	if(NULL == stack_stream_pr){
 		return NULL;
@@ -2652,6 +2683,8 @@ static inline void sapp_get_dup_pkt_key_udp_v6(const struct mesa_ip6_hdr *ip6hdr
 	return;
 }
 
+extern int sapp_dup_pkt_identify_v4(int tid, const sapp_dup_pkt_key_v4_t *key);
+extern int sapp_dup_pkt_mark_v4(int tid, const sapp_dup_pkt_key_v4_t *key);
 
 int sapp_dup_pkt_identify_udp_v4(int tid, struct streaminfo_private *pstream_pr, 
 		const struct mesa_ip4_hdr *ipv4_hdr, const struct mesa_udp_hdr *udp_h, int need_add_bloom_filter)
@@ -2672,6 +2705,8 @@ int sapp_dup_pkt_identify_udp_v4(int tid, struct streaminfo_private *pstream_pr,
 	return is_dup_pkt;
 }
 
+extern int sapp_dup_pkt_identify_v6(int tid, const sapp_dup_pkt_key_v6_t *key);
+
 int sapp_dup_pkt_identify_udp_v6(int tid, struct streaminfo_private *pstream_pr, 
 		const struct mesa_ip6_hdr *ipv6_hdr, const struct mesa_udp_hdr *udp_h)
 {
@@ -2686,6 +2721,8 @@ int sapp_dup_pkt_identify_udp_v6(int tid, struct streaminfo_private *pstream_pr,
 	
 	return is_dup_pkt;
 }
+
+extern int sapp_dup_pkt_mark_v6(int tid, const sapp_dup_pkt_key_v6_t *key);
 
 void sapp_dup_pkt_mark_tcp(int tid, unsigned char addrtype, const void *ip_hdr, const struct mesa_tcp_hdr *tcp_h)
 {
@@ -2954,6 +2991,8 @@ extern unsigned int tuple4_v6_make_crc_hash(const struct stream_tuple4_v6 *tuple
 
 	return tot_found_stream_num;
 }
+
+extern int stream_bridge_init(void);
 
 int init_stream_manage(int threadcount)
 {

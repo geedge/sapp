@@ -4,6 +4,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 extern void gdev_keepalive_log(void);
 extern void queue_full_detect(FILE *queue_log_fp);

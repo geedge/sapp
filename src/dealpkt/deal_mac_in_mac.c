@@ -5,6 +5,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 extern int g_skip_ethernet_layer_sw;
 

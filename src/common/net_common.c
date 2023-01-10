@@ -1,5 +1,6 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 
 #ifdef __cplusplus
@@ -1499,6 +1500,7 @@ char *sapp_memmove_for_blank_table(char *data, int max_len)
 	while(('\t' == data[0]) || (' ' ==data[0])){
 		memmove(data, data+1, max_len-1);
 	}
+	return data;
 }
 
 /*	
@@ -1600,13 +1602,12 @@ const char *sapp_raw_ipv6_ntop(const struct mesa_ip6_hdr *ip6_hdr, char *out_buf
 
 const char *sapp_rawpkt_ntop(const raw_pkt_t *raw_pkt, int greedy_inner_layer, char *out_buf, int buf_len)
 {
-	const struct mesa_ethernet_hdr *ehdr;
 	const struct mesa_ip4_hdr *ip4hdr;
 	const struct mesa_ip6_hdr *ip6hdr;
 	const struct mesa_tcp_hdr *thdr;
 	const struct mesa_udp_hdr *uhdr;
 	char ipsrc_str[64], ipdst_str[64];
-	unsigned short sport, dport, ipid, transport_checksum;
+	unsigned short sport, dport, ipid=0, transport_checksum;
 	unsigned char ip_pro;
 
 	if(greedy_inner_layer){

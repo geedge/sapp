@@ -3,6 +3,7 @@ extern "C" {
 #endif
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 #include "dablooms.h"
 
 

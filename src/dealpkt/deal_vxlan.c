@@ -4,6 +4,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 int set_vxlan_addr(const void *this_layer_hdr, struct layer_addr_vxlan_private *addr_pr)
 {

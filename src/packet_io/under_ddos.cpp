@@ -9,6 +9,7 @@
 #include "cpu_limit.h"
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 #ifdef __cplusplus
 extern "C" {

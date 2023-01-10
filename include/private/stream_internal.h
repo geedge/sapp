@@ -412,6 +412,7 @@ int gdev_block_init(void);
 int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt_t *raw_pkt);
 int sapp_identify_tunnel_inner_pkt(const raw_pkt_t *raw_pkt);
 int sapp_assistant_init(void);
+void sapp_fs2_fuzzy_latency_update_per_entry(int thead_seq, int entry_id, long long time_cost);
 int save_polling_inject_context(int mem_used_type, struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt);
 void free_polling_inject_context(int mem_used_type, struct streaminfo_private *pstream_pr);
 int update_polling_inject_context(int mem_used_type, struct streaminfo_private *pstream_pr, const raw_pkt_t *raw_pkt);

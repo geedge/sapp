@@ -1,5 +1,6 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 #include "support/MESA_socket_wrap.h"
 
 /*

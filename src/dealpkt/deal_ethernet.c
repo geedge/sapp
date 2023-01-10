@@ -4,6 +4,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];  
 extern int g_skip_ethernet_layer_sw;
@@ -40,6 +41,8 @@ static inline int should_create_empty_mpls_layer_for_symmetric(const struct stre
 
 	return 0;
 }
+
+extern int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_pkt_t *rawpkt);
 
 int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,int thread_num, 
 			unsigned char dir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)

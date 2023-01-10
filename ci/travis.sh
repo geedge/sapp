@@ -38,6 +38,7 @@ env | sort
 if [ -n "${INSTALL_DEPENDENCY_LIBRARY}" ]; then
 	yum install -y $INSTALL_DEPENDENCY_LIBRARY
 	source /etc/profile.d/framework.sh
+	source /etc/profile.d/mrzcpd.sh
 fi
 
 if [ $ASAN_OPTION ] && [ -f "/opt/rh/devtoolset-7/enable" ] ;then

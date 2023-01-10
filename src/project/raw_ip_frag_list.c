@@ -8,6 +8,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 //extern int g_packet_io_thread_num;
 

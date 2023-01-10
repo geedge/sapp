@@ -4,6 +4,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 #define CPU_CLOCK_TO_1US				(2199) /* 1微妙转换成CPU周期数, 比如2.2GHz就是2200 */
 

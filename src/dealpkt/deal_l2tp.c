@@ -33,6 +33,7 @@ extern "C" {
 */
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 #define L2TP_DEBUG    	(0)
 #if L2TP_DEBUG

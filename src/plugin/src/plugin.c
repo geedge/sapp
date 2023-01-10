@@ -99,6 +99,7 @@ int stream_register_fun(int funtype,char (*x)(void), int);
 #include "plugin.h"
 #include "plugin_serial.h"
 
+#include "sapp_declaration.h"
 
 extern stProtocolPlugInfo* g_protocol_plug_info;
 extern stBusinessPlugInfo* g_business_plug_info;
@@ -117,7 +118,7 @@ stPlugRuntimeInfo plugctrl_runtime_info;
 	Lijia note:
 	出现顺序要和enum fun_type_t类型顺序一致.
 */
-char* g_plugin_entryname[PLUGIN_MAX_ENTRYNUM] = 
+const char* g_plugin_entryname[PLUGIN_MAX_ENTRYNUM] = 
 {
 	SECTION_FUN_IP,
 	SECTION_FUN_IPV6,
@@ -187,7 +188,7 @@ static int reset_cwd()
 	memset(cur_path, 0, sizeof(cur_path));
 	int path_len = readlink("/proc/self/exe", cur_path, sizeof(cur_path));
 	int i = 0, ret = 0;
-	if(path_len < 0 || path_len > sizeof(cur_path))
+	if(path_len < 0 || path_len > (int)sizeof(cur_path))
 	{
 		perror(NULL);
 		return -1;
@@ -504,8 +505,6 @@ int check_plug_conf(char* filename,int plugtype)
 *****************************************************************************/
 int process_conf_entryname()
 {
-	int rec;
-	int len;
 	//char filename[PLUGIN_FILENAME_MAXLEN] = {0};
 	char buf_entryname[PLUGIN_MAX_CONFLEN] = {0};
 	FILE* fp;
@@ -587,7 +586,8 @@ int process_conf_entryname()
 	
 }
 
-
+extern int plugin_load_new_plug(const char *plug_name, const char *plug_path);
+extern int plugin_is_necessary(const char *plug_path);
 /****************************************************************************
 函数名:process_confelem_plugname()
 功能：处理插件配置文件的插件名字段
@@ -880,8 +880,8 @@ plug_init_error:
 	return -1;
 }
 
-
-
+extern int plugin_load_new_plug_entry(const char *plug_name, const char *plug_entry_type, void *entry_addr);
+extern int stream_register_fun(enum fun_type_t funtype,char (*x)(void), int plug_entry_id);
 /****************************************************************************
 函数名:process_confelem_platentry()
 功能：加载平台入口函数
@@ -930,7 +930,7 @@ int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname)
 			}
 
 			plug_entry_id = plug_mange_get_entry_id(plugname, buf_funname);
-			ret=stream_register_fun(i,fun_pointer, plug_entry_id); 
+			ret=stream_register_fun((enum fun_type_t)i,fun_pointer, plug_entry_id); 
 			if(ret==-1)
 			{
 				sapp_printf("\033[1;31;40m[Error]%s stream_register %s entry error\033[0m\n",filename,g_plugin_entryname[i]);
@@ -1318,7 +1318,7 @@ static int fetch_section_name(char *filename, char *section_name)
 /*
 	filename : ./plug/conflist.inf
 */
-static int process_conflist_single(char* filename, int plug_type, char *wanted_section_name)
+static int process_conflist_single(char* filename, int plug_type, const char *wanted_section_name)
 {
 	int rec = 0;
 	char buf_confname[PLUGIN_FILENAME_MAXLEN] = {0};
@@ -1373,7 +1373,7 @@ static int process_conflist_single(char* filename, int plug_type, char *wanted_s
 static void confilist_file_check(void)
 {
 	struct stat fstat;
-	int fres, ret;
+	int fres;
 
 	fres = stat(ABBR_PLUG_LIST_CONF_FILE, &fstat);
 	if(fres < 0){
@@ -1400,8 +1400,6 @@ static void confilist_file_check(void)
 int process_conflist(int plug_type)
 {
 	int rec;
-	int len;
-	char buf_confname[PLUGIN_FILENAME_MAXLEN] = {0};
 
 	confilist_file_check();
 
@@ -1881,7 +1879,6 @@ static char session_multi_state_context_free(stSessionInfo* session_info,void **
 char PROT_PROCESS(stSessionInfo* session_info, void **pme, int thread_seq,struct streaminfo *a_stream,const void *a_packet)
 {
 	char ret1=PROT_STATE_DROPME;
-	char ret2=PROT_STATE_GIVEME;
 	unsigned short plugid = session_info->plugid;
 	int session_state = session_info->session_state;
 	stProtocolPlugInfo* pluginfo;
@@ -1961,7 +1958,6 @@ void plugctrl_destroy_all_plug()
 {
 	stBusinessPlugInfo *plug_info, *plug_next;
 	stProtocolPlugInfo *pro_plug_info, *pro_plug_next;
-	int i;
 
 	sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, begin destory all plugin !");
 	/***** call all plugins destory callback fun *****/

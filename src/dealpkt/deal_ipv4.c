@@ -22,6 +22,7 @@
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -435,86 +436,93 @@ found:
 	}
 
 	/*Is this a continuous piece?*/
-	if(0 > i && 0 > j) 
-	{
-    	/*creat a new fragment piece*/
-    	tfp = frags_create(ip4_frag_handle, offset, end);
-    	tfp->prev = prev;
-    	tfp->next = next;
-    	if(prev) 
-			prev->next = tfp;
-    	else
-      		ipv4_qp->fragments = tfp;
-      
-    	if(next)
-      		next->prev = tfp;
-      	else
-      		ipv4_qp->fragments_tail = tfp; /* 2013-06-06 lijia add */
-	} 
-	else if(i >= 0 && j >= 0) 
-	{
-	    for (tmp2=next,tmp=next; NULL!=tmp; tmp=tmp->next) 
-	    {
-	      if (end < tmp->offset) 
-	      {
-	        break;
-	        tmp2 = tmp;
-	      }
-	    }
-    	prev->end = end;
-    	for(next=next; NULL!=next && next!=tmp; next=next->next) 
-    	{
-			if(end <= next->end) 
-			{
-		        prev->end = next->end;
-		        end -= (end - next->offset);
-		        frags_kill(ip4_frag_handle, ipv4_qp, next);
-		        break;
-			}
-			ipv4_qp->meat -= (next->end - next->offset);
-			frags_kill(ip4_frag_handle, ipv4_qp, next);
-		}
-	} 
-	else if(i >= 0) 
-	{
-		if(end > prev->end) 
-		{
-		  prev->end = end;
-		} 
-		else 
-		{
-		  end = offset;
-		}
-	} 
-	else if (j >= 0) 
-	{
-	    for (prev=next,tmp=next; NULL!=tmp; tmp=tmp->next) {
-	      if (end < tmp->offset) {
-	        break;
-	        prev = tmp;
-	      }
-	    }
-	    
-	    if (next != tmp) {
-	      next->offset = offset;
-	      next->end = end;
-	      for (tmp2=next->next; NULL!=tmp2 && tmp2!=tmp; tmp2=tmp2->next) {
-	        if (end <= tmp2->end) {
-	          next->end = tmp2->end;
-	          end -= (end - tmp2->offset);
-	          frags_kill(ip4_frag_handle, ipv4_qp, tmp2);
-	          break;
-	        }
-	        ipv4_qp->meat -= (tmp2->end - tmp2->offset);
-	        frags_kill(ip4_frag_handle, ipv4_qp, tmp2);
-	      }
-	    } else {
-	      end -= j;
-	      next->offset = offset;
-	    }
-	}
+    if (0 > i && 0 > j)
+    {
+        /*creat a new fragment piece*/
+        tfp = frags_create(ip4_frag_handle, offset, end);
+        tfp->prev = prev;
+        tfp->next = next;
+        if (prev)
+            prev->next = tfp;
+        else
+            ipv4_qp->fragments = tfp;
 
-	ipv4_qp->meat += (end - offset);
+        if (next)
+            next->prev = tfp;
+        else
+            ipv4_qp->fragments_tail = tfp; /* 2013-06-06 lijia add */
+    }
+    else if (i >= 0 && j >= 0)
+    {
+        for (tmp2 = next, tmp = next; NULL != tmp; tmp = tmp->next)
+        {
+            if (end < tmp->offset)
+            {
+                break;
+                // tmp2 = tmp;
+            }
+        }
+        prev->end = end;
+        for (; NULL != next && next != tmp; next = next->next)
+        {
+            if (end <= next->end)
+            {
+                prev->end = next->end;
+                end -= (end - next->offset);
+                frags_kill(ip4_frag_handle, ipv4_qp, next);
+                break;
+            }
+            ipv4_qp->meat -= (next->end - next->offset);
+            frags_kill(ip4_frag_handle, ipv4_qp, next);
+        }
+    }
+    else if (i >= 0)
+    {
+        if (end > prev->end)
+        {
+            prev->end = end;
+        }
+        else
+        {
+            end = offset;
+        }
+    }
+    else if (j >= 0)
+    {
+        for (prev = next, tmp = next; NULL != tmp; tmp = tmp->next)
+        {
+            if (end < tmp->offset)
+            {
+                break;
+                // prev = tmp;
+            }
+        }
+
+        if (next != tmp)
+        {
+            next->offset = offset;
+            next->end = end;
+            for (tmp2 = next->next; NULL != tmp2 && tmp2 != tmp; tmp2 = tmp2->next)
+            {
+                if (end <= tmp2->end)
+                {
+                    next->end = tmp2->end;
+                    end -= (end - tmp2->offset);
+                    frags_kill(ip4_frag_handle, ipv4_qp, tmp2);
+                    break;
+                }
+                ipv4_qp->meat -= (tmp2->end - tmp2->offset);
+                frags_kill(ip4_frag_handle, ipv4_qp, tmp2);
+            }
+        }
+        else
+        {
+            end -= j;
+            next->offset = offset;
+        }
+    }
+
+    ipv4_qp->meat += (end - offset);
 	/*If ipq buff is not enough to store current fragment piece, get a bigger one*/
 	if (end + private_info->raw_ip_hdr_len > ipv4_qp->buf_size) 
 	{
@@ -579,6 +587,9 @@ static inline void set_ipv4_addr(struct stream_tuple4_v4 *addr, struct mesa_ip4_
 	addr->dest = 0;/* 端口信息在tcp/udp层设置 */
 }
 
+extern int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_pkt_t *rawpkt);
+extern int stream_process_overlay_ipv4(struct streaminfo *pfstream, const struct ip* this_layer_hdr,
+				int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt);
 
 /* IPv4数据包入口函数, 包括分片包 */
 int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_data, int thread_num, 
@@ -731,7 +742,8 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 		local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;
 		local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG] += this_layer_len;
 	}else{
-		if(0 == this_layer_is_overlay){ /* 非overlay层才累加相关层计数 */
+		//if(0 == this_layer_is_overlay)
+		{ /* 非overlay层才累加相关层计数 */
 			local_sys_stat->count[SAPP_STAT_RCV_IPV4]++;
 			local_sys_stat->length[SAPP_STAT_RCV_IPV4] += this_layer_len;
 			if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)

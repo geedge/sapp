@@ -9,6 +9,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 
 char pcap_gdev_card[128]; 		/* 2012-08-14 LiJia add, 特殊设备模式下，捕包网卡名称，通常与sendto_gdev_card一样 */

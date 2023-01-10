@@ -5,6 +5,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 #define GRE_DEBUG    	(0)
 

@@ -90,12 +90,15 @@ enum addr_type_t{
 /* CHN : 应用层返回结果定义 */
 /* ENG : return value of plug */
 #define APP_STATE_GIVEME   0x00
+#define APP_STATE_FAWPKT   0x00
+
 #define APP_STATE_DROPME   0x01
 #define APP_STATE_GIVESTATE   0x02
 
-#define APP_STATE_FAWPKT   0x00
 
 #define APP_STATE_DROPPKT  0x10
+#define APP_STATE_STOLENPKT  0x20
+
 #define APP_STATE_KILL_FOLLOW 0x40 /* 强制CLOSE当前插件后续的所有插件 */
 #define APP_STATE_KILL_OTHER  0x80 /* 强制CLOSE除当前插件外的所有插件 */
 

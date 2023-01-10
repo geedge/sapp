@@ -4,6 +4,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 #ifdef GIT_VERSION
  __attribute__((__used__)) const char *sapp_git_ver = GIT_VERSION;
 #endif

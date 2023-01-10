@@ -8,6 +8,7 @@ extern "C" {
 #include "sapp_private_api.h"
 #include "support/tomlc99_wrap.h"
 #include "field_stat2.h"
+#include "sapp_declaration.h"
 
 extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];  
 
@@ -151,7 +152,7 @@ static int cfg_value_check_bind_mask(const sapp_config_check_t *sapp_cfg_check_a
 	}
 
 	const char *raw_cfg_send_only_threads_value = sapp_cfg_get_value_from_attr_by_section_key(sapp_cfg_check_attr, "CPU", "send_only_threads_max");
-	if(NULL == raw_cfg_worker_threads_value){
+	if(NULL == raw_cfg_send_only_threads_value){
 		return -1;
 	}
 	
@@ -171,7 +172,7 @@ static int cfg_value_check_stream_id_base_time(const sapp_config_check_t *sapp_c
 {
 	struct tm local_tm;
 	
-	if(NULL == raw_cfg_value || strlen(raw_cfg_value) <= 0){
+	if(NULL == raw_cfg_value || strlen(raw_cfg_value) == 0){
 		return 0; /* 可以为NULL,不算错误 */
 	}
 	
@@ -292,8 +293,8 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{6301,1,RLOG_LV_FATAL,"profiling.log",	"level",	NULL,NULL, NULL, NULL, 0},
 	{6302,0,RLOG_LV_INFO,"profiling.log",	"interval",	NULL,NULL, NULL, NULL, 0},
 	
-	{6401,0,RLOG_LV_INFO,"profiling.log.local",	"enabled",	NULL, NULL, NULL, 0},
-	{6402,0,RLOG_LV_INFO,"profiling.log.local",	"file_truncate_enabled",	NULL, NULL, NULL, 0},
+	{6401,0,RLOG_LV_INFO,"profiling.log.local",	"enabled",	NULL, NULL, NULL, 0, 0},
+	{6402,0,RLOG_LV_INFO,"profiling.log.local",	"file_truncate_enabled",	NULL, NULL, NULL, 0, 0},
 
 	{6501,0,RLOG_LV_INFO,"profiling.log.remote",	"enabled",	NULL,NULL, NULL, NULL, 0},
 	{6502,6501,RLOG_LV_INFO,"profiling.log.remote",	"server_ip",	"1",NULL, NULL, NULL, 0},
@@ -381,7 +382,6 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{-1,-1,RLOG_LV_DEBUG,NULL,NULL,NULL, NULL, NULL,NULL, 0}
 };
 
-static const int g_sapp_cfg_check_attr_num = sizeof(g_sapp_cfg_check_attr)/sizeof(sapp_config_check_t) - 1; /* 最后有个结束行, 全是NULL */
 
 
 static int cfg_get_index_by_cfg_id(int expect_cfg_id)
@@ -510,7 +510,7 @@ static void special_usage(void)
 static inline int is_file_exist(const char *filename)
 {
 	struct stat fstat;
-	int fres, ret;
+	int fres, ret=0;
 
 	fres = stat(filename, &fstat);
 	if(fres < 0){
@@ -639,7 +639,7 @@ static int parse_vlan_flipping_map_config(void)
 		c_router_vlan_id = 4097;
 		i_router_vlan_id = 4097;
 		mac_flip_enable = 0;
-		ret = sscanf(line_cont, "%u %u %u", &c_router_vlan_id, &i_router_vlan_id, &mac_flip_enable);
+		ret = sscanf(line_cont, "%llu %llu %llu", &c_router_vlan_id, &i_router_vlan_id, &mac_flip_enable);
 		if(ret != 3){
 			sapp_log(RLOG_LV_FATAL,1,1,"parse vlan_flipping_cfg_file:%s, line:%s error!", ABBR_VLAN_FLIPPING_CONF_FILE, line_cont);
 			fclose(fp);
@@ -682,7 +682,7 @@ static int parse_vlan_flipping_map_config(void)
 static int embed_layer_t_pton(char *config_val, embed_layer_t *result)
 {
 	enum addr_type_t addrtype;
-	int  j, ret, layer_index;
+	int  j, layer_index;
 	const char *delim = "[] ";
 	char *save_ptr;
 	const char *layer_type_string;
@@ -770,8 +770,6 @@ static int update_asymmetric_layer_info(embed_layer_t *global_array, embed_layer
 
 static int update_asymmetric_presence_layer(enum addr_type_t addrtype, embed_layer_t *under_layer, embed_layer_t *upper_layer)
 {
-	int i;
-
 	g_asymmetric_presence_layer_set[addrtype].is_asymmetric_layer = 1;
 
 	update_asymmetric_layer_info(&g_asymmetric_presence_layer_set[addrtype].under_layer, under_layer);
@@ -1449,7 +1447,7 @@ static int config_sanity_check(void)
 		int tot_cpu_core_num = get_nprocs();
 		for(i = 0; i < pconfig->cpu.bind_mask_array_num; i++){
 			if(pconfig->cpu.bind_mask_array[i] > tot_cpu_core_num-1){
-				printf("\033[41mbind_mask[%d]=%d, bigger than total cpu core number:%d!\033[0m\n", i, pconfig->cpu.bind_mask_array[i], tot_cpu_core_num);
+				printf("\033[41mbind_mask[%d]=%ld, bigger than total cpu core number:%d!\033[0m\n", i, pconfig->cpu.bind_mask_array[i], tot_cpu_core_num);
 				return -1;
 			}
 		}
@@ -1481,16 +1479,16 @@ static int config_sanity_check(void)
 
 	if(strncasecmp(tmp_str, "transparent", strlen("transparent")) == 0){
 		if((pconfig->packet_io.internal.interface.name[0] == '\0')
-		 || (strlen(pconfig->packet_io.internal.interface.name) <= 0)
+		 || (strlen(pconfig->packet_io.internal.interface.name) == 0)
 		 ||(pconfig->packet_io.internal.interface.type_str[0] == '\0')
-		 || (strlen(pconfig->packet_io.internal.interface.type_str) <= 0)){
+		 || (strlen(pconfig->packet_io.internal.interface.type_str) == 0)){
 			sapp_log(RLOG_LV_FATAL, ~0, ~0, "depolyment_mode is transparent, must set internal interface parameters!");
 			return -1;
 		}
 		if((pconfig->packet_io.external.interface.name[0] == '\0')
-		 || (strlen(pconfig->packet_io.external.interface.name) <= 0)
+		 || (strlen(pconfig->packet_io.external.interface.name) == 0)
 		 ||(pconfig->packet_io.external.interface.type_str[0] == '\0')
-		 || (strlen(pconfig->packet_io.external.interface.type_str) <= 0)){
+		 || (strlen(pconfig->packet_io.external.interface.type_str) == 0)){
 			sapp_log(RLOG_LV_FATAL, ~0, ~0, "depolyment_mode is transparent, must set external interface parameters!");
 			return -1;
 		}
@@ -2276,7 +2274,7 @@ int sapp_config_check(void)
 	sapp_config_check_t *local_cfg_check_attr = (sapp_config_check_t *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(g_sapp_cfg_check_attr)); 
 	memcpy(local_cfg_check_attr, g_sapp_cfg_check_attr, sizeof(g_sapp_cfg_check_attr));
 
-	for(i = 0; i < sizeof(g_interger_range_array)/sizeof(int); i++){
+	for(i = 0; i < (int)(sizeof(g_interger_range_array)/sizeof(int)); i++){
 		g_interger_range_array[i] = i;
 	}
 

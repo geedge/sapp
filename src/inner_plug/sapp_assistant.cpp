@@ -5,7 +5,10 @@
 */
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 #include "field_stat2.h"
+
+#include "marsio.h"
 
 static int sapp_fs2_init(void);
 static int sapp_line_protocol_init(void);

@@ -4,7 +4,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
-
+#include "sapp_declaration.h"
 
 static inline void set_pppoe_addr(struct layer_addr_pppoe_session *tuple_pppoe, 
 							struct mesa_pppoe_session_hdr *pppoe_hdr)

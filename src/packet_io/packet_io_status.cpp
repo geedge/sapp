@@ -6,6 +6,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 #include <stdarg.h>
 
 volatile int update_packet_io_status_sw = 1;

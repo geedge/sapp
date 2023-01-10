@@ -1,5 +1,6 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 #include "stream_register.h"
 
@@ -274,7 +275,7 @@ int stream_register_overlay_udp(STREAM_CB_FUN_T x)
 	return stream_register_funtoArray(FUN_TYPE_UDP,(char (*)())x,g_OverlayUdpFun,&g_OverlayUdpFunNum, 0);
 }
 
-
+extern const char *sapp_rawpkt_ntop(const raw_pkt_t *raw_pkt, int greedy_inner_layer, char *out_buf, int buf_len);
 /*
 	lijia 2015-01-12 add this_iphdr, 
 	如果是IP分片重组的包, 必须显式的传递IP包头, 否则只传raw_hdr, 无法获取重组后的IP包头.
@@ -772,7 +773,7 @@ int stream_process_udp_single(struct streaminfo *a_udp,const void * a_packet,voi
 		//add by lqy 20141230
 		//注意如下的只有是stream_raw类型的函数，函数调用不一样
 		//if(funtype>FUN_TYPE_IPV6_RAW)
-		if(is_raw_cb(funtype)){
+		if(is_raw_cb((enum fun_type_t)funtype)){
 			appState=g_StreamUdpFun[i].sapp_stream_fun(a_udp,a_packet,a_packet,&(pAppInfo));
 		}else{
 			appState=g_StreamUdpFun[i].stream_fun(a_udp,&(pAppInfo),a_udp->threadnum,a_packet);
@@ -1215,50 +1216,6 @@ static inline int is_raw_cb(enum fun_type_t cb_type)
 	return g_raw_cb_fun_identify_array[cb_type].is_raw;
 }
 
-
-#ifdef IIEFD_DUAL_STACK
-/* 2015-09-02 lijia add, for iieqd_dual_stack */
-static int judge_pure_ipv4_stack(const struct streaminfo *pstream, const void *a_packet)
-{
-	int ret = 0;
-	const mesa_ip4_hdr *ip4_hdr = (const mesa_ip4_hdr *)a_packet;
-	
-	switch(pstream->addr.addrtype){
-		case __ADDR_TYPE_IP_PAIR_V4:
-			if((IPPROTO_TCP != ip4_hdr->ip_p) && (IPPROTO_UDP != ip4_hdr->ip_p)){
-				ret = 0;
-				break;
-			}
-			if((NULL == pstream->pfather)
-			 ||((NULL != pstream->pfather) && (ADDR_TYPE_MAC == pstream->pfather->addr.addrtype))){
-				ret = 1;
-			 }else{
-				ret = 0;
-			 }
-		break;
-
-		case ADDR_TYPE_IPV4:
-			if(__ADDR_TYPE_IP_PAIR_V4 != pstream->pfather->addr.addrtype){
-				ret = 0;
-				break;
-			}
-
-			if((pstream->pfather->pfather != NULL) && (ADDR_TYPE_MAC != pstream->pfather->pfather->addr.addrtype)){
-				ret = 0;
-				break;
-			}
-
-			ret = 1;
-		break;
-
-		default:
-			ret = 0;
-		break;
-	}
-
-	return ret;
-}
-#endif
 
  int app_function_rationality_check(void)
 {

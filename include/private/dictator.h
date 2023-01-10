@@ -9,6 +9,8 @@
 extern "C"{
 #endif
 
+#include <stddef.h>
+ 
 void *__wrap_malloc(size_t size);
 void __wrap_free(void *p);
 void *__wrap_realloc(void *ptr, size_t size);

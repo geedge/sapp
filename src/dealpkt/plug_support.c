@@ -4,6 +4,7 @@
 */
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_declaration.h"
 #include "stream_inc/stream_base.h"
 
 #ifdef __cplusplus
