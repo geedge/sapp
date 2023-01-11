@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 
 enum tomlc99_errno{
 	TOMLC99_RET_SUCCESS				=  0,

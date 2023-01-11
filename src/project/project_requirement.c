@@ -120,7 +120,7 @@ static int project_platform_register(const char *project_req_name, enum pro_type
 		sapp_runtime_log(30, "project_platform_register (%s) FAIL: Empty G_PROJECT_NAME_HASH or Invalid pro_type(%d)", project_req_name, type);
 		return -1;
 	}
-	int *project_id = (int *)MESA_htable_search(G_PROJECT_NAME_HASH, project_req_name, strlen(project_req_name));
+	int *project_id = (int *)MESA_htable_search(G_PROJECT_NAME_HASH, (const unsigned char *)project_req_name, strlen(project_req_name));
 	if (project_id != NULL)
 	{
 		sapp_runtime_log(30, "project_platform_register (%s) DUPLICATE, exist project_id %d", project_req_name, *project_id);
@@ -141,7 +141,7 @@ static int project_platform_register(const char *project_req_name, enum pro_type
 		G_PROJECT_REQ_MANAGE[G_PROJECT_PLUG_NUM].project_req_type = type;
 		project_id = (int *)calloc(sizeof(int), 1);
 		*project_id = pid;
-		MESA_htable_add(G_PROJECT_NAME_HASH, project_req_name, strlen(project_req_name), (const void *)project_id);
+		MESA_htable_add(G_PROJECT_NAME_HASH, (const unsigned char*)project_req_name, strlen(project_req_name), (const void *)project_id);
 		G_PROJECT_PLUG_NUM++;
 		sapp_runtime_log(20, "project_platform_register (%s) SUCCEED, project_id return %d", project_req_name, pid);
 		return pid;
@@ -378,11 +378,6 @@ static long long __project_req_get(const struct streaminfo *stream, int project_
 	}
 
 	pinfo = (project_req_info_t *)(stream_pr->pproject);
-
-	if(NULL == pinfo){
-		sapp_runtime_log(RLOG_LV_FATAL, "project get error, id=%d, pproject is NULL!", project_req_id);
-		return -1;
-	}
 
 	if(0 == pinfo[project_req_id].valid_flag){ /* 生产者还未设置过, 返回-1并设置errno */
 		errno = ERANGE;

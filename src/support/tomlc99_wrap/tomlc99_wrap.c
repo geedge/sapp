@@ -213,7 +213,8 @@ int tomlc99_wrap_load_int_array(
 		}
 
 		int_val[cfg_array_num] = (int)tmp_long_val;
-		int_val = (int *)realloc(int_val, sizeof(int) * (cfg_array_num + 2));
+		 int *tmp = (int *)realloc(int_val, sizeof(int) * (cfg_array_num + 2));
+		 if(tmp)int_val=tmp;
 	}
 
 	if(cfg_array_num > *array_num){

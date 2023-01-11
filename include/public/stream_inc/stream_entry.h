@@ -33,6 +33,7 @@ typedef struct _plugin_session_info
 extern "C" {
 #endif
 
+struct streaminfo;
 
 typedef char (*STREAM_CB_FUN_T)(const struct streaminfo *pstream,void **pme, int thread_seq,const void *ip_hdr);
 typedef char (*IPv4_CB_FUN_T)(const struct streaminfo *pstream,unsigned char routedir,int thread_seq,  const void *ipv4_hdr);

@@ -11,6 +11,9 @@ extern "C" {
 #define DEBUG_PRINT  1
 #if DEBUG_PRINT
 #define DPRINT(fmt, args...)    printf(fmt, ## args)
+#define DFPRINT(fmt, args...)    fprintf(fmt, ## args)
+#define DSPRINT(fmt, args...)    sprintf(fmt, ## args)
+#define DSNPRINT(fmt, args...)    snprintf(fmt, ## args)
 #else
 #define DPRINT(fmt, args...)    /* Don't do anything in release builds */
 #endif
@@ -22,6 +25,13 @@ static unsigned short phony_protocol_plugid;
 #define TEST_NETWORK_FLOW  1
 #define TEST_SAPP_API		   1
 
+#ifndef MAX
+#define MAX(a, b)  	(((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef MIN
+#define MIN(a, b)       (((a) < (b)) ? (a) : (b))
+#endif
 
 typedef struct{
 	int ivalue1;
@@ -128,8 +138,6 @@ static void show_hierarchical_layer_stat(void)
 
 static int update_hierarchical_layer_stat(const struct hierarchical_layer *stream_hierarchical_layer_stat)
 {
-	int i;
-	
 	if(search_g_hierarchical_layer_stat(stream_hierarchical_layer_stat) == 0){ //涓嶅瓨鍦? 鏄?鏂扮殑娴佺粨鏋?
 		memcpy(&g_hierarchical_layer_stat[hierarchical_layer_stat_num], stream_hierarchical_layer_stat, sizeof(struct hierarchical_layer) * MAX_LAYER_DEPTH);
 		hierarchical_layer_stat_num++;
@@ -375,7 +383,7 @@ char test_tcp_uni_stream_stats(struct streaminfo *a_tcp,  void **pme, int thread
 			/* 2015-12-29 lijia add */
 			tflow_project = (struct tcp_flow_stat *)project_req_get_struct(a_tcp, test_tcp_flow_id);
 			if(tflow_project){
-				DPRINT("from-project: server pkt=%u, count=%lu, client pkt=%u, count=%lu\n",
+				DPRINT("from-project: server pkt=%u, count=%llu, client pkt=%u, count=%llu\n",
 					tflow_project->C2S_data_pkt,tflow_project->C2S_data_byte,
 					tflow_project->S2C_data_pkt, tflow_project->S2C_data_byte);		
 			}
@@ -486,11 +494,10 @@ char test_set_stream_timeout(struct streaminfo *pstream,  void **pme, int thread
 	return APP_STATE_GIVEME;	
 }
 
-char test_set_stream_timer(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
+char test_set_stream_timed(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
 {
 	int ret;
 	int tout_val;
-	int opt_len;
 	
 	if(pstream->pktstate== OP_STATE_PENDING){
 			tout_val = 1;
@@ -499,13 +506,13 @@ char test_set_stream_timer(struct streaminfo *pstream,  void **pme, int thread_s
 				DPRINT("stream:%p, MESA_set_stream_opt error:\n", pstream);
 				return APP_STATE_DROPME;
 			}			
-			DPRINT("stream: %p %s set timer at %llu!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
+			DPRINT("stream: %p %s set timer at %ld!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
 	}
 	if(pstream->pktstate == OP_STATE_TIMED){
-		DPRINT("stream timeup: %p %s at %llu!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
+		DPRINT("stream timeup: %p %s at %ld!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
 	}
 	if(pstream->pktstate == OP_STATE_CLOSE){
-		DPRINT("stream close: %p %s at %llu!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
+		DPRINT("stream close: %p %s at %ld!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
 	}
 	return APP_STATE_GIVEME;	
 }
@@ -629,7 +636,7 @@ char test_stream_with_platform_in_out_traffic(struct streaminfo *pstream,  void 
 }
 
 
-int test_sapp_get_device_opt(const char *device)
+static int test_sapp_get_device_opt(const char *device)
 {
 	int ret;
 	unsigned char dev_mac[6];
@@ -661,6 +668,7 @@ int test_sapp_get_device_opt(const char *device)
 	}else{
 		DPRINT("sapp_get_device_opt->%s : SDO_MTU: %d\n", device, dev_mtu);
 	}
+	return 0;
 }
 
 #endif
@@ -806,29 +814,30 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 	{
 		if(pdetail != NULL){
 			DPRINT("%20s: %s, %llu, ", "UdpallstreaM-inter", printaddr(&(pstream->addr), pstream->threadnum), test_get_stream_id(pstream));
-			DPRINT("server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, datalen=%u, ",
+			DPRINT("server-pkt=%u, server-count=%u, client-pkt=%u, client-count=%u, datalen=%u, ",
 				pdetail->serverpktnum, pdetail->serverbytes,
 				pdetail->clientpktnum,pdetail->clientbytes, pdetail->datalen);
 			DPRINT("total-pkt=%d, ", pdetail->serverpktnum + pdetail->clientpktnum);
 			DPRINT("total-count=%u\n", pdetail->serverbytes + pdetail->clientbytes);       
-		}
+		
 		
 		DPRINT("%20s: %s, ", "udpallstream-plug", printaddr(&(pstream->addr),	pstream->threadnum));
-		DPRINT("server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, datalen=%u, ",
+		DPRINT("server-pkt=%u, server-count=%llu, client-pkt=%u, client-count=%llu, datalen=%u, ",
 			plug_stat->C2S_pkt,plug_stat->C2S_byte,
 			plug_stat->S2C_pkt,plug_stat->S2C_byte, pdetail->datalen);
+		}
 		DPRINT("total-pkt=%d, ", plug_stat->C2S_pkt + plug_stat->S2C_pkt);
-		DPRINT("total-count=%u\n", plug_stat->C2S_byte+plug_stat->S2C_byte);
+		DPRINT("total-count=%llu\n", plug_stat->C2S_byte+plug_stat->S2C_byte);
                 free(*pme);
 
 		struct udp_flow_stat *flow_project = (struct udp_flow_stat *)project_req_get_struct(pstream, test_udp_flow_id);
 		if(flow_project != NULL){
 			DPRINT("%20s: %s, ", "UdpallstreaM-project", printaddr(&(pstream->addr),	pstream->threadnum));
-			DPRINT("server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, datalen=%u, ",
+			DPRINT("server-pkt=%u, server-count=%llu, client-pkt=%u, client-count=%llu, datalen=%u, ",
 				flow_project->C2S_pkt,flow_project->C2S_byte,
 				flow_project->S2C_pkt,flow_project->S2C_byte, pdetail->datalen);
 			DPRINT("total-pkt=%d, ", flow_project->C2S_pkt + flow_project->S2C_pkt);
-			DPRINT("total-count=%u\n", flow_project->C2S_byte+flow_project->S2C_byte);       
+			DPRINT("total-count=%llu\n", flow_project->C2S_byte+flow_project->S2C_byte);       
 		}
 	}
 	return APP_STATE_GIVEME;
@@ -862,7 +871,7 @@ char tcp_data_dump(struct streaminfo *pstream,void **pme, int thread_seq,void *a
 	if(pstream->opstate== OP_STATE_PENDING){
 		inet_ntop(AF_INET, &pstream->addr.tuple4_v4->saddr, sip_str, 20);
 		inet_ntop(AF_INET, &pstream->addr.tuple4_v4->daddr, dip_str, 20);
-		snDPRINT(file_name, 128, "%s_%u_%s_%u.T%ld.dump", 
+		DSNPRINT(file_name, 128, "%s_%u_%s_%u.T%ld.dump", 
 				sip_str, ntohs(pstream->addr.tuple4_v4->source), 
 				dip_str, ntohs(pstream->addr.tuple4_v4->dest),
 				(long)time(NULL)); 
@@ -978,7 +987,6 @@ char testtcpApp_2(struct streaminfo *pstream,void **pme, int thread_seq,void *a_
 {
 	struct tcpdetail *raw_pdetail=(struct tcpdetail *)pstream->pdetail;
 	struct tcp_flow_stat *plug_stat;
-	char addr_str_buf[1024];
 
 	if(-1 == test_tcp_flow_id){
 		test_tcp_flow_id = project_customer_register("tcp_flow_stat", "struct");
@@ -1019,7 +1027,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 		struct tcp_flow_stat *tflow_inter = ((struct tcpdetail_private *)pstream->pdetail)->flow_stat;
 		if(tflow_inter){
 			DPRINT("%17s: %s, %llu,", "TcpstreaM-inter", printaddr(&(pstream->addr), pstream->threadnum), test_get_stream_id(pstream));
-			DPRINT("opstate=%d, server pkt=%u, count=%lu, client pkt=%u, count=%lu\n",
+			DPRINT("opstate=%d, server pkt=%u, count=%llu, client pkt=%u, count=%llu\n",
 				pstream->opstate,
 				tflow_inter->C2S_data_pkt,tflow_inter->C2S_data_byte,
 				tflow_inter->S2C_data_pkt, tflow_inter->S2C_data_byte);		
@@ -1030,7 +1038,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 			struct tcp_flow_stat *tflow_project = (struct tcp_flow_stat *)project_req_get_struct(pstream, test_tcp_flow_id);
 			if(tflow_project){
 				DPRINT("%17s: %s, ", "TcpstreaM-project", printaddr(&(pstream->addr),	pstream->threadnum));
-				DPRINT("opstate=%d, server pkt=%u, count=%lu, client pkt=%u, count=%lu\n",
+				DPRINT("opstate=%d, server pkt=%u, count=%llu, client pkt=%u, count=%llu\n",
 					pstream->opstate,
 					tflow_project->C2S_data_pkt,tflow_project->C2S_data_byte,
 					tflow_project->S2C_data_pkt, tflow_project->S2C_data_byte);		
@@ -1082,7 +1090,7 @@ char tcpentry_vlink_info(struct streaminfo *pstream,void **pme, int thread_seq,v
 	char srcstr[INET6_ADDRSTRLEN], dststr[INET6_ADDRSTRLEN];
 	const struct mesa_ethernet_hdr *ehdr;
 	unsigned char inline_dev_mac[6], local_dev_mac[6];
-	unsigned int inline_dev_ip, local_dev_ip;
+	unsigned int local_dev_ip;
 	
 	if(pstream->opstate== OP_STATE_PENDING)
 	{
@@ -1148,7 +1156,7 @@ char tcpentry_vlink_info(struct streaminfo *pstream,void **pme, int thread_seq,v
 
 static int test_tcpall_flow_id = -1;
 
-char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
+char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq, const void *a_packet)
 {
 	struct tcpdetail *pdetail=(struct tcpdetail *)pstream->pdetail;
 	struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private *)pstream->pdetail;
@@ -1184,24 +1192,24 @@ char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq,voi
 	{	
 		DPRINT("%20s: %s, ", "tcpallstream-plug", printaddr(&(pstream->addr),	pstream->threadnum));
 		//DPRINT("index=%d,state=%d ",*(int*)((char *)(pstream)-8),*(char *)((char *)(pstream)-4));
-		DPRINT("out:%d, final_dir=%d server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, ",
+		DPRINT("out:%d, final_dir=%d server-pkt=%u, server-count=%llu, client-pkt=%u, client-count=%llu, ",
 		pdetail_pr->link_state, pstream->dir,
 		tcpallflow->C2S_all_pkt, tcpallflow->C2S_all_byte,
 		tcpallflow->S2C_all_pkt, tcpallflow->S2C_all_byte);
 		DPRINT("total-pkt=%u, ", tcpallflow->C2S_all_pkt + tcpallflow->S2C_all_pkt);
-		DPRINT("total-count=%lu\n", tcpallflow->C2S_all_byte + tcpallflow->S2C_all_byte);
+		DPRINT("total-count=%llu\n", tcpallflow->C2S_all_byte + tcpallflow->S2C_all_byte);
 		free(*pme);
 
 		/* 2015-12-29 lijia add */
 		struct tcp_flow_stat *tflow_inter = pdetail_pr->flow_stat;
 		if(tflow_inter){
 			DPRINT("%20s: %s, %llu", "TcpallstreaM-inter", printaddr(&(pstream->addr),	pstream->threadnum), test_get_stream_id(pstream));
-			DPRINT("out:%d, pktstate=%d, opstate=%d, server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, ",
+			DPRINT("out:%d, pktstate=%d, opstate=%d, server-pkt=%u, server-count=%llu, client-pkt=%u, client-count=%llu, ",
 				pdetail_pr->link_state,pstream->pktstate,pstream->opstate,
 				tflow_inter->C2S_all_pkt,tflow_inter->C2S_all_byte,
 				tflow_inter->S2C_all_pkt, tflow_inter->S2C_all_byte);	
 			DPRINT("total-pkt=%u, ", tflow_inter->C2S_all_pkt + tflow_inter->S2C_all_pkt);
-			DPRINT("total-count=%lu\n", tflow_inter->C2S_all_byte + tflow_inter->S2C_all_byte);				
+			DPRINT("total-count=%llu\n", tflow_inter->C2S_all_byte + tflow_inter->S2C_all_byte);				
 		}
 
 
@@ -1210,12 +1218,12 @@ char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq,voi
 			struct tcp_flow_stat *tflow_project = (struct tcp_flow_stat *)project_req_get_struct(pstream, test_tcpall_flow_id);
 			if(tflow_project){
 				DPRINT("%20s: %s, ", "TcpallstreaM-project", printaddr(&(pstream->addr),	pstream->threadnum));
-				DPRINT("out:%d, pktstate=%d, opstate=%d, server-pkt=%u, server-count=%lu, client-pkt=%u, client-count=%lu, ",
+				DPRINT("out:%d, pktstate=%d, opstate=%d, server-pkt=%u, server-count=%llu, client-pkt=%u, client-count=%llu, ",
 					pdetail_pr->link_state,pstream->pktstate,pstream->opstate,
 					tflow_project->C2S_all_pkt,tflow_project->C2S_all_byte,
 					tflow_project->S2C_all_pkt, tflow_project->S2C_all_byte);	
 				DPRINT("total-pkt=%u, ", tflow_project->C2S_all_pkt + tflow_project->S2C_all_pkt);
-				DPRINT("total-count=%lu\n", tflow_project->C2S_all_byte + tflow_project->S2C_all_byte);				
+				DPRINT("total-count=%llu\n", tflow_project->C2S_all_byte + tflow_project->S2C_all_byte);				
 			}
 		}
 	}
@@ -1423,11 +1431,11 @@ static int check_rst_ip_old (unsigned int sip_net_order, unsigned int dip_net_or
 {
         unsigned short window_compute;
         if (sip_net_order == INADDR_NONE) {
-                fDPRINT (stderr, "source IP wrong.\n");
+                DFPRINT (stderr, "source IP wrong.\n");
                 return -1;
         }
         if (dip_net_order == INADDR_NONE) {
-                fDPRINT (stderr, "destination IP wrong.\n");
+                DFPRINT (stderr, "destination IP wrong.\n");
                 return -1;
         }
 
@@ -1438,8 +1446,6 @@ static int check_rst_ip_old (unsigned int sip_net_order, unsigned int dip_net_or
                 return 0;
         int val = (iMaxRandVal - ipid + sip_net_order%window)/iRandKey;
         window_compute = (unsigned short)(val+dip_net_order%iRandKey);
-        if (window == 0 )
-                return 0;
         if (window == 1 ) {
                 if (window_compute == 0 || window_compute == 1 )
                         return 1;
@@ -1511,8 +1517,6 @@ char test_ipv6_frag(const struct streaminfo *pstream,unsigned char routedir,int 
 
 char test_layer_addr_prefix_ntop(const struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
-	char addr_ntop_str_r[4096];
-	char *addr_ntop_str;
 	const char *addr_type_ntop_str;
 	const struct streaminfo *tmp = stream;
 	
@@ -1859,7 +1863,7 @@ static void test_inject_tcp_pkt_with_this_hdr(struct streaminfo *stream,void **p
 						0,
 						NULL,
 						0,
-						(unsigned char *)send_thdr);	
+						(char *)send_thdr);	
 
 	sendpacket_build_ipv4(sizeof(struct mesa_tcp_hdr) + sizeof(fake_http_data), 
 						0, 
@@ -1912,12 +1916,12 @@ char test_inject_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,co
 				}				
 		  	}
 
-		  	payload_char_len = SAPP_MIN(g_test_app_val.ivalue1, 4096);
+		  	payload_char_len = MIN(g_test_app_val.ivalue1, 4096);
 		  	payload_buf[payload_char_len] = '\0';
-		  	snDPRINT(payload_with_html_buf, sizeof(payload_with_html_buf), "<html><head>%s</head></html>", payload_buf);
+		  	DSNPRINT(payload_with_html_buf, sizeof(payload_with_html_buf), "<html><head>%s</head></html>", payload_buf);
 
 			total_payload_len = strlen(payload_with_html_buf);
-			snDPRINT(fake_http_send_buf, sizeof(fake_http_send_buf), fake_http_pattern, total_payload_len, payload_with_html_buf);
+			DSNPRINT(fake_http_send_buf, sizeof(fake_http_send_buf), fake_http_pattern, total_payload_len, payload_with_html_buf);
 		  	
 		  	DPRINT("found key 'hijack', send fake http response, len=%d\n", total_payload_len);
 			//MESA_inject_pkt(stream, fake_http_data, sizeof(fake_http_data), raw_pkt, stream->routedir ^ 1);
@@ -1938,7 +1942,6 @@ char test_inject_tcp_pkt2(struct streaminfo *stream,void **pme, int thread_seq,c
 {
 	char fake_http_data[] = "HTTP/1.1 200 OK\r\nServer: Apache-Coyote/1.1\r\nContent-Type: text/html;charset=UTF-8\r\nContent-Language: zh-CN\r\nContent-Length: 41\r\nConnection: Close\r\n\r\n<html><head>sapp inject pkt</head></html>";
 	char plug_ret = APP_STATE_DROPME;
-	int optval;
 	
 	if(OP_STATE_CLOSE == stream->opstate){
 		return APP_STATE_DROPME;
@@ -1965,9 +1968,9 @@ static int send_by_sapp_inject_pkt(struct streaminfo *a_tcp, const struct mesa_i
 	struct mesa_ip4_hdr *send_ip4hdr = (struct mesa_ip4_hdr *)http_hijack_buf;
 	struct mesa_tcp_hdr *send_thdr = (struct mesa_tcp_hdr *)((char *)send_ip4hdr + sizeof(struct mesa_ip4_hdr)); //no options
 
-	int hdr_len = snDPRINT(http_hijack_buf+sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), 
-	                   1500, HIJACK_RESPONSE_HDR, strlen(HIJACK_RESPONSE_BODY));
-	int body_len = snDPRINT(http_hijack_buf+sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr)+hdr_len, 
+	int hdr_len = DSNPRINT(http_hijack_buf+sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr), 
+	                   1460, HIJACK_RESPONSE_HDR, (int)strlen(HIJACK_RESPONSE_BODY));
+	int body_len = DSNPRINT(http_hijack_buf+sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr)+hdr_len, 
 	                   1500-hdr_len, "%s", HIJACK_RESPONSE_BODY);
 
 	http_hijack_len = sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr) + hdr_len + body_len;
@@ -1994,10 +1997,10 @@ static int send_by_sapp_inject_pkt(struct streaminfo *a_tcp, const struct mesa_i
 	send_ip4hdr->ip_src.s_addr = raw_ip4hdr->ip_dst.s_addr;
 	send_ip4hdr->ip_dst.s_addr = raw_ip4hdr->ip_src.s_addr;
 
-	sendpacket_do_checksum(http_hijack_buf, IPPROTO_TCP, sizeof(struct mesa_tcp_hdr) + hdr_len + body_len);
-	sendpacket_do_checksum(http_hijack_buf, IPPROTO_IP, sizeof(struct mesa_ip4_hdr));
+	sendpacket_do_checksum((unsigned char*)http_hijack_buf, IPPROTO_TCP, sizeof(struct mesa_tcp_hdr) + hdr_len + body_len);
+	sendpacket_do_checksum((unsigned char*)http_hijack_buf, IPPROTO_IP, sizeof(struct mesa_ip4_hdr));
 	
-	sapp_inject_pkt(a_tcp, SIO_EXCLUDE_THIS_LAYER_HDR, http_hijack_buf, http_hijack_len, MESA_dir_reverse(a_tcp->routedir));
+	return sapp_inject_pkt(a_tcp, SIO_EXCLUDE_THIS_LAYER_HDR, http_hijack_buf, http_hijack_len, MESA_dir_reverse(a_tcp->routedir));
 
 }
 
@@ -2007,8 +2010,6 @@ char MESA_inject_pkt_for_l2_l3_tcp(struct streaminfo *stream,void **pme, int thr
 	const char *modify_raw_data_c2s =    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"; //C2S原始字符串内容	
 	const char *modify_inject_data_s2c = "HTTP/1.1 200 OK\r\nServer: Microsoft-IIS/8.5\r\nContent-Type: text/html\r\nContent-Length: 4000\r\n\r\n<html><pre> sapp test inject data.........";
 
-	char raw_data_s2c[2048];
-	char *modify_ptr_c2s, *modify_ptr_s2c;
 	int ret;
 	char ret_flag = 0;
 	
@@ -2060,9 +2061,9 @@ char MESA_inject_pkt_for_l2_l3_tcpall(struct streaminfo *stream,void **pme, int 
 	 && (stream->ptcpdetail->datalen == 0)){ /* 只在三次握手刚刚完成后, 收到ACK包发送一次get请求,否则序号对不上 */
 		inet_ntop(AF_INET, &stream->addr.tuple4_v4->daddr, server_ip, 32);
 
-		sDPRINT(raw_data_c2s, modify_inject_data_c2s, server_ip);
+		DSPRINT(raw_data_c2s, modify_inject_data_c2s, server_ip);
 		if(strlen(raw_data_c2s) != 197){
-			DPRINT("MESA_inject_pkt_for_l2_l3_tcpall(), C2S inject len is not 197, %s\n", strlen(raw_data_c2s)); //要与仪表造的流量长度一致, 后续的SEQ才能不乱
+			DPRINT("MESA_inject_pkt_for_l2_l3_tcpall(), C2S inject len is not 197, %d\n", (int)strlen(raw_data_c2s)); //要与仪表造的流量长度一致, 后续的SEQ才能不乱
 			return APP_STATE_DROPME;
 		}		
 		ret = MESA_inject_pkt(stream, raw_data_c2s, strlen(raw_data_c2s), raw_pkt, stream->routedir);
@@ -2318,22 +2319,14 @@ void print_stream_list(const struct streaminfo *pstream)
 char test_proxy_cb(struct streaminfo *pstream,void **pme, int thread_seq,const void *a_packet)
 {
 	struct tcpdetail *a_tcp;
-	//int addr_type;
-	//void *tuple4;
-	//int project_req_id;
-	long stream_id;
 
 	if(OP_STATE_PENDING == pstream->opstate){
 		a_tcp = (struct tcpdetail *)pstream->pdetail;
-		//DPRINT("######### %p, %x\n", a_tcp->pdata, ((char *)a_tcp->pdata)[0]);
-		//print_tuple4(pstream);
 		DPRINT("into test_proxy_cb----------\n");
 		print_stream_list(pstream);
 		write(1, a_tcp->pdata, a_tcp->datalen);
-		//DPRINT("test_tcp_cb-pending: stream:%p, %s, len:%d\n", pstream, printaddr(&pstream->addr, pstream->threadnum), a_tcp->datalen);
 	}else if (OP_STATE_DATA == pstream->opstate){
 		a_tcp = (struct tcpdetail *)pstream->pdetail;
-		//DPRINT("test_tcp_cb-data: %s, len:%d\n", printaddr(&pstream->addr, pstream->threadnum), a_tcp->datalen );
 	}else if(OP_STATE_CLOSE == pstream->opstate){
 		DPRINT("test_tcp_cb-close: strem %s\n", printaddr(&pstream->addr, pstream->threadnum));
 		return APP_STATE_DROPME;
@@ -2712,7 +2705,7 @@ char stream_bridge_tcp_entry(struct streaminfo *pstream,void **pme, int thread_s
 		void *data = calloc(1, 100);
 		strncpy(data, "abcdefg1234567", 100);
 		stream_bridge_async_data_put(pstream, bridge_id, data);	
-		DPRINT("##### tcp entry bridge put data:%s\n", data);
+		DPRINT("##### tcp entry bridge put data:%s\n", (char*)data);
 	}
 
 	return APP_STATE_GIVEME;
@@ -2972,8 +2965,8 @@ char TCP_ALL_DUMP_PCAP_PKT(struct streaminfo *pstream,  void **pme, int thread_s
 	
 	if(OP_STATE_PENDING == pstream->pktstate){
 		char tmp_file[32];
-		snDPRINT(tmp_file, 32, "%p.pcap", pstream);
-		FILE *fp = fopen(tmp_file, "a+");
+		DSNPRINT(tmp_file, 32, "%p.pcap", pstream);
+		fp = fopen(tmp_file, "a+");
 		if(NULL == fp){
 			DPRINT("fopen ./%p.pcap error!\n", tmp_file);
 			return APP_STATE_DROPME;
@@ -3208,7 +3201,7 @@ char INJECT_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 }
 
 
-char TEST_STREAM(struct streaminfo *stream,  void **pme, int thread_seq,void *a_packet)
+char TEST_STREAM(struct streaminfo *stream,  void **pme, int thread_seq, const void *a_packet)
 {
 	char *data = NULL;
 	int i, datalen = -1, ret;
@@ -3220,7 +3213,7 @@ char TEST_STREAM(struct streaminfo *stream,  void **pme, int thread_seq,void *a_
 		return APP_STATE_DROPME;
 	}
 
-	int min_num = SAPP_MIN(65535, g_test_app_val.ivalue1+1); //从配置文件获取
+	int min_num = MIN(65535, g_test_app_val.ivalue1+1); //从配置文件获取
 
 	for(i = 0; i < min_num; i++){
 		local_data[i] = rand();
@@ -3232,12 +3225,12 @@ char TEST_STREAM(struct streaminfo *stream,  void **pme, int thread_seq,void *a_
 	}
 	
 	ret = get_rawpkt_opt_from_streaminfo(stream, RAW_PKT_GET_TOT_LEN, &datalen);
-	if(ret < 0 || NULL == data){
+	if(ret < 0 ){
 		return APP_STATE_GIVEME;
 	}
 
 	/* 随便写点东西, 耗费CPU */
-	if((data != NULL) && (datalen > 0)){
+	if(datalen > 0){
 		for(i = 0; i < datalen; i++){
 			result1[i] = (long)memchr(local_data, data[i], min_num);
 			result2[i] = (long long )memmem((void *)local_data, min_num, (void *)&data[i], datalen-i);
@@ -3316,10 +3309,10 @@ static void anti_flood_stat_log(void)
 
 	fp = fopen("./log/anti_flood_stat.log", "w+");
 
-	fDPRINT(fp, "tcp_syn\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_TCP_SYN]);
-	fDPRINT(fp, "udp_dns\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_UDP_DNS]);
-	fDPRINT(fp, "udp_ntp\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_UDP_NTP]);
-	fDPRINT(fp, "ip_frag\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_IP_FRAG]);
+	DFPRINT(fp, "tcp_syn\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_TCP_SYN]);
+	DFPRINT(fp, "udp_dns\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_UDP_DNS]);
+	DFPRINT(fp, "udp_ntp\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_UDP_NTP]);
+	DFPRINT(fp, "ip_frag\t %llu\n", tmp_anti_flood_stat[ANTI_FLOOD_IP_FRAG]);
 
 	fclose(fp);
 }
@@ -3443,6 +3436,7 @@ char arp_plug_entry(const struct streaminfo *pstream,unsigned char routedir,int 
 
 	DPRINT("rev arp response: ip:%s--->mac:%02x-%02x-%02x-%02x-%02x-%02x \n", ip4_str, 
 				aph->ar_sha[0],aph->ar_sha[1],aph->ar_sha[2],aph->ar_sha[3],aph->ar_sha[4],aph->ar_sha[5]);
+	return APP_STATE_GIVEME;	
 }
 
 

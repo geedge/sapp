@@ -8,6 +8,8 @@ extern "C" {
 #include <pcap/pcap.h>
 #include <sys/types.h>
 
+#include "tomlc99_wrap.h"
+
 
 #define PROCESS_BAR_SW 		(1)
 
@@ -386,29 +388,31 @@ static int sendpacket_tcp_offload(char *raw_data, int raw_datalen, int fd, const
 
 send_again:		
 		ret = sendto(fd, tmp_send_buf, this_send_len+fix_hdr_len, 0, (struct sockaddr *)sa, sizeof(struct sockaddr));
-    		if(ret < 0){
-    			local_errno = errno;
-			if((EAGAIN == local_errno) 
-			  || (EINTR == local_errno) 
-			  || (EWOULDBLOCK==local_errno)
-			  || (ENOBUFS==local_errno)
-			  || (ENOMEM==local_errno))
-	  		{
-	  			if(retry_times++ < 3){
-					sapp_usleep(1);
-					goto send_again;
-	       		}else{
-					sapp_runtime_log(RLOG_LV_FATAL,"sendpacket","retry more than %d times, %s\n", retry_times, strerror(local_errno));
-					return -1;
-	       		}
-		    }
-		    	else
-		    	{
-				sapp_runtime_log(RLOG_LV_FATAL,"sendpacket","%s\n", strerror(local_errno));
-				return -1;
-			}			
-		}
-		data += this_send_len;
+        if (ret < 0)
+        {
+            local_errno = errno;
+            if ((EAGAIN == local_errno) || (EINTR == local_errno) || (EWOULDBLOCK == local_errno) ||
+                (ENOBUFS == local_errno) || (ENOMEM == local_errno))
+            {
+                if (retry_times++ < 3)
+                {
+                    sapp_usleep(1);
+                    goto send_again;
+                }
+                else
+                {
+                    sapp_runtime_log(RLOG_LV_FATAL, "sendpacket", "retry more than %d times, %s\n", retry_times,
+                                    strerror(local_errno));
+                    return -1;
+                }
+            }
+            else
+            {
+                sapp_runtime_log(RLOG_LV_FATAL, "sendpacket", "%s\n", strerror(local_errno));
+                return -1;
+            }
+        }
+        data += this_send_len;
 		leftlen -= this_send_len;
 		send_seq += this_send_len;
 	}
@@ -703,7 +707,7 @@ int pcap_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 	/* delete by lijia 2014-12-10, datalen已经包含了mac地址长度 */
 	//datalen += sizeof(struct mesa_ethernet_hdr); 
 
-	packet_io_hook_sendto(raw_pkt, dir, data, NULL);
+	packet_io_hook_sendto(raw_pkt, dir, (char *)data, NULL);
 
 send_again:
 	ret = sendto(send_handle->raw_eth_fd, data, datalen, 0, (struct sockaddr *)snd_addr, sizeof(struct sockaddr));
@@ -822,6 +826,8 @@ static void pcap_clear_pkt_queue_left(int thread_index)
 	}
 }
 
+extern void libsapp_destroy_env_per_thread(int tseq);
+
 static void *__pcap_work_thread(void *arg)
 {
 	int thread_num = (int)(*((short *)arg));
@@ -929,7 +935,6 @@ static void *__pcap_work_thread(void *arg)
 
 	sapp_runtime_log(RLOG_LV_INFO, "pcap work thread:%d, TID:%ld, thread exited", thread_num, sapp_global_val->individual_fixed.thread_tid[thread_num]);
 	
-exit:
 	return NULL;
 }
 
@@ -1050,7 +1055,7 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 
 disp:
 	//hash = pcap_dispatch_hash(disp_arg1, disp_arg2, 0xFEEDBEAF); 
-	hash = dpdk_rte_crc_hash(disp_arg1, disp_arg2, disp_addrlen, 0);
+	hash = dpdk_rte_crc_hash((char *)disp_arg1, (char *)disp_arg2, disp_addrlen, 0);
 	hash %=  g_pcap_work_thread_num;
 
 	return hash;

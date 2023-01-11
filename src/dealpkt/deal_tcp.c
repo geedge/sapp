@@ -1612,131 +1612,129 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 	int thisseq=ntohl (this_tcphdr->th_seq);
 	int thisack=ntohl (this_tcphdr->th_ack);
 
-	if(pstream->dir==DIR_C2S)
-	{
-		curseq=pdetail_pr->iserverseq;
-		if(curdir==DIR_S2C)
-		{
-			if((this_tcphdr->th_flags & TH_RST)&&(datalen==0))
-			{
-				if(thisack==curseq)
-				{
-					pstream->dir=DIR_DOUBLE; /* 更新dir */
-			 		pdetail_pr->link_state=STREAM_LINK_RESET;
-					tcp_free_stream(pindex, this_iphdr, this_tcphdr, raw_pkt);
-					return PASS;
-				}			
-			}
-			else
-			//反向来包，建立链接
-			if(thisack==curseq)
-			{
-					pstream->dir=DIR_DOUBLE;
-					if(this_tcphdr->th_flags & TH_SYN)
-						pdetail_pr->iclientseq=thisseq+1;
-					else
-						pdetail_pr->iclientseq=thisseq;
-					if(this_tcphdr->th_flags == (TH_SYN|TH_ACK)){
- 					     pdetail_pr->tcpstateflag=TCP_SYN_RECV;	
- 					     tcp_parse_opts(pstream_pr, DIR_S2C, (const struct tcphdr *)this_tcphdr); /* 2016-07-07 lijia add, for janus hijack */
- 					}
-					return PASS;
-			}
-			
-		}
-		else //同侧来包
-		{
-			//正序报文
-			 if(thisseq==curseq)
-			 {
-			 	if((this_tcphdr->th_flags & TH_RST)&&(datalen==0))
-			       {
-			 		pdetail_pr->link_state=STREAM_LINK_RESET;
-					tcp_free_stream(pindex,  this_iphdr, this_tcphdr, raw_pkt);
-					return PASS;
-			        }	
-				//add by lqy 20130802 单向流防攻击必须有第三个包
-			        //单向流第二个ack
-			       else  if((this_tcphdr->th_flags == TH_ACK)&&(datalen==0))
-			       {
-			       	pdetail_pr->tcpstateflag=TCP_SYN_RECV;
-					return PASS;
-			       }
-				else
-				{
-					//if(TCP_SYN_SENT==pdetail_pr->tcpstateflag ){
-				 	   //return DROP;
-				 	  return PASS; //2014-12-05 lijia modify, for xj serial
-				 	 //}  
-				}
-				//end add by lqy 20130802
-			 } 
-		}
-	}
-	else if (pstream->dir == DIR_S2C)
-	{	
-		curseq=pdetail_pr->iclientseq;
+    if (pstream->dir == DIR_C2S)
+    {
+        curseq = pdetail_pr->iserverseq;
+        if (curdir == DIR_S2C)
+        {
+            if ((this_tcphdr->th_flags & TH_RST) && (datalen == 0))
+            {
+                if (thisack == curseq)
+                {
+                    pstream->dir = DIR_DOUBLE; /* 更新dir */
+                    pdetail_pr->link_state = STREAM_LINK_RESET;
+                    tcp_free_stream(pindex, this_iphdr, this_tcphdr, raw_pkt);
+                    return PASS;
+                }
+            }
+            else
+                //反向来包，建立链接
+                if (thisack == curseq)
+                {
+                    pstream->dir = DIR_DOUBLE;
+                    if (this_tcphdr->th_flags & TH_SYN)
+                        pdetail_pr->iclientseq = thisseq + 1;
+                    else
+                        pdetail_pr->iclientseq = thisseq;
+                    if (this_tcphdr->th_flags == (TH_SYN | TH_ACK))
+                    {
+                        pdetail_pr->tcpstateflag = TCP_SYN_RECV;
+                        tcp_parse_opts(pstream_pr, DIR_S2C,
+                                       (const struct tcphdr *)this_tcphdr); /* 2016-07-07 lijia add, for janus hijack */
+                    }
+                    return PASS;
+                }
+        }
+        else //同侧来包
+        {
+            //正序报文
+            if (thisseq == curseq)
+            {
+                if ((this_tcphdr->th_flags & TH_RST) && (datalen == 0))
+                {
+                    pdetail_pr->link_state = STREAM_LINK_RESET;
+                    tcp_free_stream(pindex, this_iphdr, this_tcphdr, raw_pkt);
+                    return PASS;
+                }
+                // add by lqy 20130802 单向流防攻击必须有第三个包
+                //单向流第二个ack
+                else if ((this_tcphdr->th_flags == TH_ACK) && (datalen == 0))
+                {
+                    pdetail_pr->tcpstateflag = TCP_SYN_RECV;
+                    return PASS;
+                }
+                else
+                {
+                    // if(TCP_SYN_SENT==pdetail_pr->tcpstateflag ){
+                    // return DROP;
+                    return PASS; // 2014-12-05 lijia modify, for xj serial
+                    //}
+                }
+                // end add by lqy 20130802
+            }
+        }
+    }
+    else if (pstream->dir == DIR_S2C)
+    {
+        curseq = pdetail_pr->iclientseq;
 
-		if(curdir==DIR_C2S)			
-	    	{
-		    	if((this_tcphdr->th_flags & TH_RST)&&(datalen==0))
-			   {	
-			   		pstream->dir=DIR_DOUBLE; /* 更新dir */
-			   		pdetail_pr->link_state=STREAM_LINK_RESET;
-					tcp_free_stream(pindex,  this_iphdr, this_tcphdr, raw_pkt);
-					return PASS;
-		    	}
-			else
-			{
-				pstream->dir=DIR_DOUBLE;
-				if(this_tcphdr->th_flags & TH_SYN)
-					pdetail_pr->iserverseq=thisseq+1;
-	            		else
-					pdetail_pr->iserverseq=thisseq;
-				return PASS;
-			}
-		}	
-		else //同侧来包
-		{
-			//正序rst
-			if((thisseq==curseq)
-			 	&&(this_tcphdr->th_flags & TH_RST)
-				&&(datalen==0))
+        if (curdir == DIR_C2S)
+        {
+            if ((this_tcphdr->th_flags & TH_RST) && (datalen == 0))
+            {
+                pstream->dir = DIR_DOUBLE; /* 更新dir */
+                pdetail_pr->link_state = STREAM_LINK_RESET;
+                tcp_free_stream(pindex, this_iphdr, this_tcphdr, raw_pkt);
+                return PASS;
+            }
+            else
+            {
+                pstream->dir = DIR_DOUBLE;
+                if (this_tcphdr->th_flags & TH_SYN)
+                    pdetail_pr->iserverseq = thisseq + 1;
+                else
+                    pdetail_pr->iserverseq = thisseq;
+                return PASS;
+            }
+        }
+        else //同侧来包
+        {
+            //正序rst
+            if ((thisseq == curseq) && (this_tcphdr->th_flags & TH_RST) && (datalen == 0))
 
-			 {
-			 	pdetail_pr->link_state=STREAM_LINK_RESET;
-					tcp_free_stream(pindex,  this_iphdr, this_tcphdr, raw_pkt);
-					return PASS;
-			 }
-		}
-
-	}
-	//add by lqy 20130805 双向流，三次握手完整后存入data表
-	else if( pstream->dir == DIR_DOUBLE)
-	{
-		if((pdetail_pr->tcpstateflag==TCP_SYN_RECV)&&(curdir==DIR_C2S))
-		{
-			 if((this_tcphdr->th_flags == TH_ACK)&&(datalen==0))
-			{
-			       	pdetail_pr->tcpstateflag=TCP_ESTABLISHED;
-				tcp_change_stream_todata(pindex,this_tcphdr,0); 
-		 	}
-		}
-	}
-	//syn重传
+            {
+                pdetail_pr->link_state = STREAM_LINK_RESET;
+                tcp_free_stream(pindex, this_iphdr, this_tcphdr, raw_pkt);
+                return PASS;
+            }
+        }
+    }
+    // add by lqy 20130805 双向流，三次握手完整后存入data表
+    else if (pstream->dir == DIR_DOUBLE)
+    {
+        if ((pdetail_pr->tcpstateflag == TCP_SYN_RECV) && (curdir == DIR_C2S))
+        {
+            if ((this_tcphdr->th_flags == TH_ACK) && (datalen == 0))
+            {
+                pdetail_pr->tcpstateflag = TCP_ESTABLISHED;
+                tcp_change_stream_todata(pindex, this_tcphdr, 0);
+            }
+        }
+    }
+    //syn重传
 	/*
 		TODO, 
 		四元组相同的两个SYN包, 还要进一步判断SEQ是否一致才能算重传, 可能是四元组重用,
 		需要reset.
 	*/
-	if((this_tcphdr->th_flags == TH_SYN))
+	if(this_tcphdr->th_flags == TH_SYN)
 	{
 		pdetail_pr->iserverseq=thisseq + 1;
 		pdetail_pr->multisynflag=1;
 		pdetail_pr->tcpstateflag=TCP_SYN_SENT;
 	}
 	
-	if((this_tcphdr->th_flags == (TH_SYN|TH_ACK)))
+	if(this_tcphdr->th_flags == (TH_SYN|TH_ACK))
 	{
 		pdetail_pr->iclientseq=thisseq+1;
 		pdetail_pr->multisynflag=1;
@@ -1809,7 +1807,9 @@ static int tcp_deal_ack(struct streaminfo *a_tcp,struct mesa_tcp_hdr *this_tcphd
 		//add by lqy 20150210
 		if((this_tcphdr->th_flags & TH_SYN)
 			&& (this_tcphdr->th_flags & TH_ACK))
-		phalf->first_data_seq+=1;
+		{
+			phalf->first_data_seq+=1;
+		}
 		
 		pdetail_pr->S2C_ack_seq = ntohl (this_tcphdr->th_ack);
 		phalf->window = ntohs (this_tcphdr->th_win);
@@ -3485,7 +3485,7 @@ static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const v
 		正常的包, 当前包头和原始包头的地址偏移量肯定在MTU范围内,
 		如果超过了MTU, 则当前IP包肯定是新malloc的, 即分片重组的包.
 	*/
-	if(abs((char *)this_iphdr - (char *)stack_raw_pkt->raw_pkt_data) > MTU_MAX){
+	if(labs((char *)this_iphdr - (char *)stack_raw_pkt->raw_pkt_data) > MTU_MAX){
 #endif
 		uo_packet->ip_reassemble_pkt = 1;
 		this_ip_tot_len = get_ip_pkt_tot_len(carry_ip_stream, this_iphdr);

@@ -350,12 +350,6 @@ char plugin_call_ipentry(int type,IPv4_CB_FUN_T stream_fun,SAPP_PKT_CB_FUN_T sap
 {
 	char rec;
 
-#if 0	
-	if(g_business_plug_info!=NULL)
-	{
-		plug_record_start_time(g_business_plug_info->plugid, thread_num);
-	}
-#endif	
 	if(type==CALL_FUN_TYPE_RAW)
 	{
 		rec=stream_fun(pfstream,routedir,thread_num,this_layer_hdr);
@@ -364,14 +358,6 @@ char plugin_call_ipentry(int type,IPv4_CB_FUN_T stream_fun,SAPP_PKT_CB_FUN_T sap
 	{
 		rec=sapp_fun(pfstream,this_layer_hdr,raw_pkt);
 	}
-#if 0
-	if(g_business_plug_info!=NULL)
-	{
-		plug_record_end_time(g_business_plug_info->plugid, thread_num);
-
-	}
-#endif	
-
 	return rec;
 }
 

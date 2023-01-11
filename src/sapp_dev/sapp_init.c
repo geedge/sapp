@@ -119,16 +119,16 @@ static void sapp_platform_finish_up(void)
 	return;
 }
 
+extern int stream_register_overlay_ip(IPv4_CB_FUN_T x);
+extern int stream_register_overlay_udp(STREAM_CB_FUN_T x);
+extern int gdev_keepalive_plug_init(void);
+
 int MESA_platform_init(int argc, char *argv[])
 {
-	int queue_max_num, ipv6_switch = 0;
-	char pcap_dev1[128], pcap_dev2[128], snd_dev[128]; 
+	int ipv6_switch = 0;
 	char cap_filter[1024] = {};
 	char gateway_mac[32] = {};
-	//int create_link_mode;
 	int TcpAllEnable = 0;
-	//pthread_t gettimeThread;
-	int maxrandval, randkeyval;
 	int load_plug_sw = 1;
 	unsigned short udp_stream_timeout = 300, max_unorder_num;
 	unsigned short link_timeout = 600;
@@ -278,7 +278,7 @@ int MESA_platform_init(int argc, char *argv[])
 
 	/* 2020-12-23 lijia add, vxlan保活插件内置 */
 	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
-		stream_register_overlay_ip(gdev_keepalive_ip_entry);
+		stream_register_overlay_ip((IPv4_CB_FUN_T)gdev_keepalive_ip_entry);
 		stream_register_overlay_udp(gdev_keepalive_udp_entry);
 
 		if(gdev_keepalive_plug_init() < 0){
