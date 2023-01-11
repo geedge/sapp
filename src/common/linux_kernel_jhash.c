@@ -180,7 +180,10 @@ u32 sapp_jhash_4words(u32 a, u32 b, u32 c, u32 initval, u32 *out_val)
 
 	__jhash_final(a, b, c);
 
-	*out_val = b;
+	if(out_val != NULL)
+	{
+		*out_val = b;
+	}
 
 	return c;
 }

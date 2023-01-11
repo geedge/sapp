@@ -130,8 +130,7 @@ static inline unsigned long long __get_platform_opt_traffic(int ctype, sapp_sys_
 /* 2017-09-04 lijia add, for 网管需求, 插件获取平台内部参数 */
 int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_val_len)
 {
-	int i, ret = 0;
-	unsigned long long tmp_long;
+	int ret = 0;
 
 	if((NULL == opt_val) ||  (NULL == opt_val_len) || (*opt_val_len <= 0)){
 		return -1;
@@ -158,7 +157,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_RCV_ETHERNET);;
+			*tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_RCV_ETHERNET);;
 		}
 		break;
 
@@ -318,7 +317,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_IPV4_OUTBOUND);
+			*tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_IPV4_OUTBOUND);
 			;
 		}
 		break;
@@ -331,7 +330,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_IPV4_OUTBOUND);
+			*tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_IPV4_OUTBOUND);
 			;
 		}
 		break;
@@ -369,7 +368,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_IPV6_OUTBOUND);
+			*tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_IPV6_OUTBOUND);
 			;
 		}
 		break;
@@ -382,7 +381,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_IPV6_OUTBOUND);
+			*tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_IPV6_OUTBOUND);
 			;
 		}
 		break;
@@ -420,7 +419,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_TCP_OUTBOUND);
+			*tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_TCP_OUTBOUND);
 			;
 		}
 		break;
@@ -433,7 +432,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_TCP_OUTBOUND);
+			*tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_TCP_OUTBOUND);
 			;
 		}
 		break;
@@ -473,7 +472,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_UDP_OUTBOUND);
+			*tot_byte = __get_platform_opt_traffic('c', SAPP_STAT_UDP_OUTBOUND);
 			;
 		}
 		break;
@@ -487,7 +486,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				break;
 			}
 			unsigned long long *tot_byte = (unsigned long long *)opt_val;
-			*tot_byte = *tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_UDP_OUTBOUND);
+			*tot_byte = __get_platform_opt_traffic('l', SAPP_STAT_UDP_OUTBOUND);
 			;
 		}
 		break;
@@ -541,7 +540,6 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 			}
 			time_t cur_time = g_CurrentTime;
 			struct tm date_loc;
-			int ret;
 			
 			localtime_r(&cur_time, &date_loc);
 			ret = snprintf((char *)opt_val, *opt_val_len, "%04d-%02d-%02d %02d:%02d:%02d", 
@@ -1117,9 +1115,6 @@ static int fs2_tcp_unorder_historgram_init(void *fs2_handle)
 /************************ C++ compiler **************************************/
 static int sapp_fs2_init(void)
 {
-	char cfg_ip_str[32];
-	char fs_name[1024];
-	int cfg_port;
 	int fs2_opt;
 	int cycle;
 	int send_historgram = 0;
@@ -1311,10 +1306,7 @@ static int sapp_fs2_init(void)
                                                                      1,              //可追踪的最小值
                                                                      1000000,        //可追踪的最大值
                                                                      2); //精度，即小数点后几位，范围1~4
-            if (send_historgram == 0)
-            {
-                FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &pfs_para->fs_latency_id_array[i], sizeof(int));
-            }
+            FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &pfs_para->fs_latency_id_array[i], sizeof(int));
         }
 
         if (fs2_plug_entry_historgram_init(fs2_handle) < 0)

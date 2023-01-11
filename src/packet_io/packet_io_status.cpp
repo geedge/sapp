@@ -300,8 +300,8 @@ void sysinfo_output(void)
 	fprintf(fp,"\n*********************** %s *********************\n", time_string);
 	fprintf(fp,"*********************** \033[41m%s\033[0m *************************\n", "sysinfo exactly");
 	fprintf(fp,"%-12s %12s %12s %12s %12s\n","Layer", "total_pkt", "total_len","pps", "Bps");
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_work", 0,0,(cur_count[SAPP_POLLING_WORK]-history_count[SAPP_POLLING_WORK]),0);
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_idle", 0,0,(cur_count[SAPP_POLLING_IDLE]-history_count[SAPP_POLLING_IDLE]),0);
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_work", (unsigned long long)0, (unsigned long long)0,(cur_count[SAPP_POLLING_WORK]-history_count[SAPP_POLLING_WORK]),(unsigned long long)0);
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_idle", (unsigned long long)0,(unsigned long long)0,(cur_count[SAPP_POLLING_IDLE]-history_count[SAPP_POLLING_IDLE]),(unsigned long long)0);
 
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Line", cur_count[SAPP_STAT_RCV_LINE],cur_length[SAPP_STAT_RCV_LINE],(cur_count[SAPP_STAT_RCV_LINE]-history_count[SAPP_STAT_RCV_LINE]),(cur_length[SAPP_STAT_RCV_LINE]-history_length[SAPP_STAT_RCV_LINE]));
 
@@ -350,7 +350,7 @@ void sysinfo_output(void)
 	for(i = 0; i < g_packet_io_thread_num; i++){	
 		fprintf(fp, "%3d %6ld %3d %8llu %9llu %10llu %10llu %10llu %10llu %9llu %13llu %13d\n",
 				i, 
-				sapp_global_val->individual_fixed.thread_tid[i],
+				(long)sapp_global_val->individual_fixed.thread_tid[i],
 				sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[i],
 				mstat[i]->sys_stat.count[SAPP_STAT_TCP_STREAM_SYN], 
 				mstat[i]->sys_stat.count[SAPP_STAT_TCP_STREAM_DATA],
@@ -371,7 +371,7 @@ void sysinfo_output(void)
 	for(i = 0; i < g_packet_io_thread_num; i++){	
 		fprintf(fp, "%3d %6ld %3d %8llu %9llu %10llu %10llu %10llu %10llu %9llu %13llu %13d\n",
 				i, 
-				sapp_global_val->individual_fixed.thread_tid[i],
+				(long)sapp_global_val->individual_fixed.thread_tid[i],
 				sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[i],
 				mstat[i]->sys_stat.count[SAPP_STAT_UDP_STREAM_ONE], 
 				mstat[i]->sys_stat.count[SAPP_STAT_UDP_STREAM_TWO],
@@ -389,8 +389,8 @@ void sysinfo_output(void)
 	fprintf(fp,"*****************************************************************\n\n");
 	fprintf(fp,"################# \033[41m%s\033[0m --- is same as above! #########\n", "sysinfo humanly");
 	fprintf(fp,"%-12s %12s %12s %12s %12s\n", "Layer", "total_pkt", "total_len","pps", "bps");
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_work", 0,0,(cur_count[SAPP_POLLING_WORK]-history_count[SAPP_POLLING_WORK]),0);
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_idle", 0,0,(cur_count[SAPP_POLLING_IDLE]-history_count[SAPP_POLLING_IDLE]),0);
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_work", (unsigned long long)0,(unsigned long long)0,(cur_count[SAPP_POLLING_WORK]-history_count[SAPP_POLLING_WORK]),(unsigned long long)0);
+	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_idle", (unsigned long long)0,(unsigned long long)0,(cur_count[SAPP_POLLING_IDLE]-history_count[SAPP_POLLING_IDLE]),(unsigned long long)0);
 	
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n","Line",cur_count[SAPP_STAT_RCV_LINE],byte_convert_human(cur_length[SAPP_STAT_RCV_LINE],1 ,1,s1),(cur_count[SAPP_STAT_RCV_LINE]-history_count[SAPP_STAT_RCV_LINE]),byte_convert_human((cur_length[SAPP_STAT_RCV_LINE]-history_length[SAPP_STAT_RCV_LINE]),1,8,s2));	
 	

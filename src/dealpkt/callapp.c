@@ -1,14 +1,13 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 #include "sapp_declaration.h"
-
 #include "stream_register.h"
+
+#include "plugin_serial.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "plugin_serial.h"
-//20170525 liuy add for wy serical
 #define CALL_FUN_TYPE_RAW		1
 #define CALL_FUN_TYPE_NORAW	2	
 

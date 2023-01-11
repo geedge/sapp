@@ -947,6 +947,7 @@ static int calc_gtp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_st
 	return hdr_len;
 }
 
+extern int calc_l2tp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_stream_dir);
 /*
 	1-计算所有包头的长度, 用于预留空间. 计算到最底层协议, 如果有MAC也包含MAC头空间;
 	2-递归过程中获取Ethernet层承载的协议类型.
@@ -1096,9 +1097,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 		return -1;
 	}
 
-#if 0 /* 2014-10-24 lijia modify, pag, ppf等捕包方式从IPv4开始 */
-	if(stream->pfather && (ADDR_TYPE_MAC == stream->pfather->addr.addrtype)){
-#else
+
 	if(CAP_LEVEL_MAC == g_packet_io_cap_level) {
 		if(stream_pr->pfather_pr 
 		 && ((ADDR_TYPE_MAC_IN_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype) || (ADDR_TYPE_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype))){
@@ -1119,10 +1118,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 			}			
 		}
 	}
-#endif
-
 	
-done:
 	pfather_hdr_len = calc_reserved_hdr_len((struct streaminfo *)stream_pr->pfather_pr, net_layer_type, send_stream_dir);
 	if(pfather_hdr_len < 0){
 		return -1;
@@ -1826,8 +1822,6 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
 	const struct gtp_hdr *raw_hdr;
 	struct gtp_hdr *gtp_send_hdr;
 	int gtp_net_layer_len = sizeof(struct gtp_hdr);
-	void *gtp_hash_key;
-	int gtp_hash_key_len;
 	const struct layer_addr_gtp *p_gtp_layer_addr = stream_pr->stream_public.addr.gtp;
 	unsigned int this_pkt_teid;
 	
@@ -2125,7 +2119,7 @@ void sendpkt_dup_pkt_mark_stream(const struct streaminfo *top_stream, const char
 	}
 }
 
-
+extern int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_pkt_t *rawpkt);
 /* 
 	buf: 执向应用层负载地址, skip hdr.
 	reverse: 从应用层的角度区别dir, 表示与当前raw_pkt包相比, 方向是否一致, 对于有方向性的地址, 需反向造包.
@@ -2191,7 +2185,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			*/
 			if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
 			 && (sapp_is_overlay_layer(stream_pr, raw_pkt) == 0)){
-				sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV4, (char *)buf, buf+sizeof(struct mesa_ip4_hdr));
+				sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV4, (char *)buf, (const char *)buf+sizeof(struct mesa_ip4_hdr));
 			}
 		}	
 		break;
@@ -2221,7 +2215,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 
 			/* 重复流量识别, 加到这里是因为如果有隧道, 可能会有多层, 且不用再经过jump_layer跳转到内部udp/tcp层了 */
 			if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0){
-				sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV6, (char *)buf, buf+sizeof(struct mesa_ip6_hdr));
+				sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV6, (char *)buf, (const char*)buf+sizeof(struct mesa_ip6_hdr));
 			}			
 		break;
 		
@@ -2347,7 +2341,6 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			}
 			carry_layer_type = ADDR_TYPE_GPRS_TUNNEL;
 
-			///sapp_runtime_log(10, "build_net_layer_pkt()-->ADDR_TYPE_GPRS_TUNNEL, buf start addr:%p, this_layer_len:%d", buf, this_layer_len);
 			break;
 
 		case ADDR_TYPE_PPPOE_SES:
@@ -2423,24 +2416,6 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			this_layer_len = gre_layer_len + ppp_hdr_len;
 		}	
 		break;
-#if 0		
-		case ADDR_TYPE_MAC_IN_MAC:
-		{
-			buf -= sizeof(struct mesa_ethernet_hdr); 
-	
-			build_net_layer_ethernet(stream_pr, ETHERTYPE_PANGU_MAC_IN_MAC, carry_layer_len, buf, reverse, raw_pkt);
-			
-			/* 此处可以不构造mac地址, 仅告知packet_io_send_fake_pkt函数底层类型, MAC还是MAC_IN_MAC */
-		
-			/* 并联模式下, 与MAC类似, 可以直接靠系统sendto发送, 所以MAC地址不在build系列函数中添加, 在dl_io中填充 */
-			this_layer_len = sizeof(struct mesa_ethernet_hdr);
-			carry_layer_type = ETHERTYPE_PANGU_MAC_IN_MAC;
-
-			sapp_runtime_log(10, "build_net_layer_pkt()-->ADDR_TYPE_MAC_IN_MAC, buf start addr:%p, this_layer_len:%d", buf, this_layer_len);
-		}	
-		break;
-#endif
-
 		case ADDR_TYPE_VXLAN:
 		{
 			const struct layer_addr_vxlan_private *vxaddr_pr = (struct layer_addr_vxlan_private *)stream_pr->stream_public.addr.paddr;
@@ -2461,7 +2436,6 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			break;
 	}
 
-done:	
 	return build_net_layer_pkt(top_stream, carry_layer_stream, (struct streaminfo_private *)stream_pr->pfather_pr,carry_layer_type, 
 							this_layer_len+carry_layer_len, buf, reverse, raw_pkt, send_stream_dir);
 
@@ -2987,7 +2961,7 @@ use_rand_value:
 int __MESA_rst_tcp(struct streaminfo *stream, unsigned char rst_th_flags, int rst_pkt_num, unsigned char snd_rst_dir, 
 							unsigned short signature_seed1, unsigned short signature_seed2)
 {
-	int i, ret = -1, reserved_hdr_len, send_len = 0;
+	int i, ret = -1, send_len = 0;
 	const raw_pkt_t *raw_pkt;
 	int threadnum = stream->threadnum;
 	struct streaminfo_private *stream_pr;
@@ -3319,39 +3293,31 @@ static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream
 	int ret = -1;
 	struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
 
-	while(stream_pr && stream_pr->pfather_pr){
-#if 0 //使用动态创建非对称协议层, 此处不用再额外判断了	
-		if(skip_asymmetric_presence_layer(stream, send_stream_dir)){
-			stream_pr = stream_pr->pfather_pr;
-			continue;
-		}
-#endif		
-		if(CAP_LEVEL_MAC == g_packet_io_cap_level) {
-			if(stream_pr->pfather_pr 
-			 && ((ADDR_TYPE_MAC_IN_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype) || (ADDR_TYPE_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype))){
-				/* 记录MAC层之上的协议地址类型, 用于填充Ethernet->type字段, 对于MAC-in-MAC的inner_eth, 记录上层协议类型 */
-				ret = (int)stream->addr.addrtype;
-			}
-		}else{
-			/* to do:
-				如果捕包库自动屏蔽了ethernet层, 甚至剥掉了vlan等层而且还要发包怎么办?
-			*/
-			if(NULL == stream_pr->pfather_pr){
-				if(g_packet_io_cap_level == stream->addr.addrtype){
-					ret = (int)stream->addr.addrtype;
-				}
-				if((CAP_LEVEL_IPV4 == g_packet_io_cap_level)
-				 && (ADDR_TYPE_IPV4 == stream->addr.addrtype)){
-					ret = CAP_LEVEL_IPV4;
-				}			
-			}
-		}
-	
-		stream_pr = stream_pr->pfather_pr;
-		stream = &stream_pr->stream_public;
-	}
+    while (stream_pr && stream_pr->pfather_pr)
+    {
+        if (CAP_LEVEL_MAC == g_packet_io_cap_level)
+        {
+            if (stream_pr->pfather_pr &&
+                ((ADDR_TYPE_MAC_IN_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype) ||
+                 (ADDR_TYPE_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype)))
+            {
+                /* 记录MAC层之上的协议地址类型, 用于填充Ethernet->type字段, 对于MAC-in-MAC的inner_eth, 记录上层协议类型
+                 */
+                ret = (int)stream->addr.addrtype;
+            }
+        }
+        else
+        {
+            /* to do:
+                如果捕包库自动屏蔽了ethernet层, 甚至剥掉了vlan等层而且还要发包怎么办?
+            */
+        }
 
-	return ret;
+        stream_pr = stream_pr->pfather_pr;
+        stream = &stream_pr->stream_public;
+    }
+
+    return ret;
 }
 
 int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio, 
@@ -3568,7 +3534,7 @@ static int send_handle_init(int tot_thread_num)
 		}
 		
 		if(pcfg_io->inject_mode_single_gateway_device[0] != '\0'){
-			ret = g_send_handle[i].raw_eth_fd =  socket(PF_INET, SOCK_PACKET, htons(ETH_P_ALL));
+			g_send_handle[i].raw_eth_fd =  socket(PF_INET, SOCK_PACKET, htons(ETH_P_ALL));
 			if(g_send_handle[i].raw_eth_fd < 0){
 				sapp_log(30, ~0, ~0, "create socket raw eth error, %s\n", strerror(errno));
 				return -1;
@@ -4875,7 +4841,6 @@ int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream,
 int sapp_forward_current_pkt(const struct streaminfo *stream, unsigned int target_id)
 {
 	int ret;
-#if IOMODE_MARSIO
 	marsio_buff_t *raw_mbuf, *new_clone_buf;
 	const struct streaminfo_private *stream_pr = (const struct streaminfo_private *)stream;
 
@@ -4916,10 +4881,6 @@ int sapp_forward_current_pkt(const struct streaminfo *stream, unsigned int targe
 	ret = ptr_marsio_send_burst((struct mr_sendpath *)g_packet_device_alias[target_id].dl_io_param, 
 									stream->threadnum, &new_clone_buf, 1); 
 	
-#else
-	sapp_runtime_log(30, "sapp_forward_current_pkt() not support in non-marsio mode, TODO!\n");
-	return -1;/* 其他模式todo */
-#endif
 
 	return ret;
 }

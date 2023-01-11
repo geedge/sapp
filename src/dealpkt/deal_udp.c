@@ -20,6 +20,13 @@ int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *p
 extern int guess_if_teredo(const struct streaminfo *pstream, struct mesa_udp_hdr *udphdr);
 extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   
 
+
+extern int vxlan_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_hdr,int thread_num, 
+						unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr);
+extern int stream_process_overlay_udp(struct streaminfo *a_udp, const void *this_iphdr, const void *transport_hdr, 
+						const raw_pkt_t * raw_pkt,void **apme,unsigned char *popstate);
+extern int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_pkt_t *rawpkt);
+
 int G_UDP_FLOW_STAT_PROJECT_ID = -1;
 int G_UDP_TEREDO_IDENTIFY_PROJECT_ID = -1;
 
@@ -467,6 +474,8 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
 return is_dup_pkt; 
 }
 
+
+
 int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_iphdr,
 		int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
@@ -684,7 +693,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		
      }
 	
-	if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
+	if(pdetail_pr!=NULL&&pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
 		&& pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON 
 		&& DROP!=ret
 		&& (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
@@ -918,7 +927,8 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		udp_cleardata(pstream);
 	}
 
-	if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
+	if(pdetail_pr!=NULL
+		&&pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
 		&& pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON 
 		&& DROP!=ret
 		&& (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))

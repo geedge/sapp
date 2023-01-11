@@ -884,23 +884,15 @@ int ipv4_frag_init(int thread_count, uint32 hash_size)
 	{
 		g_ipv4_frag_manage[i].thread_num = i;
 		
-#if USE_MESA_STREAM_HASH		
 		g_ipv4_frag_manage[i].frag_hash_table = ipv4_frag_htable_create();
 		if(NULL == g_ipv4_frag_manage[i].frag_hash_table){
 			printf("ipv4_frag_init(): MESA_htable_create fail!\n");
 			sapp_runtime_log(RLOG_LV_FATAL, "ipv4_frag_init(): MESA_htable_create fail!");
 			goto err;
 		}
-#else
-		g_ipv4_frag_manage[i].hash_table_size = hash_size;
-		g_ipv4_frag_manage[i].frag_hash_table = (struct frag_ipq **)SAPP_GLOBAL_ALLOC(sizeof(void *) * hash_size);
-		memset(g_ipv4_frag_manage[i].frag_hash_table, 0, sizeof(void *) * hash_size);
-		g_ipv4_frag_manage[i].hash_index = ipv4_frag_hash_index;
-		g_ipv4_frag_manage[i].hash_cmp = ipv4_frag_hash_cmp;
-#endif
+
 	}
 
-	//FRAG_IP4_RANDOM = (unsigned int)time(NULL) ^ 0xABCD9876;
 	FRAG_IP4_RANDOM = 0xABCD9876;
 	
 	return 0;

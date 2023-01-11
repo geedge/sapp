@@ -221,28 +221,6 @@ static int gdev_keepalive_bfd_plug(const raw_pkt_t *raw_pkt, int thread_id, unsi
 	int service_id = 0;
 	int action;
 	
-#if 0	 /* 做为UDP插件, 在gdev_bfd_pkt_identify已经判断过, 无需再次判断 */
-	if(ntohs(eth_hdr->ether_type) != ETHERTYPE_IP){
-		return -1;
-	}
-
-	if(ip_hdr->ip_p != IPPROTO_UDP){
-		return -1;
-	}
-
-	if(ntohs(udp_hdr->uh_dport) != BFD_DEFAULT_PORT){
-		return -1;
-	}
-
-	if(memcmp(&ip_hdr->ip_dst.s_addr, &sendto_gdev_card_ip, sizeof(int)) != 0){
-		return -1;
-	}
-
-	if(payload_len != (int)sizeof(bfd_header_t)){
-		return -1;
-	}
-#endif
-
 	service_id = vxlan_sport_map_to_service_id(ntohs(udp_hdr->uh_sport));
 	action = gdev_kp_action_judge(service_id);
 
@@ -272,31 +250,30 @@ static int gdev_keepalive_bfd_plug(const raw_pkt_t *raw_pkt, int thread_id, unsi
 	sendpacket_build_ethernet(raw_eth_hdr->ether_shost, raw_eth_hdr->ether_dhost, ETH_P_IP, NULL, 0, send_buf);
 
 	sendpacket_build_udp_dual_stack(ntohs(udp_hdr->uh_sport), /* BFD协议不交换源和目的端口 */
-						 ntohs(udp_hdr->uh_dport),
-						 (char *)bfd_send_hdr,
-						 payload_len,
-						 payload_len,
-						 send_buf + SENDPACKET_ETH_H + SENDPACKET_IP_H);
-	
-    sendpacket_build_ipv4(SENDPACKET_UDP_H + payload_len,
-    					  0, 
-    					  ntohs(ip_hdr->ip_id),
-    					  ntohs(ip_hdr->ip_off), 
-    					  ip_hdr->ip_ttl, 
-    					  IPPROTO_UDP, 
-    					  ip_hdr->ip_dst.s_addr,
-    					  ip_hdr->ip_src.s_addr, /* 交换源、目的IP地址 */
-    					  NULL, 0, 
-    					  send_buf + SENDPACKET_ETH_H);
+									ntohs(udp_hdr->uh_dport),
+									(char *)bfd_send_hdr,
+									payload_len,
+									payload_len,
+									send_buf + SENDPACKET_ETH_H + SENDPACKET_IP_H);
 
-    sendpacket_do_checksum(send_buf + SENDPACKET_ETH_H,
-    					   IPPROTO_IP, 
-    					   SENDPACKET_IP_H);
-				   
-    sendpacket_do_checksum(send_buf + SENDPACKET_ETH_H,
-    					   IPPROTO_UDP, 
-    					   payload_len + SENDPACKET_UDP_H);
+	sendpacket_build_ipv4(SENDPACKET_UDP_H + payload_len,
+						0,
+						ntohs(ip_hdr->ip_id),
+						ntohs(ip_hdr->ip_off),
+						ip_hdr->ip_ttl,
+						IPPROTO_UDP,
+						ip_hdr->ip_dst.s_addr,
+						ip_hdr->ip_src.s_addr, /* 交换源、目的IP地址 */
+						NULL, 0,
+						send_buf + SENDPACKET_ETH_H);
 
+	sendpacket_do_checksum(send_buf + SENDPACKET_ETH_H,
+				IPPROTO_IP, 
+						SENDPACKET_IP_H);
+
+	sendpacket_do_checksum(send_buf + SENDPACKET_ETH_H,
+						IPPROTO_UDP,
+						payload_len + SENDPACKET_UDP_H);
 
 	return SENDPACKET_IP_H + SENDPACKET_UDP_H+sizeof(bfd_header_t) + sizeof(struct mesa_ethernet_hdr);	
 }
@@ -317,31 +294,30 @@ static int gdev_keepalive_icmp_plug(const raw_pkt_t *raw_pkt, int thread_id, uns
 
 	sendpacket_build_ethernet(raw_eth_hdr->ether_shost, raw_eth_hdr->ether_dhost, ETH_P_IP, NULL, 0, send_buf);
 
-	sendpacket_build_icmpv4_echo(ICMP_ECHOREPLY, 0, 0, 
-                                 ntohs(icmp_hdr->icd_id),
-                                 ntohs(icmp_hdr->icd_seq),
-                                 icmp_payload,
-                                 icmp_payload_len,
-                                 send_buf + SENDPACKET_ETH_H + SENDPACKET_IP_H);
+	sendpacket_build_icmpv4_echo(ICMP_ECHOREPLY, 0, 0,
+								ntohs(icmp_hdr->icd_id),
+								ntohs(icmp_hdr->icd_seq),
+								icmp_payload,
+								icmp_payload_len,
+								send_buf + SENDPACKET_ETH_H + SENDPACKET_IP_H);
 
-    sendpacket_build_ipv4(icmp_payload_len + sizeof(struct mesa_icmp_echo_hdr),
-    					  0, 0x1234, 0, 64, IPPROTO_ICMP, 
-    					  ip_hdr->ip_dst.s_addr,
-    					  ip_hdr->ip_src.s_addr,
-    					  NULL, 0, 
-    					  send_buf + SENDPACKET_ETH_H);
-    	memcpy(send_buf + SENDPACKET_ETH_H+SENDPACKET_IP_H+sizeof(struct mesa_icmp_echo_hdr), 	
-    	   	     icmp_payload,
-    	   	     icmp_payload_len);
-    	   	     
+	sendpacket_build_ipv4(icmp_payload_len + sizeof(struct mesa_icmp_echo_hdr),
+						0, 0x1234, 0, 64, IPPROTO_ICMP,
+						ip_hdr->ip_dst.s_addr,
+						ip_hdr->ip_src.s_addr,
+						NULL, 0,
+						send_buf + SENDPACKET_ETH_H);
+	memcpy(send_buf + SENDPACKET_ETH_H + SENDPACKET_IP_H + sizeof(struct mesa_icmp_echo_hdr),
+			icmp_payload,
+			icmp_payload_len);
 
-    sendpacket_do_checksum(send_buf + SENDPACKET_ETH_H,
-    					   IPPROTO_IP, 
-    					   SENDPACKET_IP_H);
-    					   
-    sendpacket_do_checksum(send_buf + SENDPACKET_ETH_H,
-    					   IPPROTO_ICMP, 
-    					   icmp_payload_len + sizeof(struct mesa_icmp_echo_hdr));
+	sendpacket_do_checksum(send_buf + SENDPACKET_ETH_H,
+						IPPROTO_IP,
+						SENDPACKET_IP_H);
+
+	sendpacket_do_checksum(send_buf + SENDPACKET_ETH_H,
+						IPPROTO_ICMP,
+						icmp_payload_len + sizeof(struct mesa_icmp_echo_hdr));
 
 	return ntohs(ip_hdr->ip_len) + sizeof(struct mesa_ethernet_hdr);	
 }
@@ -384,40 +360,10 @@ static int gdev_keepalive_plug(const raw_pkt_t *raw_pkt, int thread_id, unsigned
 			return -1;
 	}
 
-#if 0
-	snd_eth_hdr = 	(struct mesa_ethernet_hdr *)snd_handle->send_buf;
-	memcpy(snd_eth_hdr->ether_shost, raw_eth_hdr->ether_dhost, ETHER_ADDR_LEN);
-	memcpy(snd_eth_hdr->ether_dhost, raw_eth_hdr->ether_shost, ETHER_ADDR_LEN);
-	snd_eth_hdr->ether_type = ntohs(ETHERTYPE_IP);
 
-	///MESA_sendpacket_ethlayer(thread_id, (char *)snd_handle->send_buf, send_len + 14, 0);
-	
-	marsio_buff_t *send_mbuf[1];
-	char *real_buf;
-
-	ret = ptr_marsio_buff_malloc_global(gdev_plug_extern_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_id);
-	if(ret < 0){
-		goto err;
-	}
-
-	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = ptr_marsio_buff_append(send_mbuf[0], send_len + 14);
-	if(NULL == real_buf){
-		ptr_marsio_buff_free(gdev_plug_extern_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_id);
-		goto err;
-	}
-	
-	memcpy(real_buf, snd_handle->send_buf, send_len + 14); /* send_len没包括mac地址 */
-
-	ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, 
-								thread_id, send_mbuf, 1, MARSIO_SEND_OPT_FAST);
-	/* mbuf 发送完后自动释放 */							
-#else
 	ret = packet_io_send(snd_handle, send_len, SEND_TYPE_LINK_INJECT, 
 						__ADDR_TYPE_IP_PAIR_V4, dir, thread_id,
 						(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, raw_pkt);	
-
-#endif
 
     packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_id);
     return ret;
@@ -492,7 +438,6 @@ static void gdev_keepalive_update_local_log(void)
 	char cur_time_str[64];
 	char tmp_ip_str[INET6_ADDRSTRLEN];
 	const char *tmp_keealive_type;
-	time_t last_op_time;
 	const gdev_keepalive_status_per_thread_t *this_thread_stat;
 	const gdev_keepalive_status_per_dev_t *this_dev_stat;
 	
@@ -554,7 +499,7 @@ static void gdev_keepalive_update_fs2(void)
 {
 	const gdev_keepalive_status_per_thread_t *this_thread_stat;
 	const gdev_keepalive_status_per_dev_t *this_dev_stat;
-	int dev_index, thread_seq, service_index;
+	int dev_index, thread_seq;
 	int platform_thread_num;
 	
 	platform_thread_num = get_thread_count();
@@ -852,13 +797,13 @@ int gdev_keepalive_set_opt(const SAPP_TLV_T *tlv_value)
 				if(last_log_time < g_CurrentTime){
 					last_log_time = g_CurrentTime;
 					MESA_handle_runtime_log(gdev_kp_log_handle, 20, "[gdev_keepalive]", "set gdev-keepalive error! service:%d, action:%d", 
-										   actual_val->service_num, actual_val->keepalive_switch);
+										actual_val->service_num, actual_val->keepalive_switch);
 				}					   
 			}else{
 				if(last_log_time < g_CurrentTime){
 					last_log_time = g_CurrentTime;
 					MESA_handle_runtime_log(gdev_kp_log_handle, 10, "[gdev_keepalive]", "set gdev-keepalive, service:%d, action:%d", 
-										   actual_val->service_num, actual_val->keepalive_switch);
+										actual_val->service_num, actual_val->keepalive_switch);
 				}
 			}
 		}
@@ -1025,7 +970,6 @@ int gdev_keepalive_plug_init(void)
 	inet_pton(AF_INET, tmp_ip_buf, &sendto_gdev_card_ip);
 
 	MESA_load_profile_int_def((char *)ABBR_INLINE_DEV_CONF_FILE, (char *)"Module", (char *)"default_keepalive_action", &g_dev_keepalive_default_action, 1);
-	///MESA_load_profile_int_def((char *)ABBR_INLINE_DEV_CONF_FILE, (char *)"Module", (char *)"gdev_status_switch", &GDEV_KEEPALIVE_LOG_SWITCH, 1);
 
 
 	for(i = 0; i <  MAX_VXLAN_SERVICE_NUM; i++){

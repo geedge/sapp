@@ -2797,7 +2797,7 @@ int find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *t
 	const struct global_stream *this_thread_stream = G_MESA_GLOBAL_STREAM[thread_index];
 	struct streamindex **phashstream=NULL;
 	struct streamindex *stream_hash_head = NULL;
-	unsigned int hash_index, hash_max, no_use_slave_hash;
+	unsigned int hash_index, hash_max;
 	int ret, match_layer_dir; /* 输入的四元组与大端口做为源的规则一致 */
 	int tot_found_stream_num = 0;
 
@@ -2854,7 +2854,7 @@ int find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *t
 			match_layer_dir = 0;
 		}
 	}
-	hash_index = sapp_jhash_4words(a,b,c,d, &no_use_slave_hash) % hash_max;
+	hash_index = sapp_jhash_4words(a,b,c,d, NULL) % hash_max;
 #else
 extern unsigned int tuple4_v4_make_crc_hash(const struct stream_tuple4_v4 *tuple4_v4);
 	hash_index = tuple4_v4_make_crc_hash(tuplev4) % hash_max;

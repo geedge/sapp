@@ -2,6 +2,9 @@
 #include "sapp_private_api.h"
 #include "sapp_declaration.h"
 #include "support/MESA_feedback.h"
+
+#include "breakpad_mini.h"
+
 /*
 2015-04-15
    平台实时捕获最近的数据包, 按size指定大小, 如最近的100MB,
@@ -578,7 +581,7 @@ static int packet_io_strip_L2E_hdr(raw_pkt_t *p_raw_pkt, unsigned char dir, int 
 
 extern void sapp_fs2_set_latency(int thead_seq, long long time_cost);
 extern char (*g_platform_action_cb_fun)(int net_conn_mode, char plug_action);
-
+extern void sapp_fs2_fuzzy_latency_update_per_thread(int thead_seq, long long time_cost);
 
 static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, int thread_num)
 {
@@ -1010,7 +1013,7 @@ retry:
 static int packet_io_get_sendroute_mac(char dev_id, char link_id, unsigned char *out_mac_addr)
 {
     char *p_mac_addr = (char *)&g_send_gateway_mac_table[dev_id][link_id][0];
-    if(G_SND_ROUTE_INFO_NUM <= 0 || strlen(p_mac_addr) <= 0){
+    if(G_SND_ROUTE_INFO_NUM <= 0 || strlen(p_mac_addr) == 0){
     	return -1;
     }else{
 		if(MESA_mac_pton(p_mac_addr, ':', (char *)out_mac_addr) < 0){
@@ -1049,7 +1052,7 @@ static int packet_io_send_by_manual_conf(MESA_send_handle *send_handle,int datal
     unsigned char send_route_mac[MAC_ADDR_LEN] = "";
 	unsigned char *p_dst_mac;
 
-	if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE )
+    if (sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE)
     {
         ret = packet_io_get_sendroute_mac(mim_mem_hdr.dev_id, mim_mem_hdr.link_id, send_route_mac);
         if(ret < 0){
@@ -1062,7 +1065,7 @@ static int packet_io_send_by_manual_conf(MESA_send_handle *send_handle,int datal
     {
         p_dst_mac = (unsigned char *)sapp_global_val->config.packet_io.inject_mode_single_gateway_dst_mac;
     }
-    sendpacket_build_ethernet(p_dst_mac, sapp_global_val->config.packet_io.inject_mode_single_gateway_src_mac, ether_type, NULL, 0, send_handle->send_buf);
+    sendpacket_build_ethernet(p_dst_mac, (unsigned char *)sapp_global_val->config.packet_io.inject_mode_single_gateway_src_mac, ether_type, NULL, 0, send_handle->send_buf);
 
 
 send_again:
@@ -1220,7 +1223,7 @@ int parse_send_gdev_ip_conf(const char *profile_path)
 
         //del_last_rn(conf_buf, 1024);
 
-        ret = sscanf(conf_buf, "%d\t%s", &dev_id, ip_addr);
+        ret = sscanf(conf_buf, "%d\t%31s", &dev_id, ip_addr);
 
         if(ret != 2 || dev_id >= 64 || strlen(ip_addr) >= 32)
         {
@@ -1262,7 +1265,7 @@ int parse_send_route_conf(const char *profile_path)
 
 		//del_last_rn(conf_buf, 1024);
 
-		ret = sscanf(conf_buf, "%d\t%d\t%s", &dev_id, &link_id, mac_addr);
+		ret = sscanf(conf_buf, "%d\t%d\t%17s", &dev_id, &link_id, mac_addr);
 
 		if(ret != 3 || dev_id >= 64 || link_id >= 16 || strlen(mac_addr) >= 18)
 		{
@@ -1402,6 +1405,8 @@ void sapp_breakpad_destroy(void)
 {
 	breakpad_destroy(sapp_global_val->individual_fixed.breakpad);
 }
+
+extern void sapp_log_handle_destroy(void);
 
 void packet_io_exit(void)
 {	
