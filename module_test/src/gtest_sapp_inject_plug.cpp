@@ -2003,7 +2003,7 @@ static int MESA_rst_tcp_test_case_c2s(struct streaminfo *pstream, void *a_packet
 		return -1;
 	}
 
-	while((0 == g_recv_tun_rst_flag) && (g_recv_tun_rst_flag != 2)){
+	while(g_recv_tun_rst_flag != 2){
 		usleep(1000);
 	}
 
@@ -2097,7 +2097,7 @@ static int MESA_inject_udp_test_case_s2c(struct streaminfo *pstream, void *a_pac
 		return -1;
 	}
 
-	while((0 == g_recv_tun_rst_flag) && (g_recv_tun_rst_flag != 2)){
+	while((g_recv_tun_rst_flag != 2)){
 		usleep(1000);
 	}
 	
@@ -2219,7 +2219,7 @@ extern "C" char MESA_rst_tcp_plug_entry_in_double_dir(struct streaminfo *pstream
 
 static int MESA_kill_tcp_test_check_pkt(struct streaminfo *pstream, struct inject_pkt_para *inject_paras, void *a_packet)
 {
-	while((0 == g_recv_tun_rst_flag) && (g_recv_tun_rst_flag != 2)){
+	while((g_recv_tun_rst_flag != 2)){
 		usleep(1000);
 	}
 
@@ -2326,7 +2326,7 @@ extern "C" int sapp_inject_tcp_payload_c2s(struct streaminfo *pstream,void **pme
 		return APP_STATE_DROPME;
 	}
 
-	while((0 == g_recv_tun_rst_flag) && (g_recv_tun_rst_flag != 2)){
+	while((g_recv_tun_rst_flag != 2)){
 		usleep(1000);
 	}
 
@@ -2371,7 +2371,7 @@ extern "C" int sapp_inject_tcp_payload_s2c(struct streaminfo *pstream,void **pme
 		return APP_STATE_DROPME;
 	}
 
-	while((0 == g_recv_tun_rst_flag) && (g_recv_tun_rst_flag != 2)){
+	while((g_recv_tun_rst_flag != 2)){
 		usleep(1000);
 	}
 
@@ -2422,7 +2422,7 @@ extern "C" int sapp_inject_udp_payload_c2s(struct streaminfo *pstream,void **pme
 		return APP_STATE_DROPME;
 	}
 
-	while((0 == g_recv_tun_rst_flag) && (g_recv_tun_rst_flag != 2)){
+	while((g_recv_tun_rst_flag != 2)){
 		usleep(1000);
 	}
 
@@ -2466,7 +2466,7 @@ extern "C" int MESA_inject_tcp_payload_c2s(struct streaminfo *pstream,void **pme
 		return APP_STATE_DROPME;
 	}
 
-	while((0 == g_recv_tun_rst_flag) && (g_recv_tun_rst_flag != 2)){
+	while((g_recv_tun_rst_flag != 2)){
 		usleep(1000);
 	}
 
@@ -2510,7 +2510,7 @@ extern "C" int MESA_inject_tcp_payload_s2c(struct streaminfo *pstream,void **pme
 		return APP_STATE_DROPME;
 	}
 
-	while((0 == g_recv_tun_rst_flag) && (g_recv_tun_rst_flag != 2)){
+	while((g_recv_tun_rst_flag != 2)){
 		usleep(1000);
 	}
 

@@ -46,7 +46,7 @@ enum MESA_stream_opt{
 	MSO_DROP_CURRENT_PKT,  /* opt_val type must be int, value only be [0,1], notice the difference between MSO_DROP_CURRENT_PKT and MSO_DROP_STREAM, MSO_DROP_CURRENT_PKT only discard current packet, but MSO_DROP_STREAM discard all subsequent packets of stream  */
 	MSO_HAVE_DUP_PKT,  /* opt_val type must be int, value only be [0, 1, -2], if the current stream found duplicate packets ? 0:no; 1:yes; -2: not sure */
 	MSO_STREAM_LASTUPDATE_TIMESTAMP_MS,/* latest pkt arrive timestamp of this stream, opt_val type must be unsigned long long  */
-	MSO_STREAM_TIMER,
+	MSO_STREAM_TIMED,
 	__MSO_MAX,
 };
 

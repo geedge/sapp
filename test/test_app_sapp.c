@@ -504,7 +504,7 @@ char test_set_stream_timed(struct streaminfo *pstream,  void **pme, int thread_s
     if (pstream->pktstate == OP_STATE_PENDING)
     {
         tout_val = 1;
-        ret = MESA_set_stream_opt(pstream, MSO_STREAM_TIMER, &tout_val, sizeof(int));
+        ret = MESA_set_stream_opt(pstream, MSO_STREAM_TIMED, &tout_val, sizeof(int));
         if (ret < 0)
         {
             DPRINT("stream:%p, MESA_set_stream_opt error:\n", pstream);

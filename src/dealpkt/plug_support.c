@@ -787,7 +787,7 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			}
 		}
 		break;
-		case (int)MSO_STREAM_TIMER:
+		case (int)MSO_STREAM_TIMED:
 		{
 			if(sizeof(int) != opt_val_len){
 				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_set_stream_opt() MSO_TIMEOUT error:opt_val_len invalid, must be sizeof(short)\n",printaddr(&pstream->addr, pstream->threadnum));
@@ -803,9 +803,9 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			if(false == timeout_pending(&funinfo->timeout))
 			{
 				timeout_init(&funinfo->timeout, TIMEOUT_ABS);
+				G_MESA_GLOBAL_STREAM[pstream->threadnum]->user_define_timer_cnt+=1;
 			}
 			timeouts_add(G_MESA_GLOBAL_STREAM[pstream->threadnum]->user_define_timer, &funinfo->timeout, set_timer_s+g_CurrentTime);
-			G_MESA_GLOBAL_STREAM[pstream->threadnum]->user_define_timer_cnt+=1;
 			ret = 0;
 		}
 		break;		

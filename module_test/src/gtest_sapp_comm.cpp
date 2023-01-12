@@ -1237,6 +1237,7 @@ int check_tcp_pkt_equal(const struct mesa_tcp_hdr *raw_hdr, const struct mesa_tc
 /* 此函数copy自sapp : deal_mpls.c->set_mpls_addr   */
 static int sapp_mpls_addr_net_to_mem(const struct mesa_mpls_hdr *net_mpls_hdr, struct single_layer_mpls_addr *mem_mpls_hdr)
 {
+	assert(net_mpls_hdr!=NULL);
 	memset(mem_mpls_hdr, 0, sizeof(struct single_layer_mpls_addr));
 
 	mem_mpls_hdr->label = htonl( (net_mpls_hdr->mpls_label_low<<12) | (net_mpls_hdr->mpls_label_mid<<4) | net_mpls_hdr->mpls_label_high ); /* network order */
@@ -1298,13 +1299,16 @@ static int __sapp_guess_mpls_with_control_word(const unsigned char *maybe_eth_hd
 /* 此函数copy自sapp     */
 int sapp_set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mpls_pkt_data)
 {
-	const struct mesa_mpls_hdr *this_mpls_hdr;
+	const struct mesa_mpls_hdr *this_mpls_hdr=NULL;
 	int i;
 	
 	memset(addr, 0, sizeof(struct layer_addr_mpls));
 	for(i = 0; i < MAX_MPLS_ADDR_LAYER; i++)
 	{
 		this_mpls_hdr = (const struct mesa_mpls_hdr *)raw_mpls_pkt_data;
+		if (this_mpls_hdr)
+		{
+		assert(this_mpls_hdr->mpls_bls!=1);
 		//memcpy(&addr->src_mpls_pkt[i], raw_mpls_pkt_data,  sizeof(struct mesa_mpls_hdr));
 		sapp_mpls_addr_net_to_mem(this_mpls_hdr, &addr->c2s_addr_array[i]); /* 函数栈里的地址, 每次暂存在c2s方向, TCP/UDP层再根据流方向翻�?*/
 		
@@ -1314,11 +1318,7 @@ int sapp_set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mp
 			break;
 		}
 		raw_mpls_pkt_data += sizeof(struct mesa_mpls_hdr);
-	}
-
-	if(1 != this_mpls_hdr->mpls_bls) /* 超过MAX_MPLS_ADDR_LAYER, MPLS还没有结�?*/
-	{
-		return -1;
+		}
 	}
 
 	if(((*raw_mpls_pkt_data & 0xF0) != 0x40) && ((*raw_mpls_pkt_data & 0xF0) != 0x60)){ //VPLS, MPLS with Control Word

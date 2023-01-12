@@ -861,7 +861,7 @@ struct __inline_vxlan_hdr{
 }__attribute__((packed));
 typedef struct __inline_vxlan_hdr inline_vxlan_hdr_t;
 
-
+#include "stream_inc/stream_base.h"
 
 unsigned char net_layer_to_ipv4_protocol(int addr_type);
 unsigned char net_layer_to_ipv6_protocol(int addr_type);
