@@ -728,7 +728,28 @@ int pcap_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt_l
 {
 	return 0;
 }
+static int pcap_forward_pkt(int thread_num, const unsigned char *data,int data_len,unsigned char dir);
 
+int pcap_dl_io_forward_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
+{
+	if(raw_pkt == NULL && (thread_seq < 0 || thread_seq > get_thread_count()))
+		return -1;
+	int ret = 0;
+    if (raw_pkt->__lib_raw_pkt_data != NULL && raw_pkt->__lib_raw_pkt_len > 0)
+    {
+        ret = pcap_forward_pkt(thread_seq, (unsigned char *)raw_pkt->__lib_raw_pkt_data, raw_pkt->__lib_raw_pkt_len,
+                               raw_pkt->route_dir);
+    }
+    return ret;
+}
+void pcap_dl_io_free_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
+{
+	if(raw_pkt == NULL && (thread_seq < 0 || thread_seq > get_thread_count()))
+		return;
+	if(raw_pkt->__lib_raw_pkt_data != NULL)
+		PCAP_FREE((void *)(raw_pkt->__lib_raw_pkt_data));
+	return;
+}
 /************************  funcitons for dynamic link *************************/
 
 
@@ -821,7 +842,10 @@ static void pcap_clear_pkt_queue_left(int thread_index)
 				pcap_forward_pkt(thread_index, (unsigned char *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data, 
 							pkt_queue_node.raw_pkt.__lib_raw_pkt_len, pkt_queue_node.raw_pkt.route_dir);
 			}		
-			PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
+			if(ret == DROP)
+			{
+				PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
+			}
 		}
 	}
 }
@@ -1242,6 +1266,7 @@ retry:
 	pkt_queue_node.raw_pkt.diagnose_error_to_dump = 0;
 	pkt_queue_node.raw_pkt.overlay_layer_bytes = 0;
 	pkt_queue_node.raw_pkt.drop_current_pkt_flag = 0;
+	pkt_queue_node.raw_pkt.d_pkt = NULL;
 
 	if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
 		/* 读包模式下本来没有routedir的概念, 为了便于测试上层业务, 使用最底层地址比较算出一个routedir */

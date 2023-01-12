@@ -6,6 +6,7 @@
 #include "sapp_private_api.h"
 #include "sapp_declaration.h"
 #include "stream_inc/stream_base.h"
+#include "stream_inc/stream_rawpkt.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,6 +19,101 @@ extern const raw_ipfrag_list_t *get_raw_frag_list(const struct streaminfo *strea
 #if IOMODE_MARSIO
 extern void * (*ptr_marsio_buff_ctrlzone)(marsio_buff_t *m, uint8_t id);
 #endif
+
+
+struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const void *rawpkt)
+{
+	if(pstream == NULL || rawpkt == NULL)return NULL;
+
+	raw_pkt_t *p_rawpkt = (raw_pkt_t *)rawpkt;
+	
+	if(p_rawpkt->d_pkt)return NULL; // rawpkt can be retained only once
+	if(p_rawpkt->drop_current_pkt_flag == 1)return NULL; // rawpkt need to be drop, can not be retained
+
+	if(sapp_global_val->config.packet_io.depolyment_mode_bin != DEPOLYMENT_MODE_INLINE)return NULL;
+
+	struct detain_pkt *d_pkt = ALLOC(struct detain_pkt, 1);
+	d_pkt->original = rawpkt;
+	memcpy(d_pkt, p_rawpkt, sizeof(raw_pkt_t));
+	p_rawpkt->d_pkt = d_pkt;
+	d_pkt->tid = pstream->threadnum;
+
+	return d_pkt;
+}
+
+int MESA_detain_pkt_forward(struct detain_pkt *pkt)
+{
+	if(pkt->original == NULL) //original packet stack finished, being processed by all plugin;
+	{
+		if(pkt->replica.__lib_raw_pkt_len > 0 && pkt->replica.__lib_raw_pkt_data&& pkt->replica.io_lib_pkt_reference)
+		{
+			dl_io_fun_list.dl_io_forward_rawpkt(&pkt->replica, pkt->tid);
+		}
+		free(pkt);
+		pkt = NULL;
+	}
+	else //still in original packet stack, need be processed by follow-up plugin, mark operation to replica;
+	{
+		if(pkt->mark != RETAIN_RAWPKT)
+		{
+			return -1; // redundant operation, return abnormal
+		}
+		pkt->mark = FORWARD_RAWPKT;
+	}
+	return 0;
+}
+
+void MESA_detain_pkt_free(struct detain_pkt *pkt)
+{
+	if(pkt->original == NULL) //original packet stack finished, being processed by all plugin;
+	{
+		if(pkt->replica.__lib_raw_pkt_len > 0 && pkt->replica.__lib_raw_pkt_data&& pkt->replica.io_lib_pkt_reference)
+		{
+			dl_io_fun_list.dl_io_free_rawpkt(&pkt->replica, pkt->tid);
+		}
+		free(pkt);
+		pkt = NULL;
+
+	}
+	else //still in original packet stack, need be processed by follow-up plugin, mark operation to replica;
+	{
+		if(pkt->mark == RETAIN_RAWPKT)
+		{
+			pkt->mark = FREE_RAWPKT;
+		}
+	}
+}
+
+int MESA_retain_pkt_update(const raw_pkt_t *p_raw_pkt, int pkt_ret)
+{
+	int update_ret = pkt_ret;
+    if (p_raw_pkt->d_pkt != NULL)// have retain operation
+    {
+        if (p_raw_pkt->d_pkt->mark == RETAIN_RAWPKT) //retain pkt in use
+        {
+            if (pkt_ret == PASS)
+            {
+                update_ret = RETAIN;
+            }
+            if (pkt_ret == DROP)
+            {
+                p_raw_pkt->d_pkt->replica.io_lib_pkt_reference = NULL;
+                p_raw_pkt->d_pkt->replica.__lib_raw_pkt_data = NULL;
+                p_raw_pkt->d_pkt->replica.__lib_raw_pkt_len = 0;
+            }
+            p_raw_pkt->d_pkt->original = NULL;
+        }
+        else //During the processing of the original package, the retained pkt being called forward or free, so it is directly released
+        {
+            if (p_raw_pkt->d_pkt->mark == FREE_RAWPKT)
+            {
+                update_ret = DROP;
+            }
+            free(p_raw_pkt->d_pkt);
+        }
+    }
+	return update_ret;
+}
 
 int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 {

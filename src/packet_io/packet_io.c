@@ -582,6 +582,7 @@ static int packet_io_strip_L2E_hdr(raw_pkt_t *p_raw_pkt, unsigned char dir, int 
 extern void sapp_fs2_set_latency(int thead_seq, long long time_cost);
 extern char (*g_platform_action_cb_fun)(int net_conn_mode, char plug_action);
 extern void sapp_fs2_fuzzy_latency_update_per_thread(int thead_seq, long long time_cost);
+extern int MESA_retain_pkt_update(const raw_pkt_t *p_raw_pkt, int pkt_ret);
 
 static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, int thread_num)
 {
@@ -711,29 +712,54 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		ret = DROP;
 	}
 
-	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){ 
-		if((p_raw_pkt->is_overlay_pkt)&& (PASS == ret)){
-			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_FORWARD);
-			packet_io_hook_forward((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
-		}else{
-			/* inline模式下, 非原始链路中的包, 即使插件返回了PASS, 也不能注入链路 */
-			ret = DROP;
-			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
-		}
-	}else if(DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin){
-		if(PASS == ret){
-			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_FORWARD);
-		}else{
-			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
-		}
-	}else{
-		/* mirror模式下, 没有forward, 仅有drop,虽然drop也没实际意义,但是可以用于观察哪些包被插件返回了DROP */
-		if(DROP == ret){
-			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
-		}		
-	}
-
-	return ret;
+    if (DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+    {
+        if ((p_raw_pkt->is_overlay_pkt) && (PASS == ret))
+        {
+            if (p_raw_pkt->d_pkt != NULL)
+            {
+                ret = MESA_retain_pkt_update(p_raw_pkt, ret);
+            }
+			if(ret == PASS)
+			{
+            	cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_FORWARD);
+			}
+			if(ret != DROP)
+			{
+            	packet_io_hook_forward((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
+			}
+        }
+        else
+        {
+            /* inline模式下, 非原始链路中的包, 即使插件返回了PASS, 也不能注入链路 */
+            ret = DROP;
+            cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
+        }
+    }
+    else if (DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin)
+    {
+		if (p_raw_pkt->d_pkt != NULL)
+        {
+            ret = MESA_retain_pkt_update(p_raw_pkt, ret);
+        }
+        if (PASS == ret)
+        {
+            cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_FORWARD);
+        }
+        if (DROP == ret)
+        {
+            cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
+        }
+    }
+    else
+    {
+        /* mirror模式下, 没有forward, 仅有drop,虽然drop也没实际意义,但是可以用于观察哪些包被插件返回了DROP */
+        if (DROP == ret)
+        {
+            cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
+        }
+    }
+    return ret;
 }
 
 

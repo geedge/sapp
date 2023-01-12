@@ -709,7 +709,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 	switch(*opstate)
 	{
 		case	OP_STATE_PENDING:
-			return stream_state_pending(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate, smart_offload_flag);
+			ret = stream_state_pending(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate, smart_offload_flag);
 			break;
 		case	OP_STATE_DATA:	
 			if(*apme==NULL) //如果已经没有要处理的函数了
@@ -717,7 +717,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 				*opstate= OP_STATE_CLOSE;
 				break;
 			}
-			return stream_state_data(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate, smart_offload_flag);
+			ret =  stream_state_data(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate, smart_offload_flag);
 			break;
 		case	OP_STATE_CLOSE: //链接关闭,清除状态
 				pFunInfo=(StreamFunInfo *)(*apme);
@@ -740,6 +740,12 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 			break;
 	}
 	
+	if(raw_pkt != NULL && ret == DROP)
+	{
+		raw_pkt_t *p_rawpkt = (raw_pkt_t *)raw_pkt;
+		p_rawpkt->drop_current_pkt_flag = 1;
+	}
+
 	return ret;
 }
 

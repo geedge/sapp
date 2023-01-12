@@ -32,6 +32,7 @@ extern int tcp_support_all;
 
 #define DROP             0x00
 #define PASS             0x01
+#define RETAIN             0x02
 
 #define	SMART_OFFLOAD_FLAG_UNKNOWN	0x0
 #define	SMART_OFFLOAD_FLAG_UDP 0x01

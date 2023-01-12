@@ -48,7 +48,7 @@ int Gserial_sendpacket_iplayer(int plug_id, struct streaminfo *stream,const char
 {
 	int ret;
 	
-	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
+	if(plug_id <= 0 || plug_id >= GSERIAL_PLUGID_MAX)
 	{
 		sapp_runtime_log(30, "Gserial_sendpacket_iplayer(): Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
 		return -1;
@@ -70,7 +70,7 @@ int Gserial_sendpacket_ipv6_layer(int plug_id, struct streaminfo *stream,const c
 {
 	int ret;
 	
-	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
+	if(plug_id <= 0 || plug_id >= GSERIAL_PLUGID_MAX)
 	{
 		printf("Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
 		return -1;
@@ -93,7 +93,7 @@ int Gserial_sendpacket_ipv4(int plug_id, struct streaminfo *stream,u_char ttl,u_
 {
 	int ret;
 	
-	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
+	if(plug_id <= 0 || plug_id >= GSERIAL_PLUGID_MAX)
 	{
 		printf("Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
 		return -1;
@@ -128,7 +128,7 @@ int Gserial_sendpacket_ipv4_detail(int plug_id,struct streaminfo *stream,u_char 
 {
 	int ret;
 	
-	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
+	if(plug_id <= 0 || plug_id >= GSERIAL_PLUGID_MAX)
 	{
 		printf("Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
 		return -1;
@@ -166,7 +166,7 @@ int Gserial_sendpacket_ipv6(int plug_id, struct streaminfo *stream,u_char ttl,u_
 {
 	int ret;
 	
-	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
+	if(plug_id <= 0 || plug_id >= GSERIAL_PLUGID_MAX)
 	{
 		printf("Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
 		return -1;
@@ -199,7 +199,7 @@ int Gserial_sendpacket_tcp(int plug_id,struct streaminfo *stream,u_int sip,u_int
 {
 	int ret;
 	
-	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
+	if(plug_id <= 0 || plug_id >= GSERIAL_PLUGID_MAX)
 	{
 		printf("Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
 		return -1;
@@ -232,7 +232,7 @@ int Gserial_sendpacket_tcp_detail(int plug_id,struct streaminfo *stream, u_int s
 {
 	int ret;
 	
-	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
+	if(plug_id <= 0 || plug_id >= GSERIAL_PLUGID_MAX)
 	{
 		printf("Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
 		return -1;
@@ -276,7 +276,7 @@ int Gserial_sendpacket_ipv6_tcp_detail(int plug_id,struct streaminfo *stream,str
 {
 	int ret;
 	
-	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
+	if(plug_id <= 0 || plug_id >= GSERIAL_PLUGID_MAX)
 	{
 		printf("Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
 		return -1;
@@ -312,7 +312,7 @@ int Gserial_sendpacket_udp(int plug_id,struct streaminfo *stream, u_int sip, u_i
 {
 	int ret;
 	
-	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
+	if(plug_id <= 0 || plug_id >= GSERIAL_PLUGID_MAX)
 	{
 		printf("Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
 		return -1;
@@ -343,7 +343,7 @@ int Gserial_sendpacket_udp_detail(int plug_id,struct streaminfo *stream, u_int s
 {
 	int ret;
 	
-	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
+	if(plug_id <= 0 || plug_id >= GSERIAL_PLUGID_MAX)
 	{
 		printf("Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
 		return -1;

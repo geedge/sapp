@@ -764,7 +764,7 @@ static int cycle_pkt_dump_get_cur_enable_thread(void)
 	const sapp_config_tools_pktdump_t *pktdump_cfg = &sapp_global_val->config.tools.pkt_dump;
 
 	for(i = 0; i < MAX_THREAD_NUM; i++){
-		if(G_PKT_DUMP_PER_THREAD_SW != 0){
+		if(G_PKT_DUMP_PER_THREAD_SW[i] != 0){
 			sum++;
 		}
 	}
@@ -1098,8 +1098,6 @@ static int cycle_pkt_dump_socket_init(void)
 int cycle_pkt_dump_init(int argc, char *argv[])
 {
 	int i, ret = 0;
-	int int_tmp, total_files_size, core_num;
-	char per_thread_sw[PATH_MAX];
 	char pcap_errbuf[PCAP_ERRBUF_SIZE];
 	const sapp_config_tools_pktdump_t *pktdump_cfg = &sapp_global_val->config.tools.pkt_dump;
 

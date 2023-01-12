@@ -64,6 +64,7 @@
 extern "C" {
 #endif
 
+struct detain_pkt;
 /* 原始包结构 */
 typedef struct {
 	unsigned int magic_num; 
@@ -84,7 +85,23 @@ typedef struct {
 	char diagnose_error_to_dump; /* 是某种错误数据包, 期望pkt_dump存储或udp socket发送给tcpdump_mesa */
 	unsigned char overlay_layer_bytes; /* 串联封装层长度, 比如vxlan模式下是50字节 */
 	char drop_current_pkt_flag; /* 插件调用MSO_DROP_CURRENT_PKT设置丢弃当前包, 每次处理完要清空 */
+	struct detain_pkt *d_pkt;
 }raw_pkt_t;
+
+enum retained_rawpkt_mark
+{
+	RETAIN_RAWPKT = 0,
+	FORWARD_RAWPKT = 1,
+	FREE_RAWPKT = 2,
+};
+
+struct detain_pkt
+{
+	const raw_pkt_t *original;
+	raw_pkt_t replica;	
+	enum retained_rawpkt_mark mark;
+	int tid;
+};
 
 
 struct buf_unorder

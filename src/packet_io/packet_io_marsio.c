@@ -391,6 +391,28 @@ int marsio_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt
 	return 0;
 }
 
+static int marsio4_pkt_forward(int tid, struct mr_sendpath * sendpath, marsio_buff_t * mbufs);
+
+int marsio_dl_io_forward_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
+{
+	if(raw_pkt == NULL && (thread_seq < 0 || thread_seq > get_thread_count()))
+		return -1;
+	int ret = 0;
+	if(raw_pkt->io_lib_pkt_reference != NULL)
+	{
+		ret = marsio4_pkt_forward(thread_seq, g_mr4_sendpath_up_set[raw_pkt->device_index], (marsio_buff_t *)raw_pkt->io_lib_pkt_reference);
+	}
+	return ret;
+}
+
+void marsio_dl_io_free_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
+{
+	if(raw_pkt == NULL && (thread_seq < 0 || thread_seq > get_thread_count()))
+		return;
+	ptr_marsio_buff_free(sapp_marsio4_instance, (marsio_buff_t **)&raw_pkt->io_lib_pkt_reference, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
+	return;
+}
+
 void *marsio_dl_io_get_send_handle(int thread_seq)
 {
 	return (void *)&g_mario4_io_handle[thread_seq];
@@ -584,7 +606,7 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->vlan_flipping_couple[1] = 0;
 	raw_pkt->overlay_layer_bytes = 0;
 	raw_pkt->drop_current_pkt_flag = 0;
-	raw_pkt->r_pkt = NULL;
+	raw_pkt->d_pkt = NULL;
 
 	//ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, mr_ctrlzone->route_dir, tid);
 	ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, dir, tid);

@@ -28,6 +28,8 @@ enum{
 	RAW_PKT_GET_ORIGINAL_LOWEST_ETH_DMAC, /* value type is char[6],真实原始包最外层的dmac地址,mirror模式下, 等同于RAW_PKT_GET_DATA, 或者使用stream->pfather自行偏移; inline + vxlan + mrtunnat模式下, 等同于RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC; */
 };
 
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -103,6 +105,11 @@ const void *get_this_layer_header(const struct streaminfo *pstream);
 		ip6_header = MESA_jump_layer(this_layer_hdr, ADDR_TYPE_MAC, ADDR_TYPE_IPV6);
 */
 const void *MESA_jump_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
+
+struct detain_pkt;
+struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const void *rawpkt);
+int MESA_detain_pkt_forward(struct detain_pkt *pkt);
+void MESA_detain_pkt_free(struct detain_pkt *pkt);
 
 #ifdef __cplusplus
 }

@@ -133,6 +133,8 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		dl_io_fun_list_static_link[cap_mode].dl_io_stop = pcap_dl_io_stop;
 		dl_io_fun_list_static_link[cap_mode].dl_io_device_alias_free = pcap_dl_io_device_alias_free;
 		dl_io_fun_list_static_link[cap_mode].dl_io_smart_offload = pcap_dl_io_smart_offload;
+		dl_io_fun_list_static_link[cap_mode].dl_io_forward_rawpkt = pcap_dl_io_forward_rawpkt;
+		dl_io_fun_list_static_link[cap_mode].dl_io_free_rawpkt = pcap_dl_io_free_rawpkt;
 	}
 #endif
 
@@ -163,6 +165,8 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_free_send_handle = NULL;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_destroy = marsio_dl_io_destroy;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_smart_offload = marsio_dl_io_smart_offload;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_forward_rawpkt = marsio_dl_io_forward_rawpkt;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_free_rawpkt = marsio_dl_io_free_rawpkt;
 	}
 #endif 
 
@@ -261,6 +265,7 @@ void * get_dl_io_device_alias_fun_symbol(void)
 	return (void *)tmp_device_alias_fun;
 }
 
+extern void sapp_log(int level, int print_sw, int file_sw, const char *format, ...);
 
 /* 
 	(0:pag,1:pcap,2:dumpfile,3:pfring,4:DPDK,5:ppf,6:NPacket,7:qnf,8:N95,9:pcap-dumpfile-list,10:topsec,

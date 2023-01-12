@@ -1308,8 +1308,6 @@ int sapp_set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mp
 		this_mpls_hdr = (const struct mesa_mpls_hdr *)raw_mpls_pkt_data;
 		if (this_mpls_hdr)
 		{
-		assert(this_mpls_hdr->mpls_bls!=1);
-		//memcpy(&addr->src_mpls_pkt[i], raw_mpls_pkt_data,  sizeof(struct mesa_mpls_hdr));
 		sapp_mpls_addr_net_to_mem(this_mpls_hdr, &addr->c2s_addr_array[i]); /* 函数栈里的地址, 每次暂存在c2s方向, TCP/UDP层再根据流方向翻�?*/
 		
 		addr->c2s_layer_num += 1;
@@ -1321,6 +1319,11 @@ int sapp_set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mp
 		}
 	}
 
+	if(1 != this_mpls_hdr->mpls_bls) /* 超过MAX_MPLS_ADDR_LAYER, MPLS还没有结�?*/
+	{
+		return -1;
+	}
+	
 	if(((*raw_mpls_pkt_data & 0xF0) != 0x40) && ((*raw_mpls_pkt_data & 0xF0) != 0x60)){ //VPLS, MPLS with Control Word
 		if(__sapp_guess_mpls_with_control_word(raw_mpls_pkt_data) > 0){
 			memcpy(&addr->c2s_mpls_ctrl_word, raw_mpls_pkt_data,  sizeof(int));
