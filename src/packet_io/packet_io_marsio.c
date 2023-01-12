@@ -305,7 +305,7 @@ static void marsio_pkt_dump(int thread_seq, const marsio_buff_t *send_mbuf, enum
 	to_tcpdump_mesa.low_layer_type = ADDR_TYPE_MAC;
 	to_tcpdump_mesa.raw_pkt_data = ptr_marsio_buff_mtod((marsio_buff_t *)send_mbuf);
 	to_tcpdump_mesa.raw_pkt_len = ptr_marsio_buff_buflen((marsio_buff_t *)send_mbuf);
-	cycle_pkt_dump_by_classify(thread_seq, &to_tcpdump_mesa, PKT_CLASSIFY_INJECT);
+	cycle_pkt_dump_by_classify(thread_seq, &to_tcpdump_mesa, class);
 
 }
 
@@ -584,6 +584,7 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->vlan_flipping_couple[1] = 0;
 	raw_pkt->overlay_layer_bytes = 0;
 	raw_pkt->drop_current_pkt_flag = 0;
+	raw_pkt->r_pkt = NULL;
 
 	//ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, mr_ctrlzone->route_dir, tid);
 	ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, dir, tid);
@@ -622,21 +623,25 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 				for(j = 0; j < rcv_res; j++){
 					raw_pkt->device_index = i;
 					hand_res = marsio4_pkt_hand(tid, rx_buff[j], raw_pkt, DIR_ROUTE_UP); /* 在marsio4_pkt_hand()更新dir */
-					if((g_marsio4_topology_mode & __NET_CONN_SERIAL) && (PASS == hand_res)){
-						/* NOTE: 
-						    MARSIO主从模式独特性, 从虚拟网卡收包, 但要通过物理网卡回注包,  
-						*/
-						int ret = marsio4_pkt_forward(tid, g_mr4_sendpath_up_set[i], rx_buff[j]);
-						if(ret < 0)
-						{
-							ptr_marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);
-						}
-
-					}else{
-						/* 串联模式下只能单包free, 有可能batch收的N各包里, 某个包需要回注, 某个包不需要 */
-						ptr_marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);
-					}
-				}
+                    if ((g_marsio4_topology_mode & __NET_CONN_SERIAL) && (PASS == hand_res))
+                    {
+                        /* NOTE:
+                            MARSIO主从模式独特性, 从虚拟网卡收包, 但要通过物理网卡回注包,
+                        */
+                        int ret = marsio4_pkt_forward(tid, g_mr4_sendpath_up_set[i], rx_buff[j]);
+                        if (ret < 0)
+                        {
+                            ptr_marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);
+                        }
+                    }
+                    else if (hand_res == DROP)
+                    {
+                        /* 串联模式下只能单包free, 有可能batch收的N各包里, 某个包需要回注, 某个包不需要 */
+                        ptr_marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);
+                    }
+                    else
+                    ;
+                }
 				pkt_num += rcv_res;
 			}
 		}

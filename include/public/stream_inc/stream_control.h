@@ -335,7 +335,7 @@ int MESA_dir_link_to_human(int link_route_dir);
 	CHN : 因为历史遗留问题,此类函数保留仅为向后兼容,请使用新接口:MESA_set_stream_opt().
 	ENG : for compat old version, keep these functions, but we suggest you use new API MESA_set_stream_opt().
 *****************************************************************************************/
-int tcp_set_single_stream_max_unorder(const struct streaminfo *stream, UCHAR dir, unsigned short unorder_num);
+int tcp_set_single_stream_max_unorder(const struct streaminfo *stream, unsigned char dir, unsigned short unorder_num);
 int tcp_set_single_stream_needack(const struct streaminfo *pstream);
 int tcp_set_single_stream_takeoverflag(const struct streaminfo *pstream,int flag);
 int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned short timeout);

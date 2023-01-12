@@ -29,10 +29,8 @@ extern "C" {
 #define UNIX_DOMAIN_SOCKET_NAME	"/tmp/.pktdump"
 #define PKT_DUMP_PROCESS_NAME	"sapp_pkt_dump"
 
-extern iknow_handle PLATFORM_IHANDLE;
 
 #if DEBUG
-#include "iknow.h"
 
 typedef struct{
 	unsigned long long total_pkt_num;
@@ -752,229 +750,12 @@ void cycle_pkt_dump_old(int thread_seq, const void *ippkt, int ippktlen)
 	cycle_pkt_dump(thread_seq, &raw_pkt);
 }
 
-#if 0 
-static int cycle_pkt_dump_child_init(void)
-{
-	int i, ret;
-	struct sockaddr_un father_pro_addr;
-	int addr_len;
-	char test_buf[1024];
-	int buf_len = 0;
-	socklen_t opt_len;	
-
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		G_UNIX_DOMAIN_SD[i] = socket(AF_UNIX,SOCK_DGRAM,0);
-		if(G_UNIX_DOMAIN_SD[i] < 0){
-			printf("socket error: %s\n", strerror(errno));
-			return -1;
-		}
-		
-		addr_len = sizeof(father_pro_addr);
-		father_pro_addr.sun_family=AF_UNIX;
-		snprintf(father_pro_addr.sun_path, sizeof(father_pro_addr.sun_path), "%s%d", UNIX_DOMAIN_SOCKET_NAME, i);
-
-		unlink(father_pro_addr.sun_path);
-		if(bind(G_UNIX_DOMAIN_SD[i], (struct sockaddr *)&father_pro_addr, addr_len) < 0){
-			printf("bind %s error: %s\n", father_pro_addr.sun_path, strerror(errno));
-			return -1;
-		}
-
-		listen(G_UNIX_DOMAIN_SD[i], 10);
-	}
-
-	sapp_usleep(10000);
-
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		ret = read(G_UNIX_DOMAIN_SD[i], test_buf, 1024); /* 阻塞等待捕包进程的数据, 正确返回说明连接正常 */
-		if(ret <= 0){
-			printf("socket read error:%s\n", strerror(errno));
-			return -1;
-		}
-	}
-	
-	return 0;
-}
-#endif
-
-
-#if 0
-static long ifuncb_show_pktdump_summary(iknow_handle ihandle, iknow_conn iconn, const void *cb_fun_arg, const char *cmd_args)
-{
-	int i;
-	unsigned long long discard_pkt_sum = 0, discard_byte_sum = 0;
-	unsigned long long tot_pkt_sum = 0, tot_byte_sum = 0;
-
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		tot_pkt_sum += PKT_DISCARD_STAT[i].total_pkt_num;
-		tot_byte_sum += PKT_DISCARD_STAT[i].total_pkt_bytes;
-		discard_pkt_sum += PKT_DISCARD_STAT[i].discard_pkt_num;
-		discard_byte_sum += PKT_DISCARD_STAT[i].discard_pkt_bytes;
-	}
-	//iprintf(ihandle, iconn,"NOTE: unit of byte for total is 'byte', for realtime is 'bps, bit per second'!\n");
-	iprintf(ihandle, iconn, "%8s %8s %13s\n", "", "packet", "byte");
-	iprintf(ihandle, iconn, "%8s %8llu %13llu\n",  "total", tot_pkt_sum, tot_byte_sum);
-	iprintf(ihandle, iconn, "%8s %8llu %13llu\n",  "DROP", discard_pkt_sum, discard_byte_sum);
-
-	return 0;
-}
-
-#endif
-
-#if 0
-static int cycle_pkt_dump_father_init(void)
-{
-	int i;
-	struct sockaddr_un child_pro_addr;
-	int addr_len;
-	char test_buf[1024] = "I am father";
-	int buf_len = 0;
-	socklen_t opt_len;
-		
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		G_UNIX_DOMAIN_SD[i] = socket(AF_UNIX,SOCK_DGRAM,0);
-		if(G_UNIX_DOMAIN_SD[i] < 0){
-			printf("socket error: %s\n", strerror(errno));
-			return -1;
-		}
-		
-		addr_len = sizeof(child_pro_addr);
-		child_pro_addr.sun_family=AF_UNIX;
-		snprintf(child_pro_addr.sun_path, sizeof(child_pro_addr.sun_path), "%s%d", UNIX_DOMAIN_SOCKET_NAME, i);
-
-		if(connect(G_UNIX_DOMAIN_SD[i], (struct sockaddr*)&child_pro_addr, addr_len) < 0){
-			printf("connect %s error: %s\n", child_pro_addr.sun_path, strerror(errno));
-			return -1;
-		}
-	}
-
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		write(G_UNIX_DOMAIN_SD[i], test_buf, 1024);
-	}
-
-	unlink(child_pro_addr.sun_path);
-#if DEBUG
-	iknow_register_cmd(PLATFORM_IHANDLE, "show pktdump summary", "display packet dump status", 
-					ifuncb_show_pktdump_summary, NULL, 0, NULL);
-#endif
-
-	return 0;
-}
-#endif
-
-#if 0
-static void cycle_pkt_dump_clear_last_status(void)
-{
-	char cmd_buf[128];
-
-	snprintf(cmd_buf, 128, "killall %s", PKT_DUMP_PROCESS_NAME);
-
-	system(cmd_buf);
-}
-
-
-static void cycle_pkt_dump_exec(int argc, char *argv[])
-{
-	int i;
-	pid_t pid;
-	pthread_t check_ppid, thread_id[MAX_THREAD_NUM];
-	static int thread_seq[MAX_THREAD_NUM];
-
-	cycle_pkt_dump_clear_last_status();	
-
-	pid = fork();
-	if(0 == pid){ /* 子进程, 即捕包进程 */
-		if(cycle_pkt_dump_child_init() < 0){
-			printf("cycle pkt dump init error!\n");
-			exit(1);
-		}		
-		prctl(PR_SET_NAME, PKT_DUMP_PROCESS_NAME, 0, 0, 0);
-	}else if(pid > 0){
-		sapp_usleep(50000);
-		if(cycle_pkt_dump_father_init() < 0){
-			printf("cycle pkt dump init error!\n");
-			exit(1);
-		}
-		return; /* 父进程返回, 即sapp主进程 */
-	}else{
-		printf("cycle_pkt_dump fork error!\n");
-		exit(0);
-	}
-
-	for(i = 0; i < pkt_dump_thread_num; i++){
-		if(G_PKT_DUMP_PER_THREAD_SW[i] != 0){
-			thread_seq[i] = i;
-			pthread_create(&thread_id[i], NULL, cycle_pkt_dump_thread, &thread_seq[i]);
-			sapp_usleep(100);
-		}
-	}
-
-	pthread_create(&check_ppid, NULL, cycle_pkt_dump_check_father, NULL);
-
-	/* 子进程的主线程阻塞等待 */	
-	for(i = 0; i < pkt_dump_thread_num; i++){
-		if(G_PKT_DUMP_PER_THREAD_SW[i] != 0){
-			pthread_join(thread_id[i], NULL);
-		}
-	}
-
-	exit(0);
-}
-#endif
 
 static void cycle_pkt_dump_set_thread_num(int thread_num)
 {
 	pkt_dump_thread_num = thread_num;
 }
 
-#if 0
-static int cycle_pkt_dump_get_core_num(void)
-{
-	FILE *fp;
-	char line_buf[PATH_MAX] = {0};
-	int core_num = 0;
-
-	fp = popen("ls -l core.* | wc -l", "r");
-	if(NULL == fp){
-		return -1;
-	}
-
-	fgets(line_buf, PATH_MAX, fp);
-
-	core_num = atoi(line_buf);
-
-	pclose(fp);
-	return core_num;
-}
-
-
-/* config is like: "0,1,2,3,4,5" */
-static int cycle_pkt_dump_parse_per_thread_switch(char *config_str)
-{
-	char *parse_config = config_str;
-	char *save_ptr;
-	char *token;
-	int i, thread_seq;
-
-	if(strncasecmp("all", config_str, 3) == 0){ /* all thread is enable */
-		for(i = 0; i < pkt_dump_thread_num; i++){
-			G_PKT_DUMP_PER_THREAD_SW[i] = 1;
-		}
-		return 0;
-	}
-
-	while((token = strtok_r(parse_config, ", \t", &save_ptr)) != NULL){
-		thread_seq = atoi(token);
-		if(thread_seq < 0 || thread_seq >= pkt_dump_thread_num){
-			printf("'pkt_dump_thread_seq' config invalid, threadnum=%d!\n", pkt_dump_thread_num);
-			return -1;
-		}
-		G_PKT_DUMP_PER_THREAD_SW[thread_seq] = 1;
-		parse_config = NULL;
-	}
-
-	return 0;
-}
-#endif
 
 
 static int cycle_pkt_dump_get_cur_enable_thread(void)
@@ -990,72 +771,6 @@ static int cycle_pkt_dump_get_cur_enable_thread(void)
 
 	return sum;
 }
-#if 0	
-
-static long cycle_pkt_dump_get_cur_files_size(void)
-{
-	FILE *fp;
-	long cur_files_size;
-	char cmd_str[PATH_MAX], tmp_str[1024];
-
-	snprintf(cmd_str, PATH_MAX, "du -scb %s | grep %s  | awk {'print $1'}", G_PKT_DUMP_ROOT_DIR, G_PKT_DUMP_ROOT_DIR);
-
-	fp = popen(cmd_str, "r");
-	if(NULL == fp){
-		return -1;
-	}
-
-	if(NULL == fgets(tmp_str, 1024, fp)){
-		pclose(fp);
-		return -1;
-	}
-	cur_files_size = (long)strtol(tmp_str, NULL, 10);
-
-	pclose(fp);
-
-	return cur_files_size;
-}
-
-/*
-	total_files_size: 此目录下总的.pcap包大小, 单位:Byte;
-	file_size_per_thread_by_conf: 单个线程最大文件大小, 单位:Byte;
-
-	最终的实际file_size_per_thread值, 取决于当前已有的.pcap文件大小和total_files_size的关系;
-	如果当前已有的.pcap文件已超过total_files_size, 则不再写新的文件.
-*/
-static int cycle_pkt_dump_set_file_size(long total_files_size, long file_size_per_thread_by_conf)
-{
-	long cur_files_size;
-	int cur_enable_thread_num = 0;
-	long file_size_per_thread_by_calc; /* 根据实际计算得出的每个线程最大文件大小 */
-
-	cur_files_size = cycle_pkt_dump_get_cur_files_size();
-	if(cur_files_size < 0 || cur_files_size >= total_files_size){
-		printf("\033[33m[Warning]pkt_dump is enable, but current files size is more than 'pkt_dump_total_size', disable pktdump!\033[0m\n");
-		sapp_usleep(1000);
-		G_PKT_DUMP_SW = 0;
-		return -1;
-	}
-
-	cur_enable_thread_num = cycle_pkt_dump_get_cur_enable_thread();
-	if(0 == cur_enable_thread_num){
-		printf("\033[33m[Warning]pkt_dump is enable, but enable thread number is 0, disable pktdump!\033[0m\n");
-		sapp_usleep(1000);
-		return -1;
-	}
-
-	file_size_per_thread_by_calc = (total_files_size-cur_files_size)/cur_enable_thread_num/2; 
-
-	/* 两者取最小 */
-	G_PKT_DUMP_FILE_SIZE = (file_size_per_thread_by_calc < file_size_per_thread_by_conf?file_size_per_thread_by_calc:file_size_per_thread_by_conf);
-	if(G_PKT_DUMP_FILE_SIZE < 2048){
-		printf("\033[33m[Warning]pkt_dump is enable, but current files size is more than 'pkt_dump_total_size'!\033[0m\n");
-		return -1;
-	}
-
-	return 0;
-}
-#endif
 
 static void pkt_dump_sig_ignore(int sig)
 {
@@ -1423,23 +1138,6 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 		}
 
 		G_PKT_DUMP_FILE_SIZE = (long)pktdump_cfg->file_size_max_per_thread * 1024L * 1024L ;
-#if 0		
-		MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_total_size", &total_files_size, 1000);
-		if(total_files_size < 1 || (unsigned int)total_files_size >= 1024*1000 /* 1000GB */){
-			printf("pkt_dump_total_size  invalid!\n");
-			return -1;
-		}
-		
-		MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"pkt_dump", (char *)"pkt_dump_file_max_size", &int_tmp, 100);
-		if(int_tmp < 2 || (unsigned int)int_tmp >= 1024*1000 /* 1000GB */){
-			printf("pkt_dump_file_max_size  invalid!\n");
-			return -1;
-		}
-		/* 每个线程需要循环写2个文件, 所以需要将pkt_dump_file_max_size的实际值再除以2 */
-		if(cycle_pkt_dump_set_file_size((long)total_files_size*1024*1024, (long)int_tmp*1024*512) < 0){
-			return 0;
-		}
-#endif		
 		signal(SIGPIPE, SIG_IGN);
 		/* 捕获SIGSEGV信号, 保证程序异常终止时, 最后一个触发BUG的pcap包真正能写到硬盘 */
 		if((SIG_ERR == signal(SIGSEGV, pkt_dump_sig_handle))){

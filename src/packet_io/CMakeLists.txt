@@ -35,16 +35,6 @@ if(CAPTURE_MODE MATCHES "PAG")
     endif()
 endif()
 
-if(CAPTURE_MODE MATCHES "PPF")
-	set(PACKET_IO_SOURCE  packet_io_ppf.c)
-    add_library(packet_io_ppf SHARED ${PACKET_IO_SOURCE})
-endif()
-
-if(CAPTURE_MODE MATCHES "DPDK")
-	set(PACKET_IO_SOURCE  packet_io_dpdk.c)
-    add_library(packet_io_dpdk SHARED ${PACKET_IO_SOURCE})
-endif()
-
 if(CAPTURE_MODE MATCHES "MARSIO")
 	set(PACKET_IO_SOURCE packet_io_marsio.c)
     if(ENABLE_STATIC_LINK)
@@ -66,7 +56,7 @@ if(CAPTURE_MODE MATCHES "TUN")
 endif()
 
 set(PACKET_IO_STATIC_SOURCE cycle_pkt_dump_through_write_offset.c  packet_io_lib_load.c
-iknow_info.c                           packet_io_log.c         sendpacket.c
+packet_io_log.c         sendpacket.c
 packet_io.c
 packet_io_status.cpp packet_io_status_new.c 
 packet_io_device.c sapp_compat_old_papp_api.c
