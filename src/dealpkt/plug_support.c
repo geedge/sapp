@@ -333,8 +333,8 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 /*Convert tuple4 to string. Format: 10.0.0.1, 1234->10.0.0.2,5678*/
 const char *printaddr (const struct layer_addr *paddrinfo,int threadindex)
 {
-	static char maxbuf[MAX_THREAD_NUM][128];
-	char *buf=maxbuf[threadindex];
+	static const char maxbuf[MAX_THREAD_NUM][128];
+	char *buf=(char*)maxbuf[threadindex];
 	char ip_str[INET6_ADDRSTRLEN];
 	struct stream_tuple4_v4 *paddr;
 	struct stream_tuple4_v6 *paddr6;
@@ -889,7 +889,7 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
 
 	memset(vxinfo, 0, sizeof(struct vxlan_info));
 
-	if(ADDR_TYPE_MAC_IN_MAC == mim_stream->addr.addrtype)
+    if (ADDR_TYPE_MAC_IN_MAC == mim_stream->addr.addrtype)
     {
         mim_addr = mim_stream->addr.mimac;
         sapp_mac_addr_to_long(mim_addr->outer_src_mac, &smac_integer_type);
@@ -899,7 +899,7 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
         mac_addr = mim_stream->addr.mac;
         sapp_mac_addr_to_long(mac_addr->src_addr.h_source, &smac_integer_type);
     }
-	vxinfo->encap_type = (smac_integer_type & GDEV_SMAC_MASK_ENCAP_TYPE) >> 16;
+    vxinfo->encap_type = (smac_integer_type & GDEV_SMAC_MASK_ENCAP_TYPE) >> 16;
 	vxinfo->entrance_id = (smac_integer_type & GDEV_SMAC_MASK_ENTRANCE_ID) >> 10;
 	vxinfo->dev_id = (smac_integer_type & GDEV_SMAC_MASK_DEV_ID) >> 4;
 	vxinfo->link_id = (smac_integer_type & GDEV_SMAC_MASK_LINK_ID ) >> 1;
@@ -959,7 +959,7 @@ static void *MESA_get_stream_plug_pme_from_platform_entry(const StreamFunInfo *p
 /*
 	根据插件入口函数和类型, 获取插件的私有存储空间指针pme.
 */
-static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_val, int *opt_val_len)
+static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_val, const int *opt_val_len)
 {
 	int ret = 0;
 	struct mso_plug_pme *in_arg;
@@ -1317,7 +1317,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			pstream_pr = (const struct streaminfo_private *)pstream;
 			unsigned long long *out_args = (unsigned long long *)opt_val;
 			unsigned long long dev_id = *out_args;
-			if(dev_id < 0 || dev_id > 4095){
+			if(dev_id > 4095){
 				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_GLOBAL_STREAM_ID error:invalid dev_id:%llu!\n", printaddr(&pstream->addr, pstream->threadnum), dev_id);
 				return -1;
 			}

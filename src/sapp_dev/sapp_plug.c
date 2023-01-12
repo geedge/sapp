@@ -152,10 +152,11 @@ static void *sapp_monitor_thread(void *args)
 
 	sapp_runtime_log(RLOG_LV_FATAL, "sapp_monitor_thread  begin libsapp_destroy_env!\n");
 	libsapp_destroy_env();
-
+	pthread_exit(NULL);
 	return NULL;
 }
 
+extern void sapp_update_main_config_file(const char *main_entry_cfg);
 
 int libsapp_setup_env(int argc, char *argv[])
 {
@@ -196,11 +197,6 @@ int libsapp_setup_env(int argc, char *argv[])
 	printf("\033[33m[Warning]This sapp is a temp version for solve confounded bug!\033[0m\n");
 #endif
 	
-#if COMPAT_PAPP_FOR_BENCHMARK
-	printf("\033[33m[Warning]This sapp is a emasculate version for compare with papp, in other word, it's papp!\033[0m\n");
-	sleep(1);
-#endif
-
 	sapp_init_breakpad_mini();
 	signal_take_over();
 	
@@ -238,7 +234,7 @@ static void wait_for_all_io_threads(void)
 	sapp_timer_destroy(sapp_global_val->individual_fixed.sapp_standalone_timer);
 }
 
-
+extern void packet_io_clean_thread_context(int thread_seq);
 
 void libsapp_destroy_env_per_thread(int tseq)
 {
@@ -256,7 +252,8 @@ void libsapp_destroy_env_per_thread(int tseq)
 }
 
 
-
+extern void packet_io_stop(void);
+extern void packet_io_exit(void);
 
 void libsapp_destroy_env(void)
 {

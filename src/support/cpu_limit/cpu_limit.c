@@ -365,14 +365,14 @@ static void cl_debug_log(cpu_limit_inner_t *h)
 			thread_bypass_state++;
 		}
 		if(CL_LIMIT_STATE_PENDING == this_stat->op_state){
-			fprintf(fp, "%9d %7s %9.2f %15ld %18ld %15s\n", tid, 
+			fprintf(fp, "%9d %7s %9.2f %15lld %18lld %15s\n", tid, 
 					cl_op_state_ntop(this_stat->op_state), 
 					this_stat->realtime_res_val, 
 					this_stat->debug_factor_work_per_second + this_stat->debug_factor_bypass_per_second,
 					this_stat->debug_factor_bypass_per_second,
 					"infinity"/*无限制*/);
 		}else{
-			fprintf(fp, "%9d %7s %9.2f %15ld %18ld %15.2f\n", tid, 
+			fprintf(fp, "%9d %7s %9.2f %15lld %18lld %15.2f\n", tid, 
 					cl_op_state_ntop(this_stat->op_state), 
 					this_stat->realtime_res_val, 
 					this_stat->debug_factor_work_per_second + this_stat->debug_factor_bypass_per_second,
@@ -424,6 +424,7 @@ static inline long long _cl_get_current_time_in_ms(void)
 	return tms;
 }
 
+extern int sapp_usleep(int usec);
 
 /* 后台实时统计分析线程, 不占用sapp IO线程的时间片 */
 static void *cl_bg_thread(void *_arg_h)
@@ -552,21 +553,24 @@ int cpu_limit_get_opt(cpu_limit_handle _arg_h, cpu_limit_opt opt, void *value, i
 
 	if(NULL == _arg_h || NULL == value || NULL == value_len){
 		return -1;
-	}	
-
-	switch(opt){
-		case CL_OPT_GLOBAL_BYPASS_STATE:
-		{
-			if(h->running_state != CL_STATE_RUNNING){
-				return -1;
-			}
-			int *out_value = (int *)value;
-			*out_value = h->global_bypass_state;
-		}
-		break;
 	}
 
-	return ret;
+    switch (opt)
+    {
+    case CL_OPT_GLOBAL_BYPASS_STATE: {
+        if (h->running_state != CL_STATE_RUNNING)
+        {
+            return -1;
+        }
+        int *out_value = (int *)value;
+        *out_value = h->global_bypass_state;
+    }
+    break;
+    default:
+        break;
+    }
+
+    return ret;
 }
 
 cpu_limit_handle cpu_limit_create(void)
@@ -641,12 +645,22 @@ void cpu_limit_destroy(cpu_limit_handle _arg_h)
 	
 	h->running_state = CL_STATE_TO_BE_DESTORY;
 	pthread_join(h->thread_id, NULL);
-	
-	if(h->destroy_cb_fun){
+	int i;
+    for (i = 0; i < h->thread_count; i++)
+    {
+        free(h->mthread_stat[i].recent_smooth_res_value);
+        h->mthread_stat[i].recent_smooth_index = 0;
+    }
+	if(h->debug_log_filename)
+	{
+		free(h->debug_log_filename);
+	}
+
+    if(h->destroy_cb_fun){
 		h->destroy_cb_fun(_arg_h, h->user_arg);
 	}
 
-	memset(h, 0xFE, sizeof(cpu_limit_inner_t));
+	//memset(h, 0xFE, sizeof(cpu_limit_inner_t));
 	
 	free(h);
 	

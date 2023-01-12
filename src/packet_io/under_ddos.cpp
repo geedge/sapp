@@ -226,6 +226,15 @@ void packet_io_under_ddos_run(void)
 	}
 }
 
+void packet_io_under_ddos_limit_arg_free(cpu_limit_handle h, void *user_arg)
+{
+	if(user_arg)
+	{
+		free(user_arg);
+	}
+	return;
+}
+
 int packet_io_under_ddos_init(void)
 {
 	sapp_under_ddos_config_t *p_ddos_cfg = &sapp_global_val->config.packet_io.under_ddos_config;
@@ -262,6 +271,7 @@ int packet_io_under_ddos_init(void)
 	cpu_limit_set_opt(ud_handle, CL_OPT_FACTOR_GET_FUN, (void *)&sapp_get_create_stream_rate_cb, sizeof(void *));	
 	under_sapp_user_args_t *ud_user_arg = (under_sapp_user_args_t *)calloc(1, sizeof(under_sapp_user_args_t));
 	cpu_limit_set_opt(ud_handle, CL_OPT_USER_ARG, ud_user_arg, sizeof(void *));	
+	cpu_limit_set_opt(ud_handle, CL_OPT_DESTROY_CALLBCAK_FUN, (void *)packet_io_under_ddos_limit_arg_free, sizeof(void *));	
 	cpu_limit_set_opt(ud_handle, CL_OPT_DEBUG_LOG_FILE_NAME, (void *)sapp_global_val->config.data_file_path.data_under_ddos_stat_log_absolute, strlen(sapp_global_val->config.data_file_path.data_under_ddos_stat_log_absolute));		
 
 	sapp_global_val->individual_fixed.under_ddos_handle = ud_handle;

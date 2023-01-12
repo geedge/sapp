@@ -33,7 +33,6 @@ static char *popen_result_store(FILE *fp)
 	int chr;
 	char *exec_result;
 	int exec_result_size = 0;
-	char line_buf[PATH_MAX];
 
 	exec_result = (char *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, 1);
 	
@@ -86,11 +85,9 @@ static int get_dumpfile_list_array(const char *opt_arg)
 	tobe_free_result = exec_result;
 	sapp_global_val->cla.dumpfie_list_array = NULL;
 	
-	while(ptr_cont = strtok_r(exec_result, delim, &save_ptr)){
+	while((ptr_cont = strtok_r(exec_result, delim, &save_ptr))){
 		sapp_global_val->cla.dumpfie_list_array = (char **)sapp_mem_realloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sapp_global_val->cla.dumpfie_list_array, sizeof(void *) * (line_num + 2));//当前要存储的指针再加上EOF
 		sapp_global_val->cla.dumpfie_list_array[line_num] = sapp_strdup(ptr_cont);;
-		
-		//printf("#### %d: result_content:%s\n", line_num, sapp_global_val->cla.dumpfie_list_array[line_num]);
 		line_num++;
 		exec_result = NULL;
 	}
@@ -374,7 +371,6 @@ void sapp_update_main_config_file(const char *main_entry_cfg)
 
 void sapp_update_config_root_dir(const char *cfg_root_dir)
 {
-	char sapp_cfg_filename[PATH_MAX];
 	sapp_config_file_link_t *pconfig;
 
 	pconfig = &sapp_global_val->config.cfg_file_path;
@@ -435,18 +431,14 @@ void sapp_update_data_root_dir(const char *data_root_dir)
 
 static void sapp_close_stdout(void)
 {
-#if 0
-	int null_fd = open("/dev/null", O_CREAT | O_RDWR); /* 消除sapp刷屏信息 */
-	if(null_fd > 0){
-		dup2(null_fd, STDOUT_FILENO);
-	}
-#else
 	if(stdout){
 		fclose(stdout);
 		stdout = fopen("/dev/null", "w");
 	}
-#endif	
 }
+
+
+extern int sapp_config_check(void);
 
 int sapp_parse_cmd_args(int argc, char *argv[])
 {
