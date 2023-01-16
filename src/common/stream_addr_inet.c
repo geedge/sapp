@@ -1047,38 +1047,6 @@ static struct streaminfo *create_chain_inward(addr_continuous_bin_t *list_bin_va
 	return &list_bin_val[layer_num-1].stream;
 }
 
-#if (0 == IP_PORT_UNION_VERSION)
-static int fix_tuple4_addr(struct streaminfo *raw_stream)
-{
-	struct streaminfo *stream = raw_stream;
-	struct stream_tuple4_v4 *tuple4_v4_this, *tuple4_v4_father;
-	struct stream_tuple4_v6 *tuple4_v6_this, *tuple4_v6_father;
-
-if(NULL == raw_stream->pfather){ /* 2015-03-27 lijia add, for bug */
-return -1;
-}
-	
-	while(stream){
-		if(ADDR_TYPE_IPV4 == stream->addr.addrtype){
-			tuple4_v4_this = (struct stream_tuple4_v4 *)stream->addr.paddr;
-			tuple4_v4_father = (struct stream_tuple4_v4 *)stream->pfather->addr.paddr;
-			tuple4_v4_father->source = tuple4_v4_this->source;
-			tuple4_v4_father->dest = tuple4_v4_this->dest;
-			stream->addr.paddr = stream->pfather->addr.paddr;
-		}else if(ADDR_TYPE_IPV6 == stream->addr.addrtype){
-			tuple4_v6_this = (struct stream_tuple4_v6 *)stream->addr.paddr;
-			tuple4_v6_father = (struct stream_tuple4_v6 *)stream->pfather->addr.paddr;
-			tuple4_v6_father->source = tuple4_v6_this->source;
-			tuple4_v6_father->dest = tuple4_v6_this->dest;
-			stream->addr.paddr = stream->pfather->addr.paddr;
-		}
-
-		stream = stream->pfather;
-	}
-
-	return 0;
-}
-#endif
 
 /* 由内向外(平台默认模式), "TCP<12345-80>|IP4<10.0.6.1-10.0.6.2>|MAC<0x112233445566-0xAABBCCDDEEFF>"*/
 const struct streaminfo *stream_addr_list_pton_outward(const char *addr_list_str, int thread_index)
@@ -1121,25 +1089,11 @@ const struct streaminfo *stream_addr_list_pton_outward(const char *addr_list_str
 	/* 构建pfather的链接关系 */
 	stream_head = create_chain_outward(list_bin_val, layer_addr_level);
 
-#if (0 == IP_PORT_UNION_VERSION)
-	/* 修正四元组地址关系, 地址信息实际存储于IP层, 将TCP或UDP层的地址改为ADDR_TYPE_IPV4, 或ADDR_TYPE_IPV6 */
-	ret = fix_tuple4_addr(stream_head); 
-	if(ret < 0){
-		printf("stream_addr_list_pton_outward(): '%s' error!\n", addr_list_str);
-		goto err_exit;
-	}
-#endif	
 
 fun_exit:
 	dictator_free(thread_index, tmp_store_str);
 
 	return stream_head;
-
-#if (0 == IP_PORT_UNION_VERSION)	
-err_exit:
-	dictator_free(thread_index, tmp_store_str);
-	return NULL;
-#endif	
 }
 
 /* 向外向内, "MAC:0x112233445566-0xAABBCCDDEEFF,IP4:10.0.6.1-10.0.6.2,TCP:12345-80" */
@@ -1181,11 +1135,6 @@ const struct streaminfo *stream_addr_list_pton_inward(const char *addr_list_str,
 
 	/* 构建pfather的链接关系 */
 	stream_head = create_chain_inward(list_bin_val, layer_addr_level);
-
-#if (0 == IP_PORT_UNION_VERSION)
-	/* 修正四元组地址关系, 地址信息实际存储于IP层, TCP或UDP层的地址改为ADDR_TYPE_IPV4, 或ADDR_TYPE_IPV6 */
-	fix_tuple4_addr(stream_head); 
-#endif
 
 fun_exit:
 	dictator_free(thread_index, tmp_store_str);

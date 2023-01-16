@@ -3307,31 +3307,7 @@ static int adjust_stream_dir_by_well_known_ports(unsigned char stream_type,UINT1
 }
 
 
-#if 0 /* 20141014 lijia modify */
-int set_stream_addr(struct streaminfo *pfstream, UINT16 sport, UINT16 dport, struct layer_addr *this_addr)
-{
-	
-	if(__ADDR_TYPE_IP_PAIR_V4 == pfstream->addr.addrtype){
-		struct layer_addr_ipv4 *ip4_addr = pfstream->addr.ipv4;
-		ip4_addr->source = sport;
-		ip4_addr->dest = dport;
-		this_addr->addrtype = ADDR_TYPE_IPV4;
-		this_addr->addrlen = sizeof(struct layer_addr_ipv4);
-	}else if(__ADDR_TYPE_IP_PAIR_V6 == pfstream->addr.addrtype){
-		struct layer_addr_ipv6 *ip6_addr = pfstream->addr.ipv6;
-		ip6_addr->source = sport;
-		ip6_addr->dest = dport;
-		this_addr->addrtype = ADDR_TYPE_IPV6;
-		this_addr->addrlen = sizeof(struct layer_addr_ipv6);
-	}else{
-		assert(0);
-	}
 
-	this_addr->paddr = pfstream->addr.paddr;
-			
-	return 0;
-}
-#else
 int set_transport_addr(struct streaminfo *this_stream, int enable_well_known_port, UINT16 sport, UINT16 dport)
 {
 	struct streaminfo_private *this_stream_pr = (struct streaminfo_private *)this_stream;
@@ -3421,7 +3397,6 @@ int set_transport_addr(struct streaminfo *this_stream, int enable_well_known_por
 	
 	return 0;
 }
-#endif
 
 
 
