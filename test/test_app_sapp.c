@@ -495,39 +495,65 @@ char test_set_stream_timeout(struct streaminfo *pstream,  void **pme, int thread
 	return APP_STATE_GIVEME;	
 }
 
-char test_set_stream_timed(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
+
+
+static char set_stream_timed(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet, unsigned char opstate, int timed_s)
 {
 	int ret;
-	int tout_val;
-	static int timed_cnt=0;
+	int tout_val = timed_s;
 
-    if (pstream->pktstate == OP_STATE_PENDING)
+	long timed_cnt = *(long *)pme;
+
+    if (opstate == OP_STATE_PENDING)
     {
-        tout_val = 1;
         ret = MESA_set_stream_opt(pstream, MSO_STREAM_TIMED, &tout_val, sizeof(int));
         if (ret < 0)
         {
-            DPRINT("stream:%p, MESA_set_stream_opt error:\n", pstream);
+            DPRINT("stream:%p, MESA_set_stream_opt %ds error:\n", pstream, timed_s);
             return APP_STATE_DROPME;
         }
-        DPRINT("stream: %p %s set timer at %ld!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
+        DPRINT("timed_%d_stream: %p %s set timer %d at %ld!\n", timed_s, pstream, printaddr(&pstream->addr, thread_seq), timed_s, time(NULL));
     }
-    if (pstream->pktstate == OP_STATE_TIMED)
+    if (opstate == OP_STATE_TIMED)
     {
 		timed_cnt+=1;
-        DPRINT("stream timed callback: %p %s, cnt=%d at %ld!\n", pstream, printaddr(&pstream->addr, thread_seq), timed_cnt, time(NULL));
-		if(timed_cnt >= 5)
+        DPRINT("timed_%d_stream timed callback: %p %s, cnt=%ld at %ld!\n", timed_s, pstream, printaddr(&pstream->addr, thread_seq), timed_cnt, time(NULL));
+		if(timed_cnt >= 3)
 		{
-        	DPRINT("stream timed callback: %p %s, cnt=%d >= 5, dropme!\n", pstream, printaddr(&pstream->addr, thread_seq), timed_cnt);
+        	DPRINT("timed_%d_stream timed callback: %p %s, cnt=%ld >= 3, dropme!\n", timed_s, pstream, printaddr(&pstream->addr, thread_seq), timed_cnt);
 			return APP_STATE_DROPME;	
 		}
+		*(long *)pme = timed_cnt;	
     }
-    if (pstream->pktstate == OP_STATE_CLOSE)
+    if (opstate == OP_STATE_CLOSE)
     {
-        DPRINT("stream close: %p %s at %ld!\n", pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
+        DPRINT("timed_%d_stream close: %p %s at %ld!\n",timed_s, pstream, printaddr(&pstream->addr, thread_seq), time(NULL));
     }
     return APP_STATE_GIVEME;	
 }
+
+char test_tcpall_stream_timed_1s(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
+{
+	 return set_stream_timed(pstream, pme, thread_seq, a_packet, pstream->pktstate, 1);
+}
+
+
+char test_tcpall_stream_timed_2s(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
+{
+	 return set_stream_timed(pstream, pme, thread_seq, a_packet, pstream->pktstate, 2);
+}
+
+char test_app_stream_timed_1s(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
+{
+	 return set_stream_timed(pstream, pme, thread_seq, a_packet, pstream->opstate, 1);
+}
+
+
+char test_app_stream_timed_2s(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
+{
+	 return set_stream_timed(pstream, pme, thread_seq, a_packet, pstream->opstate, 2);
+}
+
 
 char test_sapp_get_platform_opt(struct streaminfo *pstream,  void **pme, int thread_seq,void *a_packet)
 {

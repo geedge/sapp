@@ -49,6 +49,8 @@ INIT_FUNC=CHAR_INIT
 #FUNC_NAME=test_set_stream_timeout
 #FUNC_NAME=test_tcp_uni_stream_stats
 #FUNC_NAME=print_vxlan_info
+#FUNC_NAME=test_app_stream_timed_1s
+#FUNC_NAME=test_app_stream_timed_2s
 
 [TCP_ALL]
 FUNC_FLAG=ALL
@@ -63,6 +65,8 @@ FUNC_NAME=testtcpApp_allpkt
 #FUNC_NAME=TCP_ENTRY_ALL
 #FUNC_NAME=test_allpkt_stream
 #FUNC_NAME=test_get_stream_tcp_opts
+#FUNC_NAME=test_tcpall_stream_timed_1s
+#FUNC_NAME=test_tcpall_stream_timed_2s
 
 [UDP]
 FUNC_FLAG=ALL
@@ -77,6 +81,8 @@ FUNC_NAME=testudpApp_1
 #FUNC_NAME=test_get_rawpkt_opt_from_streaminfo
 #FUNC_NAME=test_set_stream_timeout
 #FUNC_NAME=print_vxlan_info
+#FUNC_NAME=test_app_stream_timed_1s
+#FUNC_NAME=test_app_stream_timed_2s
 
 #[POLLING]
 #FUNC_FLAG=ALL
