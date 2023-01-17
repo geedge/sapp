@@ -297,6 +297,7 @@ void sysinfo_output(void)
 		}
 	}	
 
+#if 0
 	fprintf(fp,"\n*********************** %s *********************\n", time_string);
 	fprintf(fp,"*********************** \033[41m%s\033[0m *************************\n", "sysinfo exactly");
 	fprintf(fp,"%-12s %12s %12s %12s %12s\n","Layer", "total_pkt", "total_len","pps", "Bps");
@@ -340,7 +341,7 @@ void sysinfo_output(void)
 	fprintf(fp,"%12s %12llu %12llu\n", "ETH", cur_count[SAPP_STAT_DROP_ETHERNET], cur_length[SAPP_STAT_DROP_ETHERNET]);
 	fprintf(fp,"%12s %12llu %12llu\n", "IPV4", cur_count[SAPP_STAT_DROP_IPV4], cur_length[SAPP_STAT_DROP_IPV4]);
 	fprintf(fp,"%12s %12llu %12llu\n", "IPV6", cur_count[SAPP_STAT_DROP_IPV6], cur_length[SAPP_STAT_DROP_IPV6]);
-
+#endif
 
 	fprintf(fp,"\n|------------------------------------------------ TCP statistics detail ----------------------------------------------|\n");
 	fprintf(fp,"%3s %6s %3s %-27s %-19s %-27s %-27s\n", "", "", "","|-----------Current---------|", "|------Realtime-----|",
