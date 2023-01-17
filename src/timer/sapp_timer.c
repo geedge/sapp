@@ -219,7 +219,7 @@ void __st_pkt_proc_context_check_timeout(int tid)
 		return;
 	}
 	
-	if(inner_h->event_cnt <= 0)
+	if(likely(inner_h->event_cnt) <= 0)
 	{
 		return;
 	}
