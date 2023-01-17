@@ -379,7 +379,7 @@ void sysinfo_output(void)
 				(mstat[i]->sys_stat.count[SAPP_STAT_UDP_STREAM_NEW]-history_threads_stat[i].count[SAPP_STAT_UDP_STREAM_NEW]), 
 				(mstat[i]->sys_stat.count[SAPP_STAT_UDP_STREAM_DEL]-history_threads_stat[i].count[SAPP_STAT_UDP_STREAM_DEL]),
 				mstat[i]->sys_stat.count[SAPP_STAT_UDP_STREAM_NEW],
-				mstat[i]->sys_stat.count[SAPP_STAT_UDP_STREAM_RESET],
+				mstat[i]->sys_stat.count[SAPP_STAT_UDP_STREAM_DEL],
 				mstat[i]->sys_stat.count[SAPP_STAT_UDP_HASH_LIST_MAX],
 				sapp_global_mthread[i].udp_stream_special_timeout_num);
 	}
