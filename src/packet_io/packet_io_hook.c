@@ -20,6 +20,7 @@ extern "C" {
 
 extern unsigned int marsio_get_vlan_id_from_mbuff(void *pkt_reference);
 extern int marsio_set_vlan_id_to_mbuff(void *pkt_reference, unsigned int vlan_id_host_order);
+extern void marsio_dl_io_set_rawpkt_meta(const raw_pkt_t *raw_pkt, void *send_pkt_io_reference, unsigned char route_dir);
 extern int vxlan_packet_is_myself(const raw_pkt_t *rawpkt);
 #if 0
 static const sapp_vlan_flipping_map_t *vlan_flipping_get_opposite(int cori, unsigned short vlan_id)
@@ -280,6 +281,8 @@ int packet_io_hook_sendto(const raw_pkt_t *raw_pkt, unsigned char route_dir, cha
 		ret = packet_io_hook_output_vlan_flipping((raw_pkt_t *)raw_pkt, route_dir, (void *)send_pkt_data, send_pkt_io_reference, "send pkt");
 		return ret;
 	}
+
+	marsio_dl_io_set_rawpkt_meta(raw_pkt, send_pkt_io_reference, route_dir);
 
 	if(OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
 		ret = packet_io_hook_output_vxlan((raw_pkt_t *)raw_pkt, (void *)send_pkt_data, route_dir);

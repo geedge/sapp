@@ -44,6 +44,8 @@ typedef enum{
 	SAPP_MEM_DYN_TCP_BRIDGE,
 	SAPP_MEM_DYN_UDP_BRIDGE,	
 	SAPP_MEM_DYN_PADDR, 		/* 每层地址所占的内存, 就不分具体协议了, 太麻烦了!! */
+	SAPP_MEM_DYN_DETAIN_PKT,	
+	SAPP_MEM_DYN_SID_LIST,	
 
 	__SAPP_MEM_TYPE_MAX,
 }sapp_mem_type_t;

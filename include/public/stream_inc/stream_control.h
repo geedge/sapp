@@ -47,6 +47,8 @@ enum MESA_stream_opt{
 	MSO_HAVE_DUP_PKT,  /* opt_val type must be int, value only be [0, 1, -2], if the current stream found duplicate packets ? 0:no; 1:yes; -2: not sure */
 	MSO_STREAM_LASTUPDATE_TIMESTAMP_MS,/* latest pkt arrive timestamp of this stream, opt_val type must be unsigned long long  */
 	MSO_STREAM_TIMED,
+	MSO_STREAM_APPLEND_SEGMENT_ID_LIST,
+	MSO_STREAM_PREPLEND_SEGMENT_ID_LIST,
 	__MSO_MAX,
 };
 
@@ -229,6 +231,18 @@ enum sapp_deploment_mode_t{
 	DEPOLYMENT_MODE_INLINE		= 3,
 };
 
+
+#ifndef MAX_SID_NUM
+#define MAX_SID_NUM 8
+#endif
+struct segment_id_list
+{
+	unsigned short sid_list[MAX_SID_NUM];
+	unsigned int sz_sidlist;
+};
+
+int append_sid_to_rawpkt(const void *rawpkt, struct segment_id_list *sid_list);
+int prepend_sid_to_rawpkt(const void *rawpkt, struct segment_id_list *sid_list);
 
 
 /*

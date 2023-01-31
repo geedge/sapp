@@ -2443,43 +2443,62 @@ err:
 	return -1;
 }
 
-
 static raw_pkt_t *update_raw_pkt(struct streaminfo_private *stream_pr, uchar snd_dir, int *inject_dir_reverse)
 {
-	raw_pkt_t *inject_raw_pkt;
-	
-	if((stream_pr->packet_io_context != 0)
-	|| (0 == sapp_global_val->config.packet_io.polling_enabled)){
-		/* 在包处理上下文, 或者没有开启polling, do nothing */
-		*inject_dir_reverse = ((snd_dir == stream_pr->stream_public.routedir) ? 0: 1);
-		return (raw_pkt_t *)stream_pr->raw_pkt;
-	}
+    raw_pkt_t *inject_raw_pkt = NULL;
 
-	if((DIR_ROUTE_DOWN & snd_dir) == DIR_ROUTE_DOWN){
-		inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_down;
-		if(inject_raw_pkt){
-			*inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 0: 1);
-		}else{/* 本端还没收到过包,使用对端数据包构造本端的包,对于某些非对称协议,如GRE, MPLS等,会有问题! reverse需要反向 */
-			inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_up;
-			*inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 1: 0);
-		}
-	}else{
-		inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_up;
-		if(inject_raw_pkt){
-			*inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 1: 0);
-		}else{/* 本端还没收到过包,使用对端数据包构造本端的包,对于某些非对称协议,如GRE, MPLS等,会有问题! reverse需要反向 */
-			inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_down;
-			*inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 0: 1);
-		}		
-	}
-	
-	if((NULL == inject_raw_pkt) || (RAW_PKT_MAGIC_NUM != inject_raw_pkt->magic_num)){
-		return NULL;
-	}
+    if (stream_pr->packet_io_context == 1)
+    {
+            /* 在包处理上下文, 或者没有开启polling, do nothing */
+            *inject_dir_reverse = ((snd_dir == stream_pr->stream_public.routedir) ? 0 : 1);
+            inject_raw_pkt = (raw_pkt_t *)stream_pr->raw_pkt;
+    }
+    else if (stream_pr->polling_inject_context != NULL)
+    {
+            if ((DIR_ROUTE_DOWN & snd_dir) == DIR_ROUTE_DOWN)
+            {
+                inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_down;
+                if (inject_raw_pkt)
+                {
+                    *inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 0 : 1);
+                }
+                else
+                { /* 本端还没收到过包,使用对端数据包构造本端的包,对于某些非对称协议,如GRE, MPLS等,会有问题!
+                     reverse需要反向 */
+                    inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_up;
+                    *inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 1 : 0);
+                }
+            }
+            else
+            {
+                inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_up;
+                if (inject_raw_pkt)
+                {
+                    *inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 1 : 0);
+                }
+                else
+                { /* 本端还没收到过包,使用对端数据包构造本端的包,对于某些非对称协议,如GRE, MPLS等,会有问题!
+                     reverse需要反向 */
+                    inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_down;
+                    *inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 0 : 1);
+                }
+            }
+    }
+    else
+            ;
+    if ((NULL == inject_raw_pkt) || (RAW_PKT_MAGIC_NUM != inject_raw_pkt->magic_num))
+    {
+            return NULL;
+    }
 
-	return inject_raw_pkt;
+    if (stream_pr->polling_inject_context != NULL)
+    {
+            inject_raw_pkt->meta[0]=stream_pr->polling_inject_context->meta[0];
+            inject_raw_pkt->meta[1]=stream_pr->polling_inject_context->meta[1];
+    }
+
+    return inject_raw_pkt;
 }
-
 
 static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int kill_num,
 								char *feedback_buf, int *feedback_buf_len)
@@ -3375,6 +3394,15 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
 		sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_pkt() error, not found raw_pkt!");
 		return -1;
+	}
+
+	if(raw_stream_pr->sid_append_list != NULL)
+	{
+		((raw_pkt_t *)raw_pkt)->append_list=raw_stream_pr->sid_append_list;
+	}
+	if(raw_stream_pr->sid_prepend_list != NULL)
+	{
+		((raw_pkt_t *)raw_pkt)->prepend_list=raw_stream_pr->sid_prepend_list;
 	}
 
 	/* inject使用的是routedir, 此处转换成stream dir, 

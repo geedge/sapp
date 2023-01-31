@@ -32,24 +32,52 @@ struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const vo
 
 	if(sapp_global_val->config.packet_io.depolyment_mode_bin != DEPOLYMENT_MODE_INLINE)return NULL;
 
-	struct detain_pkt *d_pkt = ALLOC(struct detain_pkt, 1);
+	struct detain_pkt *d_pkt = sapp_mem_calloc(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum,  sizeof(struct detain_pkt));
 	d_pkt->original = rawpkt;
-	memcpy(d_pkt, p_rawpkt, sizeof(raw_pkt_t));
+	memcpy(&d_pkt->replica, p_rawpkt, sizeof(raw_pkt_t));
+	d_pkt->replica.append_list=NULL;
+	d_pkt->replica.prepend_list=NULL;
+	if(p_rawpkt->append_list!= NULL && p_rawpkt->append_list->sz_sidlist > 0)
+	{
+		d_pkt->replica.append_list = sapp_mem_calloc(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum,  sizeof(unsigned short)*p_rawpkt->append_list->sz_sidlist);
+		memcpy(d_pkt->replica.append_list->sid_list, p_rawpkt->append_list->sid_list, sizeof(unsigned short)*p_rawpkt->append_list->sz_sidlist);
+		d_pkt->replica.append_list->sz_sidlist = p_rawpkt->append_list->sz_sidlist;
+	}
+	if(p_rawpkt->prepend_list!= NULL && p_rawpkt->prepend_list->sz_sidlist > 0)
+	{
+		d_pkt->replica.prepend_list = sapp_mem_calloc(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum,  sizeof(unsigned short)*p_rawpkt->prepend_list->sz_sidlist);
+		memcpy(d_pkt->replica.prepend_list->sid_list, p_rawpkt->prepend_list->sid_list, sizeof(unsigned short)*p_rawpkt->prepend_list->sz_sidlist);
+		d_pkt->replica.prepend_list->sz_sidlist = p_rawpkt->prepend_list->sz_sidlist;
+	}
 	p_rawpkt->d_pkt = d_pkt;
 	d_pkt->tid = pstream->threadnum;
 
 	return d_pkt;
 }
 
+static void detain_pkt_mem_free(struct detain_pkt *pkt)
+{
+	if(pkt == NULL)return;
+	if(pkt->replica.append_list)
+	{
+		sapp_mem_free(SAPP_MEM_DYN_DETAIN_PKT, pkt->tid, pkt->replica.append_list);
+	}
+	if(pkt->replica.prepend_list)
+	{
+		sapp_mem_free(SAPP_MEM_DYN_DETAIN_PKT, pkt->tid, pkt->replica.prepend_list);
+	}
+	sapp_mem_free(SAPP_MEM_DYN_DETAIN_PKT, pkt->tid, pkt);
+}
+
 int MESA_detain_pkt_forward(struct detain_pkt *pkt)
 {
 	if(pkt->original == NULL) //original packet stack finished, being processed by all plugin;
 	{
-		if(pkt->replica.__lib_raw_pkt_len > 0 && pkt->replica.__lib_raw_pkt_data&& pkt->replica.io_lib_pkt_reference)
+		if(pkt->replica.__lib_raw_pkt_len > 0 && pkt->replica.__lib_raw_pkt_data && pkt->replica.io_lib_pkt_reference)
 		{
 			dl_io_fun_list.dl_io_forward_rawpkt(&pkt->replica, pkt->tid);
 		}
-		free(pkt);
+		detain_pkt_mem_free(pkt);
 		pkt = NULL;
 	}
 	else //still in original packet stack, need be processed by follow-up plugin, mark operation to replica;
@@ -67,11 +95,11 @@ void MESA_detain_pkt_free(struct detain_pkt *pkt)
 {
 	if(pkt->original == NULL) //original packet stack finished, being processed by all plugin;
 	{
-		if(pkt->replica.__lib_raw_pkt_len > 0 && pkt->replica.__lib_raw_pkt_data&& pkt->replica.io_lib_pkt_reference)
+		if(pkt->replica.__lib_raw_pkt_len > 0 && pkt->replica.__lib_raw_pkt_data && pkt->replica.io_lib_pkt_reference)
 		{
 			dl_io_fun_list.dl_io_free_rawpkt(&pkt->replica, pkt->tid);
 		}
-		free(pkt);
+		detain_pkt_mem_free(pkt);
 		pkt = NULL;
 
 	}
@@ -109,7 +137,7 @@ int MESA_retain_pkt_update(const raw_pkt_t *p_raw_pkt, int pkt_ret)
             {
                 update_ret = DROP;
             }
-            free(p_raw_pkt->d_pkt);
+			detain_pkt_mem_free(p_raw_pkt->d_pkt);
         }
     }
 	return update_ret;
@@ -883,7 +911,7 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			}
 		}
 		break;
-		case (int)MSO_STREAM_TIMED:
+		case MSO_STREAM_TIMED:
 		{
 			if(sizeof(int) != opt_val_len){
 				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_set_stream_opt() MSO_TIMEOUT error:opt_val_len invalid, must be sizeof(short)\n",printaddr(&pstream->addr, pstream->threadnum));
@@ -905,7 +933,72 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			ret = 0;
 		}
 		break;		
-		
+		case MSO_STREAM_APPLEND_SEGMENT_ID_LIST:
+		{
+			if(sizeof(struct segment_id_list) != opt_val_len){
+				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_set_stream_opt() MSO_STREAM_APPLEND_SEGMENT_ID_LIST error:opt_val_len invalid, must be sizeof(struct segment_id_list)\n",printaddr(&pstream->addr, pstream->threadnum));
+				ret = -1;
+				break;
+			}
+			struct segment_id_list *set_sid_list = (struct segment_id_list *)opt_val;
+			struct streaminfo_private *pstream_pr=(struct streaminfo_private *)pstream;
+			if(pstream_pr->sid_append_list == NULL)
+			{
+				if(set_sid_list->sz_sidlist > 0)
+				{
+					pstream_pr->sid_append_list = (struct segment_id_list *)sapp_mem_calloc(SAPP_MEM_DYN_SID_LIST, pstream->threadnum, sizeof(struct segment_id_list));
+					memcpy(pstream_pr->sid_append_list->sid_list, set_sid_list->sid_list, set_sid_list->sz_sidlist*sizeof(unsigned short));
+					pstream_pr->sid_append_list->sz_sidlist = set_sid_list->sz_sidlist;
+				}
+			}
+			else
+			{
+				if(set_sid_list->sz_sidlist > 0)
+				{
+					memcpy(pstream_pr->sid_append_list->sid_list, set_sid_list->sid_list, set_sid_list->sz_sidlist*sizeof(unsigned short));
+					pstream_pr->sid_append_list->sz_sidlist = set_sid_list->sz_sidlist;
+				}
+				else
+				{
+					memset(pstream_pr->sid_append_list, 0, sizeof(struct segment_id_list));
+				}
+			}
+			ret = 0;
+		}
+		break;	
+		case MSO_STREAM_PREPLEND_SEGMENT_ID_LIST:
+		{
+			if(sizeof(struct segment_id_list) != opt_val_len){
+				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_set_stream_opt() MSO_STREAM_APPLEND_SEGMENT_ID_LIST error:opt_val_len invalid, must be sizeof(struct segment_id_list)\n",printaddr(&pstream->addr, pstream->threadnum));
+				ret = -1;
+				break;
+			}
+			struct segment_id_list *set_sid_list = (struct segment_id_list *)opt_val;
+			struct streaminfo_private *pstream_pr=(struct streaminfo_private *)pstream;
+			if(pstream_pr->sid_prepend_list == NULL)
+			{
+				if(set_sid_list->sz_sidlist > 0)
+				{
+					pstream_pr->sid_prepend_list = (struct segment_id_list *)sapp_mem_calloc(SAPP_MEM_DYN_SID_LIST, pstream->threadnum, sizeof(struct segment_id_list));
+					memcpy(pstream_pr->sid_prepend_list->sid_list, set_sid_list->sid_list, set_sid_list->sz_sidlist*sizeof(unsigned short));
+					pstream_pr->sid_prepend_list->sz_sidlist = set_sid_list->sz_sidlist;
+				}
+			}
+			else
+			{
+				if(set_sid_list->sz_sidlist > 0)
+				{
+					memcpy(pstream_pr->sid_prepend_list->sid_list, set_sid_list->sid_list, set_sid_list->sz_sidlist*sizeof(unsigned short));
+					pstream_pr->sid_prepend_list->sz_sidlist = set_sid_list->sz_sidlist;
+				}
+				else
+				{
+					memset(pstream_pr->sid_prepend_list, 0, sizeof(struct segment_id_list));
+				}
+			}
+			ret = 0;
+		}
+		break;	
 		default:
 			sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_set_stream_opt() error: unsupport MESA_stream_opt type:%d!\n", printaddr(&pstream->addr, pstream->threadnum), (int)opt);
 			ret = -1;

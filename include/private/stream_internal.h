@@ -65,6 +65,10 @@ extern "C" {
 #endif
 
 struct detain_pkt;
+
+struct rawpkt_metadata;
+
+
 /* 原始包结构 */
 typedef struct {
 	unsigned int magic_num; 
@@ -86,6 +90,9 @@ typedef struct {
 	unsigned char overlay_layer_bytes; /* 串联封装层长度, 比如vxlan模式下是50字节 */
 	char drop_current_pkt_flag; /* 插件调用MSO_DROP_CURRENT_PKT设置丢弃当前包, 每次处理完要清空 */
 	struct detain_pkt *d_pkt;
+	struct rawpkt_metadata *meta[2];// 发送所需的metadata, 用于在调用low_level_send时, 填充marsio 4.6后需要的信息.
+	struct segment_id_list *append_list;
+	struct segment_id_list *prepend_list;
 }raw_pkt_t;
 
 enum retained_rawpkt_mark
@@ -153,6 +160,7 @@ struct half_tcpstream
 typedef struct {
 	const raw_pkt_t *raw_pkt_up;
 	const raw_pkt_t *raw_pkt_down;
+	struct rawpkt_metadata* meta[2];// 每个流的metadata按方向存储在polling_inject_context中, update_raw_pkt函数调用时，按方向填充到返回的rawpkt中
 }polling_inject_context_t;
 
 struct streaminfo_private
@@ -201,6 +209,9 @@ struct streaminfo_private
 	struct tcp_option *synack_opt_array;
 
 	polling_inject_context_t *polling_inject_context;
+
+	struct segment_id_list *sid_append_list;
+	struct segment_id_list *sid_prepend_list;
 
 	/* 全局流id, stream_index历史上已经表示单机内唯一id, 此处要保证集群所有机器不重复, 所以新建变量;  
 		高位 --- 低位

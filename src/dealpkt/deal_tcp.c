@@ -1433,7 +1433,18 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 	}
 
 	free_polling_inject_context(SAPP_MEM_DYN_TCP_POLLING_RAW_PKT, pstream_pr);
-	
+
+	if(pstream_pr->sid_append_list){
+		sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_append_list);
+		pstream_pr->sid_append_list = NULL;
+	}
+
+	if(pstream_pr->sid_prepend_list){
+		sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_prepend_list);
+		pstream_pr->sid_prepend_list = NULL;
+	}	
+
+
 	free_streamindex(threadnum,pindex);
 	
 	return pkt_ret;
@@ -1568,6 +1579,17 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	}
 
 	free_polling_inject_context(SAPP_MEM_DYN_TCP_POLLING_RAW_PKT, pstream_pr); //2020-06-08 lijia add, for memory leak
+
+	if(pstream_pr->sid_append_list){
+		sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_append_list);
+		pstream_pr->sid_append_list = NULL;
+	}
+	
+	if(pstream_pr->sid_prepend_list){
+		sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_prepend_list);
+		pstream_pr->sid_prepend_list = NULL;
+	}	
+
 
 	if (pstream_pr->timeout > link_default_nopkt_time)
 	{ /* 链接独有超时时间, 减少计数 */
@@ -2857,6 +2879,17 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
 		return PASS;
 	}
+
+
+	if(pstream_pr->sid_append_list != NULL)
+	{
+		((raw_pkt_t *)raw_pkt)->append_list=pstream_pr->sid_append_list;
+	}
+	if(pstream_pr->sid_prepend_list != NULL)
+	{
+		((raw_pkt_t *)raw_pkt)->prepend_list=pstream_pr->sid_prepend_list;
+	}
+
 
 	/* 2014-10-11 lijia add, Fd补救由平台实现 */
 	if(unlikely(pstream_pr->stream_killed_flag != 0)){

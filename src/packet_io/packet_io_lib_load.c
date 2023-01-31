@@ -135,6 +135,8 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		dl_io_fun_list_static_link[cap_mode].dl_io_smart_offload = pcap_dl_io_smart_offload;
 		dl_io_fun_list_static_link[cap_mode].dl_io_forward_rawpkt = pcap_dl_io_forward_rawpkt;
 		dl_io_fun_list_static_link[cap_mode].dl_io_free_rawpkt = pcap_dl_io_free_rawpkt;
+		dl_io_fun_list_static_link[cap_mode].dl_io_get1_rawpkt_meta = pcap_dl_io_get1_rawpkt_meta;
+		dl_io_fun_list_static_link[cap_mode].dl_io_free_rawpkt_meta = pcap_dl_io_free_rawpkt_meta;
 	}
 #endif
 
@@ -167,6 +169,8 @@ static int packet_io_lib_load_by_mode(int cap_mode, const char *no_use)
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_smart_offload = marsio_dl_io_smart_offload;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_forward_rawpkt = marsio_dl_io_forward_rawpkt;
 		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_free_rawpkt = marsio_dl_io_free_rawpkt;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_get1_rawpkt_meta = marsio_dl_io_get1_rawpkt_meta;
+		dl_io_fun_list_static_link[CAP_MODEL_MARSIOV4].dl_io_free_rawpkt_meta = marsio_dl_io_free_rawpkt_meta;
 	}
 #endif 
 

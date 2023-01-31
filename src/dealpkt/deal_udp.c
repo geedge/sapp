@@ -316,8 +316,20 @@ void udp_free_stream(struct streamindex *pindex)
 	}
 
 	free_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr);
-	
-	free_streamindex(threadnum,pindex);
+
+    if (pstream_pr->sid_append_list)
+    {
+        sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_append_list);
+        pstream_pr->sid_append_list = NULL;
+    }
+
+    if (pstream_pr->sid_prepend_list)
+    {
+        sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_prepend_list);
+        pstream_pr->sid_prepend_list = NULL;
+    }
+
+    free_streamindex(threadnum,pindex);
 }
 
 //add by lqy 20130530
@@ -362,7 +374,20 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 		project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, threadnum, pstream_pr->pproject);
 		stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
 
-		pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_UDP_PROJECT,threadnum);
+		free_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr); //2020-06-08 lijia add, for memory leak
+        if (pstream_pr->sid_append_list)
+        {
+            sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_append_list);
+            pstream_pr->sid_append_list = NULL;
+        }
+
+        if (pstream_pr->sid_prepend_list)
+        {
+            sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_prepend_list);
+            pstream_pr->sid_prepend_list = NULL;
+        }
+
+        pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_UDP_PROJECT,threadnum);
 		pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_UDP_BRIDGE,threadnum);
 
 		/* 2015-12-28 lijia add, 流重置, 从新申请内存 */
@@ -627,7 +652,16 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			return PASS;
 		}
 
-		/* 2014-11-15 lijia add, for udp serial kill udp */
+        if (pstream_pr->sid_append_list != NULL)
+        {
+            ((raw_pkt_t *)raw_pkt)->append_list = pstream_pr->sid_append_list;
+        }
+        if (pstream_pr->sid_prepend_list != NULL)
+        {
+            ((raw_pkt_t *)raw_pkt)->prepend_list = pstream_pr->sid_prepend_list;
+        }
+
+        /* 2014-11-15 lijia add, for udp serial kill udp */
 		if(unlikely(a_index->stream.stream_killed_flag != 0)){
 			return DROP;
 		}
@@ -871,7 +905,16 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			return PASS;
 		}
 
-		/* 2014-11-15 lijia add, for udp serial kill udp */
+        if (pstream_pr->sid_append_list != NULL)
+        {
+            ((raw_pkt_t *)raw_pkt)->append_list = pstream_pr->sid_append_list;
+        }
+        if (pstream_pr->sid_prepend_list != NULL)
+        {
+            ((raw_pkt_t *)raw_pkt)->prepend_list = pstream_pr->sid_prepend_list;
+        }
+
+        /* 2014-11-15 lijia add, for udp serial kill udp */
 		if(unlikely(a_index->stream.stream_killed_flag != 0)){
 			return DROP;
 		}

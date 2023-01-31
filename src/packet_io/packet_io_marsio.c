@@ -27,14 +27,20 @@ typedef struct{
 	struct mr_sendpath *sendpath_up, *sendpath_down; /* 并联模式下, 直接使用sendpath_up; 同时兼容双网卡串联模式 */
 }marsio4_io_handle;
 
-/* for vlan flipping */
-#if 0
-enum mr_buff_metadata_type
-{
-	MR_BUFF_REHASH_INDEX = 0,
-	MR_BUFF_METADATA_VLAN_TCI = 1, /* int类型, 主机序, host order */
-};
+
+
+
+#ifndef MAX_METADATA_LEN
+#define MAX_METADATA_LEN 16
 #endif
+
+struct rawpkt_metadata
+{
+	enum mr_buff_metadata_type type;
+	char data[MAX_METADATA_LEN];
+	unsigned int sz_data;
+	struct segment_id_list raw_sid_list;
+};
 
 extern int marsio_buff_get_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
 extern int marsio_buff_set_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
@@ -103,6 +109,10 @@ int (*ptr_marsio_buff_set_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type
 int (*ptr_marsio_buff_unset_metadata)(marsio_buff_t *m, enum mr_buff_metadata_type type);
 marsio_buff_t *(*ptr_marsio_buff_malloc_smartoffload)(struct mr_vdev *vdev, const char * pkt, unsigned int pkt_len);
 
+int (*ptr_marsio_buff_get_sid_list)(marsio_buff_t * m, uint16_t * out_slist, uint8_t sz_out_slist);
+int (*ptr_marsio_buff_set_sid_list)(marsio_buff_t * m, uint16_t * slist, uint8_t sz_slist);
+int (*ptr_marsio_buff_append_sid_list)(marsio_buff_t * m, uint16_t * slist, uint8_t sz_slist);
+int (*ptr_marsio_buff_prepend_sid_list)(marsio_buff_t * m, uint16_t * slist, uint8_t sz_slist);
 
 
 static struct bpf_program MARSIO_BPF_FILTER[MAX_THREAD_NUM];
@@ -393,6 +403,20 @@ int marsio_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt
 
 static int marsio4_pkt_forward(int tid, struct mr_sendpath * sendpath, marsio_buff_t * mbufs);
 
+
+static void marsio_update_sid_list(const raw_pkt_t *raw_pkt, void *send_pkt_io_reference)
+{
+	if(raw_pkt->append_list && ptr_marsio_buff_append_sid_list!= NULL)
+	{
+		ptr_marsio_buff_append_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->append_list->sid_list, raw_pkt->append_list->sz_sidlist);
+	}
+	if(raw_pkt->prepend_list && ptr_marsio_buff_prepend_sid_list != NULL)
+	{
+		ptr_marsio_buff_prepend_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->prepend_list->sid_list, raw_pkt->prepend_list->sz_sidlist);
+	}
+	return;
+}
+
 int marsio_dl_io_forward_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
 {
 	if(raw_pkt == NULL && (thread_seq < 0 || thread_seq > get_thread_count()))
@@ -400,6 +424,7 @@ int marsio_dl_io_forward_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
 	int ret = 0;
 	if(raw_pkt->io_lib_pkt_reference != NULL)
 	{
+		marsio_update_sid_list(raw_pkt, (void *)raw_pkt->io_lib_pkt_reference);
 		ret = marsio4_pkt_forward(thread_seq, g_mr4_sendpath_up_set[raw_pkt->device_index], (marsio_buff_t *)raw_pkt->io_lib_pkt_reference);
 	}
 	return ret;
@@ -412,6 +437,94 @@ void marsio_dl_io_free_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
 	ptr_marsio_buff_free(sapp_marsio4_instance, (marsio_buff_t **)&raw_pkt->io_lib_pkt_reference, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
 	return;
 }
+
+
+struct rawpkt_metadata *marsio_dl_io_get1_rawpkt_meta(const raw_pkt_t *raw_pkt)
+{
+	struct rawpkt_metadata *meta = NULL;
+	int ret = 0;
+	if(raw_pkt->io_lib_pkt_reference != NULL)
+	{
+        if (ptr_marsio_buff_get_sid_list != NULL || ptr_marsio_buff_get_metadata != NULL)
+        {
+            meta = (struct rawpkt_metadata *)calloc(sizeof(struct rawpkt_metadata), 1);
+            if (ptr_marsio_buff_get_metadata)
+            {
+                        ret = ptr_marsio_buff_get_metadata((marsio_buff_t *)raw_pkt->io_lib_pkt_reference,
+                                                           MR_BUFF_ROUTE_CTX, meta->data, meta->sz_data);
+                        if (ret <= 0)
+                        {
+                            free(meta);
+                            return NULL;
+                        }
+                        else
+                        {
+                            meta->sz_data = ret;
+                        }
+            }
+            if (ptr_marsio_buff_get_sid_list)
+            {
+                        ret = ptr_marsio_buff_get_sid_list((marsio_buff_t *)raw_pkt->io_lib_pkt_reference,
+                                                           meta->raw_sid_list.sid_list, MAX_SID_NUM);
+                        if (ret <= 0)
+                        {
+                            meta->raw_sid_list.sz_sidlist = 0;
+                        }
+                        else
+                        {
+                            meta->raw_sid_list.sz_sidlist = ret;
+                        }
+            }
+            if (meta->sz_data == 0 && meta->raw_sid_list.sz_sidlist == 0)
+            {
+                        free(meta);
+                        meta = NULL;
+            }
+        }
+    }
+
+	return  meta;
+}
+
+
+
+void marsio_dl_io_set_rawpkt_meta(const raw_pkt_t *raw_pkt, void *send_pkt_io_reference, unsigned char route_dir)
+{
+	if(raw_pkt->meta[0]!= NULL || (raw_pkt->meta[1]!= NULL))
+	{
+		struct rawpkt_metadata *snd_meta = NULL;
+		if(raw_pkt->meta[route_dir]!=NULL)
+		{
+			snd_meta=raw_pkt->meta[route_dir];
+		}
+		else // failover 
+		{
+			snd_meta=raw_pkt->meta[route_dir^1];
+		}
+		if(ptr_marsio_buff_set_metadata)
+		{
+			ptr_marsio_buff_set_metadata((marsio_buff_t *)send_pkt_io_reference, snd_meta->type, (void *)snd_meta->data, snd_meta->sz_data);
+		}
+		if(ptr_marsio_buff_set_sid_list)
+		{
+			ptr_marsio_buff_set_sid_list((marsio_buff_t *)send_pkt_io_reference, snd_meta->raw_sid_list.sid_list, snd_meta->raw_sid_list.sz_sidlist);
+		}
+		marsio_update_sid_list(raw_pkt, send_pkt_io_reference);
+	}
+
+	return;
+}
+
+void marsio_dl_io_free_rawpkt_meta(struct rawpkt_metadata * meta)
+{
+	if(meta != NULL)
+	{
+		free(meta);
+		meta=NULL;
+	}
+	return;
+}
+
 
 void *marsio_dl_io_get_send_handle(int thread_seq)
 {
@@ -650,6 +763,7 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
                         /* NOTE:
                             MARSIO主从模式独特性, 从虚拟网卡收包, 但要通过物理网卡回注包,
                         */
+					   	marsio_update_sid_list(raw_pkt, rx_buff[j]);
                         int ret = marsio4_pkt_forward(tid, g_mr4_sendpath_up_set[i], rx_buff[j]);
                         if (ret < 0)
                         {
@@ -985,6 +1099,33 @@ static int marsio_dl_get_function_entry(void)
 		ptr_marsio_buff_set_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_set_metadata");
 		if(NULL == ptr_marsio_buff_set_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_metadata", ABBR_MARSIO_LIBRARY_FILE);
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			sleep(1);
+		}
+
+		ptr_marsio_buff_get_sid_list = (int (*)(marsio_buff_t *m, uint16_t * out_slist, uint8_t sz_out_slist))dlsym(marsio_so_handle, "marsio_buff_get_sid_list");
+		if(NULL == ptr_marsio_buff_set_metadata){
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_get_sid_list", ABBR_MARSIO_LIBRARY_FILE);
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			sleep(1);
+		}
+		ptr_marsio_buff_set_sid_list = (int (*)(marsio_buff_t *m, uint16_t * slist, uint8_t sz_slist))dlsym(marsio_so_handle, "marsio_buff_set_sid_list");
+		if(NULL == ptr_marsio_buff_set_metadata){
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_sid_list", ABBR_MARSIO_LIBRARY_FILE);
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			sleep(1);
+		}
+
+		ptr_marsio_buff_append_sid_list = (int (*)(marsio_buff_t *m, uint16_t * slist, uint8_t sz_slist))dlsym(marsio_so_handle, "marsio_buff_append_sid_list");
+		if(NULL == ptr_marsio_buff_append_sid_list){
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_append_sid_list", ABBR_MARSIO_LIBRARY_FILE);
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			sleep(1);
+		}
+
+		ptr_marsio_buff_prepend_sid_list = (int (*)(marsio_buff_t *m, uint16_t * slist, uint8_t sz_slist))dlsym(marsio_so_handle, "marsio_buff_prepend_sid_list");
+		if(NULL == ptr_marsio_buff_prepend_sid_list){
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_prepend_sid_list", ABBR_MARSIO_LIBRARY_FILE);
 			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
 			sleep(1);
 		}

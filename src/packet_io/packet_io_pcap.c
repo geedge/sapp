@@ -750,6 +750,17 @@ void pcap_dl_io_free_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
 		PCAP_FREE((void *)(raw_pkt->__lib_raw_pkt_data));
 	return;
 }
+
+struct rawpkt_metadata *pcap_dl_io_get1_rawpkt_meta(const raw_pkt_t *raw_pkt)
+{
+	return  NULL;
+}
+
+void pcap_dl_io_free_rawpkt_meta(struct rawpkt_metadata * meta)
+{
+	return;
+}
+
 /************************  funcitons for dynamic link *************************/
 
 

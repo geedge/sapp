@@ -251,6 +251,8 @@ void pcap_dl_io_device_alias_free(unsigned int target_id, char *dev_args);
 extern int pcap_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt_len, unsigned char dir, int thread_num);
 extern int pcap_dl_io_forward_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq);
 extern void pcap_dl_io_free_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq);
+extern struct rawpkt_metadata *pcap_dl_io_get1_rawpkt_meta(const raw_pkt_t *raw_pkt);
+extern void pcap_dl_io_free_rawpkt_meta(struct rawpkt_metadata *);
 
 /********************** pcap funcitons for dynamic link ***********************/
 
@@ -312,6 +314,8 @@ extern void marsio_dl_io_destroy(void);
 extern int marsio_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt_len, unsigned char dir, int thread_num);
 extern int marsio_dl_io_forward_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq);
 extern void marsio_dl_io_free_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq);
+extern struct rawpkt_metadata *marsio_dl_io_get1_rawpkt_meta(const raw_pkt_t *raw_pkt);
+extern void marsio_dl_io_free_rawpkt_meta(struct rawpkt_metadata *);
 
 /********************** marsio funcitons for dynamic link *********************/
 
