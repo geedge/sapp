@@ -22,7 +22,7 @@
 
 [PACKET_IO]
     [overlay_tunnel_definition]
-### note, optional value is [none, vxlan]
+### note, optional value is [none, vxlan, nf]
     overlay_mode=none
 
     [packet_io.feature]

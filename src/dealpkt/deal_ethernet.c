@@ -209,22 +209,44 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 			break;
 
 			default:
-				/* unknown protocol */
+            /* unknown protocol */
+            if (eth_type == 0xaaaa &&
+                OVERLAY_MODE_NF == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)
+            {
+                    ret = PASS;
+            }
+            else
+            {
+                    sapp_runtime_log(20, "eth_entry() recv unknown pkt, protocol is:0x%04x, pkt seq:%llu", eth_type,
+                                     local_sys_stat->count[SAPP_STAT_RCV_LINE]);
+                    local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+                    local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += (unsigned long long)raw_pkt->raw_pkt_len;
+                    if (NET_CONN_SERIAL_GDEV == g_topology_mode)
+                    {
+                        if (sapp_identify_tunnel_inner_pkt(raw_pkt) != 0)
+                        {
+                            ret = PASS;
+                        }
+                        else
+                        {
+                            if (OVERLAY_MODE_NF == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)
+                            {
+                                ret = PASS;
+                            }
+                            else
+                            {
+                                /* GDEV模式下, 什么时候都不应该把非隧道内不认识的包再转发出去,
+                                 * 在线发现把SPT生成树协议再注回去, 导致网络故障 */
+                                local_sys_stat->count[SAPP_STAT_DROP_ETHERNET]++;
+                                ret = DROP;
+                                sapp_runtime_log(RLOG_LV_DEBUG,
+                                                 "is not raw inline ethernet pkt, type is:0x%x, drop it.", eth_type);
+                            }
+                        }
+                    }
+            }
 
-				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
-				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += (unsigned long long)raw_pkt->raw_pkt_len;				
-				if(NET_CONN_SERIAL_GDEV == g_topology_mode){
-					if(sapp_identify_tunnel_inner_pkt(raw_pkt) != 0){
-						ret = PASS;
-					}else{
-						/* GDEV模式下, 什么时候都不应该把非隧道内不认识的包再转发出去, 在线发现把SPT生成树协议再注回去, 导致网络故障 */
-						local_sys_stat->count[SAPP_STAT_DROP_ETHERNET]++;
-						ret = DROP;
-						sapp_runtime_log(RLOG_LV_DEBUG, "is not raw inline ethernet pkt, type is:0x%x, drop it.", eth_type); 
-					}
-				}
-				sapp_runtime_log(20, "eth_entry() recv unknown pkt, protocol is:0x%04x, pkt seq:%llu", eth_type, local_sys_stat->count[SAPP_STAT_RCV_LINE]);
-			break;
+            break;
 		}
 	}
 

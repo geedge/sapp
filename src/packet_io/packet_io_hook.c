@@ -227,6 +227,8 @@ int packet_io_hook_input(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
 		ret = packet_io_hook_input_vxlan(raw_pkt, dir, thread_num);
 	}else if(OVERLAY_MODE_NONE == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
 		ret = 0;
+	}else if(OVERLAY_MODE_NF == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
+		ret = 0;
 	}else{
 		sapp_runtime_log(RLOG_LV_INFO, "packet_io_hook_input() error, unsupport overlay_mode:%d\n", 
 						sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin);

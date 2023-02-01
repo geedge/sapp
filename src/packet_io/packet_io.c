@@ -731,9 +731,12 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
         }
         else
         {
-            /* inline模式下, 非原始链路中的包, 即使插件返回了PASS, 也不能注入链路 */
-            ret = DROP;
-            cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
+            if (OVERLAY_MODE_NF != sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)
+            {
+                /* inline模式下, 非原始链路中的包, 即使插件返回了PASS, 也不能注入链路 */
+                ret = DROP;
+                cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
+            }
         }
     }
     else if (DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin)

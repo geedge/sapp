@@ -1200,6 +1200,9 @@ static int config_expression_convert(void)
 		pconfig->packet_io.packet_io_tunnel.overlay_mode_bin = OVERLAY_MODE_NONE;
 	}else if(strncasecmp(tmp_str, "vxlan", strlen("vxlan")) == 0){
 		pconfig->packet_io.packet_io_tunnel.overlay_mode_bin = OVERLAY_MODE_VXLAN;
+	}
+	else if(strncasecmp(tmp_str, "nf", strlen("nf")) == 0){
+		pconfig->packet_io.packet_io_tunnel.overlay_mode_bin = OVERLAY_MODE_NF;
 	}else{
 		sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->overlay_mode error, unsupport : %s", tmp_str); 
 		return -1;

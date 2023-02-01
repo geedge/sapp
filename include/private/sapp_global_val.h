@@ -25,6 +25,7 @@ enum pkt_dump_mode{
 enum overlay_mode_config{
 	OVERLAY_MODE_NONE			= 0,
 	OVERLAY_MODE_VXLAN			= 1,
+	OVERLAY_MODE_NF			= 2,
 };
 
 typedef struct{
