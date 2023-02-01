@@ -281,14 +281,14 @@ static void __do_pkt_runtime_output(const char *filename, const char *open_mode,
 	left_len -= ret;
 	
 	for(i = 0; i < TIMESTAMP_SINGLE_PKT_REGION_MAX; i++){
-		ret = snprintf(log_out_buf + offset, left_len, "%12lld ", per_region_pkt[i]);
+		ret = snprintf(log_out_buf + offset, left_len, "%12llu ", per_region_pkt[i]);
 		left_len -= ret;
 		offset += ret;
 	}
 	if(summary_total_pkt > 0){/* ∑¿÷π≥˝¡„¥ÌŒÛ */
-		ret = snprintf(log_out_buf + offset, left_len, "%9.1f %9lld",  (double)summary_tot_time/(double)summary_total_pkt, summary_max_delay);
+		ret = snprintf(log_out_buf + offset, left_len, "%9.1f %9u",  (double)summary_tot_time/(double)summary_total_pkt, summary_max_delay);
 	}else{
-		ret = snprintf(log_out_buf + offset, left_len, "%9.1f %9lld",  (double)0, summary_max_delay);
+		ret = snprintf(log_out_buf + offset, left_len, "%9.1f %9u",  (double)0, summary_max_delay);
 	}
 	left_len -= ret;
 	offset += ret;		
@@ -308,7 +308,7 @@ static void __do_pkt_runtime_output(const char *filename, const char *open_mode,
 			left_len -= ret;
 			offset += ret;
 		}
-		ret = snprintf(log_out_buf + offset, left_len, "%9.1f %9lld", per_thread_avg[tid], per_thread_max[tid]);
+		ret = snprintf(log_out_buf + offset, left_len, "%9.1f %9llu", per_thread_avg[tid], per_thread_max[tid]);
 		offset += ret;
 		left_len -= ret;
 

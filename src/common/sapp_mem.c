@@ -51,6 +51,8 @@ static const  mem_stat_name_tuple_t mem_stat_name_tuple[] =
 	{SAPP_MEM_DYN_TCP_BRIDGE , "tcp_bridge"},
 	{SAPP_MEM_DYN_UDP_BRIDGE , "udp_bridge"},
 	{SAPP_MEM_DYN_PADDR , 		"layer_addr"},
+	{SAPP_MEM_DYN_DETAIN_PKT , 		"detain_pkt"},
+	{SAPP_MEM_DYN_SID_LIST , 		"segment_id_list"},
 };
 
 void *sapp_mem_malloc(sapp_mem_type_t type, int thread_seq, int size)
