@@ -2389,12 +2389,12 @@ int update_polling_inject_context(int mem_used_type,struct streaminfo_private *p
 	if((DIR_ROUTE_DOWN & pstream_pr->stream_public.routedir) == DIR_ROUTE_DOWN){
 		if(NULL == pstream_pr->polling_inject_context->raw_pkt_down){
 			pstream_pr->polling_inject_context->raw_pkt_down = sapp_raw_pkt_dup(mem_used_type,thread_index, raw_pkt);
-			pstream_pr->polling_inject_context->meta[1] = dl_io_fun_list.dl_io_get1_rawpkt_meta(raw_pkt);
+			pstream_pr->polling_inject_context->meta[1] = dl_io_fun_list.dl_io_get1_rawpkt_meta(raw_pkt, thread_index);
 		}
 	}else{
 		if(NULL == pstream_pr->polling_inject_context->raw_pkt_up){
 			pstream_pr->polling_inject_context->raw_pkt_up = sapp_raw_pkt_dup(mem_used_type,thread_index, raw_pkt);
-			pstream_pr->polling_inject_context->meta[0] = dl_io_fun_list.dl_io_get1_rawpkt_meta(raw_pkt);
+			pstream_pr->polling_inject_context->meta[0] = dl_io_fun_list.dl_io_get1_rawpkt_meta(raw_pkt, thread_index);
 		}
 	}
 
@@ -2420,10 +2420,10 @@ int save_polling_inject_context(int mem_used_type, struct streaminfo_private *ps
 	    将发包所需的参数都藏于private结构中, 不再依赖原始包 */
 	if((DIR_ROUTE_DOWN & pstream_pr->stream_public.routedir) == DIR_ROUTE_DOWN){
 		pstream_pr->polling_inject_context->raw_pkt_down = sapp_raw_pkt_dup(mem_used_type, thread_index, raw_pkt);
-		pstream_pr->polling_inject_context->meta[1] = dl_io_fun_list.dl_io_get1_rawpkt_meta(raw_pkt);
+		pstream_pr->polling_inject_context->meta[1] = dl_io_fun_list.dl_io_get1_rawpkt_meta(raw_pkt, thread_index);
 	}else{
 		pstream_pr->polling_inject_context->raw_pkt_up = sapp_raw_pkt_dup(mem_used_type, thread_index, raw_pkt);
-		pstream_pr->polling_inject_context->meta[0] = dl_io_fun_list.dl_io_get1_rawpkt_meta(raw_pkt);
+		pstream_pr->polling_inject_context->meta[0] = dl_io_fun_list.dl_io_get1_rawpkt_meta(raw_pkt, thread_index);
 	}
 
 	return 0;
@@ -2457,12 +2457,12 @@ void free_polling_inject_context(int mem_used_type, struct streaminfo_private *p
 
 	if(pstream_pr->polling_inject_context->meta[0]!=NULL)
 	{
-		dl_io_fun_list.dl_io_free_rawpkt_meta(pstream_pr->polling_inject_context->meta[0]);
+		dl_io_fun_list.dl_io_free_rawpkt_meta(pstream_pr->polling_inject_context->meta[0], thread_index);
 		pstream_pr->polling_inject_context->meta[0]=NULL;
 	}
 	if(pstream_pr->polling_inject_context->meta[1]!=NULL)
 	{
-		dl_io_fun_list.dl_io_free_rawpkt_meta(pstream_pr->polling_inject_context->meta[1]);
+		dl_io_fun_list.dl_io_free_rawpkt_meta(pstream_pr->polling_inject_context->meta[1], thread_index);
 		pstream_pr->polling_inject_context->meta[1]=NULL;
 	}
 

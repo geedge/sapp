@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-
+extern int marsio_get_route_dir_from_mbuff(void *pkt_reference);
 extern unsigned int marsio_get_vlan_id_from_mbuff(void *pkt_reference);
 extern int marsio_set_vlan_id_to_mbuff(void *pkt_reference, unsigned int vlan_id_host_order);
 extern void marsio_dl_io_set_rawpkt_meta(const raw_pkt_t *raw_pkt, void *send_pkt_io_reference, unsigned char route_dir);
@@ -228,6 +228,11 @@ int packet_io_hook_input(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
 	}else if(OVERLAY_MODE_NONE == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
 		ret = 0;
 	}else if(OVERLAY_MODE_NF == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
+		ret = marsio_get_route_dir_from_mbuff((void *)raw_pkt->io_lib_pkt_reference);
+		if(ret >= 0)
+		{
+				raw_pkt->route_dir = ret;
+		}
 		ret = 0;
 	}else{
 		sapp_runtime_log(RLOG_LV_INFO, "packet_io_hook_input() error, unsupport overlay_mode:%d\n", 
@@ -268,6 +273,8 @@ int packet_io_hook_forward(raw_pkt_t *raw_pkt, unsigned char route_dir, int thre
 		ret = packet_io_hook_output_vxlan(raw_pkt, (void *)raw_pkt->raw_pkt_data, route_dir);
 	}else if(OVERLAY_MODE_NONE == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
 		ret = 0;
+	}else if(OVERLAY_MODE_NF == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
+		ret = 0;
 	}else{
 		sapp_runtime_log(20, "packet_io_hook_forward() error, unsupport overlay_mode:%d\n", sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin);
 	}
@@ -288,7 +295,7 @@ int packet_io_hook_sendto(const raw_pkt_t *raw_pkt, unsigned char route_dir, cha
 
 	if(OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
 		ret = packet_io_hook_output_vxlan((raw_pkt_t *)raw_pkt, (void *)send_pkt_data, route_dir);
-	}else if(OVERLAY_MODE_NONE == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
+	}else if(OVERLAY_MODE_NONE == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin || OVERLAY_MODE_NF == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin){
 		ret = 0;
 	}else{
 		sapp_runtime_log(20, "packet_io_hook_sendto() error, unsupport overlay_mode:%d\n", sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin);

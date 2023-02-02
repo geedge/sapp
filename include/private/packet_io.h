@@ -118,8 +118,8 @@ typedef struct{
 	int (*dl_io_smart_offload)(int device_index, unsigned char *pkt_ptr, int pkt_len, unsigned char dir, int thread_num);
 	int (*dl_io_forward_rawpkt)(const raw_pkt_t *raw_pkt, int thread_seq);
 	void (*dl_io_free_rawpkt)(const raw_pkt_t *raw_pkt, int thread_seq);
-	struct rawpkt_metadata *(*dl_io_get1_rawpkt_meta)(const raw_pkt_t *raw_pkt);
-	void (*dl_io_free_rawpkt_meta)(struct rawpkt_metadata *);
+	struct rawpkt_metadata *(*dl_io_get1_rawpkt_meta)(const raw_pkt_t *raw_pkt, int thread_seq);
+	void (*dl_io_free_rawpkt_meta)(struct rawpkt_metadata *, int thread_seq);
 
 }dl_io_fun_list_t;
 

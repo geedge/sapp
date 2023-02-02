@@ -36,7 +36,6 @@ typedef struct{
 
 struct rawpkt_metadata
 {
-	enum mr_buff_metadata_type type;
 	char data[MAX_METADATA_LEN];
 	unsigned int sz_data;
 	struct segment_id_list raw_sid_list;
@@ -439,7 +438,7 @@ void marsio_dl_io_free_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
 }
 
 
-struct rawpkt_metadata *marsio_dl_io_get1_rawpkt_meta(const raw_pkt_t *raw_pkt)
+struct rawpkt_metadata *marsio_dl_io_get1_rawpkt_meta(const raw_pkt_t *raw_pkt, int thread_seq)
 {
 	struct rawpkt_metadata *meta = NULL;
 	int ret = 0;
@@ -447,14 +446,14 @@ struct rawpkt_metadata *marsio_dl_io_get1_rawpkt_meta(const raw_pkt_t *raw_pkt)
 	{
         if (ptr_marsio_buff_get_sid_list != NULL || ptr_marsio_buff_get_metadata != NULL)
         {
-            meta = (struct rawpkt_metadata *)calloc(sizeof(struct rawpkt_metadata), 1);
+            meta = (struct rawpkt_metadata *)sapp_mem_calloc(SAPP_MEM_DYN_SID_LIST, thread_seq,sizeof(struct rawpkt_metadata));
             if (ptr_marsio_buff_get_metadata)
             {
                         ret = ptr_marsio_buff_get_metadata((marsio_buff_t *)raw_pkt->io_lib_pkt_reference,
-                                                           MR_BUFF_ROUTE_CTX, meta->data, meta->sz_data);
+                                                           MR_BUFF_ROUTE_CTX, meta->data, MAX_METADATA_LEN);
                         if (ret <= 0)
                         {
-                            free(meta);
+                            sapp_mem_free(SAPP_MEM_DYN_SID_LIST, thread_seq,meta);
                             return NULL;
                         }
                         else
@@ -477,7 +476,7 @@ struct rawpkt_metadata *marsio_dl_io_get1_rawpkt_meta(const raw_pkt_t *raw_pkt)
             }
             if (meta->sz_data == 0 && meta->raw_sid_list.sz_sidlist == 0)
             {
-                        free(meta);
+                        sapp_mem_free(SAPP_MEM_DYN_SID_LIST, thread_seq,meta);
                         meta = NULL;
             }
         }
@@ -503,7 +502,7 @@ void marsio_dl_io_set_rawpkt_meta(const raw_pkt_t *raw_pkt, void *send_pkt_io_re
 		}
 		if(ptr_marsio_buff_set_metadata)
 		{
-			ptr_marsio_buff_set_metadata((marsio_buff_t *)send_pkt_io_reference, snd_meta->type, (void *)snd_meta->data, snd_meta->sz_data);
+			ptr_marsio_buff_set_metadata((marsio_buff_t *)send_pkt_io_reference, MR_BUFF_ROUTE_CTX, (void *)snd_meta->data, snd_meta->sz_data);
 		}
 		if(ptr_marsio_buff_set_sid_list)
 		{
@@ -515,11 +514,11 @@ void marsio_dl_io_set_rawpkt_meta(const raw_pkt_t *raw_pkt, void *send_pkt_io_re
 	return;
 }
 
-void marsio_dl_io_free_rawpkt_meta(struct rawpkt_metadata * meta)
+void marsio_dl_io_free_rawpkt_meta(struct rawpkt_metadata * meta, int thread_seq)
 {
 	if(meta != NULL)
 	{
-		free(meta);
+		sapp_mem_free(SAPP_MEM_DYN_SID_LIST, thread_seq,meta);
 		meta=NULL;
 	}
 	return;
@@ -710,7 +709,14 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 		struct mr_tunnat_ctrlzone *mr_ctrlzone = (struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone(rx_buff, 0); /* index */
 		raw_pkt->is_overlay_pkt = mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD;
 	}else{
-		raw_pkt->is_overlay_pkt = 0; /* 无mrtunnat时, 刚收到包还不确定, 靠packet_io_hook决定是否是overlay的包 */
+		if(OVERLAY_MODE_NF == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)
+		{
+			raw_pkt->is_overlay_pkt = 1; 
+		}
+		else
+		{
+			raw_pkt->is_overlay_pkt = 0; /* 无mrtunnat时, 刚收到包还不确定, 靠packet_io_hook决定是否是overlay的包 */
+		}
 	}
 
 	/* clear pkt status */
@@ -1181,6 +1187,18 @@ unsigned int marsio_get_vlan_id_from_mbuff(void *pkt_reference)
 	
 	return vlan_id;
 }
+
+int marsio_get_route_dir_from_mbuff(void *pkt_reference)
+{
+	int dir = -1;
+	
+	if(ptr_marsio_buff_get_metadata){
+		ptr_marsio_buff_get_metadata((marsio_buff_t *)pkt_reference, MR_BUFF_DIR, &dir, sizeof(int));
+	}
+	
+	return dir;
+}
+
 
 int marsio_set_vlan_id_to_mbuff(void *pkt_reference, unsigned int vlan_id_host_order)
 {

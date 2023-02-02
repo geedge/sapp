@@ -44,8 +44,8 @@ typedef struct{
 	int test_bridge_id;
 }test_app_val_t;
 
-/* ÉèÖÃÒ»Ğ©È«¾Ö±äÁ¿, ÓĞ¸÷ÖÖ²»Í¬µÄÀàĞÍ, ·½±ã²âÊÔÓÃÀı´«µİ²ÎÊı, 
-   ²ÎÊıµÄÒâÒåÓÉ¸÷¸öÓÃÀı×Ô¼º½âÊÍ 
+/* ï¿½ï¿½ï¿½ï¿½Ò»Ğ©È«ï¿½Ö±ï¿½ï¿½ï¿½, ï¿½Ğ¸ï¿½ï¿½Ö²ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ²ï¿½ï¿½ï¿½, 
+   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ 
 */
 static test_app_val_t g_test_app_val;
 static const char *g_test_app_cfg_file="./etc/test_app.conf";
@@ -139,7 +139,7 @@ static void show_hierarchical_layer_stat(void)
 
 static int update_hierarchical_layer_stat(const struct hierarchical_layer *stream_hierarchical_layer_stat)
 {
-	if(search_g_hierarchical_layer_stat(stream_hierarchical_layer_stat) == 0){ //ä¸å­˜åœ? æ˜?æ–°çš„æµç»“æ?
+	if(search_g_hierarchical_layer_stat(stream_hierarchical_layer_stat) == 0){ //ä¸å­˜ï¿½? ï¿½?æ–°çš„æµç»“ï¿½?
 		memcpy(&g_hierarchical_layer_stat[hierarchical_layer_stat_num], stream_hierarchical_layer_stat, sizeof(struct hierarchical_layer) * MAX_LAYER_DEPTH);
 		hierarchical_layer_stat_num++;
 		show_hierarchical_layer_stat();
@@ -208,7 +208,7 @@ void phony_protocol_get_plugid(unsigned short plugid)
 	phony_protocol_plugid= plugid;
 }
 
-/* Ä£Äâ½âÎö²ã, ¿¿ÅäÖÃÎÄ¼şPLUGNAME=xxxÊ¶±ğ */
+/* Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½PLUGNAME=xxxÊ¶ï¿½ï¿½ */
 char phony_protocol_test(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
 	stSessionInfo stinfo;
@@ -356,7 +356,7 @@ char test_get_pkt_tcp_opts_ext(struct streaminfo *a_tcp,  void **pme, int thread
 
 	return APP_STATE_GIVEME;
 }
-/* ²âÊÔµ¥ÏòÁ÷Í³¼Æ */
+/* ï¿½ï¿½ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½ */
 char test_tcp_uni_stream_stats(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
 	struct tcpdetail *raw_pdetail;
@@ -371,7 +371,7 @@ char test_tcp_uni_stream_stats(struct streaminfo *a_tcp,  void **pme, int thread
 	
 	if(OP_STATE_CLOSE == a_tcp->opstate){
 		if(DIR_DOUBLE == a_tcp->dir){
-			/* Ö»¿´µ¥ÏòÁ÷ */
+			/* Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 			return APP_STATE_DROPME;
 		}
 
@@ -456,10 +456,10 @@ char test_set_stream_timeout(struct streaminfo *pstream,  void **pme, int thread
 	if(pstream->opstate== OP_STATE_PENDING){
 		/* 
 			for test, port 11111=timeout=11s, port 22222=timeout=22s, 
-			²âÊÔÓÃnc²úÉú3¸öudpÁ÷Á¿, ¶Ë¿Ú·Ö±ğÎª11111, 22222, 33333,
-			µÈ11sÖ®ºó, 11111Ó¦¸Ã½áÊø,
-			22sÖ®ºó, 22222Ó¦¸Ã½áÊø,
-			33333°´ÕÕÄ¬ÈÏÈ«¾Ö³¬Ê±ÌÔÌ­Ê±¼ä, Èç¹û²»ÉèÈ«¾Ö³¬Ê±ÌÔÌ­, Ó¦¸Ã²»»á½áÊø(dumpfileÄ£Ê½³ıÍâ).
+			ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ncï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½udpï¿½ï¿½ï¿½ï¿½, ï¿½Ë¿Ú·Ö±ï¿½Îª11111, 22222, 33333,
+			ï¿½ï¿½11sÖ®ï¿½ï¿½, 11111Ó¦ï¿½Ã½ï¿½ï¿½ï¿½,
+			22sÖ®ï¿½ï¿½, 22222Ó¦ï¿½Ã½ï¿½ï¿½ï¿½,
+			33333ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½È«ï¿½Ö³ï¿½Ê±ï¿½ï¿½Ì­Ê±ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½Ö³ï¿½Ê±ï¿½ï¿½Ì­, Ó¦ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(dumpfileÄ£Ê½ï¿½ï¿½ï¿½ï¿½).
 		*/
 		if((pstream->addr.tuple4_v4->source == ntohs(11111))
 		|| (pstream->addr.tuple4_v4->dest == ntohs(11111))){
@@ -1087,7 +1087,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 }
 
 
-/* å…³äºç½‘ç»œç›¸å…³å­—æ??, å‡ä¸ºç½‘ç»œåº? network order */
+/* å…³äºç½‘ç»œç›¸å…³å­—ï¿½??, å‡ä¸ºç½‘ç»œï¿½? network order */
 struct __test_inline_vxlan_hdr{
 	unsigned char flags;
 
@@ -1095,12 +1095,12 @@ struct __test_inline_vxlan_hdr{
 #if 0	
 	unsigned char reserved[3];
 #else
-	unsigned char nat_type; /* å¤ç”¨ä¸?ä¸?ä¿ç•™å­—æ?? è¡¨ç¤ºNATç±»å‹ */
+	unsigned char nat_type; /* å¤ç”¨ï¿½?ï¿½?ä¿ç•™å­—ï¿½?? è¡¨ç¤ºNATç±»å‹ */
 	unsigned char reserved[2];
 #endif
 	/*--------int delim -------*/
 	unsigned char vlan_id_half_high;
-	unsigned char link_layer_type : 4; /* äºŒå±‚æŠ¥æ–‡å°è?…æ ¼å¼? */
+	unsigned char link_layer_type : 4; /* äºŒå±‚æŠ¥æ–‡å°ï¿½?ï¿½æ ¼ï¿½? */
 	unsigned char vlan_id_half_low : 4;
 	unsigned int dir : 1;
 	unsigned int link_id : 6;
@@ -1447,7 +1447,7 @@ static void print_tuple4(struct streaminfo *stream)
 
 }
 
-/* ·µ»ØÖµ 1:ÊÇ×Ô¼ºµÄ°ü  0:²»ÊÇ×Ô¼ºµÄ°ü  -1:ÊäÈëÊı¾İ´íÎó */
+/* ï¿½ï¿½ï¿½ï¿½Öµ 1:ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½Ä°ï¿½  0:ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½Ä°ï¿½  -1:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ´ï¿½ï¿½ï¿½ */
 static int check_rst_ip_new (unsigned int dip_net_order,unsigned short dport_net_order, unsigned short ipid_host_order, 
 					unsigned short win_host_order, int iMaxRandVal, int iRandKey)
 {
@@ -1463,7 +1463,7 @@ static int check_rst_ip_new (unsigned int dip_net_order,unsigned short dport_net
 	return 1;
 }
 
-/* ·µ»ØÖµ 1:ÊÇ×Ô¼ºµÄ°ü  0:²»ÊÇ×Ô¼ºµÄ°ü  -1:ÊäÈëÊı¾İ´íÎó */
+/* ï¿½ï¿½ï¿½ï¿½Öµ 1:ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½Ä°ï¿½  0:ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½Ä°ï¿½  -1:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ´ï¿½ï¿½ï¿½ */
 static int check_rst_ip_old (unsigned int sip_net_order, unsigned int dip_net_order, unsigned short ipid, 
 					unsigned short window, int iMaxRandVal, int iRandKey)
 {
@@ -1480,7 +1480,7 @@ static int check_rst_ip_old (unsigned int sip_net_order, unsigned int dip_net_or
         if (window == 0)
                 return 0;
 
-        if ((iMaxRandVal - ipid + sip_net_order%window)%iRandKey != 0) // ±ØĞëÕû³ı²ÅĞĞ
+        if ((iMaxRandVal - ipid + sip_net_order%window)%iRandKey != 0) // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 return 0;
         int val = (iMaxRandVal - ipid + sip_net_order%window)/iRandKey;
         window_compute = (unsigned short)(val+dip_net_order%iRandKey);
@@ -1488,7 +1488,7 @@ static int check_rst_ip_old (unsigned int sip_net_order, unsigned int dip_net_or
                 if (window_compute == 0 || window_compute == 1 )
                         return 1;
         }
-        if (window == window_compute) { // ÈôÏàµÈ£¬Ôò±íÃ÷¿ÉÄÜÊÇ×Ô¼º²úÉúµÄ
+        if (window == window_compute) { // ï¿½ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 return 1;
         }
         return 0;
@@ -1747,7 +1747,7 @@ char test_kill_connection( struct streaminfo *stream,void **pme, int thread_seq,
 	char ip1[16], ip2[16];
 	struct stream_tuple4_v4 *tuple_v4;
 
-	if(OP_STATE_DATA != stream->opstate){ /* Ö»ÔÚDATA×´Ì¬µ÷ÓÃKILL */
+	if(OP_STATE_DATA != stream->opstate){ /* Ö»ï¿½ï¿½DATA×´Ì¬ï¿½ï¿½ï¿½ï¿½KILL */
 		return APP_STATE_GIVEME;
 	}
 
@@ -1888,7 +1888,7 @@ static void test_inject_tcp_pkt_with_this_hdr(struct streaminfo *stream,void **p
 	raw_thdr = (struct mesa_tcp_hdr *)((char *)raw_ihdr + raw_ihdr->ip_hl*4);
 	raw_tcp_payload_len = ntohs(raw_ihdr->ip_len) - raw_ihdr->ip_hl*4 - raw_thdr->th_off * 4;
 
-	/* å½“å‰åŒ…æ˜¯C2Sæ–¹å‘çš„GET, éœ?è¦å›å¤ä¸€ä¸?è™šå‡çš„S2Cæ–¹å‘çš„RESPONSE */
+	/* å½“å‰åŒ…æ˜¯C2Sæ–¹å‘çš„GET, ï¿½?è¦å›å¤ä¸€ï¿½?è™šå‡çš„S2Cæ–¹å‘çš„RESPONSE */
 	send_ihdr = (struct mesa_ip4_hdr *)pkt_header_payload;
 	send_thdr = (struct mesa_tcp_hdr *)((char *)send_ihdr + sizeof(struct mesa_ip4_hdr));
 
@@ -1992,7 +1992,7 @@ char test_inject_tcp_pkt2(struct streaminfo *stream,void **pme, int thread_seq,c
 
 
 
-/* Ê¹ÓÃĞÂµÄ·¢°ü½Ó¿Ú  sapp_inject_pkt()·¢ËÍÎ±Ôì°ü */
+/* Ê¹ï¿½ï¿½ï¿½ÂµÄ·ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½  sapp_inject_pkt()ï¿½ï¿½ï¿½ï¿½Î±ï¿½ï¿½ï¿½ */
 static int send_by_sapp_inject_pkt(struct streaminfo *a_tcp, const struct mesa_ip4_hdr *raw_ip4hdr)
 {
 #define HIJACK_RESPONSE_HDR "HTTP/1.1 200 OK\r\nServer: hijack.com\r\nContent-Length:%d\r\nContent-Type: text/html; charset=UTF-8\r\nConnection: close\r\n\r\n"
@@ -2045,7 +2045,7 @@ static int send_by_sapp_inject_pkt(struct streaminfo *a_tcp, const struct mesa_i
 
 char MESA_inject_pkt_for_l2_l3_tcp(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
-	const char *modify_raw_data_c2s =    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"; //C2SÔ­Ê¼×Ö·û´®ÄÚÈİ	
+	const char *modify_raw_data_c2s =    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"; //C2SÔ­Ê¼ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½	
 	const char *modify_inject_data_s2c = "HTTP/1.1 200 OK\r\nServer: Microsoft-IIS/8.5\r\nContent-Type: text/html\r\nContent-Length: 4000\r\n\r\n<html><pre> sapp test inject data.........";
 
 	int ret;
@@ -2058,7 +2058,7 @@ char MESA_inject_pkt_for_l2_l3_tcp(struct streaminfo *stream,void **pme, int thr
 	if(DIR_C2S == stream->curdir){
 		if(memmem(stream->ptcpdetail->pdata, stream->ptcpdetail->datalen, modify_raw_data_c2s, strlen(modify_raw_data_c2s)) != NULL){
 
-			//¿´µ½µÚÒ»¸öget°üºó, ·´Ïò·¢ËÍÒ»¸öĞé¼ÙÓ¦´ğ
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½getï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½
 			ret = MESA_inject_pkt(stream, modify_inject_data_s2c, 1460, raw_pkt, stream->routedir ^ 1); 
 			if(ret < 0){
 				DPRINT("%s, MESA_inject_pkt S2C error!\n", printaddr(&stream->addr, thread_seq));
@@ -2067,12 +2067,12 @@ char MESA_inject_pkt_for_l2_l3_tcp(struct streaminfo *stream,void **pme, int thr
 			}	
 
 			if(stream->ptcpdetail->serverpktnum <= 3){
-				ret_flag = APP_STATE_DROPPKT;//¶ªÆúC2S·½ÏòµÚÒ»¸öGET°ü, ÔÚMESA_inject_pkt_for_l2_l3_tcpall()»á·¢ËÍÒ»¸ö¼ÙµÄ
+				ret_flag = APP_STATE_DROPPKT;//ï¿½ï¿½ï¿½ï¿½C2Sï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½GETï¿½ï¿½, ï¿½ï¿½MESA_inject_pkt_for_l2_l3_tcpall()ï¿½á·¢ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ùµï¿½
 			}
 		}
 	}else{
 		if(memmem(stream->ptcpdetail->pdata, stream->ptcpdetail->datalen, "<html><pre>******", strlen("<html><pre>******")) != NULL){
-			/* µÚÒ»¸öS2CÓ¦´ğ°üÒÑ¾­±»Î±Ôì·¢ËÍ, ´Ë´¦¶ªÆúÒª */
+			/* ï¿½ï¿½Ò»ï¿½ï¿½S2CÓ¦ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½Î±ï¿½ì·¢ï¿½ï¿½, ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½Òª */
 			ret_flag = APP_STATE_DROPPKT;
 			return APP_STATE_DROPME | ret_flag;
 		}
@@ -2096,12 +2096,12 @@ char MESA_inject_pkt_for_l2_l3_tcpall(struct streaminfo *stream,void **pme, int 
 
 	if((DIR_C2S == stream->curdir) 
 	 && (stream->ptcpdetail->serverpktnum == 2)
-	 && (stream->ptcpdetail->datalen == 0)){ /* Ö»ÔÚÈı´ÎÎÕÊÖ¸Õ¸ÕÍê³Éºó, ÊÕµ½ACK°ü·¢ËÍÒ»´ÎgetÇëÇó,·ñÔòĞòºÅ¶Ô²»ÉÏ */
+	 && (stream->ptcpdetail->datalen == 0)){ /* Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸Õ¸ï¿½ï¿½ï¿½Éºï¿½, ï¿½Õµï¿½ACKï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½getï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å¶Ô²ï¿½ï¿½ï¿½ */
 		inet_ntop(AF_INET, &stream->addr.tuple4_v4->daddr, server_ip, 32);
 
 		DSPRINT(raw_data_c2s, modify_inject_data_c2s, server_ip);
 		if(strlen(raw_data_c2s) != 197){
-			DPRINT("MESA_inject_pkt_for_l2_l3_tcpall(), C2S inject len is not 197, %d\n", (int)strlen(raw_data_c2s)); //ÒªÓëÒÇ±íÔìµÄÁ÷Á¿³¤¶ÈÒ»ÖÂ, ºóĞøµÄSEQ²ÅÄÜ²»ÂÒ
+			DPRINT("MESA_inject_pkt_for_l2_l3_tcpall(), C2S inject len is not 197, %d\n", (int)strlen(raw_data_c2s)); //Òªï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SEQï¿½ï¿½ï¿½Ü²ï¿½ï¿½ï¿½
 			return APP_STATE_DROPME;
 		}		
 		ret = MESA_inject_pkt(stream, raw_data_c2s, strlen(raw_data_c2s), raw_pkt, stream->routedir);
@@ -2202,7 +2202,7 @@ char test_sapp_inject_pkt_reverse_dir(struct streaminfo *stream,void **pme, int 
 static struct streaminfo *g_polling_stream = NULL;
 char polling_inject_tcpall_entry(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
-	/* polling_inject_tcp_entryÔÚpollingÉÏÏÂÎÄ, ÄÃ²»µ½stream, ¿¿tcpall_entry¸üĞÂÈ«¾Ö±äÁ¿g_polling_stream,ÒÔ»ñÈ¡Ä³¸öÁ÷ÉÏÏÂÎÄ */
+	/* polling_inject_tcp_entryï¿½ï¿½pollingï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ã²ï¿½ï¿½ï¿½stream, ï¿½ï¿½tcpall_entryï¿½ï¿½ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½g_polling_stream,ï¿½Ô»ï¿½È¡Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 
 	if((OP_STATE_DATA == stream->pktstate) && (stream->addr.tuple4_v4->dest == htons(22))){
 		DPRINT("update polling stream %p: %s \n", stream, printaddr(&stream->addr, thread_seq));
@@ -2664,7 +2664,7 @@ char test_get_rawpkt_opt_from_streaminfo(struct streaminfo *f_stream,unsigned ch
 	int tot_len = -1, this_layer_remain_len = -1;
 	int ret;
 
-	if((OP_STATE_DATA != f_stream->opstate) && (OP_STATE_DATA != f_stream->pktstate)){ /* ¿ÉÍ¬Ê±¹ÒÔØµ½tcp,tcpall */
+	if((OP_STATE_DATA != f_stream->opstate) && (OP_STATE_DATA != f_stream->pktstate)){ /* ï¿½ï¿½Í¬Ê±ï¿½ï¿½ï¿½Øµï¿½tcp,tcpall */
 		return APP_STATE_GIVEME;
 	}
 
@@ -2739,7 +2739,7 @@ char stream_bridge_tcp_entry(struct streaminfo *pstream,void **pme, int thread_s
 	}
 
 	if(OP_STATE_CLOSE == pstream->opstate){
-		/* tcpÏÈ½áÊø, ´æÈëÊı¾İ */
+		/* tcpï¿½È½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		void *data = calloc(1, 100);
 		strncpy(data, "abcdefg1234567", 100);
 		stream_bridge_async_data_put(pstream, bridge_id, data);	
@@ -2916,20 +2916,20 @@ char TEST_TCP_LOST(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 	if(a_tcp->ptcpdetail->datalen > 0){
 		ipv4_hdr = (const struct mesa_ip4_hdr *)a_packet;
 		tcp_hdr = (const struct mesa_tcp_hdr *)((char *)ipv4_hdr + ipv4_hdr->ip_hl * 4);
-		pkt_raw_data = (char *)tcp_hdr + tcp_hdr->th_off * 4; /* Êı¾İ°üÔ­Ê¼Êı¾İÖ¸Õë */
-		/* ÓÉÓÚÖØ´«×·¼ÓÊı¾İµÈÔ­Òò, Æ½Ì¨¸ø²å¼şµÄÊı¾İa_tcp->ptcpdetail->pdata²¢²»Ò»¶¨µÈÓÚpkt_raw_data, ¿ÉÄÜÏòºóÆ«ÒÆÁË */
+		pkt_raw_data = (char *)tcp_hdr + tcp_hdr->th_off * 4; /* ï¿½ï¿½ï¿½İ°ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ */
+		/* ï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½×·ï¿½ï¿½ï¿½ï¿½ï¿½İµï¿½Ô­ï¿½ï¿½, Æ½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½a_tcp->ptcpdetail->pdataï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pkt_raw_data, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ */
 		actual_data_seq = ntohl(tcp_hdr->th_seq) + ((char *)a_tcp->ptcpdetail->pdata - pkt_raw_data);
 
 		DPRINT("stream:%s, dir:%d, pkt-seq:%u, actual-data-seq:%u\n", printaddr(&a_tcp->addr, a_tcp->threadnum),a_tcp->curdir, ntohl(tcp_hdr->th_seq),  actual_data_seq);
 		
 		if(DIR_C2S == a_tcp->curdir){
-			/* ±¾´ÎÊµ¼ÊĞòºÅ == ÓÉÉÏ´Î¼ÆËãµÃ³öµÄÀíÂÛÓ¦¸Ãµ½´ïĞòºÅ + ±¾´Î¼ÆËãµÃ³öµÄ¶ª°ü³¤¶È */
+			/* ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ == ï¿½ï¿½ï¿½Ï´Î¼ï¿½ï¿½ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ + ï¿½ï¿½ï¿½Î¼ï¿½ï¿½ï¿½Ã³ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 			if(actual_data_seq != tcp_status->seq_next_c2s + a_tcp->ptcpdetail->lostlen){
 				DPRINT("\033[41mstream:%s,  seq check fail!\033[0m\n", printaddr(&a_tcp->addr, a_tcp->threadnum));
 				//assert(0);
 				goto err_exit;
 			}
-			/* ÏÂÒ»¸öÆÚ´ıµÄĞòºÅÊÇ: µ±Ç°Êµ¼ÊĞòºÅ + Êµ¼ÊÊı¾İ³¤¶È */
+			/* ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½Ç°Êµï¿½ï¿½ï¿½ï¿½ï¿½ + Êµï¿½ï¿½ï¿½ï¿½ï¿½İ³ï¿½ï¿½ï¿½ */
 			tcp_status->seq_next_c2s = actual_data_seq + a_tcp->ptcpdetail->datalen;
 		}else{
 			if(actual_data_seq  != tcp_status->seq_next_s2c + a_tcp->ptcpdetail->lostlen){
@@ -2937,7 +2937,7 @@ char TEST_TCP_LOST(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 				//assert(0);
 				goto err_exit;
 			}
-			/* ÏÂÒ»¸öÆÚ´ıµÄĞòºÅÊÇ: µ±Ç°Êµ¼ÊĞòºÅ + Êµ¼ÊÊı¾İ³¤¶È */
+			/* ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½Ç°Êµï¿½ï¿½ï¿½ï¿½ï¿½ + Êµï¿½ï¿½ï¿½ï¿½ï¿½İ³ï¿½ï¿½ï¿½ */
 			tcp_status->seq_next_s2c = actual_data_seq + a_tcp->ptcpdetail->datalen;
 		}
 	}
@@ -3172,22 +3172,22 @@ char RST_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_pa
 		
 		if((sport_host >= 10000) && (sport_host <= 19999)){
 			if(DIR_C2S == a_tcp->curdir){
-				RST_STREAM_C2S(a_tcp, pme, thread_seq, a_packet);  /* C2SÔ­Ê¼°ü´¥·¢C2S×¢ÈëRST */
+				RST_STREAM_C2S(a_tcp, pme, thread_seq, a_packet);  /* C2SÔ­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½C2S×¢ï¿½ï¿½RST */
 				DPRINT("inject C2S rst by raw C2S pkt\n");
 			}
 		}else if((sport_host >= 20000) && (sport_host <= 29999)){
 			if(DIR_C2S == a_tcp->curdir){
-				RST_STREAM_S2C(a_tcp, pme, thread_seq, a_packet);  /* C2SÔ­Ê¼°ü´¥·¢S2C×¢ÈëRST */
+				RST_STREAM_S2C(a_tcp, pme, thread_seq, a_packet);  /* C2SÔ­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½S2C×¢ï¿½ï¿½RST */
 				DPRINT("inject S2C rst by raw C2S pkt\n");
 			}
 		}else if((sport_host >= 30000) && (sport_host <= 39999)){
 			if(DIR_S2C == a_tcp->curdir){
-				RST_STREAM_C2S(a_tcp, pme, thread_seq, a_packet);  /* S2CÔ­Ê¼°ü´¥·¢C2S×¢ÈëRST */
+				RST_STREAM_C2S(a_tcp, pme, thread_seq, a_packet);  /* S2CÔ­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½C2S×¢ï¿½ï¿½RST */
 				DPRINT("inject C2S rst by raw S2C pkt\n");
 			}
 		}else if((sport_host >= 40000) && (sport_host <= 49999)){
 			if(DIR_S2C == a_tcp->curdir){
-				RST_STREAM_S2C(a_tcp, pme, thread_seq, a_packet);  /* S2CÔ­Ê¼°ü´¥·¢S2C×¢ÈëRST */
+				RST_STREAM_S2C(a_tcp, pme, thread_seq, a_packet);  /* S2CÔ­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½S2C×¢ï¿½ï¿½RST */
 				DPRINT("inject S2C rst by raw S2C pkt\n");
 			}
 		}else{
@@ -3207,34 +3207,47 @@ char INJECT_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 	const char *inject_C2S_by_S2C = "sapp inject_C2S_by_S2C payload......";
 	const char *inject_S2C_by_S2C = "sapp inject_S2C_by_S2C payload......";
 
-	if((OP_STATE_CLOSE != a_tcp->opstate) && (DIR_DOUBLE == a_tcp->dir)){
+	//if((OP_STATE_CLOSE != a_tcp->opstate) && (DIR_DOUBLE == a_tcp->dir)){
+	if((OP_STATE_CLOSE != a_tcp->opstate)){
 		sport_host = ntohs(a_tcp->addr.tuple4_v4->source);
-		
+
+        if (a_tcp->routedir == DIR_ROUTE_UP)
+        {
+            sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_S2C_by_C2S, strlen(inject_S2C_by_C2S), a_tcp->routedir ^ 1);
+            DPRINT("Get Outbound pkt:%s, CurDir:%d, inject to S2C by raw C2S pkt, raw payload len:%d\n", printaddr(&a_tcp->addr, thread_seq), a_tcp->curdir, a_tcp->ptcpdetail->datalen);
+        }
+        else
+        {
+            sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_S2C_by_S2C, strlen(inject_S2C_by_S2C), a_tcp->routedir);
+            DPRINT("Get Inbound pkt:%s, CurDir:%d, inject S2C pkt by raw S2C pkt, raw payload len:%d\n", printaddr(&a_tcp->addr, thread_seq), a_tcp->curdir, a_tcp->ptcpdetail->datalen);
+        }
+#if 0		
 		if((sport_host >= 10000) && (sport_host <= 19999)){
 			if(DIR_C2S == a_tcp->curdir){
-				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_C2S_by_C2S, strlen(inject_C2S_by_C2S), a_tcp->routedir);  /* C2SÔ­Ê¼°ü´¥·¢C2S×¢Èë */
+				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_C2S_by_C2S, strlen(inject_C2S_by_C2S), a_tcp->routedir);  /* C2SÔ­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½C2S×¢ï¿½ï¿½ */
 				DPRINT("inject C2S pkt by raw C2S pkt\n");
 			}
 		}else if((sport_host >= 20000) && (sport_host <= 29999)){
 			if(DIR_C2S == a_tcp->curdir){
-				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_S2C_by_C2S, strlen(inject_S2C_by_C2S), a_tcp->routedir ^ 1);  /* C2SÔ­Ê¼°ü´¥·¢S2C×¢Èë */
+				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_S2C_by_C2S, strlen(inject_S2C_by_C2S), a_tcp->routedir ^ 1);  /* C2SÔ­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½S2C×¢ï¿½ï¿½ */
 				DPRINT("inject S2C pkt by raw C2S pkt\n");
 			}
 		}else if((sport_host >= 30000) && (sport_host <= 39999)){
 			if(DIR_S2C == a_tcp->curdir){
-				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_C2S_by_S2C, strlen(inject_C2S_by_S2C), a_tcp->routedir ^ 1);  /* S2CÔ­Ê¼°ü´¥·¢C2S×¢Èë */
+				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_C2S_by_S2C, strlen(inject_C2S_by_S2C), a_tcp->routedir ^ 1);  /* S2CÔ­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½C2S×¢ï¿½ï¿½ */
 				DPRINT("inject C2S pkt by raw S2C pkt\n");
 			}
 		}else if((sport_host >= 40000) && (sport_host <= 49999)){
 			if(DIR_S2C == a_tcp->curdir){
-				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_S2C_by_S2C, strlen(inject_S2C_by_S2C), a_tcp->routedir);  /* S2CÔ­Ê¼°ü´¥·¢S2C×¢Èë */
+				sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_S2C_by_S2C, strlen(inject_S2C_by_S2C), a_tcp->routedir);  /* S2CÔ­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½S2C×¢ï¿½ï¿½ */
 				DPRINT("inject S2C pkt by raw S2C pkt\n");
 			}
 		}else{
 			return APP_STATE_DROPME;
 		}
+#endif
 	}
-	
+
 	return APP_STATE_GIVEME;
 }
 
@@ -3251,7 +3264,7 @@ char TEST_STREAM(struct streaminfo *stream,  void **pme, int thread_seq, const v
 		return APP_STATE_DROPME;
 	}
 
-	int min_num = MIN(65535, g_test_app_val.ivalue1+1); //´ÓÅäÖÃÎÄ¼ş»ñÈ¡
+	int min_num = MIN(65535, g_test_app_val.ivalue1+1); //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½È¡
 
 	for(i = 0; i < min_num; i++){
 		local_data[i] = rand();
@@ -3267,7 +3280,7 @@ char TEST_STREAM(struct streaminfo *stream,  void **pme, int thread_seq, const v
 		return APP_STATE_GIVEME;
 	}
 
-	/* Ëæ±ãĞ´µã¶«Î÷, ºÄ·ÑCPU */
+	/* ï¿½ï¿½ï¿½Ğ´ï¿½ã¶«ï¿½ï¿½, ï¿½Ä·ï¿½CPU */
 	if(datalen > 0){
 		for(i = 0; i < datalen; i++){
 			result1[i] = (long)memchr(local_data, data[i], min_num);
@@ -3487,7 +3500,7 @@ char POLLING_ENTRY(struct streaminfo *stream,  void **pme, int thread_seq,void *
 extern long long sapp_random(void);
 char fake_deadlock(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
 {
-	/* Ëæ»úÔÚÈÎÒâÏß³Ì, Ä£ÄâËÀËø */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½, Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	int opt_val_len = sizeof(int);
 	int tid;
 	int tot_thread_cnt;
@@ -3562,7 +3575,7 @@ int CHAR_INIT()
 	int i;
 	CHAR_CONFIG_INIT();
 
-	/* ½ö¿ÉÒÔÔÚ³õÊ¼»¯Ê±¿ÉÒÔ×¢²áproject */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú³ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½project */
 	g_test_app_val.test_project_id =  project_producer_register("test_project", "struct", __fake_project_free_cb);
 	if(g_test_app_val.test_project_id < 0){
 		DPRINT("##### project_producer_register error!\n");
