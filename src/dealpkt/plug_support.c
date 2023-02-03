@@ -26,6 +26,8 @@ struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const vo
 	if(pstream == NULL || rawpkt == NULL)return NULL;
 
 	raw_pkt_t *p_rawpkt = (raw_pkt_t *)rawpkt;
+	assert(p_rawpkt->magic_num == RAW_PKT_MAGIC_NUM);
+	if(p_rawpkt->magic_num != RAW_PKT_MAGIC_NUM )return NULL;
 	
 	if(p_rawpkt->d_pkt)return NULL; // rawpkt can be retained only once
 	if(p_rawpkt->drop_current_pkt_flag == 1)return NULL; // rawpkt need to be drop, can not be retained
@@ -115,6 +117,10 @@ void MESA_detain_pkt_free(struct detain_pkt *pkt)
 int MESA_retain_pkt_update(const raw_pkt_t *p_raw_pkt, int pkt_ret)
 {
 	int update_ret = pkt_ret;
+
+	assert(p_raw_pkt->magic_num == RAW_PKT_MAGIC_NUM);
+	if(p_raw_pkt->magic_num != RAW_PKT_MAGIC_NUM )return pkt_ret;
+
     if (p_raw_pkt->d_pkt != NULL)// have retain operation
     {
         if (p_raw_pkt->d_pkt->mark == RETAIN_RAWPKT) //retain pkt in use
@@ -413,6 +419,15 @@ static int get_vxlan_info_from_streaminfo(const struct streaminfo_private *pstre
 	return ret;
 }
 
+const void *get_rawpkt_from_streaminfo(const struct streaminfo *pstream)
+{
+	const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
+	if(pstream_pr->packet_io_context == 1)
+	{
+		return pstream_pr->raw_pkt;
+	}
+	return NULL;
+}
 
 int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, void *out_value)
 {

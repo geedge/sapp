@@ -376,7 +376,7 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 		stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
 		pstream_pr->stream_bridge=NULL;
 
-		free_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr); //2020-06-08 lijia add, for memory leak
+		//free_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr);
         if (pstream_pr->sid_append_list)
         {
             sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_append_list);

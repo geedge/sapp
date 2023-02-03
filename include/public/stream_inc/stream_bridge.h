@@ -57,7 +57,7 @@ extern "C" {
 */
 int stream_bridge_build(const char *bridge_name, const char *rw_mode);
 
-
+struct streaminfo;
 typedef void stream_bridge_free_cb_t(const struct streaminfo *stream, int bridge_id, void *data);
 typedef int  stream_bridge_sync_cb_t(const struct streaminfo *stream, int bridge_id, void *data);
 

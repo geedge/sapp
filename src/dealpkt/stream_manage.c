@@ -2384,6 +2384,11 @@ int update_polling_inject_context(int mem_used_type,struct streaminfo_private *p
 		return 0;
 	}
 
+	if(pstream_pr->polling_inject_context==NULL)
+	{
+		return 0;
+	}
+
 	thread_index = pstream_pr->stream_public.threadnum;
 	/* 保存当前流C2S, S2C方向的第一个包 */
 	if((DIR_ROUTE_DOWN & pstream_pr->stream_public.routedir) == DIR_ROUTE_DOWN){
