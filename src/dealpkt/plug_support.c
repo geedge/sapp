@@ -472,7 +472,7 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 /*Convert tuple4 to string. Format: 10.0.0.1, 1234->10.0.0.2,5678*/
 const char *printaddr (const struct layer_addr *paddrinfo,int threadindex)
 {
-	static const char maxbuf[MAX_THREAD_NUM][128];
+	static char maxbuf[MAX_THREAD_NUM][128];
 	char *buf=(char*)maxbuf[threadindex];
 	char ip_str[INET6_ADDRSTRLEN];
 	struct stream_tuple4_v4 *paddr;
