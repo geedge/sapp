@@ -807,8 +807,8 @@ void control_get_root_dir_run(void)
 	call_libsapp_devel_with_args(8, sapp_change_root_dir_args);	
 
 	/* 执行完后再检查一下数据目录是否有sysinfo.log, 是否日志里的数据符合预期 */
-	ASSERT_EQ(expect_file_has_some_string("/tmp/sapp_change_root_dir_test/data/sysinfo.log", "18178"), 0);
-	ASSERT_EQ(expect_file_has_some_string("/tmp/sapp_change_root_dir_test/data/sysinfo.log", "17226"), 0);
+	ASSERT_EQ(expect_file_has_some_string("/tmp/sapp_change_root_dir_test/data/sysinfo.log", "17.75K"), 0);
+	ASSERT_EQ(expect_file_has_some_string("/tmp/sapp_change_root_dir_test/data/sysinfo.log", "16.82K"), 0);
 	ASSERT_EQ(expect_file_has_some_string("/tmp/sapp_change_root_dir_test/data/sysinfo.log", "13674"), 0);
 }
 

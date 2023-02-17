@@ -114,6 +114,7 @@ inline_test_for_centos7:
     - cd build/testing/
 #run module v2.0 with death test
     - ./gtest_sapp_v4 -f inline_mode.*
+    - ./gtest_sapp_v4 -f transparent.*
     - ./gtest_sapp_v4 -f offload.*
 
 basic_test_for_centos7:
@@ -139,7 +140,6 @@ basic_test_for_centos7:
     - ./gtest_sapp_v4 -f jump_layer.*
     - ./gtest_sapp_v4 -f hybrid.*
     - ./gtest_sapp_v4 -f inject.*
-    - ./gtest_sapp_v4 -f transparent.*
 
 
 branch_build_debug_for_centos7:
