@@ -25,7 +25,7 @@ target_link_libraries(sapp breakpad_mini)
 target_include_directories(sapp PRIVATE ${SYSTEMD_INCLUDE_DIRS})
 
 
-set(SAPP_MODULES timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap dpdk_ip_hash libevent-static gdev_assistant inner_plug libdabloom-static sapp_dev sapp_assistant cpu_limit timeout libjemalloc-static)
+set(SAPP_MODULES timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap dpdk_ip_hash libevent-static gdev_assistant inner_plug libdabloom-static sapp_dev sapp_assistant cpu_limit timeout)
 
 if(MEM_POOL MATCHES "DICTATOR_DEBUG")
    set(SAPP_MODULES ${SAPP_MODULES} dictator2_debug)
