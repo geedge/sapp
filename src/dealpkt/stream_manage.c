@@ -2454,7 +2454,7 @@ void free_polling_inject_context(int mem_used_type, struct streaminfo_private *p
 
 	thread_index = pstream_pr->stream_public.threadnum;
 	if(pstream_pr->polling_inject_context->raw_pkt_up){
-		
+		sapp_raw_pkt_free(mem_used_type, thread_index, (raw_pkt_t *)pstream_pr->polling_inject_context->raw_pkt_up);
 	}
 	if(pstream_pr->polling_inject_context->raw_pkt_down){
 		sapp_raw_pkt_free(mem_used_type, thread_index, (raw_pkt_t *)pstream_pr->polling_inject_context->raw_pkt_down);
