@@ -81,9 +81,12 @@ typedef struct {
 	const void *raw_pkt_data;	/* 给上层应用看的原始包头指针, 有可能跳过了Ethernet层, 根据low_layer_type判断协议类型 */
 	struct timeval raw_pkt_ts;	/* 原始包捕获时间戳, 如果全为0则不支持此功能(如pag模式) */
 	const void *io_lib_pkt_reference; /* 引用底层I/O库的原始包管理结构, 例如:对于marsio来说, 即底层的mbuf结构 */
-	int route_dir;
+	int payload_len; /* 负载长度 */
 	int device_index;/* 有多块网卡时, 要保证从哪个卡进就从哪个卡出 */
-	int is_overlay_pkt; /* 表示是真实链路中的数据包, 要无条件回注, 即本机看起来像一根网线; 否则要丢弃 */
+	char is_overlay_pkt; /* 表示是真实链路中的数据包, 要无条件回注, 即本机看起来像一根网线; 否则要丢弃 */
+	char is_send_ctrl_pkt;
+	unsigned char route_dir;
+	unsigned char padding;
 	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, in host order, vlan flipping for adev, index0表示收到当前包的vlan_id, index1表示原包转发的vlan_id */
 	unsigned char mac_flipping_enable;
 	char diagnose_error_to_dump; /* 是某种错误数据包, 期望pkt_dump存储或udp socket发送给tcpdump_mesa */
@@ -93,6 +96,7 @@ typedef struct {
 	struct rawpkt_metadata *meta[2];// 发送所需的metadata, 用于在调用low_level_send时, 填充marsio 4.6后需要的信息.
 	struct segment_id_list *append_list;
 	struct segment_id_list *prepend_list;
+	unsigned long long stream_trace_id;
 }raw_pkt_t;
 
 enum retained_rawpkt_mark
@@ -191,7 +195,8 @@ struct streaminfo_private
 	unsigned int hash_slave; /* 2015-12-14 lijia add, 使用linux_jhash计算时, 可以同时得到两个以上的HASH值, 主HASH用于确定在HASH表的SLOT位置, slave_HASH用于快速比较地址是否相等 */
 	unsigned char hash_not_head_times;/* 2015-12-15 lijia add, 当前index不在HASH SLOT的第一位的次数 */
 	unsigned char cur_layer_raw_hdr_len; /* 2017-10-31 lijia add, 当前层的原始包地址长度, 因ppp头部压缩, 原来版本无法保存这个状态, 发包时也无法得知地址如何填充 */
-	unsigned char __pad:3;
+	unsigned char __pad:2;
+	unsigned char is_send_ctrl_pkt; /* 当前发送是否为控制报文 */
 	unsigned char packet_io_context:1; /* 2019-09-07 lijia add, for polling entry send packet */
 	unsigned char stream_close_reason:4; /* 2019-02-14 lijia add, 对于TCP使用tcpdetail_private的link_state变量, 对于UDP之前没有, 拆分pad新增此变量 */
 	unsigned char gdev_block_timer;
@@ -204,6 +209,8 @@ struct streaminfo_private
 	unsigned short syn_opt_num;
 	unsigned short synack_opt_num;
 	/* ===8 bytes=== */
+
+	unsigned long long stream_trace_id;
 	
 	struct tcp_option *syn_opt_array;
 	struct tcp_option *synack_opt_array;

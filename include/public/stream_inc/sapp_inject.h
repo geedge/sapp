@@ -27,6 +27,7 @@ enum sapp_inject_opt{
 */
 int sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir);
 
+int sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir);
 
 
 #ifdef __cplusplus

@@ -662,6 +662,10 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
         {
             ((raw_pkt_t *)raw_pkt)->prepend_list = pstream_pr->sid_prepend_list;
         }
+        if (pstream_pr->stream_trace_id != 0)
+        {
+            ((raw_pkt_t *)raw_pkt)->stream_trace_id = pstream_pr->stream_trace_id;
+        }
 
         /* 2014-11-15 lijia add, for udp serial kill udp */
 		if(unlikely(a_index->stream.stream_killed_flag != 0)){
@@ -914,6 +918,10 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
         if (pstream_pr->sid_prepend_list != NULL)
         {
             ((raw_pkt_t *)raw_pkt)->prepend_list = pstream_pr->sid_prepend_list;
+        }
+        if (pstream_pr->stream_trace_id != 0)
+        {
+            ((raw_pkt_t *)raw_pkt)->stream_trace_id = pstream_pr->stream_trace_id;
         }
 
         /* 2014-11-15 lijia add, for udp serial kill udp */

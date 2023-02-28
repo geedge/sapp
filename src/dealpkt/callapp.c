@@ -815,7 +815,10 @@ int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const v
 	}
 #endif	
 
-	a_tcp_pr->packet_io_context = 1;
+	if(raw_pkt!=NULL)
+	{	
+		a_tcp_pr->packet_io_context = 1;
+	}
 	ret = stream_process(a_tcp, this_iphdr, transport_hdr, raw_pkt,g_StreamTcpFunNum, g_StreamTcpFun,apme,popstate, SMART_OFFLOAD_FLAG_TCP);	
 	a_tcp_pr->packet_io_context = 0;
 	
@@ -854,7 +857,10 @@ int stream_process_udp(struct streaminfo *a_udp, const void *this_iphdr, const v
 	raw_ip_frag_list_stream_attach(a_udp);
 #endif
 
-	a_udp_pr->packet_io_context = 1;
+	if(raw_pkt!=NULL)
+	{	
+		a_udp_pr->packet_io_context = 1;
+	}
 	ret = stream_process(a_udp, this_iphdr, transport_hdr, raw_pkt, g_StreamUdpFunNum, g_StreamUdpFun, apme, popstate, SMART_OFFLOAD_FLAG_UDP);
 	a_udp_pr->packet_io_context = 0;
 	
@@ -902,7 +908,10 @@ int stream_process_tcp_allpkt(struct streaminfo *a_tcp,const void *this_iphdr, c
 	raw_ip_frag_list_stream_attach(a_tcp);
 #endif
 
-	a_tcp_pr->packet_io_context = 1;
+	if(raw_pkt!=NULL)
+	{	
+		a_tcp_pr->packet_io_context = 1;
+	}
 	ret = stream_process(a_tcp, this_iphdr, transport_hdr, raw_pkt, g_StreamTcpAllFunNum, g_StreamTcpAllFun, apme, popstate, SMART_OFFLOAD_FLAG_TCPALL);
 	a_tcp_pr->packet_io_context = 0;
 	

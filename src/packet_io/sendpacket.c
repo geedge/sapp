@@ -3228,7 +3228,6 @@ int MESA_inject_pkt(struct streaminfo *stream, const char *payload, int payload_
 
 #endif
 
-
 int MESA_inject_pkt_feedback(struct streaminfo *stream, const char *payload, int payload_len, 
 						const void *ext_raw_pkt, UCHAR snd_routedir,
 						char *feedback_buf, int *feedback_buf_len)
@@ -3403,6 +3402,15 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	if(raw_stream_pr->sid_prepend_list != NULL)
 	{
 		((raw_pkt_t *)raw_pkt)->prepend_list=raw_stream_pr->sid_prepend_list;
+	}
+	if (raw_stream_pr->stream_trace_id != 0)
+	{
+		((raw_pkt_t *)raw_pkt)->stream_trace_id = raw_stream_pr->stream_trace_id;
+	}
+	if (raw_stream_pr->is_send_ctrl_pkt != 0)
+	{
+		((raw_pkt_t *)raw_pkt)->is_send_ctrl_pkt = raw_stream_pr->is_send_ctrl_pkt;
+		((raw_pkt_t *)raw_pkt)->payload_len=payload_len;
 	}
 
 	/* inject使用的是routedir, 此处转换成stream dir, 

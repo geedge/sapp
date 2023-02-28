@@ -1334,7 +1334,6 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 	int pkt_ret = PASS;
 
 	tcp_update_close_reason_stat(threadnum, pdetail_pr);
-	
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]);
 
 	/* TODO 1,
@@ -2890,6 +2889,10 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		((raw_pkt_t *)raw_pkt)->prepend_list=pstream_pr->sid_prepend_list;
 	}
 
+	if(pstream_pr->stream_trace_id != 0)
+	{
+		((raw_pkt_t *)raw_pkt)->stream_trace_id=pstream_pr->stream_trace_id;
+	}
 
 	/* 2014-10-11 lijia add, Fd补救由平台实现 */
 	if(unlikely(pstream_pr->stream_killed_flag != 0)){

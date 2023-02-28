@@ -113,6 +113,8 @@ int (*ptr_marsio_buff_set_sid_list)(marsio_buff_t * m, uint16_t * slist, uint8_t
 int (*ptr_marsio_buff_append_sid_list)(marsio_buff_t * m, uint16_t * slist, uint8_t sz_slist);
 int (*ptr_marsio_buff_prepend_sid_list)(marsio_buff_t * m, uint16_t * slist, uint8_t sz_slist);
 
+void (*ptr_marsio_buff_set_ctrlbuf)(marsio_buff_t * m);
+
 
 static struct bpf_program MARSIO_BPF_FILTER[MAX_THREAD_NUM];
 static int g_marsio_have_bpf;
@@ -318,6 +320,34 @@ static void marsio_pkt_dump(int thread_seq, const marsio_buff_t *send_mbuf, enum
 
 }
 
+static void marsio_update_trace_id(const raw_pkt_t *raw_pkt, void *send_pkt_io_reference)
+{
+	if(ptr_marsio_buff_set_metadata!=NULL && raw_pkt->stream_trace_id>0)
+	{
+		ptr_marsio_buff_set_metadata((marsio_buff_t *)send_pkt_io_reference, MR_BUFF_SESSION_ID, (void *)&(raw_pkt->stream_trace_id), sizeof(unsigned long));
+	}
+}
+
+static void marsio_update_sid_list(const raw_pkt_t *raw_pkt, void *send_pkt_io_reference)
+{
+	if(raw_pkt->append_list && ptr_marsio_buff_append_sid_list!= NULL)
+	{
+		ptr_marsio_buff_append_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->append_list->sid_list, raw_pkt->append_list->sz_sidlist);
+	}
+	if(raw_pkt->prepend_list && ptr_marsio_buff_prepend_sid_list != NULL)
+	{
+		ptr_marsio_buff_prepend_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->prepend_list->sid_list, raw_pkt->prepend_list->sz_sidlist);
+	}
+	return;
+}
+
+static void marsio_update_payload_offset(unsigned short offset, void *send_pkt_io_reference)
+{
+	if(ptr_marsio_buff_set_metadata!=NULL)
+	{
+		ptr_marsio_buff_set_metadata((marsio_buff_t *)send_pkt_io_reference, MR_BUFF_PAYLOAD_OFFSET, (void *)&(offset), sizeof(unsigned short));
+	}
+}
 
 int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void *arg, 
 			int thread_seq, unsigned char route_dir, const raw_pkt_t *raw_pkt)
@@ -355,8 +385,29 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	if(raw_pkt){
 		packet_io_hook_sendto(raw_pkt, route_dir, real_buf, (void *)send_mbuf[0]);
 	}
+	else
+	{
+		if(raw_pkt->append_list)
+		{
+			ptr_marsio_buff_set_sid_list(send_mbuf[0], raw_pkt->append_list->sid_list, raw_pkt->append_list->sz_sidlist);
+		}
 
-	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
+		if(raw_pkt->prepend_list)
+		{
+			ptr_marsio_buff_set_sid_list(send_mbuf[0], raw_pkt->prepend_list->sid_list, raw_pkt->prepend_list->sz_sidlist);
+		}
+		
+		marsio_update_trace_id(raw_pkt, (void *)send_mbuf[0]);
+	}
+
+	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
+
+	if(ptr_marsio_buff_set_ctrlbuf!=NULL && raw_pkt->is_send_ctrl_pkt==1)
+	{
+		ptr_marsio_buff_set_ctrlbuf(send_mbuf[0]);
+		unsigned short offset=(unsigned short)(ptr_marsio_buff_datalen(send_mbuf[0]) - raw_pkt->payload_len);
+		marsio_update_payload_offset(offset, (void *)send_mbuf[0]);
+	}
 
 	ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, send_option);
 	if(ret < 0){
@@ -402,20 +453,6 @@ int marsio_dl_io_smart_offload(int device_index, unsigned char *pkt_ptr, int pkt
 
 static int marsio4_pkt_forward(int tid, struct mr_sendpath * sendpath, marsio_buff_t * mbufs);
 
-
-static void marsio_update_sid_list(const raw_pkt_t *raw_pkt, void *send_pkt_io_reference)
-{
-	if(raw_pkt->append_list && ptr_marsio_buff_append_sid_list!= NULL)
-	{
-		ptr_marsio_buff_append_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->append_list->sid_list, raw_pkt->append_list->sz_sidlist);
-	}
-	if(raw_pkt->prepend_list && ptr_marsio_buff_prepend_sid_list != NULL)
-	{
-		ptr_marsio_buff_prepend_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->prepend_list->sid_list, raw_pkt->prepend_list->sz_sidlist);
-	}
-	return;
-}
-
 int marsio_dl_io_forward_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
 {
 	if(raw_pkt == NULL && (thread_seq < 0 || thread_seq > get_thread_count()))
@@ -423,6 +460,7 @@ int marsio_dl_io_forward_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
 	int ret = 0;
 	if(raw_pkt->io_lib_pkt_reference != NULL)
 	{
+		marsio_update_trace_id(raw_pkt, (void *)raw_pkt->io_lib_pkt_reference);
 		marsio_update_sid_list(raw_pkt, (void *)raw_pkt->io_lib_pkt_reference);
 		ret = marsio4_pkt_forward(thread_seq, g_mr4_sendpath_up_set[raw_pkt->device_index], (marsio_buff_t *)raw_pkt->io_lib_pkt_reference);
 	}
@@ -489,26 +527,47 @@ struct rawpkt_metadata *marsio_dl_io_get1_rawpkt_meta(const raw_pkt_t *raw_pkt, 
 
 void marsio_dl_io_set_rawpkt_meta(const raw_pkt_t *raw_pkt, void *send_pkt_io_reference, unsigned char route_dir)
 {
-	if(raw_pkt->meta[0]!= NULL || (raw_pkt->meta[1]!= NULL))
+	if(raw_pkt->meta[0]== NULL && (raw_pkt->meta[1]== NULL))
 	{
-		struct rawpkt_metadata *snd_meta = NULL;
-		if(raw_pkt->meta[route_dir]!=NULL)
-		{
-			snd_meta=raw_pkt->meta[route_dir];
-		}
-		else // failover 
-		{
-			snd_meta=raw_pkt->meta[route_dir^1];
-		}
-		if(ptr_marsio_buff_set_metadata)
-		{
-			ptr_marsio_buff_set_metadata((marsio_buff_t *)send_pkt_io_reference, MR_BUFF_ROUTE_CTX, (void *)snd_meta->data, snd_meta->sz_data);
-		}
-		if(ptr_marsio_buff_set_sid_list)
-		{
-			ptr_marsio_buff_set_sid_list((marsio_buff_t *)send_pkt_io_reference, snd_meta->raw_sid_list.sid_list, snd_meta->raw_sid_list.sz_sidlist);
-		}
+		return ;
+	}
+	
+	struct rawpkt_metadata *snd_meta = NULL;
+	if(raw_pkt->meta[route_dir]!=NULL)
+	{
+		snd_meta=raw_pkt->meta[route_dir];
+	}
+	else // failover 
+	{
+		snd_meta=raw_pkt->meta[route_dir^1];
+	}
+	if(ptr_marsio_buff_set_metadata)
+	{
+		ptr_marsio_buff_set_metadata((marsio_buff_t *)send_pkt_io_reference, MR_BUFF_ROUTE_CTX, (void *)snd_meta->data, snd_meta->sz_data);
+	}
+
+	marsio_update_trace_id(raw_pkt, send_pkt_io_reference);
+	
+	if(ptr_marsio_buff_set_sid_list==NULL)
+	{
+		return ;
+	}
+
+	if(raw_pkt->is_send_ctrl_pkt==0)
+	{
+		ptr_marsio_buff_set_sid_list((marsio_buff_t *)send_pkt_io_reference, snd_meta->raw_sid_list.sid_list, snd_meta->raw_sid_list.sz_sidlist);
 		marsio_update_sid_list(raw_pkt, send_pkt_io_reference);
+		return ;
+	}
+
+	if(raw_pkt->append_list)
+	{
+		ptr_marsio_buff_set_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->append_list->sid_list, raw_pkt->append_list->sz_sidlist);
+	}
+
+	if(raw_pkt->prepend_list)
+	{
+		ptr_marsio_buff_set_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->prepend_list->sid_list, raw_pkt->prepend_list->sz_sidlist);
 	}
 
 	return;
@@ -769,7 +828,8 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
                         /* NOTE:
                             MARSIO主从模式独特性, 从虚拟网卡收包, 但要通过物理网卡回注包,
                         */
-					   	marsio_update_sid_list(raw_pkt, rx_buff[j]);
+					   	marsio_update_sid_list(raw_pkt, (void *)rx_buff[j]);
+						marsio_update_trace_id(raw_pkt, (void *)rx_buff[j]);
                         int ret = marsio4_pkt_forward(tid, g_mr4_sendpath_up_set[i], rx_buff[j]);
                         if (ret < 0)
                         {
@@ -1139,6 +1199,13 @@ static int marsio_dl_get_function_entry(void)
 		ptr_marsio_buff_unset_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type))dlsym(marsio_so_handle, "marsio_buff_unset_metadata");
 		if(NULL == ptr_marsio_buff_unset_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_unset_metadata", ABBR_MARSIO_LIBRARY_FILE);
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			sleep(1);
+		}
+
+		ptr_marsio_buff_set_ctrlbuf = (void (*)(marsio_buff_t *m))dlsym(marsio_so_handle, "marsio_buff_set_ctrlbuf");
+		if(NULL == ptr_marsio_buff_set_ctrlbuf){
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_ctrlbuf", ABBR_MARSIO_LIBRARY_FILE);
 			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
 			sleep(1);
 		}

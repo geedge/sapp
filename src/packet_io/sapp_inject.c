@@ -86,6 +86,16 @@ int sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const v
 	return ret;
 }
 
+int sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir)
+{
+	struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
+	stream_pr->is_send_ctrl_pkt=1;
+	int ret=sapp_inject_pkt(stream, SIO_DEFAULT, payload, payload_len, snd_routedir);
+	stream_pr->is_send_ctrl_pkt=0;
+
+	return ret;
+}
+
 
 #ifdef __cplusplus
 }

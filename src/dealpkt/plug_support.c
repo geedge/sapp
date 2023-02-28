@@ -1013,7 +1013,17 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			}
 			ret = 0;
 		}
-		break;	
+		break;
+		case MSO_STREAM_SET_DATAMETA_TRACE_ID:
+		{
+			struct streaminfo_private *pstream_pr=(struct streaminfo_private *)pstream;
+			if(pstream_pr->stream_trace_id>0)
+			{
+				break;
+			}
+			pstream_pr->stream_trace_id=*((unsigned long long *)opt_val);
+		}
+		break;
 		default:
 			sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_set_stream_opt() error: unsupport MESA_stream_opt type:%d!\n", printaddr(&pstream->addr, pstream->threadnum), (int)opt);
 			ret = -1;
