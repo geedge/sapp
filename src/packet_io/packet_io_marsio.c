@@ -385,20 +385,6 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	if(raw_pkt){
 		packet_io_hook_sendto(raw_pkt, route_dir, real_buf, (void *)send_mbuf[0]);
 	}
-	else
-	{
-		if(raw_pkt->append_list)
-		{
-			ptr_marsio_buff_set_sid_list(send_mbuf[0], raw_pkt->append_list->sid_list, raw_pkt->append_list->sz_sidlist);
-		}
-
-		if(raw_pkt->prepend_list)
-		{
-			ptr_marsio_buff_set_sid_list(send_mbuf[0], raw_pkt->prepend_list->sid_list, raw_pkt->prepend_list->sz_sidlist);
-		}
-		
-		marsio_update_trace_id(raw_pkt, (void *)send_mbuf[0]);
-	}
 
 	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 
@@ -785,6 +771,9 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->overlay_layer_bytes = 0;
 	raw_pkt->drop_current_pkt_flag = 0;
 	raw_pkt->d_pkt = NULL;
+	raw_pkt->is_send_ctrl_pkt=0;
+	raw_pkt->payload_len=0;
+	raw_pkt->stream_trace_id=0;
 
 	//ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, mr_ctrlzone->route_dir, tid);
 	ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, dir, tid);
