@@ -382,18 +382,19 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 		send_option = MARSIO_SEND_OPT_FAST;
 	}
 	
-	if(raw_pkt){
+	if(raw_pkt)
+	{
 		packet_io_hook_sendto(raw_pkt, route_dir, real_buf, (void *)send_mbuf[0]);
+
+		if(ptr_marsio_buff_set_ctrlbuf!=NULL && raw_pkt->is_send_ctrl_pkt==1)
+		{
+			ptr_marsio_buff_set_ctrlbuf(send_mbuf[0]);
+			unsigned short offset=(unsigned short)(ptr_marsio_buff_datalen(send_mbuf[0]) - raw_pkt->payload_len);
+			marsio_update_payload_offset(offset, (void *)send_mbuf[0]);
+		}
 	}
 
 	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
-
-	if(ptr_marsio_buff_set_ctrlbuf!=NULL && raw_pkt->is_send_ctrl_pkt==1)
-	{
-		ptr_marsio_buff_set_ctrlbuf(send_mbuf[0]);
-		unsigned short offset=(unsigned short)(ptr_marsio_buff_datalen(send_mbuf[0]) - raw_pkt->payload_len);
-		marsio_update_payload_offset(offset, (void *)send_mbuf[0]);
-	}
 
 	ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, send_option);
 	if(ret < 0){
