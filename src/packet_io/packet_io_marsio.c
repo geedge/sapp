@@ -116,6 +116,7 @@ int (*ptr_marsio_buff_append_sid_list)(marsio_buff_t * m, uint16_t * slist, uint
 int (*ptr_marsio_buff_prepend_sid_list)(marsio_buff_t * m, uint16_t * slist, uint8_t sz_slist);
 
 void (*ptr_marsio_buff_set_ctrlbuf)(marsio_buff_t * m);
+int (*ptr_marsio_poll_wait)(struct mr_instance * instance, struct mr_vdev * vdevs[], unsigned int nr_vdevs, unsigned int tid, int timeout);
 
 
 static struct bpf_program MARSIO_BPF_FILTER[MAX_THREAD_NUM];
@@ -891,12 +892,21 @@ static int marsio4_sleep_time_table[100] =
 };
 
 
-static inline void marsio4_sleep(int tot_call_times, int rcv_pkt_times)
+static inline void marsio4_sleep(int tid, int tot_call_times, int rcv_pkt_times)
 {
 	float work_percent = ((float)rcv_pkt_times/(float)tot_call_times) * 100.0;
 
-	if((work_percent < 90.0) && (marsio4_sleep_time_table[(int)work_percent] > 0)){
-		sapp_usleep(marsio4_sleep_time_table[(int)work_percent]);
+	if((work_percent < 90.0) && (marsio4_sleep_time_table[(int)work_percent] > 0))
+	{
+		if(ptr_marsio_poll_wait != NULL)
+		{
+			ptr_marsio_poll_wait(sapp_marsio4_instance, g_mr4_dev_up_handle_set, g_mr4_device_num, tid, 900);//sapp内部定时器最小精度为秒，此处设置超时为为900毫秒，用于多进程模式下让出CPU时间
+		}
+		else
+		{
+			sapp_usleep(marsio4_sleep_time_table[(int)work_percent]);
+		}
+
 	}
 }
 
@@ -983,7 +993,7 @@ static void *marsio4_worker(void *arg)
 		if(total_call_times >= 100){
 			if(likely(infinite_loop_enabled == 0))
 			{
-				marsio4_sleep(total_call_times, rcv_pkt_tims + polling_work_times);
+				marsio4_sleep(tseq, total_call_times, rcv_pkt_tims + polling_work_times);
 			}
 			total_call_times = 0;
 			rcv_pkt_tims = 0;
@@ -1151,55 +1161,61 @@ static int marsio_dl_get_function_entry(void)
 		ptr_marsio_buff_get_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_get_metadata");
 		if(NULL == ptr_marsio_buff_get_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_get_metadata", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误*/
 			sleep(1);
 		}
 
 		ptr_marsio_buff_set_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_set_metadata");
 		if(NULL == ptr_marsio_buff_set_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_metadata", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误*/
 			sleep(1);
 		}
 
 		ptr_marsio_buff_get_sid_list = (int (*)(marsio_buff_t *m, uint16_t * out_slist, uint8_t sz_out_slist))dlsym(marsio_so_handle, "marsio_buff_get_sid_list");
 		if(NULL == ptr_marsio_buff_set_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_get_sid_list", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误*/
 			sleep(1);
 		}
 		ptr_marsio_buff_set_sid_list = (int (*)(marsio_buff_t *m, uint16_t * slist, uint8_t sz_slist))dlsym(marsio_so_handle, "marsio_buff_set_sid_list");
 		if(NULL == ptr_marsio_buff_set_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_sid_list", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误*/
 			sleep(1);
 		}
 
 		ptr_marsio_buff_append_sid_list = (int (*)(marsio_buff_t *m, uint16_t * slist, uint8_t sz_slist))dlsym(marsio_so_handle, "marsio_buff_append_sid_list");
 		if(NULL == ptr_marsio_buff_append_sid_list){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_append_sid_list", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误 */
 			sleep(1);
 		}
 
 		ptr_marsio_buff_prepend_sid_list = (int (*)(marsio_buff_t *m, uint16_t * slist, uint8_t sz_slist))dlsym(marsio_so_handle, "marsio_buff_prepend_sid_list");
 		if(NULL == ptr_marsio_buff_prepend_sid_list){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_prepend_sid_list", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误*/
 			sleep(1);
 		}
 
 		ptr_marsio_buff_unset_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type))dlsym(marsio_so_handle, "marsio_buff_unset_metadata");
 		if(NULL == ptr_marsio_buff_unset_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_unset_metadata", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误*/
 			sleep(1);
 		}
 
 		ptr_marsio_buff_set_ctrlbuf = (void (*)(marsio_buff_t *m))dlsym(marsio_so_handle, "marsio_buff_set_ctrlbuf");
 		if(NULL == ptr_marsio_buff_set_ctrlbuf){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_ctrlbuf", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误, 只是vlan_flipping会失效 */
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误*/
+			sleep(1);
+		}
+		ptr_marsio_poll_wait = (int (*)(struct mr_instance * instance, struct mr_vdev * vdevs[], unsigned int nr_vdevs, unsigned int tid, int timeout))dlsym(marsio_so_handle, "marsio_poll_wait");
+		if(NULL == ptr_marsio_poll_wait){
+			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_poll_wait", ABBR_MARSIO_LIBRARY_FILE);
+			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误 */
 			sleep(1);
 		}
 	}
