@@ -1964,7 +1964,21 @@ static void  tcp_set_new_data(struct streaminfo *a_tcp,struct  half_tcpstream  *
 	
    }
 
-	pdetail->lostlen=rcv->count_ideal-rcv->count-rcv->totallost;
+	if((long long)(rcv->count_ideal - rcv->count - rcv->totallost) < 0)
+	{
+		pdetail->lostlen=0;
+		sapp_runtime_log(RLOG_LV_FATAL, "TCP stream:%s lostlen anomaly, TCP count_ideal:%u, count:%u, total_lost:%u", 
+							printaddr(&a_tcp->addr, 
+							this_seq),
+							rcv->count_ideal,
+							rcv->count,
+							rcv->totallost);
+	}
+	else
+	{
+		pdetail->lostlen=rcv->count_ideal - rcv->count- rcv->totallost;
+	}
+
 	rcv->totallost+=pdetail->lostlen;
 
 	sapp_global_val->mthread_volatile[a_tcp->threadnum]->sys_stat.length[SAPP_STAT_TCP_LOST_PKT] += pdetail->lostlen;		
