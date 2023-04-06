@@ -2894,19 +2894,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	}
 
 
-	if(pstream_pr->sid_append_list != NULL)
-	{
-		((raw_pkt_t *)raw_pkt)->append_list=pstream_pr->sid_append_list;
-	}
-	if(pstream_pr->sid_prepend_list != NULL)
-	{
-		((raw_pkt_t *)raw_pkt)->prepend_list=pstream_pr->sid_prepend_list;
-	}
 
-	if(pstream_pr->stream_trace_id != 0)
-	{
-		((raw_pkt_t *)raw_pkt)->stream_trace_id=pstream_pr->stream_trace_id;
-	}
 
 	/* 2014-10-11 lijia add, Fd补救由平台实现 */
 	if(unlikely(pstream_pr->stream_killed_flag != 0)){
@@ -2948,6 +2936,22 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		lrustream(pindex_tcp);
 		return DROP;
 	}
+
+// 对于kill remedy，drop stream和重复流量，sapp直接处理，不再追加流上的sid,避免转发到service chain上引起其他SF的歧义
+	if(pstream_pr->sid_append_list != NULL)
+	{
+		((raw_pkt_t *)raw_pkt)->append_list=pstream_pr->sid_append_list;
+	}
+	if(pstream_pr->sid_prepend_list != NULL)
+	{
+		((raw_pkt_t *)raw_pkt)->prepend_list=pstream_pr->sid_prepend_list;
+	}
+
+	if(pstream_pr->stream_trace_id != 0)
+	{
+		((raw_pkt_t *)raw_pkt)->stream_trace_id=pstream_pr->stream_trace_id;
+	}
+
 
 	if(pstream->curdir==DIR_S2C)
 	{

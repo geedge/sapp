@@ -654,6 +654,16 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			return PASS;
 		}
 
+        /* 2014-11-15 lijia add, for udp serial kill udp */
+		if(unlikely(a_index->stream.stream_killed_flag != 0)){
+			return DROP;
+		}
+
+		if(unlikely(pdetail_pr->drop_stream_flag != 0)){ /* 2020-06-02 lijia add */
+			return DROP;
+		}
+
+		// 对于kill remedy，drop stream和重复流量，sapp直接处理，不再追加流上的sid,避免转发到service chain上引起其他SF的歧义
         if (pstream_pr->sid_append_list != NULL)
         {
             ((raw_pkt_t *)raw_pkt)->append_list = pstream_pr->sid_append_list;
@@ -667,14 +677,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
             ((raw_pkt_t *)raw_pkt)->stream_trace_id = pstream_pr->stream_trace_id;
         }
 
-        /* 2014-11-15 lijia add, for udp serial kill udp */
-		if(unlikely(a_index->stream.stream_killed_flag != 0)){
-			return DROP;
-		}
 
-		if(unlikely(pdetail_pr->drop_stream_flag != 0)){ /* 2020-06-02 lijia add */
-			return DROP;
-		}
 
 		if(pstream->curdir==DIR_S2C){
 			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* 当前方向的第一个包, 尝试更新底层隧道的单向地址信息(如MPLS, GTP) */
