@@ -7,6 +7,8 @@ extern "C" {
 #include "sapp_declaration.h"
 #include <assert.h>
 
+#include "marsio.h"
+#include "mrtunnat.h"
 /*
 	netconnection_mode:
 		1: 多网卡纯收不发 
@@ -241,12 +243,12 @@ int marsio_dl_io_set_capture_filter(const char *filter_rule)
 	int i,j;
 
 	int pcap_link_type = DLT_EN10MB;
-	for (i = 0; i < (unsigned int)g_packet_io_thread_num; i++)
+	for (i = 0; i < g_packet_io_thread_num; i++)
 	{
 			if (pcap_compile_nopcap(65535, pcap_link_type, &MARSIO_BPF_FILTER[i], filter_rule, 100, 0) < 0)
 			{
 				printf("Compile pcap filter '%s' error\n", filter_rule);
-					for(j = 0; j <  (unsigned int )g_packet_io_thread_num; j++)
+					for(j = 0; j <  g_packet_io_thread_num; j++)
 					{
 						pcap_freecode(&MARSIO_BPF_FILTER[j]);
 					}
@@ -305,7 +307,7 @@ void marsio_dl_io_free_sendbuf(void *phandle, int thread_seq)
 }
 
 /* 2020-10-30 lijia add, in/forward/inject的包给tcpdump_mesa, 用于debug. */
-static void marsio_pkt_dump(int thread_seq, const marsio_buff_t *send_mbuf, enum _pkt_classify class)
+static void marsio_pkt_dump(int thread_seq, const marsio_buff_t *send_mbuf, enum _pkt_classify classify)
 {
 	raw_pkt_t to_tcpdump_mesa;
 
@@ -316,7 +318,7 @@ static void marsio_pkt_dump(int thread_seq, const marsio_buff_t *send_mbuf, enum
 	to_tcpdump_mesa.low_layer_type = ADDR_TYPE_MAC;
 	to_tcpdump_mesa.raw_pkt_data = ptr_marsio_buff_mtod((marsio_buff_t *)send_mbuf);
 	to_tcpdump_mesa.raw_pkt_len = ptr_marsio_buff_buflen((marsio_buff_t *)send_mbuf);
-	cycle_pkt_dump_by_classify(thread_seq, &to_tcpdump_mesa, class);
+	cycle_pkt_dump_by_classify(thread_seq, &to_tcpdump_mesa, classify);
 
 }
 
@@ -394,7 +396,8 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 		}
 	}
 
-	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
+	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
+
 
 	ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, send_option);
 	if(ret < 0){
@@ -408,7 +411,7 @@ int marsio_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 						int eth_carry_layer_addr_type, int dir,int thread_num,const raw_pkt_t *raw_pkt)
 {
 	int ret;
-	struct mesa_ethernet_hdr *ehdr = (struct mesa_ethernet_hdr *)data;
+	//struct mesa_ethernet_hdr *ehdr = (struct mesa_ethernet_hdr *)data;
 	//在双网卡透明模式(transparent)下, 根据dir选择up or down device发出.
 	if(NET_CONN_SERIAL_2CARD == g_marsio4_topology_mode){
 		assert((dir >= 0) && (dir <= 1));
@@ -447,9 +450,9 @@ int marsio_dl_io_forward_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
 	int ret = 0;
 	if(raw_pkt->io_lib_pkt_reference != NULL)
 	{
-		marsio_update_trace_id(raw_pkt, (void *)raw_pkt->io_lib_pkt_reference);
-		marsio_update_sid_list(raw_pkt, (void *)raw_pkt->io_lib_pkt_reference);
-		ret = marsio4_pkt_forward(thread_seq, g_mr4_sendpath_up_set[raw_pkt->device_index], (marsio_buff_t *)raw_pkt->io_lib_pkt_reference);
+		marsio_update_trace_id(raw_pkt, (void *)(raw_pkt->io_lib_pkt_reference));
+		marsio_update_sid_list(raw_pkt, (void *)(raw_pkt->io_lib_pkt_reference));
+		ret = marsio4_pkt_forward(thread_seq, g_mr4_sendpath_up_set[raw_pkt->device_index], (marsio_buff_t *)(raw_pkt->io_lib_pkt_reference));
 	}
 	return ret;
 }
@@ -1271,7 +1274,7 @@ int marsio_set_vlan_id_to_mbuff(void *pkt_reference, unsigned int vlan_id_host_o
 int marsio_dl_io_init(int argc, char *argv[])
 {
 	int i, ret;
-	char app_name[32];
+	//char app_name[32];
 	int max_send_queue_num;
 
 	if(marsio_dl_get_function_entry() < 0){

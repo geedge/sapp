@@ -1,6 +1,7 @@
 #ifndef _APP_STREAM_INTERNAL_H_
 #define _APP_STREAM_INTERNAL_H_ 
 
+#include "mesa_net.h"
 #include "public/stream.h"
 #include "private/mesa_net.h"
 #include "private/sysinfo.h"

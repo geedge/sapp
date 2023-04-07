@@ -33,8 +33,8 @@
 #include "private/duplicate_pkt_distinguish.h"
 
 #if IOMODE_MARSIO
-#include "/opt/mrzcpd/include/marsio.h"
-#include "/opt/mrzcpd/include/mrtunnat.h"
+#include "marsio.h"
+#include "mrtunnat.h"
 #endif
 
 #endif
