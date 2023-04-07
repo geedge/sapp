@@ -1964,6 +1964,7 @@ static void  tcp_set_new_data(struct streaminfo *a_tcp,struct  half_tcpstream  *
 	
    }
 
+/*
 	if((long long)(rcv->count_ideal - rcv->count - rcv->totallost) < 0)
 	{
 		pdetail->lostlen=0;
@@ -1975,6 +1976,7 @@ static void  tcp_set_new_data(struct streaminfo *a_tcp,struct  half_tcpstream  *
 							rcv->totallost);
 	}
 	else
+*/
 	{
 		pdetail->lostlen=rcv->count_ideal - rcv->count- rcv->totallost;
 	}
@@ -2190,7 +2192,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 				if(rcv->unorder_cnt > rcv->maxunorder || orderflag!=CHECK_ORDER_DATA)//add by lqy 20150325
 				{
 					//20150401 lqy
-					if(after(pakiet->seq,EXP_SEQ))
+					if(after(pakiet->seq,EXP_SEQ) && rcv->first_data_seq!=0)
 					{
 						rcv->count_ideal = pakiet->seq   - rcv->first_data_seq;
 					}
