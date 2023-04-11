@@ -649,7 +649,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 
 		case SPO_DEPLOYMENT_MODE_STR:
 		{
-			if(*opt_val_len <= strlen(sapp_global_val->config.packet_io.depolyment_mode_str)){
+			if(*opt_val_len <= (int)strlen(sapp_global_val->config.packet_io.depolyment_mode_str)){
 				ret = -1;
 				
 				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_DEPLOYMENT_MODE_STR error:opt_val_len:%d is not enough!\n", *opt_val_len);
@@ -689,7 +689,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				ret = -1;
 				break;
 			}
-			if(*opt_val_len <= strlen(sapp_global_val->config.cfg_file_path.cfg_files_root_dir)+1){
+			if(*opt_val_len <= (int)strlen(sapp_global_val->config.cfg_file_path.cfg_files_root_dir)+1){
 				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_CONFIG_ROOT_DIR error:opt_val_len:%d is smaller than root dir string len!\n", *opt_val_len);
 				ret = -1;
 			}
@@ -704,7 +704,7 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 				ret = -1;
 				break;
 			}		
-			if(*opt_val_len <= strlen(sapp_global_val->config.data_file_path.data_files_root_dir)+1){
+			if(*opt_val_len <= (int)strlen(sapp_global_val->config.data_file_path.data_files_root_dir)+1){
 				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_DATA_ROOT_DIR error:opt_val_len:%d is smaller than root dir string len!\n", *opt_val_len);
 				ret = -1;
 			}
@@ -1116,8 +1116,6 @@ static int fs2_tcp_unorder_historgram_init(void *fs2_handle)
 static int sapp_fs2_init(void)
 {
 	int fs2_opt;
-	int cycle;
-	int send_historgram = 0;
 	void *fs2_handle;
 	unsigned short fs_server_port;
 	sapp_gval_individual_fixed_fs_t *pfs_para = &sapp_global_val->individual_fixed.field_stat2_para;

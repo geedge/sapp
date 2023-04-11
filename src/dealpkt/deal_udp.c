@@ -701,7 +701,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 
 		if(is_overlay_udp_layer != 0){
-			if(ulen < sizeof(struct ethhdr) + sizeof(struct layer_addr_vxlan_private))
+			if(ulen < (int)(sizeof(struct ethhdr) + sizeof(struct layer_addr_vxlan_private)))
 			{
 				return DROP;
 			}
@@ -793,7 +793,6 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	int ret=PASS;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	int try_to_update_addr_info = 0;
-	sapp_dup_pkt_key_v6_t dup_bloom_key;
 	int next_layer_offset;
 	iplen = ntohs (a_packet->ip6_payload_len);
 	ulen = ntohs (udph->uh_ulen);
