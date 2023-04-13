@@ -119,18 +119,29 @@ static int parse_l2tpv2_ppp_hdr(const unsigned char *l2tp_ppp_hdr, struct layer_
 	return ppp_hdr_len;
 }
 
-int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2tp *l2tpaddr)
+int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2tp *l2tpaddr, size_t left_len)
 {
-	unsigned short l2top_tot_len, offset_size;
+	if(unlikely(left_len == 0) || left_len < (sizeof(struct l2tp_hdr_v2)))
+	{
+		return -1;
+	}
+	unsigned short l2top_tot_len=0, offset_size=0;
 	const char *ptr = (const char *)pl2tphdrv2 + sizeof(struct l2tp_hdr_v2);
-	int l2tp_ppp_hdr_len;
+	left_len -= sizeof(struct l2tp_hdr_v2);
+	int l2tp_ppp_hdr_len=0;
 
 	memset(l2tpaddr, 0, sizeof(struct layer_addr_l2tp));
 	
 	if(pl2tphdrv2->length_present){
 		l2top_tot_len = ntohs(*((unsigned short *)ptr));
+		if(left_len < sizeof(short))
+		{
+			return -1;
+		}
 		ptr += sizeof(short);
-		if(l2top_tot_len < sizeof(struct l2tp_hdr_v2) +  1/* compress ppp hdr len */ + sizeof(struct mesa_ip4_hdr)){
+		left_len -= sizeof(short);
+		if(l2top_tot_len < sizeof(struct l2tp_hdr_v2) +  1/* compress ppp hdr len */ + sizeof(struct mesa_ip4_hdr))
+		{
 			return -1; /* 无最小有效数据 */
 		}
 	}
@@ -139,39 +150,60 @@ int parse_l2tpv2_hdr(const struct l2tp_hdr_v2 *pl2tphdrv2, struct layer_addr_l2t
         创建流时, 如果需要reverse拷贝, 则将source, dest颠倒, 否则直接memcpy到堆里的addr.
      */
 
-	l2tpaddr->l2tpun.l2tp_addr_v2.tunnelid_C2S = *((unsigned short *)ptr);
-	ptr += sizeof(short);
-	l2tpaddr->l2tpun.l2tp_addr_v2.sessionid_C2S = *((unsigned short *)ptr);
-	ptr += sizeof(short);	
+    if (left_len > sizeof(short) * 2)
+    {
+        l2tpaddr->l2tpun.l2tp_addr_v2.tunnelid_C2S = *((unsigned short *)ptr);
+        ptr += sizeof(short);
+        l2tpaddr->l2tpun.l2tp_addr_v2.sessionid_C2S = *((unsigned short *)ptr);
+        ptr += sizeof(short);
+		left_len -= sizeof(short) * 2;
+    }
 
-	if(pl2tphdrv2->seq_present){
+    if(pl2tphdrv2->seq_present){
+		if(left_len < sizeof(int))
+		{
+			return -1;
+		}
 		ptr += sizeof(int);	
+		left_len -= sizeof(int);
 		l2tpaddr->l2tpun.l2tp_addr_v2.seq_present_C2S = 1;
 	}
 
 	if(pl2tphdrv2->offset_present){
 		offset_size = ntohs(*((unsigned short *)ptr));
+		if(left_len < sizeof(short) + offset_size) 
+		{
+			return -1;
+		}
 		ptr += sizeof(short);	 /* 2 byte fix len offset size */
 		ptr += offset_size;  /* var bytes offset value length */
+		left_len -= sizeof(short) + offset_size;
 	}	
 
+	if(left_len < sizeof(char)*2) // parse_l2tpv2_ppp_hdr need to read at least 2 Bytes to guess
+	{
+		return -1;
+	}
+
 	l2tp_ppp_hdr_len = parse_l2tpv2_ppp_hdr((unsigned char *)ptr, l2tpaddr);
-	if(l2tp_ppp_hdr_len < 0){
+	if(l2tp_ppp_hdr_len < 0 || (int)left_len < l2tp_ppp_hdr_len)
+	{
 		return -1;
 	}
 	ptr += l2tp_ppp_hdr_len;
+	left_len -= l2tp_ppp_hdr_len;
 
 	l2tpaddr->version = 2; /* version, RFC2661 */
 
 	return ptr - (char *)pl2tphdrv2;
 }
 
-int calc_l2tp_hdr_len_by_net_pkt(const struct l2tp_hdr_v2 *l2tp_hdr)
+int calc_l2tp_hdr_len_by_net_pkt(const struct l2tp_hdr_v2 *l2tp_hdr, size_t left_len)
 {
 	int l2tphdr_len;
 	struct layer_addr_l2tp no_use_addr;
 	
-	l2tphdr_len = parse_l2tpv2_hdr(l2tp_hdr, &no_use_addr);
+	l2tphdr_len = parse_l2tpv2_hdr(l2tp_hdr, &no_use_addr, left_len);
 
 	return l2tphdr_len;
 }
@@ -442,7 +474,7 @@ static int guess_if_l2tpv2(const struct streaminfo *a_udp, const struct mesa_udp
 			return 0; /* control mesage priority must be set to 0, refer to RFC2661 page10. */
 		}		
 	}else{
-		l2tphdr_len = parse_l2tpv2_hdr(pl2tphdrv2, &l2tp_mem_addr);
+		l2tphdr_len = parse_l2tpv2_hdr(pl2tphdrv2, &l2tp_mem_addr, udp_payload_len);
 		if((l2tphdr_len < 0) || (l2tphdr_len > L2TP_MAX_HDR_LEN)){
 			return 0;
 		}
@@ -519,7 +551,7 @@ int l2tpv2_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_d
 	pl2tphdrv2 = (const struct l2tp_hdr_v2 *)((char *)this_layer_data + sizeof(struct mesa_udp_hdr));
 
 	/* L2TP层只有单向id, 先复用father的layer_dir */
-	l2tphdr_len = parse_l2tpv2_hdr(pl2tphdrv2, &l2tpaddr);
+	l2tphdr_len = parse_l2tpv2_hdr(pl2tphdrv2, &l2tpaddr, raw_pkt->raw_pkt_len - offset_to_raw_pkt_hdr);
 	if((l2tphdr_len < 0) || (l2tphdr_len > L2TP_MAX_HDR_LEN)){
 		return PASS;
 	}

@@ -62,7 +62,7 @@ static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream
 extern void *g_packet_dl_send_handle[MAX_THREAD_NUM];
 extern dl_io_fun_list_t dl_io_fun_list;
 extern int g_app_send_rst_type ;
-extern int calc_l2tp_hdr_len_by_net_pkt(const struct l2tp_hdr_v2 *l2tp_hdr);
+extern int calc_l2tp_hdr_len_by_net_pkt(const struct l2tp_hdr_v2 *l2tp_hdr, size_t left_len);
 extern int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_type, 
 					int low_layer_type, int dir,int thread_num,
 					char *feedback_buf, int *feedback_buf_len, const raw_pkt_t *raw_pkt);					
