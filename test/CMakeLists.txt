@@ -20,19 +20,37 @@ LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/test)
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/sapp_devel.cpp "")
 
+set(LIBS sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
+			config inner_plug gdev_assistant sapp_assistant plugctrl project timer dictator2 
+			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
+			MESA_sleep dpdk_ip_hash  cpu_limit timeout libevent-static libdabloom-static )
+
 add_library(sapp_devel SHARED sapp_devel.cpp)
-target_link_libraries(sapp_devel -Wl,--whole-archive sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
-			config inner_plug gdev_assistant sapp_assistant plugctrl project timer dictator2 
-			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
-			MESA_sleep dpdk_ip_hash  cpu_limit timeout libevent-static libdabloom-static -Wl,--no-whole-archive)
+target_link_libraries(sapp_devel -Wl,--whole-archive ${LIBS} -Wl,--no-whole-archive)
 
-add_library(sapp_devel_static STATIC sapp_devel.cpp)
-target_link_libraries(sapp_devel sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
-			config inner_plug gdev_assistant sapp_assistant plugctrl project timer dictator2 
-			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
-			MESA_sleep dpdk_ip_hash  cpu_limit timeout libevent-static libdabloom-static)
-set_target_properties(sapp_devel_static PROPERTIES OUTPUT_NAME sapp_devel)
+#add_library(sapp_devel_static STATIC sapp_devel.cpp)
 
+set(OBJECTS_DIR ${CMAKE_CURRENT_BINARY_DIR}/temp_objs)
+
+file(MAKE_DIRECTORY ${OBJECTS_DIR})
+
+foreach(lib IN LISTS LIBS)
+    get_target_property(lib_file ${lib} LOCATION)
+    add_custom_command(OUTPUT "${OBJECTS_DIR}/${lib}_objects"
+        COMMAND ${CMAKE_COMMAND} -E chdir "${OBJECTS_DIR}" ${CMAKE_AR} -x "${lib_file}"
+        DEPENDS ${lib}
+    )
+    list(APPEND ALL_OBJECTS_TARGETS "${OBJECTS_DIR}/${lib}_objects")
+endforeach()
+
+file(GLOB_RECURSE OBJECTS "${OBJECTS_DIR}/*.o")
+
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/libsapp_devel.a"
+    COMMAND ${CMAKE_AR} -qc "${CMAKE_CURRENT_BINARY_DIR}/libsapp_devel.a" ${OBJECTS}
+    DEPENDS ${ALL_OBJECTS_TARGETS}
+)
+
+add_custom_target(sapp_devel_static ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/libsapp_devel.a")
 
 
 add_library(test_app_sapp SHARED test_app_sapp.c)
