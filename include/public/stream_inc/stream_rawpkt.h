@@ -26,6 +26,9 @@ enum{
 
 	RAW_PKT_GET_ORIGINAL_LOWEST_ETH_SMAC, /* value type is char[6],真实原始包最外层的smac地址,mirror模式下, 等同于RAW_PKT_GET_DATA, 或者使用stream->pfather自行偏移; inline + vxlan + mrtunnat模式下, 等同于RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC; */
 	RAW_PKT_GET_ORIGINAL_LOWEST_ETH_DMAC, /* value type is char[6],真实原始包最外层的dmac地址,mirror模式下, 等同于RAW_PKT_GET_DATA, 或者使用stream->pfather自行偏移; inline + vxlan + mrtunnat模式下, 等同于RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC; */
+
+	RAW_PKT_GET_ROUTE_CTX, /* max value size  char[64] */
+	RWA_PKT_GET_SID_LIST, /* value defined in stream_control.h, struct segment_id_list */
 };
 
 
@@ -67,8 +70,7 @@ for example:
 	get_opt_from_rawpkt(voidpkt, RAW_PKT_GET_TIMESTAMP, &pkt_stamp); 
 
 	return value:
-		 1:only for RAW_PKT_GET_DATA type, value is raw_ipfrag_list_t;
-		 0:success;
+		 >=0:success,length of out_value;
 		-1:error, or not support.
 */
 int get_opt_from_rawpkt(const void *rawpkt, int type, void *out_value);

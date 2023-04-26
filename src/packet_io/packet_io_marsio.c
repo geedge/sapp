@@ -30,19 +30,6 @@ typedef struct{
 }marsio4_io_handle;
 
 
-
-
-#ifndef MAX_METADATA_LEN
-#define MAX_METADATA_LEN 16
-#endif
-
-struct rawpkt_metadata
-{
-	char data[MAX_METADATA_LEN];
-	unsigned int sz_data;
-	struct segment_id_list raw_sid_list;
-};
-
 extern int marsio_buff_get_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
 extern int marsio_buff_set_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
 extern int marsio_buff_unset_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type);

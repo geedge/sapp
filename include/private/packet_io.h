@@ -86,6 +86,17 @@ typedef void (*PACKET_IO_EXIT_PER_THREAD_CB_T)(int thread_seq);
 
 extern PACKET_IO_CB_T G_DEFAULT_PKT_CB;
 
+#ifndef MAX_METADATA_LEN
+#define MAX_METADATA_LEN 64
+#endif
+
+struct rawpkt_metadata
+{
+	char data[MAX_METADATA_LEN];
+	unsigned int sz_data;
+	struct segment_id_list raw_sid_list;
+};
+
 /* 所有捕包库的操作函数全集, 对这些函数不必全支持, 但为了兼容性, 一定要保证有此符号, 写个空函数即可 */
 typedef struct{
 	int (*dl_io_set_cap_level)(int cap_level);
