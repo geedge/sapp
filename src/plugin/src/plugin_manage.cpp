@@ -1,5 +1,6 @@
 #include "sapp_api.h"
 #include "sapp_declaration.h"
+#include "sapp_mem.h"
 #include "sapp_private_api.h"
 #include "field_stat2.h"
 
@@ -23,6 +24,7 @@ struct plug_uniq_t{
 	const char *plug_path;
 	int is_necessary;
 	int plug_id; /* 只有protocol解析层才有�? 其他�?1 */
+	int priority;	
 };
 
 /*
@@ -59,13 +61,10 @@ static int g_plug_load_stat_fs2_column_id;
 */
 static MESA_htable_handle g_plug_manage_htable;
 
-
+int g_max_priority=0;
 plug_global_entry_t g_plug_global_entry[SAPP_MAX_PLUG_ENTRY_NUM];
 int g_plug_global_entry_index;
 /*
-	TODO1:
-		插件加载失败是否退�? 取决于g_plug_uniq_htable中的necessary是否设置;
-
 	TODO2:
 		插件获取自己的pme, 传入streaminfo和plugname, entry_type_string,
 
@@ -87,6 +86,16 @@ int g_plug_global_entry_index;
 */
 
 
+int max_plug_priority_get()
+{
+	return g_max_priority;
+}
+
+int plug_priority_get(int entry_id)
+{
+	return g_plug_global_entry[entry_id].priority;
+}
+
 int plug_mange_get_entry_id(const char *plug_name, const char *plug_entry_name)
 {
 	int this_entry_id;
@@ -95,8 +104,19 @@ int plug_mange_get_entry_id(const char *plug_name, const char *plug_entry_name)
 		sapp_runtime_log(RLOG_LV_FATAL, "plug entry number overflow! no valid id for %s->%s\n", plug_name, plug_entry_name);
 		return -1;
 	}
+
+	struct plug_uniq_t *plug_info = (struct plug_uniq_t *)MESA_htable_search(g_plug_uniq_htable, (unsigned char *)plug_name, strlen(plug_name));
+	if(plug_info == NULL){
+		sapp_runtime_log(RLOG_LV_FATAL, "plugin %s not found in g_plug_uniq_htable", plug_name);
+		return -1;
+	}
+	if(plug_info->priority > g_max_priority)
+	{
+		g_max_priority=plug_info->priority;
+	}
 	this_entry_id = g_plug_global_entry_index;
 	g_plug_global_entry[this_entry_id].entry_id = this_entry_id;
+	g_plug_global_entry[this_entry_id].priority = plug_info->priority;
 	g_plug_global_entry[this_entry_id].plug_name =  (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_name)+1);
 	strncpy((char *)g_plug_global_entry[this_entry_id].plug_name, plug_name, strlen(plug_name));
 	
@@ -109,6 +129,7 @@ int plug_mange_get_entry_id(const char *plug_name, const char *plug_entry_name)
 
 static void plug_necessary_htable_free_cb(void *data)
 {
+	if(data)sapp_mem_free(SAPP_MEM_FIX_PLUG_CTRL, -1, data);
 	//necessary htable没有实际的data, 只有key
 	;//do nothing
 }
@@ -295,9 +316,13 @@ static MESA_htable_handle create_plug_manage_htable(void)
 }
 
 
-int plugin_is_necessary(const char *plug_path)
+int plugin_is_necessary(const char *plug_path, int *priority)
 {
-	if(MESA_htable_search(g_plug_necessary_htable, (unsigned char *)plug_path, strlen(plug_path)) != NULL){
+	int *p = (int *)MESA_htable_search(g_plug_necessary_htable, (unsigned char *)plug_path, strlen(plug_path));
+	if(p != NULL){
+		if(priority != NULL){
+			*priority = *p;
+		}
 		return 1;
 	}
 
@@ -310,6 +335,7 @@ int plugin_is_necessary(const char *plug_path)
 int plugin_load_new_plug(const char *plug_name, const char *plug_path)
 {
 	struct plug_uniq_t *plug_info;
+	int priority=0;
 
 	plug_info = (struct plug_uniq_t *)MESA_htable_search(g_plug_uniq_htable, (unsigned char *)plug_name, strlen(plug_name));
 	if(plug_info != NULL){
@@ -320,8 +346,8 @@ int plugin_load_new_plug(const char *plug_name, const char *plug_path)
 	plug_info = (struct plug_uniq_t *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, sizeof(struct plug_uniq_t));
 	plug_info->plug_path = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_path)+1);
 	strncpy((char *)plug_info->plug_path, plug_path, strlen(plug_path));
-	plug_info->is_necessary = plugin_is_necessary(plug_path);
-
+	plug_info->is_necessary = plugin_is_necessary(plug_path, &priority);
+	plug_info->priority = priority;
 	MESA_htable_add(g_plug_uniq_htable, (unsigned char *)plug_name, strlen(plug_name), plug_info);
 
 	return 0;
@@ -369,7 +395,9 @@ void *plugin_get_plug_entry(const char *plug_name, const char *plug_entry_type)
 static int plugin_parse_necessary_conf(void)
 {
 	FILE *fp;
-	char line_buf[1024];
+	char line_buf[1024]="";
+	char plugin_path[1024]="";
+	int priority=0;
 
 	fp = fopen(ABBR_NECESSARY_PLUG_CONF_FILE, "r");
 	if(NULL == fp){
@@ -382,8 +410,10 @@ static int plugin_parse_necessary_conf(void)
 			continue;
 		}	
 		del_last_rn(line_buf, 1024);
-
-		MESA_htable_add(g_plug_necessary_htable, (unsigned char *)line_buf, strlen(line_buf), (void *)0x12345678);
+		sscanf(line_buf, "%s\t%d", plugin_path, &priority);
+		int *p = (int *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, sizeof(int));
+		*p = priority;
+		MESA_htable_add(g_plug_necessary_htable, (unsigned char *)plugin_path, strlen(plugin_path), (void *)p);
 	}
 
 	fclose(fp);

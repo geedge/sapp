@@ -106,6 +106,7 @@ typedef struct _plugin_protocol_session_fun_info
 
 typedef struct {
 	int entry_id; /* 全局唯一, 所有插件每层的entry都分配一个id */
+	int priority; /* 插件的优先级 */
 	const char *plug_name;
 	const char *plug_entry_name;
 }plug_global_entry_t;
@@ -123,8 +124,8 @@ int process_conflist(int plug_type);
 int plug_mange_get_entry_id(const char *plug_name, const char *plug_entry_name);
 int sapp_plugin_load_state_fs2_init(void);
 void plugin_load_state_update(int init_state, long long time_spent_in_us, const char *plug_path, const char *plug_name);
-
-
+int plug_priority_get(int entry_id);
+int max_plug_priority_get();
 #ifdef __cplusplus
 }
 #endif

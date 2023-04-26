@@ -587,7 +587,7 @@ int process_conf_entryname()
 }
 
 extern int plugin_load_new_plug(const char *plug_name, const char *plug_path);
-extern int plugin_is_necessary(const char *plug_path);
+extern int plugin_is_necessary(const char *plug_path, int *priority);
 /****************************************************************************
 函数名:process_confelem_plugname()
 功能：处理插件配置文件的插件名字段
@@ -603,6 +603,7 @@ int process_confelem_plugname(char* filename,int plugtype,char** plugname)
 	int len;
 	char buf_plugname[PLUGIN_MAX_CONFLEN]={0};
 	char* plugname_tmp;
+	int priority=0;
 	
 	rec = MESA_load_profile_string_nodef(filename,SECTION_PLUGINFO,KEYWORD_PLUGNAME,buf_plugname,PLUGIN_MAX_CONFLEN);
 	if(rec < 0)
@@ -635,8 +636,8 @@ int process_confelem_plugname(char* filename,int plugtype,char** plugname)
 	return 0;
 
 plug_init_error:
-	if(plugin_is_necessary(filename)){
-		sapp_log(RLOG_LV_FATAL, 1, 1, "%s init error, but this plug is necessary, exit!", filename);
+	if(plugin_is_necessary(filename, &priority)){
+		sapp_log(RLOG_LV_FATAL, 1, 1, "%s init error, but this plug is necessary, priority:%d, exit!", filename, priority);
 		exit(1);
 	}
 	return -1;
@@ -667,7 +668,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	int (*fun_init)() = NULL;
 	void  (*fun_destroy)() = NULL;	
 	void (*fun_getplugid)(unsigned short plugid) = NULL;
-
+	int priority=0;
 
 	//load FILENAME 
 	MESA_load_profile_string_nodef(filename,SECTION_PLUGINFO,KEYWORD_FILENAME,buf_sofilename,PLUGIN_MAX_CONFLEN);
@@ -873,8 +874,9 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	return 0;
 
 plug_init_error:
-	if(plugin_is_necessary(filename)){
-		sapp_log(RLOG_LV_FATAL, 1, 1, "%s init error, but this plug is necessary, exit!", filename);
+
+	if(plugin_is_necessary(filename, &priority)){
+		sapp_log(RLOG_LV_FATAL, 1, 1, "%s init error, but this plug is necessary, priority:%d, exit!", filename, priority);
 		exit(1);
 	}	
 	return -1;

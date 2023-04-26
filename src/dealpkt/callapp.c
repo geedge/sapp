@@ -395,6 +395,51 @@ static void plug_entry_kick_out_tot_list(StreamFunInfo *list_head, struct stream
 	ptcpdetail_pr->link_state = saved_linkstate;
 }
 
+static StreamFunInfo *plug_entry_kick_out_tot_list_by_priority(StreamFunInfo *list_head, struct streaminfo *a_stream, int kicker_priority)
+{
+	UCHAR saved_linkstate;
+	StreamFunInfo *tmp_ptr = NULL, *cur_node = list_head;
+	struct tcpdetail_private *ptcpdetail_pr = (struct tcpdetail_private *)a_stream->ptcpdetail;
+
+	UCHAR saved_opstate = a_stream->opstate;
+	UCHAR saved_pktstate = a_stream->pktstate;
+	saved_linkstate = ptcpdetail_pr->link_state;
+	
+	/* 临时修改为CLOSE, 再恢复原状态 */
+	a_stream->opstate = OP_STATE_CLOSE;
+	a_stream->pktstate = OP_STATE_CLOSE;
+	ptcpdetail_pr->link_state = STREAM_FAKE_CLOSE_BY_DEPRIVE;
+
+    while (cur_node)
+    {
+		tmp_ptr = cur_node->next;
+        if (plug_priority_get(cur_node->entry_id) <= kicker_priority)
+        {
+            if (is_raw_cb(cur_node->funtype))
+            {
+                plugin_call_streamentry(CALL_FUN_TYPE_RAW, cur_node, a_stream, NULL, a_stream->threadnum, NULL);
+            }
+            else
+            {
+                plugin_call_streamentry(CALL_FUN_TYPE_NORAW, cur_node, a_stream, NULL, a_stream->threadnum, NULL);
+            }
+			if(cur_node == list_head)
+			{
+				list_head=tmp_ptr;
+			}
+        	sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, a_stream->threadnum, cur_node);
+        	
+        }
+		cur_node = tmp_ptr;
+		
+    }
+
+    a_stream->opstate = saved_opstate;
+	a_stream->pktstate = saved_pktstate;	
+	ptcpdetail_pr->link_state = saved_linkstate;
+	return list_head;
+}
+
 static int stream_set_offload_flag(struct streaminfo *pstream, unsigned char smart_offload_flag)
 {
 	if(STREAM_TYPE_TCP == pstream->type)
@@ -461,13 +506,12 @@ int stream_state_pending(struct streaminfo *a_stream,const void *this_iphdr, con
 	StreamFunInfo *pNext=NULL,*pPrev=NULL;
 	UCHAR threadnum = a_stream->threadnum;
 	UCHAR local_app_ret;
-	int break_flag = 0;
+	int kicker_plugin_priority=-1;
 
 	pFunList = (StreamFunInfo*)(*apme);
 
 	for(i=0;i<funnum;i++)
 	{
-		break_flag = 0;
 		copy_funcation_from_entry_to_stream(&pFunInfo, &pfunAarry[i], threadnum);
 		local_app_ret=call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, pFunInfo);
 
@@ -476,12 +520,17 @@ int stream_state_pending(struct streaminfo *a_stream,const void *this_iphdr, con
 			/* 2019-11-15 lijia add for plug kill other */
 			if(local_app_ret & APP_STATE_KILL_OTHER)
 			{
-				/* 当前插件返回了DROPME, 且KILL_OTHER, 说明所有插件都结束 */
-				plug_entry_kick_out_tot_list(pFunList, a_stream);
-				pFunList = NULL;
-				*apme = NULL; /* 2020-05-08 lijia modify */
-				break;
-			}
+
+                kicker_plugin_priority = plug_priority_get(pfunAarry[i].entry_id);
+                if (kicker_plugin_priority >= max_plug_priority_get())
+                {
+                    /* 当前插件返回了DROPME, 且KILL_OTHER, 说明所有插件都结束 */
+                    plug_entry_kick_out_tot_list(pFunList, a_stream);
+                    pFunList = NULL;
+                    *apme = NULL; /* 2020-05-08 lijia modify */
+                    break;
+                }
+            }
 		}
 		else
 		{
