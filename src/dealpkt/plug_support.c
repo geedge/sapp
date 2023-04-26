@@ -322,24 +322,6 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
             }
         }
         break;
-        case RAW_PKT_GET_ROUTE_CTX:
-		{
-			if(rawpkt->meta[rawpkt->route_dir] != NULL)
-			{
-				void_value = (void *)(rawpkt->meta[rawpkt->route_dir]->data);
-				ret = rawpkt->meta[rawpkt->route_dir]->sz_data;
-			}
-		}
-		break;
-        case RWA_PKT_GET_SID_LIST:
-		{
-			if(rawpkt->meta[rawpkt->route_dir] != NULL)
-			{
-				void_value = (void *)(&rawpkt->meta[rawpkt->route_dir]->raw_sid_list);
-				ret = sizeof(struct segment_id_list);
-			}
-		}
-		break;
 		default:
 			sapp_runtime_log(RLOG_LV_FATAL, "get_opt_from_rawpkt(): not support option type: %d", type);
 			ret = -1;
@@ -522,6 +504,31 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 		case RAW_PKT_GET_VXLAN_VPNID:
 		case RAW_PKT_GET_VXLAN_LOCAL_IP:
 			return get_vxlan_info_from_streaminfo(pstream_pr, type, out_value);
+		break;
+	}
+	switch(type)
+	{
+		case RAW_PKT_GET_ROUTE_CTX:
+		{
+			void **value = (void **)out_value;
+			if(pstream_pr->polling_inject_context->meta[pstream->routedir] != NULL)
+			{
+				*value = (void *)(pstream_pr->polling_inject_context->meta[pstream->routedir]->data);
+				ret = pstream_pr->polling_inject_context->meta[pstream->routedir]->sz_data;
+				return ret;
+			}
+		}
+		break;
+        case RWA_PKT_GET_SID_LIST:
+		{
+			void **value = (void **)out_value;
+			if(pstream_pr->polling_inject_context->meta[pstream->routedir] != NULL)
+			{
+				*value = (void *)(&pstream_pr->polling_inject_context->meta[pstream->routedir]->raw_sid_list);
+				ret = sizeof(struct segment_id_list);
+				return ret;
+			}
+		}
 		break;
 	}
 	
