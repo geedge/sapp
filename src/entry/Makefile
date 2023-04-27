@@ -7,7 +7,7 @@ endif
 all: $(TARGET)
 LIB=
 LIB_PATH=-L../lib -L/opt/mrzcpd/lib
-CFLAGS += -fPIC -D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD
+CFLAGS += -fPIC -D_DEFAULT_SOURCE -D_DEFAULT_SOURCE -D__DEFAULT_SOURCE -D__FAVOR_BSD
 CFLAGS     += -DPLATFORM_NSDPF_PAPP=1
 
 ifeq ($(USE_PAG_GET_FRAME), $(YES))
@@ -106,7 +106,7 @@ MESA_IP_PLUG.so:sapp_plug.o  sapp_init.o sapp_global_val.o
 	cp $@ ../../bin/
 	cp $@ /opt/MESA/lib/libMESA_IP_PLUG.so
 sapp_plug.o:sapp_plug.c
-	g++ -c -g -o $@ -fPIC $^ $(INC) -D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DSAPP_AS_TARGET_SO=1
+	g++ -c -g -o $@ -fPIC $^ $(INC) -D_DEFAULT_SOURCE -D_DEFAULT_SOURCE -D__DEFAULT_SOURCE -D__FAVOR_BSD -DSAPP_AS_TARGET_SO=1
 .c.o:
 	$(CC) -c $(CFLAGS) -I. $(INC) $<
 

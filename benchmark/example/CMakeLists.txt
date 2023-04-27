@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8...3.10)
 
 set(MESA_SDK_PREFIX "/opt/MESA" CACHE STRING "MESA Framework Prefix")
 
@@ -9,7 +9,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include/public/stream_inc)
 
 LINK_DIRECTORIES(/opt/MESA/lib)
 
-add_definitions(-D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
+add_definitions(-D_DEFAULT_SOURCE -D_DEFAULT_SOURCE -D__DEFAULT_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
 add_definitions(-fPIC)
 add_definitions(-std=c++11)
 

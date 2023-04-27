@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8...3.10)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/include/private)
@@ -13,7 +13,7 @@ if(CAPTURE_MODE MATCHES "MARSIO")
     include_directories(${MARSIO_SDK_PREFIX}/include)
 endif()
 
-add_definitions(-D_BSD_SOURCE -D_BSD_SOURCE -D__BSD_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
+add_definitions(-D_DEFAULT_SOURCE -D_DEFAULT_SOURCE -D__DEFAULT_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
 add_definitions(-fPIC)
 LINK_DIRECTORIES(/opt/MESA/lib)
 LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/test)
@@ -35,12 +35,11 @@ set(OBJECTS_DIR ${CMAKE_CURRENT_BINARY_DIR}/temp_objs)
 file(MAKE_DIRECTORY ${OBJECTS_DIR})
 
 foreach(lib IN LISTS LIBS)
-    get_target_property(lib_file ${lib} LOCATION)
     add_custom_command(OUTPUT "${OBJECTS_DIR}/${lib}_objects"
-        COMMAND ${CMAKE_COMMAND} -E chdir "${OBJECTS_DIR}" ${CMAKE_AR} -x "${lib_file}"
+        COMMAND ${CMAKE_COMMAND} -E chdir "${OBJECTS_DIR}" ${CMAKE_AR} -x "$<TARGET_FILE:${lib}>"
         DEPENDS ${lib}
-    )
-    list(APPEND ALL_OBJECTS_TARGETS "${OBJECTS_DIR}/${lib}_objects")
+        )
+        list(APPEND ALL_OBJECTS_TARGETS "${OBJECTS_DIR}/${lib}_objects")
 endforeach()
 
 file(GLOB_RECURSE OBJECTS "${OBJECTS_DIR}/*.o")

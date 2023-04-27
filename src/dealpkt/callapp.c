@@ -361,6 +361,38 @@ char plugin_call_ipentry(int type,IPv4_CB_FUN_T stream_fun,SAPP_PKT_CB_FUN_T sap
 	return rec;
 }
 
+static void plug_entry_kick_out_one(StreamFunInfo *node, struct streaminfo *a_stream)
+{
+	if(node==NULL)return;
+
+    UCHAR saved_linkstate;
+    struct tcpdetail_private *ptcpdetail_pr = (struct tcpdetail_private *)a_stream->ptcpdetail;
+
+    UCHAR saved_opstate = a_stream->opstate;
+    UCHAR saved_pktstate = a_stream->pktstate;
+    saved_linkstate = ptcpdetail_pr->link_state;
+
+    /* 临时修改为CLOSE, 再恢复原状态 */
+    a_stream->opstate = OP_STATE_CLOSE;
+    a_stream->pktstate = OP_STATE_CLOSE;
+    ptcpdetail_pr->link_state = STREAM_FAKE_CLOSE_BY_DEPRIVE;
+
+    if (is_raw_cb(node->funtype))
+    {
+        plugin_call_streamentry(CALL_FUN_TYPE_RAW, node, a_stream, NULL, a_stream->threadnum, NULL);
+    }
+    else
+    {
+        plugin_call_streamentry(CALL_FUN_TYPE_NORAW, node, a_stream, NULL, a_stream->threadnum, NULL);
+    }
+    sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, a_stream->threadnum, node);
+
+    a_stream->opstate = saved_opstate;
+    a_stream->pktstate = saved_pktstate;
+    ptcpdetail_pr->link_state = saved_linkstate;
+	return;
+}
+
 
 /* 将剩余插件entry链全部CLOSE */
 static void plug_entry_kick_out_tot_list(StreamFunInfo *list_head, struct streaminfo *a_stream)
@@ -496,6 +528,224 @@ int call_streamentry(struct streaminfo *a_stream, const void *this_iphdr, const 
 	return pFunInfo->appState;
 }
 
+
+static int stream_state_pending_process(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
+				int funnum,stFunArray *p_plugin_entrys,void **apme,unsigned char *opstate, unsigned char smart_offload_flag)
+{
+	int ret=PASS;
+	StreamFunInfo *p_plugin_runtime_list=NULL;
+	StreamFunInfo *p_plugin_runtime_last=NULL;
+	StreamFunInfo tmp_runtime;
+	UCHAR giveme_cnt=0;
+	UCHAR entry_ret;
+	
+	for(int i=0;i<funnum;i++)
+	{
+		memset(&tmp_runtime, 0, sizeof(StreamFunInfo));
+		tmp_runtime.appState=APP_STATE_GIVEME;
+		tmp_runtime.pAppInfo=NULL;
+		tmp_runtime.funtype=(p_plugin_entrys+i)->funtype;
+		tmp_runtime.pfun=(p_plugin_entrys+i)->pfun;
+		tmp_runtime.entry_id=(p_plugin_entrys+i)->entry_id;
+		tmp_runtime.next=NULL;
+		entry_ret = call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, &tmp_runtime);
+		if(entry_ret & APP_STATE_DROPPKT)	
+		{
+			ret=DROP;
+		}	
+		if((entry_ret&APP_STATE_DROPME) != APP_STATE_DROPME)
+		{
+			StreamFunInfo *new_plugin_runtime=(StreamFunInfo *)sapp_mem_calloc(SAPP_MEM_DYN_PLUG_CTRL, a_stream->threadnum, sizeof(StreamFunInfo));	
+			memcpy(new_plugin_runtime, &tmp_runtime, sizeof(StreamFunInfo));
+            if ((entry_ret & APP_STATE_GIVESTATE)==APP_STATE_GIVESTATE)
+            {
+                new_plugin_runtime->appState = APP_STATE_GIVESTATE;
+            }
+            else
+            {
+                if ((entry_ret & APP_STATE_GIVEME) == APP_STATE_GIVEME || APP_STATE_GIVEME == 0)
+                {
+                    giveme_cnt++;
+                }
+			}
+            if (p_plugin_runtime_list == NULL)
+            {
+                p_plugin_runtime_list = new_plugin_runtime;
+                p_plugin_runtime_last = new_plugin_runtime;
+            }
+            else
+            {
+                p_plugin_runtime_last->next = new_plugin_runtime;
+                p_plugin_runtime_last = new_plugin_runtime;
+            }
+        }
+		if(entry_ret&APP_STATE_KILL_OTHER)
+		{
+            // 删除优先级小于等于当前处理器的其他节点
+            StreamFunInfo* current = p_plugin_runtime_list;
+            StreamFunInfo* prev = NULL;
+            while (current != NULL) {
+                if (plug_priority_get(current->entry_id) <= plug_priority_get((p_plugin_entrys+i)->entry_id)) {
+                    if (prev != NULL) {
+                        prev->next = current->next;
+                    } else {
+                        p_plugin_runtime_list = current->next;
+                    }
+                    StreamFunInfo* to_remove = current;
+                    current = current->next;
+					plug_entry_kick_out_one(to_remove, a_stream);
+                } else {
+                    prev = current;
+                    current = current->next;
+                }
+            }
+
+            // 跳过后续优先级小于等于当前处理器的处理器
+            while (i + 1 < funnum && plug_priority_get((p_plugin_entrys+i+1)->entry_id) <= plug_priority_get((p_plugin_entrys+i)->entry_id)) 
+			{
+                ++i;
+            }
+        }
+
+	}
+
+	if(p_plugin_runtime_list != NULL)
+	{
+		*apme = p_plugin_runtime_list;
+		*opstate= OP_STATE_DATA;
+		if(giveme_cnt == 0)
+		{
+			stream_set_offload_flag(a_stream, smart_offload_flag);
+		}
+	}
+	else
+	{
+		*opstate= OP_STATE_CLOSE;	
+		stream_set_offload_flag(a_stream, smart_offload_flag);
+	}
+
+	return ret;
+}
+
+static int stream_state_data_process(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
+				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate, unsigned char smart_offload_flag)
+{
+	StreamFunInfo* prev = NULL;
+    StreamFunInfo* current = (StreamFunInfo*)*apme;
+    StreamFunInfo* head = (StreamFunInfo*)*apme;
+	StreamFunInfo *to_remove = NULL;
+	int ret=PASS;
+	UCHAR giveme_cnt=0;
+	UCHAR entry_ret;
+    while (current != NULL)
+    {
+        if (current->appState == APP_STATE_GIVESTATE)
+        {
+            current = current->next;
+            continue;
+        }
+        entry_ret = call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, current);
+		if(entry_ret & APP_STATE_DROPPKT)	
+		{
+			ret=DROP;
+		}
+        if ((entry_ret & APP_STATE_GIVESTATE) == APP_STATE_GIVESTATE)
+        {
+            current->appState = APP_STATE_GIVESTATE;
+        }
+        else
+        {
+            if ((entry_ret & APP_STATE_GIVEME) == APP_STATE_GIVEME || APP_STATE_GIVEME == 0)
+            {
+                giveme_cnt++;
+            }
+        }
+        if (entry_ret & APP_STATE_KILL_OTHER)
+        {
+            // 删除优先级小于等于当前插件的其他节点
+            to_remove = NULL;
+            if (prev != NULL)
+            {
+                prev->next = current->next;
+                to_remove = current;
+                current = current->next;
+            }
+            else
+            {
+                head = current->next;
+                to_remove = current;
+                current = current->next;
+            }
+            plug_entry_kick_out_one(to_remove, a_stream);
+
+            StreamFunInfo *iter_prev = NULL;
+            StreamFunInfo *iter_current = head;
+            while (iter_current != NULL)
+            {
+                if (plug_priority_get(iter_current->entry_id) <= plug_priority_get(current->entry_id))
+                {
+                    to_remove = iter_current;
+                    if (iter_prev != NULL)
+                    {
+                        iter_prev->next = iter_current->next;
+                    }
+                    else
+                    {
+                        head = iter_current->next;
+                    }
+                    iter_current = iter_current->next;
+                    plug_entry_kick_out_one(to_remove, a_stream);
+                }
+                else
+                {
+                    iter_prev = iter_current;
+                    iter_current = iter_current->next;
+                }
+            }
+        }
+        else
+        {
+            if (entry_ret&APP_STATE_DROPME)
+            {
+                to_remove = NULL;
+                if (prev != NULL)
+                {
+                    prev->next = current->next;
+                    to_remove = current;
+                    current = current->next;
+                }
+                else
+                {
+                    head = current->next;
+                    to_remove = current;
+                    current = current->next;
+                }
+                sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,a_stream->threadnum,to_remove);
+            }
+            else
+            {
+                prev = current;
+                current = current->next;
+            }
+        }
+    }
+	if(head != NULL)
+	{
+		*opstate= OP_STATE_DATA;
+		if(giveme_cnt == 0)
+		{
+			stream_set_offload_flag(a_stream, smart_offload_flag);
+		}
+	}
+	else
+	{
+		*opstate= OP_STATE_CLOSE;	
+		stream_set_offload_flag(a_stream, smart_offload_flag);
+	}
+	*apme = head;
+	return ret;
+}
+
 int stream_state_pending(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
 				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate, unsigned char smart_offload_flag)
 {
@@ -607,6 +857,7 @@ int stream_state_pending(struct streaminfo *a_stream,const void *this_iphdr, con
 	}
 	
 	return ret;
+
 }
 
 static int stream_state_data(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
@@ -758,7 +1009,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 	switch(*opstate)
 	{
 		case	OP_STATE_PENDING:
-			ret = stream_state_pending(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate, smart_offload_flag);
+			ret = stream_state_pending_process(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate, smart_offload_flag);
 			break;
 		case	OP_STATE_DATA:	
 			if(*apme==NULL) //如果已经没有要处理的函数了
@@ -766,7 +1017,7 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 				*opstate= OP_STATE_CLOSE;
 				break;
 			}
-			ret =  stream_state_data(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate, smart_offload_flag);
+			ret =  stream_state_data_process(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate, smart_offload_flag);
 			break;
 		case	OP_STATE_CLOSE: //链接关闭,清除状态
 				pFunInfo=(StreamFunInfo *)(*apme);

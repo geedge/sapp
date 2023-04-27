@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8...3.10)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/module_test/vendor)
 add_subdirectory(${CMAKE_SOURCE_DIR}/module_test/test_case)

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8...3.10)
 
 add_subdirectory(timestamp_record)
 add_subdirectory(symbol_check)

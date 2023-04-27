@@ -1,5 +1,5 @@
 #define _XOPEN_SOURCE 1
-#define _BSD_SOURCE 1
+#define _DEFAULT_SOURCE 1
 #define _ISOC99_SOURCE 1
 #include <time.h>
 #include <stdio.h>

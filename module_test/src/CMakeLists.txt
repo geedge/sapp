@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8...3.10)
 
 include_directories(${PROJECT_SOURCE_DIR}/benchmark/include)
 include_directories(${PROJECT_SOURCE_DIR}/module_test/include)
