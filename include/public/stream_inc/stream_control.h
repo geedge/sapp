@@ -112,6 +112,12 @@ enum sapp_platform_opt{
 	SPO_CONFIG_ROOT_DIR,		/* config file root directory, opt_val type must be char[], opt_val_len is value-result argument */
 	SPO_DATA_ROOT_DIR,			/* data or state file root directory, opt_val type must be char[], opt_val_len is value-result argument */
 	SPO_DEPLOYMENT_MODE, /* Similar to SPO_DEPLOYMENT_MODE_STR, opt_val type is sapp_deploment_mode_t */
+	SPO_TCP_STREAM_C2S,			/* total number of TCP c2s flows processed since start of run, opt_val type must be unsigned long long */
+	SPO_TCP_STREAM_S2C,		/* total number of TCP s2c flows processed since start of run, opt_val type must be unsigned long long */
+	SPO_TCP_STREAM_DOUBLE,		/* total number of TCP bidirectional flows processed since start of run, opt_val type must be unsigned long long */
+	SPO_UDP_STREAM_C2S,			/* total number of TCP c2s flows processed since start of run, opt_val type must be unsigned long long */
+	SPO_UDP_STREAM_S2C,		/* total number of TCP s2c flows processed since start of run, opt_val type must be unsigned long long */
+	SPO_UDP_STREAM_DOUBLE,		/* total number of TCP bidirectional flows processed since start of run, opt_val type must be unsigned long long */
 };
 
 

@@ -712,6 +712,78 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 		}
 		break;
 		
+		case SPO_TCP_STREAM_C2S:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_TCP_STREAM_C2S error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_num = (unsigned long long *)opt_val;
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_TCP_STREAM_TOTAL_C2S);
+		}
+		break;	
+				
+		case SPO_TCP_STREAM_S2C:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_TCP_STREAM_S2C error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_num = (unsigned long long *)opt_val;
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_TCP_STREAM_TOTAL_S2C);
+		}
+		break;	
+
+		case SPO_TCP_STREAM_DOUBLE:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_TCP_STREAM_DOUBLE error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_num = (unsigned long long *)opt_val;
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE);
+		}
+		break;	
+
+		case SPO_UDP_STREAM_C2S:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_UDP_STREAM_C2S error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_num = (unsigned long long *)opt_val;
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_UDP_STREAM_TOTAL_C2S);
+		}
+		break;	
+				
+		case SPO_UDP_STREAM_S2C:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_UDP_STREAM_S2C error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_num = (unsigned long long *)opt_val;
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_UDP_STREAM_TOTAL_S2C);
+		}
+		break;	
+
+		case SPO_UDP_STREAM_DOUBLE:
+		{
+			if(*opt_val_len != sizeof(long long)){
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_UDP_STREAM_DOUBLE error:opt_val_len:%d is invalid!\n", *opt_val_len);
+				break;
+			}
+			unsigned long long *tot_num = (unsigned long long *)opt_val;
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE);
+		}
+		break;			
+		
 		default:
 			
 			sapp_runtime_log(RLOG_LV_FATAL, "sapp_get_platform_opt() error:opt_type:%d not support!\n", (int)opt);
