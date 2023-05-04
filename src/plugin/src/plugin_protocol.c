@@ -27,7 +27,7 @@ static void plugin_protocol_info_convert(void)
 		return;
 	}
 	
-	g_protocol_plug_info_array = malloc(sizeof(void *) * (g_plugin_plugid + 1));
+	g_protocol_plug_info_array = SAPP_GLOBAL_ALLOC(sizeof(void *) * (g_plugin_plugid + 1));
 	memset(g_protocol_plug_info_array, 0, sizeof(void *) * (g_plugin_plugid + 1));
 
 	while(tmp_plug_info->next){
@@ -94,11 +94,11 @@ void destroy_pluginfo_elem_pro(stProtocolPlugInfo* plug_info)
 {
 	if(plug_info->plugname != NULL)
 	{
-		free(plug_info->plugname);
+		SAPP_GLOBAL_FREE(plug_info->plugname);
 		plug_info->plugname = NULL;
 	}
 
-	free(plug_info);
+	SAPP_GLOBAL_FREE(plug_info);
 	plug_info = NULL;
 
 	return;
