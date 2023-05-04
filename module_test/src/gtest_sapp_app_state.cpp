@@ -111,6 +111,8 @@ void app_state_kill_follow_middle_pending_run(void)
 {
 	app_state_common_init();
   
+  	system("echo ./plug/business/gtest_sapp_appstate_1/gtest_sapp.inf 1 > ./etc/necessary_plug_list.conf");
+
 	/* 更新插件conflist, 第一次使用update, 后续使用append */
 	update_conflist_inf("./plug/business/gtest_sapp_appstate_1/gtest_sapp.inf");
 	append_conflist_inf("./plug/business/gtest_sapp/gtest_sapp.inf"); 
@@ -132,6 +134,8 @@ void app_state_kill_follow_tail_pending_run(void)
 {
 	app_state_common_init();
   
+  	system("echo ./plug/business/gtest_sapp_appstate_1/gtest_sapp.inf 1 > ./etc/necessary_plug_list.conf");
+  	system("echo ./plug/business/gtest_sapp_appstate_2/gtest_sapp.inf 1 >> ./etc/necessary_plug_list.conf");
 	/* 更新插件conflist, 第一次使用update, 后续使用append */
 	update_conflist_inf("./plug/business/gtest_sapp_appstate_1/gtest_sapp.inf");
 	append_conflist_inf("./plug/business/gtest_sapp_appstate_2/gtest_sapp.inf");
@@ -178,6 +182,8 @@ void app_state_kill_follow_middle_data_run(void)
 {
 	app_state_common_init();
   
+  	system("echo ./plug/business/gtest_sapp_appstate_1/gtest_sapp.inf 1 > ./etc/necessary_plug_list.conf");
+
 	/* 更新插件conflist, 第一次使用update, 后续使用append */
 	update_conflist_inf("./plug/business/gtest_sapp_appstate_1/gtest_sapp.inf"); 
 	append_conflist_inf("./plug/business/gtest_sapp/gtest_sapp.inf"); 
@@ -194,6 +200,8 @@ void app_state_kill_follow_tail_data_run(void)
 {
 	app_state_common_init();
   
+  	system("echo ./plug/business/gtest_sapp_appstate_1/gtest_sapp.inf 1 > ./etc/necessary_plug_list.conf");
+  	system("echo ./plug/business/gtest_sapp_appstate_2/gtest_sapp.inf 1 >> ./etc/necessary_plug_list.conf");
 	/* 更新插件conflist, 第一次使用update, 后续使用append */
 	update_conflist_inf("./plug/business/gtest_sapp_appstate_1/gtest_sapp.inf"); 
 	append_conflist_inf("./plug/business/gtest_sapp_appstate_2/gtest_sapp.inf"); 

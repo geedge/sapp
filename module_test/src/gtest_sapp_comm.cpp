@@ -602,6 +602,8 @@ void set_default_config(void)
 		0x22   "
 		0x2F   /
 	*/
+	system(">./etc/necessary_plug_list.conf");
+
 	update_config_file("./etc/sapp.toml", "cfg_file_sapp_log", "\\x22etc\\x2Fsapp_log.conf\\x22");
 	update_config_file("./etc/sapp.toml", "cfg_file_plug_list", "\\x22plug\\x2Fconflist.inf\\x22");
 	update_config_file("./etc/sapp.toml", "data_file_sysinfo_log", "\\x22sysinfo.log\\x22");

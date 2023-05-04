@@ -579,13 +579,15 @@ static int stream_state_pending_process(struct streaminfo *a_stream,const void *
                 p_plugin_runtime_last = new_plugin_runtime;
             }
         }
-		if(entry_ret&APP_STATE_KILL_OTHER)
+		if(entry_ret&APP_STATE_KILL_OTHER || entry_ret&APP_STATE_KILL_FOLLOW)
 		{
             // 删除优先级小于等于当前处理器的其他节点
             StreamFunInfo* current = p_plugin_runtime_list;
             StreamFunInfo* prev = NULL;
+			int kicker_entry_id=(p_plugin_entrys+i)->entry_id;
+			int kicker_priority=plug_priority_get(kicker_entry_id);
             while (current != NULL) {
-                if (plug_priority_get(current->entry_id) <= plug_priority_get((p_plugin_entrys+i)->entry_id)) {
+                if (plug_priority_get(current->entry_id) <= kicker_priority && current->entry_id != kicker_entry_id) {
                     if (prev != NULL) {
                         prev->next = current->next;
                     } else {
@@ -600,8 +602,8 @@ static int stream_state_pending_process(struct streaminfo *a_stream,const void *
                 }
             }
 
-            // 跳过后续优先级小于等于当前处理器的处理器
-            while (i + 1 < funnum && plug_priority_get((p_plugin_entrys+i+1)->entry_id) <= plug_priority_get((p_plugin_entrys+i)->entry_id)) 
+            // 跳过后续优先级小于等于当前插件优先级的入口调用
+            while (i + 1 < funnum && plug_priority_get((p_plugin_entrys+i+1)->entry_id) <= kicker_priority) 
 			{
                 ++i;
             }
@@ -660,29 +662,15 @@ static int stream_state_data_process(struct streaminfo *a_stream,const void *thi
                 giveme_cnt++;
             }
         }
-        if (entry_ret & APP_STATE_KILL_OTHER)
+        if (entry_ret & APP_STATE_KILL_OTHER || entry_ret&APP_STATE_KILL_FOLLOW)
         {
-            // 删除优先级小于等于当前插件的其他节点
-            to_remove = NULL;
-            if (prev != NULL)
-            {
-                prev->next = current->next;
-                to_remove = current;
-                current = current->next;
-            }
-            else
-            {
-                head = current->next;
-                to_remove = current;
-                current = current->next;
-            }
-            plug_entry_kick_out_one(to_remove, a_stream);
-
+			int kicker_entry_id=current->entry_id;
+			int kicker_priority=plug_priority_get(kicker_entry_id);
             StreamFunInfo *iter_prev = NULL;
             StreamFunInfo *iter_current = head;
             while (iter_current != NULL)
             {
-                if (plug_priority_get(iter_current->entry_id) <= plug_priority_get(current->entry_id))
+                if (plug_priority_get(iter_current->entry_id) <= kicker_priority && iter_current->entry_id != kicker_entry_id)
                 {
                     to_remove = iter_current;
                     if (iter_prev != NULL)
@@ -702,6 +690,7 @@ static int stream_state_data_process(struct streaminfo *a_stream,const void *thi
                     iter_current = iter_current->next;
                 }
             }
+			current = current->next;
         }
         else
         {
