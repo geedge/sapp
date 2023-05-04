@@ -254,7 +254,7 @@ void MESA_rst_tcp_with_vpls_run(void);
 void MESA_rst_tcp_with_double_vlan_run(void);
 void MESA_rst_tcp_with_8021ad_qinq_run(void);
 void MESA_rst_tcp_mpls_vlan_mpls_c2s_run(void);
-void tcp_plug_droppkt_run(void);
+void tcp_plug_killother_run(void);
 void MESA_inject_tcp_payload_test_v4_run(void);
 void sapp_inject_tcp_payload_test_v4_run(void);
 void MESA_inject_udp_mpls_vlan_mpls_s2c_run(void);

@@ -159,7 +159,7 @@ void tcp_call_order_for_reset_check_run(void)
 
 
 
-static void tcp_droppkt_env_init(void)
+static void tcp_plug_killother_env_init(void)
 {
 	set_default_config();
 
@@ -185,10 +185,10 @@ static void tcp_droppkt_env_init(void)
 
 
 /* 测试插件返回DROPPKT处理逻辑 */
-void tcp_plug_droppkt_run(void)
+void tcp_plug_killother_run(void)
 {
 	set_default_config();
-	tcp_droppkt_env_init();
+	tcp_plug_killother_env_init();
 	
 	set_pcap_dumpfile("tcp/tcp_simple.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "df138740a6a22ca9c977052f21f7a470"),0);

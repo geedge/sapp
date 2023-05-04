@@ -372,9 +372,9 @@ TEST(tcp, oos_lost_pkt)
 }
 
 #define _tcp_plug_droppkt_test 1  // for SI symbol view
-TEST(tcp, plug_droppkt)
+TEST(tcp, plug_killother)
 {
-	tcp_plug_droppkt_run();
+	tcp_plug_killother_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 

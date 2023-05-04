@@ -450,7 +450,7 @@ extern "C" int tcp_plug_droppkt_second_init(void)
 }
 
 
-extern "C" char tcp_plug_droppkt_first(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
+extern "C" unsigned char tcp_plug_droppkt_first(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	struct plug_droppkt_stat_t *droppkt_stat;
 	
@@ -475,7 +475,7 @@ extern "C" char tcp_plug_droppkt_first(struct streaminfo *pstream,void **pme, in
 		}
 	}
 
-	return APP_STATE_GIVEME | APP_STATE_DROPPKT;
+	return APP_STATE_GIVEME | APP_STATE_KILL_OTHER;
 }
 
 
