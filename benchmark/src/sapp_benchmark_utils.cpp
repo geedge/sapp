@@ -184,6 +184,7 @@ static int tuntap_dev_create(char *dev, int flags)
         strncpy(ifr.ifr_name, dev, IFNAMSIZ);
     }
     if ((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0) {
+		perror ("Error: ");
         close(fd);
         return err;
     }

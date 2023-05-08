@@ -16,6 +16,8 @@
 #include <gtest/gtest.h>
 
 
+int g_inline_test_timeout_s=5;
+
 static void set_default_sapp_inline_env(void)
 {
 	set_default_config();
@@ -58,6 +60,8 @@ void start_run_stop_libsapp(int sleep_seconds)
 /* vxlan头部字段解析功能测试 */
 void inline_vxlan_header_run(void)
 {
+
+	printf("--------------------------inline_vxlan_header_run start!\n");
 	set_default_sapp_inline_env();
 
 	set_default_asymmetric_addr_layer_conf("ethernet[*]\nvlan[*]\nvxlan[*]\nmpls[*]\ngre[*]\ngtp[*]\n\n");
@@ -66,7 +70,7 @@ void inline_vxlan_header_run(void)
 	update_plugin_inf("TCP_ALL", "inline_vxlan_header_parse_entry"); 
 	set_pcap_dumpfile("for_gtest_only/inline/vxlan_header_simple.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "24fd87627aa8c240530982cdeb1b40ab"),0);
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/vxlan_header_simple.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/vxlan_header_simple.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -89,7 +93,7 @@ void inline_flow_forward_simple_run(void)
 	printf("inline_mode.simple, dependency polling timeout, please wait for a monment......\n");
 
 	/* 插件inline_tcpall_simple需要超时淘汰, 此处时间长一些 */
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_flow_forward_simple.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_flow_forward_simple.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -104,7 +108,7 @@ void inline_tcp_simple_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/tcp_flow_stat.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "917fd6b8bc70e02812a036adf637479b"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_flow_stat.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_flow_stat.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -125,7 +129,7 @@ void inline_inject_rst_c2s_trigger_by_c2s_pkt_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/tcp_inject_rst_c2s.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "508e10b7af3ad4bac49868d9610d550b"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_inject_rst_c2s.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_inject_rst_c2s.pcap", g_inline_test_timeout_s);
 
 	gtest_start_sapp_progress(sapp_inline_start_args);
 }
@@ -148,7 +152,7 @@ void inline_inject_rst_s2c_trigger_by_s2c_pkt_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/tcp_inject_rst_s2c.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "a53c8674fbe467b86256b9911c66361f"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_inject_rst_s2c.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_inject_rst_s2c.pcap", g_inline_test_timeout_s);
 	
 	gtest_start_sapp_progress(sapp_inline_start_args);
 }
@@ -172,7 +176,7 @@ void inline_inject_rst_s2c_trigger_by_c2s_pkt_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/tcp_inject_s2c_rst_trigger_by_c2s.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "8da13608354898e2af3f34547a0d54fa"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_inject_s2c_rst_trigger_by_c2s.pcap",30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_inject_s2c_rst_trigger_by_c2s.pcap",g_inline_test_timeout_s);
 	
 	gtest_start_sapp_progress(sapp_inline_start_args);
 }
@@ -194,7 +198,7 @@ void inline_inject_rst_c2s_trigger_by_s2c_pkt_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/tcp_inject_c2s_rst_trigger_by_s2c.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "25a94fb48a2cdb568a5561d60a2f72b3"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_inject_c2s_rst_trigger_by_s2c.pcap",30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_inject_c2s_rst_trigger_by_s2c.pcap",g_inline_test_timeout_s);
 	
 	gtest_start_sapp_progress(sapp_inline_start_args);
 }
@@ -221,7 +225,7 @@ void inline_inject_payload_s2c_trigger_by_c2s_ipv6_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/tcp_inject_s2c_rst_trigger_by_c2s_ipv6.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "ff0aac8961b4cd660894304fd38d7d71"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_inject_s2c_rst_trigger_by_c2s_ipv6.pcap",30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_inject_s2c_rst_trigger_by_c2s_ipv6.pcap",g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -241,7 +245,7 @@ void inline_ip_plug_entry_not_call_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/ip_plug_entry_not_call.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "136ec31b723d689f0ee6bb6867193f39"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/ip_plug_entry_not_call.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/ip_plug_entry_not_call.pcap", g_inline_test_timeout_s);
 	start_run_stop_libsapp(5);
 }
 
@@ -262,7 +266,7 @@ void inline_udp_plug_entry_not_call_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/udp_plug_not_call_entry.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "365675bc0fcb0ef839648c31419f107f"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/udp_plug_not_call_entry.pcap",30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/udp_plug_not_call_entry.pcap",g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -280,7 +284,7 @@ void inline_udp_plug_drop_entry_run(void)
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "48126d760155589618c523050148475d"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/inline_drop_pkt.pcap",30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/inline_drop_pkt.pcap",g_inline_test_timeout_s);
 	
 	//start_run_stop_libsapp(5);
 	gtest_start_sapp_progress(sapp_inline_start_args);
@@ -300,7 +304,7 @@ void inline_layer_addr_ntop_run(void)
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "ff145f7e429c96abd783504da8c44a01"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_layer_addr_ntop.pcap",30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_layer_addr_ntop.pcap",g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -320,7 +324,7 @@ void inline_stream_addr_ntop_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/tcp_flow_forward_simple.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "2d930e391d57b8e4e930eec5a234aaba"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_flow_forward_simple.pcap",30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_flow_forward_simple.pcap",g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -341,7 +345,7 @@ void inline_stream_pfather_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/tcp_flow_forward_simple.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "2d930e391d57b8e4e930eec5a234aaba"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_flow_forward_simple.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_flow_forward_simple.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -358,7 +362,7 @@ void inline_plug_stat_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/inline_plug_stat.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "3153c45408e8b18b49ffda62b08e341e"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/inline_plug_stat.pcap",30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/inline_plug_stat.pcap",g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -389,7 +393,7 @@ void inline_polling_timeout_tcp_run(void)
 	
 	ASSERT_EQ(file_md5_checksum("dumpfile", "87f99936b70f415b81e665204a841ac3"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/timer/polling_timeout.pcap", 30);  
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/timer/polling_timeout.pcap", g_inline_test_timeout_s);  
 	
 	start_run_stop_libsapp(5);
 }
@@ -416,7 +420,7 @@ void inline_polling_timeout_tcpall_run(void)
 	set_pcap_dumpfile("for_gtest_only/timer/polling_timeout.pcap");
 	
 	ASSERT_EQ(file_md5_checksum("dumpfile", "87f99936b70f415b81e665204a841ac3"),0);
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/timer/polling_timeout.pcap", 30);  
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/timer/polling_timeout.pcap", g_inline_test_timeout_s);  
 	
 	start_run_stop_libsapp(5);
 }
@@ -442,7 +446,7 @@ void inline_polling_timeout_udp_run(void)
 	set_pcap_dumpfile("for_gtest_only/timer/polling_timeout_udp.pcap");
 	
 	ASSERT_EQ(file_md5_checksum("dumpfile", "a261999fac529d55b938b35c7d53b35d"),0);
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/timer/polling_timeout_udp.pcap", 30); 
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/timer/polling_timeout_udp.pcap", g_inline_test_timeout_s); 
 	
 	start_run_stop_libsapp(5);
 }
@@ -470,7 +474,7 @@ void inline_asymmetric_vxlan_addr_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/inline_asymmetric_vxlan_addr.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "ba1aaa9eefc8e026509ce185369ee8c9"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/inline_asymmetric_vxlan_addr.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/inline_asymmetric_vxlan_addr.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -493,7 +497,7 @@ void inline_cheat_dup_tcp_run(void)
 
 	set_pcap_dumpfile("for_gtest_only/duplicate_packet/inline_cheat_dup_tcp.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "f51735e23e24c83e583040cf20e79b57"),0);
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/duplicate_packet/inline_cheat_dup_tcp.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/duplicate_packet/inline_cheat_dup_tcp.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -519,7 +523,7 @@ void inline_dup_inject_ipv4_tcp_run(void)
 	set_pcap_dumpfile("for_gtest_only/duplicate_packet/ipv4_tcp_with_syn_dup_test.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "2808e7b99ed7680b22f370aa6621da2a"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/duplicate_packet/ipv4_tcp_with_syn_dup_test.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/duplicate_packet/ipv4_tcp_with_syn_dup_test.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -542,7 +546,7 @@ void inline_dup_inject_ipv6_tcp_run(void)
 	set_pcap_dumpfile("for_gtest_only/duplicate_packet/ipv6_tcp_with_syn_dup_test.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "8c66d7544a6c931d956c15249f401923"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/duplicate_packet/ipv6_tcp_with_syn_dup_test.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/duplicate_packet/ipv6_tcp_with_syn_dup_test.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -567,7 +571,7 @@ void inline_dup_inject_ipv4_udp_run(void)
 	set_pcap_dumpfile("for_gtest_only/duplicate_packet/ipv4_udp_dup_test.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "0f6dbdc4f65b98c7fd2e95c812b26d87"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/duplicate_packet/ipv4_udp_dup_test.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/duplicate_packet/ipv4_udp_dup_test.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -589,7 +593,7 @@ void inline_dup_inject_ipv6_udp_run(void)
 	set_pcap_dumpfile("for_gtest_only/duplicate_packet/ipv6_udp_dup_test.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "f109d211904245ea55a0ba8b92fd7233"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/duplicate_packet/ipv6_udp_dup_test.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/duplicate_packet/ipv6_udp_dup_test.pcap", g_inline_test_timeout_s);
 	start_run_stop_libsapp(5);
 }
 
@@ -646,7 +650,7 @@ void inline_ssdp_run(void)
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "bb0a7f7ebdcc6bf01dac576c719022c5"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/ssdp/ssdp_inline.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/ssdp/ssdp_inline.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -664,7 +668,7 @@ void inline_nbns_run(void)
 	set_pcap_dumpfile("nbns/nbns_inline.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "4b01a59f8299deb070323594b32b4351"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/nbns/nbns_inline.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/nbns/nbns_inline.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -687,7 +691,7 @@ void inline_get_rawpkt_data_run(void)
 	set_pcap_dumpfile("for_gtest_only/vxlan/vxlan_dns.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "844de2098c057c82cab8b9e47b6e6123"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/vxlan/vxlan_dns.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/vxlan/vxlan_dns.pcap", g_inline_test_timeout_s);
 
 	start_run_stop_libsapp(5);
 }
@@ -706,7 +710,7 @@ void inline_raw_ip_frag_list_run(void)
 	set_pcap_dumpfile("vxlan/vxlan_ipv4_frag_udp.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "395574c5b55f1e2955421fad4bcb15e5"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/vxlan/vxlan_ipv4_frag_udp.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/vxlan/vxlan_ipv4_frag_udp.pcap", g_inline_test_timeout_s);
 
 	gtest_set_timeout_default_result(GTEST_SAPP_ERR);
 	start_run_stop_libsapp(5);
@@ -722,7 +726,7 @@ void inline_vxlan_info_run(void)
 	set_pcap_dumpfile("for_gtest_only/vxlan/get_vxlan_info.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "8027a7e72305c97a471dcffe46f547e7"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/vxlan/get_vxlan_info.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/vxlan/get_vxlan_info.pcap", g_inline_test_timeout_s);
 	start_run_stop_libsapp(5);
 }
 
@@ -736,7 +740,7 @@ void inline_inner_hdlc_run(void)
 	set_pcap_dumpfile("for_gtest_only/vxlan/vxlan_with_hdlc_oicq.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "a259f6c7b8080ba8446b7dd7b989ca1e"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/vxlan/vxlan_with_hdlc_oicq.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/vxlan/vxlan_with_hdlc_oicq.pcap", g_inline_test_timeout_s);
 	start_run_stop_libsapp(5);
 }
 
@@ -751,7 +755,7 @@ void inline_grev0_inject_reverse_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/gre_v0_reverse_inject.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "6f24d4d3f3c13c925afae812f0114626"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/gre_v0_reverse_inject.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/gre_v0_reverse_inject.pcap", g_inline_test_timeout_s);
 	gtest_start_sapp_progress(sapp_inline_start_args);
 
 }
@@ -772,7 +776,7 @@ void inline_inject_rst_inner_hdlc_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/tcp_rst_vxlan_with_hdlc.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "e588fef2066daa25ffe0e61ab5586728"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_rst_vxlan_with_hdlc.pcap",30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_rst_vxlan_with_hdlc.pcap",g_inline_test_timeout_s);
 	gtest_start_sapp_progress(sapp_inline_start_args);
 }
 
@@ -787,7 +791,7 @@ void inline_inner_ppp_run(void)
 	set_pcap_dumpfile("for_gtest_only/vxlan/vxlan_with_ppp_oicq.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "e22da1283cbd1fe1fe2fe4f1d7ebf048"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/vxlan/vxlan_with_ppp_oicq.pcap", 30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/vxlan/vxlan_with_ppp_oicq.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
 }
@@ -808,7 +812,7 @@ void inline_inject_rst_inner_ppp_run(void)
 	set_pcap_dumpfile("for_gtest_only/inline/tcp_rst_vxlan_with_ppp.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "509e6213660f2c33964db8dd7c348917"),0);
 
-	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_rst_vxlan_with_ppp.pcap",30);
+	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/inline/tcp_rst_vxlan_with_ppp.pcap",g_inline_test_timeout_s);
 	
 	gtest_start_sapp_progress(sapp_inline_start_args);
 }

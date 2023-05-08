@@ -114,13 +114,13 @@ static void transparent_env_usage(const char *prog_name)
 */
 static int transparent_env_init(char *argv[])
 {
-	g_transparent_to_sapp_up_fd = tuntap_dev_create((char *)GTEST_TAP_UP_DEV_NAME, IFF_TAP | IFF_MULTI_QUEUE | IFF_NO_PI);
+	g_transparent_to_sapp_up_fd = tuntap_dev_create((char *)GTEST_TAP_UP_DEV_NAME, IFF_TAP | IFF_NO_PI);
 	if(g_transparent_to_sapp_up_fd < 0){
 		printf("tuntap_dev_create() %s error!\n", GTEST_TAP_UP_DEV_NAME);
 		return -1;
 	}
 
-	g_transparent_to_sapp_down_fd = tuntap_dev_create((char *)GTEST_TAP_DOWN_DEV_NAME, IFF_TAP | IFF_MULTI_QUEUE | IFF_NO_PI);
+	g_transparent_to_sapp_down_fd = tuntap_dev_create((char *)GTEST_TAP_DOWN_DEV_NAME, IFF_TAP | IFF_NO_PI);
 	if(g_transparent_to_sapp_down_fd < 0){
 		printf("tuntap_dev_create() %s error!\n", GTEST_TAP_DOWN_DEV_NAME);
 		return -1;

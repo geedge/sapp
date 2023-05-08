@@ -128,7 +128,7 @@ static void inline_env_usage(const char *prog_name)
 */
 static int inline_env_init(char *argv[])
 {
-	g_replay_pkt_to_sapp_fd = tuntap_dev_create((char *)GTEST_TAP_UP_DEV_NAME, IFF_TAP | IFF_MULTI_QUEUE | IFF_NO_PI);
+	g_replay_pkt_to_sapp_fd = tuntap_dev_create((char *)GTEST_TAP_UP_DEV_NAME, IFF_TAP | IFF_NO_PI);
 	if(g_replay_pkt_to_sapp_fd < 0){
 		printf("tuntap_dev_create() %s error!\n", GTEST_TAP_UP_DEV_NAME);
 		return -1;

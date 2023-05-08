@@ -297,9 +297,9 @@ void sysinfo_output(void)
 		}
 	}	
 
-#if 0
 	fprintf(fp,"\n*********************** %s *********************\n", time_string);
 	fprintf(fp,"*********************** \033[41m%s\033[0m *************************\n", "sysinfo exactly");
+#if 0
 	fprintf(fp,"%-12s %12s %12s %12s %12s\n","Layer", "total_pkt", "total_len","pps", "Bps");
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_work", (unsigned long long)0, (unsigned long long)0,(cur_count[SAPP_POLLING_WORK]-history_count[SAPP_POLLING_WORK]),(unsigned long long)0);
 	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_idle", (unsigned long long)0,(unsigned long long)0,(cur_count[SAPP_POLLING_IDLE]-history_count[SAPP_POLLING_IDLE]),(unsigned long long)0);
