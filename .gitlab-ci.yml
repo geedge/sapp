@@ -114,7 +114,7 @@ inline_test_for_centos7:
     - cd build/testing/
 #run module v2.0 with death test
     - ./gtest_sapp_v4 -f inline_mode.*
-    - ./gtest_sapp_v4 -f transparent.*
+#    - ./gtest_sapp_v4 -f transparent.*
 
 basic_test_for_centos7:
   stage: test

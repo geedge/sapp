@@ -89,6 +89,7 @@ int stream_register_fun(int funtype,char (*x)(void), int);
 
 */
 
+#include <libgen.h>
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
@@ -182,6 +183,7 @@ static void plugin_del_blank_rn(char *data, int max_len)
 输出：
 //add by yw 20150318, reset cwd to exe dir
 *****************************************************************************/
+#if 0 
 static int reset_cwd()
 {
 	char cur_path[1024];
@@ -208,6 +210,29 @@ static int reset_cwd()
 	}
 	return 0;	
 }
+#endif
+
+static int reset_cwd() 
+{
+    char path[PATH_MAX];
+    ssize_t path_len = readlink("/proc/self/exe", path, sizeof(path) - 1);
+    if (path_len == -1) {
+        perror("readlink");
+        return -1;
+    }
+    path[path_len] = '\0';
+
+    // 获取可执行文件所在的目录
+    char *dir = dirname(path);
+
+    if (chdir(dir) == -1) {
+        perror("chdir");
+        return -1;
+    }
+
+    return 0;
+}
+
 
 /****************************************************************************
 函数名:get_propluginfo_name()

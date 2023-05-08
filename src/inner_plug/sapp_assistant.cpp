@@ -808,7 +808,7 @@ static int __sdo_get_dev_mtu(const char *device, int *mtu)
     strncpy(ifr.ifr_ifrn.ifrn_name, device, sizeof(ifr.ifr_ifrn.ifrn_name));
     if(ioctl(fd, SIOCGIFMTU, &ifr) == -1) 
     {
-        //perror("Cann't get ip addr:");
+		fprintf(stderr, "__sdo_get_dev_mtu(%s), ioctl SIOCGIFMTU: %s\n", device, strerror(errno));
         goto err_exit;
     }
 

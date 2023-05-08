@@ -106,7 +106,7 @@ static int ifconfig_device_up(const char *interface_name)
 	sprintf(ifr.ifr_name, "%s", interface_name);
 	/* 获得接口的标志 */
 	if ((err = ioctl(socket_fd, SIOCGIFFLAGS, (void *)&ifr)) < 0) {
-		perror("ioctl SIOCGIFADDR");
+		fprintf(stderr, "ifconfig_device_up(%s), ioctl SIOCGIFFLAGS: %s\n", interface_name, strerror(errno));
 		close(socket_fd);
 		return -3;
 	}
@@ -145,7 +145,7 @@ int ifconfig_device_mtu(const char *interface_name, int mtu_val)
 	sprintf(ifr.ifr_name, "%s", interface_name);
 	/* 获得接口的标志 */
 	if ((err = ioctl(socket_fd, SIOCGIFMTU, (void *)&ifr)) < 0) {
-		perror("ioctl SIOCGIFMTU");
+		fprintf(stderr, "ifconfig_device_mtu(%s), ioctl SIOCGIFMTU: %s\n", interface_name, strerror(errno));
 		close(socket_fd);
 		return -3;
 	}
@@ -153,7 +153,7 @@ int ifconfig_device_mtu(const char *interface_name, int mtu_val)
 	ret = ioctl(socket_fd, SIOCSIFMTU, &ifr);
 	if (ret != 0)	 
 	{
-		perror("ioctl SIOCSIFMTU");
+		fprintf(stderr, "ifconfig_device_mtu(%s), ioctl SIOCSIFMTU: %s\n", interface_name, strerror(errno));
 		close(socket_fd);
 		return -3;
 	}
@@ -184,7 +184,7 @@ static int tuntap_dev_create(char *dev, int flags)
         strncpy(ifr.ifr_name, dev, IFNAMSIZ);
     }
     if ((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0) {
-		perror ("Error: ");
+		fprintf(stderr, "tuntap_dev_create(%s), ioctl TUNSETIFF: %s\n", dev, strerror(errno));
         close(fd);
         return err;
     }

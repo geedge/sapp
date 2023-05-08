@@ -219,7 +219,7 @@ static int MESA_get_dev_ipv4(const char *device, unsigned int *ip_add_net)
     strncpy(ifr.ifr_ifrn.ifrn_name, device, sizeof(ifr.ifr_ifrn.ifrn_name));
     if(ioctl(fd, SIOCGIFADDR, &ifr) == -1) 
     {
-        //perror("Cann't get ip addr:");
+		fprintf(stderr, "MESA_get_dev_ipv4(%s), ioctl SIOCGIFADDR: %s\n", device, strerror(errno));
         goto err_exit;
     }
 
