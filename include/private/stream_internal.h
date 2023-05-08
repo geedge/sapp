@@ -72,33 +72,57 @@ struct rawpkt_metadata;
 
 /* 原始包结构 */
 typedef struct {
+	/* ---8 bytes-- */
 	unsigned int magic_num; 
 	int offset_to_raw_pkt_hdr;			/* 本层回调对应的数据在raw_pkt_data的偏移量 */
+	/* ===8 bytes=== */
+
+	/* ---8 bytes-- */
 	enum addr_type_t low_layer_type;	/* 原始包最底层协议的类型, 可能是MAC(pcap捕包), 也可能是IPv4(pag捕包) */
 	int __lib_raw_pkt_len;		/* 底层捕包库提供的包真实原始长度 */
+	/* ===8 bytes=== */
+
+	/* ---8 bytes-- */
 	int raw_pkt_len;			/* 给上层应用看的原始包总长度, 有可能不是真实的, 比如跳过了Ethernet层 */
 	unsigned int hd_hash; /* 网卡硬件计算的四元组HASH, 减少平台CPU计算消耗 */
+	/* ===8 bytes=== */
+
 	const void *__lib_raw_pkt_data; /* 底层捕包库提供的真实原始包指针 */
 	const void *raw_pkt_data;	/* 给上层应用看的原始包头指针, 有可能跳过了Ethernet层, 根据low_layer_type判断协议类型 */
+
 	struct timeval raw_pkt_ts;	/* 原始包捕获时间戳, 如果全为0则不支持此功能(如pag模式) */
+	//2*8 Bytes
 	const void *io_lib_pkt_reference; /* 引用底层I/O库的原始包管理结构, 例如:对于marsio来说, 即底层的mbuf结构 */
+
+	/* ---8 bytes-- */
 	int payload_len; /* 负载长度 */
 	int device_index;/* 有多块网卡时, 要保证从哪个卡进就从哪个卡出 */
-	char is_overlay_pkt; /* 表示是真实链路中的数据包, 要无条件回注, 即本机看起来像一根网线; 否则要丢弃 */
-	char is_send_ctrl_pkt;
-	unsigned char route_dir;
-	unsigned char padding;
-	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, in host order, vlan flipping for adev, index0表示收到当前包的vlan_id, index1表示原包转发的vlan_id */
-	unsigned char mac_flipping_enable;
-	char diagnose_error_to_dump; /* 是某种错误数据包, 期望pkt_dump存储或udp socket发送给tcpdump_mesa */
+	/* ===8 bytes=== */
+
+	/* ---8 bytes-- */
+	unsigned char route_dir:1;
+	unsigned char is_overlay_pkt:1; /* 表示是真实链路中的数据包, 要无条件回注, 即本机看起来像一根网线; 否则要丢弃 */
+	unsigned char is_ctrl_pkt:1;
+	unsigned char diagnose_error_to_dump:1; /* 是某种错误数据包, 期望pkt_dump存储或udp socket发送给tcpdump_mesa */
+	unsigned char drop_current_pkt_flag:1; /* 插件调用MSO_DROP_CURRENT_PKT设置丢弃当前包, 每次处理完要清空 */
+	unsigned char mac_flipping_enable:1;
+	unsigned char padding_flags:2;
+			//1 Bytes
+	unsigned char padding[2];
 	unsigned char overlay_layer_bytes; /* 串联封装层长度, 比如vxlan模式下是50字节 */
-	char drop_current_pkt_flag; /* 插件调用MSO_DROP_CURRENT_PKT设置丢弃当前包, 每次处理完要清空 */
+			//3 Bytes
+		//4 Bytes
+	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, in host order, vlan flipping for adev, index0表示收到当前包的vlan_id, index1表示原包转发的vlan_id */
+		//4Bytes
+	/* ===8 bytes=== */
+
+
 	struct detain_pkt *d_pkt;
 	struct rawpkt_metadata *meta[2];// 发送所需的metadata, 用于在调用low_level_send时, 填充marsio 4.6后需要的信息.
 	struct segment_id_list *append_list;
 	struct segment_id_list *prepend_list;
 	unsigned long long stream_trace_id;
-}raw_pkt_t;
+}raw_pkt_t; 
 
 enum retained_rawpkt_mark
 {
@@ -196,8 +220,7 @@ struct streaminfo_private
 	unsigned int hash_slave; /* 2015-12-14 lijia add, 使用linux_jhash计算时, 可以同时得到两个以上的HASH值, 主HASH用于确定在HASH表的SLOT位置, slave_HASH用于快速比较地址是否相等 */
 	unsigned char hash_not_head_times;/* 2015-12-15 lijia add, 当前index不在HASH SLOT的第一位的次数 */
 	unsigned char cur_layer_raw_hdr_len; /* 2017-10-31 lijia add, 当前层的原始包地址长度, 因ppp头部压缩, 原来版本无法保存这个状态, 发包时也无法得知地址如何填充 */
-	unsigned char __pad:2;
-	unsigned char is_send_ctrl_pkt; /* 当前发送是否为控制报文 */
+	unsigned char __pad:3;
 	unsigned char packet_io_context:1; /* 2019-09-07 lijia add, for polling entry send packet */
 	unsigned char stream_close_reason:4; /* 2019-02-14 lijia add, 对于TCP使用tcpdetail_private的link_state变量, 对于UDP之前没有, 拆分pad新增此变量 */
 	unsigned char gdev_block_timer;
@@ -228,7 +251,7 @@ struct streaminfo_private
 	unsigned long long global_stream_id; 
 	unsigned long long stream_create_timestamp_ms; 
 	unsigned long long stream_lastupdate_timestamp_ms; 
-	/* ===8 bytes=== */
+	/* ---8 bytes-- */
 	unsigned char layer_index:4; /* 表示当前层的计数, 从最底层开始,一般是ethernet开始, 从0开始计数, 4bit最多支持15层嵌套, 也能防止隧道嵌套攻击(目前还没捕到过包) */
 	unsigned char create_dir_by_well_known_port:1;  /* UDP或TCP按data建连接, 命中well_known_port规则, 而不是按大端口是客户端原则创建流 */
 	char __pad2:3;

@@ -322,6 +322,16 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
             }
         }
         break;
+
+		case RAW_PKT_GET_IS_CTRL_PKT:
+		{
+			int *out_value = (int *)void_value;
+			*out_value = rawpkt->is_ctrl_pkt;
+		}
+		ret = sizeof(int);
+		break;
+
+
 		default:
 			sapp_runtime_log(RLOG_LV_FATAL, "get_opt_from_rawpkt(): not support option type: %d", type);
 			ret = -1;
@@ -519,7 +529,7 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 			}
 		}
 		break;
-        case RWA_PKT_GET_SID_LIST:
+        case RAW_PKT_GET_SID_LIST:
 		{
 			void **value = (void **)out_value;
 			if(pstream_pr->polling_inject_context->meta[pstream->routedir] != NULL)

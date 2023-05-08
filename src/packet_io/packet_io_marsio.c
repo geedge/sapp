@@ -105,6 +105,7 @@ int (*ptr_marsio_buff_prepend_sid_list)(marsio_buff_t * m, uint16_t * slist, uin
 void (*ptr_marsio_buff_set_ctrlbuf)(marsio_buff_t * m);
 int (*ptr_marsio_poll_wait)(struct mr_instance * instance, struct mr_vdev * vdevs[], unsigned int nr_vdevs, unsigned int tid, int timeout);
 
+int (*ptr_marsio_buff_is_ctrlbuf)(marsio_buff_t * m);
 
 static struct bpf_program MARSIO_BPF_FILTER[MAX_THREAD_NUM];
 static int g_marsio_have_bpf;
@@ -375,13 +376,6 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	if(raw_pkt)
 	{
 		packet_io_hook_sendto(raw_pkt, route_dir, real_buf, (void *)send_mbuf[0]);
-
-		if(ptr_marsio_buff_set_ctrlbuf!=NULL && raw_pkt->is_send_ctrl_pkt==1)
-		{
-			ptr_marsio_buff_set_ctrlbuf(send_mbuf[0]);
-			unsigned short offset=(unsigned short)(ptr_marsio_buff_datalen(send_mbuf[0]) - raw_pkt->payload_len);
-			marsio_update_payload_offset(offset, (void *)send_mbuf[0]);
-		}
 	}
 
 	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
@@ -531,23 +525,35 @@ void marsio_dl_io_set_rawpkt_meta(const raw_pkt_t *raw_pkt, void *send_pkt_io_re
 		return ;
 	}
 
-	if(raw_pkt->is_send_ctrl_pkt==0)
+	if (raw_pkt->is_ctrl_pkt == 1)
+	{
+		if (ptr_marsio_buff_set_ctrlbuf != NULL)
+		{
+			ptr_marsio_buff_set_ctrlbuf(send_pkt_io_reference);
+			unsigned short offset = (unsigned short)(ptr_marsio_buff_datalen(send_pkt_io_reference) - raw_pkt->payload_len);
+			marsio_update_payload_offset(offset, (void *)send_pkt_io_reference);
+		}
+		if (raw_pkt->prepend_list)
+		{
+			ptr_marsio_buff_set_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->prepend_list->sid_list, raw_pkt->prepend_list->sz_sidlist);
+			if (raw_pkt->append_list)
+			{
+				ptr_marsio_buff_append_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->append_list->sid_list, raw_pkt->append_list->sz_sidlist);
+			}
+		}
+		else
+		{
+			if (raw_pkt->append_list)
+			{
+				ptr_marsio_buff_set_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->append_list->sid_list, raw_pkt->append_list->sz_sidlist);
+			}
+		}
+	}
+	else
 	{
 		ptr_marsio_buff_set_sid_list((marsio_buff_t *)send_pkt_io_reference, snd_meta->raw_sid_list.sid_list, snd_meta->raw_sid_list.sz_sidlist);
 		marsio_update_sid_list(raw_pkt, send_pkt_io_reference);
-		return ;
 	}
-
-	if(raw_pkt->append_list)
-	{
-		ptr_marsio_buff_set_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->append_list->sid_list, raw_pkt->append_list->sz_sidlist);
-	}
-
-	if(raw_pkt->prepend_list)
-	{
-		ptr_marsio_buff_set_sid_list((marsio_buff_t *)send_pkt_io_reference, raw_pkt->prepend_list->sid_list, raw_pkt->prepend_list->sz_sidlist);
-	}
-
 	return;
 }
 
@@ -726,6 +732,14 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->__lib_raw_pkt_len = ptr_marsio_buff_datalen(rx_buff);
 	raw_pkt->raw_pkt_len = raw_pkt->__lib_raw_pkt_len;
 	raw_pkt->io_lib_pkt_reference = rx_buff;
+	if(ptr_marsio_buff_is_ctrlbuf)
+	{
+		raw_pkt->is_ctrl_pkt=ptr_marsio_buff_is_ctrlbuf(rx_buff);
+	}
+	else
+	{
+		raw_pkt->is_ctrl_pkt=0;
+	}
 	/* 双臂模式dir根据网卡internal, external决定, 
 	   inline模式此时的dir无意义, 最终会在 packet_io_hook_input_vxlan() ,通过vxlan header更新routedir .
 	*/
@@ -763,7 +777,6 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->overlay_layer_bytes = 0;
 	raw_pkt->drop_current_pkt_flag = 0;
 	raw_pkt->d_pkt = NULL;
-	raw_pkt->is_send_ctrl_pkt=0;
 	raw_pkt->payload_len=0;
 	raw_pkt->stream_trace_id=0;
 
@@ -1204,6 +1217,12 @@ static int marsio_dl_get_function_entry(void)
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_poll_wait", ABBR_MARSIO_LIBRARY_FILE);
 			//return -1; /* 为了向前兼容mrzcpd旧版, 此处先不返回错误 */
 			sleep(1);
+		}
+		ptr_marsio_buff_is_ctrlbuf = (int(*)(marsio_buff_t * m))dlsym(marsio_so_handle, "marsio_buff_is_ctrlbuf");
+		if (NULL == ptr_marsio_buff_ctrlzone)
+		{
+			printf("\033[1;31;40m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_is_ctrlbuf", ABBR_MARSIO_LIBRARY_FILE);
+			return -1;
 		}
 	}
 
