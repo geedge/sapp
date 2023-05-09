@@ -466,14 +466,14 @@ TEST(tcp, dropstream_and_unorder)
 TEST(tcp, tuple4_reuse_with_fin)
 {
 	tcp_tuple4_reuse_with_fin_run();
-	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
+	EXPECT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 
 #define tcpall_tuple4_reuse_with_fin 1  // for SI symbol view
 TEST(tcpall, tuple4_reuse_with_fin)
 {
 	tcpall_tuple4_reuse_with_fin_run();
-	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
+	EXPECT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 
 #define tcp_tuple4_reuse_no_close 1  // for SI symbol view
