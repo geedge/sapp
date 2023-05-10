@@ -3407,6 +3407,11 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	{
 		((raw_pkt_t *)raw_pkt)->stream_trace_id = raw_stream_pr->stream_trace_id;
 	}
+	
+	if (((raw_pkt_t *)raw_pkt)->is_ctrl_pkt != 0)
+	{
+		((raw_pkt_t *)raw_pkt)->payload_len=payload_len;
+	}
 
 	/* inject使用的是routedir, 此处转换成stream dir, 
 	   注意: 插件发包的动作可能不是由当前包触发的,  比如kni, 是从其他网卡收到数据包, 再注入链路的,

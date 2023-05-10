@@ -5,12 +5,12 @@
 /*
 	2020-09-28 add:
 	
-	ä¼ ç»Ÿæ„ä¹‰ä¸Šçš„packet_io, ä¸€èˆ¬ä¸ä¼šä¿®æ”¹åŸå§‹åŒ…å†…å®¹çš„, åŸæ ·æ”¶ã€åŸæ ·è½¬å‘,
+	´«Í³ÒâÒåÉÏµÄpacket_io, Ò»°ã²»»áĞŞ¸ÄÔ­Ê¼°üÄÚÈİµÄ, Ô­ÑùÊÕ¡¢Ô­Ñù×ª·¢,
 
-	ä½†æ˜¯åœ¨inlineä¸²è”æ¨¡å¼ä¸‹, å¦‚vxlanç­‰, éœ€è¦å¯¹æ”¶åˆ°çš„åŒ…è¿›è¡Œç¿»è½¬, å¦‚åº•å±‚mac, åº•å±‚ipç­‰.
-	æˆ–è€…æŸäº›åœ°å€å‚æ•°æ ¹æœ¬ä¸åœ¨åŸå§‹åŒ…é‡Œå‘ˆç°, è¦é€šè¿‡ä¸€äº›tesæ¥å£è®¾ç½®è½¬å‘å‚æ•°, å¦‚Aè®¾å¤‡è·å–vlanã€è®¾ç½®è½¬å‘vlan, ç­‰ç­‰,
+	µ«ÊÇÔÚinline´®ÁªÄ£Ê½ÏÂ, ÈçvxlanµÈ, ĞèÒª¶ÔÊÕµ½µÄ°ü½øĞĞ·­×ª, Èçµ×²ãmac, µ×²ãipµÈ.
+	»òÕßÄ³Ğ©µØÖ·²ÎÊı¸ù±¾²»ÔÚÔ­Ê¼°üÀï³ÊÏÖ, ÒªÍ¨¹ıÒ»Ğ©tes½Ó¿ÚÉèÖÃ×ª·¢²ÎÊı, ÈçAÉè±¸»ñÈ¡vlan¡¢ÉèÖÃ×ª·¢vlan, µÈµÈ,
 
-	åŸæ¥éƒ½ç”±mrtunnatå®Œæˆ, å¯¹sappé€æ˜, mrtunnatè¢«å–ä»£å, æ–°å¢æ­¤å±‚, ç”¨äºå®Œæˆä¸Šè¿°åŠŸèƒ½.
+	Ô­À´¶¼ÓÉmrtunnatÍê³É, ¶ÔsappÍ¸Ã÷, mrtunnat±»È¡´úºó, ĞÂÔö´Ë²ã, ÓÃÓÚÍê³ÉÉÏÊö¹¦ÄÜ.
 */
 
 #ifdef __cplusplus
@@ -60,12 +60,12 @@ static int packet_io_hook_output_vlan_flipping(raw_pkt_t *raw_pkt, unsigned char
 	}
 
 	if(raw_pkt->route_dir == route_dir){
-		/* åŸå§‹åŒ…åŒå‘å‘é€, éœ€è¦è®¾ç½®å‘é€vlanä¸ºcouple vlan id */
+		/* Ô­Ê¼°üÍ¬Ïò·¢ËÍ, ĞèÒªÉèÖÃ·¢ËÍvlanÎªcouple vlan id */
 		marsio_set_vlan_id_to_mbuff((void *)io_lib_pkt_reference, raw_pkt->vlan_flipping_couple[1]);
 		sapp_runtime_log(RLOG_LV_DEBUG, "%s: input_vlan_id:%u, output_vlan_id:%u, mac_flapping:%d", 
 						action, raw_pkt->vlan_flipping_couple[0], raw_pkt->vlan_flipping_couple[1], raw_pkt->mac_flipping_enable);
 	}else{
-		/* åå‘æ³¨å…¥, éœ€è¦è®¾ç½®å‘é€vlanä¸ºæ”¶åŒ…æ—¶çš„vlan id */
+		/* ·´Ïò×¢Èë, ĞèÒªÉèÖÃ·¢ËÍvlanÎªÊÕ°üÊ±µÄvlan id */
 		marsio_set_vlan_id_to_mbuff((void *)io_lib_pkt_reference, raw_pkt->vlan_flipping_couple[0]);
 		sapp_runtime_log(RLOG_LV_DEBUG, "%s: input_vlan_id:%u, output_vlan_id:%u, mac_flapping:%d", 
 						action, raw_pkt->vlan_flipping_couple[0], raw_pkt->vlan_flipping_couple[0], raw_pkt->mac_flipping_enable);
@@ -81,13 +81,13 @@ static int packet_io_hook_output_vxlan(raw_pkt_t *raw_pkt, void *raw_pkt_data, u
 	struct mesa_ethernet_hdr *send_ethh = (struct mesa_ethernet_hdr *)(raw_pkt_data);
 	const struct mesa_ip4_hdr *raw_ip4h = (struct mesa_ip4_hdr *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr));
 	struct mesa_ip4_hdr *send_ip4h = (struct mesa_ip4_hdr *)((char *)raw_pkt_data + sizeof(struct mesa_ethernet_hdr));
-	/* vxlan udpå±‚ä¸ç”¨ç¿»è½¬, checksumè®¾ä¸º0å³å¯ */
+	/* vxlan udp²ã²»ÓÃ·­×ª, checksumÉèÎª0¼´¿É */
 	struct mesa_udp_hdr *send_outer_udp_hdr = (struct mesa_udp_hdr *)((char *)raw_pkt_data + sizeof(struct mesa_ethernet_hdr)+sizeof(struct mesa_ip4_hdr));
 	const inline_vxlan_hdr_t *raw_vxlan_hdr = (inline_vxlan_hdr_t *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_udp_hdr));
 	inline_vxlan_hdr_t *send_vxlan_hdr = (inline_vxlan_hdr_t *)((char *)raw_pkt_data + sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_udp_hdr));
 	unsigned char tmp_mac_addr[ETH_ALEN];
 	unsigned int tmp_ip_addr;
-	/* æ³¨æ„, åœ¨forwardæ—¶,raw_pkt->raw_pkt_dataå’Œraw_pkt_dataå®é™…ä¸Šæ˜¯ä¸€ä¸ªåœ°å€, éœ€è¦æš‚å­˜ä¸€ä¸‹,ä¸èƒ½ç›´æ¥åƒä¸‹é¢è¿™æ ·copy:  */
+	/* ×¢Òâ, ÔÚforwardÊ±,raw_pkt->raw_pkt_dataºÍraw_pkt_dataÊµ¼ÊÉÏÊÇÒ»¸öµØÖ·, ĞèÒªÔİ´æÒ»ÏÂ,²»ÄÜÖ±½ÓÏñÏÂÃæÕâÑùcopy:  */
 #if 0
 	memcpy((void *)send_ethh->ether_shost, raw_ethh->ether_dhost, ETH_ALEN);
 	memcpy((void *)send_ethh->ether_dhost, raw_ethh->ether_shost, ETH_ALEN);
@@ -97,7 +97,7 @@ static int packet_io_hook_output_vxlan(raw_pkt_t *raw_pkt, void *raw_pkt_data, u
 	memcpy((void *)send_ethh->ether_dhost, tmp_mac_addr, ETH_ALEN);
 #endif
 
-	/* æ³¨æ„, åœ¨forwardæ—¶,raw_pkt->raw_pkt_dataå’Œraw_pkt_dataå®é™…ä¸Šæ˜¯ä¸€ä¸ªåœ°å€, éœ€è¦æš‚å­˜ä¸€ä¸‹,ä¸èƒ½ç›´æ¥åƒä¸‹é¢è¿™æ ·copy:  */
+	/* ×¢Òâ, ÔÚforwardÊ±,raw_pkt->raw_pkt_dataºÍraw_pkt_dataÊµ¼ÊÉÏÊÇÒ»¸öµØÖ·, ĞèÒªÔİ´æÒ»ÏÂ,²»ÄÜÖ±½ÓÏñÏÂÃæÕâÑùcopy:  */
 #if 0	
 	send_ip4h->ip_src.s_addr = raw_ip4h->ip_dst.s_addr;
 	send_ip4h->ip_dst.s_addr = raw_ip4h->ip_src.s_addr;
@@ -107,7 +107,7 @@ static int packet_io_hook_output_vxlan(raw_pkt_t *raw_pkt, void *raw_pkt_data, u
 	send_ip4h->ip_dst.s_addr = tmp_ip_addr;
 #endif
 
-	/* keepalive icmpåº”ç­”ä¸æ˜¯udpåè®®, æ˜¯g_dev_plugæ’ä»¶ç›´æ¥æ³¨å…¥åŸå§‹åŒ…, æ˜¯ä¸ªç‰¹ä¾‹, æ­¤å¤„è¦åˆ¤æ–­ä¸€ä¸‹ */
+	/* keepalive icmpÓ¦´ğ²»ÊÇudpĞ­Òé, ÊÇg_dev_plug²å¼şÖ±½Ó×¢ÈëÔ­Ê¼°ü, ÊÇ¸öÌØÀı, ´Ë´¦ÒªÅĞ¶ÏÒ»ÏÂ */
 	if(IPPROTO_UDP == raw_ip4h->ip_p){
 		send_outer_udp_hdr->uh_sum = 0;
 		//send_vxlan_hdr->dir = route_dir;    //20220415 liuxueli for TSG-10227
@@ -126,10 +126,10 @@ static int packet_io_hook_update_vlan_couple(raw_pkt_t *raw_pkt, unsigned short 
 	raw_pkt->mac_flipping_enable = vlan_map[vlan_id].mac_flipping_enable;
 
 	if('C' == vlan_map[vlan_id].this_vlan_route_location){
-		/* æ•°æ®åŒ…æ¥è‡ªCè·¯ç”±å™¨ç«¯, å³C2I(I2E)æ–¹å‘, æ ¹æ®inbound_route_dirçš„å€¼, æ›´æ–°å½“å‰åŒ…route_dirçš„å€¼ */
+		/* Êı¾İ°üÀ´×ÔCÂ·ÓÉÆ÷¶Ë, ¼´C2I(I2E)·½Ïò, ¸ù¾İinbound_route_dirµÄÖµ, ¸üĞÂµ±Ç°°üroute_dirµÄÖµ */
 		raw_pkt->route_dir = sapp_global_val->config.packet_io.inbound_route_dir ^ 1;
 	}else{
-		/* æ•°æ®åŒ…æ¥è‡ªIè·¯ç”±å™¨ç«¯, å³I2C(E2I)æ–¹å‘, æ ¹æ®inbound_route_dirçš„å€¼, æ›´æ–°å½“å‰åŒ…route_dirçš„å€¼ */
+		/* Êı¾İ°üÀ´×ÔIÂ·ÓÉÆ÷¶Ë, ¼´I2C(E2I)·½Ïò, ¸ù¾İinbound_route_dirµÄÖµ, ¸üĞÂµ±Ç°°üroute_dirµÄÖµ */
 		raw_pkt->route_dir = sapp_global_val->config.packet_io.inbound_route_dir;
 	}
 
@@ -140,7 +140,7 @@ static int packet_io_hook_update_vlan_couple(raw_pkt_t *raw_pkt, unsigned short 
 }
 
 /*
-	å¦‚æœä»metadataé‡Œè·å–ä¸åˆ°, ä»åŸå§‹åŒ…é‡Œè§£ævlanå¤´éƒ¨è·å–.
+	Èç¹û´ÓmetadataÀï»ñÈ¡²»µ½, ´ÓÔ­Ê¼°üÀï½âÎövlanÍ·²¿»ñÈ¡.
 */
 static unsigned short get_vlan_id_from_rawpkt(raw_pkt_t *raw_pkt)
 {
@@ -156,13 +156,13 @@ static int packet_io_hook_input_vlan_flipping(raw_pkt_t *raw_pkt, unsigned char 
 	int ret = 0;
 
 	vlan_id = marsio_get_vlan_id_from_mbuff((void *)raw_pkt->io_lib_pkt_reference);
-	if((vlan_id > 1) && (vlan_map[vlan_id].couple_vlan_id > 1)){ /* vlan_id ä¸åœ¨vlan flippingè¡¨ä¸­, ä¸ç®—ä½œoverlay packet */
+	if((vlan_id > 1) && (vlan_map[vlan_id].couple_vlan_id > 1)){ /* vlan_id ²»ÔÚvlan flipping±íÖĞ, ²»Ëã×÷overlay packet */
 		packet_io_hook_update_vlan_couple(raw_pkt, vlan_id);
 		ret=  0;
 		raw_pkt->overlay_layer_bytes = 0;
 	}else{
 		vlan_id = get_vlan_id_from_rawpkt(raw_pkt);
-		if((vlan_id > 1) && (vlan_map[vlan_id].couple_vlan_id > 1)){ /* vlan_id ä¸åœ¨vlan flippingè¡¨ä¸­, ä¸ç®—ä½œoverlay packet */
+		if((vlan_id > 1) && (vlan_map[vlan_id].couple_vlan_id > 1)){ /* vlan_id ²»ÔÚvlan flipping±íÖĞ, ²»Ëã×÷overlay packet */
 			packet_io_hook_update_vlan_couple(raw_pkt, vlan_id);
 		}else{
 			sapp_runtime_log(RLOG_LV_DEBUG, "packet_io_hook_input(), not found vlan_id:%u in vlan flipping table\n", vlan_id);
@@ -217,7 +217,7 @@ int packet_io_hook_input(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num)
 {
 	int ret = 0;
 
-	/* vlan flippingä¸overlayå¯å…±å­˜, å¦‚æœmetadataæˆ–åŸå§‹åŒ…é‡Œæœ‰vlanä¸”å‘½ä¸­flipè§„åˆ™, åˆ™è¿›è¡Œç¿»è½¬,å¯èƒ½æ˜¯æœ¬æœºè‡ªæ£€æµé‡; */
+	/* vlan flippingÓëoverlay¿É¹²´æ, Èç¹ûmetadata»òÔ­Ê¼°üÀïÓĞvlanÇÒÃüÖĞflip¹æÔò, Ôò½øĞĞ·­×ª,¿ÉÄÜÊÇ±¾»ú×Ô¼ìÁ÷Á¿; */
 	ret = packet_io_hook_input_vlan_flipping(raw_pkt, dir, thread_num);
 	if(ret >= 0){
 		return 0;

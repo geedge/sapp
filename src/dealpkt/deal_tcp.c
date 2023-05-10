@@ -2923,11 +2923,12 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		   1)如果开启了代理策略, 重传包被识别成了重复包的话, sapp就直接PASS了, 实际那个包是真实通信双方发的, 没有经过tfe处理, 可能就断网了.
 		   2)如果开启了firewall的drop策略, 第一次drop成功了, 但应用层会重传, 重传包被识别成了重复包的话, sapp就直接PASS了, 导致CT.
 	*/
-	if(deal_tcp_stream_dup_pkt_check(pstream->threadnum, pstream_pr, pdetail_pr, (const struct mesa_ip4_hdr *)this_iphdr, this_tcphdr) != 0){
-		local_sys_stat->count[SAPP_STAT_RCV_DUP_TCP]++;
-		local_sys_stat->length[SAPP_STAT_RCV_DUP_TCP] += tcplen;	
-		cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
-		return PASS;
+	if(raw_pkt->is_ctrl_pkt==0 &&
+		deal_tcp_stream_dup_pkt_check(pstream->threadnum, pstream_pr, pdetail_pr, (const struct mesa_ip4_hdr *)this_iphdr, this_tcphdr) != 0){
+			local_sys_stat->count[SAPP_STAT_RCV_DUP_TCP]++;
+			local_sys_stat->length[SAPP_STAT_RCV_DUP_TCP] += tcplen;	
+			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
+			return PASS;
 	}
 
 	if(unlikely(pdetail_pr->drop_stream_flag != 0)){

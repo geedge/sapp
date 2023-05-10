@@ -647,11 +647,12 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			return PASS;
 		}
 
-		if(dealipv4udppkt_dup_check(pstream->threadnum, pstream_pr, pdetail_pr, is_overlay_udp_layer, this_iphdr, udph) != 0){
-			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
-			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
-			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
-			return PASS;
+		if(raw_pkt->is_ctrl_pkt==0 && 
+			dealipv4udppkt_dup_check(pstream->threadnum, pstream_pr, pdetail_pr, is_overlay_udp_layer, this_iphdr, udph) != 0){
+				local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
+				local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
+				cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
+				return PASS;
 		}
 
         /* 2014-11-15 lijia add, for udp serial kill udp */

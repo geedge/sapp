@@ -934,9 +934,13 @@ static inline int checkipv4pkt(const struct mesa_ip4_hdr * iph, const raw_pkt_t 
 		|| (pkt_declare_len > pkt_actual_len)
 		|| (iph->ip_hl < 5) 
 		|| (iph->ip_v != 4)
-		|| (pkt_declare_len < iph->ip_hl << 2)){	
-		sapp_runtime_log(RLOG_LV_DEBUG, "ipv4 packet check error: pkt length, hdr len, or version error, pkt_declare_len:%d, pkt_actual_len:%d", pkt_declare_len, pkt_actual_len);
-		return -1;
+		|| (pkt_declare_len < iph->ip_hl << 2)){
+
+		if(raw_pkt->is_ctrl_pkt==0)
+		{
+			sapp_runtime_log(RLOG_LV_DEBUG, "ipv4 packet check error: pkt length, hdr len, or version error, pkt_declare_len:%d, pkt_actual_len:%d", pkt_declare_len, pkt_actual_len);
+			return -1;
+		}
 	}
 
 #if 0
