@@ -1929,7 +1929,7 @@ static inline void tcp_clear_newdata(struct streaminfo *a_tcp,struct  half_tcpst
 }
 
 static void  tcp_set_new_data(struct streaminfo *a_tcp,struct  half_tcpstream  *rcv, struct half_tcpstream *snd,
-	u_char* data, int datalen, u_int this_seq,char fin)
+	u_char* data, int datalen, u_int this_seq,char fin, unsigned char is_ctrl_pkt)
 {
   	int havelen;
 	int len_new=0;
@@ -1937,33 +1937,39 @@ static void  tcp_set_new_data(struct streaminfo *a_tcp,struct  half_tcpstream  *
 	struct tcpdetail_private*pdetail_pr=(struct tcpdetail_private*)a_tcp->pdetail;
 	struct tcpdetail *pdetail=(struct tcpdetail *)&pdetail_pr->tcpdetail_public;
 
-   //不一定是乱序的可能是重传包但是长度比原来大
-   if(this_seq< EXP_SEQ)
-   {
-   	havelen = EXP_SEQ - this_seq;
-	if (datalen - havelen > 0)
+	if(is_ctrl_pkt==0)
 	{
-		//20150225 记录重叠的长度
-		pdetail_pr->tcpoverlen=havelen;		
-	   len_new= datalen - havelen; 
-	   pdata_new=data+havelen;
-	}
-   }
-   else //正序的报文
-   {
-   	  len_new=datalen;
-	    pdata_new=data;
-   }
-   
-   if(len_new>0)
-   {
-	rcv->count_ideal += len_new;
-	rcv->data=pdata_new;
-	rcv->count_new = len_new;
-	rcv->count += len_new;
-	
-   }
+		//不一定是乱序的可能是重传包但是长度比原来大
+		if(this_seq< EXP_SEQ)
+		{
+			havelen = EXP_SEQ - this_seq;
+			if (datalen - havelen > 0)
+			{
+				//20150225 记录重叠的长度
+				pdetail_pr->tcpoverlen=havelen;		
+				len_new= datalen - havelen; 
+				pdata_new=data+havelen;
+			}
+		}
+		else //正序的报文
+		{
+			len_new=datalen;
+			pdata_new=data;
+		}
 
+		if(len_new>0)
+		{
+			rcv->count_ideal += len_new;
+			rcv->data=pdata_new;
+			rcv->count_new = len_new;
+			rcv->count += len_new;
+		}
+	}
+	else
+	{
+		len_new=datalen;
+		pdata_new=data;
+	}
 /*
 	if((long long)(rcv->count_ideal - rcv->count - rcv->totallost) < 0)
 	{
@@ -1985,7 +1991,7 @@ static void  tcp_set_new_data(struct streaminfo *a_tcp,struct  half_tcpstream  *
 
 	sapp_global_val->mthread_volatile[a_tcp->threadnum]->sys_stat.length[SAPP_STAT_TCP_LOST_PKT] += pdetail->lostlen;		
 	
-   	pdetail->datalen=len_new;
+	pdetail->datalen=len_new;
 	pdetail->pdata=pdata_new;
 
 	if (fin)
@@ -2207,7 +2213,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 					pakiet->tcpdatalen,pakiet->seq,pakiet->fin);
 #else
 				tcp_set_new_data(a_tcp,rcv,snd,(u_char *)(pakiet->tcpdata),
-					pakiet->tcpdatalen,pakiet->seq,pakiet->fin);
+					pakiet->tcpdatalen,pakiet->seq,pakiet->fin, 0);
 #endif
 				if(pakiet->tcpdatalen >0)
 				{
@@ -2310,7 +2316,7 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 		if (after(this_seq + datalen + 
 			(this_tcphdr->th_flags & TH_FIN), EXP_SEQ))
 		{
-			tcp_set_new_data(pstream,rcv,snd,tcpdata,datalen,this_seq,this_tcphdr->th_flags & TH_FIN);
+			tcp_set_new_data(pstream,rcv,snd,tcpdata,datalen,this_seq,this_tcphdr->th_flags & TH_FIN, raw_pkt->is_ctrl_pkt);
 			if(datalen >0)
 			{
 				ret=stream_process_tcp(pstream,this_iphdr,(const void *)this_tcphdr, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
@@ -3192,16 +3198,25 @@ int dealipv4tcppkt(struct streamindex *pfindex, const struct mesa_ip4_hdr *this_
 	iphdr_len = this_iphdr->ip_hl << 2;
 	struct mesa_tcp_hdr *this_tcphdr = (struct mesa_tcp_hdr *)((char *)this_iphdr + iphdr_len);
 
-	iplen = ntohs (this_iphdr->ip_len);
-	if(unlikely(iplen - iphdr_len < (int)sizeof (struct mesa_tcp_hdr))){
-		return PASS;
+	if(raw_pkt->is_ctrl_pkt==0)
+	{
+		iplen = ntohs (this_iphdr->ip_len);
+		if(unlikely(iplen - iphdr_len < (int)sizeof (struct mesa_tcp_hdr))){
+			return PASS;
+		}
+		
+		datalen = iplen - iphdr_len - (this_tcphdr->th_off<<2);
 	}
-	
-	datalen = iplen - iphdr_len - (this_tcphdr->th_off<<2);
+	else
+	{
+		datalen = raw_pkt->raw_pkt_len-offset_to_raw_pkt_hdr-(this_tcphdr->th_off<<2);
+	}
+
 	if(unlikely(datalen < 0)){
 		return PASS;
 	}
-
+	
+			
 	/* lijia 2016-06-15 add, 性能优化, 丢弃纯ACK包 */
 #if HIGH_PERF /* 高性能模式下自动丢弃ACK */
 	if((0 == datalen) && (TH_ACK == this_tcphdr->th_flags)){
@@ -3229,7 +3244,15 @@ int dealipv6tcppkt(struct streamindex *pfindex, const struct mesa_ip6_hdr *this_
 {
 	struct mesa_tcp_hdr *this_tcphdr = (struct mesa_tcp_hdr *)data;
 
-	datalen -= (this_tcphdr->th_off << 2);
+	if(raw_pkt->is_ctrl_pkt==0)
+	{
+		datalen -= (this_tcphdr->th_off << 2);
+	}
+	else
+	{
+		datalen = raw_pkt->raw_pkt_len-offset_to_raw_pkt_hdr-(this_tcphdr->th_off<<2);
+	}
+	
 	if(unlikely(datalen < 0)){
 		return PASS;
 	}

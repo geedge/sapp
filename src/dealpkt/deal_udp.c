@@ -30,7 +30,7 @@ extern int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, con
 int G_UDP_FLOW_STAT_PROJECT_ID = -1;
 int G_UDP_TEREDO_IDENTIFY_PROJECT_ID = -1;
 
-static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_hdr *udph, const raw_pkt_t *raw_pkt)
+static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_hdr *udph, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
 	int	ulen =0;
 	int	datalen =0;
@@ -44,6 +44,20 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 
 	ulen = ntohs (udph->uh_ulen);
 	datalen =ulen - sizeof (struct mesa_udp_hdr);
+
+	if(raw_pkt->is_ctrl_pkt==0)
+	{
+		ulen = ntohs (udph->uh_ulen);
+		datalen =ulen - sizeof (struct mesa_udp_hdr);
+	}
+	else
+	{
+		datalen = raw_pkt->raw_pkt_len-offset_to_raw_pkt_hdr-sizeof(struct mesa_udp_hdr);
+	}
+
+	if(unlikely(datalen < 0)){
+		return ;
+	}
 
 	if(a_udp->curdir==DIR_C2S)
 	{
@@ -535,13 +549,24 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 
 	local_sys_stat->count_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index]++; /* udp和ip算作一层 */
 	local_sys_stat->length_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index] += ulen; /* udp和ip算作一层 */
-	
-	/* 2015-12-29 lijia modify, 某些UDP包没有负载数据, 没有意义, 直接丢弃 */
-	if(unlikely(iplen - hlen < ulen || ulen <= (int)sizeof (struct mesa_udp_hdr))){
-			return PASS;
-	}
-	datalen =ulen - sizeof (struct mesa_udp_hdr);
 
+	if(raw_pkt->is_ctrl_pkt==0)
+	{
+		/* 2015-12-29 lijia modify, 某些UDP包没有负载数据, 没有意义, 直接丢弃 */
+		if(unlikely(iplen - hlen < ulen || ulen <= (int)sizeof (struct mesa_udp_hdr))){
+				return PASS;
+		}
+		datalen =ulen - sizeof (struct mesa_udp_hdr);
+	}
+	else
+	{
+		datalen = raw_pkt->raw_pkt_len-offset_to_raw_pkt_hdr-sizeof(struct mesa_udp_hdr);
+	}
+
+	if(unlikely(datalen <= 0)){
+		return PASS;
+	}
+	
 	pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
 	pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 	//set_stream_addr(pfstream, udph->uh_sport, udph->uh_dport, &ptmp->stream.addr);
@@ -696,7 +721,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		
 		update_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr, raw_pkt);
 		
-		udp_change_stream_state(a_index,udph, raw_pkt);
+		udp_change_stream_state(a_index,udph, raw_pkt, offset_to_raw_pkt_hdr);
 
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
@@ -950,7 +975,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 					(struct streaminfo_private *)(pindex->stream.pfather_pr), pstream->curdir);
 		}
 		
-		udp_change_stream_state(a_index,udph, raw_pkt);
+		udp_change_stream_state(a_index,udph, raw_pkt, offset_to_raw_pkt_hdr);
 
 		/* 更新pstream指针 */
 		pstream_pr=&(a_index->stream);
