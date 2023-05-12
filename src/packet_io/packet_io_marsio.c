@@ -699,19 +699,23 @@ static int marsio4_pkt_forward_for_gdev_mode(int tid, struct mr_sendpath * sendp
 
 static int marsio4_pkt_forward(int tid, struct mr_sendpath * sendpath, marsio_buff_t * mbufs)
 {
-	int ret = 0;
-	struct mr_tunnat_ctrlzone *ctrl_zone;
+	int ret=0;
 
-	ctrl_zone = (struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone(mbufs, 0);
+	//struct mr_tunnat_ctrlzone *ctrl_zone;
+	//ctrl_zone = (struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone(mbufs, 0);
 
 	/* 批量获取, 但考虑特殊情况下, vxlan和其他封装模式混杂使用, 要对每个mbuf判断底层封装模式 */
-	if((ctrl_zone->action & TUNNAT_CZ_ACTION_FORWARD)
-	|| (0 != sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support)){ 
+	//if((ctrl_zone->action & TUNNAT_CZ_ACTION_FORWARD) || (0 != sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support))
+	
+	if(0 != sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support)
+	{ 
 		/* 20201010 lijia modify, 开启overlay无mrtunnat的模式下, ctrl_zone是空, 默认都回注 */
 		/* 20190409 lijia modify, tunnel mode, 非隧道封装的包不能回注 */
 		/* vxlan封装内层数据转发不必做任何操作, 直接调用marsio_send_burst, 由marsio驱动负责 */
-		ctrl_zone->action = TUNNAT_CZ_ACTION_FORWARD;
-		ptr_marsio_buff_ctrlzone_set(mbufs, 0, ctrl_zone, sizeof(struct mr_tunnat_ctrlzone));
+
+		//ctrl_zone->action = TUNNAT_CZ_ACTION_FORWARD;
+		//ptr_marsio_buff_ctrlzone_set(mbufs, 0, ctrl_zone, sizeof(struct mr_tunnat_ctrlzone));
+
 		marsio_pkt_dump(tid, mbufs, PKT_CLASSIFY_FORWARD);
 		ret = ptr_marsio_send_burst(sendpath, tid, &mbufs, 1);
 
