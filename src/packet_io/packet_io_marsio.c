@@ -381,11 +381,12 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 
 
+	marsio_pkt_dump(thread_seq, send_mbuf[0], PKT_CLASSIFY_INJECT);
+
 	ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, send_option);
 	if(ret < 0){
 		return -1;
 	}
-	marsio_pkt_dump(thread_seq, send_mbuf[0], PKT_CLASSIFY_INJECT);
 	return datalen;
 }
 
@@ -711,9 +712,9 @@ static int marsio4_pkt_forward(int tid, struct mr_sendpath * sendpath, marsio_bu
 		/* vxlan封装内层数据转发不必做任何操作, 直接调用marsio_send_burst, 由marsio驱动负责 */
 		ctrl_zone->action = TUNNAT_CZ_ACTION_FORWARD;
 		ptr_marsio_buff_ctrlzone_set(mbufs, 0, ctrl_zone, sizeof(struct mr_tunnat_ctrlzone));
+		marsio_pkt_dump(tid, mbufs, PKT_CLASSIFY_FORWARD);
 		ret = ptr_marsio_send_burst(sendpath, tid, &mbufs, 1);
 
-		marsio_pkt_dump(tid, mbufs, PKT_CLASSIFY_FORWARD);
 	}
 	else
 	{
