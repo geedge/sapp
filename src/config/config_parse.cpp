@@ -1465,11 +1465,6 @@ static int config_sanity_check(void)
 	}
 
 	/*******************************  Packet IO  ******************************/
-	if((sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support != 0)
-	    && (strncasecmp(pconfig->packet_io.internal.interface.name, "vxlan_user", strlen("vxlan_user"))== 0)){
-		sapp_log(30, ~0, ~0, "[Warning]l2_l3_tunnel_support is enable, but capture device is vxlan_user!");
-		sleep(2);
-	}
 	
 	tmp_str = pconfig->packet_io.depolyment_mode_str;
 	if((strncasecmp(tmp_str, "mirror", strlen("mirror")) != 0)
@@ -1766,7 +1761,8 @@ int sapp_parse_config(void)
 
 	/*******************************  packet_io.overlay_tunnel_definition ******************************/
 	
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"overlay_tunnel_definition", (char *)"l2_l3_tunnel_support", &pconfig->packet_io.packet_io_tunnel.l2_l3_tunnel_support, 1);
+	//tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"overlay_tunnel_definition", (char *)"l2_l3_tunnel_support", &pconfig->packet_io.packet_io_tunnel.l2_l3_tunnel_support, 1);
+	pconfig->packet_io.packet_io_tunnel.l2_l3_tunnel_support=1;
 
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"overlay_tunnel_definition", (char *)"overlay_mode", pconfig->packet_io.packet_io_tunnel.overlay_mode_string, NAME_MAX, "none");
 

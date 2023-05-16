@@ -346,7 +346,6 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	int ret;
 	marsio_buff_t *send_mbuf[1];
 	char *real_buf;
-	struct mr_tunnat_ctrlzone mr_ctrlzone = {};
 	uint16_t send_option = 0;
 
 	ret = ptr_marsio_buff_malloc_global(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
@@ -364,21 +363,11 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	
 	memcpy(real_buf, data, datalen);
 
-	if(0 == sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support){
-		mr_ctrlzone.action = TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
-		send_option = MARSIO_SEND_OPT_FAST|MARSIO_SEND_OPT_REHASH;
-	}else{
-		/* v4.2之后, sapp无需mrtunnat支持, 直接发送原始包, 不需要驱动封装底层链路信息 */
-		mr_ctrlzone.action = TUNNAT_CZ_ACTION_ENCAP_NO_SESSION;
-		send_option = MARSIO_SEND_OPT_FAST;
-	}
-	
 	if(raw_pkt)
 	{
 		packet_io_hook_sendto(raw_pkt, route_dir, real_buf, (void *)send_mbuf[0]);
 	}
 
-	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
 
 
 	marsio_pkt_dump(thread_seq, send_mbuf[0], PKT_CLASSIFY_INJECT);
@@ -699,31 +688,16 @@ static int marsio4_pkt_forward_for_gdev_mode(int tid, struct mr_sendpath * sendp
 
 static int marsio4_pkt_forward(int tid, struct mr_sendpath * sendpath, marsio_buff_t * mbufs)
 {
-	int ret=0;
-
-	//struct mr_tunnat_ctrlzone *ctrl_zone;
-	//ctrl_zone = (struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone(mbufs, 0);
+	int ret = 0;
 
 	/* 批量获取, 但考虑特殊情况下, vxlan和其他封装模式混杂使用, 要对每个mbuf判断底层封装模式 */
-	//if((ctrl_zone->action & TUNNAT_CZ_ACTION_FORWARD) || (0 != sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support))
-	
-	if(0 != sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support)
-	{ 
-		/* 20201010 lijia modify, 开启overlay无mrtunnat的模式下, ctrl_zone是空, 默认都回注 */
-		/* 20190409 lijia modify, tunnel mode, 非隧道封装的包不能回注 */
-		/* vxlan封装内层数据转发不必做任何操作, 直接调用marsio_send_burst, 由marsio驱动负责 */
 
-		//ctrl_zone->action = TUNNAT_CZ_ACTION_FORWARD;
-		//ptr_marsio_buff_ctrlzone_set(mbufs, 0, ctrl_zone, sizeof(struct mr_tunnat_ctrlzone));
+	/* 20201010 lijia modify, 开启overlay无mrtunnat的模式下, ctrl_zone是空, 默认都回注 */
+	/* 20190409 lijia modify, tunnel mode, 非隧道封装的包不能回注 */
+	/* vxlan封装内层数据转发不必做任何操作, 直接调用marsio_send_burst, 由marsio驱动负责 */
 
-		marsio_pkt_dump(tid, mbufs, PKT_CLASSIFY_FORWARD);
-		ret = ptr_marsio_send_burst(sendpath, tid, &mbufs, 1);
-
-	}
-	else
-	{
-		ret = -1;
-	}
+	marsio_pkt_dump(tid, mbufs, PKT_CLASSIFY_FORWARD);
+	ret = ptr_marsio_send_burst(sendpath, tid, &mbufs, 1);
 	return ret;
 }
 
@@ -761,18 +735,13 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 		}
 	}
 
-	if(0 == sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support){
-		struct mr_tunnat_ctrlzone *mr_ctrlzone = (struct mr_tunnat_ctrlzone *)ptr_marsio_buff_ctrlzone(rx_buff, 0); /* index */
-		raw_pkt->is_overlay_pkt = mr_ctrlzone->action & TUNNAT_CZ_ACTION_FORWARD;
-	}else{
-		if(OVERLAY_MODE_NF == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)
-		{
-			raw_pkt->is_overlay_pkt = 1; 
-		}
-		else
-		{
-			raw_pkt->is_overlay_pkt = 0; /* 无mrtunnat时, 刚收到包还不确定, 靠packet_io_hook决定是否是overlay的包 */
-		}
+	if (OVERLAY_MODE_NF == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)
+	{
+		raw_pkt->is_overlay_pkt = 1;
+	}
+	else
+	{
+		raw_pkt->is_overlay_pkt = 0; /* 无mrtunnat时, 刚收到包还不确定, 靠packet_io_hook决定是否是overlay的包 */
 	}
 
 	/* clear pkt status */
@@ -785,7 +754,6 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->payload_len=0;
 	raw_pkt->stream_trace_id=0;
 
-	//ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, mr_ctrlzone->route_dir, tid);
 	ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, dir, tid);
 	
 	return ret;

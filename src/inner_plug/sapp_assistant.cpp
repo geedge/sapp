@@ -41,20 +41,12 @@ int sapp_identify_tunnel_inner_pkt(const raw_pkt_t *raw_pkt)
 {
 	int ret = 0;
 #if IOMODE_MARSIO
-	if(CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode){
-		if(0 == sapp_global_val->config.packet_io.packet_io_tunnel.l2_l3_tunnel_support){
-			const struct mr_tunnat_ctrlzone *mr_ctzone;
-			if(ptr_marsio_buff_ctrlzone){
-				mr_ctzone = (const struct mr_tunnat_ctrlzone *)((*ptr_marsio_buff_ctrlzone)((void *)raw_pkt->io_lib_pkt_reference, 0));
-				if(mr_ctzone->action & TUNNAT_CZ_ACTION_FORWARD){
-					ret = 1; 
-				}
-			}
-		}else{
-			/* 没有mrtunnat时, 如果开启l2_l3_tunnel_support, 要判断overlay类型, 是否是给本机的, 是否是经过overlay原始链路里的包    */
-			if(raw_pkt->is_overlay_pkt){
-				ret = 1;
-			}
+	if (CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode)
+	{
+		/* 没有mrtunnat时, 如果开启l2_l3_tunnel_support, 要判断overlay类型, 是否是给本机的, 是否是经过overlay原始链路里的包    */
+		if (raw_pkt->is_overlay_pkt)
+		{
+			ret = 1;
 		}
 	}
 #endif

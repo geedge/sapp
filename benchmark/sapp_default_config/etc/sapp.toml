@@ -24,7 +24,7 @@
     [overlay_tunnel_definition]
 ### note, since 2020-10-01, L2-L3 tunnel(VLAN,MPLS,PPPOE,etc.) is process and offload by mrtunnat, 	
 ### after 2020-10-01, sapp support L2-L3 tunnel(VLAN,MPLS,PPPOE,etc.) without mrtunnat.
-    l2_l3_tunnel_support=0
+    l2_l3_tunnel_support=1
 
 ### note, optional value is [none, vxlan]
     overlay_mode=none
