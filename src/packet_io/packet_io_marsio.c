@@ -753,6 +753,10 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->d_pkt = NULL;
 	raw_pkt->payload_len=0;
 	raw_pkt->stream_trace_id=0;
+	raw_pkt->prepend_list=NULL;
+	raw_pkt->append_list=NULL;
+	raw_pkt->meta[0]=NULL;
+	raw_pkt->meta[1]=NULL;
 
 	ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, dir, tid);
 	
