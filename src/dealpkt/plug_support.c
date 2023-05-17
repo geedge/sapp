@@ -449,8 +449,8 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 			{
 				*value = (void *)(pstream_pr->polling_inject_context->meta[pstream->routedir]->data);
 				ret = pstream_pr->polling_inject_context->meta[pstream->routedir]->sz_data;
-				return ret;
 			}
+			return ret;
 		}
 		break;
         case RAW_PKT_GET_SID_LIST:
@@ -460,8 +460,8 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 			{
 				*value = (void *)(&pstream_pr->polling_inject_context->meta[pstream->routedir]->raw_sid_list);
 				ret = sizeof(struct segment_id_list);
-				return ret;
 			}
+			return ret;
 		}
 		break;
 	}
