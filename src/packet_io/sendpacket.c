@@ -3407,9 +3407,10 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	{
 		((raw_pkt_t *)raw_pkt)->stream_trace_id = raw_stream_pr->stream_trace_id;
 	}
-	
-	if (((raw_pkt_t *)raw_pkt)->is_ctrl_pkt != 0)
+
+	if (raw_stream_pr->is_ctrl_pkt==1)
 	{
+		((raw_pkt_t *)raw_pkt)->is_ctrl_pkt=1;
 		((raw_pkt_t *)raw_pkt)->payload_len=payload_len;
 	}
 
