@@ -514,6 +514,9 @@ void *dictator_realloc(int thread_seq, void* pbuf, size_t size);
 /* ENG : get current total thread of platfomr */
 int get_thread_count(void);
 
+time_t get_timestamp_s(void);
+long long get_timestamp_ms(void);
+
 /* CHN : 将地enum addr_type_t址类型转换成可打印的字符串形式 */
 /* ENG : transform binary addr_type_t to string mode */
 const char *addr_type_to_string(enum addr_type_t type);

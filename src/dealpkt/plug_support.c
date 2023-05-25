@@ -629,6 +629,16 @@ int get_thread_count(void)
 	return g_packet_io_thread_num;
 }
 
+time_t get_timestamp_s(void)
+{
+	return g_CurrentTime;
+}
+
+long long get_timestamp_ms(void)
+{
+	return g_CurrentTime_ms;
+}
+
 /*
 	ctype:
 		'c':count;

@@ -55,6 +55,7 @@ extern "C" {
 extern sapp_global_t *sapp_global_val;
 
 /* 将之前分散的全局变量强制更新为新的全局变量 */
+#define g_CurrentTime_ms			sapp_global_val->individual_volatile->current_time_ms
 #define g_CurrentTime 			sapp_global_val->individual_volatile->current_time
 #define g_sapp_log_handle		sapp_global_val->individual_fixed.log_handle
 #define g_iThreadNum			sapp_global_val->config.cpu.worker_threads
