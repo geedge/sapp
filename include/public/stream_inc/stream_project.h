@@ -62,6 +62,18 @@ struct tcp_flow_stat
 	/* 以下是2020-11-17新增, 包括所有底层包头的原始包长度, 之前的内存结构不变, 向前兼容 */
 	UINT64 C2S_all_byte_raw;
 	UINT64 S2C_all_byte_raw;
+
+	UINT64 C2S_ip_fragment_pkt;
+	UINT64 S2C_ip_fragment_pkt;
+
+	UINT64 C2S_ooorder_pkt;
+	UINT64 S2C_ooorder_pkt;
+
+	UINT64 C2S_retransmission_pkt;
+	UINT64 C2S_retransmission_byte;
+	UINT64 S2C_retransmission_pkt;
+	UINT64 S2C_retransmission_byte;
+
 };
 
 struct udp_flow_stat
@@ -74,6 +86,9 @@ struct udp_flow_stat
 	/* 以下是2020-11-17新增, 包括所有底层包头的原始包长度, 之前的内存结构不变, 向前兼容 */
 	UINT64 C2S_all_byte_raw;
 	UINT64 S2C_all_byte_raw;	
+
+	UINT64 C2S_ip_fragment_pkt;
+	UINT64 S2C_ip_fragment_pkt;
 };
 
 /*	

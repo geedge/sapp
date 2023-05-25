@@ -70,6 +70,10 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 			pdetail_pr->flow_stat->C2S_pkt++;
 			pdetail_pr->flow_stat->C2S_byte += datalen;
 			pdetail_pr->flow_stat->C2S_all_byte_raw +=MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
+			if(a_udp->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
+			{
+				pdetail_pr->flow_stat->C2S_ip_fragment_pkt=1;
+			}
 		}
 	}	
 	else
@@ -84,6 +88,10 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 			pdetail_pr->flow_stat->S2C_pkt++;
 			pdetail_pr->flow_stat->S2C_byte += datalen;
 			pdetail_pr->flow_stat->S2C_all_byte_raw += MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
+			if(a_udp->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
+			{
+				pdetail_pr->flow_stat->S2C_ip_fragment_pkt=1;
+			}
 		}
 			
 	}

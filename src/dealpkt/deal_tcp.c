@@ -822,20 +822,44 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 				pdetail_pr->flow_stat->C2S_all_pkt++;
 				pdetail_pr->flow_stat->C2S_all_byte += datalen;
 				pdetail_pr->flow_stat->C2S_all_byte_raw += MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
+				if(pstream->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
+				{
+					pdetail_pr->flow_stat->C2S_ip_fragment_pkt++;
+				}
 			}else{
 				pdetail_pr->flow_stat->S2C_all_pkt++;
 				pdetail_pr->flow_stat->S2C_all_byte += datalen;
 				pdetail_pr->flow_stat->S2C_all_byte_raw += MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
+				if(pstream->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
+				{
+					pdetail_pr->flow_stat->S2C_ip_fragment_pkt++;
+				}
 			}
 		}else{
 			if(DIR_C2S == pstream->curdir){
 				pdetail_pr->flow_stat->C2S_all_pkt = 1;
 				pdetail_pr->flow_stat->C2S_all_byte = datalen;
 				pdetail_pr->flow_stat->C2S_all_byte_raw = MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
+				if(pstream->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
+				{
+					pdetail_pr->flow_stat->C2S_ip_fragment_pkt=1;
+				}
+				else
+				{
+					pdetail_pr->flow_stat->C2S_ip_fragment_pkt=0;
+				}
 			}else{
 				pdetail_pr->flow_stat->S2C_all_pkt = 1;
 				pdetail_pr->flow_stat->S2C_all_byte = datalen;
 				pdetail_pr->flow_stat->S2C_all_byte_raw = MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
+				if(pstream->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
+				{
+					pdetail_pr->flow_stat->S2C_ip_fragment_pkt=1;
+				}
+				else
+				{
+					pdetail_pr->flow_stat->S2C_ip_fragment_pkt=0;
+				}
 			}
 		}
 	}
@@ -1088,10 +1112,26 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 				pdetail_pr->flow_stat->C2S_all_pkt = 1;
 				pdetail_pr->flow_stat->C2S_all_byte = datalen;
 				pdetail_pr->flow_stat->C2S_all_byte_raw =MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
+				if(pstream->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
+				{
+					pdetail_pr->flow_stat->C2S_ip_fragment_pkt=1;
+				}
+				else
+				{
+					pdetail_pr->flow_stat->C2S_ip_fragment_pkt=0;
+				}
 			}else{
 				pdetail_pr->flow_stat->S2C_all_pkt = 1;
 				pdetail_pr->flow_stat->S2C_all_byte = datalen;	
 				pdetail_pr->flow_stat->S2C_all_byte_raw = MAX(raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes,0);
+				if(pstream->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
+				{
+					pdetail_pr->flow_stat->S2C_ip_fragment_pkt=1;
+				}
+				else
+				{
+					pdetail_pr->flow_stat->S2C_ip_fragment_pkt=0;
+				}
 			}
 		}
 		/* NOTE, tcp_data计数在stream_process_tcp()中累计 */
@@ -2018,7 +2058,7 @@ static int tcp_save_unorder(struct streaminfo *a_tcp,struct  half_tcpstream  *rc
 {
 	int threadnum = a_tcp->threadnum;
 	struct buf_unorder *p = rcv->unorderlisttail;
-	struct buf_unorder *pakiet=NULL;
+	struct buf_unorder *packet=NULL;
 	unsigned int this_seq = ntohl (this_tcphdr->th_seq);
 
 #if 0	 /* 2015-01-12 lijia modify */
@@ -2045,7 +2085,7 @@ raw_pkt指向最后一个分片包, 而tcpdatalen是重组完成后的完整IP包负载!
 	pakiet->urg = (this_tcphdr->th_flags & TH_URG);
 	pakiet->urg_ptr = ntohs (this_tcphdr->th_urp);
 #else
-	pakiet = tcp_save_unorder_pkt(a_tcp, this_iphdr, stack_raw_pkt, this_tcphdr, tcpdata, tcpdatalen);
+	packet = tcp_save_unorder_pkt(a_tcp, this_iphdr, stack_raw_pkt, this_tcphdr, tcpdata, tcpdatalen);
 #endif
 
 	for (;;)
@@ -2056,13 +2096,13 @@ raw_pkt指向最后一个分片包, 而tcpdatalen是重组完成后的完整IP包负载!
 	}
 	if (!p)
 	{
-		pakiet->prev = 0;
+		packet->prev = 0;
 		if(rcv->unorderlist)
-		  rcv->unorderlist->prev=pakiet;
-		pakiet->next = rcv->unorderlist;
-		rcv->unorderlist = pakiet;
+		  rcv->unorderlist->prev=packet;
+		packet->next = rcv->unorderlist;
+		rcv->unorderlist = packet;
 		if (!rcv->unorderlisttail)
-			rcv->unorderlisttail = pakiet;
+			rcv->unorderlisttail = packet;
 	}
 	else
 	{
@@ -2070,8 +2110,8 @@ raw_pkt指向最后一个分片包, 而tcpdatalen是重组完成后的完整IP包负载!
             //if (p->seq == this_seq)
 		//add by yw 20150311
 		if (p->seq == this_seq 
-		  || (p->seq+p->tcpdatalen) == (this_seq+pakiet->tcpdatalen)
-		  ||after(p->seq+p->tcpdatalen,this_seq+pakiet->tcpdatalen))
+		  || (p->seq+p->tcpdatalen) == (this_seq+packet->tcpdatalen)
+		  ||after(p->seq+p->tcpdatalen,this_seq+packet->tcpdatalen))
              {
 #if 0/* 2015-01-12 lijia modify */
              	if(pakiet->data){
@@ -2083,31 +2123,31 @@ raw_pkt指向最后一个分片包, 而tcpdatalen是重组完成后的完整IP包负载!
 			dictator_free(threadnum,pakiet);
 			pakiet = NULL;
 #else
-			tcp_free_unorder_pkt(threadnum, pakiet);
+			tcp_free_unorder_pkt(threadnum, packet);
 #endif
 			return PASS;
                }
 
-		pakiet->next = p->next;
-		p->next = pakiet;
-		pakiet->prev = p;
-		if (pakiet->next)
-			pakiet->next->prev = pakiet;
+		packet->next = p->next;
+		p->next = packet;
+		packet->prev = p;
+		if (packet->next)
+			packet->next->prev = packet;
 		else
-			rcv->unorderlisttail = pakiet;
+			rcv->unorderlisttail = packet;
 	}
 	rcv->unorder_cnt++;
 
 	//add by yw 20150311, remove overlab saved pkt
-	p=pakiet->next;
+	p=packet->next;
 	while(p != NULL){
-		if(before(p->seq+p->tcpdatalen,this_seq+pakiet->tcpdatalen)
-		  ||(p->seq+p->tcpdatalen)==(this_seq+pakiet->tcpdatalen)){
-			pakiet->next = p->next;
+		if(before(p->seq+p->tcpdatalen,this_seq+packet->tcpdatalen)
+		  ||(p->seq+p->tcpdatalen)==(this_seq+packet->tcpdatalen)){
+			packet->next = p->next;
 			if(p->next != NULL)	
-				p->next->prev = pakiet;
+				p->next->prev = packet;
 			else
-				rcv->unorderlisttail = pakiet;
+				rcv->unorderlisttail = packet;
 				
 			tcp_free_unorder_pkt(threadnum, p);
 			
@@ -2115,7 +2155,7 @@ raw_pkt指向最后一个分片包, 而tcpdatalen是重组完成后的完整IP包负载!
 		}else{
 			break;
 		}
-		p=pakiet->next;
+		p=packet->next;
 	}
 
 	return 1;
@@ -2169,19 +2209,18 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 				last_link_state = pdetail_pr->link_state;
 				pdetail_pr->link_state=STREAM_LINK_RESET;
 				a_tcp->opstate = OP_STATE_CLOSE;
-#if (0 == HIGH_PERF)  				
-				update_stream_ip_frag_list(a_tcp, pakiet->ipfrag_list); /* lijia add for raw ip frag list */
-				pakiet->ipfrag_list = NULL;
-#endif				
 				tmpktype=a_tcp->addr.pkttype;
-				//a_tcp->addr.pkttype=tmpktype|PKT_TYPE_TCPUNORDER|a_tcp->pfather->addr.pkttype; /* lijia add, 将IP分片类型带到上层 */
 				a_tcp->addr.pkttype=PKT_TYPE_TCPREORDER;
-				//ret=stream_process_tcp(a_tcp,pakiet->data,&(pdetail->apme),&(a_tcp->opstate));
+				if(a_tcp->curdir==DIR_C2S)
+				{
+					pdetail_pr->flow_stat->C2S_ooorder_pkt++;
+				}
+				else
+				{
+					pdetail_pr->flow_stat->S2C_ooorder_pkt++;
+				}
 				ret=stream_process_tcp(a_tcp,pakiet->this_ip_hdr, pakiet->this_tcp_hdr, &(pakiet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
 				a_tcp->addr.pkttype=tmpktype;
-#if (0 == HIGH_PERF)					
-				raw_frags_list_free_stream(a_tcp->threadnum, a_tcp);/* lijia add for raw ip frag list */
-#endif		
 				/* 2016-05-12 lijia add, 解决因乱序包导致unorder_list超长BUG, 此处应将流置于nouse状态 */
 				if(STREAM_LINK_DATA == last_link_state){
 				    tcp_update_should_close_reason_stat(a_tcp->threadnum);
@@ -2208,30 +2247,25 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 				}
 
 				//get tcp的data和len
-#if 0	/* 2014-01-12 lijia modify */			
-				tcp_set_new_data(a_tcp,rcv,snd,(u_char *)(pakiet->data)+(pakiet->len-pakiet->tcpdatalen),
-					pakiet->tcpdatalen,pakiet->seq,pakiet->fin);
-#else
+
 				tcp_set_new_data(a_tcp,rcv,snd,(u_char *)(pakiet->tcpdata),
-					pakiet->tcpdatalen,pakiet->seq,pakiet->fin, 0);
-#endif
+				pakiet->tcpdatalen,pakiet->seq,pakiet->fin, 0);
 				if(pakiet->tcpdatalen >0)
 				{
 					/* 2021-04-29 lijia add, 插件调用了Kill_tcp,或者设置了MSO_DROP_STREAM, 即便是暂存的乱序包, 也不再调用插件 */
 					if((0 == a_tcp_pr->stream_killed_flag) && (0 == pdetail_pr->drop_stream_flag)){
-#if (0 == HIGH_PERF)  				
-						update_stream_ip_frag_list(a_tcp, pakiet->ipfrag_list);
-						pakiet->ipfrag_list = NULL;
-#endif					
 						tmpktype=a_tcp->addr.pkttype;
-						//a_tcp->addr.pkttype=tmpktype|PKT_TYPE_TCPUNORDER|a_tcp->pfather->addr.pkttype;	
-						a_tcp->addr.pkttype=PKT_TYPE_TCPREORDER;
-						//ret=stream_process_tcp(a_tcp,pakiet->data,&(pdetail->apme),&(a_tcp->opstate));
+						a_tcp->addr.pkttype = PKT_TYPE_TCPREORDER;
+						if (a_tcp->curdir == DIR_C2S)
+						{
+							pdetail_pr->flow_stat->C2S_ooorder_pkt++;
+						}
+						else
+						{
+							pdetail_pr->flow_stat->S2C_ooorder_pkt++;
+						}
 						ret=stream_process_tcp(a_tcp,pakiet->this_ip_hdr,pakiet->this_tcp_hdr,&(pakiet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
 						a_tcp->addr.pkttype=tmpktype;	
-#if (0 == HIGH_PERF)
-						raw_frags_list_free_stream(a_tcp->threadnum, a_tcp);
-#endif					
 						tcp_clear_newdata(a_tcp,rcv);
 					}
 					
@@ -2438,6 +2472,16 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 	//if((thisseq<curseq)&&(thisseq+datalen<=curseq)&&(!(this_tcphdr->th_flags & TH_SYN))){ // modify by lqy 20150325
 	if(before(thisseq,curseq)&&before(thisseq+datalen,curseq+1)&&(!(th_flags & TH_SYN))){
 		pstream->addr.pkttype = PKT_TYPE_TCPRETRANS;
+		if(pstream->curdir==DIR_C2S)
+		{
+			pdetail_pr->flow_stat->C2S_retransmission_pkt++;
+			pdetail_pr->flow_stat->C2S_retransmission_byte+=MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
+		}
+		else
+		{
+			pdetail_pr->flow_stat->S2C_retransmission_pkt++;
+			pdetail_pr->flow_stat->S2C_retransmission_byte+=MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
+		}
 		return PASS;
 	}
 	//rst
@@ -2491,6 +2535,16 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 	   if((datalen>0) || ((UINT32)thisseq+1 == rcv->first_data_seq) || ((UINT32)thisseq==rcv->first_data_seq)) 
 	   {
 		pstream->addr.pkttype = PKT_TYPE_TCPRETRANS;
+		if(pstream->curdir==DIR_C2S)
+		{
+			pdetail_pr->flow_stat->C2S_retransmission_pkt++;
+			pdetail_pr->flow_stat->C2S_retransmission_byte+=MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
+		}
+		else
+		{
+			pdetail_pr->flow_stat->S2C_retransmission_pkt++;
+			pdetail_pr->flow_stat->S2C_retransmission_byte+=MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
+		}
 		return PASS;
 	   }else{
 			/* 2017-12-19 lijia add, 
@@ -2674,10 +2728,18 @@ static char tcp_process_newstreambydata(struct streamindex *pindex_tcp,const voi
 			pdetail_pr->flow_stat->S2C_all_pkt++;
 			pdetail_pr->flow_stat->S2C_all_byte += tcplen;
 			pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
+			if(pstream->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
+			{
+				pdetail_pr->flow_stat->C2S_ip_fragment_pkt++;
+			}
 		}else{
 			pdetail_pr->flow_stat->C2S_all_pkt++;
 			pdetail_pr->flow_stat->C2S_all_byte += tcplen;
 			pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
+			if(pstream->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
+			{
+				pdetail_pr->flow_stat->S2C_ip_fragment_pkt++;
+			}
 		}
 	}
 	
@@ -2993,10 +3055,18 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			pdetail_pr->flow_stat->C2S_all_pkt++;
 			pdetail_pr->flow_stat->C2S_all_byte += tcplen;
 			pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
+			if(pstream->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
+			{
+				pdetail_pr->flow_stat->C2S_ip_fragment_pkt++;
+			}
 		}else{
 			pdetail_pr->flow_stat->S2C_all_pkt++;
 			pdetail_pr->flow_stat->S2C_all_byte += tcplen;
 			pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
+			if(pstream->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
+			{
+				pdetail_pr->flow_stat->S2C_ip_fragment_pkt++;
+			}
 		}
 	}
 

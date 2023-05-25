@@ -1098,12 +1098,6 @@ int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const v
 		}
 	}
 	
-#if (0 == HIGH_PERF)	
-	if(a_tcp->addr.pkttype != PKT_TYPE_TCPREORDER){
-		raw_ip_frag_list_stream_attach(a_tcp);
-	}
-#endif	
-
 	if(raw_pkt!=NULL)
 	{	
 		a_tcp_pr->packet_io_context = 1;
@@ -1111,17 +1105,6 @@ int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const v
 	ret = stream_process(a_tcp, this_iphdr, transport_hdr, raw_pkt,g_StreamTcpFunNum, g_StreamTcpFun,apme,popstate, SMART_OFFLOAD_FLAG_TCP);	
 	a_tcp_pr->packet_io_context = 0;
 	
-#if (0 == HIGH_PERF)		
-	if(a_tcp->addr.pkttype != PKT_TYPE_TCPREORDER){
-		raw_ip_frag_list_stream_detach(a_tcp);
-	}
-#endif
-
-#if 0 /* 测试完整包处理延时, 暂时关闭 */
-	if(PKT_TYPE_NORMAL == a_tcp->addr.pkttype){ 
-		timestamp_record(TS_LEVEL_AFTER_PLUG, raw_pkt, a_tcp->threadnum);
-	}
-#endif	
 	return ret;
 }
 
