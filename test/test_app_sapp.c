@@ -892,11 +892,25 @@ char testudpApp_2(struct streaminfo *pstream,void **pme, int thread_seq,void *a_
 	
 }
 
-char testtcpApp_1(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
+char testtcpApp_3_dropme_killother(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
 {
 	struct tcpdetail *pdetail=(struct tcpdetail *)pstream->pdetail;
 
 	if(pdetail->clientpktnum >3)
+	{
+		return APP_STATE_DROPME|APP_STATE_KILL_OTHER;
+	}
+	else 
+	{
+		return APP_STATE_GIVEME;
+	}
+}	
+
+char testtcpApp_10(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
+{
+	struct tcpdetail *pdetail=(struct tcpdetail *)pstream->pdetail;
+
+	if(pdetail->clientpktnum >10)
 		return APP_STATE_DROPME;
 	else 
 		return APP_STATE_GIVEME;

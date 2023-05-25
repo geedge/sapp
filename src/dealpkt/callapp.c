@@ -563,7 +563,7 @@ static int stream_state_pending_process(struct streaminfo *a_stream,const void *
             }
             else
             {
-                if ((entry_ret & APP_STATE_GIVEME) == APP_STATE_GIVEME || APP_STATE_GIVEME == 0)
+                if ((entry_ret & APP_STATE_GIVEME) == APP_STATE_GIVEME || entry_ret == APP_STATE_GIVEME)
                 {
                     giveme_cnt++;
                 }
@@ -657,7 +657,7 @@ static int stream_state_data_process(struct streaminfo *a_stream,const void *thi
         }
         else
         {
-            if ((entry_ret & APP_STATE_GIVEME) == APP_STATE_GIVEME || APP_STATE_GIVEME == 0)
+            if ((entry_ret & APP_STATE_GIVEME) == APP_STATE_GIVEME || entry_ret == APP_STATE_GIVEME) 
             {
                 giveme_cnt++;
             }
@@ -683,6 +683,10 @@ static int stream_state_data_process(struct streaminfo *a_stream,const void *thi
                     }
                     iter_current = iter_current->next;
                     plug_entry_kick_out_one(to_remove, a_stream);
+					if (to_remove == prev) // if we remove the 'prev', update 'prev'
+                    {
+                        prev = iter_prev;
+                    }
                 }
                 else
                 {
@@ -690,34 +694,31 @@ static int stream_state_data_process(struct streaminfo *a_stream,const void *thi
                     iter_current = iter_current->next;
                 }
             }
-			current = current->next;
         }
-        else
+        // Check and process APP_STATE_DROPME separately from APP_STATE_KILL_OTHER or APP_STATE_KILL_FOLLOW.
+        if (entry_ret & APP_STATE_DROPME)
         {
-            if (entry_ret&APP_STATE_DROPME)
+            to_remove = NULL;
+            if (prev != NULL)
             {
-                to_remove = NULL;
-                if (prev != NULL)
-                {
-                    prev->next = current->next;
-                    to_remove = current;
-                    current = current->next;
-                }
-                else
-                {
-                    head = current->next;
-                    to_remove = current;
-                    current = current->next;
-                }
-                sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,a_stream->threadnum,to_remove);
+                prev->next = current->next;
+                to_remove = current;
+                current = current->next;
             }
             else
             {
-                prev = current;
+                head = current->next;
+                to_remove = current;
                 current = current->next;
             }
+            sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,a_stream->threadnum,to_remove);
         }
-    }
+        else
+        {
+            prev = current;
+            current = current->next;
+        }
+	}
 	if(head != NULL)
 	{
 		*opstate= OP_STATE_DATA;
