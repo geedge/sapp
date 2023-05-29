@@ -63,16 +63,19 @@ struct tcp_flow_stat
 	UINT64 C2S_all_byte_raw;
 	UINT64 S2C_all_byte_raw;
 
-	UINT64 C2S_ip_fragment_pkt;
-	UINT64 S2C_ip_fragment_pkt;
+	UINT32 C2S_ip_fragment_pkt;
+	UINT32 S2C_ip_fragment_pkt;
 
-	UINT64 C2S_ooorder_pkt;
-	UINT64 S2C_ooorder_pkt;
+	UINT32 C2S_ooorder_pkt;
+	UINT32 S2C_ooorder_pkt;
 
-	UINT64 C2S_retransmission_pkt;
+	UINT32 C2S_retransmission_pkt;
+	UINT32 S2C_retransmission_pkt;
 	UINT64 C2S_retransmission_byte;
-	UINT64 S2C_retransmission_pkt;
 	UINT64 S2C_retransmission_byte;
+
+	UINT64 C2S_seq_gap_loss_cnt;
+	UINT64 S2C_seq_gap_loss_cnt;
 
 };
 
@@ -87,8 +90,8 @@ struct udp_flow_stat
 	UINT64 C2S_all_byte_raw;
 	UINT64 S2C_all_byte_raw;	
 
-	UINT64 C2S_ip_fragment_pkt;
-	UINT64 S2C_ip_fragment_pkt;
+	UINT32 C2S_ip_fragment_pkt;
+	UINT32 S2C_ip_fragment_pkt;
 };
 
 /*	
