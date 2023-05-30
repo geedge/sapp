@@ -6,6 +6,7 @@
 #include "sapp_private_api.h"
 #include "sapp_declaration.h"
 #include "stream_inc/stream_base.h"
+#include "stream_inc/stream_control.h"
 #include "stream_inc/stream_rawpkt.h"
 
 #ifdef __cplusplus
@@ -34,20 +35,20 @@ struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const vo
 
 	if(sapp_global_val->config.packet_io.depolyment_mode_bin != DEPOLYMENT_MODE_INLINE)return NULL;
 
-	struct detain_pkt *d_pkt = sapp_mem_calloc(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum,  sizeof(struct detain_pkt));
-	d_pkt->original = rawpkt;
+	struct detain_pkt *d_pkt = (struct detain_pkt*)sapp_mem_calloc(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum,  sizeof(struct detain_pkt));
+	d_pkt->original = (const raw_pkt_t *)rawpkt;
 	memcpy(&d_pkt->replica, p_rawpkt, sizeof(raw_pkt_t));
 	d_pkt->replica.append_list=NULL;
 	d_pkt->replica.prepend_list=NULL;
 	if(p_rawpkt->append_list!= NULL && p_rawpkt->append_list->sz_sidlist > 0)
 	{
-		d_pkt->replica.append_list = sapp_mem_calloc(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum,  sizeof(unsigned short)*p_rawpkt->append_list->sz_sidlist);
+		d_pkt->replica.append_list = (struct segment_id_list *)sapp_mem_calloc(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum,  sizeof(unsigned short)*p_rawpkt->append_list->sz_sidlist);
 		memcpy(d_pkt->replica.append_list->sid_list, p_rawpkt->append_list->sid_list, sizeof(unsigned short)*p_rawpkt->append_list->sz_sidlist);
 		d_pkt->replica.append_list->sz_sidlist = p_rawpkt->append_list->sz_sidlist;
 	}
 	if(p_rawpkt->prepend_list!= NULL && p_rawpkt->prepend_list->sz_sidlist > 0)
 	{
-		d_pkt->replica.prepend_list = sapp_mem_calloc(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum,  sizeof(unsigned short)*p_rawpkt->prepend_list->sz_sidlist);
+		d_pkt->replica.prepend_list = (struct segment_id_list *)sapp_mem_calloc(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum,  sizeof(unsigned short)*p_rawpkt->prepend_list->sz_sidlist);
 		memcpy(d_pkt->replica.prepend_list->sid_list, p_rawpkt->prepend_list->sid_list, sizeof(unsigned short)*p_rawpkt->prepend_list->sz_sidlist);
 		d_pkt->replica.prepend_list->sz_sidlist = p_rawpkt->prepend_list->sz_sidlist;
 	}
@@ -944,7 +945,6 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			unsigned int set_timer_s = *((unsigned short *)opt_val);
-			struct stream_list *lru_list_root;
 			struct streaminfo_private *pstream_pr=(struct streaminfo_private *)pstream;
 			StreamFunInfo *funinfo = (StreamFunInfo *)pstream_pr->cur_plugin_cb_func;
 			funinfo->pstream = pstream;
@@ -1273,21 +1273,21 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 		if(pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){ /* 包太少, 不足以判断有没有重复包 */
 			*res_val = -2;
 			sapp_runtime_log(RLOG_LV_DEBUG, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT, duplicate pkt state is pending, because has only recv %d pkt", 
-						 printaddr(&pstream->addr, pstream->threadnum), pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum); 			
+						printaddr(&pstream->addr, pstream->threadnum), pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum); 			
 		}else{
 			*res_val = 0;
 		}
 	}else if(STREAM_TYPE_UDP == pstream->type){
 		if(pstream->pudpdetail->clientpktnum  + pstream->pudpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){ /* 包太少, 不足以判断有没有重复包 */
 			sapp_runtime_log(RLOG_LV_DEBUG, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT, duplicate pkt state is pending, because has only recv %d pkt", 
-						 printaddr(&pstream->addr, pstream->threadnum), pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum); 		
+						printaddr(&pstream->addr, pstream->threadnum), pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum); 		
 			*res_val = -2;
 		}else{
 			*res_val = 0;
 		}
 	}else{
 		sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT error,  not support stream type:%d", 
-						 printaddr(&pstream->addr, pstream->threadnum), pstream->type); 	
+						printaddr(&pstream->addr, pstream->threadnum), pstream->type); 	
 		*res_val = -2;				 
 		ret = -1;
 	}
@@ -1298,7 +1298,9 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt opt, void *opt_val, int *opt_val_len)
 {
 	int ret = 0;
-	
+	struct streaminfo_private *pstream_pr=(struct streaminfo_private *)pstream;
+	struct tcpdetail_private *pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
+
 	if((NULL == opt_val) || (NULL == opt_val_len) || (*opt_val_len <= 0)){
 		return -1;
 	}
@@ -1329,7 +1331,6 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			unsigned char *nack = (unsigned char *)opt_val;
-			struct tcpdetail_private *pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
 			*nack = pdetail_pr->needackflag;
 			*opt_val_len = sizeof(char);
 		}
@@ -1347,7 +1348,6 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			int *takeover = (int *)opt_val;
-			struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private*)(pstream->pdetail);
 			*takeover = pdetail_pr->takeoverflag;
 			*opt_val_len = sizeof(int);
 		}
@@ -1361,7 +1361,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			unsigned short *tmout = (unsigned short *)opt_val;
-			struct streaminfo_private *pstream_pr=(struct streaminfo_private *)pstream;
+			
 			*tmout = pstream_pr->timeout;
 			*opt_val_len = sizeof(short);
 		}
@@ -1375,14 +1375,12 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			unsigned char *igrstfin = (unsigned char *)opt_val;
-			struct tcpdetail_private *pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
 			*igrstfin = pdetail_pr->ignore_rst_fin;	
 		}	
 		break;
 		
 		case MSO_TCP_CREATE_LINK_MODE:
 		{
-			struct tcpdetail_private *pdetail_pr;
 			UCHAR *out_val = (UCHAR *)opt_val;
 			if(STREAM_TYPE_TCP != pstream->type){
 				ret = -1;
@@ -1390,73 +1388,49 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			
-			pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
 			*out_val = pdetail_pr->creat_mod;
 			*opt_val_len = sizeof(char);
 		}
 		break;
 
 		case MSO_TCP_ISN_C2S:
-		{
-			struct tcpdetail_private *pdetail_pr;
-			UINT32 *out_val = (UINT32 *)opt_val;
-			if(STREAM_TYPE_TCP != pstream->type){
-				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_TCP_ISN_C2S error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
-				break;
-			}
- 
-			pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
-			if(pdetail_pr->creat_mod != TCP_CTEAT_LINK_BYSYN){
-				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_TCP_ISN_C2S error: stream create mode is not by SYN!\n", printaddr(&pstream->addr, pstream->threadnum));
-				break;
-			}
-			if(0 == pdetail_pr->iserverseq){
-				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_TCP_ISN_C2S error: can't get SYN seq!\n", printaddr(&pstream->addr, pstream->threadnum));
-				break;
-			}
-			
-			*out_val = pdetail_pr->iserverseq - 1;
-			*opt_val_len = sizeof(int);
-		}
-		break;
-
 		case MSO_TCP_ISN_S2C:
 		{
-			/* TODO 1: 代码与上面重复, 待合并 */
-			struct tcpdetail_private *pdetail_pr;
 			UINT32 *out_val = (UINT32 *)opt_val;
-			if(STREAM_TYPE_TCP != pstream->type){
+			if (STREAM_TYPE_TCP != pstream->type)
+			{
 				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_ISN_S2C error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
-				break;
-			}
-			pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
-			if(pdetail_pr->creat_mod != TCP_CTEAT_LINK_BYSYN){
-				ret = -1;
-				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_ISN_S2C error: stream create mode is not by SYN!\n",printaddr(&pstream->addr, pstream->threadnum));
+				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() %s error:stream type is not tcp!\n",
+								printaddr(&pstream->addr, pstream->threadnum),
+								opt == MSO_TCP_ISN_C2S ? "MSO_TCP_ISN_C2S" : "MSO_TCP_ISN_S2C");
 				break;
 			}
 
-			if(0 == pdetail_pr->iclientseq){
+			if (pdetail_pr->creat_mod != TCP_CTEAT_LINK_BYSYN)
+			{
 				ret = -1;
-				if(pstream->dir != DIR_C2S)
-				{
-					sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_ISN_S2C error: can't get SYN/ACK seq!\n",printaddr(&pstream->addr, pstream->threadnum));
-				}
+				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() %s error: stream create mode is not by SYN!\n",
+								printaddr(&pstream->addr, pstream->threadnum),
+								opt == MSO_TCP_ISN_C2S ? "MSO_TCP_ISN_C2S" : "MSO_TCP_ISN_S2C");
 				break;
 			}
 
-			*out_val = pdetail_pr->iclientseq - 1;
+			if ((opt == MSO_TCP_ISN_C2S && 0 == pdetail_pr->iserverseq) || (opt == MSO_TCP_ISN_S2C && 0 == pdetail_pr->iclientseq))
+			{
+				ret = -1;
+				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() %s error: can't get SYN seq!\n",
+								printaddr(&pstream->addr, pstream->threadnum),
+								opt == MSO_TCP_ISN_C2S ? "MSO_TCP_ISN_C2S" : "MSO_TCP_ISN_S2C");
+				break;
+			}
+
+			*out_val = (opt == MSO_TCP_ISN_C2S ? pdetail_pr->iserverseq : pdetail_pr->iclientseq) - 1;
 			*opt_val_len = sizeof(int);
 		}
 		break;
 
 		case MSO_TCP_SYN_OPT:
 		{
-			const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
 			struct tcp_option **out_val = (struct tcp_option **)opt_val;
 			if((pstream_pr->syn_opt_array != NULL) && (pstream_pr->syn_opt_num > 0)){
 				*out_val = pstream_pr->syn_opt_array;
@@ -1470,7 +1444,6 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 
 		case MSO_TCP_SYNACK_OPT:
 		{
-			const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
 			struct tcp_option **out_val = (struct tcp_option **)opt_val;
 			if((pstream_pr->synack_opt_array != NULL) && (pstream_pr->synack_opt_num > 0)){
 				*out_val = pstream_pr->synack_opt_array;
@@ -1484,7 +1457,6 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 
 		case MSO_STREAM_TUNNEL_TYPE:
 		{
-			const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
 			unsigned short *out_val = (unsigned short *)opt_val;
 			*out_val = pstream_pr->stream_low_layer_tunnel_type;
 			ret = 0;
@@ -1493,7 +1465,6 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 
 		case MSO_STREAM_UP_LAYER_TUNNEL_TYPE:
 		{
-			const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
 			unsigned short *out_val = (unsigned short *)opt_val;
 			*out_val = pstream_pr->stream_carry_up_layer_tunnel_type;
 			ret = 0;
@@ -1510,10 +1481,8 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;				
 			}
 			if(STREAM_TYPE_TCP == pstream->type){
-				const struct tcpdetail_private *pdetail_pr = (struct tcpdetail_private*)(pstream->pdetail);
 				*close_reason = pdetail_pr->link_state;
 			}else if(STREAM_TYPE_UDP == pstream->type){
-				const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
 				*close_reason = pstream_pr->stream_close_reason;
 			}else{
 				ret = -1;
@@ -1535,11 +1504,9 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 
 		case MSO_GLOBAL_STREAM_ID:
 		{
-			const struct streaminfo_private *pstream_pr;
 			if(*opt_val_len != sizeof(long long)){
 				return -1;
 			}
-			pstream_pr = (const struct streaminfo_private *)pstream;
 			unsigned long long *out_args = (unsigned long long *)opt_val;
 			unsigned long long dev_id = *out_args;
 			if(dev_id > 4095){
@@ -1684,7 +1651,41 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		case MSO_HAVE_DUP_PKT:
 			ret = MESA_get_stream_dup_pkt_stat(pstream, opt_val, opt_val_len);
 		break;
-		
+		case MSO_STREAM_C2S_RAWPKT_HDR:
+		case MSO_STREAM_S2C_RAWPKT_HDR:
+		{
+		const raw_pkt_t *rawpkt = NULL;
+		if ((opt == MSO_STREAM_C2S_RAWPKT_HDR && pstream->curdir == DIR_C2S) 
+			|| (opt == MSO_STREAM_S2C_RAWPKT_HDR && pstream->curdir == DIR_S2C))
+		{
+				if (pstream->routedir == DIR_ROUTE_UP)
+				{
+					rawpkt = pstream_pr->polling_inject_context->raw_pkt_up;
+				}
+				else
+				{
+					rawpkt = pstream_pr->polling_inject_context->raw_pkt_down;
+				}
+		}
+		else
+		{
+				if (pstream->routedir == DIR_ROUTE_UP)
+				{
+					rawpkt = pstream_pr->polling_inject_context->raw_pkt_down;
+				}
+				else
+				{
+					rawpkt = pstream_pr->polling_inject_context->raw_pkt_up;
+				}
+		}
+		if (rawpkt != NULL)
+		{
+				*((void **)opt_val) = (void *)((const char *)rawpkt->raw_pkt_data + rawpkt->overlay_layer_bytes);
+				*opt_val_len = rawpkt->offset_to_raw_pkt_hdr - rawpkt->overlay_layer_bytes;
+		}
+		}
+		break;
+
 		default:
 			sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n",printaddr(&pstream->addr, pstream->threadnum), (int)opt);
 			ret = -1;
