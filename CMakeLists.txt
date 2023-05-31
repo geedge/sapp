@@ -46,14 +46,8 @@ message(STATUS "PLATFORM_MODE='${PLATFORM_MODE}'")
 
 
 #static link option
-option(ENABLE_STATIC_LINK "Enable static link" TRUE)
-if(ENABLE_STATIC_LINK)
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLINK_MODE_DYNAMIC=0")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLINK_MODE_DYNAMIC=0")
-else()
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLINK_MODE_DYNAMIC=1")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLINK_MODE_DYNAMIC=1")
-endif()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLINK_MODE_DYNAMIC=0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLINK_MODE_DYNAMIC=0")
 
 # CPU profiler
 set(CPU_PROFILE "OFF" CACHE STRING
@@ -147,6 +141,13 @@ elseif(MEM_POOL MATCHES "JEMALLOC")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 endif()
 
+set(ENABLE_STATIC_LINK ON)
+
+# 定义宏 LIBEVENT_ENABLED
+option(LIBEVENT_ENABLED "Enable libevent" OFF)
+if(LIBEVENT_ENABLED STREQUAL "ON")
+	add_definitions(-DLIBEVENT_ENABLED=1)	
+endif()
 
 add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
     -D__USE_BSD=1 -D_GNU_SOURCE=1  -DMESA_SAPP_PLATFORM=1)
@@ -234,7 +235,7 @@ install(FILES bin/etc/necessary_plug_list.conf DESTINATION etc COMPONENT PROFILE
 install(FILES bin/etc/well_known_port.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/vxlan_sport_service_map.conf DESTINATION etc COMPONENT PROFILE)
 
-if(NOT ENABLE_STATIC_LINK)
+if(ENABLE_STATIC_LINK STREQUAL "OFF")
 
 if(CAPTURE_MODE MATCHES "MARSIO")
 	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_marsio.so DESTINATION platform_lib COMPONENT LIBRARY)

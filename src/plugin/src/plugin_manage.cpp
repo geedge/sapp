@@ -356,7 +356,7 @@ int plugin_load_new_plug(const char *plug_name, const char *plug_path)
 	strncpy((char *)plug_info->plug_path, plug_path, path_length);
 	plug_info->is_necessary = plugin_is_necessary(plug_path, &priority);
 	plug_info->priority = priority;
-	MESA_htable_add(g_plug_uniq_htable, (unsigned char *)plug_name, path_length, plug_info);
+	MESA_htable_add(g_plug_uniq_htable, (unsigned char *)plug_name, strlen(plug_name), plug_info);
 
 	return 0;
 }

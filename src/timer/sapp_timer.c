@@ -2,7 +2,11 @@
 #include "sapp_private_api.h"
 #include "public/sapp_timer.h"
 #include "sapp_declaration.h"
+
+#ifdef LIBEVENT_ENABLED
 #include "support/event2/event.h"
+#endif
+
 #include <systemd/sd-daemon.h>
 
 #ifdef __cplusplus
@@ -13,7 +17,7 @@ sapp_timer_handle sapp_get_platform_standalone_timer(void);
 static void *sapp_standalone_timer_check_timeout(void *arg);
 extern volatile int update_packet_io_status_sw;
 
-static inline int __st_is_platform_timer(void *h)
+static inline int __st_is_platform_timer(const void *h)
 {
 	int i;
 
@@ -68,13 +72,12 @@ static int __st_timer_event_sanity_check(sapp_timer_handle_inner_t *inner_h, sap
 
 static int __st_timer_add_online(sapp_timer_handle_inner_t *inner_h, sapp_timer_event_inner_t  *inner_ev)
 {
-	int ret;
-	
 	if(0 == pthread_equal(inner_h->effective_thread_pid, pthread_self())){
 		return ST_RET_DIFF_THREAD_CONTEXT;
 	}
 
-	ret = event_assign(inner_ev->libev_event, inner_h->libev_base, -1, EV_PERSIST, 
+#ifdef LIBEVENT_ENABLED	
+	int ret = event_assign(inner_ev->libev_event, inner_h->libev_base, -1, EV_PERSIST, 
 				__st_libev_callback, (void*)inner_ev); /* 把inner_ev做为user_args传给libevent */
 	if(ret < 0){
 		return ST_RET_ERROR;
@@ -83,15 +86,15 @@ static int __st_timer_add_online(sapp_timer_handle_inner_t *inner_h, sapp_timer_
 	if(ret < 0){
 		return ST_RET_ERROR;
 	}
+#endif
 
 	return ST_RET_SUCC;
 }
 
 static int __st_timer_add_offline(sapp_timer_handle_inner_t *inner_h, sapp_timer_event_inner_t  *inner_ev)
 {
-	int ret;
-
-	ret = event_assign(inner_ev->libev_event, inner_h->libev_base, -1, EV_PERSIST, 
+#ifdef LIBEVENT_ENABLED
+	int ret = event_assign(inner_ev->libev_event, inner_h->libev_base, -1, EV_PERSIST, 
 				__st_libev_callback, (void*)inner_ev); /* 把inner_ev做为user_args传给libevent */
 	if(ret < 0){
 		return ST_RET_ERROR;
@@ -100,7 +103,7 @@ static int __st_timer_add_offline(sapp_timer_handle_inner_t *inner_h, sapp_timer
 	if(ret < 0){
 		return ST_RET_ERROR;
 	}
-
+#endif
 	return ST_RET_SUCC;
 }
 
@@ -132,6 +135,7 @@ int sapp_timer_add(sapp_timer_handle sth, sapp_timer_event stev)
 
 int sapp_timer_del(sapp_timer_handle sth, sapp_timer_event stev)
 {
+#ifdef LIBEVENT_ENABLED	
 	sapp_timer_handle_inner_t *inner_h = (sapp_timer_handle_inner_t *)sth;
 	sapp_timer_event_inner_t *inner_ev = (sapp_timer_event_inner_t *)stev;
 	int timer_running = 0;
@@ -155,11 +159,14 @@ int sapp_timer_del(sapp_timer_handle sth, sapp_timer_event stev)
 	}
 
 	inner_h->event_cnt-=1;
+#endif	
 	return 0;
 }
 
 static void *__st_alone_timer_check_thread(void *arg)
 {
+
+#ifdef LIBEVENT_ENABLED
 	sapp_timer_handle_inner_t *inner_h = (sapp_timer_handle_inner_t *)arg;
 
 	while(0 == MESA_ATOMIC_READ(inner_h->running)){
@@ -170,21 +177,23 @@ static void *__st_alone_timer_check_thread(void *arg)
 		event_base_loop(inner_h->libev_base, 0);
 		sapp_usleep(100);
 	}
+#endif
 
 	return NULL;
 }
 
 static sapp_timer_handle __st_timer_new(enum st_ef_scope_t scope)
 {
-	sapp_timer_handle_inner_t *inner_h;
-
+	
+	sapp_timer_handle_inner_t *inner_h = NULL;
+#ifdef LIBEVENT_ENABLED
 
 	inner_h = (sapp_timer_handle_inner_t *)calloc(1, sizeof(sapp_timer_handle_inner_t));
 
 	inner_h->libev_base = event_base_new();
 	inner_h->effective_mode = scope;
 	MESA_ATOMIC_SET(inner_h->running, 0);
-
+#endif
 	return inner_h;
 }
 
@@ -211,6 +220,8 @@ sapp_timer_event sapp_timer_event_new(sapp_timer_handle sth)
 
 void __st_pkt_proc_context_check_timeout(int tid)
 {
+	return;
+#ifdef LIBEVENT_ENABLED
 	sapp_timer_handle_inner_t *inner_h;
 
 	inner_h = (sapp_timer_handle_inner_t *)ABBR_SAPP_TIMER_HANDLE[tid];
@@ -229,6 +240,7 @@ void __st_pkt_proc_context_check_timeout(int tid)
 	}	
 	
 	event_base_loop(inner_h->libev_base, EVLOOP_NONBLOCK);
+#endif	
 }
 
 static void line_protocol_timer_cbfun(sapp_timer_handle h, sapp_timer_event ev, int pkt_process_thread_id, void *user_arg)
@@ -261,6 +273,7 @@ static void __st_add_time_event_entry(void)
 
 int __sapp_timer_platform_init(void)
 {
+#ifdef LIBEVENT_ENABLED
 	int i;
 
 	for(i = 0; i < g_iThreadNum; i++){
@@ -270,12 +283,13 @@ int __sapp_timer_platform_init(void)
 	sapp_global_val->individual_fixed.sapp_standalone_timer = __st_timer_new(STO_EFFECTIVE_SCOPE_STANDALONE_THREAD);
 
 	//__st_add_time_event_entry();
-	
+#endif	
 	return 0;
 }
 
 void __sapp_timer_platform_run(void)
 {
+#ifdef LIBEVENT_ENABLED
 	int i;
 	sapp_timer_handle_inner_t *inner_h;
 	
@@ -289,6 +303,8 @@ void __sapp_timer_platform_run(void)
 	inner_h = (sapp_timer_handle_inner_t *)sapp_global_val->individual_fixed.sapp_standalone_timer;
 	pthread_create(&inner_h->effective_thread_pid, NULL, sapp_standalone_timer_check_timeout, NULL);
 	MESA_ATOMIC_SET(inner_h->running, 1);
+#endif 
+	return;	
 }
 
 int sapp_event_set_opt(sapp_timer_event ev, sapp_event_opt ev_opt, void *ev_value, int ev_value_len)
@@ -390,13 +406,15 @@ static inline long long sapp_get_current_time_in_ms(void)
 
 static void *sapp_standalone_timer_check_timeout(void *arg)
 {
+
+#ifdef LIBEVENT_ENABLED
 	sapp_timer_handle_inner_t *inner_h = (sapp_timer_handle_inner_t *)sapp_global_val->individual_fixed.sapp_standalone_timer;
 	
 	while(MESA_ATOMIC_READ(inner_h->running)){
 		event_base_loop(inner_h->libev_base, EVLOOP_NONBLOCK);
 		sapp_usleep(1);
 	}
-
+#endif
 	return NULL;
 }
 
@@ -423,7 +441,7 @@ static void sapp_watch_dog(void)
 			{
 				check_result = "WATCHDOG=trigger";
 				sapp_runtime_log(RLOG_LV_FATAL, "##### detect deadlock in PID:%ld, thread index:%d, TID(LWP):%u, send systemd notify WATCHDOG=trigger #####",
-						 getpid(), thread_index, sapp_global_val->individual_fixed.thread_tid[thread_index]);
+						getpid(), thread_index, sapp_global_val->individual_fixed.thread_tid[thread_index]);
 				break;
 			}
 
@@ -503,6 +521,7 @@ void *sapp_time_event_thread(void *arg)
 
 int sapp_timer_destroy(sapp_timer_handle h)
 {
+#ifdef LIBEVENT_ENABLED
 	sapp_timer_handle_inner_t *inner_h = (sapp_timer_handle_inner_t *)h;
 
 	if(NULL == inner_h){
@@ -515,12 +534,14 @@ int sapp_timer_destroy(sapp_timer_handle h)
 
 	//free 内存在 global_sapp_timer_destroy() 实现
 	//free(h);
-
+#endif
 	return ST_RET_SUCC;
 }
 
 void global_sapp_timer_destroy(void)
 {
+
+#ifdef LIBEVENT_ENABLED
 	int i;
 	sapp_timer_handle_inner_t *inner_h;
 	
@@ -533,6 +554,8 @@ void global_sapp_timer_destroy(void)
 	inner_h = sapp_global_val->individual_fixed.sapp_standalone_timer;	
 	event_base_free(inner_h->libev_base);
 	free(inner_h);	
+#endif
+
 }
 
 

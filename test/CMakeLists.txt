@@ -23,7 +23,11 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/sapp_devel.cpp "")
 set(LIBS sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
 			config inner_plug gdev_assistant sapp_assistant plugctrl project timer dictator2 
 			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
-			MESA_sleep dpdk_ip_hash  cpu_limit timeout libevent-static libdabloom-static )
+			MESA_sleep dpdk_ip_hash  cpu_limit timeout libdabloom-static )
+
+if(LIBEVENT_ENABLED)
+            set(LIBS ${LIBS} libevent-static)
+endif()
 
 add_library(sapp_devel SHARED sapp_devel.cpp)
 target_link_libraries(sapp_devel -Wl,--whole-archive ${LIBS} -Wl,--no-whole-archive)

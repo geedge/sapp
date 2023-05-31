@@ -14,22 +14,25 @@ include(ExternalProject)
 #set_property(TARGET gtest PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
 #set_property(TARGET gtest PROPERTY INTERFACE_LINK_LIBRARIES pthread)
 
+
 #libevent
-ExternalProject_Add(libevent PREFIX libevent
-        URL ${CMAKE_CURRENT_SOURCE_DIR}/libevent-2.1.10-stable.tar.gz
-        URL_MD5 999caf86f52943af2363bc8077f00167
-        CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR> --enable-shared CFLAGS=-fPIC --disable-samples --disable-openssl
+if(LIBEVENT_ENABLED)
+        ExternalProject_Add(libevent PREFIX libevent
+                URL ${CMAKE_CURRENT_SOURCE_DIR}/libevent-2.1.10-stable.tar.gz
+                URL_MD5 999caf86f52943af2363bc8077f00167
+                CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR> --enable-shared CFLAGS=-fPIC --disable-samples --disable-openssl
         BUILD_COMMAND make LDFLAGS="-ldl"
-        BUILD_IN_SOURCE 1)
+                BUILD_IN_SOURCE 1)
 
-ExternalProject_Get_Property(libevent INSTALL_DIR)
-file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
+        ExternalProject_Get_Property(libevent INSTALL_DIR)
+        file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
 
-add_library(libevent-static STATIC IMPORTED GLOBAL)
-add_dependencies(libevent-static libevent)
-set_property(TARGET libevent-static PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/libevent.a)
-set_property(TARGET libevent-static PROPERTY IMPORTED_INTERFACE_LINK_LIBRARIES pthread crypto)
-set_property(TARGET libevent-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
+        add_library(libevent-static STATIC IMPORTED GLOBAL)
+        add_dependencies(libevent-static libevent)
+        set_property(TARGET libevent-static PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/libevent.a)
+        set_property(TARGET libevent-static PROPERTY IMPORTED_INTERFACE_LINK_LIBRARIES pthread crypto)
+        set_property(TARGET libevent-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
+endif()
 
 ## dabloom
 ExternalProject_Add(libdabloom PREFIX libdabloom
