@@ -4,6 +4,8 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
+#include "sapp_private_api.h"
+#include "sapp_declaration.h"
 
 const int pptp_protocol_version_VERSION_20170105 = 20170105;
 

@@ -589,8 +589,8 @@ void *pcap_dl_io_get_send_handle(int thread_seq)
 		goto err_exit;
 	}
 	send_handle->thread_num = thread_seq;
-	strncpy(send_handle->saddr_up.sa_data, g_pcap_up_dev_name, sizeof(struct sockaddr));
-	strncpy(send_handle->saddr_down.sa_data, g_pcap_down_dev_name, sizeof(struct sockaddr));
+	strncpy(send_handle->saddr_up.sa_data, g_pcap_up_dev_name, sizeof(send_handle->saddr_up.sa_data));
+	strncpy(send_handle->saddr_down.sa_data, g_pcap_down_dev_name, sizeof(send_handle->saddr_down.sa_data));
 	send_handle->saddr_up.sa_family = PF_INET;
 	send_handle->saddr_down.sa_family = PF_INET;
 

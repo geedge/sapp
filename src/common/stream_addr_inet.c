@@ -1298,6 +1298,7 @@ static int __addr_pure_udp_n2p_fun(const struct layer_addr *paddr, char *buf, in
 	return strlen(buf) + 1;
 }
 
+#if 0
 static int __addr_vlan_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
 	const struct layer_addr_vlan *vlan_addr = paddr->vlan;
@@ -1337,6 +1338,60 @@ static int __addr_vlan_n2p_fun(const struct layer_addr *paddr, char *buf, int bu
 		return -1;
 	}
 	strncpy(buf, vlan_addr_string, addr_len + 1);
+
+	return addr_len + 1;
+}
+#endif
+
+#define VLAN_ADDR_STR_LEN 128
+#define TMP_BUF_LEN 32
+
+static int __addr_vlan_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
+{
+	const struct layer_addr_vlan *vlan_addr = paddr->vlan;
+	int i;
+	unsigned short vlan_id;
+	char tmp_buf[TMP_BUF_LEN] = {};
+	char vlan_addr_string[VLAN_ADDR_STR_LEN] = {};
+
+	/* 注意: 可能有非对称vlan的情况 */
+	int max_layer_num = vlan_addr->c2s_layer_num > vlan_addr->s2c_layer_num ? vlan_addr->c2s_layer_num:vlan_addr->s2c_layer_num;
+
+	for(i = 0; i < max_layer_num; i++){
+		if(vlan_addr->c2s_layer_num >= i+1){
+			vlan_id = ntohs(vlan_addr->c2s_addr_array[i].VID);
+			snprintf(tmp_buf, TMP_BUF_LEN, "%d", vlan_id);
+			if(strlen(vlan_addr_string) + strlen(tmp_buf) < VLAN_ADDR_STR_LEN){
+				strncat(vlan_addr_string, tmp_buf, VLAN_ADDR_STR_LEN - strlen(vlan_addr_string) - 1);
+			}
+		}else{
+			if(strlen(vlan_addr_string) + strlen("N/A-") < VLAN_ADDR_STR_LEN){
+				strncat(vlan_addr_string, "N/A-", VLAN_ADDR_STR_LEN - strlen(vlan_addr_string) - 1);
+			}
+		}
+		if(vlan_addr->s2c_layer_num >= i+1){
+			vlan_id = ntohs(vlan_addr->s2c_addr_array[i].VID);
+			snprintf(tmp_buf, TMP_BUF_LEN, "%d", vlan_id);
+			if(strlen(vlan_addr_string) + strlen(tmp_buf) < VLAN_ADDR_STR_LEN){
+				strncat(vlan_addr_string, tmp_buf, VLAN_ADDR_STR_LEN - strlen(vlan_addr_string) - 1);
+			}
+		}else{
+			if(strlen(vlan_addr_string) + strlen("-N/A") < VLAN_ADDR_STR_LEN){
+				strncat(vlan_addr_string, "-N/A", VLAN_ADDR_STR_LEN - strlen(vlan_addr_string) - 1);
+			}
+		}
+		if(i < max_layer_num-1){
+			if(strlen(vlan_addr_string) + 1 < VLAN_ADDR_STR_LEN){
+				strncat(vlan_addr_string, ",", VLAN_ADDR_STR_LEN - strlen(vlan_addr_string) - 1);
+			}
+		}
+	}
+
+	int addr_len = strlen(vlan_addr_string);
+	if(buf_len <= addr_len + 1){
+		return -1;
+	}
+	memcpy(buf, vlan_addr_string, addr_len + 1);
 
 	return addr_len + 1;
 }
@@ -1431,6 +1486,7 @@ static int __addr_gre_n2p_fun(const struct layer_addr *paddr, char *buf, int buf
 		<1-2>
 		<1-2,3-4,5-6>
 */
+#if 0
 static int __addr_mpls_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
 {
 	const struct layer_addr_mpls *mpls_addr = paddr->mpls;
@@ -1472,6 +1528,57 @@ static int __addr_mpls_n2p_fun(const struct layer_addr *paddr, char *buf, int bu
 		return -1;
 	}
 	strncpy(buf, mpls_addr_string, addr_len + 1);
+
+	return addr_len + 1;
+}
+#endif
+
+#define MPLS_ADDR_STR_LEN 128
+#define TMP_BUF_LEN 32
+
+static int __addr_mpls_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
+{
+	const struct layer_addr_mpls *mpls_addr = paddr->mpls;
+	int i;
+	char tmp_buf[TMP_BUF_LEN];
+	/* 注意有非对称mpls的情况 */
+	int max_layer_num = mpls_addr->c2s_layer_num > mpls_addr->s2c_layer_num ? mpls_addr->c2s_layer_num:mpls_addr->s2c_layer_num;
+
+	char mpls_addr_string[MPLS_ADDR_STR_LEN] = {};
+
+	for(i = 0; i < max_layer_num; i++){
+		if(mpls_addr->c2s_layer_num >= i+1){
+			snprintf(tmp_buf, TMP_BUF_LEN, "%d", ntohl(mpls_addr->c2s_addr_array[i].label));
+			if(strlen(mpls_addr_string) + strlen(tmp_buf) < MPLS_ADDR_STR_LEN){
+				strncat(mpls_addr_string, tmp_buf, MPLS_ADDR_STR_LEN - strlen(mpls_addr_string) - 1);
+			}
+		}else{
+			if(strlen(mpls_addr_string) + strlen("N/A") < MPLS_ADDR_STR_LEN){
+				strncat(mpls_addr_string, "N/A", MPLS_ADDR_STR_LEN - strlen(mpls_addr_string) - 1);
+			}
+		}
+		if(mpls_addr->s2c_layer_num >= i+1){
+			snprintf(tmp_buf, TMP_BUF_LEN, "-%d", ntohl(mpls_addr->s2c_addr_array[i].label));
+			if(strlen(mpls_addr_string) + strlen(tmp_buf) < MPLS_ADDR_STR_LEN){
+				strncat(mpls_addr_string, tmp_buf, MPLS_ADDR_STR_LEN - strlen(mpls_addr_string) - 1);
+			}
+		}else{
+			if(strlen(mpls_addr_string) + strlen("-N/A") < MPLS_ADDR_STR_LEN){
+				strncat(mpls_addr_string, "-N/A", MPLS_ADDR_STR_LEN - strlen(mpls_addr_string) - 1);
+			}
+		}
+		if(i < max_layer_num-1){
+			if(strlen(mpls_addr_string) + 1 < MPLS_ADDR_STR_LEN){
+				strncat(mpls_addr_string, ",", MPLS_ADDR_STR_LEN - strlen(mpls_addr_string) - 1);
+			}
+		}
+	}
+
+	int addr_len = strlen(mpls_addr_string);
+	if(buf_len <= addr_len + 1){
+		return -1;
+	}
+	memcpy(buf, mpls_addr_string, addr_len + 1);
 
 	return addr_len + 1;
 }
@@ -1731,16 +1838,24 @@ static const char *__layer_addr_ntop (const struct streaminfo *stream, int threa
 	return result;
 }
 
+size_t sapp_strlcpy(char *dst, const char *src, size_t size) {
+    size_t srclen = strlen(src);
+    if (size > 0) {
+        size_t len = (srclen >= size) ? size - 1 : srclen;
+        memcpy(dst, src, len);
+        dst[len] = '\0';
+    }
+    return srclen;
+}
+
 /* 线程安全可重入版本 */
 const char *__layer_addr_ntop_r (const struct streaminfo *stream, char *dst, int size, int thread_index)
 {
 	const char *result = __layer_addr_ntop(stream, thread_index);
-	int addr_len = strlen(result) + 1;
-	if(addr_len > size){
+	if((int)strlen(result) >= size){
 		return NULL;
 	}
-
-	strncpy(dst, result, addr_len);
+	sapp_strlcpy(dst, result, size);
 
 	return result;
 }

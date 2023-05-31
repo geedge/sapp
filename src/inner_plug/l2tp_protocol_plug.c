@@ -4,7 +4,7 @@ extern "C" {
 
 #include "sapp_api.h"
 #include "sapp_private_api.h"
-
+#include "sapp_declaration.h"
 /*
 	l2tp解析层, 
 	1)用于获取全局插件ID, 并存储于g_l2tp_plugid;

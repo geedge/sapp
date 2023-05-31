@@ -4,6 +4,8 @@
 extern "C" {
 #endif
 
+#include <unistd.h>
+
 extern int libsapp_setup_env(int argc, char *argv[]);
 
 int main(int argc, char *argv[])

@@ -219,6 +219,7 @@ void sapp_global_val_sanity_check(void)
 
 }
 
+extern int tomlc99_wrap_load_int_def(const char *file,const char *section, char *key,int *val,int dval);
 void sapp_gval_init(void)
 {
 	int tseq;

@@ -117,11 +117,12 @@ int plug_mange_get_entry_id(const char *plug_name, const char *plug_entry_name)
 	this_entry_id = g_plug_global_entry_index;
 	g_plug_global_entry[this_entry_id].entry_id = this_entry_id;
 	g_plug_global_entry[this_entry_id].priority = plug_info->priority;
-	g_plug_global_entry[this_entry_id].plug_name =  (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_name)+1);
-	strncpy((char *)g_plug_global_entry[this_entry_id].plug_name, plug_name, strlen(plug_name));
+	size_t plug_name_length = strlen(plug_name);
+	g_plug_global_entry[this_entry_id].plug_name =  (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, plug_name_length+1);
+	strncpy((char *)g_plug_global_entry[this_entry_id].plug_name, plug_name, plug_name_length);
 	
-	g_plug_global_entry[this_entry_id].plug_entry_name =  (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_entry_name)+1);
-	strncpy((char *)g_plug_global_entry[this_entry_id].plug_entry_name, plug_entry_name, strlen(plug_entry_name));
+	g_plug_global_entry[this_entry_id].plug_entry_name =  (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, plug_name_length+1);
+	strncpy((char *)g_plug_global_entry[this_entry_id].plug_entry_name, plug_entry_name, plug_name_length);
 	g_plug_global_entry_index++;
 	
 	return this_entry_id;
@@ -251,12 +252,19 @@ static uchar * plug_manage_key_dup_cb(const uchar *key, uint key_size)
 	struct plug_manage_key_t *new_mg_key; 
 	const struct plug_manage_key_t *raw_mg_key = (struct plug_manage_key_t *)key;
 
+	size_t name_length = strlen(raw_mg_key->plug_name);
 	new_mg_key = (struct plug_manage_key_t *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(struct plug_manage_key_t));
-	new_mg_key->plug_name = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, strlen(raw_mg_key->plug_name)+1);
-	strncpy((char *)new_mg_key->plug_name, raw_mg_key->plug_name, strlen(raw_mg_key->plug_name));
-	
-	new_mg_key->plug_entry_type = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, strlen(raw_mg_key->plug_entry_type)+1);
-	strncpy((char *)new_mg_key->plug_entry_type, raw_mg_key->plug_entry_type, strlen(raw_mg_key->plug_entry_type));
+
+	new_mg_key->plug_name = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, name_length+1);
+	strncpy((char *)new_mg_key->plug_name, raw_mg_key->plug_name, name_length);
+	new_mg_key = (struct plug_manage_key_t *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, sizeof(struct plug_manage_key_t));
+	new_mg_key->plug_name = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, name_length+1);
+	strncpy((char *)new_mg_key->plug_name, raw_mg_key->plug_name, name_length);
+
+
+	size_t type_length = strlen(raw_mg_key->plug_entry_type);
+	new_mg_key->plug_entry_type = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, type_length+1);
+	strncpy((char *)new_mg_key->plug_entry_type, raw_mg_key->plug_entry_type, type_length);
 
 	return (uchar *)new_mg_key;
 }
@@ -342,13 +350,13 @@ int plugin_load_new_plug(const char *plug_name, const char *plug_path)
 		sapp_log(30, 1, 1, "plugin %s->[PLUGNAME]=%s has duplicate name with %s->[PLUGNAME]=%s!", plug_path, plug_name, plug_info->plug_path, plug_name);
 		return -1;
 	}
-
+	size_t path_length = strlen(plug_path);
 	plug_info = (struct plug_uniq_t *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, sizeof(struct plug_uniq_t));
-	plug_info->plug_path = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, strlen(plug_path)+1);
-	strncpy((char *)plug_info->plug_path, plug_path, strlen(plug_path));
+	plug_info->plug_path = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, path_length+1);
+	strncpy((char *)plug_info->plug_path, plug_path, path_length);
 	plug_info->is_necessary = plugin_is_necessary(plug_path, &priority);
 	plug_info->priority = priority;
-	MESA_htable_add(g_plug_uniq_htable, (unsigned char *)plug_name, strlen(plug_name), plug_info);
+	MESA_htable_add(g_plug_uniq_htable, (unsigned char *)plug_name, path_length, plug_info);
 
 	return 0;
 }

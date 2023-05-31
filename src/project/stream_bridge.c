@@ -117,7 +117,11 @@ static int stream_bridege_create_new_bridge(const char *bridge_name)
 	memset(&g_stream_bridge_manage[g_stream_bridge_actual_num], 0, sizeof(stream_bridge_manage_t));
 	g_stream_bridge_manage[g_stream_bridge_actual_num].magic_num = STREAM_BRIDGE_MAGIC_SUCC;
 	g_stream_bridge_manage[g_stream_bridge_actual_num].bridge_id = g_stream_bridge_actual_num;
-	strncpy(g_stream_bridge_manage[g_stream_bridge_actual_num].bridge_name,bridge_name, strlen(bridge_name));
+
+	size_t bridge_name_length = strlen(bridge_name);
+	//strncpy(g_stream_bridge_manage[g_stream_bridge_actual_num].bridge_name,bridge_name, bridge_name_length);
+	sapp_strlcpy(g_stream_bridge_manage[g_stream_bridge_actual_num].bridge_name, bridge_name, bridge_name_length + 1);
+
 	MESA_list_init_head(&g_stream_bridge_manage[g_stream_bridge_actual_num].sync_callback_fun_list);
 
 	g_stream_bridge_actual_num++;

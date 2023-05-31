@@ -126,6 +126,7 @@ void line_protocol_update_metrics(void);
 char *timet_to_str(time_t timet, char *time_str, int time_str_len);
 void sapp_fuzzy_latency_update(void);
 
+extern size_t sapp_strlcpy(char *dst, const char *src, size_t size);
 
 extern volatile unsigned int  g_aiSysCounter[COUNTER_NUM]; /*newly modified   ---LiLei*/
 extern const struct dl_io_lib_name g_dl_io_lib_info[__CAP_MODEL_MAX];
