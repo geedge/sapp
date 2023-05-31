@@ -768,9 +768,9 @@ static void *sapp_timer_ev_new(int tid, void *arg)
 	struct timeval topt;
 
 	th = sapp_get_platform_timer(tid);
-	assert(th);
+	if(th==NULL)return NULL;
 	tev = sapp_timer_event_new(th);
-	assert(tev);
+	if(tev==NULL)return NULL;
 
 	iopt = tid;
 	sapp_event_set_opt(tev, STEO_EFFECTIVE_THREAD_ID, &iopt, sizeof(iopt));

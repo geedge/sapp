@@ -114,7 +114,11 @@ int sapp_timer_add(sapp_timer_handle sth, sapp_timer_event stev)
 	sapp_timer_event_inner_t  *inner_ev = (sapp_timer_event_inner_t *)stev;
 	int timer_running = 0;
 	int ret;
-
+	if(inner_h == NULL)
+	{
+		return -1;
+	}
+	
 	if(MESA_ATOMIC_READ(inner_h->running) != 0){
 		timer_running = 1;
 	}
@@ -206,13 +210,15 @@ sapp_timer_handle sapp_standalone_timer_new(void)
 
 sapp_timer_event sapp_timer_event_new(sapp_timer_handle sth)
 {
-	sapp_timer_event_inner_t *inner_ev;
+	sapp_timer_event_inner_t *inner_ev = NULL;
 	sapp_timer_handle_inner_t *inner_h = (sapp_timer_handle_inner_t *)sth;
-
-	inner_ev = (sapp_timer_event_inner_t *)calloc(1, sizeof(sapp_timer_event_inner_t));
-	inner_ev->libev_event = (struct event *)calloc(1, sizeof(struct event));
-	inner_ev->timer_handle = inner_h;
-	inner_h->effective_thread_index = -1;
+	if (inner_h)
+	{
+		inner_ev = (sapp_timer_event_inner_t *)calloc(1, sizeof(sapp_timer_event_inner_t));
+		inner_ev->libev_event = (struct event *)calloc(1, sizeof(struct event));
+		inner_ev->timer_handle = inner_h;
+		inner_h->effective_thread_index = -1;
+	}
 
 	return inner_ev;
 }
