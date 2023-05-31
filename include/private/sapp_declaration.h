@@ -86,7 +86,18 @@ extern sapp_global_t *sapp_global_val;
 #define G_SKIP_NOT_IP_LAYER 	sapp_global_val->config.protocol_feature.skip_not_ip_layer_over_eth
 #define G_DICTATOR_SW			sapp_global_val->config.mem.dictator_enable
 
-#define sapp_runtime_log(log_level, format, args...)  do{if(log_level>=ABBR_SAPP_LOG_LEVEL){MESA_handle_runtime_log(ABBR_SAPP_LOG_HANDLE, log_level, "sapp", format, ##args);}}while(0)
+//#define sapp_runtime_log(log_level, format, args...)  do{if(log_level>=ABBR_SAPP_LOG_LEVEL){MESA_handle_runtime_log(ABBR_SAPP_LOG_HANDLE, log_level, "sapp", format, ##args);}}while(0)
+
+
+#define sapp_runtime_log(log_level, format, ...)                             \
+    do {                                                                     \
+        if (MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, log_level)) { \
+            MESA_handle_runtime_log(ABBR_SAPP_LOG_HANDLE, log_level, "sapp ", "file %s, line %d, " format, \
+                                    __FILE__, __LINE__, ##__VA_ARGS__);      \
+        }                                                                    \
+    } while(0)
+
+
 
 extern void sapp_log(int level, int print_sw, int file_sw, const char *format, ...);
 

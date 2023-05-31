@@ -473,6 +473,12 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 /*Convert tuple4 to string. Format: 10.0.0.1, 1234->10.0.0.2,5678*/
 const char *printaddr (const struct layer_addr *paddrinfo,int threadindex)
 {
+
+	if(MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, RLOG_LV_DEBUG) == 0)
+	{
+		return NULL;
+	}
+	
 	static char maxbuf[MAX_THREAD_NUM][128];
 	char *buf=(char*)maxbuf[threadindex];
 	char ip_str[INET6_ADDRSTRLEN];
