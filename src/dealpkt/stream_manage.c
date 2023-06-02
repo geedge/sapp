@@ -1485,6 +1485,7 @@ void hash_add_stream(struct streamindex *pindex)
 	}
 
 	pindex->stream.global_stream_id = get_global_stream_id(threadnum);
+	pindex->stream.stream_trace_id=0;
 }
 
 

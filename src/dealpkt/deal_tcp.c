@@ -674,7 +674,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 
 		copy_ipport_union_addr(pstream, &pindex->stream.stream_public, need_reverse);
 
-		hash_add_stream(pindex_tcp);
+ 		hash_add_stream(pindex_tcp);
 
 		pstream_pr->pfather_pr = copy_stream_info_to_heap(SAPP_MEM_DYN_TCP_STREAM, (struct streaminfo_private *)pindex->stream.pfather_pr, need_reverse);	   
 		pstream->pfather = (struct streaminfo *)pstream_pr->pfather_pr;
@@ -742,7 +742,8 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pdetail_pr->drop_stream_flag = 0;
 		
 		/* 链接复用, 重新生成一个新的streamid */
-		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);				
+		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);
+		pindex_tcp->stream.stream_trace_id=0;
 		pdetail->createtime=g_CurrentTime;
 		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 
@@ -989,6 +990,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		pstream_pr->stream_killed_flag = 0;
 		/* 链接复用, 重新生成一个新的streamid */
 		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);	
+		pindex_tcp->stream.stream_trace_id=0;
 
 		/* 链接复用, 重新判断一下ddos 状态 */
 		if(pstream_pr->create_dir_by_well_known_port != 1)

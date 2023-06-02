@@ -221,6 +221,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	pstream_udp->pktstate=OP_STATE_PENDING;
 	pdetail->createtime=g_CurrentTime;	
 	pstream_udp_pr->global_stream_id = get_global_stream_id(threadnum);
+	pstream_udp_pr->stream_trace_id=0;
 	pstream_udp_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 	pdetail->lastmtime=g_CurrentTime;
 
@@ -435,6 +436,7 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 
 		pdetail->createtime=g_CurrentTime;
 		pstream_pr->global_stream_id = get_global_stream_id(threadnum);
+		pstream_pr->stream_trace_id=0;
 		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 		plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[UDP_ONE_STATE]);
 		pstream->stream_state=UDP_ONE_STATE;
@@ -629,6 +631,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 
 		pdetail->createtime = g_CurrentTime;
 		pstream_pr->global_stream_id = get_global_stream_id(thread_num);
+		pstream_pr->stream_trace_id=0;
 		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
 		pdetail->datalen = datalen;
 		pdetail->pdata = (char *)udph + sizeof (struct udphdr);
