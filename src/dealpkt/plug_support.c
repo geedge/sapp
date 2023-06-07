@@ -474,7 +474,7 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 const char *printaddr (const struct layer_addr *paddrinfo,int threadindex)
 {
 
-	if(MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, RLOG_LV_DEBUG) == 0)
+	if(MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, RLOG_LV_INFO) == 0)
 	{
 		return NULL;
 	}
