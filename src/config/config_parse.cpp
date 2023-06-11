@@ -1831,18 +1831,8 @@ int sapp_parse_config(void)
 
 	/*******************************  STREAM.TCP ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"max", (int *)&pconfig->stream.tcp.max, 50000);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"special_timeout_ratio", (int *)&pconfig->stream.tcp.special_timeout_ratio, 10);
-	if(pconfig->stream.tcp.special_timeout_ratio>100)
-	{
-		pconfig->stream.tcp.special_timeout_ratio = 100;
-	}
-	else if(pconfig->stream.tcp.special_timeout_ratio<0)
-	{
-		pconfig->stream.tcp.special_timeout_ratio = 0;
-	}
-	else
-	;
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"timeout", (int *)&pconfig->stream.tcp.timeout, 60);
+
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"timeout", (int *)&pconfig->stream.tcp.timeout, 180);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"syn_mandatory", (int *)&pconfig->stream.tcp.syn_mandatory, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"reorder_pkt_max", (int *)&pconfig->stream.tcp.reorder_pkt_max, 5);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"analyse_option_enabled", (int *)&pconfig->stream.tcp.analyse_option_enabled, 1);
@@ -1850,6 +1840,7 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"meaningful_statistics_minimum_pkt", (int *)&pconfig->stream.tcp.meaningful_statistics_minimum_pkt, 3);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"meaningful_statistics_minimum_byte", (int *)&pconfig->stream.tcp.meaningful_statistics_minimum_byte, 5);
 	
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"closing_timeout", (int *)&pconfig->stream.tcp.closing_timeout, 30);
 	
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp.inject", (char *)"link_mss", (int *)&pconfig->stream.tcp.inject.link_mss, 1460);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp.inject.rst", (char *)"auto_remedy", (int *)&pconfig->stream.tcp.inject.auto_remedy, 0);
@@ -1862,17 +1853,6 @@ int sapp_parse_config(void)
 
 	/*******************************  STREAM.UDP ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"max", (int *)&pconfig->stream.udp.max, 5000);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"special_timeout_ratio", (int *)&pconfig->stream.udp.special_timeout_ratio, 20);
-	if(pconfig->stream.udp.special_timeout_ratio>100)
-	{
-		pconfig->stream.udp.special_timeout_ratio = 100;
-	}
-	else if(pconfig->stream.udp.special_timeout_ratio<0)
-	{
-		pconfig->stream.udp.special_timeout_ratio = 0;
-	}
-	else
-	;
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"timeout", (int *)&pconfig->stream.udp.timeout, 60);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"meaningful_statistics_minimum_pkt", (int *)&pconfig->stream.udp.meaningful_statistics_minimum_pkt, 3);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"meaningful_statistics_minimum_byte", (int *)&pconfig->stream.udp.meaningful_statistics_minimum_byte, 5);

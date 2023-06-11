@@ -141,7 +141,6 @@
 
     meaningful_statistics_minimum_pkt=3
     meaningful_statistics_minimum_byte=5
-    special_timeout_ratio=10
 
         [stream.tcp.inject]
         link_mss=1460
@@ -159,7 +158,6 @@
     timeout=60
     meaningful_statistics_minimum_pkt=3
     meaningful_statistics_minimum_byte=5
-    special_timeout_ratio=20
 
 [PROFILING]
 [profiling.pkt_latency]

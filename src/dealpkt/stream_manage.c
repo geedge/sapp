@@ -197,10 +197,6 @@ static void stream_timeout_shift_lrulist(struct streamindex *pindex, unsigned sh
 		lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->udpList[pstream->stream_state]);
 	}
 
-	if(lru_list_root->cnt == 1){ /* 当前仅剩最后一个流, 无需移动 */
-		return;
-	}
-
 	timeouts_add(lru_list_root->streamindex_timer, &pindex->timeout, new_timeout+g_CurrentTime);
 
 	return;
@@ -360,10 +356,18 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 	}
 	
 	struct streaminfo *pstream=(struct streaminfo *)(&(pindex->stream));
-	long set_timeout = pindex->stream.timeout;
-	if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
+
 	timeout_init(&pindex->timeout, TIMEOUT_ABS);
-	timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout+g_CurrentTime);
+	if(pstream->stream_state==TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP)
+	{
+		timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout+g_CurrentTime);
+	}
+	else
+	{
+		long set_timeout = pindex->stream.timeout;
+		if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
+		timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout+g_CurrentTime);
+	}
 	plist->cnt++;
 
 	update_stream_status(pstream->threadnum, pstream->type, pstream->stream_state, 1);
@@ -527,10 +531,16 @@ int lrustream(struct streamindex *pindex)
 			return 1;
 		}
 	}
-	long set_timeout = pindex->stream.timeout;
-	if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
-	timeouts_add(plist->streamindex_timer, &pindex->timeout, g_CurrentTime+set_timeout);
-	
+	if(pstream->stream_state==TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP)
+	{
+		timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout+g_CurrentTime);
+	}
+	else
+	{
+		long set_timeout = pindex->stream.timeout;
+		if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
+		timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout+g_CurrentTime);
+	}	
 	return 0;
 }
 
