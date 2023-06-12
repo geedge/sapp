@@ -149,6 +149,12 @@ if(LIBEVENT_ENABLED STREQUAL "ON")
 	add_definitions(-DLIBEVENT_ENABLED=1)	
 endif()
 
+option(HASP_ENABLED "Enable hasp envelope" OFF)
+if(HASP_ENABLED STREQUAL "ON")
+	add_definitions(-DHASP_ENABLED=1)	
+	set(project_name sapp-pr)
+endif()
+
 add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
     -D__USE_BSD=1 -D_GNU_SOURCE=1  -DMESA_SAPP_PLATFORM=1)
 

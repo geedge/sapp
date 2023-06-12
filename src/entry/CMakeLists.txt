@@ -16,6 +16,14 @@ if(CAPTURE_MODE MATCHES "MARSIO")
 	LINK_DIRECTORIES(/opt/mrzcpd/lib)
 endif()
 
+
+
+if(HASP_ENABLED)
+	include_directories(/opt/tsg/hasp-tools/include/)
+endif()
+
+
+
 add_executable(sapp sapp_main.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
 target_link_libraries(sapp nsl pthread dl m pcap)
@@ -24,10 +32,19 @@ target_link_libraries(sapp sapp_assistant)
 target_link_libraries(sapp breakpad_mini)
 target_include_directories(sapp PRIVATE ${SYSTEMD_INCLUDE_DIRS})
 
+if(HASP_ENABLED STREQUAL "ON")
+	find_library(HASP_TOOLS_LIB NAMES hasp-tools PATHS /opt/tsg/hasp-tools/lib)
+	target_link_libraries(sapp ${HASP_TOOLS_LIB})
+endif()
 
-set(SAPP_MODULES timestamp_record md5 symbol_check MESA_sleep MESA_socket_wrap packet_io dealpkt project plugctrl common config timer tomlc99_wrap dpdk_ip_hash  gdev_assistant inner_plug libdabloom-static sapp_dev sapp_assistant cpu_limit timeout)
+set(SAPP_MODULES timestamp_record md5 
+	symbol_check MESA_sleep MESA_socket_wrap 
+	packet_io dealpkt project plugctrl common 
+	config timer tomlc99_wrap dpdk_ip_hash  
+	gdev_assistant inner_plug libdabloom-static 
+	sapp_dev sapp_assistant cpu_limit timeout)
 
-if(LIBEVENT_ENABLED)
+if(LIBEVENT_ENABLED STREQUAL "ON")
 	set(SAPP_MODULES ${SAPP_MODULES} libevent-static)
 endif()
 
@@ -36,33 +53,15 @@ if(MEM_POOL MATCHES "DICTATOR_DEBUG")
 elseif(MEM_POOL MATCHES "DICTATOR")
    set(SAPP_MODULES ${SAPP_MODULES} dictator2)
 endif()
+
 target_link_libraries(sapp -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive ${SAPP_DEPEND_DYN_LIB} ${SYSTEMD_LIBRARIES})
 
-if(ENABLE_STATIC_LINK)
-	#if(CAPTURE_MODE MATCHES "PAG")
-	#	target_link_libraries(sapp pag)
-	#endif()
-	#
-	#if(CAPTURE_MODE MATCHES "PPF")
-	#	target_link_libraries(sapp ppf)
-	#endif()
-#
-	#if(CAPTURE_MODE MATCHES "PFRING")
-	#	target_link_libraries(sapp pfring)
-	#endif()
-#
-	#if(CAPTURE_MODE MATCHES "DPDK")
-	#	target_link_libraries(sapp nl2fwd)
-	#endif()
-	#if(CAPTURE_MODE MATCHES "PCAP")
-	target_link_libraries(sapp packet_io_pcap)
-	#endif()
-	if(CAPTURE_MODE MATCHES "MARSIO")
-		target_link_libraries(sapp packet_io_marsio)
-	endif()
-	
-	if(CAPTURE_MODE MATCHES "TUN")
-		target_link_libraries(sapp packet_io_tun)
-	endif()	
+target_link_libraries(sapp packet_io_pcap)
+if(CAPTURE_MODE MATCHES "MARSIO")
+	target_link_libraries(sapp packet_io_marsio)
 endif()
+	
+if(CAPTURE_MODE MATCHES "TUN")
+	target_link_libraries(sapp packet_io_tun)
+endif()	
 

@@ -343,24 +343,29 @@ release_build_release_for_centos8:
 ###############################################################################
 # envelope and upload
 ###############################################################################
-
 envelope_rpm:
   stage: envelope
   image: $BUILD_IMAGE_CENTOS7
   variables:
+    BUILD_TYPE: RelWithDebInfo
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
+    MEM_POOL: JEMALLOC
+    HASP_ENABLED: "ON"
     FEATURE_ID: 100
-    APP_NAME_IN_RPM_SPEC: sapp
+    HASP_INTERNAL_S: 3600
+    PACKAGE: 1
+  extends: .build_before_script
   script:
-    - chmod +x ./ci/envelope_rpm.sh
-    - ./ci/envelope_rpm.sh
+    - yum install -y hasp-tools
+    - chmod +x ./ci/travis.sh
+    - ./ci/travis.sh
   artifacts:
     name: "sapp-pr-$CI_COMMIT_REF_NAME-release"
     paths:
       - build/*-pr-*.rpm
   tags:
-    - envelope
-  only:
-    - tags
+    - share
  
 upload_enveloped_rpm:
   stage: upload
