@@ -775,7 +775,7 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 			if(rcv_res > 0){
 				raw_pkt->device_index = i;
 				__builtin_prefetch(ptr_marsio_buff_mtod(rx_buff[0]));
-			
+
 				for(j = 0, k = 1; j < rcv_res; j++, k++){
 					if(k < rcv_res) {
 						__builtin_prefetch(ptr_marsio_buff_mtod(rx_buff[k]));
@@ -793,11 +793,14 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 			if(rcv_res > 0){
 				raw_pkt->device_index = i;
 				__builtin_prefetch((rx_buff[0]));
+				__builtin_prefetch(((char *)(rx_buff[0])+128));
+				
 				for(j = 0, k = 1; j < rcv_res; j++, k++)
 				{
 					if(k < rcv_res)
 					{
 						__builtin_prefetch((rx_buff[k]));
+						__builtin_prefetch(((char *)(rx_buff[k])+128));
 					}
 					hand_res = marsio4_pkt_hand(tid, rx_buff[j], raw_pkt, DIR_ROUTE_UP); /* ÔÚmarsio4_pkt_hand()¸üÐÂdir */
                     if ((g_marsio4_topology_mode & __NET_CONN_SERIAL) && (PASS == hand_res))
