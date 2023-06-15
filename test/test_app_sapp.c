@@ -1261,7 +1261,9 @@ char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq, co
 				tflow_inter->C2S_all_pkt,tflow_inter->C2S_all_byte,
 				tflow_inter->S2C_all_pkt, tflow_inter->S2C_all_byte);	
 			DPRINT("total-pkt=%u, ", tflow_inter->C2S_all_pkt + tflow_inter->S2C_all_pkt);
-			DPRINT("total-count=%llu\n", tflow_inter->C2S_all_byte + tflow_inter->S2C_all_byte);				
+			DPRINT("total-bytes=%llu, ", tflow_inter->C2S_all_byte + tflow_inter->S2C_all_byte);				
+			DPRINT("retransmit-pkt=%u, ", tflow_inter->C2S_retransmission_pkt + tflow_inter->S2C_retransmission_pkt);
+			DPRINT("retransmit-bytes=%llu\n", tflow_inter->C2S_retransmission_byte + tflow_inter->S2C_retransmission_byte);
 		}
 
 
@@ -1275,7 +1277,9 @@ char testtcpApp_allpkt(struct streaminfo *pstream,void **pme, int thread_seq, co
 					tflow_project->C2S_all_pkt,tflow_project->C2S_all_byte,
 					tflow_project->S2C_all_pkt, tflow_project->S2C_all_byte);	
 				DPRINT("total-pkt=%u, ", tflow_project->C2S_all_pkt + tflow_project->S2C_all_pkt);
-				DPRINT("total-count=%llu\n", tflow_project->C2S_all_byte + tflow_project->S2C_all_byte);				
+				DPRINT("total-bytes=%llu, ", tflow_project->C2S_all_byte + tflow_project->S2C_all_byte);				
+				DPRINT("retransmit-pkt=%u, ", tflow_project->C2S_retransmission_pkt + tflow_project->S2C_retransmission_pkt);
+				DPRINT("retransmit-bytes=%llu\n", tflow_project->C2S_retransmission_byte + tflow_project->S2C_retransmission_byte);
 			}
 		}
 	}
