@@ -1088,7 +1088,8 @@ int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const v
 	/* 2016-07-14 lijia add */
 	if((G_TCP_FLOW_STAT_PROJECT_ID != -1) 
 	&& (a_tcp->ptcpdetail->datalen > 0)
-	&& (STREAM_TYPE_TCP == a_tcp->type)){ /* 即使G_TCP_FLOW_STAT_PROJECT_ID开启, a_tcp可能是代理流, 不一定是TCP, 此处要判断流类型 */
+	&& (STREAM_TYPE_TCP == a_tcp->type)
+	&& (raw_pkt != NULL && raw_pkt->is_ctrl_pkt == 0)){ /* 即使G_TCP_FLOW_STAT_PROJECT_ID开启, a_tcp可能是代理流, 不一定是TCP, 此处要判断流类型 */
 		struct tcpdetail_private *pdetail_pr = (struct tcpdetail_private *)a_tcp->pdetail;
 		if(DIR_C2S == a_tcp->curdir){
 			pdetail_pr->flow_stat->C2S_data_pkt ++;

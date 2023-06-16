@@ -2763,16 +2763,18 @@ static char tcp_process_newstreambydata(struct streamindex *pindex_tcp,const voi
 		*/
 		return DROP;
 	}
-	
-	if(pstream->stream_state==TCP_DATA_STATE)
+
+	if(likely(raw_pkt->is_ctrl_pkt == 0))
 	{
-			ret=tcp_deal_data_stream(pindex_tcp,this_iphdr,raw_pkt, this_tcphdr,tcplen); 		
+		if (pstream->stream_state == TCP_DATA_STATE)
+		{
+			ret = tcp_deal_data_stream(pindex_tcp, this_iphdr, raw_pkt, this_tcphdr, tcplen);
+		}
+		else if (pstream->stream_state == TCP_NOUSE_STATE)
+		{
+			ret = tcp_deal_nouse_stream(pindex_tcp, this_iphdr, raw_pkt, this_tcphdr, tcplen);
+		}
 	}
-	else if(pstream->stream_state==TCP_NOUSE_STATE)
-	{
-			ret=tcp_deal_nouse_stream(pindex_tcp,this_iphdr,raw_pkt,this_tcphdr,tcplen);
-	}
-		
 	return ret;
 }
 
@@ -3061,7 +3063,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	}
 
 	/* flow_stat是全包无状态记录, 不关心重传、乱序问题 */
-	if(G_TCP_FLOW_STAT_PROJECT_ID != -1){
+	if(G_TCP_FLOW_STAT_PROJECT_ID != -1 && raw_pkt->is_ctrl_pkt == 0){
 		if(DIR_C2S == pstream->curdir){
 			pdetail_pr->flow_stat->C2S_all_pkt++;
 			pdetail_pr->flow_stat->C2S_all_byte += tcplen;
@@ -3132,37 +3134,39 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
 			return PASS;
 		}
-		
-		if(pstream->stream_state==TCP_DATA_STATE)
+		if (likely(raw_pkt->is_ctrl_pkt == 0))
 		{
-			//ret=tcp_deal_data_stream(pindex_tcp,rawippkt,iplen,this_tcphdr,tcplen);			
-			ret=tcp_deal_data_stream(pindex_tcp,this_iphdr, raw_pkt,this_tcphdr,tcplen);
-		}	
-		else if(pstream->stream_state==TCP_SYN_STATE)
-		{
-			ret=tcp_deal_syn_stream(pindex_tcp,raw_pkt,this_iphdr, this_tcphdr,tcplen);
-			// 不正常的报文，不继续进行后继处理
-			if(DROP==ret)
+			if (pstream->stream_state == TCP_DATA_STATE)
 			{
-				   //return PASS;//不进行后继处理，但是必须返回PASS否则串联逻辑不对
-				   ret = PASS;
-				   goto fun_exit;
+				// ret=tcp_deal_data_stream(pindex_tcp,rawippkt,iplen,this_tcphdr,tcplen);
+				ret = tcp_deal_data_stream(pindex_tcp, this_iphdr, raw_pkt, this_tcphdr, tcplen);
 			}
-			if((tcplen>0) && (checkcreatlinkseq(&(pindex_tcp->stream),htonl(this_tcphdr->th_seq))==1))
+			else if (pstream->stream_state == TCP_SYN_STATE)
 			{
-				tcp_change_stream_todata(pindex_tcp,this_tcphdr,tcplen);
-				 //ret=tcp_deal_data_stream(pindex_tcp,rawippkt,iplen,this_tcphdr,tcplen);
-				 ret=tcp_deal_data_stream(pindex_tcp,this_iphdr,raw_pkt,this_tcphdr,tcplen);
+				ret = tcp_deal_syn_stream(pindex_tcp, raw_pkt, this_iphdr, this_tcphdr, tcplen);
+				// 不正常的报文，不继续进行后继处理
+				if (DROP == ret)
+				{
+					// return PASS;//不进行后继处理，但是必须返回PASS否则串联逻辑不对
+					ret = PASS;
+					goto fun_exit;
+				}
+				if ((tcplen > 0) && (checkcreatlinkseq(&(pindex_tcp->stream), htonl(this_tcphdr->th_seq)) == 1))
+				{
+					tcp_change_stream_todata(pindex_tcp, this_tcphdr, tcplen);
+					// ret=tcp_deal_data_stream(pindex_tcp,rawippkt,iplen,this_tcphdr,tcplen);
+					ret = tcp_deal_data_stream(pindex_tcp, this_iphdr, raw_pkt, this_tcphdr, tcplen);
+				}
+				// add by lqy 20150215 新建链接刚开始的乱序报文
+				else
+				{
+					pindex_tcp->stream.stream_public.addr.pkttype = PKT_TYPE_TCPUNORDER;
+				}
 			}
-			//add by lqy 20150215 新建链接刚开始的乱序报文
-			else
+			else if (pstream->stream_state == TCP_NOUSE_STATE)
 			{
-				pindex_tcp->stream.stream_public.addr.pkttype=PKT_TYPE_TCPUNORDER;
-			}			
-		}
-		else if(pstream->stream_state==TCP_NOUSE_STATE)
-		{
-			ret=tcp_deal_nouse_stream(pindex_tcp,this_iphdr,raw_pkt,this_tcphdr,tcplen);
+				ret = tcp_deal_nouse_stream(pindex_tcp, this_iphdr, raw_pkt, this_tcphdr, tcplen);
+			}
 		}
 	}
 	
