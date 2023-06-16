@@ -1,0 +1,11 @@
+{
+	"abstract": {
+		"md5sum": "5b512b3321164a73446bdd54f7d20057",
+		"type": "normal",
+		"description": "最内层是HTTP协议, 基于IPv6 over IPv4隧道, TCP双向流, 包含SYN包",
+		"layers": ["HTTP", "TCP", "IPV6", "IPV4", "ETHERNET"],
+		"benchmark": {
+			"TCP": "{\"Proto\":\"TCP\",\"Stream_id\":0,\"Tuple4\":\"2001:da8:200:900e:200:5efe:d24d:58a3.52556>2600:140e:6::1702:1058.80\",\"C2S_pkt\":1,\"C2S_byte\":97,\"C2S_lost_byte\":0,\"C2S_payload\":\"4abdfc5bc27fd17ff6aaa83dea959a36\",\"S2C_pkt\":1,\"S2C_byte\":179,\"S2C_lost_byte\":0,\"S2C_payload\":\"80d168f5799e6f3ec783ab47b3aae0b7\",\"Total_pkt\":2,\"Total_byte\":276}"
+		}
+	}
+}

@@ -366,7 +366,9 @@ envelope_rpm:
       - build/*-pr-*.rpm
   tags:
     - share
- 
+  only:
+    - tags  
+     
 upload_enveloped_rpm:
   stage: upload
   image: $BUILD_IMAGE_CENTOS7

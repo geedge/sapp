@@ -31,4 +31,6 @@ add_test(NAME COPY_TEST_PCAP COMMAND sh -c "cp -r ${CMAKE_SOURCE_DIR}/module_tes
 add_test(NAME COPY_TEST_PROFILE COMMAND sh -c "cp -r ${CMAKE_SOURCE_DIR}/module_test/test_case/TEST_PROFILE ${CMAKE_BINARY_DIR}/testing/")
 add_test(NAME COPY_DEFAULT_CONFIG COMMAND sh -c "cp -r ${CMAKE_SOURCE_DIR}/benchmark/sapp_default_config/etc ${CMAKE_BINARY_DIR}/testing/")
 
-add_test(NAME FAKE_TEST COMMAND sh -c "pwd")
+add_test(NAME SOFT_LINK_BENCHMARK_PCAP COMMAND sh -c "ln -fs ${CMAKE_SOURCE_DIR}/benchmark_pcap/ ${CMAKE_BINARY_DIR}/")
+
+#add_test(NAME FAKE_TEST COMMAND ./gtest_sapp_v4 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/testing/)

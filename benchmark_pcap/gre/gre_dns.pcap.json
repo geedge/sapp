@@ -1,0 +1,11 @@
+{
+	"abstract": {
+		"md5sum": "9242d1b85676308cee9b56e6a5fea3f4",
+		"type": "normal",
+		"description": "最内层是DNS协议, 中间嵌套两层GRE隧道",
+		"layers": ["DNS", "GRE", "IPV4", "ETHERNET"],
+		"benchmark": {
+			"UDP": "{\"Proto\":\"UDP\",\"Stream_id\":0,\"Tuple4\":\"122.112.114.73.20755>115.238.253.235.53\",\"C2S_pkt\":1,\"C2S_byte\":44,\"C2S_lost_byte\":0,\"C2S_payload\":\"24ac8ec87827fc913b1fd1a20646bd94\",\"S2C_pkt\":0,\"S2C_byte\":0,\"S2C_lost_byte\":0,\"S2C_payload\":\"NULL\",\"Total_pkt\":1,\"Total_byte\":44}"
+		}
+	}
+}
