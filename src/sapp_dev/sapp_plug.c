@@ -59,7 +59,7 @@ static void signal_take_over(void)
 
 static void show_mesa_log(void)
 {
-	int i;
+	unsigned int i;
 
 	for(i = 0; (i < sizeof(MESA_art_log)) && (MESA_art_log[i] != 0); i ++){
 		//putchar(MESA_log[i]);
