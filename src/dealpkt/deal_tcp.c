@@ -2175,7 +2175,7 @@ raw_pkt指向最后一个分片包, 而tcpdatalen是重组完成后的完整IP包负载!
 static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 		struct  half_tcpstream  *rcv, struct half_tcpstream *snd,int orderflag)
 {
-	struct buf_unorder *pakiet, *tmp;
+	struct buf_unorder *unorder_packet, *tmp;
 	int ret;
 	unsigned char tmpktype;
    	struct tcpdetail_private *pdetail_pr;
@@ -2183,8 +2183,8 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
    	const raw_pkt_t *cur_raw_pkt;
    	UCHAR last_link_state;
 
-	pakiet = (struct buf_unorder *) rcv->unorderlist;
-	if(likely(NULL == pakiet)){
+	unorder_packet = (struct buf_unorder *) rcv->unorderlist;
+	if(likely(NULL == unorder_packet)){
 		return PASS;
 	}
 
@@ -2197,7 +2197,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 	UINT16 t_tcpoverlen = pdetail_pr->tcpoverlen;
 	pdetail_pr->tcpoverlen = 0;
 	
-	while (pakiet)
+	while (unorder_packet)
 	{
 		if(a_tcp->opstate== OP_STATE_CLOSE)
 		{
@@ -2205,17 +2205,17 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 			goto done;
 		}	
 		
-		if ((after (pakiet->seq, EXP_SEQ)) && (orderflag==CHECK_ORDER_DATA)){
+		if ((after (unorder_packet->seq, EXP_SEQ)) && (orderflag==CHECK_ORDER_DATA)){
 			ret = PASS;
 			goto done;
 		}
 
-		if (after (pakiet->seq + pakiet->tcpdatalen+pakiet->fin+pakiet->rst, EXP_SEQ))
+		if (after (unorder_packet->seq + unorder_packet->tcpdatalen+unorder_packet->fin+unorder_packet->rst, EXP_SEQ))
 		{                    
 			/* 2015-01-13 lijia add, 如果因乱序包触发kill_tcp或inject相关函数, 需要更新原始包信息 */
-			update_stream_list_raw_pkt_pointer(a_tcp_pr, &pakiet->raw_pkt);
+			update_stream_list_raw_pkt_pointer(a_tcp_pr, &unorder_packet->raw_pkt);
 			
-			if(pakiet->rst )//add by lqy 20100805)
+			if(unorder_packet->rst )//add by lqy 20100805)
 			{
 				last_link_state = pdetail_pr->link_state;
 				pdetail_pr->link_state=STREAM_LINK_RESET;
@@ -2230,7 +2230,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 				{
 					pdetail_pr->flow_stat->S2C_ooorder_pkt++;
 				}
-				ret=stream_process_tcp(a_tcp,pakiet->this_ip_hdr, pakiet->this_tcp_hdr, &(pakiet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
+				ret=stream_process_tcp(a_tcp,unorder_packet->this_ip_hdr, unorder_packet->this_tcp_hdr, &(unorder_packet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
 				a_tcp->addr.pkttype=tmpktype;
 				/* 2016-05-12 lijia add, 解决因乱序包导致unorder_list超长BUG, 此处应将流置于nouse状态 */
 				if(STREAM_LINK_DATA == last_link_state){
@@ -2248,9 +2248,9 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 				if(rcv->unorder_cnt > rcv->maxunorder || orderflag!=CHECK_ORDER_DATA)//add by lqy 20150325
 				{
 					//20150401 lqy
-					if(after(pakiet->seq,EXP_SEQ) && rcv->first_data_seq!=0)
+					if(after(unorder_packet->seq,EXP_SEQ) && rcv->first_data_seq!=0)
 					{
-						rcv->count_ideal = pakiet->seq   - rcv->first_data_seq;
+						rcv->count_ideal = unorder_packet->seq   - rcv->first_data_seq;
 					}
 					//add by lqy 20150331 for payload overlap in deal reorder 
 					if(rcv->unorder_cnt > rcv->maxunorder)
@@ -2259,9 +2259,9 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 
 				//get tcp的data和len
 
-				tcp_set_new_data(a_tcp,rcv,snd,(u_char *)(pakiet->tcpdata),
-				pakiet->tcpdatalen,pakiet->seq,pakiet->fin, 0);
-				if(pakiet->tcpdatalen >0)
+				tcp_set_new_data(a_tcp,rcv,snd,(u_char *)(unorder_packet->tcpdata),
+				unorder_packet->tcpdatalen,unorder_packet->seq,unorder_packet->fin, 0);
+				if(unorder_packet->tcpdatalen >0)
 				{
 					/* 2021-04-29 lijia add, 插件调用了Kill_tcp,或者设置了MSO_DROP_STREAM, 即便是暂存的乱序包, 也不再调用插件 */
 					if((0 == a_tcp_pr->stream_killed_flag) && (0 == pdetail_pr->drop_stream_flag)){
@@ -2275,7 +2275,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 						{
 							pdetail_pr->flow_stat->S2C_ooorder_pkt++;
 						}
-						ret=stream_process_tcp(a_tcp,pakiet->this_ip_hdr,pakiet->this_tcp_hdr,&(pakiet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
+						ret=stream_process_tcp(a_tcp,unorder_packet->this_ip_hdr,unorder_packet->this_tcp_hdr,&(unorder_packet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
 						a_tcp->addr.pkttype=tmpktype;	
 						tcp_clear_newdata(a_tcp,rcv);
 					}
@@ -2291,15 +2291,15 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 					}
 				}
 			}
-			if (pakiet->prev)
-					pakiet->prev->next = pakiet->next;
+			if (unorder_packet->prev)
+					unorder_packet->prev->next = unorder_packet->next;
 			else
-					rcv->unorderlist= pakiet->next;
-			if (pakiet->next)
-					pakiet->next->prev = pakiet->prev;
+					rcv->unorderlist= unorder_packet->next;
+			if (unorder_packet->next)
+					unorder_packet->next->prev = unorder_packet->prev;
 			else
-					rcv->unorderlisttail= pakiet->prev;
-			tmp = pakiet->next;
+					rcv->unorderlisttail= unorder_packet->prev;
+			tmp = unorder_packet->next;
 #if 0	/* 2015-01-12 lijia modify */		
 			if(pakiet->data){
 				dictator_free(a_tcp->threadnum,pakiet->data);
@@ -2311,14 +2311,14 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 			dictator_free(a_tcp->threadnum, (void *)pakiet->raw_pkt.raw_pkt_data);
 			dictator_free(a_tcp->threadnum,pakiet);
 #else
-			tcp_free_unorder_pkt(a_tcp->threadnum, pakiet);
+			tcp_free_unorder_pkt(a_tcp->threadnum, unorder_packet);
 #endif
-			pakiet = tmp;
+			unorder_packet = tmp;
 			rcv->unorder_cnt--;                    
 		}
 		else
 		 {
-			pakiet = pakiet->next;
+			unorder_packet = unorder_packet->next;
 		 }			
 	}
 
