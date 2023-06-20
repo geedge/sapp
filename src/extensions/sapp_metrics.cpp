@@ -3,10 +3,6 @@
 
 #include "sapp_declaration.h"
 
-static int sapp_fs2_init(sapp_global_t *global_parameters);
-static int sapp_fs3_init(sapp_global_t *global_parameters);
-
-
 void sapp_fs2_update_count(int field_index, unsigned  long long value)
 {
 	if(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle != NULL){
@@ -134,24 +130,6 @@ void sapp_fuzzy_latency_update(void)
 			}
 		}
 	}
-}
-
-
-
-
-int sapp_metric_init(void)
-{
-	int ret = 0;
-	if( sapp_global_val->config.profiling.fs2.enabled == 1)
-	{
-		sapp_fs2_init(sapp_global_val);
-	}
-	if( sapp_global_val->config.profiling.fs3.enabled == 1)
-	{
-		sapp_fs3_init(sapp_global_val);
-	}
-	
-	return ret;
 }
 
 
@@ -417,6 +395,22 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 static void sapp_fs3_destroy(sapp_global_t *global_paramters)
 {
 		return;
+}
+
+
+int sapp_metric_init(void)
+{
+	int ret = 0;
+	if( sapp_global_val->config.profiling.fs2.enabled == 1)
+	{
+		sapp_fs2_init(sapp_global_val);
+	}
+	if( sapp_global_val->config.profiling.fs3.enabled == 1)
+	{
+		sapp_fs3_init(sapp_global_val);
+	}
+	
+	return ret;
 }
 
 void sapp_metric_destroy(void)
