@@ -7,15 +7,15 @@ add_test(NAME COPY_SAPP COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/src/entry/sapp ${C
 
 add_test(NAME COPY_ISAKMP_DIR COMMAND sh -c "mkdir -p ${CMAKE_BINARY_DIR}/testing/plug/protocol/isakmp_protocol_plug")
 add_test(NAME COPY_ISAKMP_INF COMMAND sh -c "cp ${CMAKE_SOURCE_DIR}/bin/plug/protocol/isakmp_protocol_plug/isakmp_protocol_plug.inf ${CMAKE_BINARY_DIR}/testing/plug/protocol/isakmp_protocol_plug")
-add_test(NAME COPY_ISAKMP_SO COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/src/inner_plug/isakmp_protocol_plug.so ${CMAKE_BINARY_DIR}/testing/plug/protocol/isakmp_protocol_plug")
+add_test(NAME COPY_ISAKMP_SO COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/src/extensions/isakmp_protocol_plug.so ${CMAKE_BINARY_DIR}/testing/plug/protocol/isakmp_protocol_plug")
 
 add_test(NAME COPY_L2TP_DIR COMMAND sh -c "mkdir -p ${CMAKE_BINARY_DIR}/testing/plug/protocol/l2tp_protocol_plug")
 add_test(NAME COPY_L2TP_INF COMMAND sh -c "cp ${CMAKE_SOURCE_DIR}/bin/plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.inf ${CMAKE_BINARY_DIR}/testing/plug/protocol/l2tp_protocol_plug/")
-add_test(NAME COPY_L2TP_SO COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/src/inner_plug/l2tp_protocol_plug.so ${CMAKE_BINARY_DIR}/testing/plug/protocol/l2tp_protocol_plug/")
+add_test(NAME COPY_L2TP_SO COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/src/extensions/l2tp_protocol_plug.so ${CMAKE_BINARY_DIR}/testing/plug/protocol/l2tp_protocol_plug/")
 
 add_test(NAME COPY_PPTP_DIR COMMAND sh -c "mkdir -p ${CMAKE_BINARY_DIR}/testing/plug/protocol/pptp_protocol_plug")
 add_test(NAME COPY_PPTP_INF COMMAND sh -c "cp ${CMAKE_SOURCE_DIR}/bin/plug/protocol/pptp_protocol_plug/pptp_protocol_plug.inf ${CMAKE_BINARY_DIR}/testing/plug/protocol/pptp_protocol_plug/")
-add_test(NAME COPY_PPTP_SO COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/src/inner_plug/pptp_protocol_plug.so ${CMAKE_BINARY_DIR}/testing/plug/protocol/pptp_protocol_plug/")
+add_test(NAME COPY_PPTP_SO COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/src/extensions/pptp_protocol_plug.so ${CMAKE_BINARY_DIR}/testing/plug/protocol/pptp_protocol_plug/")
 
 add_test(NAME COPY_TSHARK COMMAND sh -c "cp ${CMAKE_SOURCE_DIR}/benchmark/vendor/tshark_v3.2.17/tshark ${CMAKE_BINARY_DIR}/testing/bin")
 add_test(NAME COPY_ADD_X_TSHARK COMMAND sh -c "chmod +x ${CMAKE_BINARY_DIR}/testing/bin/tshark")
@@ -34,3 +34,4 @@ add_test(NAME COPY_DEFAULT_CONFIG COMMAND sh -c "cp -r ${CMAKE_SOURCE_DIR}/bench
 add_test(NAME SOFT_LINK_BENCHMARK_PCAP COMMAND sh -c "ln -fs ${CMAKE_SOURCE_DIR}/benchmark_pcap/ ${CMAKE_BINARY_DIR}/")
 
 #add_test(NAME FAKE_TEST COMMAND ./gtest_sapp_v4 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/testing/)
+

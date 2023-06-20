@@ -195,7 +195,7 @@ add_subdirectory(./src/plugin)
 add_subdirectory(./src/project)
 add_subdirectory(./src/common)
 add_subdirectory(./src/config)
-add_subdirectory(./src/inner_plug)
+add_subdirectory(./src/extensions)
 add_subdirectory(./src/timer)
 add_subdirectory(./src/sapp_dev)
 add_subdirectory(./src/entry)
@@ -260,13 +260,13 @@ endif()
 #install(FILES bin/plug/protocol/conflist_protocol.inf DESTINATION plug/protocol COMPONENT PROFILE)
 
 install(FILES bin/plug/protocol/isakmp_protocol_plug/isakmp_protocol_plug.inf DESTINATION plug/protocol/isakmp_protocol_plug COMPONENT PROFILE)
-install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/isakmp_protocol_plug.so DESTINATION plug/protocol/isakmp_protocol_plug COMPONENT LIBRARY)
+install(FILES ${CMAKE_BINARY_DIR}/src/extensions/isakmp_protocol_plug.so DESTINATION plug/protocol/isakmp_protocol_plug COMPONENT LIBRARY)
 
 install(FILES bin/plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.inf DESTINATION plug/protocol/l2tp_protocol_plug COMPONENT PROFILE)
-install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/l2tp_protocol_plug.so DESTINATION plug/protocol/l2tp_protocol_plug COMPONENT LIBRARY)
+install(FILES ${CMAKE_BINARY_DIR}/src/extensions/l2tp_protocol_plug.so DESTINATION plug/protocol/l2tp_protocol_plug COMPONENT LIBRARY)
 
 install(FILES bin/plug/protocol/pptp_protocol_plug/pptp_protocol_plug.inf DESTINATION plug/protocol/pptp_protocol_plug COMPONENT PROFILE)
-install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/pptp_protocol_plug.so DESTINATION plug/protocol/pptp_protocol_plug COMPONENT LIBRARY)
+install(FILES ${CMAKE_BINARY_DIR}/src/extensions/pptp_protocol_plug.so DESTINATION plug/protocol/pptp_protocol_plug COMPONENT LIBRARY)
 
 
 install(FILES bin/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app COMPONENT PROFILE)
