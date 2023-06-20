@@ -41,7 +41,7 @@ set(SAPP_MODULES timestamp_record md5
 	symbol_check MESA_sleep MESA_socket_wrap 
 	packet_io dealpkt project plugctrl common 
 	config timer tomlc99_wrap dpdk_ip_hash  
-	gdev_assistant inner_plug libdabloom-static 
+	gdev_assistant inline_keepalive libdabloom-static 
 	sapp_dev sapp_assistant cpu_limit timeout)
 
 if(LIBEVENT_ENABLED STREQUAL "ON")

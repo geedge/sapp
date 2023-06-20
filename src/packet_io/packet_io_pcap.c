@@ -61,7 +61,6 @@ static pcap_distmode_t g_pcap_distmode = PCAP_DISTMODE_OUTER_TUPLE2;
 
 static pthread_t g_pcap_io_pid_up, g_pcap_io_pid_down;
 static volatile int g_pcap_io_stop_flag_up, g_pcap_io_stop_flag_down; 
-extern sapp_global_t *sapp_global_val;
 extern int g_PollingFunNum;
 extern int g_use_MESA_sleep_sw;
 extern void MESA_sleep(void);

@@ -50,8 +50,6 @@ typedef struct{
 
 static plugin_load_state_t g_plugin_load_state[SAPP_MAX_PLUG_ENTRY_NUM];
 static int plugin_load_state_num = 0;
-static void *g_plug_load_stat_fs2_handle;
-static int g_plug_load_stat_fs2_column_id;
 
 
 /* 
@@ -486,50 +484,6 @@ static int qsort_compare_time_spent_cb(const void *item1, const void *item2)
 }
 
 
-int sapp_plugin_load_state_fs2_init(void)
-{
-	int fs2_opt;
-	unsigned short fs_server_port;
-	
-	g_plug_load_stat_fs2_handle = FS_create_handle();
-
-	/*
-		prometheus相关的配置, 由  	   sapp_fs2_init() 初始化.
-	*/
-
-	fs2_opt = sapp_global_val->config.profiling.log.interval;
-	FS_set_para(g_plug_load_stat_fs2_handle, STAT_CYCLE, &fs2_opt, sizeof(int));	
-
-	fs2_opt = 1; /* 1:Rewrite ,2: Append.  */
-	FS_set_para(g_plug_load_stat_fs2_handle, PRINT_MODE, &fs2_opt, sizeof(int));
-
-	fs2_opt = 1;
-	FS_set_para(g_plug_load_stat_fs2_handle, PRINT_TRIGGER, &fs2_opt, sizeof(int));
-
-	if(sapp_global_val->config.profiling.log.local.enabled){
-		FS_set_para(g_plug_load_stat_fs2_handle, OUTPUT_DEVICE, "./fs2_plug_stat.log", strlen("./fs2_plug_stat.log") + 1); 
-	}
-	
-	FS_set_para(g_plug_load_stat_fs2_handle, APP_NAME, "plug_load", strlen("plug_load")+1);
-
-	if(sapp_global_val->config.profiling.log.remote.enabled){
-		FS_set_para(g_plug_load_stat_fs2_handle, STATS_SERVER_IP, (void *)sapp_global_val->config.profiling.log.remote.server_ip, strlen(sapp_global_val->config.profiling.log.remote.server_ip)+1);
-		fs_server_port = (unsigned short)sapp_global_val->config.profiling.log.remote.server_port;
-		FS_set_para(g_plug_load_stat_fs2_handle, STATS_SERVER_PORT, &fs_server_port, sizeof(short));
-	}
-
-	if(sapp_global_val->config.profiling.log.prometheus.enabled){
-		fs2_opt = 1;
-		FS_set_para(g_plug_load_stat_fs2_handle, OUTPUT_PROMETHEUS, &fs2_opt, sizeof(int));
-	}
-
-	/* 先注册列, 初始化后固定不变, 行以plug_name为单位动态注册, 动态增加 */
-	g_plug_load_stat_fs2_column_id = FS_register(g_plug_load_stat_fs2_handle, FS_STYLE_COLUMN, FS_CALC_CURRENT, "status");
-
-	FS_start(g_plug_load_stat_fs2_handle);
-
-	return 0;
-}
 
 /* 
 	field stat注册名称时不允许用  "|:\n\r.\t<>[]#!@", 所以常见的字符里, 只能改成"_".
@@ -541,22 +495,6 @@ static void sapp_plug_modify_char(char *str, int raw_char, int new_char)
 	while((ptr = strchr(str, raw_char))){
 		*ptr = (char)new_char;
 	}
-}
-
-
-int sapp_plug_stat_dynamic_register_fs2_line(const char *plug_path, long load_stats)
-{
-	char valid_fs2_plug_path[PATH_MAX];
-
-	strncpy(valid_fs2_plug_path, plug_path, PATH_MAX);
-	sapp_plug_modify_char(valid_fs2_plug_path, '.', '_');
-	
-	/* 此处 fs2_line_id 仅用一次, 用临时变量就行了 */
-	int fs2_line_id = FS_register(g_plug_load_stat_fs2_handle, FS_STYLE_LINE, FS_CALC_CURRENT, valid_fs2_plug_path);
-
-	FS_operate(g_plug_load_stat_fs2_handle, fs2_line_id, g_plug_load_stat_fs2_column_id, FS_OP_SET, load_stats);
-
-	return 0;
 }
 
 
@@ -589,13 +527,9 @@ void sapp_plugin_load_state_output(void)
 				(ptr_plugin_load_state[i]->init_state < 0) ? "\033[1;31;40mFAIL\033[0m":"\033[32mSUCC\033[0m", 
 				ptr_plugin_load_state[i]->time_spent_in_us, 
 				ptr_plugin_load_state[i]->plug_path);	
-		sapp_plug_stat_dynamic_register_fs2_line(g_plugin_load_state[i].plug_path, g_plugin_load_state[i].init_state);
 	}	
 	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
-
-	if(fp){
-		fclose(fp);
-	}
+	fclose(fp);
 }
 
 
@@ -622,9 +556,6 @@ int plugin_manage_init(void)
 	g_plug_global_entry[0].plug_name = sapp_strdup("inner_plug");
 	g_plug_global_entry[0].plug_entry_name = sapp_strdup("inner_entry");
 	g_plug_global_entry_index++;
-
-	sapp_plugin_load_state_fs2_init();
-
 	return 0;
 }
 
@@ -654,10 +585,6 @@ void plugin_manage_destroy(void)
 	}
 	memset(g_plugin_load_state, 0, sizeof(g_plugin_load_state));
 	plugin_load_state_num = 0;
-
-	if(g_plug_load_stat_fs2_handle){
-		FS_stop(&g_plug_load_stat_fs2_handle);
-	}	
 }
 
 #ifdef __cplusplus

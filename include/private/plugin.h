@@ -6,6 +6,7 @@
 #include "sapp_limits.h"
 #include "sapp_mem.h"
 #include "stream_register.h"
+#include "sapp_global_val.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -114,7 +115,11 @@ typedef struct {
 
 extern plug_global_entry_t g_plug_global_entry[SAPP_MAX_PLUG_ENTRY_NUM];
 extern int g_plug_global_entry_index;
-extern void* g_plugin_runtime_handle;
+
+extern sapp_global_t *sapp_global_val;
+
+#define g_plugin_runtime_handle  sapp_global_val->individual_fixed.plugin_log_handle
+
 extern int stream_register_fun(enum fun_type_t funtype,char (*x)(void), int entry_id);
 
 void plugin_call_flagstate();

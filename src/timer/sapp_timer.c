@@ -249,11 +249,6 @@ void __st_pkt_proc_context_check_timeout(int tid)
 #endif	
 }
 
-static void line_protocol_timer_cbfun(sapp_timer_handle h, sapp_timer_event ev, int pkt_process_thread_id, void *user_arg)
-{
-	line_protocol_update_metrics();
-}
-
 static void __st_add_time_event_entry(void)
 {
 	sapp_timer_handle th;
@@ -266,10 +261,9 @@ static void __st_add_time_event_entry(void)
 	tev = sapp_timer_event_new(th);
 	assert(tev);
 	
-	topt.tv_sec = sapp_global_val->config.profiling.log.interval;
+	topt.tv_sec = 1;
 	topt.tv_usec = 0;
 	sapp_event_set_opt(tev, STEO_TIMEOUT_VAL, &topt, sizeof(topt));
-	//sapp_event_set_opt(tev, STEO_CALLBACK_FUN, (void *)&line_protocol_timer_cbfun, sizeof(void *));
 
 	ret = sapp_timer_add(th, tev);
 	assert(ret >= 0);

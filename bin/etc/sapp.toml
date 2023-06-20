@@ -23,7 +23,7 @@
 [PACKET_IO]
     [overlay_tunnel_definition]
 ### note, optional value is [none, vxlan, nf]
-    overlay_mode=none
+    overlay_mode="none"
 
     [packet_io.feature]
 ### note, used to represent inbound or outbound direction value,
@@ -46,7 +46,7 @@
 ### vxlan_by_inline_device: encapsulation inject packet with vxlan, and then send to inline device by udp socket.
 ### raw_ethernet_single_gateway: send layer2 ethernet packet to specific gateway in same broadcast domain. 
 ### raw_ethernet_multi_gateway: send layer2 ethernet packet to multiple gateway in same broadcast domain. 
-    inject_pkt_mode=sys_route
+    inject_pkt_mode="sys_route"
 
 ### note, this config is valid if inject_pkt_mode==vxlan_by_inline_device, means udp socket src port.
     inject_mode_inline_device_sport=54789
@@ -69,18 +69,18 @@
     destroy_all_plug_enabled = 1
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]
-    mode=mirror
+    mode="mirror"
 
 ### note, interface.type options: [pag, pcap, marsio, tun]
 ### receive from internal interface, route dir is 0,
 ### receive from external interface, route dir is 1.
     [packet_io.internal.interface]
-    type=pcap
+    type="pcap"
     name="lo"
 
     [packet_io.external.interface]
-    type=pcap
-    name=lo
+    type="pcap"
+    name="lo"
     
     [packet_io.polling]
     enabled=1    
@@ -160,46 +160,43 @@
     meaningful_statistics_minimum_byte=5
 
 [PROFILING]
-[profiling.pkt_latency]
-    enabled=0
-    accurate_enable=0
+    [profiling.log]
+    sapp_log_category="sapp_log"
+    sapp_plugin_log_category="sapp_plugin_log"
+    #for profiling-related API control, e.g printaddr
+    enabled_log_level=20
+    
+    [profiling.metric]
+        [profiling.metric.fs2]
+        enabled=1
+        prometheus_port=9273
+        prometheus_url_path="/metrics"
+        local_file="fs2_sysinfo.metrics"
+        refresh_interval_s=2
+
+        [profiling.metric.fs3]
+        enabled=1
+        prometheus_port=9373
+        prometheus_url_path="/metrics"
+        local_file="fs3_sysinfo.metrics"
+        refresh_interval_s=2
+
+
+    [profiling.process_latency]
+    log_category="sapp_process_latency_log"
+    enabled_log_level=20
 ### note, threshold unit is microseconds (us)
-    threshold=100000
+    threshold_us=100000
 
     [profiling.sanity_check]
     raw_pkt_broken_enabled=0
     symbol_conflict_enabled=0
-  
-    [profiling.log]
-    level=20
-    interval=5
-    
-        [profiling.log.local]
-        enabled=1
-### note, if "file_truncate_open_enabled=1", file will be truncated, otherwise open the file for appending.	 
-        file_truncate_enabled = 1
-     
-        [profiling.log.remote]
-        enabled=1
-        server_ip="127.0.0.1"
-        server_port=8126
 
-        [profiling.log.remote.field_stat2]
-### note, is valid when "remote_send_out_type=field_stat2"	 
-### note, metric_type option value: [default, json]
-        metric_type = default
-        app_name=sapp
-
-        [profiling.log.prometheus]
-        prometheus_enabled=1
-        prometheus_port=9273
-        prometheus_url_path="/metrics"
-     
 [TOOLS]
     [tools.pkt_dump]
     enabled=1
 ### note, mode options value:[storage, udp_socket]
-    mode=udp_socket
+    mode="udp_socket"
     BSD_packet_filter=""
    
         [tools.pkt_dump.threads]
@@ -249,7 +246,6 @@
 
 [SECONDARY_DATA_LINK]
     data_file_sysinfo_log="sysinfo.log"
-    data_file_field_stat_log="fs2_sysinfo.log"
     data_file_inline_keepalive_log="gdev_keeplive_status.log"
     data_file_load_plugin_stat_log="load_plugin_stat.log"
     data_file_under_ddos_stat_log="under_ddos_stat.log"

@@ -141,26 +141,6 @@ typedef struct{
 }sapp_config_profiling_log_remote_field_stat2_t;
 
 
-typedef struct{
-	char name[NAME_MAX];
-	char value[NAME_MAX];
-}log_line_protocol_tag_t;
-
-typedef struct{
-	int sock_fd;
-	struct sockaddr_in sock_addr;
-	time_t last_send_metrics_time;
-	unsigned long long history_count[SAPP_STAT_NUM_MAX];
-	unsigned long long history_length[SAPP_STAT_NUM_MAX];	
-}log_line_protocol_handle_t;
-
-
-#define LINE_PROTOCOL_TAG_NUM_MAX	16
-typedef struct{
-	log_line_protocol_tag_t tags[LINE_PROTOCOL_TAG_NUM_MAX];
-}sapp_config_profiling_log_remote_line_protocol_t;
-
-
 
 typedef struct{
 	int enabled;
@@ -180,26 +160,38 @@ typedef struct{
 
 
 typedef struct{
-	int level;
-	int interval;
-	sapp_config_profiling_log_local_t local;
-	sapp_config_profiling_log_remote_t remote;
-	sapp_config_profiling_log_prometheus_t prometheus;
+	int enabled_log_level;
+	char sapp_log_category[NAME_MAX];
+	char sapp_plugin_log_category[NAME_MAX];
 }sapp_config_profiling_log_t;
 
 
 typedef struct{
+	int enabled;
+	int  prometheus_service_port;
+	char  prometheus_service_uri[NAME_MAX];
+	char local_file[NAME_MAX];
+	int refresh_interval_s;
+}sapp_config_profiling_metric_t;
+
+typedef struct{
 	sapp_config_profiling_log_t log;
-	int pkt_latency_enabled;
+	sapp_config_profiling_metric_t fs2;
+	sapp_config_profiling_metric_t fs3;
+
+	//process_latency and sanity_check
+	char process_latency_log_category[NAME_MAX];
+	int process_latency_enabled_log_level;
+	int process_latency_threshold_in_ns; /* nanosecond, 配置文件里单位是microsecond, 需要乘以1000 */
 	/* 精确模式开启后, fs2自身统计也非常耗CPU, 每个包都要调用FS_operate(),
 	   如果停用精确模式, 输入fs2的是保留最近一段时间的最大值, 最小值和这一段时间的平均值, 仅调用FS_operate()三次,
 	   精确度降低了一些, 但大大减少了调用FS_operate()的次数.
 		开启pkt_latency_accurate_enable后平均值基本是对的, 但标准差就不准了.
 	   */
-	int pkt_latency_accurate_enable; 
+	//int process_latency_accurate_enable; 
+	
 	int sanity_check_raw_pkt_broken_enabled;
 	int sanity_check_symbol_conflict_enabled;
-	int pkt_latency_threshold_in_ns; /* nanosecond, 配置文件里单位是microsecond, 需要乘以1000 */
 }sapp_config_profiling_t;
 
 typedef struct{
@@ -393,7 +385,7 @@ typedef struct{
 
 
 typedef struct{
-	void *field_stat2_handle; /* equal to profiling_log_remote_handle if log.enabled=1 and remote_send_out_type=field_stat2 */
+	void *fs_metric_handle; 
 	int fs_id_count_array[SAPP_STAT_NUM_MAX];
 	int fs_id_length_array[SAPP_STAT_NUM_MAX];
 	int fs_latency_id_array[SAPP_MAX_THREADS];
@@ -403,14 +395,18 @@ typedef struct{
 
 typedef struct{
 	void *log_handle; /* runtime.log */
-	void *profiling_log_remote_handle; /* metric, field_stat2 or line_protocol */
+	void *plugin_log_handle; /* runtime.log */
+	void *process_latency_log_handle;
 	void *sapp_timer_handle[SAPP_MAX_THREADS];
 	void *sapp_standalone_timer;
 	time_t sapp_start_time;
 	int depolyment_mode_private; /* 根据配置sapp_global_val->config.packet_io.depolyment_mode_bin转换得到的内部值,例如:NET_CONN_PARALLEL  */
 	unsigned char create_stream_mode; /* 兼容原来的逻辑, 值从配置stream.tcp.syn_mandatory转换得到 */
 	int packet_io_cap_level; 
-	sapp_gval_individual_fixed_fs_t field_stat2_para;
+
+	sapp_gval_individual_fixed_fs_t fs2_runtime;
+	sapp_gval_individual_fixed_fs_t fs3_runtime;
+
 	pthread_t thread_obtain_id[SAPP_MAX_THREADS]; /* pthread_create返回的id */
 	pid_t thread_tid[SAPP_MAX_THREADS]; /* gdb 或 top 查看的id */
 	pthread_t thread_timer_event_id;

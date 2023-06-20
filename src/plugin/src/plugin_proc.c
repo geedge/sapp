@@ -2,7 +2,8 @@
 #include "sapp_declaration.h"
 #include "sapp_private_api.h"
 
-void* g_plugin_runtime_handle;
+#include "plugin.h"
+
 extern int g_business_plug_type;
 extern stPlugRuntimeInfo plugctrl_runtime_info;
 void sapp_plugin_load_state_output(void);
@@ -105,12 +106,7 @@ int plugctrl_proc()
 	}
 #endif
 
-	g_plugin_runtime_handle = MESA_create_runtime_log_handle("./log/runtimelog_plugin", RLOG_LV_DEBUG);
-	if(g_plugin_runtime_handle == NULL)
-	{
-		printf("plugctrl_proc MESA_create_runtime_log_handle() error!\n");
-		return -1;
-	}
+
 
 
 	rec = process_conf_entryname();
@@ -120,9 +116,9 @@ int plugctrl_proc()
 		return -1;
 	}
 
-	rec = plugin_load_platform();
-	rec = plugin_load_protocol();
-	rec = plugin_load_business();
+	plugin_load_platform();
+	plugin_load_protocol();
+	plugin_load_business();
 
 	sapp_plugin_load_state_output();
 

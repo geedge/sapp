@@ -312,12 +312,8 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 
 	if(g_timestamp_record_sw){
 		clock_gettime(CLOCK_REALTIME, &after_ts);
-		time_spent_ns = (after_ts.tv_sec*1000000000 + after_ts.tv_nsec) - (before_ts.tv_sec*1000000000 + before_ts.tv_nsec);
-		if(sapp_global_val->config.profiling.pkt_latency_accurate_enable != 0){
-			sapp_fs2_set_plug_entry_latency(pFunInfo->entry_id, time_spent_ns);
-		}else{
-			sapp_fs2_fuzzy_latency_update_per_entry(thread_seq, pFunInfo->entry_id, time_spent_ns);
-		}
+		time_spent_ns = (after_ts.tv_sec * 1000000000 + after_ts.tv_nsec) - (before_ts.tv_sec * 1000000000 + before_ts.tv_nsec);
+		sapp_fs2_fuzzy_latency_update_per_entry(thread_seq, pFunInfo->entry_id, time_spent_ns);
 		if(unlikely(time_spent_ns >= g_timestamp_record_threshold)){
 			if(NULL == a_packet || OP_STATE_CLOSE == a_stream->opstate || OP_STATE_CLOSE == a_stream->pktstate){
 				sapp_runtime_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, stream close process latency:%lld ns, %s", 

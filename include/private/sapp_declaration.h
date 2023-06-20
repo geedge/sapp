@@ -16,10 +16,17 @@ extern "C" {
 #define SAPP_MIN(a, b)       (((a) < (b)) ? (a) : (b))
 #endif
 
+extern sapp_global_t *sapp_global_val;
 
 /* 因嵌套层次太多, 使用简称描述 */
-#define ABBR_SAPP_LOG_LEVEL 	sapp_global_val->config.profiling.log.level
+#define ABBR_SAPP_LOG_LEVEL 	sapp_global_val->config.profiling.log.enabled_log_level
 #define ABBR_SAPP_LOG_HANDLE 	sapp_global_val->individual_fixed.log_handle
+
+#define ABBR_SAPP_PLUGIN_LOG_HANDLE 	sapp_global_val->individual_fixed.plugin_log_handle
+#define ABBR_PROCESS_LATENCY_LOG_HANDLE 	sapp_global_val->individual_fixed.process_latency_log_handle
+
+
+
 #define ABBR_SAPP_TIMER_HANDLE	sapp_global_val->individual_fixed.sapp_timer_handle
 #define ABBR_SAPP_START_TIME 	sapp_global_val->individual_fixed.sapp_start_time
 #define ABBR_CURRENT_TIME 		sapp_global_val->individual_volatile->current_time
@@ -50,10 +57,6 @@ extern "C" {
 #define ABBR_MARSIO_LIBRARY_FILE  	sapp_global_val->config.library_file_path.libmarsio_file_path
 #define ABBR_MEMORY_STAT_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_memory_stat_log_absolute
 
-
-
-extern sapp_global_t *sapp_global_val;
-
 /* 将之前分散的全局变量强制更新为新的全局变量 */
 #define g_CurrentTime_ms			sapp_global_val->individual_volatile->current_time_ms
 #define g_CurrentTime 			sapp_global_val->individual_volatile->current_time
@@ -74,9 +77,9 @@ extern sapp_global_t *sapp_global_val;
 #define g_topology_mode_raw		sapp_global_val->config.packet_io.depolyment_mode_bin
 #define g_packet_io_cap_mode 	sapp_global_val->config.packet_io.internal.interface.type_bin
 #define g_packet_io_cap_level	sapp_global_val->individual_fixed.packet_io_cap_level
-#define g_timestamp_record_sw	sapp_global_val->config.profiling.pkt_latency_enabled
-#define g_timestamp_record_accurate 	sapp_global_val->config.profiling.pkt_latency_accurate_enable
-#define g_timestamp_record_threshold	sapp_global_val->config.profiling.pkt_latency_threshold_in_ns
+#define g_timestamp_record_sw	MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, sapp_global_val->config.profiling.process_latency_enabled_log_level)
+
+#define g_timestamp_record_threshold	sapp_global_val->config.profiling.process_latency_threshold_in_ns
 
 #define g_discard_ack_sw		sapp_global_val->config.protocol_feature.tcp_drop_pure_ack_pkt
 #define g_tcp_syn_option_parse_enabled	sapp_global_val->config.protocol_feature.tcp_syn_option_parse_enabled
@@ -120,7 +123,6 @@ int __sapp_timer_platform_init(void);
 void __st_pkt_proc_context_check_timeout(int tid);
 void __sapp_timer_platform_run(void);
 void sapp_set_current_state(enum sapp_state_t st);
-void line_protocol_update_metrics(void);
 char *timet_to_str(time_t timet, char *time_str, int time_str_len);
 void sapp_fuzzy_latency_update(void);
 

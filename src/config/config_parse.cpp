@@ -1694,16 +1694,6 @@ int sapp_get_secondary_file_path(void)
 	return 0;
 }
 
-/* 因为处理过程中,要写文件,log_handle必须先初始化 */
-static void log_handle_init(void)
-{
-	void *lhand;
-	MESA_handle_runtime_log_creation(ABBR_SAPP_LOG_CONF_FILE);
-	lhand = MESA_create_runtime_log_handle("./log/runtimelog", sapp_global_val->config.profiling.log.level);
-
-	sapp_global_val->individual_fixed.log_handle = lhand;
-}
-
 
 /* 读取配置文件sapp.toml, 本函数只Load, 不做解析和错误处理 */
 int sapp_parse_config(void)
@@ -1723,6 +1713,7 @@ int sapp_parse_config(void)
 	
 	pconfig = &sapp_global_val->config;
 
+
 	/*******************************  SYSTEM *********************************/
 	ret = tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SYSTEM", (char *)"instance_name", pconfig->system.instance_name, NAME_MAX, "sapp_v4.2");
 	if(TOMLC99_RET_PATTERN_ERROR == ret){
@@ -1730,6 +1721,17 @@ int sapp_parse_config(void)
 		sapp_log(30, ~0, ~0, "parse config file %s error!", ABBR_CFG_FILE_MAIN_ENTRY);
 		exit(1);
 	}
+
+	/*******************************  PROFILING.LOG ***************************/
+	MESA_handle_runtime_log_creation(ABBR_SAPP_LOG_CONF_FILE);
+
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log", (char *)"enabled_log_level", (int *)&pconfig->profiling.log.enabled_log_level, 20);
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log", (char *)"sapp_log_category", pconfig->profiling.log.sapp_log_category, NAME_MAX, "sapp_runtime_log");
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log", (char *)"sapp_plugin_log_category", pconfig->profiling.log.sapp_plugin_log_category, NAME_MAX, "sapp_plugin_log");
+	
+	sapp_global_val->individual_fixed.log_handle = MESA_create_runtime_log_handle(sapp_global_val->config.profiling.log.sapp_log_category, sapp_global_val->config.profiling.log.enabled_log_level);
+	sapp_global_val->individual_fixed.plugin_log_handle = MESA_create_runtime_log_handle(sapp_global_val->config.profiling.log.sapp_plugin_log_category, sapp_global_val->config.profiling.log.enabled_log_level);
+
 
 	/*******************************  CPU *********************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"CPU", (char *)"worker_threads", (int *)&pconfig->cpu.worker_threads, 1);
@@ -1858,77 +1860,48 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"meaningful_statistics_minimum_byte", (int *)&pconfig->stream.udp.meaningful_statistics_minimum_byte, 5);
 	
 
-	/*******************************  PROFILING ******************************/
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.pkt_latency", (char *)"enabled", (int *)&pconfig->profiling.pkt_latency_enabled, 0);
-	if(pconfig->profiling.pkt_latency_enabled != 0){
-		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.pkt_latency", (char *)"accurate_enable", (int *)&pconfig->profiling.pkt_latency_accurate_enable, 0);
-		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.pkt_latency", (char *)"threshold", (int *)&pconfig->profiling.pkt_latency_threshold_in_ns, 1000000);
-		if(pconfig->profiling.pkt_latency_threshold_in_ns <= 0){
-			sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,999999]");
-			return -1;
-		}
-		if(pconfig->profiling.pkt_latency_threshold_in_ns >= 1000000){
-			sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,999999], set to max value 999999!");
-			pconfig->profiling.pkt_latency_threshold_in_ns *= 999999;		
-		}	
-		/* 为了配置文件方便查看, 避免写太多的0, 配置文件里的单位是微秒, 程序处理实际以纳秒ns为单位, 此处要乘以1000 */
-		pconfig->profiling.pkt_latency_threshold_in_ns *= 1000;
+
+	/*******************************  PROFILING.metric.fs2 **********************/
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"enabled", (int *)&pconfig->profiling.fs2.enabled, 0);
+	if(pconfig->profiling.fs2.enabled)
+	{
+		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"prometheus_port", (int *)&pconfig->profiling.fs2.prometheus_service_port, 0);
+		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"refresh_interval_s", (int *)&pconfig->profiling.fs2.refresh_interval_s, 2);
+		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"prometheus_url_path", pconfig->profiling.fs2.prometheus_service_uri, NAME_MAX, "");
+		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"local_file", pconfig->profiling.fs2.local_file, NAME_MAX, "");
 	}
-	
+	/*******************************  PROFILING.metric.fs3 **********************/
+	if(pconfig->profiling.fs3.enabled)
+	{
+		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"prometheus_port", (int *)&pconfig->profiling.fs3.prometheus_service_port, 0);
+		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"refresh_interval_s", (int *)&pconfig->profiling.fs3.refresh_interval_s, 2);
+		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"prometheus_url_path", pconfig->profiling.fs3.prometheus_service_uri, NAME_MAX, "");
+		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"local_file", pconfig->profiling.fs3.local_file, NAME_MAX, "");
+	}
+
+	/*******************************  PROFILING.process_latency ******************************/
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"enabled_log_level", (int *)&pconfig->profiling.process_latency_enabled_log_level, 20);
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"log_category", pconfig->profiling.process_latency_log_category, NAME_MAX, "sapp_process_latency_log");
+
+	sapp_global_val->individual_fixed.process_latency_log_handle = MESA_create_runtime_log_handle(sapp_global_val->config.profiling.process_latency_log_category, sapp_global_val->config.profiling.process_latency_enabled_log_level);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"threshold_us", (int *)&pconfig->profiling.process_latency_threshold_in_ns, 500000);
+	if (pconfig->profiling.process_latency_threshold_in_ns <= 0)
+	{
+		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,999999]");
+		return -1;
+	}
+	if (pconfig->profiling.process_latency_threshold_in_ns >= 1000000)
+	{
+		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,999999], set to max value 999999!");
+		pconfig->profiling.process_latency_threshold_in_ns *= 999999;
+	}
+	/* 为了配置文件方便查看, 避免写太多的0, 配置文件里的单位是微秒, 程序处理实际以纳秒ns为单位, 此处要乘以1000 */
+	pconfig->profiling.process_latency_threshold_in_ns *= 1000;
+
+	/*******************************  PROFILING.sanity_check ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.sanity_check", (char *)"raw_pkt_broken_enabled", (int *)&pconfig->profiling.sanity_check_raw_pkt_broken_enabled, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.sanity_check", (char *)"symbol_conflict_enabled", (int *)&pconfig->profiling.sanity_check_symbol_conflict_enabled, 0);
 
-	/*******************************  PROFILING.LOG ***************************/
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log", (char *)"level", (int *)&pconfig->profiling.log.level, 20);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log", (char *)"interval", (int *)&pconfig->profiling.log.interval, 3);
-	/*******************************  PROFILING.LOG.local **********************/
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.local", (char *)"enabled", (int *)&pconfig->profiling.log.local.enabled, 1);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.local", (char *)"file_truncate_enabled", (int *)&pconfig->profiling.log.local.file_truncate_enabled, 1);
-	/*******************************  PROFILING.LOG.remote **********************/
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.remote", (char *)"enabled", (int *)&pconfig->profiling.log.remote.enabled, 0);
-	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.remote", (char *)"server_ip", pconfig->profiling.log.remote.server_ip, INET_ADDRSTRLEN, "#");
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.remote", (char *)"server_port", (int *)&pconfig->profiling.log.remote.server_port, 0);
-
-	/*******************************  PROFILING.LOG.prometheus **********************/
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.prometheus", (char *)"prometheus_enabled", (int *)&pconfig->profiling.log.prometheus.enabled, 1);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.prometheus", (char *)"prometheus_port", (int *)&pconfig->profiling.log.prometheus.port, 9273);
-	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.prometheus", (char *)"prometheus_url_path", pconfig->profiling.log.prometheus.url_path, NAME_MAX, "/metrics");
-	
-	
-#if 0
-	//tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.remote", (char *)"remote_send_out_type", pconfig->profiling.log.remote.remote_send_out_type, NAME_MAX, "field_stat2");
-	/*******************************  PROFILING.LOG.remote.field_stat2 **********************/
-	if(strncasecmp(pconfig->profiling.log.remote.remote_send_out_type, "field_stat2", strlen("field_stat2")) == 0){
-		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.remote.field_stat2", (char *)"app_name", pconfig->profiling.log.remote.field_stat2.app_name, NAME_MAX, "sapp");
-		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.remote.field_stat2", (char *)"metric_type", str_tmp, ARG_MAX, "default");
-		if(strncasecmp(str_tmp, "default", strlen("default")) == 0){
-			pconfig->profiling.log.remote.field_stat2.metrics_type = FS_METRIS_OUTPUT_DEFAULT;
-		}else if(strncasecmp(str_tmp, "json", strlen("json")) == 0){
-			pconfig->profiling.log.remote.field_stat2.metrics_type = FS_METRIS_OUTPUT_JSON;
-		}else{
-			sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.log.remote.field_stat2.metric_type'");
-			return -1;
-		}
-	/*******************************  PROFILING.LOG.remote.line_protocol **********************/	
-	}else if(strncasecmp(pconfig->profiling.log.remote.remote_send_out_type, "line_protocol", strlen("line_protocol")) == 0){
-		//TODO, parse tags array
-	}else{
-		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.log.remote.remote_send_out_type'");
-		return -1;
-	}
-#else
-	strncpy(pconfig->profiling.log.remote.remote_send_out_type, "field_stat2", strlen("field_stat2"));
-	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.remote.field_stat2", (char *)"app_name", pconfig->profiling.log.remote.field_stat2.app_name, NAME_MAX, "sapp");
-		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log.remote.field_stat2", (char *)"metric_type", str_tmp, ARG_MAX, "default");
-		if(strncasecmp(str_tmp, "default", strlen("default")) == 0){
-			pconfig->profiling.log.remote.field_stat2.metrics_type = FS_METRIS_OUTPUT_DEFAULT;
-		}else if(strncasecmp(str_tmp, "json", strlen("json")) == 0){
-			pconfig->profiling.log.remote.field_stat2.metrics_type = FS_METRIS_OUTPUT_JSON;
-		}else{
-			sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.log.remote.field_stat2.metric_type'");
-			return -1;
-		}
-#endif
 	/************************  PROTOCOL_FEATURE **********************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"ipv6_decapsulation_enabled", (int *)&pconfig->protocol_feature.ipv6_decapsulation_enabled, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"ipv6_send_packet_enabled", (int *)&pconfig->protocol_feature.ipv6_send_packet_enabled, 1);
@@ -1944,7 +1917,8 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"tools.pkt_dump", (char *)"enabled", (int *)&pconfig->tools.pkt_dump.enabled, 0);
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"tools.pkt_dump", (char *)"mode", pconfig->tools.pkt_dump.mode_str, NAME_MAX, "udp_socket");
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"tools.pkt_dump", (char *)"BSD_packet_filter", str_tmp, ARG_MAX, "");
-	if(str_tmp[0] != '\0'){
+	if (str_tmp[0] != '\0')
+	{
 		pconfig->tools.pkt_dump.bpf_filter = sapp_strdup(str_tmp);
 	}
 
@@ -1963,8 +1937,6 @@ int sapp_parse_config(void)
 
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"LIBRARY_LINK", (char *)"marsio_library_path", str_tmp, ARG_MAX, "/opt/mrzcpd/lib/libmarsio.so");
 	pconfig->library_file_path.libmarsio_file_path = sapp_strdup(str_tmp);
-
-	log_handle_init();
 
 	if(config_sanity_check() < 0){
 		exit(1);

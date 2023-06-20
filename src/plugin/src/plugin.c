@@ -1254,12 +1254,7 @@ char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* sessi
 		//plug_record_start_time(g_business_plug_info->plugid, thread_seq);
 		clock_gettime(CLOCK_REALTIME, &after_ts);
 		time_spent_ns = (after_ts.tv_sec*1000000000 + after_ts.tv_nsec) - (before_ts.tv_sec*1000000000 + before_ts.tv_nsec);
-		if(sapp_global_val->config.profiling.pkt_latency_accurate_enable != 0){
-			sapp_fs2_set_plug_entry_latency(funelem_session->entry_id, time_spent_ns);
-		}else{
-			sapp_fs2_fuzzy_latency_update_per_entry(thread_seq, funelem_session->entry_id, time_spent_ns);
-		}
-		
+		sapp_fs2_fuzzy_latency_update_per_entry(thread_seq, funelem_session->entry_id, time_spent_ns);
 		if(time_spent_ns >= g_timestamp_record_threshold){
 			if(NULL == a_packet || (SESSION_STATE_CLOSE & session_info->session_state)){
 				sapp_runtime_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, session close process latency:%lld ns, %s", 

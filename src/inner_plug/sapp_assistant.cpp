@@ -7,15 +7,12 @@
 #include "sapp_private_api.h"
 #include "sapp_declaration.h"
 #include "field_stat2.h"
+#include "fieldstat.h"
 
 #include "marsio.h"
 
-static int sapp_fs2_init(void);
-static int sapp_line_protocol_init(void);
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+static int sapp_fs2_init(sapp_global_t *global_parameters);
+static int sapp_fs3_init(sapp_global_t *global_parameters);
 
 //extern time_t g_CurrentTime;//add by lqy 20070606
 //extern int g_packet_io_thread_num;
@@ -29,8 +26,8 @@ static pthread_t *g_plug_Independent_thread_pid;
 static const unsigned char G_BROADCAST_ADDR[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 int sapp_assistant_version_VERSION_20181024;
-extern int MESA_get_dev_ipv4(const char *device, int *ip_add);
-extern int MESA_get_dev_mac(const char *device, unsigned char mac[6]);
+extern "C" int MESA_get_dev_ipv4(const char *device, int *ip_add);
+extern "C" int MESA_get_dev_mac(const char *device, unsigned char mac[6]);
 
 void * (*dl_marsio_buff_ctrlzone)(void *m, uint8_t id);
 extern void * (*ptr_marsio_buff_ctrlzone)(marsio_buff_t *m, uint8_t id);
@@ -120,7 +117,7 @@ static inline unsigned long long __get_platform_opt_traffic(int ctype, sapp_sys_
 }
 
 /* 2017-09-04 lijia add, for 网管需求, 插件获取平台内部参数 */
-int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_val_len)
+extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_val_len)
 {
 	int ret = 0;
 
@@ -588,14 +585,9 @@ int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_va
 
 		case SPO_FIELD_STAT_HANDLE:
 		{
-			if(*opt_val_len != sizeof(long long)){
-				ret = -1;
-				
-				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_FIELD_STAT_HANDLE error:opt_val_len:%d is invalid!\n", *opt_val_len);
-				break;
-			}
-			void **out_handle = (void **)opt_val;
-			*out_handle = sapp_global_val->individual_fixed.profiling_log_remote_handle;
+			ret = -1;
+			sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_FIELD_STAT_HANDLE error: obsolete option");
+			break;
 		}
 		break;
 
@@ -815,7 +807,7 @@ err_exit:
     return -1;
 }
 
-int sapp_get_device_opt(const char *device, enum sapp_device_opt opt_type, void *opt_val, int *opt_val_len)
+extern "C" int sapp_get_device_opt(const char *device, enum sapp_device_opt opt_type, void *opt_val, int *opt_val_len)
 {
 	int ret;
 	unsigned char uchar_tmp_buf[8];
@@ -880,71 +872,20 @@ int sapp_get_device_opt(const char *device, enum sapp_device_opt opt_type, void 
 	return ret;
 }
 
-
-#if 0
-void sapp_statsd_flush_buf(void)
-{
-	struct sockaddr_in statsd_addr;
-
-	if(sapp_global_single.statsd_fd < 0){
-		return;
-	}
-	
-	if(sapp_global_single.stats_send_ptr -  sapp_global_single.stats_send_buf > 0){
-		statsd_addr.sin_family = AF_INET;
-		statsd_addr.sin_addr.s_addr = sapp_global_single.statsd_ip_net;
-		statsd_addr.sin_port = sapp_global_single.statsd_port_net;
-		
-		sendto(sapp_global_single.statsd_fd, 
-			 sapp_global_single.stats_send_buf, 
-			 sapp_global_single.stats_send_ptr -  sapp_global_single.stats_send_buf,
-			  MSG_DONTWAIT, 
-			  (struct sockaddr *)&statsd_addr,
-			  sizeof(statsd_addr));
-		sapp_global_single.stats_send_ptr = sapp_global_single.stats_send_buf;
-	}
-}
-
-/*
-	为了避免每个信息都发送一个UDP包, 此处先缓存, 到了MTU再发送.
-	最后一条信息, 需要调用sapp_statsd_flush_buf()强制刷新一下.
-*/
-void sapp_statsd_add_para(const char *key, unsigned long long value)
-{
-	int ret;
-	int line_len;
-	char tmp_buf[128];
-
-	if(sapp_global_single.statsd_fd < 0){
-		return;
-	}
-
-	line_len = snprintf(tmp_buf, 128, "[sapp]%s:%lu|c\n", key, value);
-
-	if(sapp_global_single.stats_send_ptr -  sapp_global_single.stats_send_buf + line_len > STATSD_SEND_MSS){
-		sapp_statsd_flush_buf();
-	}
-	
-	sprintf(sapp_global_single.stats_send_ptr, "%s", tmp_buf);
-
-	sapp_global_single.stats_send_ptr += line_len;
-}
-#endif
-
 void sapp_fs2_update_count(int field_index, unsigned  long long value)
 {
-	if(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle != NULL){
-		FS_operate(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle, 
-					sapp_global_val->individual_fixed.field_stat2_para.fs_id_count_array[field_index], 
+	if(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle != NULL){
+		FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle, 
+					sapp_global_val->individual_fixed.fs2_runtime.fs_id_count_array[field_index], 
 					0, FS_OP_SET,  (long long)value);
 	}
 }
 
 void sapp_fs2_update_length(int field_index, unsigned  long long value)
 {
-	if(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle != NULL){
-		FS_operate(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle, 
-					sapp_global_val->individual_fixed.field_stat2_para.fs_id_length_array[field_index],  
+	if(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle != NULL){
+		FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle, 
+					sapp_global_val->individual_fixed.fs2_runtime.fs_id_length_array[field_index],  
 					0, FS_OP_SET,  (long long)value);
 	}
 }
@@ -952,9 +893,9 @@ void sapp_fs2_update_length(int field_index, unsigned  long long value)
 
 void sapp_fs2_set_latency(int thead_seq, long long time_cost)
 {
-    if(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle != NULL){
-        FS_operate(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle, 
-        		   sapp_global_val->individual_fixed.field_stat2_para.fs_latency_id_array[thead_seq], 
+    if(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle != NULL){
+        FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle, 
+        		   sapp_global_val->individual_fixed.fs2_runtime.fs_latency_id_array[thead_seq], 
         		   0, FS_OP_SET, time_cost);
     }
 }
@@ -965,9 +906,9 @@ void sapp_fs2_set_plug_entry_latency(int entry_id, long long time_cost)
 	if(unlikely(entry_id < 0 || entry_id >= SAPP_MAX_PLUG_ENTRY_NUM)){
 		return;
 	}
-    if(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle != NULL){
-        FS_operate(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle, 
-        		   sapp_global_val->individual_fixed.field_stat2_para.fs_latency_plug_entrg_id_array[entry_id], 
+    if(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle != NULL){
+        FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle, 
+        		   sapp_global_val->individual_fixed.fs2_runtime.fs_latency_plug_entrg_id_array[entry_id], 
         		   0, FS_OP_SET, time_cost);
     }
 }
@@ -976,7 +917,7 @@ void sapp_fs2_set_plug_entry_latency(int entry_id, long long time_cost)
 	模糊计算包处理延时, 不用每个包都调用一次FS_operate(),
 	由sapp timer线程每隔一段时间调用sapp_fuzzy_latency_update(), 更新filed_stat2计数.
 */
-void sapp_fs2_fuzzy_latency_update_per_thread(int thead_seq, long long time_cost)
+extern "C" void sapp_fs2_fuzzy_latency_update_per_thread(int thead_seq, long long time_cost)
 {
 	sapp_fuzzy_latency_stat_t *this_thread_stat = &sapp_global_val->mthread_volatile[thead_seq]->fuzzy_pkt_latency_stat_per_thread;
 
@@ -992,7 +933,7 @@ void sapp_fs2_fuzzy_latency_update_per_thread(int thead_seq, long long time_cost
 	this_thread_stat->stat_count++;
 }
 
-void sapp_fs2_fuzzy_latency_update_per_entry(int thead_seq, int entry_id, long long time_cost)
+extern "C" void sapp_fs2_fuzzy_latency_update_per_entry(int thead_seq, int entry_id, long long time_cost)
 {
 	sapp_fuzzy_latency_stat_t *this_thread_stat;
 	if(unlikely(entry_id < 0 || entry_id >= SAPP_MAX_PLUG_ENTRY_NUM)){
@@ -1025,11 +966,6 @@ void sapp_fuzzy_latency_update(void)
 	double avg_latency;
 	sapp_fuzzy_latency_stat_t *this_thread_stat, *this_entry_stat;
 	
-	if(sapp_global_val->config.profiling.pkt_latency_accurate_enable != 0){
-		/* 精确模式, 单包调用FS_operate(), 此处无需再处理 */
-		return;
-	}
-
 	for(tid = 0; tid < g_packet_io_thread_num; tid++){
 		this_thread_stat = &sapp_global_val->mthread_volatile[tid]->fuzzy_pkt_latency_stat_per_thread;
 		avg_latency = (double)this_thread_stat->time_cost_sum/(double)this_thread_stat->stat_count;
@@ -1077,61 +1013,34 @@ int sapp_independent_thread_init(void)
 	return 0;
 }
 
-int sapp_assistant_init(void)
+int sapp_metric_init(void)
 {
-	int ret = sapp_fs2_init();
+	int ret = 0;
+	if( sapp_global_val->config.profiling.fs2.enabled == 1)
+	{
+		sapp_fs2_init(sapp_global_val);
+	}
+	if( sapp_global_val->config.profiling.fs3.enabled == 1)
+	{
+		sapp_fs3_init(sapp_global_val);
+	}
 	
 	return ret;
 }
 
 
-#ifdef __cplusplus
-}
-#endif
-
-static int sapp_line_protocol_init(void)
-{
-	log_line_protocol_handle_t *lp_handle;
-
-	if(0 == sapp_global_val->config.profiling.log.remote.enabled){
-		sapp_log(RLOG_LV_INFO, 10, 10, "profiling.log.remote.enabled = 0, line protocol is disable.\n");
-		return 0;
-	}
-
-	if(strncasecmp(sapp_global_val->config.profiling.log.remote.remote_send_out_type, "line_protocol", strlen("line_protocol")) != 0){
-		sapp_log(RLOG_LV_INFO, 10, 10, "profiling.log.remote.enabled, remote_send_out_type is field_stat2, line protocol is disable.\n");
-		return 0;
-	}
-
-	lp_handle = (log_line_protocol_handle_t *)calloc(1, sizeof(log_line_protocol_handle_t));
-
-	lp_handle->sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    lp_handle->sock_addr.sin_family = AF_INET;
-    inet_pton(AF_INET, sapp_global_val->config.profiling.log.remote.server_ip, &lp_handle->sock_addr.sin_addr.s_addr);
-    lp_handle->sock_addr.sin_port = ntohs((unsigned short)sapp_global_val->config.profiling.log.remote.server_port);
-
-    lp_handle->last_send_metrics_time = 0;
-
-	sapp_global_val->individual_fixed.profiling_log_remote_handle = lp_handle;
-	
-	return 0;
-}
-
-
-static int fs2_plug_entry_historgram_init(void *fs2_handle)
+static int fs2_plug_entry_historgram_init(sapp_gval_individual_fixed_fs_t *fs_rt)
 {
 	int i;
-	sapp_gval_individual_fixed_fs_t *pfs_para = &sapp_global_val->individual_fixed.field_stat2_para;
-
 	/* 0保留给sapp内置插件, index从1开始 */
 	for(i = 1; i < g_plug_global_entry_index; i++){
-		pfs_para->fs_latency_plug_entrg_id_array[i] = FS_register_histogram(fs2_handle,  //Field Stat句柄
+		fs_rt->fs_latency_plug_entrg_id_array[i] = FS_register_histogram(fs_rt->fs_metric_handle,  //Field Stat句柄
 								  FS_CALC_SPEED,    //输出累计值或瞬时值
 								  g_plug_global_entry[i].plug_entry_name,     //统计项名称，字符串
 								  1,                  //可追踪的最小值
 								  1000000,            //可追踪的最大值
 								  2);                 //精度，即小数点后几位，范围1~4
-		if(pfs_para->fs_latency_plug_entrg_id_array[i] < 0){
+		if(fs_rt->fs_latency_plug_entrg_id_array[i] < 0){
 			sapp_runtime_log(RLOG_LV_FATAL, "FS_register_histogram() error, plug name:%s", g_plug_global_entry[i].plug_entry_name);
 			return -1;
 		}
@@ -1142,30 +1051,29 @@ static int fs2_plug_entry_historgram_init(void *fs2_handle)
 
 void sapp_fs2_set_tcp_unorder_historgram(int thead_seq, long long unorder_num)
 {
-    if(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle != NULL){
-        FS_operate(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle, 
-        		   sapp_global_val->individual_fixed.field_stat2_para.fs_tcp_unorder_id_array[thead_seq], 
+    if(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle != NULL){
+        FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle, 
+        		   sapp_global_val->individual_fixed.fs2_runtime.fs_tcp_unorder_id_array[thead_seq], 
         		   0, FS_OP_SET, unorder_num);
     }
 }
 
-static int fs2_tcp_unorder_historgram_init(void *fs2_handle)
+static int fs2_tcp_unorder_historgram_init(sapp_gval_individual_fixed_fs_t *fs_rt)
 {
     int i;
-    sapp_gval_individual_fixed_fs_t *pfs_para = &sapp_global_val->individual_fixed.field_stat2_para;
     char histogram_name[16];
     /* 0保留给sapp内置插件, index从1开始 */
     for (i = 1; i < g_packet_io_thread_num; i++)
     {
     	sprintf(histogram_name, "OoO_num(tid_%d)", i);
-        pfs_para->fs_tcp_unorder_id_array[i] =
-            FS_register_histogram(fs2_handle,                             // Field Stat句柄
+        fs_rt->fs_tcp_unorder_id_array[i] =
+            FS_register_histogram(fs_rt->fs_metric_handle,                             // Field Stat句柄
                                   FS_CALC_SPEED,                          //输出累计值或瞬时值
                                   histogram_name, //统计项名称，字符串
                                   1,                                      //可追踪的最小值
                                   65536,                                //可追踪的最大值
                                   2);                                     //精度，即小数点后几位，范围1~4
-        if (pfs_para->fs_tcp_unorder_id_array[i] < 0)
+        if (fs_rt->fs_tcp_unorder_id_array[i] < 0)
         {
             sapp_runtime_log(RLOG_LV_FATAL, "FS_fs2_tcp_unorder_historgram_init() error, name:%s",
                              histogram_name);
@@ -1177,56 +1085,46 @@ static int fs2_tcp_unorder_historgram_init(void *fs2_handle)
 }
 
 /************************ C++ compiler **************************************/
-static int sapp_fs2_init(void)
+static int sapp_fs2_init(sapp_global_t *global_paramters)
 {
+	void *fs2_handle=NULL;
 	int fs2_opt;
-	void *fs2_handle;
-	unsigned short fs_server_port;
-	sapp_gval_individual_fixed_fs_t *pfs_para = &sapp_global_val->individual_fixed.field_stat2_para;
+	sapp_gval_individual_fixed_fs_t *p_fs2_rt = &global_paramters->individual_fixed.fs2_runtime;
+	sapp_config_profiling_metric_t *p_fs2_para = &global_paramters->config.profiling.fs2;
 	int fs2_local_enabled = 0;
-	int fs2_remote_enabled = 0;
+	int fs2_prometheus_enabled = 0;
 
-	if(sapp_global_val->config.profiling.log.remote.enabled){
-		if(strncasecmp(sapp_global_val->config.profiling.log.remote.remote_send_out_type, "field_stat2", strlen("field_stat2")) == 0){
-			fs2_remote_enabled = 1;
-		}else{
-			sapp_log(RLOG_LV_INFO, 10, 10, "profiling.log.remote.enabled, remote_send_out_type is line_protocol, field_stat2 send metrics to server is disable.\n");
-			fs2_remote_enabled = 0;
-		}
-	}else{
-		fs2_remote_enabled = 0;
+	if(strlen(p_fs2_para->local_file) > 0)
+	{
+		fs2_local_enabled = 1;
 	}
-	
-	fs2_local_enabled = sapp_global_val->config.profiling.log.local.enabled;
+	if(strlen(p_fs2_para->prometheus_service_uri) > 0 && p_fs2_para->prometheus_service_port > 0)
+	{
+		fs2_prometheus_enabled = 1;
+	}	
 
-	sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle = FS_create_handle();
-	if(NULL == sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle){
+	p_fs2_rt->fs_metric_handle = FS_create_handle();
+	if(NULL == p_fs2_rt->fs_metric_handle){
 		sapp_log(RLOG_LV_FATAL, 30, 30, "FS_create_handle() error: %s!\n", strerror(errno));
 		return -1;
 	}
-
-	if(sapp_global_val->config.profiling.log.prometheus.enabled){
-		FS_library_set_prometheus_port((unsigned short)sapp_global_val->config.profiling.log.prometheus.port);
-		FS_library_set_prometheus_url_path(sapp_global_val->config.profiling.log.prometheus.url_path);
+	fs2_handle = p_fs2_rt->fs_metric_handle;
+	if(fs2_prometheus_enabled){
+		FS_library_set_prometheus_port((unsigned short)p_fs2_para->prometheus_service_port);
+		FS_library_set_prometheus_url_path(p_fs2_para->prometheus_service_uri);
 		if(FS_library_init() < 0){
 			sapp_log(RLOG_LV_FATAL, 30, 30, "FS_library_init() error, port:%d, url:%s\n", 
-					sapp_global_val->config.profiling.log.prometheus.port,
-					sapp_global_val->config.profiling.log.prometheus.url_path);
+					p_fs2_para->prometheus_service_port,
+					p_fs2_para->prometheus_service_uri);
 			return -1;			
 		}
+		fs2_opt = 1;
+		FS_set_para(fs2_handle, OUTPUT_PROMETHEUS, &fs2_opt, sizeof(int));
 	}
 
-	fs2_handle = sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle;
-	if(fs2_remote_enabled){
-		sapp_global_val->individual_fixed.profiling_log_remote_handle = fs2_handle;
-	}
-	FS_set_para(fs2_handle, STAT_CYCLE, &sapp_global_val->config.profiling.log.interval, sizeof(int));
+	FS_set_para(fs2_handle, STAT_CYCLE, &p_fs2_para->refresh_interval_s, sizeof(int));
 
-	if(sapp_global_val->config.profiling.log.local.file_truncate_enabled){
-		fs2_opt = 1; /* 1:Rewrite ,2: Append.  */
-	}else{
-		fs2_opt = 2; /* 1:Rewrite ,2: Append.  */
-	}
+	fs2_opt = 1; /* 1:Rewrite ,2: Append.  */
 	FS_set_para(fs2_handle, PRINT_MODE, &fs2_opt, sizeof(int));
 
 	fs2_opt = 1;
@@ -1241,137 +1139,124 @@ static int sapp_fs2_init(void)
 		sapp_log(RLOG_LV_INFO, 10, 10, "profiling.log.local.enabled is 0, not save local stat log file.\n");
 		FS_set_para(fs2_handle, OUTPUT_DEVICE, "/dev/null", strlen("/dev/null") + 1);
 	}
-	FS_set_para(fs2_handle, APP_NAME, sapp_global_val->config.profiling.log.remote.field_stat2.app_name, strlen(sapp_global_val->config.profiling.log.remote.field_stat2.app_name)+1);
+	FS_set_para(fs2_handle, APP_NAME, sapp_global_val->config.system.instance_name, strlen(sapp_global_val->config.system.instance_name)+1);
 
-	if(fs2_remote_enabled){
-		FS_set_para(fs2_handle, STATS_SERVER_IP, (void *)sapp_global_val->config.profiling.log.remote.server_ip, strlen(sapp_global_val->config.profiling.log.remote.server_ip)+1);
-		fs_server_port = (unsigned short)sapp_global_val->config.profiling.log.remote.server_port;
-		FS_set_para(fs2_handle, STATS_SERVER_PORT, &fs_server_port, sizeof(short));
-	}
 
-	FS_set_para(fs2_handle, METRIS_FORMAT, &sapp_global_val->config.profiling.log.remote.field_stat2.metrics_type, sizeof(int));
-
-	if(sapp_global_val->config.profiling.log.prometheus.enabled){
-		fs2_opt = 1;
-		FS_set_para(fs2_handle, OUTPUT_PROMETHEUS, &fs2_opt, sizeof(int));
-	}
-
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_LINE] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Line_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_LINE] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Line_Bit");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_RCV_LINE] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Line_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_RCV_LINE] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Line_Bit");
 	
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Eth_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Eth_Bit");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Eth_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Eth_Bit");
 
 	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
 	 || (DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin)){
-		pfs_para->fs_id_count_array[SAPP_STAT_ETH_INBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Pkt_Inbound");
-		pfs_para->fs_id_length_array[SAPP_STAT_ETH_INBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Bit_Inbound");	 
-		pfs_para->fs_id_count_array[SAPP_STAT_ETH_OUTBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Pkt_Outbound");
-		pfs_para->fs_id_length_array[SAPP_STAT_ETH_OUTBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Bit_Outbound");			
+		p_fs2_rt->fs_id_count_array[SAPP_STAT_ETH_INBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Pkt_Inbound");
+		p_fs2_rt->fs_id_length_array[SAPP_STAT_ETH_INBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Bit_Inbound");	 
+		p_fs2_rt->fs_id_count_array[SAPP_STAT_ETH_OUTBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Pkt_Outbound");
+		p_fs2_rt->fs_id_length_array[SAPP_STAT_ETH_OUTBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Bit_Outbound");			
 	}
 
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_UNKNOWN] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Unknown_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_UNKNOWN] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Unknown_Bit");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_RCV_UNKNOWN] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Unknown_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_RCV_UNKNOWN] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Unknown_Bit");
 
-	pfs_para->fs_id_count_array[SAPP_STAT_SND_ERROR] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Snd_Err_Pkt");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_SND_ERROR] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Snd_Err_Pkt");
 	//pfs_para->fs_id_length_array[SAPP_STAT_SND_ERROR] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Snd_Err_Bit");	 
 
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_IPV4] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ipv4_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_IPV4] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ipv4_Bit");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_RCV_IPV4] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ipv4_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_RCV_IPV4] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ipv4_Bit");
 
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_IPV6] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ipv6_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_IPV6] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ipv6_Bit");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_RCV_IPV6] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ipv6_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_RCV_IPV6] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Ipv6_Bit");
 
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bit");
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_DUP_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Tcp_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_DUP_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Tcp_Bit");
-    pfs_para->fs_id_length_array[SAPP_STAT_TCP_LOST_PKT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Lost_Bit");	
-	pfs_para->fs_id_count_array[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Lost_STM");	
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_RCV_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_RCV_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bit");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_RCV_DUP_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Tcp_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_RCV_DUP_TCP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Tcp_Bit");
+    p_fs2_rt->fs_id_length_array[SAPP_STAT_TCP_LOST_PKT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Lost_Bit");	
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Lost_STM");	
 
-	pfs_para->fs_id_count_array[SAPP_STAT_DUP_IDENTIFY_ERR] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Key_Err"); /* dup重复包识别添加key错误计数 */	
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_DUP_IDENTIFY_ERR] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Key_Err"); /* dup重复包识别添加key错误计数 */	
 
-    pfs_para->fs_id_count_array[SAPP_STAT_TCP_CLOSE_BY_TIMEOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Close_byT");	
-	pfs_para->fs_id_count_array[SAPP_STAT_TCP_CLOSE_BY_KICKOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Close_byK");	
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_CLOSE_BY_TIMEOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Close_byT");	
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_CLOSE_BY_KICKOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Close_byK");	
 	
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bit");
-	pfs_para->fs_id_count_array[SAPP_STAT_RCV_DUP_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Udp_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_RCV_DUP_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Udp_Bit");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_RCV_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_RCV_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bit");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_RCV_DUP_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Udp_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_RCV_DUP_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Udp_Bit");
 
-    pfs_para->fs_id_count_array[SAPP_STAT_UDP_CLOSE_BY_TIMEOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Close_byT");	
-	pfs_para->fs_id_count_array[SAPP_STAT_UDP_CLOSE_BY_KICKOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Close_byK");	
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_CLOSE_BY_TIMEOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Close_byT");	
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_CLOSE_BY_KICKOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Close_byK");	
 
-	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_NEW] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Link_New");
-	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DEL] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Link_Del");
-	pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DATA] = FS_register(fs2_handle, FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Concurrent");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_STREAM_NEW] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Link_New");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_STREAM_DEL] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Link_Del");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_STREAM_DATA] = FS_register(fs2_handle, FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Concurrent");
 
-	pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_NEW] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Link_New");
-	pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_DEL] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Link_Del");
-	pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_MORE] = FS_register(fs2_handle, FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Concurrent");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_STREAM_NEW] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Link_New");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_STREAM_DEL] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Link_Del");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_STREAM_MORE] = FS_register(fs2_handle, FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Concurrent");
 	
 
-    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_DOUBLE] = FS_register(fs2_handle, FS_STYLE_STATUS,FS_CALC_CURRENT, "Tcp_Link_Double");
-    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_C2S");
-    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_S2C");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_STREAM_DOUBLE] = FS_register(fs2_handle, FS_STYLE_STATUS,FS_CALC_CURRENT, "Tcp_Link_Double");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_STREAM_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_C2S");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_STREAM_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_S2C");
 
-    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE] = FS_register(fs2_handle, FS_STYLE_STATUS,FS_CALC_CURRENT, "Tcp_Link_Double_ALL");
-    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_TOTAL_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_C2S_ALL");
-    pfs_para->fs_id_count_array[SAPP_STAT_TCP_STREAM_TOTAL_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_S2C_ALL");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE] = FS_register(fs2_handle, FS_STYLE_STATUS,FS_CALC_CURRENT, "Tcp_Link_Double_ALL");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_STREAM_TOTAL_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_C2S_ALL");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_STREAM_TOTAL_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Tcp_Link_S2C_ALL");
  
 
-    pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_DOUBLE] = FS_register(fs2_handle, FS_STYLE_STATUS,FS_CALC_CURRENT, "Udp_Link_Double");
-    pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Link_C2S");
-    pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Link_S2C");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_STREAM_DOUBLE] = FS_register(fs2_handle, FS_STYLE_STATUS,FS_CALC_CURRENT, "Udp_Link_Double");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_STREAM_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Link_C2S");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_STREAM_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Link_S2C");
 
-    pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE] = FS_register(fs2_handle, FS_STYLE_STATUS,FS_CALC_CURRENT, "Udp_Link_Double_ALL");
-    pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_TOTAL_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Link_C2S_ALL");
-    pfs_para->fs_id_count_array[SAPP_STAT_UDP_STREAM_TOTAL_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Link_S2C_ALL");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE] = FS_register(fs2_handle, FS_STYLE_STATUS,FS_CALC_CURRENT, "Udp_Link_Double_ALL");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_STREAM_TOTAL_C2S] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Link_C2S_ALL");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_STREAM_TOTAL_S2C] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "Udp_Link_S2C_ALL");
 
 
-    pfs_para->fs_id_count_array[SAPP_STAT_SND_TCP_RST] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Tcp_Rst");
-	pfs_para->fs_id_count_array[SAPP_STAT_SND_TCP_SYNACK] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Tcp_S/A");
-	pfs_para->fs_id_count_array[SAPP_STAT_SND_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Udp");
+    p_fs2_rt->fs_id_count_array[SAPP_STAT_SND_TCP_RST] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Tcp_Rst");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_SND_TCP_SYNACK] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Tcp_S/A");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_SND_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Udp");
 
-	pfs_para->fs_id_count_array[SAPP_STAT_GLOBAL_BYPASS] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "DDOS_Bypass");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_GLOBAL_BYPASS] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "DDOS_Bypass");
 
-	pfs_para->fs_id_count_array[SAPP_STAT_TCP_BYPASS_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bypass_STM");	
-	pfs_para->fs_id_count_array[SAPP_STAT_TCP_BYPASS_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bypass_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_TCP_BYPASS_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bypass_Bit");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_BYPASS_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bypass_STM");	
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_BYPASS_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bypass_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_TCP_BYPASS_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bypass_Bit");
 
-	pfs_para->fs_id_count_array[SAPP_STAT_UDP_BYPASS_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bypass_STM");	
-	pfs_para->fs_id_count_array[SAPP_STAT_UDP_BYPASS_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bypass_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_UDP_BYPASS_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bypass_Bit");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_BYPASS_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bypass_STM");	
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_BYPASS_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bypass_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_UDP_BYPASS_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Bypass_Bit");
 
-	pfs_para->fs_id_count_array[SAPP_STAT_TCP_OFFLOAD_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Offload_STM");	
-	pfs_para->fs_id_count_array[SAPP_STAT_TCP_OFFLOAD_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Offload_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_TCP_OFFLOAD_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Offload_Bit");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_OFFLOAD_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Offload_STM");	
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_OFFLOAD_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Offload_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_TCP_OFFLOAD_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Offload_Bit");
 
-	pfs_para->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_STM");	
-	pfs_para->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Pkt");
-	pfs_para->fs_id_length_array[SAPP_STAT_UDP_OFFLOAD_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Bit");
-
-    if (fs2_tcp_unorder_historgram_init(fs2_handle) < 0)
-    {
-        return -1;
-    }
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_STM");	
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Pkt");
+	p_fs2_rt->fs_id_length_array[SAPP_STAT_UDP_OFFLOAD_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Bit");
     
     if (unlikely(g_timestamp_record_sw))
     {
+		if (fs2_tcp_unorder_historgram_init(p_fs2_rt) < 0)
+    	{
+     	   return -1;
+    	}
         for (int i = 0; i < g_packet_io_thread_num; i++)
         {
             char histogram_name[16];
             sprintf(histogram_name, "TD_ns(tid_%d)", i);
-            pfs_para->fs_latency_id_array[i] = FS_register_histogram(fs2_handle,     // Field Stat句柄
+            p_fs2_rt->fs_latency_id_array[i] = FS_register_histogram(fs2_handle,     // Field Stat句柄
                                                                      FS_CALC_SPEED,  //输出累计值或瞬时值
                                                                      histogram_name, //统计项名称，字符串
                                                                      1,              //可追踪的最小值
                                                                      1000000,        //可追踪的最大值
                                                                      2); //精度，即小数点后几位，范围1~4
-            FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &pfs_para->fs_latency_id_array[i], sizeof(int));
+            FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &p_fs2_rt->fs_latency_id_array[i], sizeof(int));
         }
 
-        if (fs2_plug_entry_historgram_init(fs2_handle) < 0)
+        if (fs2_plug_entry_historgram_init(p_fs2_rt) < 0)
         {
             return -1;
         }
@@ -1381,17 +1266,43 @@ static int sapp_fs2_init(void)
 	return 0;
 }
 
-
-void sapp_fs2_destroy(void)
+static void sapp_fs2_destroy(sapp_global_t *global_paramters)
 {
-	if(sapp_global_val->config.profiling.log.prometheus.enabled==1)
+	sapp_config_profiling_metric_t *p_fs2_para = &global_paramters->config.profiling.fs2;
+	sapp_gval_individual_fixed_fs_t *p_fs2_rt = &global_paramters->individual_fixed.fs2_runtime;
+	if (strlen(p_fs2_para->prometheus_service_uri) > 0 && p_fs2_para->prometheus_service_port > 0)
 	{
 		FS_library_destroy();
 	}
 
-	if(sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle){
-		FS_stop(&sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle);
-		sapp_global_val->individual_fixed.field_stat2_para.field_stat2_handle = NULL;
+	if (p_fs2_rt->fs_metric_handle)
+	{
+		FS_stop(&p_fs2_rt->fs_metric_handle);
+	}
+}
+
+static int sapp_fs3_init(sapp_global_t *global_paramters)
+{
+	sapp_config_profiling_metric_t *p_fs3_para = &global_paramters->config.profiling.fs3;
+	sapp_gval_individual_fixed_fs_t *p_fs3_rt = &global_paramters->individual_fixed.fs3_runtime;
+	return 0;
+}
+
+static void sapp_fs3_destroy(sapp_global_t *global_paramters)
+{
+		return;
+}
+
+void sapp_metric_destroy(void)
+{
+	
+	if( sapp_global_val->config.profiling.fs2.enabled == 1)
+	{
+		sapp_fs2_destroy(sapp_global_val);
+	}
+	if( sapp_global_val->config.profiling.fs3.enabled == 1)
+	{
+		sapp_fs3_destroy(sapp_global_val);
 	}
 }
 

@@ -27,10 +27,6 @@ extern char * (*ptr_marsio_buff_append)(marsio_buff_t *m, uint16_t len);
 extern void (*ptr_marsio_buff_free)(struct mr_instance * instance, marsio_buff_t *marsio_buff[],unsigned int nr_mbufs, int socket_id, int thread_id);
 #endif
 
-#ifdef GIT_VERSION
- __attribute__((__used__)) const char *g_device_plug_git_ver = GIT_VERSION;
-#endif
-
 #define MAX_SUPPORT_GDEV_NUM	(64)  /* 每个线程内最多支持inline device的数量, 根据分流策略和线程数的不同, 最小值是MAX_SUPPORT_GDEV_NUM, 最大值是MAX_SUPPORT_GDEV_NUM * sapp_thread_count */
 #define MAX_VXLAN_SERVICE_NUM	(256) /* 目前最大支持255种不同业务, 数组下标最大是255 */
 
@@ -94,7 +90,6 @@ typedef struct _gdev_keepalive_status_per_thread gdev_keepalive_status_per_threa
 */
 static gdev_keepalive_status_per_thread_t GDEV_KEEPALIVE_STAT[MAX_THREAD_NUM];
 
-static void *gdev_keepalive_fs2_handle;
 static volatile int g_dev_keepalive_flag = 1; /* 全局保活标志, 所有插件都不保活或者重要插件崩溃的情况 */
 
 
@@ -138,18 +133,6 @@ static const char *fs2_inet_ntop(unsigned int gip_net, char *buf, int buf_len)
 }
 
 
-static int gdev_keepalive_dynamic_register_fs2_line(gdev_keepalive_status_per_dev_t *cur_dev_stat, unsigned int gip_net)
-{
-	char ip_fs2_string[INET6_ADDRSTRLEN];
-
-	fs2_inet_ntop(gip_net, ip_fs2_string, sizeof(ip_fs2_string));
-	
-	cur_dev_stat->fs2_line_id = FS_register(gdev_keepalive_fs2_handle, FS_STYLE_LINE, FS_CALC_SPEED, ip_fs2_string);
-
-	return 0;
-}
-
-
 static void gdev_keepalive_stat_update(int tid, unsigned int gip_net, int type, int service_id, int action)
 {
 	gdev_keepalive_status_per_thread_t *cur_thread_stat = &GDEV_KEEPALIVE_STAT[tid];
@@ -179,8 +162,6 @@ static void gdev_keepalive_stat_update(int tid, unsigned int gip_net, int type, 
 			return;
 		}	
 
-		/* 当前设备ip首次发现, 动态注册到fs2 */
-		gdev_keepalive_dynamic_register_fs2_line(&cur_thread_stat->gdev_array[index], gip_net);
 	}
 
 	if(service_id < 0 || service_id >= MAX_VXLAN_SERVICE_NUM){
@@ -493,35 +474,6 @@ static void gdev_keepalive_update_local_log(void)
 }
 
 
-
-
-static void gdev_keepalive_update_fs2(void)
-{
-	const gdev_keepalive_status_per_thread_t *this_thread_stat;
-	const gdev_keepalive_status_per_dev_t *this_dev_stat;
-	int dev_index, thread_seq;
-	int platform_thread_num;
-	
-	platform_thread_num = get_thread_count();
-	
-	for(thread_seq = 0; thread_seq < platform_thread_num; thread_seq++)
-	{			
-		this_thread_stat = &GDEV_KEEPALIVE_STAT[thread_seq];
-		
-		for(dev_index = 0; dev_index < MAX_SUPPORT_GDEV_NUM; dev_index++){
-			if(0 == this_thread_stat->gdev_array[dev_index].inuse_flag){
-				continue;
-			}
-			this_dev_stat = &this_thread_stat->gdev_array[dev_index];
-			
-			FS_operate(gdev_keepalive_fs2_handle, this_dev_stat->fs2_line_id, gdev_keepalive_fs2_column_id_array[FS2_COLUMN_REQUEST_NUM], FS_OP_SET, this_dev_stat->keepalive_request_num);
-			FS_operate(gdev_keepalive_fs2_handle, this_dev_stat->fs2_line_id, gdev_keepalive_fs2_column_id_array[FS2_COLUMN_REPLY_NUM], FS_OP_SET, this_dev_stat->keepalive_reply_num);
-		}
-	}
-
-}
-
-
 static void gdev_keepalive_clear_stat(void)
 {
 	int platform_thread_num, dev_index, thread_seq, service_index;
@@ -578,7 +530,6 @@ static void *gdev_keepalive_log_thread(void *arg)
 		last_op_time = time(NULL);
 		__gdev_keepalive_pkt_calc_pps();
 		gdev_keepalive_update_local_log();
-		gdev_keepalive_update_fs2();
 		//gdev_keepalive_clear_stat(); /* 每秒清空计数, 只计算一段时间的增量 */
 	}
 
@@ -701,51 +652,6 @@ done:
 }
 
 
-static int gdev_keepalive_fs2_init(void)
-{
-	int fs2_opt;
-	unsigned short fs_server_port;
-	
-	gdev_keepalive_fs2_handle = FS_create_handle();
-
-	/*
-		prometheus相关的配置, 由  	   sapp_fs2_init() 初始化.
-	*/
-
-	fs2_opt = sapp_global_val->config.profiling.log.interval;
-	FS_set_para(gdev_keepalive_fs2_handle, STAT_CYCLE, &fs2_opt, sizeof(int));	
-
-	fs2_opt = 1; /* 1:Rewrite ,2: Append.  */
-	FS_set_para(gdev_keepalive_fs2_handle, PRINT_MODE, &fs2_opt, sizeof(int));
-
-	fs2_opt = 1;
-	FS_set_para(gdev_keepalive_fs2_handle, PRINT_TRIGGER, &fs2_opt, sizeof(int));
-
-	if(sapp_global_val->config.profiling.log.local.enabled){
-		FS_set_para(gdev_keepalive_fs2_handle, OUTPUT_DEVICE, "./fs2_inline_keepalive.log", strlen("./fs2_inline_keepalive.log") + 1); 
-	}
-	
-	FS_set_para(gdev_keepalive_fs2_handle, APP_NAME, "keepalive", strlen("keepalive")+1);
-
-	if(sapp_global_val->config.profiling.log.remote.enabled){
-		FS_set_para(gdev_keepalive_fs2_handle, STATS_SERVER_IP, (void *)sapp_global_val->config.profiling.log.remote.server_ip, strlen(sapp_global_val->config.profiling.log.remote.server_ip)+1);
-		fs_server_port = (unsigned short)sapp_global_val->config.profiling.log.remote.server_port;
-		FS_set_para(gdev_keepalive_fs2_handle, STATS_SERVER_PORT, &fs_server_port, sizeof(short));
-	}
-
-	if(sapp_global_val->config.profiling.log.prometheus.enabled){
-		fs2_opt = 1;
-		FS_set_para(gdev_keepalive_fs2_handle, OUTPUT_PROMETHEUS, &fs2_opt, sizeof(int));
-	}
-
-	/* 先注册列, 初始化后固定不变, 行以ip为单位动态注册, gdev_keepalive_dynamic_register_fs2_line() */
-	gdev_keepalive_fs2_column_id_array[FS2_COLUMN_REQUEST_NUM] = FS_register(gdev_keepalive_fs2_handle, FS_STYLE_COLUMN, FS_CALC_SPEED, "req_pkt");
-	gdev_keepalive_fs2_column_id_array[FS2_COLUMN_REPLY_NUM] = FS_register(gdev_keepalive_fs2_handle, FS_STYLE_COLUMN, FS_CALC_SPEED, "rpy_pkt");
-
-	FS_start(gdev_keepalive_fs2_handle);
-
-	return 0;
-}
 
 #ifdef __cplusplus
 extern "C" {
@@ -932,16 +838,9 @@ int gdev_keepalive_plug_init(void)
 	char deploy_mode_string[32];
 	int opt_len;
 	int i;
-#if 0
-	gdev_kp_log_handle = MESA_create_runtime_log_handle("./log/gdev_keeplive.log", 10);
-#else
-	/* 2020-12-23 保活插件内置, 此处复用sapp的log_handle, 靠module名称区别, 不再单独写文件了 */
-	gdev_kp_log_handle = sapp_global_val->individual_fixed.log_handle;
-#endif
 
-#ifdef GIT_VERSION
-	MESA_handle_runtime_log(gdev_kp_log_handle, 30, "[gdev_keepalive]", "g_device_plug version: %s\n", g_device_plug_git_ver);	
-#endif
+	gdev_kp_log_handle = sapp_global_val->individual_fixed.log_handle;
+
 
 	/* 多线程模式下伪共享问题, 64B缓存对齐 */
 	assert(sizeof(gdev_keepalive_status_per_thread_t) % 64 == 0);
@@ -979,10 +878,6 @@ int gdev_keepalive_plug_init(void)
 
 	vxlan_sport_service_map_init();
 
-	if(gdev_keepalive_fs2_init() < 0){
-		return -1;
-	}
-
 	pthread_create(&sapp_global_val->individual_fixed.gdev_keepalive_log_thread_id, NULL, gdev_keepalive_log_thread, NULL);
 
 	return 0;
@@ -998,11 +893,6 @@ void gdev_keepalive_plug_destroy(void)
 	if(sapp_global_val->individual_fixed.gdev_keepalive_log_thread_id){
 		pthread_join(sapp_global_val->individual_fixed.gdev_keepalive_log_thread_id, NULL);
 		sapp_global_val->individual_fixed.gdev_keepalive_log_thread_id = 0;
-	}
-
-	if(gdev_keepalive_fs2_handle){
-		FS_stop(&gdev_keepalive_fs2_handle);
-		gdev_keepalive_fs2_handle = NULL;
 	}
 
 	memset(GDEV_KEEPALIVE_STAT, 0, sizeof(GDEV_KEEPALIVE_STAT));

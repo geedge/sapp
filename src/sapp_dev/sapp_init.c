@@ -335,7 +335,7 @@ int MESA_platform_init(int argc, char *argv[])
 	plugctrl_proc();
 
 	/* 2021-07-05, sapp_assistant_init()移动到plugctrl_proc()之后, 要用已加载插件所有entry的列表 */
-	if(sapp_assistant_init() < 0){
+	if(sapp_metric_init() < 0){
 		return -1;
 	}
 

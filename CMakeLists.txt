@@ -269,15 +269,6 @@ install(FILES bin/plug/protocol/pptp_protocol_plug/pptp_protocol_plug.inf DESTIN
 install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/pptp_protocol_plug.so DESTINATION plug/protocol/pptp_protocol_plug COMPONENT LIBRARY)
 
 
-#install(FILES bin/plug/platform/conflist_platform.inf DESTINATION plug/platform COMPONENT PROFILE)
-
-##v4.2.20版本之后,g_device保活插件内置,不再用挂载插件的方式
-#if(PLATFORM_MODE MATCHES "INLINE")
-#    install(FILES bin/plug/platform/g_device_plug/g_device_plug.inf DESTINATION plug/platform/g_device_plug COMPONENT PROFILE)
-#    install(FILES ${CMAKE_BINARY_DIR}/src/inner_plug/g_device_plug.so DESTINATION plug/platform/g_device_plug COMPONENT LIBRARY)
-#endif()
-
-
 install(FILES bin/plug/business/test_app/test_app.inf DESTINATION plug/business/test_app COMPONENT PROFILE)
 install(FILES ${CMAKE_BINARY_DIR}/test/test_app_sapp.so DESTINATION plug/business/test_app COMPONENT LIBRARY)
 

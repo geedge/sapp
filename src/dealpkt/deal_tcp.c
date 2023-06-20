@@ -1223,31 +1223,10 @@ static void tcp_free_half(struct half_tcpstream *phalf,int threadnum)
 {
   struct buf_unorder *plist,*ptmp;
   plist = phalf->unorderlist;
-  sapp_fs2_set_tcp_unorder_historgram(threadnum, phalf->unorder_cnt);
   while (plist)
   {
- #if 0 
-        raw_frags_list_free_one(threadnum, plist->ipfrag_list);
-        plist->ipfrag_list = NULL;
-
-		if(plist->data != NULL)
-		{
-			dictator_free(threadnum,plist->data);
-			plist->data = NULL;
-		}
-
-		/* 2014-12-01 lijia add, for memory leak */
-		if(plist->raw_pkt.raw_pkt_data != NULL){
-			dictator_free(threadnum, (void *)plist->raw_pkt.raw_pkt_data);
-			plist->raw_pkt.raw_pkt_data = NULL;
-		}
-		
-		ptmp = plist->next;
-		dictator_free(threadnum,plist);
-#else
 		ptmp = plist->next;
 		tcp_free_unorder_pkt(threadnum, plist);		
-#endif
 		plist = ptmp;
 	}
 	sapp_mem_free(SAPP_MEM_DYN_TCP_HALF_STREAM, threadnum,phalf);
