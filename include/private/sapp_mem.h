@@ -69,8 +69,6 @@ void sapp_mem_stat_output(void);
 #define SAPP_GLOBAL_FREE(mem) do{if(mem){sapp_mem_free(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, (void *)mem); mem = NULL;}}while(0)
 #endif
 
-extern int g_sapp_mem_use_dictator;
-
 #ifdef __cplusplus
 }
 #endif

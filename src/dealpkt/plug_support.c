@@ -1766,20 +1766,6 @@ int get_current_thread_cpu_affinity_id(void)
 
 
 
-extern int project_req_terminal_tag_id;
-/* For863, 用于应用层插件获取本TCP流中对应的用户标签 */
-const unsigned char *get_terminal_tag(struct streaminfo *stream)
-{
-	unsigned char *terminal_tag;
-	
-	if(project_req_terminal_tag_id < 0){
-		return NULL;
-	}
-	
-	terminal_tag = (unsigned char *)project_req_get_struct(stream, project_req_terminal_tag_id);
-	
-	return (const unsigned char *)terminal_tag;
-}
 
 int number_is_2powerN(uint n)
 {
@@ -1794,45 +1780,18 @@ int number_is_2powerN(uint n)
 
 void *dictator_malloc(int thread_seq,size_t size)
 {	
-	/*
-	if(malloccount%100000==0)
-	{
-		printf("malloc=%d,free=%d\n",malloccount,freecount);
-	}
-	*/
-
-	if(G_DICTATOR_SW){
-#if USE_MEMPOOL
-		return __dictator_malloc(thread_seq, size);
-#endif		
-	}
-
 	return malloc(size);
 }	
 void dictator_free(int thread_seq,void *pbuf)
 {
-#if USE_MEMPOOL	
-	if(G_DICTATOR_SW){
-		__dictator_free(thread_seq, pbuf);
-	}
-	else
-#endif
-	{
 #if SAPP_INSECTICIDE	
 		*((char *)pbuf) = 0xFE;
 #endif
 		free(pbuf);
-	}
 }
 
 void *dictator_realloc(int thread_seq, void *ptr, size_t size)
 {
-#if USE_MEMPOOL	
-	if(G_DICTATOR_SW){
-		return __dictator_realloc(thread_seq, ptr, size);
-	}
-#endif
-
 	return realloc(ptr, size);
 }
 

@@ -1756,8 +1756,6 @@ int sapp_parse_config(void)
 	}
 
 
-	/*******************************  MEM *********************************/
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"MEM", (char *)"dictator_enable", (int *)&pconfig->mem.dictator_enable, 1);
 	
 	/*******************************  PACKET_IO ******************************/
 

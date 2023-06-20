@@ -1,3 +1,2 @@
 #!/bin/sh
-sed 's/^[ \t]*dictator_enable=.*/dictator_enable=0/g' -i etc/sapp.toml
 valgrind --tool=memcheck --leak-check=full --leak-resolution=high --error-limit=no --undef-value-errors=yes  --log-file=valgrind.log  $@

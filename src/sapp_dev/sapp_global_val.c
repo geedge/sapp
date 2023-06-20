@@ -224,9 +224,6 @@ void sapp_gval_init(void)
 {
 	int tseq;
 
-	/* 第一步先判断是否使用dictator,此值影响后续的内存分配  策略,否则后面的sapp_mem_xx系列函数无法运行 */
-	tomlc99_wrap_load_int_def(g_cmd_args_main_cfg_file, (char *)"MEM", (char *)"dictator_enable", (int *)&g_sapp_mem_use_dictator, 1);
-
 	/* 内存统计的数据自身就是存储在全局变量中, 这是先有鸡还是先有蛋的问题, 此处直接用系统的calloc, 独立计数 */
 	sapp_global_val = (sapp_global_t *)calloc(1, sizeof(sapp_global_t));
 	g_sapp_global_mem_used_block++;

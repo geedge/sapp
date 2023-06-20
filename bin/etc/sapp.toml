@@ -17,8 +17,6 @@
 ### MESA_load_profile range format: bind_mask="1-5,11-15"
     bind_mask=[]
 
-[MEM]
-    dictator_enable=1
 
 [PACKET_IO]
     [overlay_tunnel_definition]

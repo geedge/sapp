@@ -26,14 +26,9 @@ set_target_properties(isakmp_protocol_plug  PROPERTIES PREFIX "")
 
 add_library(inline_keepalive STATIC inline_keepalive.cpp)
 
-if(ENABLE_STATIC_LINK)
-    add_library(sapp_assistant STATIC sapp_assistant.cpp)
-    add_library(gdev_assistant STATIC gdev_assistant.c)
-else()
-    add_definitions(-fPIC)
-    add_library(sapp_assistant SHARED sapp_assistant.cpp)
-    add_library(gdev_assistant SHARED gdev_assistant.c)
-    install(TARGETS sapp_assistant DESTINATION ${MESA_SDK_PREFIX}/lib/)
-    install(TARGETS gdev_assistant DESTINATION ${MESA_SDK_PREFIX}/lib/)
-endif()
+add_library(sapp_assistant STATIC sapp_assistant.cpp)
+add_library(gdev_assistant STATIC gdev_assistant.c)
+
+add_library(sapp_metrics STATIC sapp_metrics.cpp)
+
 

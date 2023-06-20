@@ -6,11 +6,7 @@
 extern "C" {
 #endif
 
-extern void *__dictator_malloc(int t_seq,size_t size);
-extern void __dictator_free(int t_seq,void*p);
 
-/* 此处单独使用一个全局变量, 为了判断是否开启了dictator, 不能预先分配内存 */
-int g_sapp_mem_use_dictator = 1;
 
 int g_sapp_global_mem_used_block = 0;
 int g_sapp_global_mem_used_bytes = 0;
@@ -61,15 +57,7 @@ void *sapp_mem_malloc(sapp_mem_type_t type, int thread_seq, int size)
 	sapp_private_mem_t *mhdr;
 	sapp_mem_used_stat_t *mem_used_stat;
 
-#if USE_MEMPOOL
-	if(g_sapp_mem_use_dictator){
-		ptr = __dictator_malloc(thread_seq, size+sizeof(sapp_private_mem_t));	
-	}else{
-		ptr = (char *)malloc(size+sizeof(sapp_private_mem_t));
-	}
-#else
 	ptr = (char *)malloc(size+sizeof(sapp_private_mem_t));
-#endif
 
 	mhdr = (sapp_private_mem_t *)ptr;
 	
@@ -99,17 +87,7 @@ void *sapp_mem_calloc(sapp_mem_type_t type, int thread_seq, int size)
 	char *ptr;
 	sapp_private_mem_t *mhdr;
 	sapp_mem_used_stat_t *mem_used_stat;
-
-#if USE_MEMPOOL
-	if(g_sapp_mem_use_dictator){
-		ptr = __dictator_malloc(thread_seq, size+sizeof(sapp_private_mem_t));
-		memset(ptr, 0, size+sizeof(sapp_private_mem_t));
-	}else{
-		ptr = (char *)calloc(1, size+sizeof(sapp_private_mem_t));
-	}
-#else
 	ptr = (char *)calloc(1, size+sizeof(sapp_private_mem_t));
-#endif
 
 	mhdr = (sapp_private_mem_t *)ptr;
 	
@@ -156,19 +134,7 @@ void sapp_mem_free(sapp_mem_type_t type, int thread_seq, void *data)
 
 	mem_used_stat->mem_used_block[SAPP_MEM_DYN_MEM_HDR]--;
 	mem_used_stat->mem_used_bytes[SAPP_MEM_DYN_MEM_HDR] -= sizeof(sapp_private_mem_t);
-
-
-#if USE_MEMPOOL
-	if(g_sapp_mem_use_dictator){
-		__dictator_free(thread_seq, (void *)mhdr);	
-	}else{
-		free((void *)mhdr);
-	}
-#else
-		free((void *)mhdr);
-#endif
-
-
+	free((void *)mhdr);
 }
 
 void *sapp_mem_realloc(sapp_mem_type_t type, int thread_seq, void *old_ptr, int size)

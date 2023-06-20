@@ -48,10 +48,6 @@ typedef struct{
 	long bind_mask; /* bind_mask_array中的每个变量做为bit_index转成的整数值 */
 }sapp_config_cpu_t;
 
-typedef struct{
-	int dictator_enable;
-}sapp_config_mem_t;
-
 
 typedef struct{
 	char instance_name[NAME_MAX];
@@ -371,7 +367,6 @@ typedef struct{
 
 typedef struct{
 	sapp_config_cpu_t cpu;
-	sapp_config_mem_t mem;
 	sapp_config_tools_t tools;
 	sapp_config_system_t system;
 	sapp_config_stream_t stream;

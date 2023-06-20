@@ -2051,32 +2051,7 @@ static int tcp_save_unorder(struct streaminfo *a_tcp,struct  half_tcpstream  *rc
 	struct buf_unorder *packet=NULL;
 	unsigned int this_seq = ntohl (this_tcphdr->th_seq);
 
-#if 0	 /* 2015-01-12 lijia modify */
-	pakiet = (struct buf_unorder*)dictator_malloc(threadnum,sizeof(struct buf_unorder));
-	memset(pakiet, 0, sizeof(struct buf_unorder));
-
-/* 2014-10-20 lijia modify, 因IP分片重组后, raw_pkt和tcpdatalen不对应
-raw_pkt指向最后一个分片包, 而tcpdatalen是重组完成后的完整IP包负载!
-分别存储!
-*/		
-	if(tcpdatalen > 0){
-		pakiet->data = dictator_malloc(threadnum,tcpdatalen);
-		pakiet->len = tcpdatalen;
-		memcpy (pakiet->data, tcpdata, tcpdatalen);
-	}
-	memcpy(&(pakiet->raw_pkt),  stack_raw_pkt, sizeof(raw_pkt_t));	
-	pakiet->raw_pkt.raw_pkt_data = dictator_malloc(threadnum, stack_raw_pkt->raw_pkt_len);
-	memcpy((void *)pakiet->raw_pkt.raw_pkt_data, stack_raw_pkt->raw_pkt_data, stack_raw_pkt->raw_pkt_len);
-
-	pakiet->tcpdatalen=tcpdatalen;
-	pakiet->fin = (this_tcphdr->th_flags & TH_FIN);
-	pakiet->rst = (this_tcphdr->th_flags & TH_RST);
-	pakiet->seq = this_seq;
-	pakiet->urg = (this_tcphdr->th_flags & TH_URG);
-	pakiet->urg_ptr = ntohs (this_tcphdr->th_urp);
-#else
 	packet = tcp_save_unorder_pkt(a_tcp, this_iphdr, stack_raw_pkt, this_tcphdr, tcpdata, tcpdatalen);
-#endif
 
 	for (;;)
 	{
@@ -2103,18 +2078,8 @@ raw_pkt指向最后一个分片包, 而tcpdatalen是重组完成后的完整IP包负载!
 		  || (p->seq+p->tcpdatalen) == (this_seq+packet->tcpdatalen)
 		  ||after(p->seq+p->tcpdatalen,this_seq+packet->tcpdatalen))
              {
-#if 0/* 2015-01-12 lijia modify */
-             	if(pakiet->data){
-				dictator_free(threadnum,pakiet->data);
-			}
-			dictator_free(threadnum,(void *)pakiet->raw_pkt.raw_pkt_data);
-			pakiet->data = NULL;	
 
-			dictator_free(threadnum,pakiet);
-			pakiet = NULL;
-#else
 			tcp_free_unorder_pkt(threadnum, packet);
-#endif
 			return PASS;
                }
 
@@ -2846,7 +2811,6 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			{
 				pstream_pr = &pindex_tcp->stream;
 				pstream = &pstream_pr->stream_public;
-				//terminal_tag_probe(pstream, this_tcphdr, this_iphdr);
 				//add by lqy 20130822
 				pdetail_pr = (struct tcpdetail_private *)(pindex_tcp->stream.stream_public.pdetail);
 				pdetail = (struct tcpdetail *)(&pdetail_pr->tcpdetail_public);

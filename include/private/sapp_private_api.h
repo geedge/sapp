@@ -1,7 +1,6 @@
 #ifndef _SAPP_PRIVATE_API_H_
 #define _SAPP_PRIVATE_API_H_ 1
 
-#include "private/dictator.h"
 #include "private/compat.h"
 #include "private/deal_ipv4.h"
 #include "private/deal_ipv6.h"

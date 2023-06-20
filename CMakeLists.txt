@@ -124,24 +124,18 @@ endif()
 
 # Memory Allocator
 set(MEM_POOL "JEMALLOC" CACHE STRING
-    " set mem alloc chosen by the user, using DICTATOR as default")
-set_property(CACHE MEM_POOL PROPERTY STRINGS OFF DICTATOR DICTATOR_DEBUG
+    " set mem alloc chosen by the user, using JEMALLOC as default")
+set_property(CACHE MEM_POOL PROPERTY STRINGS OFF 
     TCMALLOC TCMALLOC_MINI JEMALLOC)
 message(STATUS "MEM_POOL='${MEM_POOL}'")
 
-if(MEM_POOL MATCHES "DICTATOR_DEBUG")
-	set(MEM_POOL_DEFINITIONS ${MEM_POOL_DEFINITIONS} -DDICTATOR_DEBUG -DUSE_MEMPOOL=1)
-elseif(MEM_POOL MATCHES "DICTATOR")
-    set(MEM_POOL_DEFINITIONS ${MEM_POOL_DEFINITIONS} -DUSE_MEMPOOL=1)
-elseif(MEM_POOL MATCHES "TCMALLOC_MINI")
+if(MEM_POOL MATCHES "TCMALLOC_MINI")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc_minimal -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 elseif(MEM_POOL MATCHES "TCMALLOC")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 elseif(MEM_POOL MATCHES "JEMALLOC")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 endif()
-
-set(ENABLE_STATIC_LINK ON)
 
 # 定义宏 LIBEVENT_ENABLED
 option(LIBEVENT_ENABLED "Enable libevent" OFF)
@@ -241,23 +235,6 @@ install(FILES bin/etc/necessary_plug_list.conf DESTINATION etc COMPONENT PROFILE
 install(FILES bin/etc/well_known_port.conf DESTINATION etc COMPONENT PROFILE)
 install(FILES bin/etc/vxlan_sport_service_map.conf DESTINATION etc COMPONENT PROFILE)
 
-if(ENABLE_STATIC_LINK STREQUAL "OFF")
-
-if(CAPTURE_MODE MATCHES "MARSIO")
-	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_marsio.so DESTINATION platform_lib COMPONENT LIBRARY)
-endif()
-
-if(CAPTURE_MODE MATCHES "PCAP")
-	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_pcap.so DESTINATION platform_lib COMPONENT LIBRARY)
-endif()
-
-if(CAPTURE_MODE MATCHES "TUN")
-	install(FILES ${CMAKE_BINARY_DIR}/src/packet_io/packet_io_tun.so DESTINATION platform_lib COMPONENT LIBRARY)
-endif()
-
-endif()
-
-#install(FILES bin/plug/protocol/conflist_protocol.inf DESTINATION plug/protocol COMPONENT PROFILE)
 
 install(FILES bin/plug/protocol/isakmp_protocol_plug/isakmp_protocol_plug.inf DESTINATION plug/protocol/isakmp_protocol_plug COMPONENT PROFILE)
 install(FILES ${CMAKE_BINARY_DIR}/src/extensions/isakmp_protocol_plug.so DESTINATION plug/protocol/isakmp_protocol_plug COMPONENT LIBRARY)

@@ -25,7 +25,6 @@ extern void sesame_open_door(const char *lock_path, const char *lock_name);
 /* (0:pag,1:pcap,2:dumpfile,3:pfring,4:DPDK,5:ppf,6:NPacket,7:qnf,8:N95,9:pcap-dumpfile-list, 10:topsec) */
 //int cap_mode = 2;
 //int top_mode = 0;
-//extern int G_DICTATOR_SW;
 extern struct global_stream **G_MESA_GLOBAL_STREAM;
 //static int __times = 0;
 //int g_timestamp_record_sw = 0;
@@ -75,27 +74,6 @@ static void forbid_call_exit_in_running_state(void)
 	
 }
 
-/* 2016-09-22 lijia add, dictator在第一次被调用时有初始化代码, 防止多线程重入冲突, 平台先调用一次 */
-static void sapp_dictator_init(void)
-{
-#if USE_MEMPOOL
-	void *tmp;
-	if(G_DICTATOR_SW){
-		tmp =  __wrap_malloc(1);
-		assert(tmp != NULL);
-		__wrap_free(tmp);
-
-		tmp = malloc(1);
-		assert(tmp != NULL);
-		free(tmp);
-	}else{
-		sapp_printf("\033[33m[Warning]dictator is not enable, maybe slow down performance, please check 'sapp.toml -> dictator_enable'.\033[0m\n");
-	}
-#else
-	sapp_printf("\033[33m[Warning]sapp is compiled without dictator.\033[0m\n");
-#endif	
-}
-
 static void sapp_platform_finish_up(void)
 {
 	/* 
@@ -138,11 +116,6 @@ int MESA_platform_init(int argc, char *argv[])
 
 	ABBR_CURRENT_TIME = time(NULL);
 	ABBR_SAPP_START_TIME = time(NULL);
-
-	/* 2016-09-22 lijia add, dictator在第一次被调用时有初始化代码, 防止多线程重入冲突, 平台先调用一次, 先要读取配置文件开关 */
-	//MESA_load_profile_int_def("conf/main.conf","Module", "dictator_switch", &G_DICTATOR_SW, 1);	
-	sapp_dictator_init();
-
 
 	ipv4_frag_init(g_iThreadNum, 1024 * 512);
 	ipv6_frag_init(g_iThreadNum, 1024 * 256);

@@ -28,7 +28,7 @@ add_executable(sapp sapp_main.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
 target_link_libraries(sapp nsl pthread dl m pcap)
 target_link_libraries(sapp MESA_handle_logger MESA_prof_load)
-target_link_libraries(sapp sapp_assistant)
+target_link_libraries(sapp sapp_assistant sapp_metrics)
 target_link_libraries(sapp breakpad_mini)
 target_include_directories(sapp PRIVATE ${SYSTEMD_INCLUDE_DIRS})
 
@@ -42,16 +42,10 @@ set(SAPP_MODULES timestamp_record md5
 	packet_io dealpkt project plugctrl common 
 	config timer tomlc99_wrap dpdk_ip_hash  
 	gdev_assistant inline_keepalive libdabloom-static 
-	sapp_dev sapp_assistant cpu_limit timeout)
+	sapp_dev sapp_assistant sapp_metrics cpu_limit timeout)
 
 if(LIBEVENT_ENABLED STREQUAL "ON")
 	set(SAPP_MODULES ${SAPP_MODULES} libevent-static)
-endif()
-
-if(MEM_POOL MATCHES "DICTATOR_DEBUG")
-   set(SAPP_MODULES ${SAPP_MODULES} dictator2_debug)
-elseif(MEM_POOL MATCHES "DICTATOR")
-   set(SAPP_MODULES ${SAPP_MODULES} dictator2)
 endif()
 
 target_link_libraries(sapp -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive ${SAPP_DEPEND_DYN_LIB} ${SYSTEMD_LIBRARIES})

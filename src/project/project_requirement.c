@@ -8,7 +8,6 @@ extern "C" {
 #include "MESA_list.h"
 
 //extern int g_packet_io_thread_num;
-extern int project_req_terminal_tag_init(void);
 extern int raw_ip_frag_list_v4_init(void);
 extern int raw_ip_frag_list_v6_init(void);
 extern void del_last_rn(char *data, int max_len);
@@ -441,29 +440,6 @@ static int teredo_identify_init(void)
 	return G_UDP_TEREDO_IDENTIFY_PROJECT_ID;
 }
 
-
-static void terminal_tag_free_struct(int thread_num, void *project_req_value)
-{
-	dictator_free(thread_num, project_req_value);
-}
-
-int project_req_terminal_tag_id = -1;
-
-int project_req_terminal_tag_init(void)
-{
-	int project_req_id;
-	
-	project_req_id = project_producer_register("terminal_tag", "struct", terminal_tag_free_struct);
-	if(project_req_id >= 0){
-		project_req_terminal_tag_id = project_req_id;
-	}else{
-		/* 配置文件没有'terminal_tag'项, 关闭此功能 */
-		project_req_terminal_tag_id = -1;
-	}
-	
-	return 0;
-}
-
 static void udp_flow_stat_free(int thread_seq, void *project_req_value)
 {
 	sapp_mem_free(SAPP_MEM_DYN_UDP_FLOW_STAT, thread_seq, project_req_value);
@@ -527,8 +503,6 @@ int project_requirement_global_init(void)
 
 	//parse_project_req_conf();
 	
-	/* 平台内置project模块初始化, 功能是否启用取决于配置文件开关 */
-	//project_req_terminal_tag_init();
 
 	/* project注册改为动态, 不靠project_list.conf控制了,
 	   但是下面这些内置功能为了向前兼容,还是检查一下project_list.conf是否存在, 不存在则不开启 */
