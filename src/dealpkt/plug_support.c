@@ -1909,6 +1909,10 @@ char *sapp_strdup(const char *raw_s)
 
 int sapp_is_absolute_path(const char *filename)
 {
+	if(filename == NULL)
+	{
+		return 0;
+	}
 	if('/' == filename[0]){
 		return 1;
 	}

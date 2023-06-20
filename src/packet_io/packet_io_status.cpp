@@ -17,6 +17,9 @@ static unsigned long long cur_count[SAPP_STAT_NUM_MAX] = {0};
 static unsigned long long cur_length[SAPP_STAT_NUM_MAX] = {0};
 
 
+static unsigned long long history_count[SAPP_STAT_NUM_MAX];
+static unsigned long long history_length[SAPP_STAT_NUM_MAX];
+
 //extern int g_packet_io_thread_num;
 extern void sapp_statsd_add_para(const char *key, unsigned long long value);
 extern void pkt_runtime_output(void);
@@ -129,6 +132,100 @@ static void packet_io_update_metrics_fs2(void)
 
 static void packet_io_update_metrics_fs3(void)
 {
+	sapp_fs3_metric_incrby(0, SAPP_STAT_RCV_UNKNOWN,cur_count[SAPP_STAT_RCV_UNKNOWN]-history_count[SAPP_STAT_RCV_UNKNOWN]);
+	sapp_fs3_metric_incrby(1, SAPP_STAT_RCV_UNKNOWN, 8 *( cur_length[SAPP_STAT_RCV_UNKNOWN]-history_length[SAPP_STAT_RCV_UNKNOWN])); /* to bps, bit per second */
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_RCV_LINE,cur_count[SAPP_STAT_RCV_LINE]-history_count[SAPP_STAT_RCV_LINE]);
+	sapp_fs3_metric_incrby(1, SAPP_STAT_RCV_LINE, 8 *( cur_length[SAPP_STAT_RCV_LINE]-history_length[SAPP_STAT_RCV_LINE])); /* to bps, bit per second */
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_SND_ERROR,cur_count[SAPP_STAT_SND_ERROR]-history_count[SAPP_STAT_SND_ERROR]);
+	sapp_fs3_metric_incrby(1, SAPP_STAT_SND_ERROR, 8 *( cur_length[SAPP_STAT_SND_ERROR]-history_length[SAPP_STAT_SND_ERROR])); /* to bps, bit per second */
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_RCV_ETHERNET,cur_count[SAPP_STAT_RCV_ETHERNET]-history_count[SAPP_STAT_RCV_ETHERNET]);
+	sapp_fs3_metric_incrby(1, SAPP_STAT_RCV_ETHERNET, 8 *( cur_length[SAPP_STAT_RCV_ETHERNET]-history_length[SAPP_STAT_RCV_ETHERNET])); /* to bps, bit per second */
+
+	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	 || (DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin)){
+		sapp_fs3_metric_incrby(0, SAPP_STAT_ETH_INBOUND, cur_count[SAPP_STAT_ETH_INBOUND] - history_count[SAPP_STAT_ETH_INBOUND]);
+		sapp_fs3_metric_incrby(1, SAPP_STAT_ETH_INBOUND, 8 * (cur_length[SAPP_STAT_ETH_INBOUND] - history_length[SAPP_STAT_ETH_INBOUND])); /* to bps, bit per second */
+
+		sapp_fs3_metric_incrby(0, SAPP_STAT_ETH_OUTBOUND, cur_count[SAPP_STAT_ETH_OUTBOUND] - history_count[SAPP_STAT_ETH_OUTBOUND]);
+		sapp_fs3_metric_incrby(1, SAPP_STAT_ETH_OUTBOUND, 8 * (cur_length[SAPP_STAT_ETH_OUTBOUND] - history_length[SAPP_STAT_ETH_OUTBOUND])); /* to bps, bit per second */
+	}
+	sapp_fs3_metric_incrby(0, SAPP_STAT_RCV_IPV4,cur_count[SAPP_STAT_RCV_IPV4]-history_count[SAPP_STAT_RCV_IPV4]);
+	sapp_fs3_metric_incrby(1, SAPP_STAT_RCV_IPV4, 8 *( cur_length[SAPP_STAT_RCV_IPV4]-history_length[SAPP_STAT_RCV_IPV4])); /* to bps, bit per second */
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_RCV_IPV6,cur_count[SAPP_STAT_RCV_IPV6]-history_count[SAPP_STAT_RCV_IPV6]);
+	sapp_fs3_metric_incrby(1, SAPP_STAT_RCV_IPV6, 8 *( cur_length[SAPP_STAT_RCV_IPV6]-history_length[SAPP_STAT_RCV_IPV6])); /* to bps, bit per second */
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_RCV_TCP,cur_count[SAPP_STAT_RCV_TCP]-history_count[SAPP_STAT_RCV_TCP]);
+	sapp_fs3_metric_incrby(1, SAPP_STAT_RCV_TCP, 8 *( cur_length[SAPP_STAT_RCV_TCP]-history_length[SAPP_STAT_RCV_TCP])); /* to bps, bit per second */
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_RCV_DUP_TCP,cur_count[SAPP_STAT_RCV_DUP_TCP]-history_count[SAPP_STAT_RCV_DUP_TCP]);
+	sapp_fs3_metric_incrby(1, SAPP_STAT_RCV_DUP_TCP, 8 *( cur_length[SAPP_STAT_RCV_DUP_TCP]-history_length[SAPP_STAT_RCV_DUP_TCP])); /* to bps, bit per second */
+	sapp_fs3_metric_incrby(0, SAPP_STAT_DUP_IDENTIFY_ERR,cur_count[SAPP_STAT_DUP_IDENTIFY_ERR]-history_count[SAPP_STAT_DUP_IDENTIFY_ERR]);
+
+	sapp_fs3_metric_incrby(1, SAPP_STAT_TCP_LOST_PKT, 8 *( cur_length[SAPP_STAT_TCP_LOST_PKT]-history_length[SAPP_STAT_TCP_LOST_PKT])); /* to bps, bit per second */
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_LOST_PKT_STREAM_NUM,cur_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM]-history_count[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM]);
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_CLOSE_BY_TIMEOUT,cur_count[SAPP_STAT_TCP_CLOSE_BY_TIMEOUT]-history_count[SAPP_STAT_TCP_CLOSE_BY_TIMEOUT]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_CLOSE_BY_KICKOUT,cur_count[SAPP_STAT_TCP_CLOSE_BY_KICKOUT]-history_count[SAPP_STAT_TCP_CLOSE_BY_KICKOUT]);
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_RCV_UDP,cur_count[SAPP_STAT_RCV_UDP]-history_count[SAPP_STAT_RCV_UDP]);
+	sapp_fs3_metric_incrby(1, SAPP_STAT_RCV_UDP, 8 *( cur_length[SAPP_STAT_RCV_UDP]-history_length[SAPP_STAT_RCV_UDP])); /* to bps, bit per second */
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_RCV_DUP_UDP,cur_count[SAPP_STAT_RCV_DUP_UDP]-history_count[SAPP_STAT_RCV_DUP_UDP]);
+	sapp_fs3_metric_incrby(1, SAPP_STAT_RCV_DUP_UDP, 8 *( cur_length[SAPP_STAT_RCV_DUP_UDP]-history_length[SAPP_STAT_RCV_DUP_UDP])); /* to bps, bit per second */
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_CLOSE_BY_TIMEOUT,cur_count[SAPP_STAT_UDP_CLOSE_BY_TIMEOUT]-history_count[SAPP_STAT_UDP_CLOSE_BY_TIMEOUT]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_CLOSE_BY_KICKOUT,cur_count[SAPP_STAT_UDP_CLOSE_BY_KICKOUT]-history_count[SAPP_STAT_UDP_CLOSE_BY_KICKOUT]);
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_STREAM_NEW,cur_count[SAPP_STAT_TCP_STREAM_NEW]-history_count[SAPP_STAT_TCP_STREAM_NEW]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_STREAM_NEW,cur_count[SAPP_STAT_TCP_STREAM_NEW]-history_count[SAPP_STAT_TCP_STREAM_NEW]);
+	sapp_fs3_metric_set(0, SAPP_STAT_TCP_STREAM_DATA,cur_count[SAPP_STAT_TCP_STREAM_DATA]);
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_STREAM_NEW,cur_count[SAPP_STAT_UDP_STREAM_NEW]-history_count[SAPP_STAT_UDP_STREAM_NEW]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_STREAM_DEL,cur_count[SAPP_STAT_UDP_STREAM_DEL]-history_count[SAPP_STAT_UDP_STREAM_DEL]);
+	sapp_fs3_metric_set(0, SAPP_STAT_UDP_STREAM_MORE,cur_count[SAPP_STAT_UDP_STREAM_MORE]);
+
+	sapp_fs3_metric_set(0, SAPP_STAT_TCP_STREAM_DOUBLE,cur_count[SAPP_STAT_TCP_STREAM_DOUBLE]);
+	sapp_fs3_metric_set(0, SAPP_STAT_TCP_STREAM_C2S,cur_count[SAPP_STAT_TCP_STREAM_C2S]);
+	sapp_fs3_metric_set(0, SAPP_STAT_TCP_STREAM_S2C,cur_count[SAPP_STAT_TCP_STREAM_S2C]);
+
+	sapp_fs3_metric_set(0, SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE,cur_count[SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE]);
+	sapp_fs3_metric_set(0, SAPP_STAT_TCP_STREAM_TOTAL_C2S,cur_count[SAPP_STAT_TCP_STREAM_TOTAL_C2S]);
+	sapp_fs3_metric_set(0, SAPP_STAT_TCP_STREAM_TOTAL_S2C,cur_count[SAPP_STAT_TCP_STREAM_TOTAL_S2C]);
+
+	sapp_fs3_metric_set(0, SAPP_STAT_UDP_STREAM_DOUBLE,cur_count[SAPP_STAT_UDP_STREAM_DOUBLE]);
+	sapp_fs3_metric_set(0, SAPP_STAT_UDP_STREAM_C2S,cur_count[SAPP_STAT_UDP_STREAM_C2S]);
+	sapp_fs3_metric_set(0, SAPP_STAT_UDP_STREAM_S2C,cur_count[SAPP_STAT_UDP_STREAM_S2C]);
+
+	sapp_fs3_metric_set(0, SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE,cur_count[SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE]);
+	sapp_fs3_metric_set(0, SAPP_STAT_UDP_STREAM_TOTAL_C2S,cur_count[SAPP_STAT_UDP_STREAM_TOTAL_C2S]);
+	sapp_fs3_metric_set(0, SAPP_STAT_UDP_STREAM_TOTAL_S2C,cur_count[SAPP_STAT_UDP_STREAM_TOTAL_S2C]);
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_SND_TCP_RST,cur_count[SAPP_STAT_SND_TCP_RST]-history_count[SAPP_STAT_SND_TCP_RST]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_SND_TCP_SYNACK,cur_count[SAPP_STAT_SND_TCP_SYNACK]-history_count[SAPP_STAT_SND_TCP_SYNACK]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_SND_UDP,cur_count[SAPP_STAT_SND_UDP]-history_count[SAPP_STAT_SND_UDP]);
+
+	sapp_fs3_metric_set(0, SAPP_STAT_GLOBAL_BYPASS,packet_io_under_ddos_global_status());
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_BYPASS_STREAM,cur_count[SAPP_STAT_TCP_BYPASS_STREAM]-history_count[SAPP_STAT_TCP_BYPASS_STREAM]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_BYPASS_PKTS,cur_count[SAPP_STAT_TCP_BYPASS_PKTS]-history_count[SAPP_STAT_TCP_BYPASS_PKTS]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_BYPASS_BYTES,cur_count[SAPP_STAT_TCP_BYPASS_BYTES]-history_count[SAPP_STAT_TCP_BYPASS_BYTES]);
+	
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_BYPASS_STREAM,cur_count[SAPP_STAT_UDP_BYPASS_STREAM]-history_count[SAPP_STAT_UDP_BYPASS_STREAM]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_BYPASS_PKTS,cur_count[SAPP_STAT_UDP_BYPASS_PKTS]-history_count[SAPP_STAT_UDP_BYPASS_PKTS]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_BYPASS_BYTES,cur_count[SAPP_STAT_UDP_BYPASS_BYTES]-history_count[SAPP_STAT_UDP_BYPASS_BYTES]);
+	
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_OFFLOAD_STREAM,cur_count[SAPP_STAT_TCP_OFFLOAD_STREAM]-history_count[SAPP_STAT_TCP_OFFLOAD_STREAM]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_OFFLOAD_PKTS,cur_count[SAPP_STAT_TCP_OFFLOAD_PKTS]-history_count[SAPP_STAT_TCP_OFFLOAD_PKTS]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_OFFLOAD_BYTES,cur_count[SAPP_STAT_TCP_OFFLOAD_BYTES]-history_count[SAPP_STAT_TCP_OFFLOAD_BYTES]);
+	
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OFFLOAD_STREAM,cur_count[SAPP_STAT_UDP_OFFLOAD_STREAM]-history_count[SAPP_STAT_UDP_OFFLOAD_STREAM]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OFFLOAD_PKTS,cur_count[SAPP_STAT_UDP_OFFLOAD_PKTS]-history_count[SAPP_STAT_UDP_OFFLOAD_PKTS]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OFFLOAD_BYTES,cur_count[SAPP_STAT_UDP_OFFLOAD_BYTES]-history_count[SAPP_STAT_UDP_OFFLOAD_BYTES]);
+	
 	return;
 }
 
@@ -140,7 +237,7 @@ static void packet_io_update_metrics(void)
 	}
 	if (1 == sapp_global_val->config.profiling.fs3.enabled )
 	{
-		packet_io_update_metrics_fs2();
+		packet_io_update_metrics_fs3();
 	}
 	return;
 }
@@ -211,8 +308,7 @@ void sysinfo_output(void)
 	FILE* fp;
 	//unsigned long long cur_count[COUNTER_NUM] = {0};
 	char time_string[32];
-	static unsigned long long history_count[SAPP_STAT_NUM_MAX];
-	static unsigned long long history_length[SAPP_STAT_NUM_MAX];
+
 	static sapp_gval_mthread_sys_stat_t history_threads_stat[SAPP_MAX_THREADS];
 	unsigned long long cur_project_in_use_array[PROJECT_REQ_MAX_PLUG_NUM] = {}, cur_bridge_in_use_array[STREAM_BRIDGE_MAX_NUM] = {};
 	
@@ -479,11 +575,10 @@ void sysinfo_output(void)
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "UDP", cur_count[SAPP_STAT_SND_UDP], byte_convert_human(cur_length[SAPP_STAT_SND_UDP],1,1,s1),(cur_count[SAPP_STAT_SND_UDP]-history_count[SAPP_STAT_SND_UDP]), byte_convert_human((cur_length[SAPP_STAT_SND_UDP]-history_length[SAPP_STAT_SND_UDP]),1,8,s2));
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "SEND-ERR", cur_count[SAPP_STAT_SND_ERROR], byte_convert_human(cur_length[SAPP_STAT_SND_ERROR],1,1,s1),(cur_count[SAPP_STAT_SND_ERROR]-history_count[SAPP_STAT_SND_ERROR]), byte_convert_human((cur_length[SAPP_STAT_SND_ERROR]-history_length[SAPP_STAT_SND_ERROR]),1,8,s2));
     fprintf(fp,"#################################################################\n\n");
-
-	packet_io_update_metrics_fs2();
-
-
 	fclose(fp);
+
+	packet_io_update_metrics();
+	
 	memcpy(history_count, cur_count, sizeof(history_count));
 	memcpy(history_length, cur_length, sizeof(history_length));
 

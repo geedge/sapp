@@ -1552,7 +1552,26 @@ int sapp_get_secondary_file_path(void)
 {
 	char str_tmp[ARG_MAX];
 	sapp_config_t *pconfig = &sapp_global_val->config;
-	
+
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"local_file", pconfig->profiling.fs2.local_file, NAME_MAX, "");
+	if (strlen(pconfig->profiling.fs2.local_file) > 0)
+	{
+		if (pconfig->data_file_path.data_sapp_fs2_log_relative)
+		{
+			SAPP_GLOBAL_FREE(pconfig->data_file_path.data_sapp_fs2_log_relative);
+		}
+		pconfig->data_file_path.data_sapp_fs2_log_relative = sapp_strdup(pconfig->profiling.fs2.local_file);
+	}
+
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"local_file", pconfig->profiling.fs3.local_file, NAME_MAX, "");
+	if (strlen(pconfig->profiling.fs3.local_file) > 0)
+	{
+		if (pconfig->data_file_path.data_sapp_fs3_log_relative)
+		{
+			SAPP_GLOBAL_FREE(pconfig->data_file_path.data_sapp_fs3_log_relative);
+		}
+		pconfig->data_file_path.data_sapp_fs3_log_relative = sapp_strdup(pconfig->profiling.fs3.local_file);
+	}
 	/*************************** SECONDARY_CONFIG_LINK *************************/
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_sapp_log", str_tmp, ARG_MAX, "etc/sapp_log.conf");
 	if(str_tmp[0] != '\0'){
@@ -1651,13 +1670,7 @@ int sapp_get_secondary_file_path(void)
 		}		
 		pconfig->data_file_path.data_sapp_sysinfo_log_relative = sapp_strdup(str_tmp);
 	}
-	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_DATA_LINK", (char *)"data_file_field_stat_log", str_tmp, ARG_MAX, "fs2_sysinfo.log");
-	if(str_tmp[0] != '\0'){
-		if(pconfig->data_file_path.data_sapp_fs2_log_relative){
-			SAPP_GLOBAL_FREE(pconfig->data_file_path.data_sapp_fs2_log_relative);
-		}	
-		pconfig->data_file_path.data_sapp_fs2_log_relative = sapp_strdup(str_tmp);
-	}
+
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_DATA_LINK", (char *)"data_file_inline_keepalive_log", str_tmp, ARG_MAX, "gdev_keeplive_status.log");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->data_file_path.data_inline_keepalive_log_relative){
@@ -1866,15 +1879,15 @@ int sapp_parse_config(void)
 		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"prometheus_port", (int *)&pconfig->profiling.fs2.prometheus_service_port, 0);
 		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"refresh_interval_s", (int *)&pconfig->profiling.fs2.refresh_interval_s, 2);
 		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"prometheus_url_path", pconfig->profiling.fs2.prometheus_service_uri, NAME_MAX, "");
-		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"local_file", pconfig->profiling.fs2.local_file, NAME_MAX, "");
+
 	}
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"enabled", (int *)&pconfig->profiling.fs3.enabled, 0);
 	/*******************************  PROFILING.metric.fs3 **********************/
 	if(pconfig->profiling.fs3.enabled)
 	{
 		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"prometheus_port", (int *)&pconfig->profiling.fs3.prometheus_service_port, 0);
 		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"refresh_interval_s", (int *)&pconfig->profiling.fs3.refresh_interval_s, 2);
 		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"prometheus_url_path", pconfig->profiling.fs3.prometheus_service_uri, NAME_MAX, "");
-		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"local_file", pconfig->profiling.fs3.local_file, NAME_MAX, "");
 	}
 
 	/*******************************  PROFILING.process_latency ******************************/

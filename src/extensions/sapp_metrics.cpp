@@ -2,6 +2,7 @@
 #include "fieldstat.h"
 
 #include "sapp_declaration.h"
+#include "sapp_pkt_stat.h"
 
 void sapp_fs2_update_count(int field_index, unsigned  long long value)
 {
@@ -132,68 +133,12 @@ void sapp_fuzzy_latency_update(void)
 	}
 }
 
-
-static int fs2_plug_entry_historgram_init(sapp_gval_individual_fixed_fs_t *fs_rt)
-{
-	int i;
-	/* 0保留给sapp内置插件, index从1开始 */
-	for(i = 1; i < g_plug_global_entry_index; i++){
-		fs_rt->fs_latency_plug_entrg_id_array[i] = FS_register_histogram(fs_rt->fs_metric_handle,  //Field Stat句柄
-								  FS_CALC_SPEED,    //输出累计值或瞬时值
-								  g_plug_global_entry[i].plug_entry_name,     //统计项名称，字符串
-								  1,                  //可追踪的最小值
-								  1000000,            //可追踪的最大值
-								  2);                 //精度，即小数点后几位，范围1~4
-		if(fs_rt->fs_latency_plug_entrg_id_array[i] < 0){
-			sapp_runtime_log(RLOG_LV_FATAL, "FS_register_histogram() error, plug name:%s", g_plug_global_entry[i].plug_entry_name);
-			return -1;
-		}
-	}
-
-	return 0;
-}
-
-void sapp_fs2_set_tcp_unorder_historgram(int thead_seq, long long unorder_num)
-{
-    if(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle != NULL){
-        FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle, 
-        		   sapp_global_val->individual_fixed.fs2_runtime.fs_tcp_unorder_id_array[thead_seq], 
-        		   0, FS_OP_SET, unorder_num);
-    }
-}
-
-static int fs2_tcp_unorder_historgram_init(sapp_gval_individual_fixed_fs_t *fs_rt)
-{
-    int i;
-    char histogram_name[16];
-    /* 0保留给sapp内置插件, index从1开始 */
-    for (i = 1; i < g_packet_io_thread_num; i++)
-    {
-    	sprintf(histogram_name, "OoO_num(tid_%d)", i);
-        fs_rt->fs_tcp_unorder_id_array[i] =
-            FS_register_histogram(fs_rt->fs_metric_handle,                             // Field Stat句柄
-                                  FS_CALC_SPEED,                          //输出累计值或瞬时值
-                                  histogram_name, //统计项名称，字符串
-                                  1,                                      //可追踪的最小值
-                                  65536,                                //可追踪的最大值
-                                  2);                                     //精度，即小数点后几位，范围1~4
-        if (fs_rt->fs_tcp_unorder_id_array[i] < 0)
-        {
-            sapp_runtime_log(RLOG_LV_FATAL, "FS_fs2_tcp_unorder_historgram_init() error, name:%s",
-                             histogram_name);
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
 /************************ C++ compiler **************************************/
 static int sapp_fs2_init(sapp_global_t *global_paramters)
 {
 	void *fs2_handle=NULL;
 	int fs2_opt;
-	sapp_gval_individual_fixed_fs_t *p_fs2_rt = &global_paramters->individual_fixed.fs2_runtime;
+	sapp_gval_individual_fixed_fs2_t *p_fs2_rt = &global_paramters->individual_fixed.fs2_runtime;
 	sapp_config_profiling_metric_t *p_fs2_para = &global_paramters->config.profiling.fs2;
 	int fs2_local_enabled = 0;
 	int fs2_prometheus_enabled = 0;
@@ -237,9 +182,12 @@ static int sapp_fs2_init(sapp_global_t *global_paramters)
 	fs2_opt = 1;
     FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &fs2_opt, sizeof(int));
 
-	if(fs2_local_enabled){
-    	FS_set_para(fs2_handle, OUTPUT_DEVICE, ABBR_FS2_LOG_DATA_FILE, strlen(ABBR_FS2_LOG_DATA_FILE)+1);
-	}else{
+	if (fs2_local_enabled)
+	{
+		FS_set_para(fs2_handle, OUTPUT_DEVICE, ABBR_FS2_LOG_DATA_FILE, strlen(ABBR_FS2_LOG_DATA_FILE) + 1);
+	}
+	else
+	{
 		sapp_log(RLOG_LV_INFO, 10, 10, "profiling.log.local.enabled is 0, not save local stat log file.\n");
 		FS_set_para(fs2_handle, OUTPUT_DEVICE, "/dev/null", strlen("/dev/null") + 1);
 	}
@@ -340,32 +288,39 @@ static int sapp_fs2_init(sapp_global_t *global_paramters)
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_STM");	
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Pkt");
 	p_fs2_rt->fs_id_length_array[SAPP_STAT_UDP_OFFLOAD_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Bit");
-    
-    if (unlikely(g_timestamp_record_sw))
-    {
-		if (fs2_tcp_unorder_historgram_init(p_fs2_rt) < 0)
-    	{
-     	   return -1;
-    	}
-        for (int i = 0; i < g_packet_io_thread_num; i++)
-        {
-            char histogram_name[16];
-            sprintf(histogram_name, "TD_ns(tid_%d)", i);
-            p_fs2_rt->fs_latency_id_array[i] = FS_register_histogram(fs2_handle,     // Field Stat句柄
-                                                                     FS_CALC_SPEED,  //输出累计值或瞬时值
-                                                                     histogram_name, //统计项名称，字符串
-                                                                     1,              //可追踪的最小值
-                                                                     1000000,        //可追踪的最大值
-                                                                     2); //精度，即小数点后几位，范围1~4
-            FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &p_fs2_rt->fs_latency_id_array[i], sizeof(int));
-        }
 
-        if (fs2_plug_entry_historgram_init(p_fs2_rt) < 0)
-        {
-            return -1;
-        }
-    }
-    FS_start(fs2_handle);
+	if (unlikely(g_timestamp_record_sw))
+	{
+		for (int i = 0; i < g_packet_io_thread_num; i++)
+		{
+			char histogram_name[16];
+			sprintf(histogram_name, "TD_ns(tid_%d)", i);
+			p_fs2_rt->fs_latency_id_array[i] = FS_register_histogram(fs2_handle,	 // Field Stat句柄
+																	 FS_CALC_SPEED,	 // 输出累计值或瞬时值
+																	 histogram_name, // 统计项名称，字符串
+																	 1,				 // 可追踪的最小值
+																	 1000000,		 // 可追踪的最大值
+																	 2);			 // 精度，即小数点后几位，范围1~4
+			FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &p_fs2_rt->fs_latency_id_array[i], sizeof(int));
+		}
+
+		/* 0保留给sapp内置插件, index从1开始 */
+		for (int i = 1; i < g_plug_global_entry_index; i++)
+		{
+			p_fs2_rt->fs_latency_plug_entrg_id_array[i] = FS_register_histogram(p_fs2_rt->fs_metric_handle,				// Field Stat句柄
+																				FS_CALC_SPEED,							// 输出累计值或瞬时值
+																				g_plug_global_entry[i].plug_entry_name, // 统计项名称，字符串
+																				1,										// 可追踪的最小值
+																				1000000,								// 可追踪的最大值
+																				2);										// 精度，即小数点后几位，范围1~4
+			if (p_fs2_rt->fs_latency_plug_entrg_id_array[i] < 0)
+			{
+				sapp_runtime_log(RLOG_LV_FATAL, "FS_register_histogram() error, plug name:%s", g_plug_global_entry[i].plug_entry_name);
+				return -1;
+			}
+		}
+	}
+	FS_start(fs2_handle);
 	
 	return 0;
 }
@@ -373,7 +328,7 @@ static int sapp_fs2_init(sapp_global_t *global_paramters)
 static void sapp_fs2_destroy(sapp_global_t *global_paramters)
 {
 	sapp_config_profiling_metric_t *p_fs2_para = &global_paramters->config.profiling.fs2;
-	sapp_gval_individual_fixed_fs_t *p_fs2_rt = &global_paramters->individual_fixed.fs2_runtime;
+	sapp_gval_individual_fixed_fs2_t *p_fs2_rt = &global_paramters->individual_fixed.fs2_runtime;
 	if (strlen(p_fs2_para->prometheus_service_uri) > 0 && p_fs2_para->prometheus_service_port > 0)
 	{
 		FS_library_destroy();
@@ -385,16 +340,233 @@ static void sapp_fs2_destroy(sapp_global_t *global_paramters)
 	}
 }
 
+
+void sapp_fs3_metric_set(int metric_idx, int metric_idy, long long value)
+{
+	sapp_gval_individual_fixed_fs3_t *fs3_rt = &sapp_global_val->individual_fixed.fs3_runtime;
+	if(fs3_rt->fs_metric_handle!=NULL)
+	{
+		fieldstat_value_set(fs3_rt->fs_metric_handle, 
+								fs3_rt->metrics_ids[metric_idx][metric_idy], 
+								value);
+	}
+	return;
+}
+
+void sapp_fs3_metric_incrby(int column_idx, int column_idy,long long value)
+{
+	sapp_gval_individual_fixed_fs3_t *fs3_rt = &sapp_global_val->individual_fixed.fs3_runtime;
+	if(fs3_rt->fs_metric_handle!=NULL)
+	{
+		fieldstat_value_incrby(fs3_rt->fs_metric_handle, 
+								fs3_rt->metrics_ids[column_idx][column_idy], 
+								value);
+	}
+	return;
+}
+
 static int sapp_fs3_init(sapp_global_t *global_paramters)
 {
-	sapp_config_profiling_metric_t *p_fs3_para = &global_paramters->config.profiling.fs3;
-	sapp_gval_individual_fixed_fs_t *p_fs3_rt = &global_paramters->individual_fixed.fs3_runtime;
+	sapp_config_profiling_metric_t *fs3_para = &global_paramters->config.profiling.fs3;
+	sapp_gval_individual_fixed_fs3_t *fs3_rt = &global_paramters->individual_fixed.fs3_runtime;
+
+	fs3_rt->fs_metric_handle = fieldstat_instance_new(sapp_global_val->config.system.instance_name);
+	if(fs3_rt->fs_metric_handle == NULL)
+	{
+		return -1;
+	}
+	struct fieldstat_instance *fs3_handle = fs3_rt->fs_metric_handle;
+	fieldstat_set_output_interval(fs3_handle, fs3_para->refresh_interval_s * 1000);
+	if(strlen(fs3_para->local_file) > 0)
+	{
+		fieldstat_set_local_output(fs3_handle, ABBR_FS3_LOG_DATA_FILE, "default");
+	}
+	if(strlen(fs3_para->prometheus_service_uri) > 0 && fs3_para->prometheus_service_port > 0)
+	{
+		fieldstat_global_enable_prometheus_endpoint(fs3_para->prometheus_service_port, fs3_para->prometheus_service_uri);
+		fieldstat_enable_prometheus_output(fs3_handle);
+	}	
+
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_LINE] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Line_Pkt", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_LINE] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Line_Bit", 
+								NULL, 0);								
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_ETHERNET] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Eth_Pkt", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_ETHERNET] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Eth_Bit", 
+								NULL, 0);		
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_ETH_INBOUND] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Pkt_Inbound", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_ETH_INBOUND] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Bit_Inbound", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_ETH_INBOUND] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Pkt_Outbound", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_ETHERNET] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Bit_Outbound", 
+								NULL, 0);	
+
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_UNKNOWN] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Unknown_Pkt", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_UNKNOWN] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Unknown_Bit", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_SND_ERROR] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Snd_Err_Pkt", 
+								NULL, 0);
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_IPV4] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Ipv4_Pkt", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_IPV4] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Ipv4_Bit", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_IPV6] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Ipv6_Pkt", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_IPV6] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Ipv6_Bit", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_TCP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Pkt", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_TCP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Bit", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_DUP_TCP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Dup_Tcp_Pkt", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_DUP_TCP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Dup_Tcp_Bit", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_LOST_PKT_STREAM_NUM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Lost_STM", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_TCP_LOST_PKT] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Lost_Bit", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_DUP_IDENTIFY_ERR] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Dup_Key_Err", 
+								NULL, 0);
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_CLOSE_BY_TIMEOUT] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Close_byT", 
+								NULL, 0);
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_CLOSE_BY_KICKOUT] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Close_byK", 
+								NULL, 0);								
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_UDP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Pkt", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_UDP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Bit", 
+								NULL, 0);		
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_DUP_UDP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Dup_Udp_Pkt", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_DUP_UDP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Dup_Udp_Bit", 
+								NULL, 0);									
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_CLOSE_BY_TIMEOUT] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Close_byT", 
+								NULL, 0);
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_CLOSE_BY_KICKOUT] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Close_byK", 
+								NULL, 0);		
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_NEW] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Link_New", 
+								NULL, 0);
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_DEL] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Link_Del", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_DATA] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Concurrent", 
+								NULL, 0);									
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_NEW] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Link_New", 
+								NULL, 0);
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_DEL] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Link_Del", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_MORE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Concurrent", 
+								NULL, 0);	
+
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_DOUBLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_Double", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_C2S", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_S2C", 
+								NULL, 0);									
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_Double_ALL", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_C2S_ALL", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_S2C] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_S2C_ALL", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_DOUBLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_Double", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_C2S", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_S2C] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_S2C", 
+								NULL, 0);									
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_Double_ALL", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_C2S_ALL", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_S2C] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_S2C_ALL", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_Double_ALL", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_C2S_ALL", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_S2C] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_S2C_ALL", 
+								NULL, 0);		
+	
+	fs3_rt->metrics_ids[0][SAPP_STAT_SND_TCP_RST] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Send_Tcp_Rst", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_SND_TCP_SYNACK] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Send_Tcp_S/A", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_SND_UDP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Send_Udp", 
+								NULL, 0);		
+								
+	
+	fs3_rt->metrics_ids[0][SAPP_STAT_GLOBAL_BYPASS] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "DDOS_Bypass", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_BYPASS_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Bypass_STM", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_BYPASS_PKTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Bypass_Pkt", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[1][SAPP_STAT_TCP_BYPASS_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Bypass_Bit", 
+								NULL, 0);								
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_BYPASS_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Bypass_STM", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_BYPASS_PKTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Bypass_Pkt", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[1][SAPP_STAT_UDP_BYPASS_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Bypass_Bit", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OFFLOAD_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Offload_STM", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OFFLOAD_PKTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Offload_Pkt", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[1][SAPP_STAT_TCP_OFFLOAD_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Offload_Bit", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OFFLOAD_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_STM", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OFFLOAD_PKTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_Pkt", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[1][SAPP_STAT_UDP_OFFLOAD_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_Bit", 
+								NULL, 0);	
+	// TODO: histogram for process lanency							
+	fieldstat_instance_start(fs3_handle);
 	return 0;
 }
 
 static void sapp_fs3_destroy(sapp_global_t *global_paramters)
 {
-		return;
+	sapp_gval_individual_fixed_fs3_t *fs3_rt = &global_paramters->individual_fixed.fs3_runtime;
+	if(fs3_rt->fs_metric_handle != NULL)
+	{
+		fieldstat_instance_free(fs3_rt->fs_metric_handle);
+	}
+	fs3_rt->fs_metric_handle=NULL;
+	return;
 }
 
 

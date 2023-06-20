@@ -302,6 +302,8 @@ void sapp_gval_destroy(void)
 	SAPP_GLOBAL_FREE(pdata->data_sapp_sysinfo_log_absolute);
 	SAPP_GLOBAL_FREE(pdata->data_sapp_fs2_log_relative);
 	SAPP_GLOBAL_FREE(pdata->data_sapp_fs2_log_absolute);
+	SAPP_GLOBAL_FREE(pdata->data_sapp_fs3_log_relative);
+	SAPP_GLOBAL_FREE(pdata->data_sapp_fs3_log_absolute);
 	SAPP_GLOBAL_FREE(pdata->data_inline_keepalive_log_relative);
 	SAPP_GLOBAL_FREE(pdata->data_inline_keepalive_log_absolute);
 	SAPP_GLOBAL_FREE(pdata->data_load_plugin_stat_log_relative);

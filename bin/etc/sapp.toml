@@ -166,23 +166,23 @@
     
     [profiling.metric]
         [profiling.metric.fs2]
-        enabled=1
+        enabled=0
         prometheus_port=9273
         prometheus_url_path="/metrics"
         local_file="fs2_sysinfo.metrics"
-        refresh_interval_s=2
+        refresh_interval_s=1
 
         [profiling.metric.fs3]
         enabled=1
         prometheus_port=9373
         prometheus_url_path="/metrics"
         local_file="fs3_sysinfo.metrics"
-        refresh_interval_s=2
+        refresh_interval_s=1
 
 
     [profiling.process_latency]
     log_category="sapp_process_latency_log"
-    enabled_log_level=20
+    enabled_log_level=10
 ### note, threshold unit is microseconds (us)
     threshold_us=100000
 

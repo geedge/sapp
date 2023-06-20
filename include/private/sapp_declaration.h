@@ -52,6 +52,7 @@ extern sapp_global_t *sapp_global_val;
 
 #define ABBR_SYSINFO_LOG_DATA_FILE		sapp_global_val->config.data_file_path.data_sapp_sysinfo_log_absolute
 #define ABBR_FS2_LOG_DATA_FILE			sapp_global_val->config.data_file_path.data_sapp_fs2_log_absolute
+#define ABBR_FS3_LOG_DATA_FILE			sapp_global_val->config.data_file_path.data_sapp_fs3_log_absolute
 #define ABBR_INLINE_KEEPALIVE_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_inline_keepalive_log_absolute
 #define ABBR_LOAD_PLUG_STAT_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_load_plugin_stat_log_absolute
 #define ABBR_MARSIO_LIBRARY_FILE  	sapp_global_val->config.library_file_path.libmarsio_file_path
@@ -109,11 +110,15 @@ void sapp_generate_example_config(const char *filename, const char *version);
 void sapp_cla_override_cfg_file(void);
 void sapp_global_val_sanity_check(void);
 void *sapp_time_event_thread(void *arg);
+
 void sapp_fs2_update_count(int field_index, unsigned  long long value);
 void sapp_fs2_update_length(int field_index, unsigned  long long value);
 void sapp_fs2_set_latency(int thead_seq, long long time_cost);
 void sapp_fs2_set_plug_entry_latency(int entry_id, long long time_cost);
-void sapp_fs2_set_tcp_unorder_historgram(int thead_seq, long long unorder_num);
+
+void sapp_fs3_metric_incrby(int column_idx, int column_idy,long long value);
+void sapp_fs3_metric_set(int metric_idx, int metric_idy, long long value);
+
 int sapp_independent_thread_init(void);
 
 void sapp_gval_init(void);

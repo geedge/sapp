@@ -46,7 +46,7 @@ set(AUTO_CONF_C ${CMAKE_BINARY_DIR}/src/asymmetric_addr_layer.conf.c ${CMAKE_BIN
 add_library(sapp_benchmark SHARED sapp_benchmark.cpp sapp_benchmark_comm.cpp sapp_benchmark_utils.cpp wrap_cJSON.c wrap_cJSON_Utils.c ${AUTO_CONF_C})		
 set_target_properties(${lib_name}  PROPERTIES PREFIX "")  
 
-target_link_libraries(sapp_benchmark  pthread pcap MESA_jump_layer MESA_htable MESA_field_stat2 MESA_handle_logger MESA_prof_load breakpad_mini dl systemd sapp_devel)
+target_link_libraries(sapp_benchmark  pthread pcap MESA_jump_layer MESA_htable MESA_field_stat2  fieldstat3 MESA_handle_logger MESA_prof_load breakpad_mini dl systemd sapp_devel)
 
 #add_test(NAME COPY_LIBBENCHMARK COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/benchmark/src/libsapp_benchmark.so ${CMAKE_BINARY_DIR}/testing/plug/business/gtest_sapp/")
 

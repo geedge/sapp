@@ -126,36 +126,6 @@ typedef struct{
 
 
 typedef struct{
-	int enabled;
-	int file_truncate_enabled; /* append or truncate */
-}sapp_config_profiling_log_local_t;
-
-
-typedef struct{
-	int metrics_type; 
-	char app_name[NAME_MAX];
-}sapp_config_profiling_log_remote_field_stat2_t;
-
-
-
-typedef struct{
-	int enabled;
-	char log_app_name[NAME_MAX];
-	char server_ip[INET_ADDRSTRLEN]; /* string */
-	unsigned int server_port; /* integer(4 byte), host order, user should truncate to short before use it */
-	char remote_send_out_type[NAME_MAX]; /* field_stat2 */
-	sapp_config_profiling_log_remote_field_stat2_t field_stat2;
-}sapp_config_profiling_log_remote_t;
-
-typedef struct{
-	int enabled;
-	int port; /* host order */
-	char url_path[NAME_MAX];
-}sapp_config_profiling_log_prometheus_t;
-
-
-
-typedef struct{
 	int enabled_log_level;
 	char sapp_log_category[NAME_MAX];
 	char sapp_plugin_log_category[NAME_MAX];
@@ -337,6 +307,9 @@ typedef struct{
 	const char *data_sapp_fs2_log_relative;
 	const char *data_sapp_fs2_log_absolute;
 
+	const char *data_sapp_fs3_log_relative;
+	const char *data_sapp_fs3_log_absolute;
+
 	const char *data_inline_keepalive_log_relative;
 	const char *data_inline_keepalive_log_absolute;	
 
@@ -386,7 +359,16 @@ typedef struct{
 	int fs_latency_id_array[SAPP_MAX_THREADS];
 	int fs_latency_plug_entrg_id_array[SAPP_MAX_PLUG_ENTRY_NUM];
 	int fs_tcp_unorder_id_array[SAPP_MAX_THREADS];
-}sapp_gval_individual_fixed_fs_t; /* field stat info */
+}sapp_gval_individual_fixed_fs2_t; 
+
+
+
+#define TRAFFIC_METRICS_MAX 3
+#define FLOW_METRICS_MAX 6
+typedef struct{
+	struct fieldstat_instance *fs_metric_handle;
+	int metrics_ids[2][SAPP_STAT_NUM_MAX];
+}sapp_gval_individual_fixed_fs3_t; 
 
 typedef struct{
 	void *log_handle; /* runtime.log */
@@ -399,8 +381,8 @@ typedef struct{
 	unsigned char create_stream_mode; /* 兼容原来的逻辑, 值从配置stream.tcp.syn_mandatory转换得到 */
 	int packet_io_cap_level; 
 
-	sapp_gval_individual_fixed_fs_t fs2_runtime;
-	sapp_gval_individual_fixed_fs_t fs3_runtime;
+	sapp_gval_individual_fixed_fs2_t fs2_runtime;
+	sapp_gval_individual_fixed_fs3_t fs3_runtime;
 
 	pthread_t thread_obtain_id[SAPP_MAX_THREADS]; /* pthread_create返回的id */
 	pid_t thread_tid[SAPP_MAX_THREADS]; /* gdb 或 top 查看的id */
