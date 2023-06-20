@@ -4,8 +4,14 @@ variables:
   BUILD_IMAGE_CENTOS7: "git.mesalab.cn:7443/mesa_platform/build-env:centos7-for-sapp"
   BUILD_IMAGE_CENTOS8: "git.mesalab.cn:7443/mesa_platform/build-env:rocky8-for-sapp"
   INSTALL_DEPENDENCY_LIBRARY: 
+<<<<<<< HEAD
     libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env 
     libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libbreakpad_mini-devel  mrzcpd hasp-tools
+=======
+    libunwind gperftools numactl-devel zlib-devel librdkafka-devel systemd-devel jemalloc jemalloc-devel vim-common 
+    libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  libfieldstat3-devel
+    libMESA_handle_logger-devel libbreakpad_mini-devel  framework_env mrzcpd
+>>>>>>> e029132 (🐎 ci(INSTALL_DEPENDENCY_LIBRARY): 增加libfieldstat3)
     libMESA_jump_layer-devel libMESA_jump_layer
   SYMBOL_TARGET: sapp
   INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
