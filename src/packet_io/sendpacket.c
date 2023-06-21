@@ -1240,7 +1240,7 @@ static int build_net_layer_ethernet(const struct streaminfo *top_stream, struct 
 	}else{
 		if((top_stream->dir & send_stream_dir) == 0){
 			sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-			sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_ethernet() error! ethernet[%d] asymmetric_addr_layer is enabled, but has not recv this dir packet!\n", stream_pr->layer_index);
+			sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_ethernet() error! ethernet[%d] asymmetric_addr_layer is enabled, but has not recv this dir packet!\n", stream_pr->layer_index);
 			return -1;
 		}
 		if(DIR_C2S == send_stream_dir){
@@ -2280,7 +2280,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			}
 
 			if(build_net_layer_ethernet(top_stream, stream_pr, eth_type_host, carry_layer_len, buf, send_stream_dir, raw_pkt) < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_mac() error!", printaddr(&stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_INFO, "%s, build_net_layer_mac() error!", printaddr(&stream->addr, stream->threadnum));
 				return -1;
 			}
 
