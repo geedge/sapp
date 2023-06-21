@@ -18,11 +18,7 @@ int main(int argc, char *argv[])
 #ifndef FEATURE_ID
 #define FEATURE_ID 100
 #endif
-
-#ifndef HASP_INTERNAL_S
-#define HASP_INTERNAL_S 10
-#endif
-	hasp_verify(FEATURE_ID, HASP_INTERNAL_S);
+	hasp_verify(FEATURE_ID);
 #endif
 	if(libsapp_setup_env(argc,argv) < 0){
 		return -1;
