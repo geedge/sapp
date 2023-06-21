@@ -1,10 +1,9 @@
 variables:
   GIT_STRATEGY: "clone"
   BUILD_PADDING_PREFIX: /tmp/padding_for_CPACK_RPM_BUILD_SOURCE_DIRS_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX/
-  BUILD_IMAGE_CENTOS7: "git.mesalab.cn:7443/mesa_platform/build-env:master"
-  BUILD_IMAGE_CENTOS8: "git.mesalab.cn:7443/mesa_platform/build-env:rockylinux"
+  BUILD_IMAGE_CENTOS7: "git.mesalab.cn:7443/mesa_platform/build-env:centos7-for-sapp"
+  BUILD_IMAGE_CENTOS8: "git.mesalab.cn:7443/mesa_platform/build-env:rocky8-for-sapp"
   INSTALL_DEPENDENCY_LIBRARY: 
-    libunwind gperftools numactl-devel zlib-devel librdkafka-devel systemd-devel jemalloc jemalloc-devel vim-common 
     libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env 
     libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libbreakpad_mini-devel  mrzcpd hasp-tools
     libMESA_jump_layer-devel libMESA_jump_layer
@@ -23,15 +22,12 @@ stages:
     - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
     - chmod +x ./ci/travis.sh
     - yum makecache
-    - yum install -y elfutils-libelf-devel
 
 .build_by_travis_for_centos7:
   stage: build
   image: $BUILD_IMAGE_CENTOS7
   extends: .build_before_script
   script:
-    - yum install -y libmnl-devel
-    - yum install -y libnfnetlink-devel
     - ./ci/travis.sh
   tags:
     - share
@@ -41,9 +37,6 @@ stages:
   image: $BUILD_IMAGE_CENTOS8
   extends: .build_before_script
   script:
-    - dnf --enablerepo=powertools install -y libmnl-devel
-    - dnf --enablerepo=powertools install -y libnfnetlink-devel
-    - dnf --enablerepo=powertools install -y libnsl
     - sh +x ./ci/update-el8-repo.sh
     - ./ci/travis.sh
   tags:
@@ -58,9 +51,8 @@ stages:
     - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
     - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
     - yum makecache
-    - yum install -y net-tools psmisc iproute initscripts gperftools-libs gdb snappy
     - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini libMESA_jump_layer
-    - yum install -y sapp benchmark_pcap gtest-devel zlib-devel jemalloc
+    - yum install -y sapp benchmark_pcap 
     - yum install -y framework_env; source /etc/profile.d/framework.sh
     - ls -l /opt/MESA/lib
     - echo "/opt/MESA/lib" >> /etc/ld.so.conf
@@ -202,7 +194,7 @@ develop_build_release_for_centos7:
   stage: build
   extends: .build_by_travis_for_centos7
   variables:
-    BUILD_TYPE: RelWithDebInfo
+    BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
     MEM_POOL: JEMALLOC
