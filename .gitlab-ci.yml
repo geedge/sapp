@@ -6,7 +6,7 @@ variables:
   INSTALL_DEPENDENCY_LIBRARY: 
     libunwind gperftools numactl-devel zlib-devel librdkafka-devel systemd-devel jemalloc jemalloc-devel vim-common 
     libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env 
-    libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libbreakpad_mini-devel  mrzcpd
+    libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libbreakpad_mini-devel  mrzcpd hasp-tools
     libMESA_jump_layer-devel libMESA_jump_layer
   SYMBOL_TARGET: sapp
   INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
@@ -14,7 +14,6 @@ variables:
 stages:
 - build
 - envelope
-- upload
 - test
 
 .build_before_script:
@@ -343,7 +342,7 @@ release_build_release_for_centos8:
 ###############################################################################
 # envelope and upload
 ###############################################################################
-envelope_rpm:
+envelope_rpm_for_centos7:
   stage: envelope
   image: $BUILD_IMAGE_CENTOS7
   variables:
@@ -355,11 +354,10 @@ envelope_rpm:
     FEATURE_ID: 100
     HASP_INTERNAL_S: 3600
     PACKAGE: 1
-  extends: .build_before_script
-  script:
-    - yum install -y hasp-tools
-    - chmod +x ./ci/travis.sh
-    - ./ci/travis.sh
+    UPLOAD: 1    
+    PULP3_REPO_NAME: platform-stable-x86_64.el7
+    PULP3_DIST_NAME: platform-stable-x86_64.el7  
+  extends: .build_by_travis_for_centos7
   artifacts:
     name: "sapp-pr-$CI_COMMIT_REF_NAME-release"
     paths:
@@ -368,19 +366,29 @@ envelope_rpm:
     - share
   only:
     - tags  
-     
-upload_enveloped_rpm:
-  stage: upload
-  image: $BUILD_IMAGE_CENTOS7
+
+envelope_rpm_for_centos8:
+  stage: envelope
+  image: $BUILD_IMAGE_CENTOS8
   variables:
-    PULP3_REPO_NAME_EL7: platform-stable-x86_64.el7
-    PULP3_DIST_NAME_EL7: platform-stable-x86_64.el7
-    PULP3_REPO_NAME_EL8: platform-stable-x86_64.el8
-    PULP3_DIST_NAME_EL8: platform-stable-x86_64.el8
-  script:
-    - chmod +x ./ci/upload_enveloped_rpm.sh
-    - ./ci/upload_enveloped_rpm.sh
+    BUILD_TYPE: RelWithDebInfo
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
+    MEM_POOL: JEMALLOC
+    HASP_ENABLED: "ON"
+    FEATURE_ID: 100
+    HASP_INTERNAL_S: 3600
+    PACKAGE: 1
+    UPLOAD: 1   
+    PULP3_REPO_NAME: platform-stable-x86_64.el8
+    PULP3_DIST_NAME: platform-stable-x86_64.el8     
+  extends: .build_by_travis_for_centos8
+  artifacts:
+    name: "sapp-pr-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*-pr-*.rpm
   tags:
     - share
   only:
-    - tags
+    - tags  
+

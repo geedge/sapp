@@ -74,7 +74,11 @@ fi
 
 if [ -n "${UPLOAD}" ]; then	
 	cp ~/rpm_upload_tools.py ./
-	python3 rpm_upload_tools.py ${PULP3_REPO_NAME} ${PULP3_DIST_NAME} *.rpm
+    if [ -n "${HASP_ENABLED}" ]; then	
+	    python3 rpm_upload_tools.py ${PULP3_REPO_NAME} ${PULP3_DIST_NAME} *-pr-*.rpm
+    else
+	    python3 rpm_upload_tools.py ${PULP3_REPO_NAME} ${PULP3_DIST_NAME} *.rpm
+    fi
 fi
 
 #if [ -n "${UPLOAD_SYMBOL_FILES}" ]; then
