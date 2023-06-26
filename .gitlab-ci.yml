@@ -6,7 +6,7 @@ variables:
   INSTALL_DEPENDENCY_LIBRARY: 
     libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env 
     libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libbreakpad_mini-devel  mrzcpd hasp-tools
-    libMESA_jump_layer-devel libMESA_jump_layer
+    libMESA_jump_layer-devel libMESA_jump_layer libfieldstat3-devel
   SYMBOL_TARGET: sapp
   INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
 
