@@ -51,7 +51,7 @@ stages:
     - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
     - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
     - yum makecache
-    - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini libMESA_jump_layer
+    - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini libMESA_jump_layer libfieldstat3
     - yum install -y sapp benchmark_pcap 
     - yum install -y framework_env; source /etc/profile.d/framework.sh
     - ls -l /opt/MESA/lib
