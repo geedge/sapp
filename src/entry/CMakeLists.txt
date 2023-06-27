@@ -12,7 +12,7 @@ add_definitions(-fPIC)
 LINK_DIRECTORIES(/opt/MESA/lib)
 LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/lib)
 
-if(CAPTURE_MODE MATCHES "MARSIO")
+if(CAPTURE_MODE STREQUAL "MARSIO")
 	LINK_DIRECTORIES(/opt/mrzcpd/lib)
 endif()
 
@@ -48,14 +48,18 @@ if(LIBEVENT_ENABLED STREQUAL "ON")
 	set(SAPP_MODULES ${SAPP_MODULES} libevent-static)
 endif()
 
+if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
+	set(SAPP_MODULES ${SAPP_MODULES} libjemalloc-static)
+endif()
+
 target_link_libraries(sapp -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive ${SAPP_DEPEND_DYN_LIB} ${SYSTEMD_LIBRARIES})
 
 target_link_libraries(sapp packet_io_pcap)
-if(CAPTURE_MODE MATCHES "MARSIO")
+if(CAPTURE_MODE STREQUAL "MARSIO")
 	target_link_libraries(sapp packet_io_marsio)
 endif()
 	
-if(CAPTURE_MODE MATCHES "TUN")
+if(CAPTURE_MODE STREQUAL "TUN")
 	target_link_libraries(sapp packet_io_tun)
 endif()	
 

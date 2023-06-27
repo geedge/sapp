@@ -54,9 +54,9 @@ set(CPU_PROFILE "OFF" CACHE STRING
     " set cpu profiler chosen by the user, using OFF as default")
 set_property(CACHE CPU_PROFILE  PROPERTY STRINGS OFF GPERF GPROF)
 message(STATUS "CPU_PROFILE='${CPU_PROFILE}'")
-if(CPU_PROFILE MATCHES "GPERF")
+if(CPU_PROFILE STREQUAL "GPERF")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
-elseif(CPU_PROFILE MATCHES "GPROF")
+elseif(CPU_PROFILE STREQUAL "GPROF")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lpg")
 endif()
 
@@ -66,12 +66,12 @@ set(ASAN_OPTION "OFF" CACHE STRING
 set_property(CACHE ASAN_OPTION  PROPERTY STRINGS OFF ADDRESS THREAD)
 message(STATUS "ASAN_OPTION='${ASAN_OPTION}'")
 
-if(ASAN_OPTION MATCHES "ADDRESS")
+if(ASAN_OPTION STREQUAL "ADDRESS")
     set(CMAKE_C_FLAGS "${CMAKADDRESS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=address -fno-omit-frame-pointer")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=address -fno-omit-frame-pointer")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
-elseif(ASAN_OPTION MATCHES "THREAD")
+elseif(ASAN_OPTION STREQUAL "THREAD")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=thread -fno-omit-frame-pointer")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DCMAKE_BUILD_TYPE=Debug -fsanitize=thread -fno-omit-frame-pointer")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lasan")
@@ -94,7 +94,7 @@ message(STATUS "CAPTURE_MODE='${CAPTURE_MODE}'")
 set(CAPTURE_DEFINITIONS -DIOMODE_PCAP)
 add_definitions(-DIOMODE_PCAP=1)
 
-#if(CAPTURE_MODE MATCHES "PCAP")
+#if(CAPTURE_MODE STREQUAL "PCAP")
 #    set(CAPTURE_DEFINITIONS -DONLY_PCAP -DIOMODE_PCAP)
 #endif()
 
@@ -102,38 +102,38 @@ set(DIST_MODE "JHASH" CACHE STRING
     "DIST_MODE set Tuple4 hash algorithm chosen by the user, using JHASH in linux kernel as default")
 set_property(CACHE DIST_MODE PROPERTY STRINGS JHASH CRCHASH)
 message(STATUS "DIST_MODE='${DIST_MODE}'")
-if(DIST_MODE MATCHES "JHASH")
+if(DIST_MODE STREQUAL "JHASH")
 	add_definitions(-DUSE_LINUX_KERNEL_HASH_ALGO=1)
 else()
 	add_definitions(-DUSE_LINUX_KERNEL_HASH_ALGO=0)
 endif()
 
-if(CAPTURE_MODE MATCHES "PAG")
+if(CAPTURE_MODE STREQUAL "PAG")
 	set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_PAG)
 endif()
 
-if(CAPTURE_MODE MATCHES "MARSIO")
+if(CAPTURE_MODE STREQUAL "MARSIO")
 	set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_MARSIO -DIOMODE_MARSIO)
 	add_definitions(-DIOMODE_MARSIO=1)
 endif()
 
-if(CAPTURE_MODE MATCHES "TUN")
+if(CAPTURE_MODE STREQUAL "TUN")
 	set(CAPTURE_DEFINITIONS -DCAPTURE_MODE_TUN)
 	add_definitions(-DIOMODE_TUN=1)
 endif()
 
 # Memory Allocator
-set(MEM_POOL "JEMALLOC" CACHE STRING
+set(MEM_POOL "JEMALLOC_STATIC" CACHE STRING
     " set mem alloc chosen by the user, using JEMALLOC as default")
 set_property(CACHE MEM_POOL PROPERTY STRINGS OFF 
-    TCMALLOC TCMALLOC_MINI JEMALLOC)
+    TCMALLOC TCMALLOC_MINI JEMALLOC JEMALLOC_STATIC)
 message(STATUS "MEM_POOL='${MEM_POOL}'")
 
-if(MEM_POOL MATCHES "TCMALLOC_MINI")
+if(MEM_POOL STREQUAL "TCMALLOC_MINI")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc_minimal -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
-elseif(MEM_POOL MATCHES "TCMALLOC")
+elseif(MEM_POOL STREQUAL "TCMALLOC")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
-elseif(MEM_POOL MATCHES "JEMALLOC")
+elseif(MEM_POOL STREQUAL "JEMALLOC")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 endif()
 

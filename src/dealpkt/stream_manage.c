@@ -433,7 +433,7 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 {
 	int ret = 0;
 	struct global_stream *g_stream = G_MESA_GLOBAL_STREAM[thread_id];
-	if(plist->last_update_timer_s < g_CurrentTime)
+	if(unlikely(plist->last_update_timer_s < g_CurrentTime))
 	{
 		timeouts_update(plist->streamindex_timer, g_CurrentTime);
 		if(g_stream->user_define_timer_cnt > 0)
