@@ -1932,7 +1932,10 @@ long long sapp_random(void)
 int sapp_usleep(int usec)
 {
 	struct timespec sleep_time_val;
-
+	if(unlikely (usec <= 0))
+	{
+		return 0;
+	}
 	sleep_time_val.tv_sec = 0;
 	sleep_time_val.tv_nsec = usec * 1000;
 

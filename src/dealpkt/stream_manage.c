@@ -336,6 +336,7 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 		{
 			timeouts_update(plist->streamindex_timer, g_CurrentTime);
 			plist->last_update_timer_s = g_CurrentTime;
+			plist->interval_to_next_timeout_s=timeouts_timeout(plist->streamindex_timer);
 		}
 		struct timeout *t = timeouts_get(plist->streamindex_timer);
 		if(t == NULL)
@@ -432,6 +433,7 @@ extern int call_streamentry(struct streaminfo *a_stream, const void *this_iphdr,
 int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index, int thread_id)
 {
 	int ret = 0;
+	struct timeout *t=NULL;
 	struct global_stream *g_stream = G_MESA_GLOBAL_STREAM[thread_id];
 	if(unlikely(plist->last_update_timer_s < g_CurrentTime))
 	{
@@ -439,42 +441,47 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 		if(g_stream->user_define_timer_cnt > 0)
 		{
 			timeouts_update(g_stream->user_define_timer, g_CurrentTime);
+			g_stream->interval_to_next_timeout_s = timeouts_timeout(g_stream->user_define_timer);
 		}
 		plist->last_update_timer_s = g_CurrentTime;
+		plist->interval_to_next_timeout_s=timeouts_timeout(plist->streamindex_timer);
 	}
-	struct timeout *t = timeouts_get(plist->streamindex_timer);
-	if (t != NULL)
+	if (plist->interval_to_next_timeout_s == 0)
 	{
-		struct streamindex *pindex = (struct streamindex *)sapp_get_struct_header(t, struct streamindex, timeout);
-		struct streaminfo_private *pstream_pr = &(pindex->stream);
-		struct streaminfo *pstream = &(pstream_pr->stream_public);
+		t = timeouts_get(plist->streamindex_timer);
+		if (t != NULL)
+		{
+			struct streamindex *pindex = (struct streamindex *)sapp_get_struct_header(t, struct streamindex, timeout);
+			struct streaminfo_private *pstream_pr = &(pindex->stream);
+			struct streaminfo *pstream = &(pstream_pr->stream_public);
 
-        if (pindex == current_drive_index)
-        { /* 当前包所在的流超时, 说明之前很长时间没有包到来, 此时不用free, 而是返回1, 再调用reset */
-            if (STREAM_TYPE_TCP == pstream->type)
-            {
-                /* 2016-12-15 lijia add, 超时reset之前, 先要设置link_state */
-                ((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
-            }
-            ret = 1;
-        }
-        else
-        {
-            if (STREAM_TYPE_TCP == pstream->type)
-            {
-                ((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
-                tcp_free_stream(pindex, NULL, NULL, NULL);
-                ret = 2;
-            }
-            else
-            {
-                pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_TIMEOUT;
-                udp_free_stream(pindex);
-                ret = 2;
-            }
-        }
-    }
-	if(g_stream->user_define_timer_cnt > 0)
+			if (pindex == current_drive_index)
+			{ /* 当前包所在的流超时, 说明之前很长时间没有包到来, 此时不用free, 而是返回1, 再调用reset */
+				if (STREAM_TYPE_TCP == pstream->type)
+				{
+					/* 2016-12-15 lijia add, 超时reset之前, 先要设置link_state */
+					((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
+				}
+				ret = 1;
+			}
+			else
+			{
+				if (STREAM_TYPE_TCP == pstream->type)
+				{
+					((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
+					tcp_free_stream(pindex, NULL, NULL, NULL);
+					ret = 2;
+				}
+				else
+				{
+					pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_TIMEOUT;
+					udp_free_stream(pindex);
+					ret = 2;
+				}
+			}
+		}
+	}
+	if(g_stream->user_define_timer_cnt > 0 && g_stream->interval_to_next_timeout_s == 0)
 	{
 		t = timeouts_get(g_stream->user_define_timer);
 		if (t != NULL)

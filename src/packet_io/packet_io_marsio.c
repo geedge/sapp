@@ -879,15 +879,16 @@ static int marsio4_sleep_time_table[100] =
 
 static inline void marsio4_sleep(int tid, int tot_call_times, int rcv_pkt_times)
 {
-	if (ptr_marsio_poll_wait != NULL)
-	{
-		ptr_marsio_poll_wait(sapp_marsio4_instance, g_mr4_dev_up_handle_set, g_mr4_device_num, tid, 900); // sapp内部定时器最小精度为秒，此处设置超时为为900毫秒，用于多进程模式下让出CPU时间
-	}
-	else
-	{
-		float work_percent = ((float)rcv_pkt_times / (float)tot_call_times) * 100.0;
 
-		if ((work_percent < 90.0) && (marsio4_sleep_time_table[(int)work_percent] > 0))
+	float work_percent = ((float)rcv_pkt_times / (float)tot_call_times) * 100.0;
+
+	if ((work_percent < 90.0)&& (marsio4_sleep_time_table[(int)work_percent] > 0))
+	{
+		if (ptr_marsio_poll_wait != NULL)
+		{
+			ptr_marsio_poll_wait(sapp_marsio4_instance, g_mr4_dev_up_handle_set, g_mr4_device_num, tid, 900); // sapp内部定时器最小精度为秒，此处设置超时为为900毫秒，用于多进程模式下让出CPU时间
+		}
+		else
 		{
 			sapp_usleep(marsio4_sleep_time_table[(int)work_percent]);
 		}
@@ -949,21 +950,30 @@ static void *marsio4_worker(void *arg)
 	*/
 	int polling_enabled = sapp_global_val->config.packet_io.polling_enabled;
 	int infinite_loop_enabled = sapp_global_val->config.packet_io.infinite_loop_enabled;
+	int polling_timeout_ret=POLLING_STATE_WORK;
 	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state){	
 		if(marsio4_process_packet(tseq, &raw_pkt) > 0){
 			rcv_pkt_tims++;
 		}else{
 			marsio4_flush_queue_buf(tseq);
 			/* 无包时要调用polling接口 */
-			if(polling_enabled && (g_PollingFunNum > 0)){
-				if((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0)
-				{
-					polling_work_times++;
-				}
-			}
-			if(polling_enabled && (polling_stream_timeout(tseq) & POLLING_STATE_WORK))
+			if (likely(polling_enabled))
 			{
-				polling_work_times++;
+				if ((g_PollingFunNum > 0))
+				{
+					if ((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0)
+					{
+						polling_work_times++;
+					}
+				}
+				if (polling_timeout_ret & POLLING_STATE_WORK)
+				{
+					polling_timeout_ret=polling_stream_timeout(tseq);
+					if ((polling_timeout_ret&POLLING_STATE_WORK))
+					{
+						polling_work_times++;
+					}
+				}
 			}
 		}
 
@@ -982,7 +992,7 @@ static void *marsio4_worker(void *arg)
 			total_call_times++;
 		}
 		
-		if(total_call_times >= 100){
+		if(total_call_times >= sapp_global_val->config.packet_io.polling_priority){
 			if(likely(infinite_loop_enabled == 0))
 			{
 				marsio4_sleep(tseq, total_call_times, rcv_pkt_tims + polling_work_times);
@@ -990,6 +1000,7 @@ static void *marsio4_worker(void *arg)
 			total_call_times = 0;
 			rcv_pkt_tims = 0;
 			polling_work_times = 0;
+			polling_timeout_ret=POLLING_STATE_WORK;
 		}
 	}
 	return NULL;

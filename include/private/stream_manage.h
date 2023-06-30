@@ -89,6 +89,7 @@ struct stream_list
 	int max_cnt;
 	struct timeouts *streamindex_timer;
 	long last_update_timer_s;
+	long interval_to_next_timeout_s;
 	timeout_error_t timer_error;
 };
 
@@ -117,6 +118,7 @@ struct global_stream
 
 	struct timeouts *user_define_timer;
 	long user_define_timer_cnt;
+	long interval_to_next_timeout_s;
 	timeout_error_t timer_error;
 };
 
