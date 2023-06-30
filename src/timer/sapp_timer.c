@@ -229,7 +229,6 @@ sapp_timer_event sapp_timer_event_new(sapp_timer_handle sth)
 
 void __st_pkt_proc_context_check_timeout(int tid)
 {
-	return;
 #ifdef LIBEVENT_ENABLED
 	sapp_timer_handle_inner_t *inner_h;
 
@@ -249,6 +248,8 @@ void __st_pkt_proc_context_check_timeout(int tid)
 	}	
 	
 	event_base_loop(inner_h->libev_base, EVLOOP_NONBLOCK);
+#else
+	return;
 #endif	
 }
 

@@ -877,22 +877,20 @@ static int marsio4_sleep_time_table[100] =
 	 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  	 
 };
 
-
 static inline void marsio4_sleep(int tid, int tot_call_times, int rcv_pkt_times)
 {
-	float work_percent = ((float)rcv_pkt_times/(float)tot_call_times) * 100.0;
-
-	if((work_percent < 90.0) && (marsio4_sleep_time_table[(int)work_percent] > 0))
+	if (ptr_marsio_poll_wait != NULL)
 	{
-		if(ptr_marsio_poll_wait != NULL)
-		{
-			ptr_marsio_poll_wait(sapp_marsio4_instance, g_mr4_dev_up_handle_set, g_mr4_device_num, tid, 900);//sapp内部定时器最小精度为秒，此处设置超时为为900毫秒，用于多进程模式下让出CPU时间
-		}
-		else
+		ptr_marsio_poll_wait(sapp_marsio4_instance, g_mr4_dev_up_handle_set, g_mr4_device_num, tid, 900); // sapp内部定时器最小精度为秒，此处设置超时为为900毫秒，用于多进程模式下让出CPU时间
+	}
+	else
+	{
+		float work_percent = ((float)rcv_pkt_times / (float)tot_call_times) * 100.0;
+
+		if ((work_percent < 90.0) && (marsio4_sleep_time_table[(int)work_percent] > 0))
 		{
 			sapp_usleep(marsio4_sleep_time_table[(int)work_percent]);
 		}
-
 	}
 }
 
@@ -913,7 +911,7 @@ static inline void marsio4_flush_queue_buf(int tid)
 		}
 	}
 }
-
+extern int g_PollingFunNum;
 static void *marsio4_worker(void *arg)
 {
 	int tseq = *((int *)arg);
@@ -957,10 +955,14 @@ static void *marsio4_worker(void *arg)
 		}else{
 			marsio4_flush_queue_buf(tseq);
 			/* 无包时要调用polling接口 */
-			if(polling_enabled && ((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0)){
-				polling_work_times++;
+			if(polling_enabled && (g_PollingFunNum > 0)){
+				if((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0)
+				{
+					polling_work_times++;
+				}
 			}
-			if(polling_enabled && (polling_stream_timeout(tseq) & POLLING_STATE_WORK)){
+			if(polling_enabled && (polling_stream_timeout(tseq) & POLLING_STATE_WORK))
+			{
 				polling_work_times++;
 			}
 		}
@@ -970,8 +972,12 @@ static void *marsio4_worker(void *arg)
 
 		if((rcv_pkt_tims % sapp_global_val->config.packet_io.polling_priority) == 0){
 			/* 如果流量巨大, 一直有包时, 每隔polling_priority个包也要调用polling接口 */
-			if(polling_enabled && ((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0)){
-				polling_work_times++;
+			if(polling_enabled && (g_PollingFunNum > 0))
+			{
+				if((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0)
+				{
+					polling_work_times++;
+				}
 			}
 			total_call_times++;
 		}
