@@ -26,8 +26,6 @@ extern void sesame_open_door(const char *lock_path, const char *lock_name);
 //int cap_mode = 2;
 //int top_mode = 0;
 extern struct global_stream **G_MESA_GLOBAL_STREAM;
-//static int __times = 0;
-//int g_timestamp_record_sw = 0;
 extern long long g_timedelay_threshold;
 extern int g_use_MESA_sleep_sw;
 extern int g_raw_pkt_broken_check;
@@ -122,7 +120,6 @@ int MESA_platform_init(int argc, char *argv[])
 	tcp_set_stream_num(max_tcp_stream_num*3,max_tcp_stream_num,max_tcp_stream_num*2);
 	udp_set_stream_num(max_udp_stream_num*3,max_udp_stream_num,max_udp_stream_num*2);
 
-	//MESA_load_profile_int_def("conf/main.conf","Module", "timestamp_record", &g_timestamp_record_sw, 0);	
 	MESA_load_profile_int_def("conf/main.conf","Module", "timedelay_threshold", &int_tmp, 10000000);
 	g_timedelay_threshold = (long long)int_tmp;
 	

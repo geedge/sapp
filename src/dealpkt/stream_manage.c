@@ -2501,7 +2501,7 @@ unsigned long long get_global_stream_id(unsigned long long thread_seq)
 	unsigned long long relative_base_time;
 
 	stream_seq = sapp_global_val->mthread_volatile[thread_seq]->stream_seq_per_thread++ % THREAD_SEQ_MAX;
-	relative_base_time = (sapp_global_val->individual_volatile->current_time - sapp_global_val->config.stream.stream_id_base_time_t) % RELATIVE_TIME_MAX;
+	relative_base_time = (g_CurrentTime - sapp_global_val->config.stream.stream_id_base_time_t) % RELATIVE_TIME_MAX;
 	
 	glo_sid = (thread_seq << 43) | (relative_base_time << 15) | (stream_seq);
 

@@ -701,7 +701,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pindex_tcp->stream.stream_public.pdetail=(void *)pdetail_pr;
 		memset(pdetail_pr,0,sizeof(struct tcpdetail_private));   
 		pdetail->createtime=g_CurrentTime;
-		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
+		pstream_pr->stream_create_timestamp_ms=g_CurrentTime_ms;
 		//adjust by lqy 20140515 只有新建时计数
 		if(createdir==DIR_S2C){
 			pdetail->clientpktnum++;
@@ -745,7 +745,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);
 		pindex_tcp->stream.stream_trace_id=0;
 		pdetail->createtime=g_CurrentTime;
-		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
+		pstream_pr->stream_create_timestamp_ms=g_CurrentTime_ms;	
 
 		/* 连接重置, 重新判断一下ddos 状态 */
 		if(pstream_pr->create_dir_by_well_known_port != 1)
@@ -796,7 +796,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	}
 	pstream_pr->timeout=link_default_nopkt_time;
 	pdetail->lastmtime=g_CurrentTime;	
-	pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
+	pstream_pr->stream_lastupdate_timestamp_ms=g_CurrentTime_ms;	
 	pdetail_pr->link_state=STREAM_LINK_JUST_EST;	
 	pstream->stream_state=TCP_SYN_STATE;
 
@@ -1046,8 +1046,8 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
     }
     pdetail->createtime=g_CurrentTime;	
 	pdetail->lastmtime=g_CurrentTime;
-	pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
-	pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
+	pstream_pr->stream_create_timestamp_ms=g_CurrentTime_ms;
+	pstream_pr->stream_lastupdate_timestamp_ms=g_CurrentTime_ms;
 	pdetail_pr->link_state=STREAM_LINK_DATA;	
 
 	if(pstream_pr->under_ddos_bypass){
@@ -2401,7 +2401,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 
 
 	pdetail->lastmtime=(long)g_CurrentTime;
-	pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
+	pstream_pr->stream_lastupdate_timestamp_ms=g_CurrentTime_ms;
 
 	
 	tcp_deal_ack(pstream,this_tcphdr);
@@ -2959,7 +2959,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, has been set drop flag, curdir:%d, return DROP.", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 		pdetail->lastmtime = g_CurrentTime;
-		pstream_pr->stream_lastupdate_timestamp_ms = sapp_global_val->individual_volatile->current_time_ms;
+		pstream_pr->stream_lastupdate_timestamp_ms = g_CurrentTime_ms;
 		lrustream(pindex_tcp);
 		return DROP;
 	}
@@ -3057,7 +3057,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	}
 
 	pdetail->lastmtime=g_CurrentTime;
-	pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
+	pstream_pr->stream_lastupdate_timestamp_ms=g_CurrentTime_ms;
 	pstream->addr.pkttype = PKT_TYPE_NORMAL;//add by lqy 20151222, init pkttype
 	pdetail_pr->tcpoverlen=0;//add by lqy 20150325
 	

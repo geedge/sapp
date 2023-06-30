@@ -57,7 +57,6 @@ char g_down_dev_name[DEV_NAME_STR_LEN];
 ///int g_packet_io_cap_level = CAP_LEVEL_MAC; /* 捕包起始位置,默认MAC层 */
 //int g_packet_io_thread_num = 1;
 int g_app_send_rst_type;
-//extern int g_timestamp_record_sw;
 int g_encapsulate_with_ddp = 0; /* 使用DDP协议封装的原始包 */
 int g_encapsulate_with_L2E = 0; /* 使用DDP协议封装的x27原始IP包 */
  /* 
@@ -678,22 +677,6 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		//timestamp_region_update(thread_num,  timecost);
 		sapp_fs2_fuzzy_latency_update_per_thread(thread_num,  timecost);
 	}
-#if DEBUG
-	//if(unlikely(g_timestamp_record_sw)){
-		//if(timecost > g_timedelay_threshold){
-		//	__timestamp_print_max_tuple4(p_raw_pkt, timecost, thread_num);
-		//}
-	//}	
-	
-	if(unlikely(g_raw_pkt_broken_check != 0)){
-		MESA_MD5_sum_bin((unsigned char *)p_raw_pkt->raw_pkt_data, p_raw_pkt->raw_pkt_len, raw_pkt_md5_after);
-
-		if(memcmp(raw_pkt_md5_before, raw_pkt_md5_after, 16) != 0){
-			printf("\033[41mraw packet is broken involuntarily! If you don't care, please disable 'raw_pkt_broken_check' in main.conf!\033[0m\n");
-			abort();
-		}
-	}	
-#endif
 
 	if(g_platform_action_cb_fun != NULL){
 		ret = g_platform_action_cb_fun(sapp_global_val->config.packet_io.depolyment_mode_bin, ret);

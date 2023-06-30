@@ -13,6 +13,9 @@
 extern "C" {
 #endif
 
+volatile time_t g_current_time;
+volatile long long g_current_time_ms;
+
 sapp_timer_handle sapp_get_platform_standalone_timer(void);
 static void *sapp_standalone_timer_check_timeout(void *arg);
 extern volatile int update_packet_io_status_sw;

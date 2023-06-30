@@ -69,67 +69,13 @@ void __timestamp_print_max_tuple4(const raw_pkt_t *raw_pkt, long timedelay, int 
 	return;
 }
 
-#if 0
 void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq)
 {
-	struct timeval curtime;
-
-	if(0 == g_timestamp_record_sw){
-		return;
-	}
-
-	if(NULL == raw_pkt){
-		/* 没有实际包到达, 可能是被超时淘汰的流, 把之前的值清空, 返回.  不记录此次时间 */
-		memset(&g_timestamp_record[thread_seq].ts_rd, 0, sizeof(long)*__TS_LEVEL_MAX);
-		return;
-	}
-
-	gettimeofday(&curtime, NULL);
-	g_timestamp_record[thread_seq].ts_rd[level] = curtime.tv_sec * 1000000 + curtime.tv_usec 
-					- (raw_pkt->raw_pkt_ts.tv_sec*1000000 + raw_pkt->raw_pkt_ts.tv_usec);
-
-	/* 某线程的最后一条时间戳记录到达时, 选择是否输出 */
-	if((TS_LEVEL_AFTER_PLUG) == level && (g_timestamp_record[thread_seq].ts_rd[level] >= timestamp_out_min)){
-		ibroadcast(PLATFORM_IHANDLE, 3, "timestamp", "%8ld %8ld %8ld %8ld %8ld \n",
-				 g_timestamp_record[thread_seq].ts_rd[TS_LEVEL_LIB],
-				 g_timestamp_record[thread_seq].ts_rd[TS_LEVEL_WORK],
-				 g_timestamp_record[thread_seq].ts_rd[TS_LEVEL_IP_ENTRY],
-				 g_timestamp_record[thread_seq].ts_rd[TS_LEVEL_BEFORE_PLUG],
-				 g_timestamp_record[thread_seq].ts_rd[TS_LEVEL_AFTER_PLUG]);
-	}
-
-	return;
 }
 
 void timestamp_record_lib(const raw_pkt_t *raw_pkt)
 {
-	int i;
-	struct timeval curtime;
-	long time_delay;
-	
-	if((0 == g_timestamp_record_sw) || (NULL == raw_pkt)){
-		return;
-	}
-
-	gettimeofday(&curtime, NULL);
-	time_delay = curtime.tv_sec * 1000000 + curtime.tv_usec 
-			 - (raw_pkt->raw_pkt_ts.tv_sec*1000000 + raw_pkt->raw_pkt_ts.tv_usec);
-
-	/* 更新所有工作线程的计数 */
-	for(i = 0; i < g_packet_io_thread_num; i++){
-		g_timestamp_record[i].ts_rd[TS_LEVEL_LIB] = time_delay;
-	}
-
-	return ;
 }
-#else
-void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq)
-{
-}
-void timestamp_record_lib(const raw_pkt_t *raw_pkt)
-{
-}
-#endif
 
 
 void timestamp_region_update(int tid, long long cpu_cycle)

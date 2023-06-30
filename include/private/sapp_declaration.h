@@ -18,6 +18,10 @@ extern "C" {
 
 extern sapp_global_t *sapp_global_val;
 
+extern volatile time_t g_current_time;
+extern volatile long long g_current_time_ms;
+
+
 /* 因嵌套层次太多, 使用简称描述 */
 #define ABBR_SAPP_LOG_LEVEL 	sapp_global_val->config.profiling.log.enabled_log_level
 #define ABBR_SAPP_LOG_HANDLE 	sapp_global_val->individual_fixed.log_handle
@@ -29,8 +33,8 @@ extern sapp_global_t *sapp_global_val;
 
 #define ABBR_SAPP_TIMER_HANDLE	sapp_global_val->individual_fixed.sapp_timer_handle
 #define ABBR_SAPP_START_TIME 	sapp_global_val->individual_fixed.sapp_start_time
-#define ABBR_CURRENT_TIME 		sapp_global_val->individual_volatile->current_time
-#define ABBR_CURRENT_TIME_MS 	sapp_global_val->individual_volatile->current_time_ms
+#define ABBR_CURRENT_TIME 		g_current_time
+#define ABBR_CURRENT_TIME_MS 	g_current_time_ms
 #define ABBR_INJECT_RST_NUM 	sapp_global_val->config.stream.tcp.inject.rst_num
 #define ABBR_INJECT_RST_SIGN 	sapp_global_val->config.stream.tcp.inject.rst_signature_enable
 #define ABBR_INTERFACE_TYPE		sapp_global_val->config.packet_io.internal.interface.type_bin
@@ -59,8 +63,8 @@ extern sapp_global_t *sapp_global_val;
 #define ABBR_MEMORY_STAT_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_memory_stat_log_absolute
 
 /* 将之前分散的全局变量强制更新为新的全局变量 */
-#define g_CurrentTime_ms			sapp_global_val->individual_volatile->current_time_ms
-#define g_CurrentTime 			sapp_global_val->individual_volatile->current_time
+#define g_CurrentTime_ms		g_current_time_ms
+#define g_CurrentTime 			g_current_time
 #define g_sapp_log_handle		sapp_global_val->individual_fixed.log_handle
 #define g_iThreadNum			sapp_global_val->config.cpu.worker_threads
 #define g_packet_io_thread_num  sapp_global_val->config.cpu.worker_threads
@@ -78,7 +82,8 @@ extern sapp_global_t *sapp_global_val;
 #define g_topology_mode_raw		sapp_global_val->config.packet_io.depolyment_mode_bin
 #define g_packet_io_cap_mode 	sapp_global_val->config.packet_io.internal.interface.type_bin
 #define g_packet_io_cap_level	sapp_global_val->individual_fixed.packet_io_cap_level
-#define g_timestamp_record_sw	MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, sapp_global_val->config.profiling.process_latency_enabled_log_level)
+//#define g_timestamp_record_sw	MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, sapp_global_val->config.profiling.process_latency_enabled_log_level)
+#define g_timestamp_record_sw	sapp_global_val->config.profiling.process_latency_enabled_log_level>20
 
 #define g_timestamp_record_threshold	sapp_global_val->config.profiling.process_latency_threshold_in_ns
 

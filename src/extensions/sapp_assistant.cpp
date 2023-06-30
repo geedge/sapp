@@ -15,7 +15,6 @@
 //extern time_t g_CurrentTime;//add by lqy 20070606
 //extern int g_packet_io_thread_num;
 extern char g_app_instance_name[64];
-//extern int g_timestamp_record_sw;
 
 static pthread_mutex_t g_plug_Independent_thread_mutex;
 static pthread_t *g_plug_Independent_thread_pid;
@@ -510,7 +509,7 @@ extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, 
 				break;
 			}
 			long long *curtime_ms = (long long *)opt_val;
-			*curtime_ms = sapp_global_val->individual_volatile->current_time_ms;
+			*curtime_ms = g_CurrentTime_ms;
 
 		}
 		break;

@@ -222,7 +222,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	pdetail->createtime=g_CurrentTime;	
 	pstream_udp_pr->global_stream_id = get_global_stream_id(threadnum);
 	pstream_udp_pr->stream_trace_id=0;
-	pstream_udp_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
+	pstream_udp_pr->stream_create_timestamp_ms=g_CurrentTime_ms;	
 	pdetail->lastmtime=g_CurrentTime;
 
 	if(pstream_udp_pr->under_ddos_bypass){
@@ -437,7 +437,7 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 		pdetail->createtime=g_CurrentTime;
 		pstream_pr->global_stream_id = get_global_stream_id(threadnum);
 		pstream_pr->stream_trace_id=0;
-		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
+		pstream_pr->stream_create_timestamp_ms=g_CurrentTime_ms;	
 		plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[UDP_ONE_STATE]);
 		pstream->stream_state=UDP_ONE_STATE;
 //		streamaddlist(pstream,plist);
@@ -632,7 +632,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		pdetail->createtime = g_CurrentTime;
 		pstream_pr->global_stream_id = get_global_stream_id(thread_num);
 		pstream_pr->stream_trace_id=0;
-		pstream_pr->stream_create_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;	
+		pstream_pr->stream_create_timestamp_ms=g_CurrentTime_ms;	
 		pdetail->datalen = datalen;
 		pdetail->pdata = (char *)udph + sizeof (struct udphdr);
 		pstream->pdetail=(void *)pdetail;
@@ -675,7 +675,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 
 		pstream->pudpdetail->lastmtime=(long)g_CurrentTime;
-		pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
+		pstream_pr->stream_lastupdate_timestamp_ms=g_CurrentTime_ms;
 
 		if(pstream_pr->under_ddos_bypass){
 			local_sys_stat->count[SAPP_STAT_UDP_BYPASS_PKTS]++;
@@ -924,7 +924,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 
 		pstream->pudpdetail->lastmtime=(long)g_CurrentTime;
-		pstream_pr->stream_lastupdate_timestamp_ms=sapp_global_val->individual_volatile->current_time_ms;
+		pstream_pr->stream_lastupdate_timestamp_ms=g_CurrentTime_ms;
 
 		if(pstream_pr->under_ddos_bypass){
 			local_sys_stat->count[SAPP_STAT_UDP_BYPASS_PKTS]++;
