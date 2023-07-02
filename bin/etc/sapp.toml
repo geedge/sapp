@@ -83,8 +83,9 @@
     [packet_io.polling]
     enabled=1    
 ### note, polling_priority = call sapp_recv_pkt every call polling_entry times,     
-    polling_priority=1
-
+    polling_priority=100
+    work_percent=90
+    
     [packet_io.under_ddos]
 ### note, to reduce impact of ddos attack,set some stream bypass, all plugins will not process these streams   
     stream_bypass_enabled=0

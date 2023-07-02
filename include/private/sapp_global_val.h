@@ -227,6 +227,7 @@ typedef struct{
 	char pcap_dumpfile_name[NAME_MAX];
 	int polling_enabled;
 	int polling_priority; /* call sapp_recv_pkt every call polling_entry times, 调用多少次polling后调用一次recv pkt, 1表示两者优先级相同 */
+	int work_percent;
 	int without_usleep; /* 性能测试模式, 不会调用usleep, CPU会100% */
 	int inbound_route_dir; /* 表示入境, I2C方向的值是0还是1 */
 	char pcap_capture_direction[NAME_MAX]; /* in, out, inout */
@@ -247,7 +248,7 @@ typedef struct{
 	unsigned char extract_linkdir_from_mac_bit_value; /* 从某个字节获取链路方向的bit值, 而不是index, 可以直接进行&运算 */
 
 	sapp_under_ddos_config_t under_ddos_config;
-	int not_exit_for_dumpfile_mode; /* 读包结束后不退出进程, 方便插件自测试, 多次循环读取多个包 */
+	short not_exit_for_dumpfile_mode; /* 读包结束后不退出进程, 方便插件自测试, 多次循环读取多个包 */
 	short infinite_loop_enabled;
 	short destroy_all_plug_enabled;
 }sapp_config_packet_io_t;

@@ -877,12 +877,14 @@ static int marsio4_sleep_time_table[100] =
 	 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  	 
 };
 
-static inline void marsio4_sleep(int tid, int tot_call_times, int rcv_pkt_times)
+static inline void marsio4_sleep(int tid, int work_percent)
 {
-
-	float work_percent = ((float)rcv_pkt_times / (float)tot_call_times) * 100.0;
-
-	if ((work_percent < 90.0)&& (marsio4_sleep_time_table[(int)work_percent] > 0))
+	if(work_percent > 100 || work_percent < 0)
+	{
+		return;
+	}
+	
+	//if ((marsio4_sleep_time_table[(int)work_percent] > 0) && (work_percent < 100))
 	{
 		if (ptr_marsio_poll_wait != NULL)
 		{
@@ -893,6 +895,7 @@ static inline void marsio4_sleep(int tid, int tot_call_times, int rcv_pkt_times)
 			sapp_usleep(marsio4_sleep_time_table[(int)work_percent]);
 		}
 	}
+	return;
 }
 
 /* 高性能模式下, marsio队列有缓存, 无新包到来时需要定期刷新队列中的数据 */
@@ -918,7 +921,9 @@ static void *marsio4_worker(void *arg)
 	int tseq = *((int *)arg);
 	raw_pkt_t raw_pkt;
 	int total_call_times = 0, rcv_pkt_tims = 0, polling_work_times = 0;
-
+	float work_percent;
+	int sleep_check_interval = sapp_global_val->config.packet_io.polling_priority;
+	int work_percent_threshold = sapp_global_val->config.packet_io.work_percent;
 	char  thread_name[32] = "";
 	sprintf(thread_name, "sapp_marsio_%d", tseq);
 	prctl(PR_SET_NAME, thread_name);
@@ -941,7 +946,8 @@ static void *marsio4_worker(void *arg)
 	raw_pkt.magic_num = RAW_PKT_MAGIC_NUM;
 	raw_pkt.offset_to_raw_pkt_hdr = 0;
 
-	while(SAPP_STATE_PROCESSING != sapp_get_current_state()){
+	while(SAPP_STATE_PROCESSING != sapp_get_current_state())
+	{
 		sapp_usleep(1000);
 	}
 
@@ -951,8 +957,10 @@ static void *marsio4_worker(void *arg)
 	int polling_enabled = sapp_global_val->config.packet_io.polling_enabled;
 	int infinite_loop_enabled = sapp_global_val->config.packet_io.infinite_loop_enabled;
 	int polling_timeout_ret=POLLING_STATE_WORK;
-	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state){	
-		if(marsio4_process_packet(tseq, &raw_pkt) > 0){
+	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state)
+	{	
+		if(marsio4_process_packet(tseq, &raw_pkt) > 0)
+		{
 			rcv_pkt_tims++;
 		}else{
 			marsio4_flush_queue_buf(tseq);
@@ -980,9 +988,10 @@ static void *marsio4_worker(void *arg)
 		sapp_global_val->mthread_volatile[tseq]->sys_stat.count[SAPP_STAT_FETCH_PKT]++;
 		total_call_times++;
 
-		if((rcv_pkt_tims % sapp_global_val->config.packet_io.polling_priority) == 0){
-			/* 如果流量巨大, 一直有包时, 每隔polling_priority个包也要调用polling接口 */
-			if(polling_enabled && (g_PollingFunNum > 0))
+		if((rcv_pkt_tims % sleep_check_interval) == 0 && polling_enabled)
+		{
+			/* 如果流量巨大, 一直有包时, 每隔sleep_check_interval次调用也要调用polling接口 */
+			if(g_PollingFunNum > 0)
 			{
 				if((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0)
 				{
@@ -992,10 +1001,15 @@ static void *marsio4_worker(void *arg)
 			total_call_times++;
 		}
 		
-		if(total_call_times >= sapp_global_val->config.packet_io.polling_priority){
+		if(total_call_times >= sleep_check_interval)
+		{
 			if(likely(infinite_loop_enabled == 0))
 			{
-				marsio4_sleep(tseq, total_call_times, rcv_pkt_tims + polling_work_times);
+				work_percent = ((float)(rcv_pkt_tims + polling_work_times )/(float)total_call_times) * 100.0;
+				if((int)work_percent < work_percent_threshold)
+				{
+					marsio4_sleep(tseq, work_percent);
+				}
 			}
 			total_call_times = 0;
 			rcv_pkt_tims = 0;
