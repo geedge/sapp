@@ -119,6 +119,7 @@ void *sapp_time_event_thread(void *arg);
 void sapp_fs2_update_count(int field_index, unsigned  long long value);
 void sapp_fs2_update_length(int field_index, unsigned  long long value);
 void sapp_fs2_set_latency(int thead_seq, long long time_cost);
+void sapp_fs2_set_work_percent(int thead_seq, long long work_percent);
 void sapp_fs2_set_plug_entry_latency(int entry_id, long long time_cost);
 
 void sapp_fs3_metric_incrby(int column_idx, int column_idy,long long value);

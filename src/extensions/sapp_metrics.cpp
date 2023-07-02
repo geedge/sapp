@@ -22,6 +22,14 @@ void sapp_fs2_update_length(int field_index, unsigned  long long value)
 	}
 }
 
+void sapp_fs2_set_work_percent(int thead_seq, long long work_percent)
+{
+    if(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle != NULL){
+        FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle, 
+        		   sapp_global_val->individual_fixed.fs2_runtime.fs_work_percent_id_array[thead_seq], 
+        		   0, FS_OP_SET, work_percent);
+    }
+}
 
 void sapp_fs2_set_latency(int thead_seq, long long time_cost)
 {
@@ -31,6 +39,7 @@ void sapp_fs2_set_latency(int thead_seq, long long time_cost)
         		   0, FS_OP_SET, time_cost);
     }
 }
+
 
 
 void sapp_fs2_set_plug_entry_latency(int entry_id, long long time_cost)
@@ -319,6 +328,18 @@ static int sapp_fs2_init(sapp_global_t *global_paramters)
 				return -1;
 			}
 		}
+	}
+	for (int i = 0; i < g_packet_io_thread_num; i++)
+	{
+		char histogram_name[16];
+		sprintf(histogram_name, "Work(tid_%d)", i);
+		p_fs2_rt->fs_work_percent_id_array[i] = FS_register_histogram(fs2_handle,	 // Field Stat句柄
+																 FS_CALC_SPEED,	 // 输出累计值或瞬时值
+																 histogram_name, // 统计项名称，字符串
+																 1,				 // 可追踪的最小值
+																 100,		 // 可追踪的最大值
+																 1);			 // 精度，即小数点后几位，范围1~4
+		FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &p_fs2_rt->fs_work_percent_id_array[i], sizeof(int));
 	}
 	FS_start(fs2_handle);
 	

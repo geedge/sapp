@@ -916,6 +916,7 @@ static inline void marsio4_flush_queue_buf(int tid)
 	}
 }
 extern int g_PollingFunNum;
+extern void sapp_fs2_set_work_percent(int thead_seq, long long work_percent);
 static void *marsio4_worker(void *arg)
 {
 	int tseq = *((int *)arg);
@@ -1006,6 +1007,7 @@ static void *marsio4_worker(void *arg)
 			if(likely(infinite_loop_enabled == 0))
 			{
 				work_percent = ((float)(rcv_pkt_tims + polling_work_times )/(float)total_call_times) * 100.0;
+				sapp_fs2_set_work_percent(tseq, (long long)work_percent);
 				if((int)work_percent < work_percent_threshold)
 				{
 					marsio4_sleep(tseq, work_percent);
