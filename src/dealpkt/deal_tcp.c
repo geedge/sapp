@@ -2017,11 +2017,11 @@ static void  tcp_set_new_data(struct streaminfo *a_tcp,struct  half_tcpstream  *
 
 	if(pdetail_pr->pclient)
 	{
-		pdetail_pr->flow_stat->C2S_seq_gap_loss_cnt=pdetail_pr->pclient->totallost;
+		pdetail_pr->flow_stat->S2C_seq_gap_loss_cnt=pdetail_pr->pclient->totallost;
 	}
 	if(pdetail_pr->pserver)
 	{
-		pdetail_pr->flow_stat->S2C_seq_gap_loss_cnt=pdetail_pr->pserver->totallost;
+		pdetail_pr->flow_stat->C2S_seq_gap_loss_cnt=pdetail_pr->pserver->totallost;
 	}
 
 	if (fin)
