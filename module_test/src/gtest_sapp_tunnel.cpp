@@ -142,7 +142,7 @@ void l2tp_protocol_timeout_run(void)
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "c2d9ac1876ee3552d9fa4d4f7e7cc831"),0);
 	
-	gtest_start_sapp_progress(sapp_timeout_argv);
+	call_libsapp_devel_with_args(3, sapp_timeout_argv);
 }
 
 

@@ -2115,7 +2115,7 @@ TEST(fake_marsio, vlan_mac_flip_inject_no_asymmetric)
 	/* 别着�? 不是BUG!
 	   这个测试用例就是应该错的 !!!
 	*/
-	EXPECT_EXIT(fake_marsio_vlan_mac_flipping_inject_run(0), testing::ExitedWithCode(0),  "index:4, mac addr error");
+	EXPECT_EXIT(fake_marsio_vlan_mac_flipping_inject_run(0), testing::ExitedWithCode(1),  "index:4, mac addr error");
 }
 
 #define _fake_marsio_vlan_mac_flip_inject_with_asymmetric 1   
