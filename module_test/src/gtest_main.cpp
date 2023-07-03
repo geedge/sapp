@@ -887,27 +887,27 @@ TEST(control, get_depmode_mirror)
 #define control_get_depmode_inline 1 
 TEST(control, get_depmode_inline)
 {
-	EXPECT_EXIT(get_deployment_mode_inline(), testing::KilledBySignal(SIGABRT),  "get_deployment_mode_entry test success");
+	EXPECT_EXIT(get_deployment_mode_inline(), testing::ExitedWithCode(0),  "get_deployment_mode_entry test success");
 }
 
 
 #define control_get_depmode_transparent 1 
 TEST(control, get_depmode_transparent)
 {
-	EXPECT_EXIT(get_deployment_mode_transparent(), testing::KilledBySignal(SIGABRT),  "get_deployment_mode_entry test success");
+	EXPECT_EXIT(get_deployment_mode_transparent(), testing::ExitedWithCode(0),  "get_deployment_mode_entry test success");
 }
 
 #define _control_tcp_drop_current_pkt 1  // for SI symbol view
 TEST(control, DISABLED_tcp_drop_current_pkt)
 {
-	EXPECT_EXIT(control_drop_current_tcp_pkt_run(), testing::KilledBySignal(SIGABRT),  "");
+	EXPECT_EXIT(control_drop_current_tcp_pkt_run(), testing::ExitedWithCode(0),  "");
 	ASSERT_EQ(GTEST_TRANSPARENT_TO_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 
 #define _control_udp_drop_current_pkt 1  // for SI symbol view
 TEST(control, DISABLED_udp_drop_current_pkt)
 {
-	EXPECT_EXIT(control_drop_current_udp_pkt_run(), testing::KilledBySignal(SIGABRT),  "");
+	EXPECT_EXIT(control_drop_current_udp_pkt_run(), testing::ExitedWithCode(0),  "");
 	ASSERT_EQ(GTEST_TRANSPARENT_TO_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 
@@ -916,7 +916,7 @@ TEST(control, DISABLED_udp_drop_current_pkt)
 TEST(control, get_tcp_flow_stat)
 {
 	inline_get_tcp_flow_stat_run();
-	//EXPECT_EXIT(inline_get_tcp_flow_stat_run(), testing::KilledBySignal(SIGABRT),  "inline_get_tcp_flow_stat_entry() test success");
+	//EXPECT_EXIT(inline_get_tcp_flow_stat_run(), testing::ExitedWithCode(0),  "inline_get_tcp_flow_stat_entry() test success");
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
 }
 
@@ -1706,20 +1706,20 @@ TEST(jump_layer, eth_vlan_ip6_udp_gtpext_ip4_tcp)
 #define _sapp_vxlan_header 1  // for SI symbol view
 TEST(inline_mode, vxlan_header)
 {
-	EXPECT_EXIT(inline_vxlan_header_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_vxlan_header_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 
 #define _sapp_inline_forward_simple 1  // for SI symbol view
 TEST(inline_mode, forward_simple)
 {
-	EXPECT_EXIT(inline_flow_forward_simple_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_flow_forward_simple_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define _sapp_inline_tcp_simple 1  // for SI symbol view
 TEST(inline_mode, tcp_simple)
 {
-	EXPECT_EXIT(inline_tcp_simple_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_tcp_simple_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 
@@ -1764,13 +1764,13 @@ TEST(inline_mode, inject_pyaload_s2c_trigger_by_c2s_ipv6)
 #define _inline_ip_plug_entry_not_call 1  // for SI symbol view
 TEST(inline_mode, ip_plug_entry_not_call)
 {
-	EXPECT_EXIT(inline_ip_plug_entry_not_call_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_ip_plug_entry_not_call_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define _inline_udp_plug_entry_not_call 1  // for SI symbol view
 TEST(inline_mode, udp_plug_entry_not_call)
 {
-	EXPECT_EXIT(inline_udp_plug_entry_not_call_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_udp_plug_entry_not_call_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define _inline_udp_plug_drop 1  // for SI symbol view
@@ -1784,129 +1784,129 @@ TEST(inline_mode, DISABLED_udp_plug_drop)
 #define _inline_layer_addr_ntop 1  // for SI symbol view
 TEST(inline_mode, test_layer_addr_ntop)
 {
-	EXPECT_EXIT(inline_layer_addr_ntop_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_layer_addr_ntop_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define _inline_stream_addr_ntop 1  // for SI symbol view
 TEST(inline_mode, stream_addr_ntop)
 {
-	EXPECT_EXIT(inline_stream_addr_ntop_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_stream_addr_ntop_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define _inline_stream_pfather 1  // for SI symbol view
 TEST(inline_mode, stream_pfather)
 {
-	EXPECT_EXIT(inline_stream_pfather_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_stream_pfather_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 
 #define _inline_plug_stat 1  // for SI symbol view
 TEST(inline_mode, plug_stat)
 {
-	EXPECT_EXIT(inline_plug_stat_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_plug_stat_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define inline_polling_timeout 1  // for SI symbol view
 TEST(inline_mode, polling_timeout_tcp)
 {
-	EXPECT_EXIT(inline_polling_timeout_tcp_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_polling_timeout_tcp_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 
 #define inline_polling_timeout_tcpall 1  // for SI symbol view
 TEST(inline_mode, polling_timeout_tcpall)
 {
-	EXPECT_EXIT(inline_polling_timeout_tcpall_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_polling_timeout_tcpall_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 
 #define inline_polling_timeout_udp 1  // for SI symbol view
 TEST(inline_mode, polling_timeout_udp)
 {
-	EXPECT_EXIT(inline_polling_timeout_udp_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_polling_timeout_udp_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define inline_asymmetric_vxlan_addr 1  // for SI symbol view
 TEST(inline_mode, asymmetric_vxlan_addr)
 {
-	EXPECT_EXIT(inline_asymmetric_vxlan_addr_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_asymmetric_vxlan_addr_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define inline_cheat_dup_tcp 1  
 TEST(inline_mode, cheat_dup_tcp)
 {
-	EXPECT_EXIT(inline_cheat_dup_tcp_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_cheat_dup_tcp_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define inline_dup_inject_ipv4_tcp 1  
 TEST(inline_mode, dup_inject_ipv4_tcp)
 {
-	EXPECT_EXIT(inline_dup_inject_ipv4_tcp_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_dup_inject_ipv4_tcp_run(), testing::ExitedWithCode(0),  "test succ");
 
 }
 
 #define inline_dup_inject_ipv6_tcp 1  
 TEST(inline_mode, dup_inject_ipv6_tcp)
 {
-	EXPECT_EXIT(inline_dup_inject_ipv6_tcp_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_dup_inject_ipv6_tcp_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define inline_dup_inject_ipv4_udp 1  
 TEST(inline_mode, dup_inject_ipv4_udp)
 {
-	EXPECT_EXIT(inline_dup_inject_ipv4_udp_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_dup_inject_ipv4_udp_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define inline_dup_inject_ipv6_udp 1  
 TEST(inline_mode, dup_inject_ipv6_udp)
 {
-	EXPECT_EXIT(inline_dup_inject_ipv6_udp_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_dup_inject_ipv6_udp_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define inline_ssdp 1  
 TEST(inline_mode, ssdp)
 {
-	EXPECT_EXIT(inline_ssdp_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_ssdp_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define inline_nbns 1  
 TEST(inline_mode, nbns)
 {
-	EXPECT_EXIT(inline_nbns_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_nbns_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 
 #define inline_get_rawpkt_data 1  
 TEST(inline_mode, get_rawpkt_data)
 {
-	EXPECT_EXIT(inline_get_rawpkt_data_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_get_rawpkt_data_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define inline_raw_ip_frag_list 1  
 TEST(inline_mode, raw_ip_frag_list)
 {
-	EXPECT_EXIT(inline_raw_ip_frag_list_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_raw_ip_frag_list_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 
 #define inline_get_vxlan_info 1  
 TEST(inline_mode, get_vxlan_info)
 {
-	EXPECT_EXIT(inline_vxlan_info_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_vxlan_info_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 
 #define inline_vxlan_inner_hdlc 1  
 TEST(inline_mode, inner_hdlc)
 {
-	EXPECT_EXIT(inline_inner_hdlc_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_inner_hdlc_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 
 #define inline_vxlan_inner_ppp 1  
 TEST(inline_mode, inner_ppp)
 {
-	EXPECT_EXIT(inline_inner_ppp_run(), testing::KilledBySignal(SIGABRT),  "test succ");
+	EXPECT_EXIT(inline_inner_ppp_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 #define inline_vxlan_inject_inner_ppp 1  
@@ -2086,27 +2086,27 @@ TEST(hybrid, dataset)
 #define _fake_marsio_vlan_flip_no_mac_flip 1   
 TEST(fake_marsio, vlan_flip_no_mac_flip)
 {
-	EXPECT_EXIT(fake_marsio_vlan_flipping_run(), testing::KilledBySignal(SIGABRT),  "test success");
+	EXPECT_EXIT(fake_marsio_vlan_flipping_run(), testing::ExitedWithCode(0),  "test success");
 }
 
 #define _fake_marsio_vlan_flip_and_mac_flip 1   
 TEST(fake_marsio, vlan_flip_and_mac_flip)
 {
-	EXPECT_EXIT(fake_marsio_vlan_flipp_and_mac_flip_run(), testing::KilledBySignal(SIGABRT),  "test success");
+	EXPECT_EXIT(fake_marsio_vlan_flipp_and_mac_flip_run(), testing::ExitedWithCode(0),  "test success");
 }
 
 
 #define _fake_marsio_vlan_flip_and_symmetric_mpls0vs1 1   
 TEST(fake_marsio, vlan_flip_and_symmetric_mpls0vs1)
 {
-	EXPECT_EXIT(fake_marsio_vlan_flipp_and_symmetric_mpls0vs1_run(), testing::KilledBySignal(SIGABRT),  "test success");
+	EXPECT_EXIT(fake_marsio_vlan_flipp_and_symmetric_mpls0vs1_run(), testing::ExitedWithCode(0),  "test success");
 }
 
 
 #define _fake_marsio_vlan_flip_and_symmetric_mpls1vs2 1   
 TEST(fake_marsio, vlan_flip_and_symmetric_mpls1vs2)
 {
-	EXPECT_EXIT(fake_marsio_vlan_flipp_and_symmetric_mpls1vs2_run(), testing::KilledBySignal(SIGABRT),  "test success");
+	EXPECT_EXIT(fake_marsio_vlan_flipp_and_symmetric_mpls1vs2_run(), testing::ExitedWithCode(0),  "test success");
 }
 
 #define _fake_marsio_vlan_mac_flip_inject_no_asymmetric 1   
@@ -2115,13 +2115,13 @@ TEST(fake_marsio, vlan_mac_flip_inject_no_asymmetric)
 	/* 别着�? 不是BUG!
 	   这个测试用例就是应该错的 !!!
 	*/
-	EXPECT_EXIT(fake_marsio_vlan_mac_flipping_inject_run(0), testing::KilledBySignal(SIGABRT),  "index:4, mac addr error");
+	EXPECT_EXIT(fake_marsio_vlan_mac_flipping_inject_run(0), testing::ExitedWithCode(0),  "index:4, mac addr error");
 }
 
 #define _fake_marsio_vlan_mac_flip_inject_with_asymmetric 1   
 TEST(fake_marsio, vlan_mac_flip_inject_with_asymmetric)
 {
-	EXPECT_EXIT(fake_marsio_vlan_mac_flipping_inject_run(1), testing::KilledBySignal(SIGABRT),  "test success");
+	EXPECT_EXIT(fake_marsio_vlan_mac_flipping_inject_run(1), testing::ExitedWithCode(0),  "test success");
 }
 
 
