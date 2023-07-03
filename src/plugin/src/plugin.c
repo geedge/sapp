@@ -706,12 +706,12 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	if((plugtype == PLUGTYPE_PLATFORM) || (plugtype == PLUGTYPE_PROTOCOL))
 	{
 		//平台层和解析层插件符号表公开
-		filepoint = dlopen(buf_sofilename,RTLD_NOW|RTLD_LAZY|RTLD_GLOBAL|RTLD_DEEPBIND);
+		filepoint = dlopen(buf_sofilename,RTLD_NOW|RTLD_LAZY|RTLD_GLOBAL);
 	}
 	else
 	{
 		//业务层插件符号表优先调用自己符号表
-		filepoint = dlopen(buf_sofilename,RTLD_NOW|RTLD_LAZY|RTLD_DEEPBIND|RTLD_LOCAL);
+		filepoint = dlopen(buf_sofilename,RTLD_NOW|RTLD_LAZY|RTLD_LOCAL);
 	}
 
 	if( filepoint == NULL ) 

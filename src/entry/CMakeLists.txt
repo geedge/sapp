@@ -52,6 +52,10 @@ if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
 	set(SAPP_MODULES ${SAPP_MODULES} libjemalloc-static)
 endif()
 
+if(MEM_POOL STREQUAL "MIMALLOC")
+	set(SAPP_MODULES ${SAPP_MODULES} libmimalloc-static)
+endif()
+
 target_link_libraries(sapp -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive ${SAPP_DEPEND_DYN_LIB} ${SYSTEMD_LIBRARIES})
 
 target_link_libraries(sapp packet_io_pcap)

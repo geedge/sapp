@@ -53,20 +53,41 @@ set_property(TARGET libdabloom-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${I
 
 ### jemalloc
 if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
-ExternalProject_Add(libjemalloc PREFIX libjemalloc
-        URL ${CMAKE_CURRENT_SOURCE_DIR}/jemalloc-5.3.0.tar.gz
-        URL_MD5 594dd8e0a1e8c1ef8a1b210a1a5aff5b
-        CONFIGURE_COMMAND ./autogen.sh --prefix=<INSTALL_DIR>
-        BUILD_COMMAND make
-		BUILD_IN_SOURCE 1
-        INSTALL_COMMAND make install prefix=<INSTALL_DIR>)
+        ExternalProject_Add(libjemalloc PREFIX libjemalloc
+                URL ${CMAKE_CURRENT_SOURCE_DIR}/jemalloc-5.3.0.tar.gz
+                URL_MD5 594dd8e0a1e8c1ef8a1b210a1a5aff5b
+                CONFIGURE_COMMAND ./autogen.sh --prefix=<INSTALL_DIR>
+                BUILD_COMMAND make
+                        BUILD_IN_SOURCE 1
+                INSTALL_COMMAND make install prefix=<INSTALL_DIR>)
 
-ExternalProject_Get_Property(libjemalloc INSTALL_DIR)
-file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
+        ExternalProject_Get_Property(libjemalloc INSTALL_DIR)
+        file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
 
-add_library(libjemalloc-static STATIC IMPORTED GLOBAL)
-add_dependencies(libjemalloc-static libjemalloc)
-set_property(TARGET libjemalloc-static PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/libjemalloc.a)
-set_property(TARGET libjemalloc-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
+        add_library(libjemalloc-static STATIC IMPORTED GLOBAL)
+        add_dependencies(libjemalloc-static libjemalloc)
+        set_property(TARGET libjemalloc-static PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/libjemalloc.a)
+        set_property(TARGET libjemalloc-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
+endif()
+
+### mimalloc
+if(MEM_POOL STREQUAL "MIMALLOC")
+        ExternalProject_Add(libmimalloc PREFIX libmimalloc
+                URL ${CMAKE_CURRENT_SOURCE_DIR}/mimalloc-2.1.2.tar.gz
+                URL_MD5 5179c8f5cf1237d2300e2d8559a7bc55
+                CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=RELWITHDEBINFO)
+
+        ExternalProject_Get_Property(libmimalloc INSTALL_DIR)
+        file(MAKE_DIRECTORY ${INSTALL_DIR}/include/mimalloc-2.1)
+
+        add_library(libmimalloc-static STATIC IMPORTED GLOBAL)
+        add_dependencies(libmimalloc-static libmimalloc)
+        set_property(TARGET libmimalloc-static PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib64/mimalloc-2.1/libmimalloc.a)
+        set_property(TARGET libmimalloc-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include/mimalloc-2.1)
+
+        add_library(libmimalloc-dynamic STATIC IMPORTED GLOBAL)
+        add_dependencies(libmimalloc-dynamic libmimalloc)
+        set_property(TARGET libmimalloc-dynamic PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib64/mimalloc-2.1/libmimalloc.so)
+        set_property(TARGET libmimalloc-dynamic PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include/mimalloc-1.8)
 endif()
 

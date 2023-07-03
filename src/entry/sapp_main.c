@@ -14,12 +14,12 @@ extern "C" {
 int main(int argc, char *argv[])
 {
 #ifdef HASP_ENABLED
-
 #ifndef FEATURE_ID
 #define FEATURE_ID 100
 #endif
 	hasp_verify(FEATURE_ID);
 #endif
+
 	if(libsapp_setup_env(argc,argv) < 0){
 		return -1;
 	}
