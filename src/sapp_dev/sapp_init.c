@@ -54,23 +54,8 @@ extern int sapp_assistant_init(void);
 extern char gdev_keepalive_ip_entry(const struct streaminfo *pstream,unsigned char routedir,int thread_seq, const struct mesa_ip4_hdr *ipv4_hdr);
 extern char gdev_keepalive_udp_entry(const struct streaminfo *a_udp,  void **pme, int thread_seq, const void *ip_hdr);
 
-static int _check_exit_cap_mode;
 extern volatile unsigned long g_sapp_destory_env_running_state;
 extern volatile unsigned long g_sapp_destory_env_done_state;
-
-static void forbid_call_exit_in_running_state(void)
-{
-	/* 主动调用libsapp_destroy_env() 退出进程, 不告警  */
-	if(SAPP_DESTROY_DONE_FLAG == g_sapp_destory_env_done_state){
-		return;
-	}
-
-	if(_check_exit_cap_mode != CAP_MODEL_PCAP_DUMPFILE){
-		printf("\033[41mCall exit() in running state is forbidden!!\033[0m\n");
-		abort();
-	}
-	
-}
 
 static void sapp_platform_finish_up(void)
 {
@@ -334,8 +319,6 @@ void MESA_platform_run(void)
 
 		调用了sapp_gval_destroy()之后, 全局变量sapp_global_val都被free了, 此处临时存一下.
 	*/
-	_check_exit_cap_mode = g_packet_io_cap_mode;
-	atexit(forbid_call_exit_in_running_state);
 
 	__sapp_timer_platform_run();
 	
