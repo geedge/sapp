@@ -140,7 +140,7 @@ branch_build_debug_for_centos7:
     BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC
+    MEM_POOL: JEMALLOC_STATIC
   artifacts:
     paths:
     - build/*
@@ -156,7 +156,7 @@ branch_build_release_for_centos7:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC
+    MEM_POOL: JEMALLOC_STATIC
   extends: .build_by_travis_for_centos7
   artifacts:
     paths:
@@ -174,7 +174,7 @@ develop_build_debug_for_centos7:
     BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC
+    MEM_POOL: JEMALLOC_STATIC
     PACKAGE: 1
     UPLOAD: 1
     ASAN_OPTION: "OFF"
@@ -197,7 +197,7 @@ develop_build_release_for_centos7:
     BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC
+    MEM_POOL: JEMALLOC_STATIC
     PACKAGE: 1
     UPLOAD: 1
     ASAN_OPTION: "OFF"
@@ -219,7 +219,7 @@ release_build_release_for_centos7:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC
+    MEM_POOL: JEMALLOC_STATIC
     PACKAGE: 1
     UPLOAD: 1
     PULP3_REPO_NAME: platform-stable-x86_64.el7
@@ -239,7 +239,7 @@ branch_build_debug_for_centos8:
     BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC
+    MEM_POOL: JEMALLOC_STATIC
   artifacts:
     paths:
     - build/*
@@ -255,7 +255,7 @@ branch_build_release_for_centos8:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC
+    MEM_POOL: JEMALLOC_STATIC
   extends: .build_by_travis_for_centos8
   artifacts:
     paths:
@@ -273,7 +273,7 @@ develop_build_debug_for_centos8:
     BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC
+    MEM_POOL: JEMALLOC_STATIC
     PACKAGE: 1
     UPLOAD: 1
     ASAN_OPTION: "OFF"
@@ -296,7 +296,7 @@ develop_build_release_for_centos8:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC
+    MEM_POOL: JEMALLOC_STATIC
     PACKAGE: 1
     UPLOAD: 1
     ASAN_OPTION: "OFF"
@@ -318,7 +318,7 @@ release_build_release_for_centos8:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC
+    MEM_POOL: JEMALLOC_STATIC
     PACKAGE: 1
     UPLOAD: 1
     PULP3_REPO_NAME: platform-stable-x86_64.el8
@@ -341,7 +341,7 @@ envelope_rpm_for_centos7:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC
+    MEM_POOL: JEMALLOC_STATIC
     HASP_ENABLED: "ON"
     FEATURE_ID: 100
     HASP_INTERNAL_S: 3600
@@ -366,7 +366,7 @@ envelope_rpm_for_centos8:
     BUILD_TYPE: RelWithDebInfo
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC
+    MEM_POOL: JEMALLOC_STATIC
     HASP_ENABLED: "ON"
     FEATURE_ID: 100
     HASP_INTERNAL_S: 3600
