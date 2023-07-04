@@ -3120,8 +3120,9 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		return ret;
 	}	
 	
+	pdetail_pr =(struct tcpdetail_private*)(pstream->pdetail);
 	//adjust by lqy 20150107 为了防止SYN重建链接时SYN在第一个链接中
-	if((0 == call_tcpall_after_reset) && pindex_tcp && (pstream->pktstate!=OP_STATE_CLOSE))
+	if((pdetail_pr != NULL) && (0 == call_tcpall_after_reset) && pindex_tcp && (pstream->pktstate!=OP_STATE_CLOSE))
 	{
 		//全包接口拿到的数据指向当前包的原始数据
 		if(tcplen == 0)
@@ -3144,8 +3145,10 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			goto fun_exit;
 		}
 	}
-
-	if(pdetail_pr->offload_stream_flag==(SMART_OFFLOAD_FLAG_TCP|SMART_OFFLOAD_FLAG_TCPALL) && DROP!=ret && (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
+	if(pdetail_pr != NULL 
+		&& pdetail_pr->offload_stream_flag==(SMART_OFFLOAD_FLAG_TCP|SMART_OFFLOAD_FLAG_TCPALL) 
+		&& DROP!=ret 
+		&& (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
 	{
 		local_sys_stat->count[SAPP_STAT_TCP_OFFLOAD_STREAM]++;
 		MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);	
