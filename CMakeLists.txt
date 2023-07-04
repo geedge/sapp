@@ -130,10 +130,17 @@ message(STATUS "MEM_POOL='${MEM_POOL}'")
 
 if(MEM_POOL STREQUAL "TCMALLOC_MINI")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc_minimal -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+	add_definitions(-DUSE_TCMALLOC=1)	
 elseif(MEM_POOL STREQUAL "TCMALLOC")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+	add_definitions(-DUSE_TCMALLOC=1)	
 elseif(MEM_POOL STREQUAL "JEMALLOC")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+	add_definitions(-DUSE_JEMALLOC=1)	
+elseif(MEM_POOL STREQUAL "JEMALLOC_STATIC")
+	add_definitions(-DUSE_JEMALLOC=1)	
+elseif(MEM_POOL STREQUAL "MIMALLOC")
+	add_definitions(-DUSE_MIMALLOC=1)		
 endif()
 
 # 定义宏 LIBEVENT_ENABLED
