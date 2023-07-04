@@ -1426,7 +1426,7 @@ void packet_io_exit(void)
 
 	sysinfo_output(); /* 最后一次写统计信息, 关闭标志位, 因为流表将被清空, 再写就没意义了 */
 	update_packet_io_status_sw = 0;
-
+		
 	for(i = 0; i < MAX_THREAD_NUM; i++){
 		SAPP_GLOBAL_FREE(g_send_buf_pool[i]);
 	}	
@@ -1486,7 +1486,7 @@ void packet_io_exit(void)
 
 	printf("packet_io_exit excuting, set SAPP_STATE_EXIT!");	
 	sapp_set_current_state(SAPP_STATE_EXIT);
-	usleep(100);
+	usleep(100000);
 	/****** 注意:释放全局变量要放在最后一行!! ******/
 	printf("packet_io_exit, call sapp_gval_destroy\n");
 	sapp_gval_destroy();

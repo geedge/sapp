@@ -817,7 +817,7 @@ extern "C" char timer_tcpall_entry(struct streaminfo *pstream,void **pme, int th
 extern "C" char global_stream_id_tcpall_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	time_t tt;
-	struct tm ttm;
+	struct tm ttm={};
 	void *res;
 	int ret;
 	unsigned long long sapp_global_id = 1010;
