@@ -297,7 +297,30 @@ static int sapp_fs2_init(sapp_global_t *global_paramters)
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_STM");	
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Pkt");
 	p_fs2_rt->fs_id_length_array[SAPP_STAT_UDP_OFFLOAD_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Bit");
+	
+	return 0;
+}
 
+static void sapp_fs2_destroy(sapp_global_t *global_paramters)
+{
+	sapp_config_profiling_metric_t *p_fs2_para = &global_paramters->config.profiling.fs2;
+	sapp_gval_individual_fixed_fs2_t *p_fs2_rt = &global_paramters->individual_fixed.fs2_runtime;
+	if (strlen(p_fs2_para->prometheus_service_uri) > 0 && p_fs2_para->prometheus_service_port > 0)
+	{
+		FS_library_destroy();
+	}
+
+	if (p_fs2_rt->fs_metric_handle)
+	{
+		FS_stop(&p_fs2_rt->fs_metric_handle);
+	}
+}
+
+
+static int sapp_fs2_start(sapp_global_t *global_paramters)
+{
+	sapp_gval_individual_fixed_fs2_t *p_fs2_rt = &global_paramters->individual_fixed.fs2_runtime;
+	void *fs2_handle = p_fs2_rt->fs_metric_handle;
 	if (unlikely(g_timestamp_record_sw))
 	{
 		for (int i = 0; i < g_packet_io_thread_num; i++)
@@ -342,25 +365,8 @@ static int sapp_fs2_init(sapp_global_t *global_paramters)
 		FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &p_fs2_rt->fs_work_percent_id_array[i], sizeof(int));
 	}
 	FS_start(fs2_handle);
-	
 	return 0;
 }
-
-static void sapp_fs2_destroy(sapp_global_t *global_paramters)
-{
-	sapp_config_profiling_metric_t *p_fs2_para = &global_paramters->config.profiling.fs2;
-	sapp_gval_individual_fixed_fs2_t *p_fs2_rt = &global_paramters->individual_fixed.fs2_runtime;
-	if (strlen(p_fs2_para->prometheus_service_uri) > 0 && p_fs2_para->prometheus_service_port > 0)
-	{
-		FS_library_destroy();
-	}
-
-	if (p_fs2_rt->fs_metric_handle)
-	{
-		FS_stop(&p_fs2_rt->fs_metric_handle);
-	}
-}
-
 
 void sapp_fs3_metric_set(int metric_idx, int metric_idy, long long value)
 {
@@ -574,6 +580,14 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 								NULL, 0);	
 	fs3_rt->metrics_ids[1][SAPP_STAT_UDP_OFFLOAD_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_Bit", 
 								NULL, 0);	
+
+	return 0;
+}
+
+static int sapp_fs3_start(sapp_global_t *global_paramters)
+{
+	sapp_gval_individual_fixed_fs3_t *fs3_rt = &global_paramters->individual_fixed.fs3_runtime;
+	struct fieldstat_instance *fs3_handle = fs3_rt->fs_metric_handle;
 	// TODO: histogram for process lanency							
 	fieldstat_instance_start(fs3_handle);
 	return 0;
@@ -603,6 +617,20 @@ int sapp_metric_init(void)
 		sapp_fs3_init(sapp_global_val);
 	}
 	
+	return ret;
+}
+
+int sapp_metric_start(void)
+{
+	int ret = 0;
+	if( sapp_global_val->config.profiling.fs2.enabled == 1)
+	{
+		sapp_fs2_start(sapp_global_val);
+	}
+	if( sapp_global_val->config.profiling.fs3.enabled == 1)
+	{
+		sapp_fs3_start(sapp_global_val);
+	}
 	return ret;
 }
 

@@ -26,7 +26,7 @@ endif()
 
 add_executable(sapp sapp_main.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
-target_link_libraries(sapp nsl pthread dl m pcap)
+target_link_libraries(sapp pthread dl pcap)
 target_link_libraries(sapp MESA_handle_logger MESA_prof_load)
 target_link_libraries(sapp sapp_assistant sapp_metrics)
 target_link_libraries(sapp breakpad_mini)
