@@ -137,6 +137,7 @@ typedef struct{
 	int  prometheus_service_port;
 	char  prometheus_service_uri[NAME_MAX];
 	char local_file[NAME_MAX];
+	char app_name[NAME_MAX];
 	int refresh_interval_s;
 }sapp_config_profiling_metric_t;
 

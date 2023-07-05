@@ -1880,6 +1880,7 @@ int sapp_parse_config(void)
 		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"prometheus_port", (int *)&pconfig->profiling.fs2.prometheus_service_port, 0);
 		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"refresh_interval_s", (int *)&pconfig->profiling.fs2.refresh_interval_s, 2);
 		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"prometheus_url_path", pconfig->profiling.fs2.prometheus_service_uri, NAME_MAX, "");
+		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"app_name", pconfig->profiling.fs2.app_name, NAME_MAX, "sapp4");
 
 	}
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"enabled", (int *)&pconfig->profiling.fs3.enabled, 0);
@@ -1889,6 +1890,7 @@ int sapp_parse_config(void)
 		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"prometheus_port", (int *)&pconfig->profiling.fs3.prometheus_service_port, 0);
 		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"refresh_interval_s", (int *)&pconfig->profiling.fs3.refresh_interval_s, 2);
 		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"prometheus_url_path", pconfig->profiling.fs3.prometheus_service_uri, NAME_MAX, "");
+		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"app_name", pconfig->profiling.fs3.app_name, NAME_MAX, "sapp4");
 	}
 
 	/*******************************  PROFILING.process_latency ******************************/

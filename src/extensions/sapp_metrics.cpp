@@ -200,7 +200,7 @@ static int sapp_fs2_init(sapp_global_t *global_paramters)
 		sapp_log(RLOG_LV_INFO, 10, 10, "profiling.log.local.enabled is 0, not save local stat log file.\n");
 		FS_set_para(fs2_handle, OUTPUT_DEVICE, "/dev/null", strlen("/dev/null") + 1);
 	}
-	FS_set_para(fs2_handle, APP_NAME, sapp_global_val->config.system.instance_name, strlen(sapp_global_val->config.system.instance_name)+1);
+	FS_set_para(fs2_handle, APP_NAME, p_fs2_para->app_name, strlen(p_fs2_para->app_name)+1);
 
 
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_RCV_LINE] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Line_Pkt");
@@ -391,7 +391,7 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 	sapp_config_profiling_metric_t *fs3_para = &global_paramters->config.profiling.fs3;
 	sapp_gval_individual_fixed_fs3_t *fs3_rt = &global_paramters->individual_fixed.fs3_runtime;
 
-	fs3_rt->fs_metric_handle = fieldstat_instance_new(sapp_global_val->config.system.instance_name);
+	fs3_rt->fs_metric_handle = fieldstat_instance_new(fs3_para->app_name);
 	if(fs3_rt->fs_metric_handle == NULL)
 	{
 		return -1;

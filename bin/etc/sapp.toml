@@ -171,6 +171,7 @@
         prometheus_url_path="/metrics"
         local_file="fs2_sysinfo.metrics"
         refresh_interval_s=1
+        app_name="sapp4"
 
         [profiling.metric.fs3]
         enabled=1
@@ -178,6 +179,7 @@
         prometheus_url_path="/metrics"
         local_file="fs3_sysinfo.metrics"
         refresh_interval_s=1
+        app_name="sapp4"
 
 
     [profiling.process_latency]
