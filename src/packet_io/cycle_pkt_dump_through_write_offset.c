@@ -882,7 +882,7 @@ static int pkt_dump_reply_ack(int connfd)
 
 static void cycle_pkt_dump_command_parse(int connfd)
 {
-	char cmd_buf[1024];
+	char cmd_buf[ARG_MAX];
 	unsigned int i;
 	int ret;
 	struct pkt_dump_handshake pkt_hdr;
