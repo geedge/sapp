@@ -426,36 +426,57 @@ static void sapp_watch_dog(void)
 {
 	const char *check_result = "WATCHDOG=1";
 	int thread_index;
+	int sd_notify_enable=0;
+
+	int deadlock_detected=0;
+	static int deadlock_cnt=0;
 
 
 	if(sapp_global_val->individual_volatile->current_state < SAPP_STATE_PROCESSING){
 		return;
 	}
-	
+
 	/* 需要在sapp.servie 里加入配置:   WatchdogSec=10s */
-	if (sd_watchdog_enabled(0, NULL))
+	sd_notify_enable=sd_watchdog_enabled(0, NULL);
+
+	for (thread_index = 0; thread_index < sapp_global_val->config.cpu.worker_threads; thread_index++)
 	{
-		for (thread_index = 0; thread_index < sapp_global_val->config.cpu.worker_threads; thread_index++)
+		/*
+			此处不用polling, 而是新增了 SAPP_STAT_FETCH_PKT, 因为没有Proxy时, polling功能可能是关闭的.
+			当前时刻跟一秒之前的数一样, 说明线程死锁了
+		*/
+		if (sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_FETCH_PKT] <= 0)
 		{
-			/*
-				此处不用polling, 而是新增了 SAPP_STAT_FETCH_PKT, 因为没有Proxy时, polling功能可能是关闭的.
-				当前时刻跟一秒之前的数一样, 说明线程死锁了
-			*/
-			if (sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_FETCH_PKT] <= 0)
-			{
-				check_result = "WATCHDOG=trigger";
-				sapp_runtime_log(RLOG_LV_FATAL, "##### detect deadlock in PID:%ld, thread index:%d, TID(LWP):%u, send systemd notify WATCHDOG=trigger #####",
-						getpid(), thread_index, sapp_global_val->individual_fixed.thread_tid[thread_index]);
-				break;
-			}
+			deadlock_detected=1;
+			check_result = "WATCHDOG=trigger";
+			sapp_runtime_log(RLOG_LV_FATAL, "##### detect deadlock in PID:%ld, at timestamp:%ld,  thread index:%d, TID(LWP):%u, send systemd notify WATCHDOG=trigger #####",
+							getpid(), ABBR_CURRENT_TIME, thread_index, sapp_global_val->individual_fixed.thread_tid[thread_index]);
+			break;
 
-			/* 每秒清零, 如果一直累加, SAPP_STAT_FETCH_PKT这个数太大了, 如果使用记录历史数据, 然后与当前数对比的方式, 可能会溢出, 导致判断错误 */
-			sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_FETCH_PKT] = 0;
 		}
+		/* 每秒清零, 如果一直累加, SAPP_STAT_FETCH_PKT这个数太大了, 如果使用记录历史数据, 然后与当前数对比的方式, 可能会溢出, 导致判断错误 */
+		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_FETCH_PKT] = 0;
+	}
 
+	if(sd_notify_enable)
+	{
 		sd_notify(0, check_result);
 	}
-    return;
+	else
+	{
+		if(deadlock_detected)
+		{
+			if(deadlock_cnt++ > 10)
+			{
+				exit(-1);
+			}
+		}
+		else
+		{
+			deadlock_cnt=0;
+		}
+	}
+	return;
 }
 
 
