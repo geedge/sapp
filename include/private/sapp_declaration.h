@@ -77,6 +77,7 @@ extern volatile long long g_current_time_ms;
 #define tcp_creatlink_model		sapp_global_val->individual_fixed.create_stream_mode
 #define link_default_nopkt_time	sapp_global_val->config.stream.tcp.timeout
 #define tcp_closing_timeout		sapp_global_val->config.stream.tcp.closing_timeout
+#define tcp_opening_timeout		sapp_global_val->config.stream.tcp.opening_timeout
 #define udp_reset_time			sapp_global_val->config.stream.udp.timeout
 #define g_topology_mode			sapp_global_val->individual_fixed.depolyment_mode_private
 #define g_topology_mode_raw		sapp_global_val->config.packet_io.depolyment_mode_bin

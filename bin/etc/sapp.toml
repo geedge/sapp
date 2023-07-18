@@ -132,6 +132,8 @@
     [stream.tcp]
     max=10000
     timeout=60
+    opening_timeout=10
+    closing_timeout=30
     syn_mandatory=1
     reorder_pkt_max=32
     analyse_option_enabled=1

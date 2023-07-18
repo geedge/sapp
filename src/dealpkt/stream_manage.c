@@ -363,6 +363,10 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 	{
 		timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout+g_CurrentTime);
 	}
+	else if(pstream->stream_state==TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
+	{
+		timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout+g_CurrentTime);
+	}
 	else
 	{
 		long set_timeout = pindex->stream.timeout;
@@ -542,6 +546,10 @@ int lrustream(struct streamindex *pindex)
 	{
 		timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout+g_CurrentTime);
 	}
+	else if(pstream->stream_state==TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
+	{
+		timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout+g_CurrentTime);
+	}	
 	else
 	{
 		long set_timeout = pindex->stream.timeout;

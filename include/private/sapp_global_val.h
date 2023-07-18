@@ -104,6 +104,7 @@ typedef struct{
 	unsigned short *well_known_ports_array; /* 用于按data建连接确定server端 */
 	int well_known_ports_array_num;
 	int closing_timeout;
+	int opening_timeout;
 }sapp_config_stream_tcp_t;
 
 
