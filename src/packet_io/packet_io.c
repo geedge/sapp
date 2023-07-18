@@ -691,57 +691,47 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		ret = DROP;
 	}
 
-    if (DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
-    {
-        if ((p_raw_pkt->is_overlay_pkt) && (PASS == ret))
-        {
-            if (p_raw_pkt->d_pkt != NULL)
-            {
-                ret = MESA_retain_pkt_update(p_raw_pkt, ret);
-            }
-			if(ret == PASS)
+	if (DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	{
+		if ((p_raw_pkt->is_overlay_pkt) && (PASS == ret))
+		{
+			if (p_raw_pkt->d_pkt != NULL)
 			{
-            	cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_FORWARD);
+				ret = MESA_retain_pkt_update(p_raw_pkt, ret);
 			}
-			if(ret != DROP)
+			if (ret == PASS)
 			{
-            	packet_io_hook_forward((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
+				cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_FORWARD);
 			}
-        }
-        else
-        {
-            if (OVERLAY_MODE_NF != sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)
-            {
-                /* inline模式下, 非原始链路中的包, 即使插件返回了PASS, 也不能注入链路 */
-                ret = DROP;
-                cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
-            }
-        }
-    }
-    else if (DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin)
-    {
+			if (ret != DROP)
+			{
+				packet_io_hook_forward((raw_pkt_t *)p_raw_pkt, p_raw_pkt->route_dir, thread_num);
+			}
+		}
+		if (p_raw_pkt->is_overlay_pkt == 0)
+		{
+			/* inline模式下, 非原始链路中的包, 即使插件返回了PASS, 也不能注入链路 */
+			ret = DROP;
+		}
+	}
+	if (DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	{
 		if (p_raw_pkt->d_pkt != NULL)
-        {
-            ret = MESA_retain_pkt_update(p_raw_pkt, ret);
-        }
-        if (PASS == ret)
-        {
-            cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_FORWARD);
-        }
-        if (DROP == ret)
-        {
-            cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
-        }
-    }
-    else
-    {
-        /* mirror模式下, 没有forward, 仅有drop,虽然drop也没实际意义,但是可以用于观察哪些包被插件返回了DROP */
-        if (DROP == ret)
-        {
-            cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
-        }
-    }
-    return ret;
+		{
+			ret = MESA_retain_pkt_update(p_raw_pkt, ret);
+		}
+		if (PASS == ret)
+		{
+			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_FORWARD);
+		}
+	}
+
+	/* mirror模式下, 没有forward, 仅有drop,虽然drop也没实际意义,但是可以用于观察哪些包被插件返回了DROP */
+	if (DROP == ret)
+	{
+		cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
+	}
+	return ret;
 }
 
 
