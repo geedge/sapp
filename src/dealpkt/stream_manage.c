@@ -219,49 +219,33 @@ int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned s
 	if(OP_STATE_CLOSE == pstream->opstate){/* 当前流已结束, 再设超时也没有意义了 */
 		return -1;
 	}
-	
-	if((0 == pstream_pr->timeout)  /* 0为从未设置过 */
-	 || (timeout >= pstream_pr->timeout))  /* 新设置的超时值必须大于等于当前值 */
+
+	pindex = sapp_get_struct_header(pstream_pr, struct streamindex, stream);
+	if (STREAM_TYPE_UDP == pstream->type)
 	{
-	  /* TODO 1, 将此流移动到LRU超时链表适当的位置, 从head开始按剩余的超时时间排序。
-	    NOTE:
-	    因为可能全局都没开启超时, 但针对单个流设置了超时, 那么此流应该移动到LRU末尾,
-		否则del_stream_by_time()函数只会判断最末尾的流是否超时, 不会判断其他的流.
-
-		风险: 这类流为了保护包数少、持续时间长的流, 增加限制条件, 不能超过总流数的%p; 
-	  */
-		pindex = sapp_get_struct_header(pstream_pr, struct streamindex, stream); 
-
-		if(STREAM_TYPE_UDP==pstream->type)
+		if (pstream_pr->timeout == udp_reset_time)
 		{
-			if(timeout < udp_reset_time){ /* 必须比全局默认值大, 且不能比之前设置的小 */
-				return -1;
-			}
-			if(pstream_pr->timeout == udp_reset_time){ 
-				/* 允许插件多次设置超时时间, 当前流第一次设置超时时间记录计数 */
-				sapp_global_mthread[pstream->threadnum].udp_stream_special_timeout_num++;
-			}
+			/* 允许插件多次设置超时时间, 当前流第一次设置超时时间记录计数 */
+			sapp_global_mthread[pstream->threadnum].udp_stream_special_timeout_num++;
 		}
-		else if (STREAM_TYPE_TCP==pstream->type)
+	}
+	else if (STREAM_TYPE_TCP == pstream->type)
+	{
+		if (pstream_pr->timeout == link_default_nopkt_time)
 		{
-			if(timeout < link_default_nopkt_time){ /* 必须比全局默认值大, 且不能比之前设置的小 */
-				return -1;
-			}		
-			if(pstream_pr->timeout == link_default_nopkt_time){ 
-				/* 允许插件多次设置超时时间, 当前流第一次设置超时时间记录计数 */
-				sapp_global_mthread[pstream->threadnum].tcp_stream_special_timeout_num++;
-			}
-		}else{
-			goto err; /* 仅支持TCP和UDP流 */
+			/* 允许插件多次设置超时时间, 当前流第一次设置超时时间记录计数 */
+			sapp_global_mthread[pstream->threadnum].tcp_stream_special_timeout_num++;
 		}
-	
 	}
 	else
 	{
-		goto err;
+		goto err; /* 仅支持TCP和UDP流 */
 	}
 
-	stream_timeout_shift_lrulist(pindex, timeout);
+	if(pstream_pr->packet_io_context != 0)
+	{
+		stream_timeout_shift_lrulist(pindex, timeout);
+	}
 	
 	pstream_pr->timeout=timeout;
 	return ret;
