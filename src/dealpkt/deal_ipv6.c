@@ -935,6 +935,7 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 				goto done;			  
 			break;
 			
+			case NEXTHDR_OSPF_IGP:			
 			case NEXTHDR_ESP:
 				ret=stream_process_ipv6(plocal_stream,(const struct ip6_hdr *)a_packet,thread_num,routedir, raw_pkt);
 				if(ret==DROP){
@@ -947,7 +948,7 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+=raw_pkt->raw_pkt_len;
 				sapp_runtime_log(20, "unsupport Ipv6 protocol:%u!\n", next_hdr_type);			
-				goto err_exit;
+				goto done;
 			break;
 		}
 
@@ -958,21 +959,13 @@ int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hd
 
 done:
 	if(unlikely(need_free)){
-#if (0 == HIGH_PERF)		
-		raw_frags_list_free_global(thread_num, __ADDR_TYPE_IP_PAIR_V6);
-#endif		
 		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,thread_num, new_ip6h);
 	}
-	
 	return action;
 
 prosecc_pkt_drop:	
-err_exit:
 	if(need_free)
 	{
-#if (0 == HIGH_PERF)		
-		raw_frags_list_free_global(thread_num, __ADDR_TYPE_IP_PAIR_V6);
-#endif		
 		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,thread_num, new_ip6h);
 	}
 	
