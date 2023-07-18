@@ -181,7 +181,7 @@ static void packet_io_update_metrics_fs3(void)
 	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_CLOSE_BY_KICKOUT,cur_count[SAPP_STAT_UDP_CLOSE_BY_KICKOUT]-history_count[SAPP_STAT_UDP_CLOSE_BY_KICKOUT]);
 
 	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_STREAM_NEW,cur_count[SAPP_STAT_TCP_STREAM_NEW]-history_count[SAPP_STAT_TCP_STREAM_NEW]);
-	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_STREAM_NEW,cur_count[SAPP_STAT_TCP_STREAM_NEW]-history_count[SAPP_STAT_TCP_STREAM_NEW]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_STREAM_DEL,cur_count[SAPP_STAT_TCP_STREAM_DEL]-history_count[SAPP_STAT_TCP_STREAM_DEL]);
 	sapp_fs3_metric_set(0, SAPP_STAT_TCP_STREAM_DATA,cur_count[SAPP_STAT_TCP_STREAM_DATA]);
 
 	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_STREAM_NEW,cur_count[SAPP_STAT_UDP_STREAM_NEW]-history_count[SAPP_STAT_UDP_STREAM_NEW]);
