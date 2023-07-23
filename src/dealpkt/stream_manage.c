@@ -324,30 +324,23 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 			plist->last_update_timer_s = g_CurrentTime;
 			plist->interval_to_next_timeout_s=timeouts_timeout(plist->streamindex_timer);
 		}
-		struct timeout *t = timeouts_get(plist->streamindex_timer);
-		if(t == NULL)
+		struct timeout *t = NULL;
+		TIMEOUTS_FOREACH(t, plist->streamindex_timer, TIMEOUTS_ALL)
 		{
-			TIMEOUTS_FOREACH(t, plist->streamindex_timer, TIMEOUTS_ALL)
-			{
-				pindex_tmp = container_of(t, struct streamindex, timeout);
-				if(pindex_tmp->stream.stream_carry_up_layer_tunnel_type == STREAM_TUNNLE_NON)
-				{
-					break;
-				}
-			}
-			timeout_reason = STREAM_CLOSE_REASON_LRUOUT;
-			assert(t!=NULL);
+			break;
 		}
+		timeout_reason = STREAM_CLOSE_REASON_LRUOUT;
+		assert(t != NULL);
 		pindex_to_del = container_of(t, struct streamindex, timeout);
 		sapp_runtime_log(RLOG_LV_DEBUG, "streamaddlist trggier kickout: %s, reason:%d,  thread:%d, stream_type:%d, stream_state:%d, create_time:%ld, lastmtime:%ld, curtime:%ld!",
-				 printaddr(&pindex_to_del->stream.stream_public.addr, pindex_to_del->stream.stream_public.threadnum),
-				 timeout_reason,
-				 pindex_to_del->stream.stream_public.threadnum,
-				 pindex_to_del->stream.stream_public.type,
-				 pindex_to_del->stream.stream_public.stream_state,
-				 pindex_to_del->stream.stream_public.ptcpdetail->createtime,
-				 pindex_to_del->stream.stream_public.ptcpdetail->lastmtime,
-				 g_CurrentTime);
+				printaddr(&pindex_to_del->stream.stream_public.addr, pindex_to_del->stream.stream_public.threadnum),
+				timeout_reason,
+				pindex_to_del->stream.stream_public.threadnum,
+				pindex_to_del->stream.stream_public.type,
+				pindex_to_del->stream.stream_public.stream_state,
+				pindex_to_del->stream.stream_public.ptcpdetail->createtime,
+				pindex_to_del->stream.stream_public.ptcpdetail->lastmtime,
+				g_CurrentTime);
 		del_stream(pindex_to_del, timeout_reason);
 	}
 	

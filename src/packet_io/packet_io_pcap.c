@@ -1405,6 +1405,8 @@ static void pcap_io_dumpfile_list(void)
 		if(pcap_handle){
 			pcap_up_handle = pcap_handle;
 			gettimeofday(&start_time, NULL);
+			sapp_log(20, 1, 1, "pcap file '%s' processing start", 
+					sapp_global_val->cla.dumpfie_list_array[pcap_file_num]);			
 			pcap_loop(pcap_handle, -1, __pcap_pkt_handle, (unsigned char *)&route_dir);
 			gettimeofday(&end_time, NULL);
 
