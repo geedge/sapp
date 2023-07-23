@@ -706,7 +706,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	if((plugtype == PLUGTYPE_PLATFORM) || (plugtype == PLUGTYPE_PROTOCOL))
 	{
 		//平台层和解析层插件符号表公开
-		#if defined(USE_TCMALLOC) || defined(USE_MIMALLOC)
+		#if defined(USE_TCMALLOC) || defined(USE_MIMALLOC) || defined(ASAN_ENABLED)
 			filepoint = dlopen(buf_sofilename,RTLD_NOW|RTLD_LAZY|RTLD_GLOBAL);
 		#else
 			filepoint = dlopen(buf_sofilename,RTLD_NOW|RTLD_LAZY|RTLD_GLOBAL|RTLD_DEEPBIND);
@@ -715,7 +715,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	else
 	{
 		//业务层插件符号表优先调用自己符号表
-		#if defined(USE_TCMALLOC) || defined(USE_MIMALLOC)
+		#if defined(USE_TCMALLOC) || defined(USE_MIMALLOC) || defined(ASAN_ENABLED)
 			filepoint = dlopen(buf_sofilename,RTLD_NOW|RTLD_LAZY|RTLD_LOCAL);
 		#else
 			filepoint = dlopen(buf_sofilename,RTLD_NOW|RTLD_LAZY|RTLD_LOCAL|RTLD_DEEPBIND);
