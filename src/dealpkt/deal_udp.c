@@ -316,6 +316,7 @@ void udp_free_stream(struct streamindex *pindex)
 		pstream->pktstate=OP_STATE_CLOSE; // add by lijia 20141202
 		stream_process_udp(pstream,NULL,NULL,NULL,&(pdetail_pr->apme),&(pstream->opstate));  
 		udp_cleardata(pstream);
+		pdetail_pr->apme=NULL;
 		
 	}
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[pstream->stream_state]);
@@ -366,7 +367,7 @@ void udp_free_stream(struct streamindex *pindex)
 //add by lqy 20130530
 // 根据设定的时间强制淘汰复用的四元组信息
 // return 1 进行了重置，0 未进行重置
-static int udp_reset_stream_bytime(struct streamindex *pindex)
+static int udp_reset_stream(struct streamindex *pindex)
 {
 	struct stream_list *plist;
 	struct streaminfo_private *pstream_pr;
@@ -435,6 +436,7 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 	pstream_pr->has_duplicate_pkt = 0;
 	pstream_pr->stream_killed_flag = 0;
 	pdetail_pr->drop_stream_flag = 0;
+	pdetail_pr->apme=NULL;
 
 	pdetail->createtime = g_CurrentTime;
 	pstream_pr->global_stream_id = get_global_stream_id(threadnum);
@@ -644,7 +646,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		{
 			if(lrustream(a_index)==1)
 			{
-				udp_reset_stream_bytime(a_index);
+				udp_reset_stream(a_index);
 			}
 		}	
 
@@ -897,7 +899,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		{
 			if(lrustream(a_index)==1)
 			{
-				udp_reset_stream_bytime(a_index);
+				udp_reset_stream(a_index);
 			}
 		}	
 
