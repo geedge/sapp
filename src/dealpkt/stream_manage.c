@@ -316,7 +316,7 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 	int timeout_reason = STREAM_CLOSE_REASON_TIMEOUT;
 	struct streamindex *pindex_to_del = NULL;
 	struct streamindex *pindex_tmp = NULL;
-	if(plist->cnt >= plist->max_cnt -1 && plist->cnt > 0)
+	if(plist->cnt >= plist->max_cnt && plist->cnt > 0)
 	{
 		if(plist->last_update_timer_s < g_CurrentTime)
 		{

@@ -924,12 +924,21 @@ static inline int checkipv4pkt(const struct mesa_ip4_hdr * iph, const raw_pkt_t 
 	int pkt_actual_len;
 	unsigned char ip_proto;
 
-	if(ADDR_TYPE_MAC == raw_pkt->low_layer_type){
-		pkt_actual_len = raw_pkt->raw_pkt_len - sizeof(struct mesa_ethernet_hdr);
-	}else{
-		pkt_actual_len = raw_pkt->raw_pkt_len;
+	if (raw_pkt->offset_to_raw_pkt_hdr != 0)
+	{
+		pkt_actual_len = raw_pkt->raw_pkt_len - raw_pkt->offset_to_raw_pkt_hdr;
 	}
-	
+	else
+	{
+		if (ADDR_TYPE_MAC == raw_pkt->low_layer_type)
+		{
+			pkt_actual_len = raw_pkt->raw_pkt_len - sizeof(struct mesa_ethernet_hdr);
+		}
+		else
+		{
+			pkt_actual_len = raw_pkt->raw_pkt_len;
+		}
+	}
 	if ((pkt_declare_len < (int)sizeof(struct mesa_ip4_hdr)) 
 		|| (pkt_declare_len > pkt_actual_len)
 		|| (iph->ip_hl < 5) 
