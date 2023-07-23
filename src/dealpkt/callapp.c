@@ -1074,12 +1074,6 @@ int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const v
 	int ret;
 	struct streaminfo_private *a_tcp_pr = (struct streaminfo_private *)a_tcp;
 
-#if 0 /* 测试完整包处理延时, 暂时关闭 */
-	if(PKT_TYPE_NORMAL == a_tcp->addr.pkttype){ 
-		timestamp_record(TS_LEVEL_BEFORE_PLUG, raw_pkt, a_tcp->threadnum);
-	}
-#endif
-
 	//stream_update_tcp_data_count(a_tcp);
 	/* 2016-07-14 lijia add */
 	if((G_TCP_FLOW_STAT_PROJECT_ID != -1) 
@@ -1117,12 +1111,6 @@ int stream_process_udp(struct streaminfo *a_udp, const void *this_iphdr, const v
 	int ret;
 	struct streaminfo_private *a_udp_pr = (struct streaminfo_private *)a_udp;
 
-#if 0 /* 测试完整包处理延时, 暂时关闭 */
-	if(PKT_TYPE_NORMAL == a_udp->addr.pkttype){ 
-		timestamp_record(TS_LEVEL_BEFORE_PLUG, raw_pkt, a_udp->threadnum);
-	}
-#endif	
-
 #if (0 == HIGH_PERF)	
 	raw_ip_frag_list_stream_attach(a_udp);
 #endif
@@ -1138,11 +1126,6 @@ int stream_process_udp(struct streaminfo *a_udp, const void *this_iphdr, const v
 	raw_ip_frag_list_stream_detach(a_udp);
 #endif
 
-#if 0 /* 测试完整包处理延时, 暂时关闭 */
-	if(PKT_TYPE_NORMAL == a_udp->addr.pkttype){ 
-		timestamp_record(TS_LEVEL_AFTER_PLUG, raw_pkt, a_udp->threadnum);
-	}
-#endif	
 	return ret;
 }
 
@@ -1208,24 +1191,7 @@ int stream_process_ipv4(struct streaminfo *pfstream, const struct ip* this_layer
 	{
 		if(g_Ipv4Fun[i].funtype==FUN_TYPE_IPV4)
 		{
-#if 0 //IIEFD_DUAL_STACK
-			/*  */
-			if(judge_pure_ipv4_stack(pfstream, 	this_layer_hdr) == 1){
-				/* 纯IPv4流量, 跳过sapp插件 */
-				if((void *)&callIpApp_old != (void *)g_Ipv4Fun[i].stream_ipv4_fun){
-					continue;
-				}
-			}else{
-				/* 非纯IPv4流量, 不给iiefd插件 */
-				if((void *)&callIpApp_old  == (void *)g_Ipv4Fun[i].stream_ipv4_fun){
-					continue;
-				}
-			}
-#else
-//			appret=g_Ipv4Fun[i].stream_ipv4_fun(pfstream,routedir,thread_num,this_layer_hdr);
 			appret= plugin_call_ipentry(CALL_FUN_TYPE_RAW,g_Ipv4Fun[i].stream_ipv4_fun,NULL,pfstream,this_layer_hdr,thread_num,routedir, raw_pkt);
-
-#endif
 		}
 		else
 		{

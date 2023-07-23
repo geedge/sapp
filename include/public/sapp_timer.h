@@ -7,16 +7,6 @@ extern "C" {
 
 #include "sapp_limits.h"
 
-#if 0
-
-
-typedef enum{
-	STO_EFFECTIVE_SCOPE, 	/* value type is int, refer to STO_EFFECTIVE_SCOPE_xxx */
-	STO_PKT_PROCESS_THREAD_NUM, /* value type is int */
-}sapp_timer_opt;
-
-#endif
-
 enum st_return_errno{
 	ST_RET_SUCC = 0,
 	ST_RET_ERROR = -1,

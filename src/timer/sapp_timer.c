@@ -32,7 +32,7 @@ static inline int __st_is_platform_timer(const void *h)
 
 	return 0;
 }
-
+#ifdef LIBEVENT_ENABLED	
 static void __st_libev_callback(evutil_socket_t sd, short event, void *sapp_args)
 {
 	sapp_timer_event_inner_t *inner_ev = (sapp_timer_event_inner_t *)sapp_args;
@@ -44,7 +44,7 @@ static void __st_libev_callback(evutil_socket_t sd, short event, void *sapp_args
 		inner_ev->sapp_plug_cb_fun(inner_ev->timer_handle, inner_ev, inner_ev->timer_handle->effective_thread_index, inner_ev->user_arg); /* 这里传入外部调用者真正的user_args */
 	}
 }
-
+#endif
 
 /*
 	NOTE:
@@ -218,7 +218,9 @@ sapp_timer_event sapp_timer_event_new(sapp_timer_handle sth)
 	if (inner_h)
 	{
 		inner_ev = (sapp_timer_event_inner_t *)calloc(1, sizeof(sapp_timer_event_inner_t));
+#ifdef LIBEVENT_ENABLED			
 		inner_ev->libev_event = (struct event *)calloc(1, sizeof(struct event));
+#endif		
 		inner_ev->timer_handle = inner_h;
 		inner_h->effective_thread_index = -1;
 	}

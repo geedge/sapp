@@ -976,17 +976,11 @@ static int __addr_pton(char *single_addr_str, addr_continuous_bin_t *addr_bin_va
 	enum addr_type_t addr_type;
 	int i, ret = 0, prefix_with_delim_len, single_addr_str_len;
 
-#if 0	
-	addr_type = addr_prefix_to_type(single_addr_str);
-	if(__ADDR_TYPE_INIT == addr_type){
-		return -1;
-	}
-#else
+
 	prefix_with_delim_len = addr_prefix_to_stream_and_addr_type(single_addr_str, &addr_type, &addr_bin_val->stream.type);
 	if(prefix_with_delim_len < 0){
 		return -1;
 	}
-#endif
 
 	single_addr_str_len = strlen(single_addr_str);
 	if(single_addr_str[single_addr_str_len-1] != '>'){ /* 地址最后一个字符不是分隔符'>' */
@@ -1298,51 +1292,6 @@ static int __addr_pure_udp_n2p_fun(const struct layer_addr *paddr, char *buf, in
 	return strlen(buf) + 1;
 }
 
-#if 0
-static int __addr_vlan_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
-{
-	const struct layer_addr_vlan *vlan_addr = paddr->vlan;
-	//const struct mesa_vlan_hdr *vhdr;
-	int i;
-	unsigned short vlan_id;
-	char tmp_buf[32] = {};
-	char vlan_addr_string[128] = {};
-	
-	/* 注意: 可能有非对称vlan的情况 */
-	int max_layer_num = vlan_addr->c2s_layer_num > vlan_addr->s2c_layer_num ? vlan_addr->c2s_layer_num:vlan_addr->s2c_layer_num;
-
-	for(i = 0; i < max_layer_num; i++){
-		if(vlan_addr->c2s_layer_num >= i+1){
-			//vhdr = (struct mesa_vlan_hdr *)&vlan_addr->c2s_addr_array[i];
-			vlan_id = ntohs(vlan_addr->c2s_addr_array[i].VID);
-			snprintf(tmp_buf, 32, "%d", vlan_id);
-			strcat(vlan_addr_string, tmp_buf);
-		}else{
-			strcat(vlan_addr_string, "N/A-");
-		}
-		if(vlan_addr->s2c_layer_num >= i+1){
-			//vhdr = (struct mesa_vlan_hdr *)&vlan_addr->s2c_addr_array[i];
-			vlan_id = ntohs(vlan_addr->s2c_addr_array[i].VID);
-			snprintf(tmp_buf, 32, "%d", vlan_id);
-			strcat(vlan_addr_string, tmp_buf);
-		}else{
-			strcat(vlan_addr_string, "-N/A");
-		}
-		if(i < max_layer_num-1){
-			strcat(vlan_addr_string, ",");
-		}
-	}
-	
-	int addr_len = strlen(vlan_addr_string);
-	if(buf_len <= addr_len + 1){
-		return -1;
-	}
-	strncpy(buf, vlan_addr_string, addr_len + 1);
-
-	return addr_len + 1;
-}
-#endif
-
 #define VLAN_ADDR_STR_LEN 128
 #define TMP_BUF_LEN 32
 
@@ -1478,60 +1427,6 @@ static int __addr_gre_n2p_fun(const struct layer_addr *paddr, char *buf, int buf
 
 	return addr_len + 1;
 }
-
-/*
-	格式说明:
-		每层mpls地址使用src-dst表示, 多层之间的mpls使用,分割, 
-		例如:
-		<1-2>
-		<1-2,3-4,5-6>
-*/
-#if 0
-static int __addr_mpls_n2p_fun(const struct layer_addr *paddr, char *buf, int buf_len)
-{
-	const struct layer_addr_mpls *mpls_addr = paddr->mpls;
-	const struct mesa_mpls_hdr *net_mpls_hdr;
-	int i;
-	int mpls_label;
-	char tmp_buf[32];
-	/* 注意有非对称mpls的情况 */
-	int max_layer_num = mpls_addr->c2s_layer_num > mpls_addr->s2c_layer_num ? mpls_addr->c2s_layer_num:mpls_addr->s2c_layer_num;
-
-	char mpls_addr_string[128] = {};
-
-	for(i = 0; i < max_layer_num; i++){
-		if(mpls_addr->c2s_layer_num >= i+1){
-			//mpls_label = 0;
-			//net_mpls_hdr = (struct mesa_mpls_hdr *)&mpls_addr->src_mpls_pkt[i];
-			//mpls_label = (net_mpls_hdr->mpls_label_low<<12) | (net_mpls_hdr->mpls_label_mid<<4) | net_mpls_hdr->mpls_label_high; /* network order */
-			snprintf(tmp_buf, 32, "%d", ntohl(mpls_addr->c2s_addr_array[i].label));
-			strcat(mpls_addr_string, tmp_buf);
-		}else{
-			strcat(mpls_addr_string, "N/A");
-		}
-		if(mpls_addr->s2c_layer_num >= i+1){
-			//mpls_label = 0;
-			//net_mpls_hdr = (struct mesa_mpls_hdr *)&mpls_addr->dest_mpls_pkt[i];
-			//mpls_label = (net_mpls_hdr->mpls_label_low<<12) | (net_mpls_hdr->mpls_label_mid<<4) | net_mpls_hdr->mpls_label_high; /* network order */
-			snprintf(tmp_buf, 32, "-%d", ntohl(mpls_addr->s2c_addr_array[i].label));
-			strcat(mpls_addr_string, tmp_buf);
-		}else{
-			strcat(mpls_addr_string, "-N/A");
-		}
-		if(i < max_layer_num-1){
-			strcat(mpls_addr_string, ",");
-		}
-	}
-	
-	int addr_len = strlen(mpls_addr_string);
-	if(buf_len <= addr_len + 1){
-		return -1;
-	}
-	strncpy(buf, mpls_addr_string, addr_len + 1);
-
-	return addr_len + 1;
-}
-#endif
 
 #define MPLS_ADDR_STR_LEN 128
 #define TMP_BUF_LEN 32

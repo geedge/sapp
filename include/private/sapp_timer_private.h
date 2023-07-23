@@ -5,10 +5,9 @@
 extern "C" {
 #endif
 
+#include <pthread.h>
 #include "support/MESA_atomic.h"
 #include "sapp_timer.h"
-#include "support/event2/event.h"
-#include "support/event2/event_struct.h"
 
 /* NOTE: the two effective scope options are conflict, can't use as same time */
 enum st_ef_scope_t{
@@ -16,29 +15,34 @@ enum st_ef_scope_t{
 	STO_EFFECTIVE_SCOPE_PKT_PROCESS_THREADS		= 2,
 };
 
-
+#ifdef LIBEVENT_ENABLED
+#include "support/event2/event.h"
+#endif
 /*
 	NOTE:
-		1.Ã¿¸öÏß³ÌÖ»ÓĞÒ»¸öev_base, Èç¹ûÊÇ°ü´¦ÀíÏß³ÌÆôÓÃ, ÔòÊÇthread_cnt¸ö, ¿ÉÒÔºÍ¶ÀÁ¢Ïß³ÌÒ»Æğ¿ªÆô.
-		2.add, newÖ»ÄÜÔÚevent´¦ÀíÏß³Ìµ÷ÓÃ, ¶øÇÒÖ»ÔÚµ±Ç°Ïß³ÌÉúĞ§.
+		1.Ã¿ï¿½ï¿½ï¿½ß³ï¿½Ö»ï¿½ï¿½Ò»ï¿½ï¿½ev_base, ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½thread_cntï¿½ï¿½, ï¿½ï¿½ï¿½ÔºÍ¶ï¿½ï¿½ï¿½ï¿½ß³ï¿½Ò»ï¿½ï¿½ï¿½ï¿½.
+		2.add, newÖ»ï¿½ï¿½ï¿½ï¿½eventï¿½ï¿½ï¿½ï¿½ï¿½ß³Ìµï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ö»ï¿½Úµï¿½Ç°ï¿½ß³ï¿½ï¿½ï¿½Ğ§.
 */
 typedef struct{
 	volatile MESA_ATOMIC_T running;
 	enum st_ef_scope_t effective_mode;
+#ifdef LIBEVENT_ENABLED	
 	struct event_base *libev_base;
-	//struct event *libev_event[SAPP_MAX_THREADS+1];
+#endif	
 	pthread_t effective_thread_pid;
 	int effective_thread_index;
 	int event_cnt;
 
-	//int thread_cnt; /* sappÆ½Ì¨Êµ¼Ê²¢·¢Ïß³ÌÊı, Èç¹ûÓĞstand_aloneÏß³Ì, Ôò¹Ì¶¨´æ´¢ÓÚ×îºóÒ»¸öindex, ¼´SAPP_TIMER_MAX_THREADS */	
+	//int thread_cnt; /* sappÆ½Ì¨Êµï¿½Ê²ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½stand_aloneï¿½ß³ï¿½, ï¿½ï¿½Ì¶ï¿½ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½index, ï¿½ï¿½SAPP_TIMER_MAX_THREADS */	
 }sapp_timer_handle_inner_t;
 
-/* eventĞèÒªÊ¹ÓÃset_optÉèÖÃ¸÷ÖÖ²ÎÊı, ÓÃ½á¹¹Ìå½«±ê×¼struct event·â×°, ´æ´¢Ïà¹Ø²ÎÊı */
+/* eventï¿½ï¿½ÒªÊ¹ï¿½ï¿½set_optï¿½ï¿½ï¿½Ã¸ï¿½ï¿½Ö²ï¿½ï¿½ï¿½, ï¿½Ã½á¹¹ï¿½å½«ï¿½ï¿½×¼struct eventï¿½ï¿½×°, ï¿½æ´¢ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ */
 typedef struct{
-	struct event *libev_event;
 	sapp_timer_handle_inner_t *timer_handle;
+#ifdef LIBEVENT_ENABLED	
+	struct event *libev_event;
 	event_callback_fn libev_cb_fun;
+#endif
 	sapp_timer_cbfun_t *sapp_plug_cb_fun;
 	void *user_arg;
 	struct timeval tval;

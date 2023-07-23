@@ -87,18 +87,6 @@ then using the CJSON_API_VISIBILITY flag to "export" the same symbols the way CJ
 
 /* cJSON Types: */
 
-#if 0 /* lijia modify */
-
-#define cJSON_Invalid (0)
-#define cJSON_False  (1 << 0)
-#define cJSON_True   (1 << 1)
-#define cJSON_NULL   (1 << 2)
-#define cJSON_Number (1 << 3)
-#define cJSON_String (1 << 4)
-#define cJSON_Array  (1 << 5)
-#define cJSON_Object (1 << 6)
-#define cJSON_Raw    (1 << 7) /* raw json */
-#else
 typedef enum {
 	cJSON_Invalid = 0,
 	cJSON_False = (1 << 0),
@@ -110,7 +98,6 @@ typedef enum {
 	cJSON_Object = (1 << 6),
 	cJSON_Raw  =  (1 << 7) /* raw json */
 }cJSON_Type;
-#endif
 
 #define cJSON_IsReference 256
 #define cJSON_StringIsConst 512
@@ -273,12 +260,12 @@ CJSON_PUBLIC(cJSON_bool) cJSON_Compare(const cJSON * const a, const cJSON * cons
 
 typedef enum{
 	CJSON_CMP_OPT_NONE 				 = 0,
-	CJSON_CMP_OPT_CASE_SENSITIVE 	 = 1<<0, /* ´óÐ¡Ð´Ãô¸Ð */
-	CJSON_CMP_OPT_IGNORE_OBJECTA_NOT_EXIST = 1<<1, /* ºöÂÔobjectÀàÐÍ, aÃ»ÓÐµ«ÊÇbÓÐµÄitem, ÊÊÓÃÓÚ½öÏë¾«È·±È½ÏÄ³¼¸¸öÖµ, ÆäÓà²»¹ØÐÄµÄÇé¿ö */
-	CJSON_CMP_OPT_IGNORE_OBJECTB_NOT_EXIST = 1<<2, /* ºöÂÔobjectÀàÐÍ, bÃ»ÓÐµ«ÊÇaÓÐµÄitem, ÊÊÓÃÓÚ½öÏë¾«È·±È½ÏÄ³¼¸¸öÖµ, ÆäÓà²»¹ØÐÄµÄÇé¿ö */
-	CJSON_CMP_OPT_IGNORE_ARRAYA_NOT_EXIST = 1<<3, /* ºöÂÔarrayÀàÐÍ, aÃ»ÓÐµ«ÊÇbÓÐµÄitem, ÊÊÓÃÓÚ½öÏë¾«È·±È½ÏÄ³¼¸¸öÖµ, ÆäÓà²»¹ØÐÄµÄÇé¿ö */
-	CJSON_CMP_OPT_IGNORE_ARRAYB_NOT_EXIST = 1<<4, /* ºöÂÔarrayÀàÐÍ, bÃ»ÓÐµ«ÊÇaÓÐµÄitem, ÊÊÓÃÓÚ½öÏë¾«È·±È½ÏÄ³¼¸¸öÖµ, ÆäÓà²»¹ØÐÄµÄÇé¿ö */	
-	CJSON_CMP_OPT_DUP_NAME_OBJECT 			= 1<<5, /* ÔÊÐíÓÐ¶à¸öÍ¬Ãûobject, ±ÈÈçËíµÀÇ¶Ì×Ð­ÒéÀïÓÐ¶à²ãip, vxlanÀïÓÐ¶à²ãethernet, ¶à²ãudpµÈµÈ */	
+	CJSON_CMP_OPT_CASE_SENSITIVE 	 = 1<<0, /* ï¿½ï¿½Ð¡Ð´ï¿½ï¿½ï¿½ï¿½ */
+	CJSON_CMP_OPT_IGNORE_OBJECTA_NOT_EXIST = 1<<1, /* ï¿½ï¿½ï¿½ï¿½objectï¿½ï¿½ï¿½ï¿½, aÃ»ï¿½Ðµï¿½ï¿½ï¿½bï¿½Ðµï¿½item, ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ë¾«È·ï¿½È½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½Öµ, ï¿½ï¿½ï¿½à²»ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½ */
+	CJSON_CMP_OPT_IGNORE_OBJECTB_NOT_EXIST = 1<<2, /* ï¿½ï¿½ï¿½ï¿½objectï¿½ï¿½ï¿½ï¿½, bÃ»ï¿½Ðµï¿½ï¿½ï¿½aï¿½Ðµï¿½item, ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ë¾«È·ï¿½È½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½Öµ, ï¿½ï¿½ï¿½à²»ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½ */
+	CJSON_CMP_OPT_IGNORE_ARRAYA_NOT_EXIST = 1<<3, /* ï¿½ï¿½ï¿½ï¿½arrayï¿½ï¿½ï¿½ï¿½, aÃ»ï¿½Ðµï¿½ï¿½ï¿½bï¿½Ðµï¿½item, ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ë¾«È·ï¿½È½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½Öµ, ï¿½ï¿½ï¿½à²»ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½ */
+	CJSON_CMP_OPT_IGNORE_ARRAYB_NOT_EXIST = 1<<4, /* ï¿½ï¿½ï¿½ï¿½arrayï¿½ï¿½ï¿½ï¿½, bÃ»ï¿½Ðµï¿½ï¿½ï¿½aï¿½Ðµï¿½item, ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ë¾«È·ï¿½È½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½Öµ, ï¿½ï¿½ï¿½à²»ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½ */	
+	CJSON_CMP_OPT_DUP_NAME_OBJECT 			= 1<<5, /* ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½Í¬ï¿½ï¿½object, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ip, vxlanï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ethernet, ï¿½ï¿½ï¿½udpï¿½Èµï¿½ */	
 }cJSON_Compare_Opt_t;
 
 cJSON_bool cJSON_Compare_options(const cJSON * const a, const cJSON * const b, cJSON_Compare_Opt_t opt, void *log_handle);

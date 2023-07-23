@@ -58,58 +58,6 @@ static inline __u32 rol32(__u32 word, unsigned int shift)
 /* An arbitrary initial parameter */
 #define JHASH_INITVAL		0xdeadbeef
 
-#if 0
-/* jhash - hash an arbitrary key
- * @k: sequence of bytes as key
- * @length: the length of the key
- * @initval: the previous hash, or an arbitray value
- *
- * The generic version, hashes an arbitrary sequence of bytes.
- * No alignment or length assumptions are made about the input key.
- *
- * Returns the hash value of the key. The result depends on endianness.
- */
-static inline u32 jhash(const void *key, u32 length, u32 initval)
-{
-	u32 a, b, c;
-	const u8 *k = key;
-
-	/* Set up the internal state */
-	a = b = c = JHASH_INITVAL + length + initval;
-
-	/* All but the last block: affect some 32 bits of (a,b,c) */
-	while (length > 12) {
-		a += __get_unaligned_cpu32(k);
-		b += __get_unaligned_cpu32(k + 4);
-		c += __get_unaligned_cpu32(k + 8);
-		__jhash_mix(a, b, c);
-		length -= 12;
-		k += 12;
-	}
-	/* Last block: affect all 32 bits of (c) */
-	/* All the case statements fall through */
-	switch (length) {
-	case 12: c += (u32)k[11]<<24;
-	case 11: c += (u32)k[10]<<16;
-	case 10: c += (u32)k[9]<<8;
-	case 9:  c += k[8];
-	case 8:  b += (u32)k[7]<<24;
-	case 7:  b += (u32)k[6]<<16;
-	case 6:  b += (u32)k[5]<<8;
-	case 5:  b += k[4];
-	case 4:  a += (u32)k[3]<<24;
-	case 3:  a += (u32)k[2]<<16;
-	case 2:  a += (u32)k[1]<<8;
-	case 1:  a += k[0];
-		 __jhash_final(a, b, c);
-	case 0: /* Nothing left to add */
-		break;
-	}
-
-	return c;
-}
-#endif
-
 /* jhash2 - hash an array of u32's
  * @k: the key which must be an array of u32's
  * @length: the number of u32's in the key
@@ -213,28 +161,16 @@ int stream_make_jhash(struct streaminfo_private *stream_pr, unsigned int maxsize
 	}else if(ADDR_TYPE_IPV6 == addr->addrtype){
 		const struct stream_tuple4_v6 *tuple4_v6 = addr->tuple4_v6;	
 		if(1 == stream_pr->layer_dir){
-#if 0 /* 20160930 lijia add, 编译器警告不对齐问题 */		
-			a = *((unsigned int *)(&tuple4_v6->saddr[12]));
-			b = *((unsigned int *)(&tuple4_v6->daddr[12]));
-#elif 0
-			memcpy(&a, &tuple4_v6->saddr[12], sizeof(int));
-			memcpy(&b, &tuple4_v6->daddr[12], sizeof(int));
-#else
 			for_werror_compile = (void *)(&tuple4_v6->saddr[12]);
 			a = *((unsigned int *)for_werror_compile);
 			for_werror_compile = (void *)(&tuple4_v6->daddr[12]);
 			b = *((unsigned int *)for_werror_compile);			
-#endif
 			c = tuple4_v6->source;
 			d = tuple4_v6->dest;			
 		}else{
-#if 0	/* 20160930 lijia add, 编译器警告不对齐问题 */		
-			a = *((unsigned int *)(&tuple4_v6->daddr[12]));
-			b = *((unsigned int *)(&tuple4_v6->saddr[12]));
-#else
+
 			memcpy(&a, &tuple4_v6->daddr[12], sizeof(int));
 			memcpy(&b, &tuple4_v6->saddr[12], sizeof(int));
-#endif
 			c = tuple4_v6->dest;
 			d = tuple4_v6->source;				
 		}

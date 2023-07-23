@@ -431,12 +431,6 @@ static int guess_if_l2tpv2(const struct streaminfo *a_udp, const struct mesa_udp
 		return 0; /* 非L2TP包 */
 	} 
 
-#if 0 /* 控制包长度不一定要计算ppp_hdr和ipv4_hdr */
-	if(ntohs(udph->uh_ulen) - sizeof(struct mesa_udp_hdr) < sizeof(struct l2tp_hdr_v2) +  sizeof(struct mesa_ppp_hdr) + sizeof(struct mesa_ip4_hdr)){
-		return 0; /* 数据小于最小可解析长度, 非L2TP包 */
-	}
-#endif	
-
 	pl2tphdrv2 = (const struct l2tp_hdr_v2 *)((char *)udph + sizeof(struct mesa_udp_hdr));
 
 	/* TODO 2, 暂时只处理L2TPv2版本, L2TPv3待添加 */

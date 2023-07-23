@@ -172,23 +172,6 @@ int MESA_htable_destroy(MESA_htable_handle table, void (* func)(void *));
  *   <0: error, refer to MESA_htable_errno_t.
  */
 int MESA_htable_add(MESA_htable_handle table, const uchar * key, uint size, const void *data);
-#if 0
-/*
- * name: hash_add_with_expire
- * functionality: adds item to table, than call hash_expire() on its list
- * param:
- * 	table: to which table do you want to add;
- * 	key: what is the label;
- * 	size: how long is the label;
- * 	data: what data do you want to attach;
- * returns:
- *	>0 success,return hash elems' linklist size
- * 	-1, duplicates found and can't add this one;
- * 	-2, memory failure;
- */
-int MESA_hash_add_with_expire_v3(MESA_htable_inner_t * table, uchar * key, uint size, void * data);
-
-#endif
 
 
 /*

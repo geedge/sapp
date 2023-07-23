@@ -826,107 +826,12 @@ static int parse_asymmetric_addr_layer_config(void)
 				strcat(debug_layer_index_str, one_layer_index_str);
 			}
 		}
-#if 0		
-		sapp_runtime_log(RLOG_LV_DEBUG, "asymmetric_addr_layer: %s:%s", 
-					addr_type_abbreviation_ntop((enum addr_type_t)i),
-					debug_layer_index_str);
-#endif
 	}
 
 	fclose(fp);
 	return 0;
 }
 
-
-
-#if 0
-/*
-    #pattern: asymmetric_layer_name  under_of_this_asymmetric_layer upper_of_this_asymmetric_layer
-    vlan    ethernet[0]    ipv4[1]
-    mpls    ethernet[1]    ipv4[2]
-*/
-static int parse_asymmetric_presence_layer_config(void)
-{
-	int i, ret, asymmetric_presence_layer_config_num = 0;
-	FILE *fp;
-	char line_cont[MAX_INPUT];
-	char layer_name[MAX_INPUT], under_layer_name[MAX_INPUT], upper_layer_name[MAX_INPUT];
-	enum addr_type_t this_layer;
-	embed_layer_t under_layer, upper_layer;
-
-	memset(g_asymmetric_presence_layer_set, 0, sizeof(g_asymmetric_presence_layer_set));
-	
-	fp = fopen(sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file, "r");
-	if(NULL == fp){
-		sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Warning]can't open sapp.toml->asymmetric_presence_layer_cfg_file:%s", 
-				sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file);
-		/* 向前兼容, 如果文件不存在, 不算错误 */
-		return 0;
-	}
-
-	while(fgets(line_cont, MAX_INPUT, fp)){
-		if('#' == line_cont[0] || ' ' == line_cont[0] || '\r' == line_cont[0] || '\n' == line_cont[0]){
-			continue;
-		}
-
-		ret = sscanf(line_cont, "%s\t%s\t%s", layer_name,under_layer_name,upper_layer_name);
-		if(ret != 3){
-			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse sapp.toml->asymmetric_presence_layer_cfg_file:%s error, invalid config:%s", 
-				sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file, line_cont);
-			fclose(fp);
-			return -1;
-		}
-
-		this_layer = addr_type_abbreviation_pton(layer_name);
-		if(__ADDR_TYPE_MAX == this_layer){
-			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, inlavid:%s", 
-					sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file,
-					line_cont); 
-			fclose(fp);
-			return -1;
-		}
-
-		ret = embed_layer_t_pton(under_layer_name, &under_layer);
-		if(ret < 0){
-			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, inlavid:%s", 
-					sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file,
-					line_cont); 
-			fclose(fp);
-			return -1;
-		}
-
-		ret = embed_layer_t_pton(upper_layer_name, &upper_layer);
-		if(ret < 0){
-			sapp_log(RLOG_LV_FATAL, ~0, ~0, "[Error]parse cfg_file:%s error, inlavid:%s", 
-					sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file,
-					line_cont); 
-			fclose(fp);
-			return -1;
-		}
-		
-		update_asymmetric_presence_layer(this_layer, &under_layer, &upper_layer);
-		asymmetric_presence_layer_config_num++;
-	}
-
-	//////// debug print
-
-	char under_layer_index_str[NAME_MAX];
-	char upper_layer_index_str[NAME_MAX];	
-	for(i = __ADDR_TYPE_INIT + 1; i < __ADDR_TYPE_MAX; i++){
-		if(g_asymmetric_presence_layer_set[i].is_asymmetric_layer != 0){
-			embed_layer_t_ntop(&g_asymmetric_presence_layer_set[i].under_layer, under_layer_index_str, NAME_MAX);
-			embed_layer_t_ntop(&g_asymmetric_presence_layer_set[i].upper_layer, upper_layer_index_str, NAME_MAX);
-			sapp_runtime_log(RLOG_LV_DEBUG, "asymmetric_presence_layer: %s, under_layer:%s, upperlayer:%s", 
-						addr_type_abbreviation_ntop((enum addr_type_t)i),
-						under_layer_index_str,
-						upper_layer_index_str);
-		}
-	}
-	
-	fclose(fp);
-	return 0;
-}
-#endif
 
 
 static int set_default_stream_compare_layer(embed_layer_t *stream_compare_layer_set)
@@ -1224,14 +1129,6 @@ static int config_expression_convert(void)
 		sapp_log(RLOG_LV_FATAL, ~0, ~0, "%s parse error", ABBR_ASYM_LAYER_ADDR_CONF_FILE); 
 		return- 1;
 	}
-
-#if 0 /* 2021-05-06 lijia close, 非对称mpls改成动态插入streaminfo的方式解决, 不再需要创建空层. */			
-	ret = parse_asymmetric_presence_layer_config();
-	if(ret < 0){
-		sapp_log(30, ~0, ~0, "%s parse error", sapp_global_val->config.packet_io.packet_io_tunnel.asymmetric_presence_layer_cfg_file); 
-		return- 1;
-	}	
-#endif
 
 	ret = parse_stream_compare_layer_config();
 	if(ret < 0){

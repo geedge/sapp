@@ -10,13 +10,6 @@ typedef double (*cl_get_res_t)(cpu_limit_handle h, int thread_seq, void *user_ar
 typedef double (*cl_get_factor_t)(cpu_limit_handle h, int thread_seq,void *user_arg);//thread_seq范围: [0,CL_OPT_THREAD_COUNT-1]
 typedef void (*cl_destroy_cb_t)(cpu_limit_handle h, void *user_arg);
 
-#if 0
-typedef enum{
-	RES_TYPE_CURRENT = 0,     //使用当前实时获取的绝对值, 比如总包数, 总字节数, 总流量等参数
-	RES_TYPE_DIFFERENCE = 1,  //使用连续两次的差值, 比如pps, bps等速率相关参数, 至少获取两次才能获取有效值
-}cpu_limit_get_value_type_t;
-#endif
-
 typedef enum{
 	/* set options */
 	CL_OPT_DEBUG_LOG_FILE_NAME, 

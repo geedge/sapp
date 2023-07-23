@@ -13,8 +13,8 @@ typedef void * grule_hdl_t;
 
 
 /*
-*  ×¢Òâ:
-*  ËùÓÐµØÖ·Àà½á¹¹Ê¹ÓÃÍøÂçÐò(¼´´ó¶ËÄ£Ê½)£¬ÆäËû¾ùÊ¹ÓÃÖ÷»úÐò
+*  ×¢ï¿½ï¿½:
+*  ï¿½ï¿½ï¿½Ðµï¿½Ö·ï¿½ï¿½á¹¹Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 */
 
 #if __BYTE_ORDER != __LITTLE_ENDIAN
@@ -250,116 +250,6 @@ char * parse_rule_str(grule_t * rule, char * buf, size_t *size);
 char * parse_rule_str_full(grule_t * rule, char * buf, size_t *size);
 
 //usage
-
-#if 0
-
-#define CCC_MAX_SIZE 16
-int grule_service()
-{
-	grule_hdl_t handle;
-	const char *ccc_list[CCC_MAX_SIZE]; //it should be inited.
-	size_t      ccc_num = 8; 
-	size_t      ccc_index = 0;
-	int         state;
-	uint8_t     auth_data[8]; // it should be inited
-	int         ret;
-	size_t      auth_err_num;
-	size_t      i;
-
-	grule_t          rule_list[16];
-	grule_result_t   rst_list[16];
-	uint64_t         rule_num;
-
-	#define SERVICE_STATE_IDLE         1
-	#define SERVICE_STATE_FIRSTCONNECT 2
-	#define SERVICE_STATE_CONNECTED    3
-	//#define SERVICE_STATE_
-
-	state        = SERVICE_STATE_IDLE;
-	auth_err_num = 0;
-	handle       = NULL;
-	while(1){
-
-			switch(state){
-				case SERVICE_STATE_IDLE:
-					handle = grule_open();
-					if(handle == NULL){
-						fprintf(stderr, "grule lib error\n");
-						abort();
-					}
-					grule_opt_set(handle, GRULE_SOL_PROTO, GRULE_TYPE_AUTH, auth_data, sizeof(auth_data));
-					ret = grule_connect(handle, ccc_list[ccc_index]);
-					ccc_index = (ccc_index + 1) % ccc_num;
-					if(ret == 0){
-						state = SERVICE_STATE_FIRSTCONNECT;
-						auth_err_num = 0;
-						continue;
-					}
-					if(grule_errno(handle) == GRULE_ERRNO_AUTH){
-						auth_err_num++;
-						if(auth_err_num >= ccc_num){
-							fprintf(stderr, "auth error\n");
-							abort();
-						}
-						//  stop the program if trying many times
-					}else{
-						fprintf(stderr, "connect error: %s\n", grule_error_str(grule_errno(handle)));
-					}
-					goto _error;
-					break;
-				case SERVICE_STATE_FIRSTCONNECT:
-					// if having durable rules, send all of them.
-					state = SERVICE_STATE_CONNECTED;
-					break;
-					//break;
-				case SERVICE_STATE_CONNECTED:
-					//
-					while(1){
-						// has rule?????
-						
-						memset(rule_list, 0, sizeof(rule_list));
-						// init
-						// set rule;
-						// sending
-						ret = grule_send(handle, rule_list, rule_num, 0);
-						if(ret != rule_num){
-							fprintf(stderr, "sending error: %s\n", grule_error_str(grule_errno(handle)));
-							goto _error;
-						}
-
-						ret = grule_recv(handle, rst_list, rule_num, 0);
-						if(ret != rule_num){
-							fprintf(stderr, "recv error: %s\n", grule_error_str(grule_errno(handle)));
-							goto _error;
-						}
-
-						for(i = 0; i < rule_num; i++){
-							if(rst_list[i].result != GRULE_RESP_OK && rst_list[i].result != GRULE_RESP_WHITELIST){ // rule is wrong.
-								fprintf(stderr, "rulerror: %s\n", grule_bad_results_str(&rst_list[i]));
-								abort();// fatal error.
-							}
-						}
-					}
-					break;
-				default:
-					fprintf(stderr, "bad state: %d\n", state);
-					abort();
-					break;
-			}	
-		_noerror:
-			continue;
-		_error:
-			if(handle != NULL){
-				grule_close(handle);
-			}
-			sleep(2);
-			state = SERVICE_STATE_IDLE;
-
-	}
-}
-
-#endif
-
 
 #define RULE_SIP     0x0001
 #define RULE_SIPMASK 0x0002
