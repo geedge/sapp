@@ -314,6 +314,8 @@ void streamleavlist(struct streamindex *pindex,struct stream_list *plist)
 void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 {
 	int timeout_reason = STREAM_CLOSE_REASON_TIMEOUT;
+	struct streamindex *pindex_to_del = NULL;
+	struct streamindex *pindex_tmp = NULL;
 	if(plist->cnt >= plist->max_cnt -1 && plist->cnt > 0)
 	{
 		if(plist->last_update_timer_s < g_CurrentTime)
@@ -325,38 +327,55 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 		struct timeout *t = timeouts_get(plist->streamindex_timer);
 		if(t == NULL)
 		{
-			struct timeouts_it it_all;
-			TIMEOUTS_IT_INIT(&it_all, TIMEOUTS_ALL);
-			t = timeouts_next(plist->streamindex_timer, &it_all);
+			TIMEOUTS_FOREACH(t, plist->streamindex_timer, TIMEOUTS_ALL)
+			{
+				pindex_tmp = container_of(t, struct streamindex, timeout);
+				if(pindex_tmp->stream.stream_carry_up_layer_tunnel_type == STREAM_TUNNLE_NON)
+				{
+					break;
+				}
+			}
 			timeout_reason = STREAM_CLOSE_REASON_LRUOUT;
 			assert(t!=NULL);
 		}
-		struct streamindex *pindex_tmp = container_of(t, struct streamindex, timeout);
-		sapp_runtime_log(RLOG_LV_DEBUG, "streamaddlist trggier timeout, reason:%d,  thread:%d, timer_count:%d, create_time:%ld, lastmtime:%ld!",
+		pindex_to_del = container_of(t, struct streamindex, timeout);
+		sapp_runtime_log(RLOG_LV_DEBUG, "streamaddlist trggier kickout: %s, reason:%d,  thread:%d, stream_type:%d, stream_state:%d, create_time:%ld, lastmtime:%ld, curtime:%ld!",
+				 printaddr(&pindex_to_del->stream.stream_public.addr, pindex_to_del->stream.stream_public.threadnum),
 				 timeout_reason,
-				 pindex->stream.stream_public.threadnum,
-				 pindex_tmp->stream.stream_public.ptcpdetail->createtime,
-				 pindex_tmp->stream.stream_public.ptcpdetail->lastmtime);
-		del_stream(pindex_tmp, timeout_reason);
+				 pindex_to_del->stream.stream_public.threadnum,
+				 pindex_to_del->stream.stream_public.type,
+				 pindex_to_del->stream.stream_public.stream_state,
+				 pindex_to_del->stream.stream_public.ptcpdetail->createtime,
+				 pindex_to_del->stream.stream_public.ptcpdetail->lastmtime,
+				 g_CurrentTime);
+		del_stream(pindex_to_del, timeout_reason);
 	}
 	
 	struct streaminfo *pstream=(struct streaminfo *)(&(pindex->stream));
-
+	time_t next_timeout_s=0;
 	timeout_init(&pindex->timeout, TIMEOUT_ABS);
 	if(pstream->stream_state==TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP)
 	{
-		timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout+g_CurrentTime);
+		next_timeout_s= tcp_closing_timeout+g_CurrentTime;
 	}
 	else if(pstream->stream_state==TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
 	{
-		timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout+g_CurrentTime);
+		next_timeout_s= tcp_opening_timeout+g_CurrentTime;
 	}
 	else
 	{
 		long set_timeout = pindex->stream.timeout;
 		if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
-		timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout+g_CurrentTime);
+		next_timeout_s=set_timeout+g_CurrentTime;
 	}
+	timeouts_add(plist->streamindex_timer, &pindex->timeout, next_timeout_s);
+	sapp_runtime_log(RLOG_LV_DEBUG, "streamaddlist timeout_add: %s, thread:%d, stream_type:%d, stream_state:%d, curtime:%ld, next_timeout_s:%ld!",
+				 printaddr(&pindex->stream.stream_public.addr, pindex->stream.stream_public.threadnum),
+				 pindex->stream.stream_public.threadnum,
+				 pstream->type,
+				 pstream->stream_state,
+				 g_CurrentTime,
+				 next_timeout_s);	
 	plist->cnt++;
 
 	update_stream_status(pstream->threadnum, pstream->type, pstream->stream_state, 1);
@@ -518,28 +537,28 @@ int lrustream(struct streamindex *pindex)
 		plist=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->tcpList[pstream->stream_state]);
 
 	}
-	//if(g_CurrentTime > plist->last_check_timer_s)
+	if(1 == del_stream_by_time(plist, pindex, pstream->threadnum))
 	{
-		int ret  = del_stream_by_time(plist, pindex, pstream->threadnum);
-		if (1 == ret)
-		{
-			return 1;
-		}
+		return 1;	
 	}
-	if(pstream->stream_state==TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP)
-	{
-		timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout+g_CurrentTime);
-	}
-	else if(pstream->stream_state==TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
-	{
-		timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout+g_CurrentTime);
-	}	
 	else
 	{
-		long set_timeout = pindex->stream.timeout;
-		if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
-		timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout+g_CurrentTime);
-	}	
+		if (pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP)
+		{
+			timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout + g_CurrentTime);
+		}
+		else if (pstream->stream_state == TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
+		{
+			timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout + g_CurrentTime);
+		}
+		else
+		{
+			long set_timeout = pindex->stream.timeout;
+			if (set_timeout == 0)
+				set_timeout = MAX_DEFALUT_TIMEOUT_S;
+			timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout + g_CurrentTime);
+		}
+	}
 	return 0;
 }
 

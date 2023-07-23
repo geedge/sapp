@@ -261,11 +261,12 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 
 static inline void udp_cleardata(struct streaminfo *a_udp)
 {
-	struct udpdetail *pdetail=(struct udpdetail *)a_udp->pdetail;
-
-   	pdetail->datalen=0;
-	pdetail->pdata=NULL;
-
+	struct udpdetail *pdetail = (struct udpdetail *)a_udp->pdetail;
+	if (pdetail)
+	{
+		pdetail->datalen = 0;
+		pdetail->pdata = NULL;
+	}
 	return;
 }
 
@@ -320,10 +321,17 @@ void udp_free_stream(struct streamindex *pindex)
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[pstream->stream_state]);
 	streamleavlist(pindex, plist);
 	hash_del_stream(pindex);
-	
+	sapp_runtime_log(RLOG_LV_DEBUG, "udp_free_stream: %s, thread:%d, stream_type:%d, stream_state:%d, curtime:%ld!",
+				 printaddr(&pindex->stream.stream_public.addr, pindex->stream.stream_public.threadnum),
+				 pindex->stream.stream_public.threadnum,
+				 pstream->type,
+				 pstream->stream_state,
+				 g_CurrentTime);	
+
 	if(pstream->pdetail!=NULL){
 		sapp_mem_free(SAPP_MEM_DYN_UDP_DETAIL, threadnum,pstream->pdetail);
 	}
+	pstream->pdetail=NULL;
 	project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, threadnum, pstream_pr->pproject);
 	pstream_pr->pproject = NULL;
 
@@ -366,108 +374,79 @@ static int udp_reset_stream_bytime(struct streamindex *pindex)
 	struct udpdetail_private *pdetail_pr;
 	struct udpdetail *pdetail;
 	UCHAR threadnum;
-	
-	pstream_pr=&(pindex->stream);
-	if(0 == pstream_pr->timeout){ /* 没设置超时时间, 不能按时间重置 */
-		return 0;
-	}
-	
-	pstream=&(pstream_pr->stream_public);
-	pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
-	pdetail=(struct udpdetail *)pstream->pdetail;
+
+	pstream_pr = &(pindex->stream);
+	pstream = &(pstream_pr->stream_public);
+	pdetail_pr = (struct udpdetail_private *)(pstream->pdetail);
+	pdetail = (struct udpdetail *)pstream->pdetail;
 	threadnum = pstream->threadnum;
 
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
-	
-	if((UINT16)((UINT64)g_CurrentTime-pdetail->lastmtime) > pstream_pr->timeout)
+	// 清理以前的调用信息
+	plist = &(G_MESA_GLOBAL_STREAM[threadnum]->udpList[pstream->stream_state]);
+	streamleavlist(pindex, plist);
+	//		pstream->stream.opstate=OP_STATE_CLOSE;
+	pstream->opstate = OP_STATE_CLOSE;
+	pstream->pktstate = OP_STATE_CLOSE; // add by lijia 20141202
+
+	pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_TIMEOUT;
+
+	udp_update_close_reason_stat(threadnum, pstream_pr);
+
+	stream_process_udp(pstream, NULL, NULL, NULL, &(pdetail_pr->apme), &(pstream->opstate));
+
+	project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, threadnum, pstream_pr->pproject);
+	pstream_pr->pproject = NULL;
+	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
+	pstream_pr->stream_bridge = NULL;
+
+	// free_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr);
+	if (pstream_pr->sid_append_list)
 	{
-		//清理以前的调用信息
-		plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[pstream->stream_state]);
-		streamleavlist(pindex, plist);
-//		pstream->stream.opstate=OP_STATE_CLOSE;
-		pstream->opstate=OP_STATE_CLOSE;
-		pstream->pktstate=OP_STATE_CLOSE;  // add by lijia 20141202
-
-		pstream_pr->stream_close_reason = STREAM_CLOSE_REASON_TIMEOUT;
-
-		udp_update_close_reason_stat(threadnum, pstream_pr);
-		
-		stream_process_udp(pstream,NULL,NULL,NULL,&(pdetail_pr->apme),&(pstream->opstate));  
-
-		project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, threadnum, pstream_pr->pproject);
-		pstream_pr->pproject=NULL;
-		stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
-		pstream_pr->stream_bridge=NULL;
-
-		//free_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr);
-        if (pstream_pr->sid_append_list)
-        {
-            sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_append_list);
-            pstream_pr->sid_append_list = NULL;
-        }
-
-        if (pstream_pr->sid_prepend_list)
-        {
-            sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_prepend_list);
-            pstream_pr->sid_prepend_list = NULL;
-        }
-
-        pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_UDP_PROJECT,threadnum);
-		pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_UDP_BRIDGE,threadnum);
-
-		/* 2015-12-28 lijia add, 流重置, 从新申请内存 */
-		if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
-			pdetail_pr->flow_stat = (struct udp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_UDP_FLOW_STAT,threadnum, sizeof(struct udp_flow_stat));
-			memset(pdetail_pr->flow_stat, 0, sizeof(struct udp_flow_stat));	
-			project_req_add_struct(pstream, G_UDP_FLOW_STAT_PROJECT_ID, pdetail_pr->flow_stat);
-		}
-		
-		//重置所有状态
-	    memset(pdetail,0,sizeof(struct udpdetail ));
-//		pstream->stream.opstate=OP_STATE_PENDING;
-		pstream->opstate=OP_STATE_PENDING;
-		pstream->pktstate=OP_STATE_PENDING;
-
-		pstream->dir = pstream->curdir;
-
-		pstream_pr->has_duplicate_pkt = 0;
-		pstream_pr->stream_killed_flag = 0;
-		pdetail_pr->drop_stream_flag = 0;
-
-		pdetail->createtime=g_CurrentTime;
-		pstream_pr->global_stream_id = get_global_stream_id(threadnum);
-		pstream_pr->stream_trace_id=0;
-		pstream_pr->stream_create_timestamp_ms=g_CurrentTime_ms;	
-		plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[UDP_ONE_STATE]);
-		pstream->stream_state=UDP_ONE_STATE;
-//		streamaddlist(pstream,plist);
-		streamaddlist(pindex,plist);
-
-		local_sys_stat->count[SAPP_STAT_UDP_STREAM_RESET]++;
-		return 1;
-	}
-	return 0;
-}
-
-
-#if 0
-static inline int set_port_20141216(struct streaminfo *pfstream, const struct mesa_udp_hdr *this_udphdr)
-{
-	if(ADDR_TYPE_IPV4 == pfstream->addr.addrtype || __ADDR_TYPE_IP_PAIR_V4 == pfstream->addr.addrtype){
-		struct stream_tuple4_v4 *tuple4_v4 = (struct stream_tuple4_v4 *)pfstream->addr.paddr;
-		tuple4_v4->source = this_udphdr->uh_sport;
-		tuple4_v4->dest = this_udphdr->uh_dport;
-		pfstream->addr.addrtype = ADDR_TYPE_IPV4;
-	}else{
-		struct stream_tuple4_v6 *tuple4_v6 = (struct stream_tuple4_v6 *)pfstream->addr.paddr;
-		tuple4_v6->source = this_udphdr->uh_sport;
-		tuple4_v6->dest = this_udphdr->uh_dport;
-		pfstream->addr.addrtype = ADDR_TYPE_IPV6;
+		sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_append_list);
+		pstream_pr->sid_append_list = NULL;
 	}
 
-	return 0;
+	if (pstream_pr->sid_prepend_list)
+	{
+		sapp_mem_free(SAPP_MEM_DYN_SID_LIST, threadnum, pstream_pr->sid_prepend_list);
+		pstream_pr->sid_prepend_list = NULL;
+	}
+
+	pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_UDP_PROJECT, threadnum);
+	pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, threadnum);
+
+	/* 2015-12-28 lijia add, 流重置, 从新申请内存 */
+	if (G_UDP_FLOW_STAT_PROJECT_ID != -1)
+	{
+		pdetail_pr->flow_stat = (struct udp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_UDP_FLOW_STAT, threadnum, sizeof(struct udp_flow_stat));
+		memset(pdetail_pr->flow_stat, 0, sizeof(struct udp_flow_stat));
+		project_req_add_struct(pstream, G_UDP_FLOW_STAT_PROJECT_ID, pdetail_pr->flow_stat);
+	}
+
+	// 重置所有状态
+	memset(pdetail, 0, sizeof(struct udpdetail));
+	//		pstream->stream.opstate=OP_STATE_PENDING;
+	pstream->opstate = OP_STATE_PENDING;
+	pstream->pktstate = OP_STATE_PENDING;
+
+	pstream->dir = pstream->curdir;
+
+	pstream_pr->has_duplicate_pkt = 0;
+	pstream_pr->stream_killed_flag = 0;
+	pdetail_pr->drop_stream_flag = 0;
+
+	pdetail->createtime = g_CurrentTime;
+	pstream_pr->global_stream_id = get_global_stream_id(threadnum);
+	pstream_pr->stream_trace_id = 0;
+	pstream_pr->stream_create_timestamp_ms = g_CurrentTime_ms;
+	plist = &(G_MESA_GLOBAL_STREAM[threadnum]->udpList[UDP_ONE_STATE]);
+	pstream->stream_state = UDP_ONE_STATE;
+	streamaddlist(pindex, plist);
+
+	local_sys_stat->count[SAPP_STAT_UDP_STREAM_RESET]++;
+	return 1;
 }
-#endif
 
 static int set_addr_recur(struct streaminfo *this_stream, int reverse)
 {
@@ -539,9 +518,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	struct udpdetail_private *pdetail_pr=NULL;
 	struct streaminfo_private *pstream_pr=&(pindex->stream);
 	struct streaminfo *pstream=&(pstream_pr->stream_public);
-#if (COMPAT_PAPP_FOR_BENCHMARK == 0)	
 	struct streaminfo_private *stack_stream_pr = &(pindex->stream); /* 2016-11-24 lijia add, 如果是l2tp, teredo隧道, 使用栈里的指针 */
-#endif	
 	int next_layer_offset;
 	void *tmpme=NULL;	
 	int hlen=0;
@@ -663,9 +640,12 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			a_index = udp_add_new_stream(pindex, udph, raw_pkt);
 		}
 		//add by lqy 只有当链接未重置时进行lru
-		else if(udp_reset_stream_bytime(a_index)==0)
+		else 
 		{
-			lrustream(a_index);
+			if(lrustream(a_index)==1)
+			{
+				udp_reset_stream_bytime(a_index);
+			}
 		}	
 
 		/* NOTE: 更新pstream指针, 指向堆中存储的内存 */
@@ -908,14 +888,17 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	{
 		set_transport_addr(pstream, 1, udph->uh_sport, udph->uh_dport);		
 	
-		a_index =(struct streamindex * ) findstreamindex (pindex, raw_pkt);
-		if(unlikely(!a_index)){
+		a_index =(struct streamindex *)findstreamindex (pindex, raw_pkt);
+		if(unlikely(!a_index))
+		{
 			a_index = udp_add_new_stream(pindex, udph, raw_pkt);
 		}
-		//add by lqy 只有当链接未重置时进行lru
-		else if( udp_reset_stream_bytime(a_index)==0)
+		else 
 		{
-			lrustream(a_index);			
+			if(lrustream(a_index)==1)
+			{
+				udp_reset_stream_bytime(a_index);
+			}
 		}	
 
 		/* NOTE: 更新pstream指针, 指向堆中存储的内存 */
