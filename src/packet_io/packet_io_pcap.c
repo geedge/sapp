@@ -1393,6 +1393,38 @@ static pcap_t *pcap_open_dumpfile_mode(const char *filename)
 }
 
 
+static const char* format_pretty_timeval(struct timeval start, struct timeval end) {
+    static char buffer[100];
+    long total_sec = end.tv_sec - start.tv_sec;
+    long total_usec = end.tv_usec - start.tv_usec;
+
+    if (total_usec < 0) {
+        total_sec -= 1;
+        total_usec += 1000000;
+    }
+
+    long hours = total_sec / 3600;
+    long minutes = (total_sec % 3600) / 60;
+    long seconds = total_sec % 60;
+    long milliseconds = total_usec / 1000;
+    long microseconds = total_usec % 1000;
+
+    if (hours > 0) {
+        snprintf(buffer, sizeof(buffer), "%ld hours, %ld minutes, %ld.%03ld seconds", hours, minutes, seconds, milliseconds);
+    } else if (minutes > 0) {
+        snprintf(buffer, sizeof(buffer), "%ld minutes, %ld.%03ld seconds", minutes, seconds, milliseconds);
+    } else if (seconds > 0) {
+        snprintf(buffer, sizeof(buffer), "%ld.%03ld seconds", seconds, milliseconds);
+    } else if (milliseconds > 0) {
+        snprintf(buffer, sizeof(buffer), "%ld.%03ld milliseconds", milliseconds, microseconds);
+    } else {
+        snprintf(buffer, sizeof(buffer), "%ld microseconds", microseconds);
+    }
+
+    return buffer;
+}
+
+
 static void pcap_io_dumpfile_list(void)
 {
 	pcap_t *pcap_handle;
@@ -1405,14 +1437,14 @@ static void pcap_io_dumpfile_list(void)
 		if(pcap_handle){
 			pcap_up_handle = pcap_handle;
 			gettimeofday(&start_time, NULL);
-			sapp_log(20, 1, 1, "pcap file '%s' processing start", 
+			sapp_log(20, 1, 1, "pcap file '%s' processing start------------", 
 					sapp_global_val->cla.dumpfie_list_array[pcap_file_num]);			
 			pcap_loop(pcap_handle, -1, __pcap_pkt_handle, (unsigned char *)&route_dir);
 			gettimeofday(&end_time, NULL);
 
-			sapp_log(20, 1, 1, "pcap file '%s' processing finished, takes time: %ldus", 
+			sapp_log(20, 1, 1, "pcap file '%s' processing finished, takes time: %s", 
 					sapp_global_val->cla.dumpfie_list_array[pcap_file_num],
-					(end_time.tv_sec-start_time.tv_sec)*1000*1000 + (end_time.tv_usec-start_time.tv_usec));
+					format_pretty_timeval(start_time, end_time));
 			pcap_close(pcap_handle);
 			pcap_up_handle = NULL;
 

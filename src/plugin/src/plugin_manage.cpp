@@ -497,6 +497,51 @@ static void sapp_plug_modify_char(char *str, int raw_char, int new_char)
 	}
 }
 
+const long long USEC_PER_SEC = 1000000LL;
+const long long USEC_PER_MSEC = 1000LL;
+const int SEC_PER_MIN = 60;
+const int MIN_PER_HOUR = 60;
+const int HOUR_PER_DAY = 24;
+
+static char* beautify_time(long long us) {
+    static char result[100];
+    long long days, hours, mins, secs, msecs, usecs;
+
+    days = us / (USEC_PER_SEC * SEC_PER_MIN * MIN_PER_HOUR * HOUR_PER_DAY);
+    us %= USEC_PER_SEC * SEC_PER_MIN * MIN_PER_HOUR * HOUR_PER_DAY;
+
+    hours = us / (USEC_PER_SEC * SEC_PER_MIN * MIN_PER_HOUR);
+    us %= USEC_PER_SEC * SEC_PER_MIN * MIN_PER_HOUR;
+
+    mins = us / (USEC_PER_SEC * SEC_PER_MIN);
+    us %= USEC_PER_SEC * SEC_PER_MIN;
+
+    secs = us / USEC_PER_SEC;
+    us %= USEC_PER_SEC;
+
+    msecs = us / USEC_PER_MSEC;
+    us %= USEC_PER_MSEC;
+
+    usecs = us;
+
+    if (days > 0) {
+        sprintf(result, "%lld days, %lld hours, %lld mins, %lld.%03lld secs", days, hours, mins, secs, msecs);
+    } else if (hours > 0) {
+        sprintf(result, "%lld hours, %lld mins, %lld.%03lld secs", hours, mins, secs, msecs);
+    } else if (mins > 0) {
+        sprintf(result, "%lld mins, %lld.%03lld secs", mins, secs, msecs);
+    } else if (secs > 0) {
+        sprintf(result, "%lld.%03lld secs", secs, msecs);
+    } else if (msecs > 0) {
+        sprintf(result, "%lld.%03lld msecs", msecs, usecs);
+    } else {
+        sprintf(result, "%lld usecs", usecs);
+    }
+
+    return result;
+}
+
+
 
 void sapp_plugin_load_state_output(void)
 {
@@ -518,14 +563,14 @@ void sapp_plugin_load_state_output(void)
 
 	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
 	fprintf(fp, "sapp load plugins statistics:\n");
-	fprintf(fp, "%20s %5s %13s %6s\n", "start_time", "state", "time_spent_us", "plugin_path");
+	fprintf(fp, "%20s %5s %24s %6s\n", "start_time", "state", "time_spent_us", "plugin_path");
 
 	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
 	for(i = 0; i < plugin_load_state_num; i++){
 		timet_to_str(ptr_plugin_load_state[i]->init_time, time_str, sizeof(time_str));
-		fprintf(fp, "%20s %5s %13lld %6s\n", time_str, 
+		fprintf(fp, "%20s %5s %24s %6s\n", time_str, 
 				(ptr_plugin_load_state[i]->init_state < 0) ? "\033[1;31;40mFAIL\033[0m":"\033[32mSUCC\033[0m", 
-				ptr_plugin_load_state[i]->time_spent_in_us, 
+				beautify_time(ptr_plugin_load_state[i]->time_spent_in_us), 
 				ptr_plugin_load_state[i]->plug_path);	
 	}	
 	fprintf(fp, "-----------------------------------------------------------------------------------------------\n");
