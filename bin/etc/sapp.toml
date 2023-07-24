@@ -131,8 +131,8 @@
     stream_id_base_time="2021-01-01 00:00:00"
     [stream.tcp]
     max=10000
-    timeout=60
-    opening_timeout=10
+    timeout=180
+    opening_timeout=60
     closing_timeout=30
     syn_mandatory=1
     reorder_pkt_max=32
