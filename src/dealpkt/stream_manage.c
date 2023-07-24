@@ -1070,56 +1070,59 @@ static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_
 	/* 外层ip地址会变化, 但四个ip不可能都不一样, 有任意方向地址相同, 即可认为是来自同一个GTP隧道
 		TODO, 此处需要同GTP-C联动 ??
 	*/
-	if (pheap_stream->addr.addrtype == ADDR_TYPE_IPV4)
+	if (pheap_stream->addr.addrlen == pstack_stream->addr.addrlen)
 	{
-		if (pheap_stream->addr.tuple4_v4->saddr == pstack_stream->addr.tuple4_v4->saddr)
+		if (pheap_stream->addr.addrtype == ADDR_TYPE_IPV4)
 		{
-			this_layer_is_same = 1;
-			cur_pkt_dir = DIR_C2S;
+			if (pheap_stream->addr.tuple4_v4->saddr == pstack_stream->addr.tuple4_v4->saddr)
+			{
+				this_layer_is_same = 1;
+				cur_pkt_dir = DIR_C2S;
+			}
+			else if (pheap_stream->addr.tuple4_v4->daddr == pstack_stream->addr.tuple4_v4->daddr)
+			{
+				this_layer_is_same = 1;
+				cur_pkt_dir = DIR_C2S;
+			}
+			else if (pheap_stream->addr.tuple4_v4->saddr == pstack_stream->addr.tuple4_v4->daddr)
+			{
+				this_layer_is_same = 1;
+				cur_pkt_dir = DIR_S2C;
+			}
+			else if (pheap_stream->addr.tuple4_v4->daddr == pstack_stream->addr.tuple4_v4->saddr)
+			{
+				this_layer_is_same = 1;
+				cur_pkt_dir = DIR_S2C;
+			}
 		}
-		else if (pheap_stream->addr.tuple4_v4->daddr == pstack_stream->addr.tuple4_v4->daddr)
+		else if (pheap_stream->addr.addrtype == ADDR_TYPE_IPV6)
 		{
-			this_layer_is_same = 1;
-			cur_pkt_dir = DIR_C2S;
-		}
-		else if (pheap_stream->addr.tuple4_v4->saddr == pstack_stream->addr.tuple4_v4->daddr)
-		{
-			this_layer_is_same = 1;
-			cur_pkt_dir = DIR_S2C;
-		}
-		else if (pheap_stream->addr.tuple4_v4->daddr == pstack_stream->addr.tuple4_v4->saddr)
-		{
-			this_layer_is_same = 1;
-			cur_pkt_dir = DIR_S2C;
-		}
-	}
-	else if(pheap_stream->addr.addrtype == ADDR_TYPE_IPV6)
-	{
-		if (0 == memcmp(pheap_stream->addr.tuple4_v6->saddr,pstack_stream->addr.tuple4_v6->saddr, IPV6_ADDR_LEN))
-		{
-			this_layer_is_same = 1;
-			cur_pkt_dir = DIR_C2S;
-		}
-		else if (0 == memcmp(pheap_stream->addr.tuple4_v6->daddr,pstack_stream->addr.tuple4_v6->daddr, IPV6_ADDR_LEN))
-		{
-			this_layer_is_same = 1;
-			cur_pkt_dir = DIR_C2S;
-		}
-		else if (0 == memcmp(pheap_stream->addr.tuple4_v6->saddr,pstack_stream->addr.tuple4_v6->daddr, IPV6_ADDR_LEN))
-		{
-			this_layer_is_same = 1;
-			cur_pkt_dir = DIR_S2C;
-		}
-		else if (0 == memcmp(pheap_stream->addr.tuple4_v6->daddr,pstack_stream->addr.tuple4_v6->saddr, IPV6_ADDR_LEN))
-		{
-			this_layer_is_same = 1;
-			cur_pkt_dir = DIR_S2C;
+			if (0 == memcmp(pheap_stream->addr.tuple4_v6->saddr, pstack_stream->addr.tuple4_v6->saddr, IPV6_ADDR_LEN))
+			{
+				this_layer_is_same = 1;
+				cur_pkt_dir = DIR_C2S;
+			}
+			else if (0 == memcmp(pheap_stream->addr.tuple4_v6->daddr, pstack_stream->addr.tuple4_v6->daddr, IPV6_ADDR_LEN))
+			{
+				this_layer_is_same = 1;
+				cur_pkt_dir = DIR_C2S;
+			}
+			else if (0 == memcmp(pheap_stream->addr.tuple4_v6->saddr, pstack_stream->addr.tuple4_v6->daddr, IPV6_ADDR_LEN))
+			{
+				this_layer_is_same = 1;
+				cur_pkt_dir = DIR_S2C;
+			}
+			else if (0 == memcmp(pheap_stream->addr.tuple4_v6->daddr, pstack_stream->addr.tuple4_v6->saddr, IPV6_ADDR_LEN))
+			{
+				this_layer_is_same = 1;
+				cur_pkt_dir = DIR_S2C;
+			}
 		}
 	}
 	else
 	{
 		sapp_runtime_log(RLOG_LV_FATAL, "stream:%s, curdir:%d, addrtype:%d for GTP tunnel, heap stream tuple4 addr not IPv4 or IPv6",
-				 printaddr(&top_stream_pr->stream_public.addr, top_stream_pr->stream_public.threadnum), cur_pkt_dir, pheap_stream->addr.addrtype);
+						printaddr(&top_stream_pr->stream_public.addr, top_stream_pr->stream_public.threadnum), cur_pkt_dir, pheap_stream->addr.addrtype);
 	}
 
 	if(0 == this_layer_is_same){ /* 本层地址全不一样, 认为不是来自一个隧道, 直接返回错误 */
@@ -1129,7 +1132,7 @@ static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_
 	/* 继续比较下一层地址 */
 	ret=checkstreamorder(top_stream_pr, (struct streaminfo_private *)(pheap_ip_stream_pr->pfather_pr), 
 						 (struct streaminfo_private *)(pstack_ip_stream_pr->pfather_pr),
-						 heap_streaminfo_skip_layer_num, stack_streaminfo_skip_layer_num);
+						heap_streaminfo_skip_layer_num, stack_streaminfo_skip_layer_num);
 
 	if(0 == ret){
 		/* 执行到此, 所有地址都相同, 或者是不用于地址比较, 说明当前流pheap_stream_pr,pstack_stream_pr是同属于一个上层TCP/UDP流,
