@@ -1099,7 +1099,12 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 	}
         return APP_STATE_GIVEME;
 }
+char test_deadlock(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
+{
+	sleep(12);
+	return APP_STATE_GIVEME;
 
+}
 
 /* 关于网络相关字�??, 均为网络�? network order */
 struct __test_inline_vxlan_hdr{

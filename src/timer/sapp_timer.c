@@ -451,8 +451,16 @@ static void sapp_watch_dog(void)
 		{
 			deadlock_detected=1;
 			check_result = "WATCHDOG=trigger";
-			sapp_runtime_log(RLOG_LV_FATAL, "##### detect deadlock in PID:%ld, at timestamp:%ld,  thread index:%d, TID(LWP):%u, send systemd notify WATCHDOG=trigger #####",
-							getpid(), ABBR_CURRENT_TIME, thread_index, sapp_global_val->individual_fixed.thread_tid[thread_index]);
+			if(sd_notify_enable)
+			{
+				sapp_runtime_log(RLOG_LV_FATAL, "##### detect deadlock in PID:%ld, at timestamp:%ld,  thread index:%d, TID(LWP):%u, sd_notify_enable:%d, deadlock_detected:%d, deadlock_cnt:%d, send systemd notify WATCHDOG=trigger #####",
+							getpid(), ABBR_CURRENT_TIME, thread_index, sapp_global_val->individual_fixed.thread_tid[thread_index], sd_notify_enable, deadlock_detected, deadlock_cnt);
+			}
+			else
+			{
+				sapp_runtime_log(RLOG_LV_FATAL, "##### detect deadlock in PID:%ld, at timestamp:%ld,  thread index:%d, TID(LWP):%u, sd_notify_enable:%d, deadlock_detected:%d, deadlock_cnt:%d #####",
+							getpid(), ABBR_CURRENT_TIME, thread_index, sapp_global_val->individual_fixed.thread_tid[thread_index], sd_notify_enable, deadlock_detected, deadlock_cnt);
+			}
 			break;
 
 		}
@@ -468,9 +476,12 @@ static void sapp_watch_dog(void)
 	{
 		if(deadlock_detected)
 		{
-			if(deadlock_cnt++ > 10)
+			deadlock_cnt+=1;
+			if(deadlock_cnt > 10)
 			{
-				exit(-1);
+				sapp_runtime_log(RLOG_LV_FATAL, "##### detect deadlock in PID:%ld, at timestamp:%ld,  thread index:%d, TID(LWP):%u, sd_notify_enable:%d, deadlock_detected:%d, deadlock_cnt:%d,  Trigger ABORT #####",
+						getpid(), ABBR_CURRENT_TIME, thread_index, sd_notify_enable, deadlock_detected, deadlock_cnt, sapp_global_val->individual_fixed.thread_tid[thread_index]);
+				abort();
 			}
 		}
 		else
