@@ -34,20 +34,6 @@ env | sort
 : "${NO_RTTI:=OFF}"
 : "${COMPILER_IS_GNUCXX:=OFF}"
 
-# Install dependency from YUM
-if [ -n "${INSTALL_DEPENDENCY_LIBRARY}" ]; then
-	yum install -y $INSTALL_DEPENDENCY_LIBRARY
-	source /etc/profile.d/framework.sh
-	source /etc/profile.d/mrzcpd.sh
-fi
-
-if [ $ASAN_OPTION ] && [ -f "/opt/rh/devtoolset-7/enable" ] ;then
-	source /opt/rh/devtoolset-7/enable
-fi
-
-if [ -f "/usr/lib64/libnsl.so.1" ]; then
-    cd /usr/lib64/; ln -fs libnsl.so.1 libnsl.so; cd -
-fi
 /usr/bin/xxd -v
 
 mkdir build || true
@@ -71,18 +57,3 @@ make
 if [ -n "${PACKAGE}" ]; then
 	make package
 fi
-
-if [ -n "${UPLOAD}" ]; then	
-	cp ~/rpm_upload_tools.py ./
-    if [ -n "${HASP_ENABLED}" ]; then	
-	    python3 rpm_upload_tools.py ${PULP3_REPO_NAME} ${PULP3_DIST_NAME} *-pr-*.rpm
-    else
-	    python3 rpm_upload_tools.py ${PULP3_REPO_NAME} ${PULP3_DIST_NAME} *.rpm
-    fi
-fi
-
-#if [ -n "${UPLOAD_SYMBOL_FILES}" ]; then
-#  rpm -i tfe*debuginfo*.rpm
-#  cp /usr/lib/debug/opt/tsg/tfe/bin/tfe.debug /tmp/tfe.debuginfo.${CI_COMMIT_SHORT_SHA}
-#  sentry-cli upload-dif -t elf /tmp/tfe.debuginfo.${CI_COMMIT_SHORT_SHA}
-#fi

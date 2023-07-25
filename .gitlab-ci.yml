@@ -5,142 +5,55 @@ variables:
   BUILD_IMAGE_CENTOS8: "git.mesalab.cn:7443/mesa_platform/build-env:rocky8-for-sapp"
   INSTALL_DEPENDENCY_LIBRARY: 
     libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env 
-    libwiredcfg-devel libWiredLB-devel libMESA_handle_logger-devel libbreakpad_mini-devel  mrzcpd hasp-tools
-    libMESA_jump_layer-devel libMESA_jump_layer libfieldstat3-devel
+    libMESA_handle_logger-devel libbreakpad_mini-devel
+    libMESA_jump_layer-devel libfieldstat3-devel
+    libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger 
+    libcjson libbreakpad_mini libMESA_jump_layer libfieldstat3
+    mrzcpd hasp-tools
   SYMBOL_TARGET: sapp
+  TEST_NAME: gtest_sapp_v4
   INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
 
 stages:
 - build
-- envelope
 - test
+- envelope
+- upload
 
-.build_before_script:
-  before_script:
+.everything_before_script: &everything_before_script
     - mkdir -p $BUILD_PADDING_PREFIX/$CI_PROJECT_NAMESPACE/
     - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
     - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
     - chmod +x ./ci/travis.sh
-    - yum makecache
+    - yum makecache --disablerepo="*" --enablerepo="framework,platform"
+    - yum install -y $INSTALL_DEPENDENCY_LIBRARY
+    - source /etc/profile.d/framework.sh; source /etc/profile.d/mrzcpd.sh
 
-.build_by_travis_for_centos7:
-  stage: build
-  image: $BUILD_IMAGE_CENTOS7
-  extends: .build_before_script
+###############################################################################
+# build 
+###############################################################################
+
+.build_before_script:
+  before_script: *everything_before_script
   script:
     - ./ci/travis.sh
-  tags:
-    - share
-
-.build_by_travis_for_centos8:
-  stage: build
-  image: $BUILD_IMAGE_CENTOS8
-  extends: .build_before_script
-  script:
-    - sh +x ./ci/update-el8-repo.sh
-    - ./ci/travis.sh
-  tags:
-    - share
-
-.setup_test_env_for_centos7:
-  stage: test
-  image: $BUILD_IMAGE_CENTOS7
-  allow_failure: true
-  before_script:
-    - mkdir -p $BUILD_PADDING_PREFIX/$CI_PROJECT_NAMESPACE/
-    - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
-    - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
-    - yum makecache
-    - yum install -y libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger libcjson systemd systemd-devel libpcap libpcap-devel libbreakpad_mini libMESA_jump_layer libfieldstat3
-    - yum install -y sapp benchmark_pcap 
-    - yum install -y framework_env; source /etc/profile.d/framework.sh
-    - ls -l /opt/MESA/lib
-    - echo "/opt/MESA/lib" >> /etc/ld.so.conf
-    - ldconfig
-    - ldd /home/mesasoft/sapp_run/sapp
-    - ifconfig
-    - sysctl -w net.ipv6.conf.all.disable_ipv6=0
-    - ifconfig
-    - ip neigh show
-    - ip -6 neigh show
-    - cd build; make test; 
-    - ln -fs /home/mesasoft/benchmark_pcap/ benchmark_pcap; 
-    - cd -
-    - ldconfig
-    - cd build/testing/
-    - ldd gtest_sapp_v4
-    - sed -i '14 i__log_test_sapp_benchmark_log.debug    >stdout; other' etc/sapp_log.conf
-    - sed -i '11 i__log_runtimelog.debug    >stdout; other' etc/sapp_log.conf
-    - ulimit -c unlimited
-    - cd -
-  dependencies:
-    - branch_build_debug_for_centos7
-    - branch_build_release_for_centos7
-    - develop_build_debug_for_centos7
-    - develop_build_release_for_centos7
-    - release_build_release_for_centos7
-  tags:
-    - share    
-
-
-benchmark_test_for_centos7:
-  stage: test
-  extends: .setup_test_env_for_centos7
-  script:
-    - cd build/testing/
-#run module v2.0 with death test
-    - ./gtest_sapp_v4 -f control.*
-    - ./gtest_sapp_v4 -f fake_marsio.*
-#run module v3.0
-    - ./gtest_sapp_v4 -f benchmark_drop.*
-    - ./gtest_sapp_v4 -f benchmark_forward.*
-    - ./gtest_sapp_v4 -f benchmark_inject.tcp*
-    - ./gtest_sapp_v4 -f benchmark_inject.inline_same_dir
-    - ./gtest_sapp_v4 -f benchmark_inject.inline_reverse_dir
-
-inline_test_for_centos7:
-  stage: test
-  extends: .setup_test_env_for_centos7
-  script:
-    - cd build/testing/
-#run module v2.0 with death test
-    - ./gtest_sapp_v4 -f inline_mode.*
-#    - ./gtest_sapp_v4 -f transparent.*
-
-basic_test_for_centos7:
-  stage: test
-  extends: .setup_test_env_for_centos7
-  script:
-    - cd build/testing/
-#run module v2.0 immediately
-    - ./gtest_sapp_v4 -f ipv4.*
-    - ./gtest_sapp_v4 -f ipv6.*
-    - ./gtest_sapp_v4 -f udp.*
-    - ./gtest_sapp_v4 -f appstate.*
-    - ./gtest_sapp_v4 -f timer.*
-    - ./gtest_sapp_v4 -f proxy.*
-    - ./gtest_sapp_v4 -f asymmetric.*
-    - ./gtest_sapp_v4 -f pkt_dump.*
-    - ./gtest_sapp_v4 -f project.*
-    - ./gtest_sapp_v4 -f stream_bridge.*
-    - ./gtest_sapp_v4 -f tunnel.*
-    - ./gtest_sapp_v4 -f plug_ctrl.*
-    - ./gtest_sapp_v4 -f jump_layer.*
-    - ./gtest_sapp_v4 -f hybrid.*
-#    - ./gtest_sapp_v4 -f inject.*
-    - ./gtest_sapp_v4 -f offload.*
-    - ./gtest_sapp_v4 -f tcp.*
-    - ./gtest_sapp_v4 -f tcpall.*
-
-
-branch_build_debug_for_centos7:
-  stage: build
-  extends: .build_by_travis_for_centos7
-  variables:
+  variables:    
     BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC_STATIC
+  tags:
+    - share
+
+.build_by_travis_for_centos7:
+  extends: .build_before_script
+  stage: build
+  image: $BUILD_IMAGE_CENTOS7
+
+
+branch_build_debug_for_centos7:
+  extends: .build_by_travis_for_centos7
+  variables:
+    BUILD_TYPE: Debug
   artifacts:
     paths:
     - build/*
@@ -150,14 +63,57 @@ branch_build_debug_for_centos7:
     - /^master.*$/i
     - tags
 
-branch_build_release_for_centos7:
-  stage: build
+develop_build_debug_for_centos7:
+  extends: .build_by_travis_for_centos7
   variables:
     BUILD_TYPE: RelWithDebInfo
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC_STATIC
+  artifacts:
+    name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-debug"
+    paths:
+      - build/*
+  only:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+
+release_build_debug_for_centos7:
   extends: .build_by_travis_for_centos7
+  variables:
+    BUILD_TYPE: Debug
+    PACKAGE: 1
+    ASAN_OPTION: "ADDRESS"
+  script:
+    - source /opt/rh/devtoolset-7/enable || true
+    - ./ci/travis.sh    
+  artifacts:
+    name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*
+  only:
+    - tags
+
+release_build_release_for_centos7:
+  extends: .build_by_travis_for_centos7
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    MEM_POOL: JEMALLOC_STATIC  
+    PACKAGE: 1
+  artifacts:
+    name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*
+  only:
+    - tags   
+
+.build_by_travis_for_centos8:
+  stage: build
+  image: $BUILD_IMAGE_CENTOS8
+  extends: .build_before_script
+
+branch_build_debug_for_centos8:
+  extends: .build_by_travis_for_centos8
+  variables:
+    BUILD_TYPE: Debug
   artifacts:
     paths:
     - build/*   
@@ -167,220 +123,206 @@ branch_build_release_for_centos7:
     - /^master.*$/i
     - tags
 
-develop_build_debug_for_centos7:
-  stage: build
-  extends: .build_by_travis_for_centos7
-  variables:
-    BUILD_TYPE: Debug
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC_STATIC
-    PACKAGE: 1
-    UPLOAD: 1
-    ASAN_OPTION: "OFF"
-    TESTING_VERSION_BUILD: 1
-    PULP3_REPO_NAME: platform-testing-x86_64.el7
-    PULP3_DIST_NAME: platform-testing-x86_64.el7
-  artifacts:
-    name: "sapp-$CI_COMMIT_REF_NAME-debug"
-    paths:
-      - build/*
-  only:
-    - /^dev*.*$/i
-    - /^rel*.*$/i
-    - /^master.*$/i
-
-develop_build_release_for_centos7:
-  stage: build
-  extends: .build_by_travis_for_centos7
-  variables:
-    BUILD_TYPE: Debug
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC_STATIC
-    PACKAGE: 1
-    UPLOAD: 1
-    ASAN_OPTION: "OFF"
-    TESTING_VERSION_BUILD: 1
-    PULP3_REPO_NAME: platform-testing-x86_64.el7
-    PULP3_DIST_NAME: platform-testing-x86_64.el7
-  artifacts:
-    name: "sapp-$CI_COMMIT_REF_NAME-release"
-    paths:
-      - build/*
-  only:
-    - /^dev*.*$/i
-    - /^rel*.*$/i
-    - /^master.*$/i
-
-release_build_release_for_centos7:
-  stage: build
+develop_build_debug_for_centos8:
+  extends: .build_by_travis_for_centos8
   variables:
     BUILD_TYPE: RelWithDebInfo
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC_STATIC
-    PACKAGE: 1
-    UPLOAD: 1
-    PULP3_REPO_NAME: platform-stable-x86_64.el7
-    PULP3_DIST_NAME: platform-stable-x86_64.el7
-  extends: .build_by_travis_for_centos7
   artifacts:
-    name: "sapp-$CI_COMMIT_REF_NAME-release"
+    name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-debug"
+    paths:
+      - build/*
+  only:
+    - /^dev*.*$/i
+    - /^rel*.*$/i
+    - /^master.*$/i
+
+release_build_debug_for_centos8:
+  extends: .build_by_travis_for_centos8
+  variables:
+    BUILD_TYPE: Debug
+    PACKAGE: 1
+    ASAN_OPTION: "ADDRESS"
+  artifacts:
+    name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*
+  only:
+    - tags
+
+release_build_release_for_centos8:
+  extends: .build_by_travis_for_centos7
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    MEM_POOL: JEMALLOC_STATIC  
+    PACKAGE: 1
+  artifacts:
+    name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-release"
     paths:
       - build/*
   only:
     - tags   
 
-branch_build_debug_for_centos8:
-  stage: build
-  extends: .build_by_travis_for_centos8
-  variables:
-    BUILD_TYPE: Debug
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC_STATIC
-  artifacts:
-    paths:
-    - build/*
-  except:
-    - /^dev*.*$/i
-    - /^rel*.*$/i
-    - /^master.*$/i
-    - tags
-
-branch_build_release_for_centos8:
-  stage: build
-  variables:
-    BUILD_TYPE: RelWithDebInfo
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC_STATIC
-  extends: .build_by_travis_for_centos8
-  artifacts:
-    paths:
-    - build/*  
-  except:
-    - /^dev*.*$/i
-    - /^rel*.*$/i
-    - /^master.*$/i
-    - tags
-
-develop_build_debug_for_centos8:
-  stage: build
-  extends: .build_by_travis_for_centos8
-  variables:
-    BUILD_TYPE: Debug
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC_STATIC
-    PACKAGE: 1
-    UPLOAD: 1
-    ASAN_OPTION: "OFF"
-    TESTING_VERSION_BUILD: 1
-    PULP3_REPO_NAME: platform-testing-x86_64.el8
-    PULP3_DIST_NAME: platform-testing-x86_64.el8
-  artifacts:
-    name: "sapp-$CI_COMMIT_REF_NAME-debug"
-    paths:
-      - build/*
-  only:
-    - /^dev*.*$/i
-    - /^rel*.*$/i
-    - /^master.*$/i
-
-develop_build_release_for_centos8:
-  stage: build
-  extends: .build_by_travis_for_centos8
-  variables:
-    BUILD_TYPE: RelWithDebInfo
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC_STATIC
-    PACKAGE: 1
-    UPLOAD: 1
-    ASAN_OPTION: "OFF"
-    TESTING_VERSION_BUILD: 1
-    PULP3_REPO_NAME: platform-testing-x86_64.el8
-    PULP3_DIST_NAME: platform-testing-x86_64.el8
-  artifacts:
-    name: "sapp-$CI_COMMIT_REF_NAME-release"
-    paths:
-      - build/*
-  only:
-    - /^dev*.*$/i
-    - /^rel*.*$/i
-    - /^master.*$/i
-
-release_build_release_for_centos8:
-  stage: build
-  variables:
-    BUILD_TYPE: RelWithDebInfo
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC_STATIC
-    PACKAGE: 1
-    UPLOAD: 1
-    PULP3_REPO_NAME: platform-stable-x86_64.el8
-    PULP3_DIST_NAME: platform-stable-x86_64.el8
-  extends: .build_by_travis_for_centos8
-  artifacts:
-    name: "sapp-$CI_COMMIT_REF_NAME-release"
-    paths:
-      - build/*
-  only:
-    - tags  
-
 ###############################################################################
-# envelope and upload
+# envelope 
 ###############################################################################
-envelope_rpm_for_centos7:
+.define_before_envelope_centos7:
   stage: envelope
-  image: $BUILD_IMAGE_CENTOS7
+  extends: .build_by_travis_for_centos7
   variables:
     BUILD_TYPE: RelWithDebInfo
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC_STATIC
+    MEM_POOL: JEMALLOC_STATIC  
     HASP_ENABLED: "ON"
     FEATURE_ID: 100
     HASP_INTERNAL_S: 3600
     PACKAGE: 1
-    UPLOAD: 1    
-    PULP3_REPO_NAME: platform-stable-x86_64.el7
-    PULP3_DIST_NAME: platform-stable-x86_64.el7  
-  extends: .build_by_travis_for_centos7
+  only:
+    - tags
+  tags:
+    - share 
+
+envelope_rpm_for_centos7:
+  extends: .define_before_envelope_centos7
   artifacts:
-    name: "sapp-pr-$CI_COMMIT_REF_NAME-release"
+    name: "$SYMBOL_TARGET-pr-$CI_COMMIT_REF_NAME-release"
     paths:
       - build/*-pr-*.rpm
-  tags:
-    - share
-  only:
-    - tags  
 
 envelope_rpm_for_centos8:
-  stage: envelope
+  extends: .define_before_envelope_centos7
   image: $BUILD_IMAGE_CENTOS8
-  variables:
-    BUILD_TYPE: RelWithDebInfo
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
-    MEM_POOL: JEMALLOC_STATIC
-    HASP_ENABLED: "ON"
-    FEATURE_ID: 100
-    HASP_INTERNAL_S: 3600
-    PACKAGE: 1
-    UPLOAD: 1   
-    PULP3_REPO_NAME: platform-stable-x86_64.el8
-    PULP3_DIST_NAME: platform-stable-x86_64.el8     
-  extends: .build_by_travis_for_centos8
   artifacts:
-    name: "sapp-pr-$CI_COMMIT_REF_NAME-release"
+    name: "$SYMBOL_TARGET-pr-$CI_COMMIT_REF_NAME-release"
     paths:
       - build/*-pr-*.rpm
+
+###############################################################################
+# test 
+###############################################################################
+
+.setup_test_env_for_centos7:
+  stage: test
+  image: $BUILD_IMAGE_CENTOS7
+  allow_failure: true
+  before_script:
+    - *everything_before_script
+    - ls -l /opt/MESA/lib && echo "/opt/MESA/lib" >> /etc/ld.so.conf
+    - ldconfig && sysctl -w net.ipv6.conf.all.disable_ipv6=0 && ifconfig && ulimit -c unlimited
+    - ip neigh show && ip -6 neigh show
+    - cd build; make test; pwd 
+    - cd testing/ && ldd $TEST_NAME
+  dependencies:
+    - branch_build_debug_for_centos7
+    - develop_build_debug_for_centos7
+    - release_build_debug_for_centos7
+    - release_build_release_for_centos7
   tags:
-    - share
+    - share    
+
+
+benchmark_test_for_centos7:
+  extends: .setup_test_env_for_centos7
+  script:
+#run module v2.0 with death test
+    - ./$TEST_NAME -f control.*
+    - ./$TEST_NAME -f fake_marsio.*
+#run module v3.0
+    - ./$TEST_NAME -f benchmark_drop.*
+    - ./$TEST_NAME -f benchmark_forward.*
+    - ./$TEST_NAME -f benchmark_inject.tcp*
+    - ./$TEST_NAME -f benchmark_inject.inline_same_dir
+    - ./$TEST_NAME -f benchmark_inject.inline_reverse_dir
+
+inline_test_for_centos7:
+  extends: .setup_test_env_for_centos7
+  script:
+#run module v2.0 with death test
+    - ./$TEST_NAME -f inline_mode.*
+#    - ./$TEST_NAME -f transparent.*
+
+basic_test_for_centos7:
+  extends: .setup_test_env_for_centos7
+  script:
+#run module v2.0 immediately
+    - ./$TEST_NAME -f ipv4.*
+    - ./$TEST_NAME -f ipv6.*
+    - ./$TEST_NAME -f udp.*
+    - ./$TEST_NAME -f appstate.*
+    - ./$TEST_NAME -f timer.*
+    - ./$TEST_NAME -f proxy.*
+    - ./$TEST_NAME -f asymmetric.*
+    - ./$TEST_NAME -f pkt_dump.*
+    - ./$TEST_NAME -f project.*
+    - ./$TEST_NAME -f stream_bridge.*
+    - ./$TEST_NAME -f tunnel.*
+    - ./$TEST_NAME -f plug_ctrl.*
+    - ./$TEST_NAME -f jump_layer.*
+    - ./$TEST_NAME -f hybrid.*
+#    - ./$TEST_NAME -f inject.*
+    - ./$TEST_NAME -f offload.*
+    - ./$TEST_NAME -f tcp.*
+    - ./$TEST_NAME -f tcpall.*
+
+###############################################################################
+# upload 
+###############################################################################
+.define_before_upload_centos7:
+  stage: upload
+  image: $BUILD_IMAGE_CENTOS7
+  before_script:
+    - pwd; ls -l ; cd build ; ls -l
+    - cp /root/rpm_upload_tools.py ./
+  variables:
+    PULP3_REPO_NAME: platform-stable-x86_64.el7
+    PULP3_DIST_NAME: platform-stable-x86_64.el7
   only:
-    - tags  
+    - tags
+  tags:
+    - share 
+
+rpm_upload_for_centos7:
+  extends: .define_before_upload_centos7
+  dependencies:
+    - release_build_debug_for_centos7
+    - release_build_release_for_centos7
+  script:
+    - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *.rpm    
+
+envelope_rpm_upload_for_centos7:
+  extends: .define_before_upload_centos7
+  dependencies:
+    - envelope_rpm_for_centos7
+  script:
+    - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *-pr-*.rpm    
+
+
+.define_before_upload_centos8:
+  stage: upload
+  image: $BUILD_IMAGE_CENTOS8
+  before_script:
+    - pwd; ls -l ; cd build ; ls -l
+    - cp /root/rpm_upload_tools.py ./  
+  variables:
+    PULP3_REPO_NAME: platform-stable-x86_64.el8
+    PULP3_DIST_NAME: platform-stable-x86_64.el8
+  only:
+    - tags
+  tags:
+    - share 
+
+rpm_upload_for_centos8:
+  extends: .define_before_upload_centos8
+  dependencies:
+    - release_build_debug_for_centos8
+    - release_build_release_for_centos8
+  script:
+    - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *.rpm    
+
+envelope_rpm_upload_for_centos8:
+  extends: .define_before_upload_centos8
+  dependencies:
+    - envelope_rpm_for_centos8
+  script:
+    - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *-pr-*.rpm    
+
+
 
