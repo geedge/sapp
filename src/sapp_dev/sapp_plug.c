@@ -150,8 +150,10 @@ static void *sapp_monitor_thread(void *args)
 		usleep(10000);
 	}
 
-	sapp_runtime_log(RLOG_LV_FATAL, "sapp_monitor_thread  begin libsapp_destroy_env!\n");
+	sapp_runtime_log(RLOG_LV_FATAL, "sapp_monitor_thread, start libsapp_destroy_env!");
+	printf("sapp_monitor_thread, start libsapp_destroy_env!\n");
 	libsapp_destroy_env();
+	printf("sapp_monitor_thread, finish libsapp_destroy_env, call_exit!\n");
 	exit(0);
 	return NULL;
 }
@@ -266,6 +268,7 @@ void libsapp_destroy_env(void)
 		如果不做同步控制, 就double free了!!
 		此处靠引用计数控制一下先后逻辑顺序.
 	*/
+	printf("libsapp_destroy_env start, try to sync exit state!\n");	
 	sapp_runtime_log(RLOG_LV_FATAL, "libsapp_destroy_env begin, try to sync exit state !");	
 	if(MESA_ATOMIC_INC(g_sapp_destory_env_running_state) != 1){ 
 		/* 初始化时是0, INC后不是1, 说明至少有另一个线程正在做destroy操作, 阻塞等待, 直到结束为止 */

@@ -1528,10 +1528,11 @@ static void *pcap_io_thread(void *arg)
 thread_exit:
 	*stop_flag = 1;
 	sapp_usleep(1000);
+	pthread_t tid = pthread_self();
 	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
 	if(exit_prog_flag){
-		printf("pcap_io_thread SAPP_STATE_READY_TO_EXIT, call exit() !\n");
-		exit(0);
+		printf("pcap_io_thread %lu SAPP_STATE_READY_TO_EXIT, call pthread_exit()!\n",(unsigned long)tid);
+		pthread_exit(NULL);
 	}
 	
 	return NULL;
