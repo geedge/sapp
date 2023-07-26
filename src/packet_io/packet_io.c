@@ -1474,7 +1474,7 @@ void packet_io_exit(void)
 	sapp_runtime_log(RLOG_LV_INFO, "packet_io_exit, call sapp_log_handle_destroy()!");
 	sapp_log_handle_destroy();
 
-	printf("packet_io_exit excuting, set SAPP_STATE_EXIT!");	
+	printf("packet_io_exit excuting, set SAPP_STATE_EXIT!\n");	
 	sapp_set_current_state(SAPP_STATE_EXIT);
 	usleep(100000);
 	/****** 注意:释放全局变量要放在最后一行!! ******/

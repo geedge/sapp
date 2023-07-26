@@ -2175,6 +2175,12 @@ void sapp_log_handle_destroy(void)
 {
 	MESA_destroy_runtime_log_handle(sapp_global_val->individual_fixed.log_handle);
 	sapp_global_val->individual_fixed.log_handle = NULL;
+
+	MESA_destroy_runtime_log_handle(sapp_global_val->individual_fixed.plugin_log_handle);
+	sapp_global_val->individual_fixed.plugin_log_handle = NULL;
+
+	MESA_destroy_runtime_log_handle( sapp_global_val->individual_fixed.process_latency_log_handle);
+	sapp_global_val->individual_fixed.process_latency_log_handle = NULL;
 }
 
 

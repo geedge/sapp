@@ -152,7 +152,7 @@ static void *sapp_monitor_thread(void *args)
 
 	sapp_runtime_log(RLOG_LV_FATAL, "sapp_monitor_thread  begin libsapp_destroy_env!\n");
 	libsapp_destroy_env();
-	pthread_exit(NULL);
+	exit(0);
 	return NULL;
 }
 
@@ -302,8 +302,7 @@ void libsapp_destroy_env(void)
 
 	MESA_ATOMIC_SET(g_sapp_destory_env_done_state, SAPP_DESTROY_DONE_FLAG);	
 	if(exit_process){
-		printf("libsapp_destroy_env end, call exit() !\n");	
-		exit(0);
+		printf("libsapp_destroy_env finish, return!\n");	
 	}	
 }
 

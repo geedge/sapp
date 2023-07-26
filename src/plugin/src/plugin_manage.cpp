@@ -250,12 +250,9 @@ static uchar * plug_manage_key_dup_cb(const uchar *key, uint key_size)
 	struct plug_manage_key_t *new_mg_key; 
 	const struct plug_manage_key_t *raw_mg_key = (struct plug_manage_key_t *)key;
 
-	size_t name_length = strlen(raw_mg_key->plug_name);
 	new_mg_key = (struct plug_manage_key_t *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(struct plug_manage_key_t));
 
-	new_mg_key->plug_name = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, name_length+1);
-	strncpy((char *)new_mg_key->plug_name, raw_mg_key->plug_name, name_length);
-	new_mg_key = (struct plug_manage_key_t *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, sizeof(struct plug_manage_key_t));
+	size_t name_length = strlen(raw_mg_key->plug_name);
 	new_mg_key->plug_name = (char *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, MEM_STAT_GLOBAL_THREAD_ID, name_length+1);
 	strncpy((char *)new_mg_key->plug_name, raw_mg_key->plug_name, name_length);
 

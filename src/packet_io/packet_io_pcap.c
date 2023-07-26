@@ -1289,25 +1289,34 @@ retry:
 #if DEBUG
 	timestamp_record_lib(&pkt_queue_node.raw_pkt);
 #endif	
-retry:		
+retry:
 	pthread_mutex_lock(&work_thread_pool[thread_num].mutex);
 	ret = MESA_lqueue_join_tail(work_thread_pool[thread_num].pkt_queue, &pkt_queue_node, sizeof(pkt_queue_t));
 	pthread_mutex_unlock(&work_thread_pool[thread_num].mutex);
-	
-	if(MESA_QUEUE_RET_OK == ret){	
+
+	if (MESA_QUEUE_RET_OK == ret)
+	{
 		pthread_cond_signal(&work_thread_pool[thread_num].cond);
-	}else{
-		if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
-			if(0 == g_use_MESA_sleep_sw){
+	}
+	else
+	{
+		if (CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode)
+		{
+			if (0 == g_use_MESA_sleep_sw)
+			{
 				sapp_usleep(1);
-			}else{
+			}
+			else
+			{
 				MESA_sleep();
 			}
-			goto retry;  /* 在读包模式下, 保证不因队列满而丢包, 要不断重试 */
-		}else{
+			goto retry; /* 在读包模式下, 保证不因队列满而丢包, 要不断重试 */
+		}
+		else
+		{
 			pcap_app_drop_num[thread_num]++; /* 在线模式记录丢包数 */
 			PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
-		}	
+		}
 	}
 #endif
 
