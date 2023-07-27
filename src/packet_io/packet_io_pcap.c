@@ -117,10 +117,9 @@ static pcap_work_thread_t work_thread_pool[MAX_THREAD_NUM];
 #include <unistd.h>
 
 
-static const char *dumpfile_name;
+static unsigned long  dumpfile_total_cnt;
 static unsigned long dumpfile_total_size;
 static unsigned long dumpfile_read_size = 0;
-static unsigned long  dump_times;
 static char process_bar[100][101];
 static unsigned long PKTps = 500000;
 static int dumpfile_according_timestamp = 0;
@@ -147,6 +146,90 @@ static unsigned long __get_file_length(const char *file_name)
 		return file_stat.st_size;
 	}
 	return 0;
+}
+
+static char* format_time(double total_seconds) {
+    static char format_time_result[100];  // Allocate static space for the result string
+
+    int minutes, hours, days, months, years;
+    double seconds;
+
+    if (total_seconds < 60) {
+        snprintf(format_time_result, sizeof(format_time_result), "%.1lf seconds", total_seconds);
+    } else if ((minutes = total_seconds / 60) < 60) {
+        seconds = total_seconds - minutes * 60;
+        snprintf(format_time_result, sizeof(format_time_result), "%d minutes, %.1lf seconds", minutes, seconds);
+    } else if ((hours = minutes / 60) < 24) {
+        minutes %= 60;
+        seconds = total_seconds - hours * 3600;
+        snprintf(format_time_result, sizeof(format_time_result), "%d hours, %d minutes, %.1lf seconds", hours, minutes, seconds);
+    } else if ((days = hours / 24) < 30) {
+        hours %= 24;
+        minutes = (total_seconds - days * 86400) / 60;
+        seconds = total_seconds - days * 86400 - minutes * 60;
+        snprintf(format_time_result, sizeof(format_time_result), "%d days, %d hours, %d minutes, %.1lf seconds", days, hours, minutes, seconds);
+    } else if ((months = days / 30) < 12) {
+        days %= 30;
+        hours = (total_seconds - months * 2592000) / 3600;
+        minutes = (total_seconds - months * 2592000 - hours * 3600) / 60;
+        seconds = total_seconds - months * 2592000 - hours * 3600 - minutes * 60;
+        snprintf(format_time_result, sizeof(format_time_result), "%d months, %d days, %d hours, %d minutes, %.1lf seconds", months, days, hours, minutes, seconds);
+    } else {
+        years = months / 12;
+        months %= 12;
+        days = (total_seconds - years * 31536000) / 86400;
+        hours = (total_seconds - years * 31536000 - days * 86400) / 3600;
+        minutes = (total_seconds - years * 31536000 - days * 86400 - hours * 3600) / 60;
+        seconds = total_seconds - years * 31536000 - days * 86400 - hours * 3600 - minutes * 60;
+        snprintf(format_time_result, sizeof(format_time_result), "%d years, %d months, %d days, %d hours, %d minutes, %.1lf seconds", years, months, days, hours, minutes, seconds);
+    }
+    return format_time_result;
+}
+
+static const char* format_pretty_timeval(struct timeval start, struct timeval end) {
+    static char format_pretty_timeval_buffer[100];
+    long total_sec = end.tv_sec - start.tv_sec;
+    long total_usec = end.tv_usec - start.tv_usec;
+
+    if (total_usec < 0) {
+        total_sec -= 1;
+        total_usec += 1000000;
+    }
+
+    long hours = total_sec / 3600;
+    long minutes = (total_sec % 3600) / 60;
+    long seconds = total_sec % 60;
+    long milliseconds = total_usec / 1000;
+    long microseconds = total_usec % 1000;
+
+    if (hours > 0) {
+        snprintf(format_pretty_timeval_buffer, sizeof(format_pretty_timeval_buffer), "%ld hours, %ld minutes, %ld.%03ld seconds", hours, minutes, seconds, milliseconds);
+    } else if (minutes > 0) {
+        snprintf(format_pretty_timeval_buffer, sizeof(format_pretty_timeval_buffer), "%ld minutes, %ld.%03ld seconds", minutes, seconds, milliseconds);
+    } else if (seconds > 0) {
+        snprintf(format_pretty_timeval_buffer, sizeof(format_pretty_timeval_buffer), "%ld.%03ld seconds", seconds, milliseconds);
+    } else if (milliseconds > 0) {
+        snprintf(format_pretty_timeval_buffer, sizeof(format_pretty_timeval_buffer), "%ld.%03ld milliseconds", milliseconds, microseconds);
+    } else {
+        snprintf(format_pretty_timeval_buffer, sizeof(format_pretty_timeval_buffer), "%ld microseconds", microseconds);
+    }
+
+    return format_pretty_timeval_buffer;
+}
+
+
+const char* beautify_size(long bytes) {
+    static char beautify_size_result[100]; // 为结果字符串分配内存
+    if(bytes >= 1073741824) {
+        sprintf(beautify_size_result, "%.2f G", bytes / 1073741824.0);
+    } else if(bytes >= 1048576) {
+        sprintf(beautify_size_result, "%.2f M", bytes / 1048576.0);
+    } else if(bytes >= 1024) {
+        sprintf(beautify_size_result, "%.2f K", bytes / 1024.0);
+    } else {
+        sprintf(beautify_size_result, "%ld B", bytes);
+    }
+    return beautify_size_result;
 }
 
 /* return value:
@@ -231,14 +314,19 @@ static void process_bar_print(int len)
 	double bytes_per_sec, remain_time;
 	FILE *fp;
 	char dumpfile_proc_log_absolute[PATH_MAX];
-
+	char read_size_str[100];
+	char total_size_str[100];
+	const char * read_size_ptr;
+	const char * total_size_ptr;
 	if(CAP_MODEL_PCAP_DUMPFILE != g_pcap_cap_mode){
 		return;
 	}
 	dumpfile_read_size += len + sizeof(struct pcap_pkthdr);
 	
+	dumpfile_total_cnt++;
+	static unsigned long  dump_times_counter;
 	//if((dump_times % (dumpfile_total_size/10000)) == 0){
-	if(dump_times > PKTps){
+	if(dump_times_counter > PKTps){
 		snprintf(dumpfile_proc_log_absolute, PATH_MAX, "%s/%s", sapp_global_val->config.data_file_path.data_files_root_dir, "dumpfile_progress.log");
 		fp = fopen(dumpfile_proc_log_absolute, "w+");
 		
@@ -247,26 +335,31 @@ static void process_bar_print(int len)
 		}else{
 			percent = 100.00;
 		}
-
+		read_size_ptr = beautify_size(dumpfile_read_size);
+		strcpy(read_size_str, read_size_ptr);
+		total_size_ptr = beautify_size(dumpfile_total_size);
+		strcpy(total_size_str, total_size_ptr);
 		/* 猜测剩余时间 */
 		bytes_per_sec = process_bar_calc_byte_per_sec_average();
 		if((percent < 99.0) && (bytes_per_sec > 100000.0) && (dumpfile_total_size-dumpfile_read_size > 100000)){
 			remain_time = ((double)(dumpfile_total_size-dumpfile_read_size)/bytes_per_sec);
 			//printf("dumpfile-progress:%s \033[41m%0.2f%% \033[0m\n", process_bar[index], percent);
+
 			printf("dumpfile-progress: %s\n", process_bar[(int)percent]);
-			printf("dumpfile-progress: \033[41m%0.2f%% \033[0m, I guess, process dumpfile over need time almost: \033[41m %0.1fsec  \033[0m \n",  percent, remain_time);	
+			printf("dumpfile-progress: \033[41m%0.2f%% \033[0m (%s/%s), dump_pkt_cnt:%lu, Estimated remaining time for dumpfile completion: \033[41m %s \033[0m \n",  
+					percent, read_size_str, total_size_str, dumpfile_total_cnt, format_time(remain_time));	
 			if(fp){
 				fprintf(fp, "dumpfile-progress: %s\n", process_bar[(int)percent]);
-				fprintf(fp, "dumpfile-progress: \033[41m%0.2f%% \033[0m, I guess, process dumpfile over need time almost: \033[41m %0.1fsec  \033[0m \n",  percent, remain_time);
+				fprintf(fp, "dumpfile-progress: \033[41m%0.2f%% \033[0m, dump_pkt_cnt:%lu, Estimated remaining time for dumpfile completion: \033[41m %s \033[0m \n",  percent, dumpfile_total_cnt, format_time(remain_time));
 			}
 		}else{
-			printf("dumpfile-progress: \033[41m%0.2f%% \033[0m\n",  percent);
+			printf("dumpfile-progress: \033[41m%0.2f%% \033[0m (%s/%s), dump_pkt_cnt:%lu\n",  percent, read_size_str, total_size_str, dumpfile_total_cnt);
 			if(fp){
 				fprintf(fp, "dumpfile-progress: \033[41m%0.2f%% \033[0m\n",  percent);	
 			}
 		}
 
-		dump_times = 0;
+		dump_times_counter = 0;
 		if(fp){
 			fclose(fp);
 		}
@@ -281,7 +374,7 @@ static void process_bar_print(int len)
 	}
 #endif
 
-	dump_times++;
+	dump_times_counter++;
 }
 
 void process_bar_prt_all(void)
@@ -292,12 +385,13 @@ void process_bar_prt_all(void)
 	}
 }
 
-int process_bar_prt_init(void)
+int process_bar_prt_init(const char *dumpfile_name)
 {
 	int i, j;
 	
 	dumpfile_total_size = __get_file_length(dumpfile_name);
-
+	dumpfile_read_size=0;
+	dumpfile_total_cnt=0;
 	for(i = 0; i < 100; i++){
 		for(j = 0; j < 100; j++){
 			if(j <= i){
@@ -1213,13 +1307,17 @@ static void __pcap_pkt_handle(u_char *user, const struct pcap_pkthdr *hdr, const
 			return;
 		}
 	}
-
 	thread_num = __pcap_dispatch_thread(data);
 
 	if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
+
 #if PROCESS_BAR_SW	
 		process_bar_print(hdr->caplen);	
-#endif		
+#endif
+		if (hdr->caplen <= 14)
+		{
+			return;
+		}
 		if((dumpfile_according_timestamp != 0)){
 			if(0 == dumpfile_timestamp_diff_with_start){ /* first time */
 				dumpfile_timestamp_diff_with_start = __get_current_time_in_ms() - (hdr->ts.tv_sec * 1000 + hdr->ts.tv_usec / 1000);
@@ -1409,36 +1507,6 @@ static pcap_t *pcap_open_dumpfile_mode(const char *filename)
 }
 
 
-static const char* format_pretty_timeval(struct timeval start, struct timeval end) {
-    static char buffer[100];
-    long total_sec = end.tv_sec - start.tv_sec;
-    long total_usec = end.tv_usec - start.tv_usec;
-
-    if (total_usec < 0) {
-        total_sec -= 1;
-        total_usec += 1000000;
-    }
-
-    long hours = total_sec / 3600;
-    long minutes = (total_sec % 3600) / 60;
-    long seconds = total_sec % 60;
-    long milliseconds = total_usec / 1000;
-    long microseconds = total_usec % 1000;
-
-    if (hours > 0) {
-        snprintf(buffer, sizeof(buffer), "%ld hours, %ld minutes, %ld.%03ld seconds", hours, minutes, seconds, milliseconds);
-    } else if (minutes > 0) {
-        snprintf(buffer, sizeof(buffer), "%ld minutes, %ld.%03ld seconds", minutes, seconds, milliseconds);
-    } else if (seconds > 0) {
-        snprintf(buffer, sizeof(buffer), "%ld.%03ld seconds", seconds, milliseconds);
-    } else if (milliseconds > 0) {
-        snprintf(buffer, sizeof(buffer), "%ld.%03ld milliseconds", milliseconds, microseconds);
-    } else {
-        snprintf(buffer, sizeof(buffer), "%ld microseconds", microseconds);
-    }
-
-    return buffer;
-}
 
 
 static void pcap_io_dumpfile_list(void)
@@ -1447,19 +1515,28 @@ static void pcap_io_dumpfile_list(void)
 	int pcap_file_num = 0;
 	unsigned char route_dir = DIR_ROUTE_UP;
 	struct timeval start_time, end_time;
-	
+	time_t curtime;
+	char *str;
+
 	while(sapp_global_val->cla.dumpfie_list_array[pcap_file_num] != NULL){
 		pcap_handle = pcap_open_dumpfile_mode(sapp_global_val->cla.dumpfie_list_array[pcap_file_num]);
 		if(pcap_handle){
+			process_bar_prt_init(sapp_global_val->cla.dumpfie_list_array[pcap_file_num]);
 			pcap_up_handle = pcap_handle;
 			gettimeofday(&start_time, NULL);
-			sapp_log(20, 1, 1, "pcap file '%s' processing start------------", 
-					sapp_global_val->cla.dumpfie_list_array[pcap_file_num]);			
+			curtime = start_time.tv_sec;
+			str = ctime(&curtime);
+			sapp_log(20, 1, 1, "pcap file '%s'(%s) processing start at %s\n------------", 
+					sapp_global_val->cla.dumpfie_list_array[pcap_file_num], beautify_size(dumpfile_total_size), str);			
 			pcap_loop(pcap_handle, -1, __pcap_pkt_handle, (unsigned char *)&route_dir);
 			gettimeofday(&end_time, NULL);
-
-			sapp_log(20, 1, 1, "pcap file '%s' processing finished, takes time: %s", 
+			curtime = end_time.tv_sec;
+			str = ctime(&curtime);
+			sapp_log(20, 1, 1, "pcap file '%s'(%s) processing finished at %s, dump_pkt_cnt:%lu, takes time: %s\n------------", 
 					sapp_global_val->cla.dumpfie_list_array[pcap_file_num],
+					beautify_size(dumpfile_total_size),
+					str,
+					dumpfile_total_cnt,
 					format_pretty_timeval(start_time, end_time));
 			pcap_close(pcap_handle);
 			pcap_up_handle = NULL;
@@ -1546,6 +1623,8 @@ thread_exit:
 }
 
 
+static struct timeval dump_one_file_start_time, dump_one_file_end_time;
+
 int pcap_dl_io_init(int argc, char *argv[])
 {
 	char pcap_errbuf[PCAP_ERRBUF_SIZE];
@@ -1562,24 +1641,28 @@ int pcap_dl_io_init(int argc, char *argv[])
 			printf("\033[1;31;40m[Error]cap_mode is %d, but topology is serial!\033[0m\n", g_pcap_cap_mode);
 			return -1;
 		}
-		
+#if PROCESS_BAR_SW
+		process_bar_prt_init(sapp_global_val->config.packet_io.pcap_dumpfile_name);
+#endif
 		if(sapp_get_cla_raw("dumpfile-list", &no_use) >= 0){
 			;//读列表模式, 无需此处打开dumpfile文件
 		}else{
+			time_t curtime;
+			char *str;
 			if((pcap_up_handle = pcap_open_offline(sapp_global_val->config.packet_io.pcap_dumpfile_name, pcap_errbuf)) == NULL)
 			{
 				printf("\033[1;31;40m[Error]Can't open file:'%s', %s\033[0m\n", sapp_global_val->config.packet_io.pcap_dumpfile_name, pcap_errbuf);
 				return -1;
 			}
+			gettimeofday(&dump_one_file_start_time, NULL);
+			curtime = dump_one_file_start_time.tv_sec;
+			str = ctime(&curtime);
+			sapp_log(20, 1, 1, "dump pcap file '%s'(%s) processing start at %s\n------------", 
+						sapp_global_val->config.packet_io.pcap_dumpfile_name, beautify_size(dumpfile_total_size), str);	
 		}
-#if PROCESS_BAR_SW
-		dumpfile_name = "dumpfile";
-#endif
 		pcap_down_handle = NULL;
 
-#if PROCESS_BAR_SW
-		process_bar_prt_init();
-#endif
+
 		pcap_set_filter(pcap_up_handle, g_pcap_cap_filter);
 		//g_pcap_topology_model = NET_CONN_PARA_NOSEND; /* 本地读包模式，网络拓扑模式设为并联不发包 */
 	}
@@ -1708,6 +1791,16 @@ void pcap_dl_io_destroy(void)
 
 	if(sapp_get_cla_raw("dumpfile-list", &no_use) < 0){
 		if(pcap_up_handle){
+			if (sapp_get_cla_raw("dumpfile", &no_use) >= 0)
+			{
+				time_t curtime;
+				char *str;
+				gettimeofday(&dump_one_file_end_time, NULL);
+				curtime = dump_one_file_end_time.tv_sec;
+				str = ctime(&curtime);
+				sapp_log(20, 1, 1, "dump pcap file '%s'(%s) finish at %s, dump_pkt_cnt:%lu, takes time: %s\n------------",
+						 sapp_global_val->config.packet_io.pcap_dumpfile_name, beautify_size(dumpfile_total_size), str, dumpfile_total_cnt, format_pretty_timeval(dump_one_file_start_time, dump_one_file_end_time));
+			}
 			pcap_close(pcap_up_handle);
 			pcap_up_handle = NULL;
 		}
