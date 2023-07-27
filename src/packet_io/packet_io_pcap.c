@@ -951,15 +951,22 @@ static void *__pcap_work_thread(void *arg)
 
 #if DEBUG
 		timestamp_record(TS_LEVEL_WORK, &(pkt_queue_node.raw_pkt), thread_num);
-#endif		
-		ret = (*g_pcap_work_fun)(&(pkt_queue_node.raw_pkt), pkt_queue_node.raw_pkt.route_dir, thread_num);
-		/* 串联模式且返回值为PASS, 需要转发包 */
-		if((g_pcap_topology_mode & __NET_CONN_SERIAL) && (PASS == ret)){
-			pcap_forward_pkt(thread_num, (unsigned char *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data, 
-						pkt_queue_node.raw_pkt.__lib_raw_pkt_len, pkt_queue_node.raw_pkt.route_dir);
+#endif
+		if (pkt_queue_node.raw_pkt.__lib_raw_pkt_len > 0 && pkt_queue_node.raw_pkt.__lib_raw_pkt_data != NULL)
+		{
+			ret = (*g_pcap_work_fun)(&(pkt_queue_node.raw_pkt), pkt_queue_node.raw_pkt.route_dir, thread_num);
+			/* 串联模式且返回值为PASS, 需要转发包 */
+			if ((g_pcap_topology_mode & __NET_CONN_SERIAL) && (PASS == ret))
+			{
+				pcap_forward_pkt(thread_num, (unsigned char *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data,
+								 pkt_queue_node.raw_pkt.__lib_raw_pkt_len, pkt_queue_node.raw_pkt.route_dir);
+			}
+			PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
 		}
-
-		PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
+		else
+		{
+			sapp_runtime_log(RLOG_LV_FATAL, "pcap work thread:%d, TID:%ld, recv abnormal rawpkt, len:%d, bypass!", thread_num, sapp_global_val->individual_fixed.thread_tid[thread_num], pkt_queue_node.raw_pkt.__lib_raw_pkt_len);
+		}
 	}
 
 	/* pcap使用异步模式, 缓存队列中可能还有未处理的数据包 */
