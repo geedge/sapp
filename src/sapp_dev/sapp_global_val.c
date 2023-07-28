@@ -262,6 +262,18 @@ void sapp_gval_destroy(void)
 		}
 		
 		SAPP_GLOBAL_FREE(sapp_global_val->cla.cmd_args_array);//此处使用了realloc追加, 要用sapp_mem_free()
+		if (sapp_global_val->cla.dumpfie_list_array)
+		{
+			int num = 0;
+			while (sapp_global_val->cla.dumpfie_list_array[num])
+			{
+				SAPP_GLOBAL_FREE(sapp_global_val->cla.dumpfie_list_array[num]);
+				sapp_global_val->cla.dumpfie_list_array[num]=NULL;
+				num++;
+			}
+			SAPP_GLOBAL_FREE(sapp_global_val->cla.dumpfie_list_array);
+			sapp_global_val->cla.dumpfie_list_array=NULL;
+		}
 	}
 
 	SAPP_GLOBAL_FREE(sapp_global_val->config.stream.tcp.well_known_ports_array);
