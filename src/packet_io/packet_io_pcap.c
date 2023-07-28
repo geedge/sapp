@@ -124,6 +124,8 @@ static pcap_work_thread_t work_thread_pool[MAX_THREAD_NUM];
 #include <unistd.h>
 
 
+static struct timeval g_dump_file_start_time, g_dump_file_end_time;
+
 static unsigned long  dumpfile_total_cnt;
 static unsigned long dumpfile_total_size;
 static unsigned long dumpfile_read_size = 0;
@@ -1539,6 +1541,12 @@ static void pcap_io_dumpfile_list(void)
 	struct timeval start_time, end_time;
 	time_t curtime;
 	char *str;
+	gettimeofday(&g_dump_file_start_time, NULL);
+	curtime = g_dump_file_start_time.tv_sec;
+	str = ctime(&curtime);
+	sapp_log(20, 1, 1, "dumpfile_list processing start at %s\n------------", str);
+
+	unsigned long long dumpfile_list_total_pkt = 0;
 
 	while(sapp_global_val->cla.dumpfie_list_array[pcap_file_num] != NULL){
 		pcap_handle = pcap_open_dumpfile_mode(sapp_global_val->cla.dumpfie_list_array[pcap_file_num]);
@@ -1566,8 +1574,13 @@ static void pcap_io_dumpfile_list(void)
 			dumpfile_timestamp_diff_with_start = 0; /* 每个pcap包的时间戳都不一样, 处理完后重置相对时间戳 */
 		}
 		pcap_file_num++;
+		dumpfile_list_total_pkt+=dumpfile_total_cnt;
 	}
-
+	gettimeofday(&g_dump_file_end_time, NULL);
+	curtime = g_dump_file_end_time.tv_sec;
+	str = ctime(&curtime);
+	sapp_log(20, 1, 1, "dumpfile_list finish at %s, dump_file_cnt:%lu, dump_pkt_cnt:%llu, takes time: %s\n------------",
+			str, pcap_file_num, dumpfile_list_total_pkt, format_pretty_timeval(g_dump_file_start_time, g_dump_file_end_time));
 	__pcap_nodify_work_thread(PCAP_OP_FLAG_EOF);
 	wait_all_work_thread();
 
@@ -1645,7 +1658,6 @@ thread_exit:
 }
 
 
-static struct timeval dump_one_file_start_time, dump_one_file_end_time;
 
 int pcap_dl_io_init(int argc, char *argv[])
 {
@@ -1676,8 +1688,8 @@ int pcap_dl_io_init(int argc, char *argv[])
 				printf("\033[1;31;40m[Error]Can't open file:'%s', %s\033[0m\n", sapp_global_val->config.packet_io.pcap_dumpfile_name, pcap_errbuf);
 				return -1;
 			}
-			gettimeofday(&dump_one_file_start_time, NULL);
-			curtime = dump_one_file_start_time.tv_sec;
+			gettimeofday(&g_dump_file_start_time, NULL);
+			curtime = g_dump_file_start_time.tv_sec;
 			str = ctime(&curtime);
 			sapp_log(20, 1, 1, "dump pcap file '%s'(%s) processing start at %s\n------------", 
 						sapp_global_val->config.packet_io.pcap_dumpfile_name, beautify_size(dumpfile_total_size), str);	
@@ -1817,11 +1829,11 @@ void pcap_dl_io_destroy(void)
 			{
 				time_t curtime;
 				char *str;
-				gettimeofday(&dump_one_file_end_time, NULL);
-				curtime = dump_one_file_end_time.tv_sec;
+				gettimeofday(&g_dump_file_end_time, NULL);
+				curtime = g_dump_file_end_time.tv_sec;
 				str = ctime(&curtime);
 				sapp_log(20, 1, 1, "dump pcap file '%s'(%s) finish at %s, dump_pkt_cnt:%lu, takes time: %s\n------------",
-						 sapp_global_val->config.packet_io.pcap_dumpfile_name, beautify_size(dumpfile_total_size), str, dumpfile_total_cnt, format_pretty_timeval(dump_one_file_start_time, dump_one_file_end_time));
+						 sapp_global_val->config.packet_io.pcap_dumpfile_name, beautify_size(dumpfile_total_size), str, dumpfile_total_cnt, format_pretty_timeval(g_dump_file_start_time, g_dump_file_end_time));
 			}
 			pcap_close(pcap_up_handle);
 			pcap_up_handle = NULL;
