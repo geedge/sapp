@@ -982,7 +982,7 @@ static void parse_keyval(context_t* ctx, toml_table_t* tab)
 
 typedef struct tabpath_t tabpath_t;
 struct tabpath_t {
-    int     cnt;
+    //int     cnt;
     token_t key[10];
 };
 

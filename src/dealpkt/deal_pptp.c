@@ -432,7 +432,7 @@ int pptp_entry(struct streamindex *pindex, const void *this_layer_data,int threa
 
 void pptp_per_thread_exit(int thread_seq)
 {
-	if(g_pptp_plugid <= 0){
+	if(g_pptp_plugid == 0){
 		return;
 	}
 
@@ -442,7 +442,7 @@ void pptp_per_thread_exit(int thread_seq)
 
 void pptp_exit(void)
 {
-	if(g_pptp_plugid <= 0){
+	if(g_pptp_plugid == 0){
 		return;
 	}
 }

@@ -80,7 +80,7 @@ const char *MESA_sock_strerror(int err_num)
 
 	abs_errno = abs(err_num); /* 将负数转换为正整数 */
 
-	if(abs_errno > abs(__MESA_SOCK_ERRNO_MAX)){
+	if(abs_errno >= abs(__MESA_SOCK_ERRNO_MAX)){
 		return "errno is invalid!";
 	}
 

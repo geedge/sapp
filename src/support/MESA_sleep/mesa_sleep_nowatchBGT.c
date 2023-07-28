@@ -48,7 +48,7 @@ void *watch_bgt_thread(void *param)
 void MESA_sleep(void)
 {
     static int hasBGT=0;//back ground thread
-    pthread_t tid,tid_watch;
+    pthread_t tid;
     static int no=0;
     int tmpno;
     if (hasBGT)

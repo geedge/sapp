@@ -202,7 +202,7 @@ static int tuntap_dev_create(char *dev, int flags)
 */
 int sapp_bchmk_create_process_engine(benchmark_engine_t *bch_engine)
 {
-	int ret, opt_len;
+	int ret;
 	char tmp_str[CONFIG_MAX_LEN];
 	char tap_dev_name_up[TAP_DEV_NAME_MAX_LEN];
 	char tap_dev_name_down[TAP_DEV_NAME_MAX_LEN];
@@ -364,7 +364,6 @@ static const pcap_file_hdr_t g_pcap_file_hdr =
 int sapp_bchmk_gen_pcap_header(benchmark_engine_t *bchmk_engine, const char *pcap_filename)
 {
 	FILE *fp;
-	int i;
 	pcap_pkt_hdr_t pcap_pkt_hdr = {};
 	struct timeval cur_time;
 	
@@ -549,11 +548,7 @@ const char *sapp_bchmk_need_check_forward_pkt(benchmark_engine_t *bchmk_engine, 
 const cJSON *sapp_bchmk_need_check_inject_pkt(benchmark_engine_t *bchmk_engine, int carray_pkt_index)
 {
 	const cJSON *cJSON_inject_root;
-	const cJSON *sub_pkt_detail_item;
-	const cJSON *sub_array_item;
 	const cJSON *sub_array_pkt_index_item;
-	const cJSON *sub_array_pkt_json_file_item;
-	int i, array_size;
 
 	cJSON_inject_root = cJSON_GetObjectItem(bchmk_engine->benchmark_json_struct, "inject");
 	if(NULL == cJSON_inject_root){
@@ -586,7 +581,6 @@ const cJSON *sapp_bchmk_need_process_control(benchmark_engine_t *bchmk_engine, i
 {
 	const cJSON *cJSON_control_root;
 	const cJSON *sub_cjson_delay_root;
-	int i, array_size;
 
 	cJSON_control_root = cJSON_GetObjectItem(bchmk_engine->benchmark_json_struct, "control");
 	if(NULL == cJSON_control_root){

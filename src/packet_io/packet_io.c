@@ -792,8 +792,6 @@ void packet_io_free_sendbuf(int type, int thread_num)
 static int packet_io_calc_ethernet_offset_to_ip(const unsigned char *sendbuf)
 {
 	int offset;
-	const struct mesa_ethernet_hdr *outer_ehdr;
-	///const struct mesa_ethernet_hdr *inner_ehdr;
 
 	if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){
 		sendbuf += VXLAN_HDR_RESERVED_LEN; /* vxlan模式下预留了vxlan和外层mac,ip,udp头部, 跳转到内层mac头 */

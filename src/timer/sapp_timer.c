@@ -259,7 +259,7 @@ static void __st_add_time_event_entry(void)
 {
 	sapp_timer_handle th;
 	sapp_timer_event tev;
-	int iopt, ret;
+	int ret;
 	struct timeval topt;
 
 	th = sapp_get_platform_standalone_timer();
@@ -447,7 +447,7 @@ static void sapp_watch_dog(void)
 			此处不用polling, 而是新增了 SAPP_STAT_FETCH_PKT, 因为没有Proxy时, polling功能可能是关闭的.
 			当前时刻跟一秒之前的数一样, 说明线程死锁了
 		*/
-		if (sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_FETCH_PKT] <= 0)
+		if (sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_FETCH_PKT] == 0)
 		{
 			deadlock_detected=1;
 			check_result = "WATCHDOG=trigger";

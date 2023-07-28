@@ -91,7 +91,7 @@ int MESA_platform_init(int argc, char *argv[])
 	char gateway_mac[32] = {};
 	int TcpAllEnable = 0;
 	int load_plug_sw = 1;
-	unsigned short udp_stream_timeout = 300, max_unorder_num;
+	unsigned short udp_stream_timeout = 300;
 	unsigned short link_timeout = 600;
 	int int_tmp;
 

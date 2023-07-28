@@ -611,12 +611,12 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	int this_layer_len = ntohs(a_packet->ip_len);
 	int this_layer_is_overlay = 0;
 
-#if DEBUG
-	//timestamp_record(TS_LEVEL_IP_ENTRY, raw_pkt, thread_num);
-#endif
 
-	local_sys_stat->count_per_layer[__ADDR_TYPE_IP_PAIR_V4][pfstream_pr->layer_index + 1]++;
-	local_sys_stat->length_per_layer[__ADDR_TYPE_IP_PAIR_V4][pfstream_pr->layer_index + 1] += this_layer_len;
+	if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_NUM_MAX - 1 ))
+	{
+		local_sys_stat->count_per_layer[__ADDR_TYPE_IP_PAIR_V4][pfstream_pr->layer_index + 1]++;
+		local_sys_stat->length_per_layer[__ADDR_TYPE_IP_PAIR_V4][pfstream_pr->layer_index + 1] += this_layer_len;
+	}
 
 
 	/* NOTE, ×¢Òâ, ÇĞ¼Ç: 

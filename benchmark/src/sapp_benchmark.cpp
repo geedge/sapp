@@ -205,7 +205,7 @@ static int sapp_bchmk_update_cfg_file(benchmark_engine_t *bch_engine, const char
 		}
 		
 		cjson_file_cont = cJSON_GetObjectItem(array_item, "file_content");
-		if(NULL == cjson_file_name){
+		if(NULL == cjson_file_cont){
 			sapp_bchmk_log(bch_engine,RLOG_LV_FATAL, "not found object 'file_content' in config_file_template->%s, index:%d",section, i);
 			return -1;
 		}
@@ -354,7 +354,6 @@ static int sapp_bchmk_build_pcap_image(benchmark_engine_t *bch_engine)
 	char pcap_file_name[PATH_MAX];
 	char pcap_absolute_file_name[PATH_MAX];
 	char expect_pcap_file_md5sum[PATH_MAX];
-	char pcap_errbuf[PCAP_ERRBUF_SIZE];
 	const char *res;
 	int opt_len;
 	
@@ -373,7 +372,7 @@ static int sapp_bchmk_build_pcap_image(benchmark_engine_t *bch_engine)
 	}
 	snprintf(pcap_absolute_file_name, PATH_MAX, "%s/%s", pcap_root_dir, pcap_file_name);
 
-	if(sapp_bchmk_get_file_len(pcap_absolute_file_name) <= 0){
+	if(sapp_bchmk_get_file_len(pcap_absolute_file_name) == 0){
 		sapp_bchmk_log(bch_engine,RLOG_LV_FATAL, "can't open pcap file '%s'", pcap_absolute_file_name);
 		return -1;
 	}
@@ -479,8 +478,6 @@ static int sapp_bchmk_determine_routedir(const struct ethhdr *eth)
 {
 	const void *res;
 	unsigned int hash = 0;
-	unsigned char *disp_arg1, *disp_arg2;
-	int disp_addrlen;
 	const struct ip *ipv4_hdr;
 	const struct ip6_hdr *ipv6_hdr;
 	int route_dir;
@@ -511,7 +508,6 @@ bingo:
 
 static void sapp_bchmk_replay_pkt(benchmark_engine_t *bchmk_engine, int pkt_index)
 {
-	int delay_time_ms;
 	pcap_pkt_image_t *pcap_pkt_image = bchmk_engine->pcap_pkt_image;
 	int ret, route_dir, reply_dev_fd;
 
@@ -744,13 +740,11 @@ static sapp_benchmark_result_t sapp_bchmk_check_inject_pkt(benchmark_engine_t *b
 	int reverse_dir;
 	char pkt_buf[SAPP_BCHMK_MTU];
 	int ret, pkt_len;
-	char bench_json_filename[PATH_MAX];
 	pcap_pkt_detail_t pkt_detail;
 	const cJSON *cjson_inject_root;
 	const cJSON *cjson_inject_pkt_detail;
 	int i, inject_pkt_detail_array_size;
 	cJSON_bool cmp_res;
-	const cJSON * cJSON_inject_pkt_index;
 	const cJSON * cJSON_inject_pkt_dir_reverse;
 	const cJSON * cJSON_inject_pkt_tshark_json_filename;
 	const cJSON * cJSON_inject_pkt_detail_item;
@@ -835,7 +829,6 @@ static sapp_benchmark_result_t sapp_bchmk_check_inject_pkt(benchmark_engine_t *b
 
 static void sapp_bchmk_ignore_pkt(benchmark_engine_t *bchmk_engine)
 {
-	int ret;
 	char pkt_buf[SAPP_BCHMK_MTU];
 
 	while(sapp_bchmk_recv_pkt(bchmk_engine, pkt_buf, SAPP_BCHMK_MTU, 0) > 0);
@@ -946,7 +939,6 @@ int sapp_benchmark_set_plug_result(sapp_benchmark_result_t res)
 
 int sapp_benchmark_set_opt(sapp_benchmark_handle h, sapp_bchmk_opt_t opt, void *value, int value_len)
 {
-	int ret;
 	benchmark_engine_t *bchmk_engine = (benchmark_engine_t *)h;
 	plug_opt_t *plug_opt = &bchmk_engine->plug_opt;
 
@@ -978,7 +970,7 @@ int sapp_benchmark_set_opt(sapp_benchmark_handle h, sapp_bchmk_opt_t opt, void *
 
 	plug_opt->plug_set_opt_flags |= (long)opt;
 
-	return ret;
+	return 0;
 }
 
 void sapp_benchmark_destroy(sapp_benchmark_handle h)

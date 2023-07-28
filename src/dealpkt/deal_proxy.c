@@ -26,15 +26,16 @@ extern int udp_stream_table_size;
 /*回调上层信息，释放代理保存的相关信息*/
 void free_tcp_proxy_stream(struct streaminfo *pstream,struct streaminfo *pProxy)
 {
+	if (pProxy == NULL)
+	{
+		return;
+	}
 	UCHAR saved_opstate;
 	struct proxydetail *pProxydetail=(struct proxydetail *)pProxy->pdetail;
 	int threadnum=pstream->threadnum;
 
 	
-	if(pProxy == NULL)
-	{
-		return;
-	}
+
 
 	//先回调可能存在的应用层
 	if(pProxydetail->apme!=NULL)

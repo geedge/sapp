@@ -468,7 +468,6 @@ static int udp_flow_stat_init(void)
 
 static void project_env_init()
 {
-	int i;
 	MESA_htable_create_args_t hargs;
 	
 	memset(&hargs, 0, sizeof(MESA_htable_create_args_t));

@@ -381,7 +381,7 @@ int Gserial_sendpacket_ipv6_udp_detail(int plug_id,struct streaminfo *stream, st
 {
 	int ret;
 	
-	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX)
+	if(plug_id <= 0 || plug_id > GSERIAL_PLUGID_MAX-1)
 	{
 		printf("Plug id error, must be [1,%d]!\n", GSERIAL_PLUGID_MAX);
 		return -1;

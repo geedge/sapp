@@ -413,7 +413,7 @@ static int plugin_parse_necessary_conf(void)
 			continue;
 		}	
 		del_last_rn(line_buf, 1024);
-		sscanf(line_buf, "%s\t%d", plugin_path, &priority);
+		sscanf(line_buf, "%1023s\t%d", plugin_path, &priority);
 		int *p = (int *)sapp_mem_calloc(SAPP_MEM_FIX_PLUG_CTRL, -1, sizeof(int));
 		*p = priority;
 		MESA_htable_add(g_plug_necessary_htable, (unsigned char *)plugin_path, strlen(plugin_path), (void *)p);

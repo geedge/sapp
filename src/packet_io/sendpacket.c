@@ -2104,8 +2104,6 @@ void sendpkt_dup_pkt_mark_stream(const struct streaminfo *top_stream, const char
 {
 	const struct mesa_ip4_hdr *ip4hdr;
 	const struct mesa_ip6_hdr *ip6hdr;
-	sapp_dup_pkt_key_v4_t dup_bloom_key_v4;
-	sapp_dup_pkt_key_v6_t dup_bloom_key_v6;	
 	const char *transport_layer_hdr;
 	
 	if(ADDR_TYPE_IPV4 == top_stream->addr.addrtype){
@@ -4193,31 +4191,7 @@ extern void (*ptr_marsio_buff_set_rehash_index)(marsio_buff_t *m, uint32_t hash)
 extern void (*ptr_marsio_buff_free)(struct mr_instance * instance, marsio_buff_t *marsio_buff[],unsigned int nr_mbufs, int socket_id, int thread_id);
 struct mr_instance *sapp_get_marsio_instance(void)
 {
-	void *address_of_sapp_marsio4_instance;
-	
-#if LINK_MODE_DYNAMIC
-	void *dl_handle;
-	char lib_path[256];
-	
-	snprintf(lib_path, 256, "%s/%s", "platform_lib", g_dl_io_lib_info[g_packet_io_cap_mode].lib_name);
-
-	dl_handle = dlopen(lib_path, RTLD_NOW);
-	if(NULL == dl_handle){
-		printf("\033[41m[Error]dlopen %s error!\033[0m\n", lib_path);
-		return NULL;
-	}
-
-	address_of_sapp_marsio4_instance = dlsym(dl_handle, "sapp_marsio4_instance");
-	if(NULL == address_of_sapp_marsio4_instance){
-		printf("\033[41m[Error]dlsym %s from %s error!\033[0m\n", "sapp_marsio4_instance", lib_path);
-		return NULL;
-	}
-
-	/* dlsym 获取的是sapp_marsio4_instance符号的起始地址, 对此地址取8bytes值, 才是指针的真实值 */
-	memcpy(&dl_io_marsio4_instance, address_of_sapp_marsio4_instance, sizeof(void *));
-#else
 	dl_io_marsio4_instance = sapp_marsio4_instance;
-#endif
 	return dl_io_marsio4_instance; 
 }
 

@@ -310,7 +310,6 @@ static int gdev_keepalive_plug(const raw_pkt_t *raw_pkt, int thread_id, unsigned
 	MESA_send_handle *snd_handle = NULL;
 #if IOMODE_MARSIO	
 	const struct mesa_ethernet_hdr *raw_eth_hdr = (struct mesa_ethernet_hdr *)raw_pkt->raw_pkt_data;
-	struct mesa_ethernet_hdr *snd_eth_hdr;
 #endif	
 
 	snd_handle = packet_io_get_send_handle(thread_id);
@@ -686,7 +685,7 @@ int gdev_keepalive_set_opt(const SAPP_TLV_T *tlv_value)
 	int ret = 0;
 	static time_t last_log_time = 0;
 
-	if((NULL == tlv_value) || (tlv_value->length <= 0)){
+	if((NULL == tlv_value) || (tlv_value->length == 0)){
 		return -1;
 	}
 	
@@ -740,7 +739,7 @@ int gdev_keepalive_get_opt(SAPP_TLV_T *tlv_value)
 {
 	int ret = 0;
 
-	if((NULL == tlv_value) || (tlv_value->length <= 0)){
+	if((NULL == tlv_value) || (tlv_value->length == 0)){
 		return -1;
 	}
 	

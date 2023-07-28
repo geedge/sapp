@@ -11,13 +11,6 @@ extern "C" {
 
 #if 1
 
-
-/* 2015-11-26 lijia add, 时间戳记录 */
-typedef struct{
-	long ts_rd[__TS_LEVEL_MAX];
-	long __pad__[3]; /* 64字节cache对齐 */
-}timestamp_record_t;
-
 static long timestamp_out_min = 0;
 
 static long long g_timestamp_record_benchmark[TIMESTAMP_SINGLE_PKT_REGION_MAX];
@@ -149,7 +142,7 @@ static void __do_pkt_runtime_output(const char *filename, const char *open_mode,
 	double per_thread_avg[MAX_THREAD_NUM];
 	unsigned long long per_thread_max[MAX_THREAD_NUM];
 	unsigned int summary_max_delay = 0;
-	unsigned long long summary_avg_delay = 0, summary_total_pkt = 0, summary_tot_time = 0;
+	unsigned long long summary_total_pkt = 0, summary_tot_time = 0;
 	const timestamp_record_region_t * time_record;
 
 	fp = fopen(filename, open_mode);
@@ -219,8 +212,8 @@ static void __do_pkt_runtime_output(const char *filename, const char *open_mode,
 	fprintf(fp, "%s\n", log_out_buf);
 
 	ret = 0;
-	offset = 0;
-	left_len = 1024;
+	//offset = 0;
+	//left_len = 1024;
 
 	ret = snprintf(log_out_buf + offset, left_len, "%6s ", "number");
 	offset += ret;

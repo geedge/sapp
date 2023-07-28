@@ -20,6 +20,31 @@ find_package(SYSTEMD REQUIRED)
 
 #add_compile_options(-march=znver2)
 
+find_program(CMAKE_CXX_CPPCHECK NAMES cppcheck)
+if (CMAKE_CXX_CPPCHECK)
+    list(
+        APPEND CMAKE_CXX_CPPCHECK 
+            "--enable=all"
+            "--error-exitcode=1"
+            "--suppress=unusedFunction"
+            "--suppress=missingInclude"
+            "--suppress=uselessAssignmentPtrArg"
+            "--suppress=unmatchedSuppression"
+            "--suppress=variableScope"
+            "--suppress=unreadVariable"
+            "--suppress=cstyleCast"
+            "--suppress=memleakOnRealloc"
+            "--suppress=constParameter"
+            "--suppress=uselessAssignmentArg"
+            "--suppress=uninitvar"
+            "--suppress=unusedStructMember"
+    )
+    set(CMAKE_C_CPPCHECK ${CMAKE_CXX_CPPCHECK})
+else()
+  message(FATAL_ERROR "Could not find the program cppcheck.")
+endif()
+
+
 set(CMAKE_BUILD_TYPE "DEBUG" CACHE STRING
     " set CMAKE_BUILD_TYPE chosen by the user, using DEBUG as default")
 set_property(CACHE CMAKE_BUILD_TYPE  PROPERTY STRINGS DEBUG RELEASE
@@ -42,6 +67,7 @@ set(PLATFORM_MODE "INLINE" CACHE STRING
     " set platform mode chosen by the user, using INLINE as default")
 set_property(CACHE PLATFORM_MODE PROPERTY STRINGS MIRROR INLINE)
 message(STATUS "PLATFORM_MODE='${PLATFORM_MODE}'")
+
 
 
 #static link option

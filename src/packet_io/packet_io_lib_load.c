@@ -284,7 +284,7 @@ int packet_io_lib_load(int cap_mode)
 	const char *lib_name;
 	char full_lib_path[PATH_MAX];
 	
-	if(cap_mode < 0 || cap_mode > __CAP_MODEL_MAX){
+	if(cap_mode < 0 || cap_mode > __CAP_MODEL_MAX-1){
 		sapp_log(RLOG_LV_FATAL, 1, 1,"Unknown capture_mode:%d\n", cap_mode);
 		return -1;
 	}

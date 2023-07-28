@@ -1232,11 +1232,11 @@ static int __addr_tcp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf
 		t4v4 = (const struct stream_tuple4_v4 *)paddr->tuple4_v4;
 #if IP_PORT_UNION_VERSION			
 		res = inet_ntop(AF_INET, &t4v4->saddr, ip_src_str, 64);
-		if(res <= 0){
+		if(res == 0){
 			return -1;
 		}
 		res = inet_ntop(AF_INET, &t4v4->daddr, ip_dst_str, 64);
-		if(res <= 0){
+		if(res == 0){
 			return -1;
 		}
 		snprintf(buf, buf_len, "%u-%u-%s-%s", ntohs(t4v4->source),ntohs(t4v4->dest), ip_src_str, ip_dst_str); 
@@ -1247,11 +1247,11 @@ static int __addr_tcp_n2p_fun(const struct layer_addr *paddr, char *buf, int buf
 		t4v6 = (const struct stream_tuple4_v6 *)paddr->tuple4_v6;
 #if IP_PORT_UNION_VERSION				
 		res = inet_ntop(AF_INET6, t4v6->saddr, ip_src_str, 64);
-		if(res <= 0){
+		if(res ==  0){
 			return -1;
 		}
 		res = inet_ntop(AF_INET6, t4v6->daddr, ip_dst_str, 64);
-		if(res <= 0){
+		if(res ==  0){
 			return -1;
 		}		
 		snprintf(buf, buf_len, "%u-%u-%s-%s", ntohs(t4v6->source),ntohs(t4v6->dest), ip_src_str, ip_dst_str);  
@@ -1567,11 +1567,11 @@ static int __addr_socks_n2p_fun(const struct layer_addr *paddr, char *buf, int b
 		t4v4 = (const struct stream_tuple4_v4 *)paddr->tuple4_v4;
 #if IP_PORT_UNION_VERSION			
 		res = inet_ntop(AF_INET, &t4v4->saddr, ip_src_str, 64);
-		if(res <= 0){
+		if(res ==  0){
 			return -1;
 		}
 		res = inet_ntop(AF_INET, &t4v4->daddr, ip_dst_str, 64);
-		if(res <= 0){
+		if(res ==  0){
 			return -1;
 		}
 		snprintf(buf, buf_len, "%u-%u-%s-%s", ntohs(t4v4->source),ntohs(t4v4->dest), ip_src_str, ip_dst_str); 
@@ -1582,11 +1582,11 @@ static int __addr_socks_n2p_fun(const struct layer_addr *paddr, char *buf, int b
 		t4v6 = (const struct stream_tuple4_v6 *)paddr->tuple4_v6;
 #if IP_PORT_UNION_VERSION				
 		res = inet_ntop(AF_INET6, t4v6->saddr, ip_src_str, 64);
-		if(res <= 0){
+		if(res ==  0){
 			return -1;
 		}
 		res = inet_ntop(AF_INET6, t4v6->daddr, ip_dst_str, 64);
-		if(res <= 0){
+		if(res ==  0){
 			return -1;
 		}		
 		snprintf(buf, buf_len, "%u-%u-%s-%s", ntohs(t4v6->source),ntohs(t4v6->dest), ip_src_str, ip_dst_str);  
@@ -1614,11 +1614,11 @@ static int __addr_openvpn_n2p_fun(const struct layer_addr *paddr, char *buf, int
 		t4v4 = (const struct stream_tuple4_v4 *)paddr->tuple4_v4;
 #if IP_PORT_UNION_VERSION			
 		res = inet_ntop(AF_INET, &t4v4->saddr, ip_src_str, 64);
-		if(res <= 0){
+		if(res ==  0){
 			return -1;
 		}
 		res = inet_ntop(AF_INET, &t4v4->daddr, ip_dst_str, 64);
-		if(res <= 0){
+		if(res ==  0){
 			return -1;
 		}
 		snprintf(buf, buf_len, "%u-%u-%s-%s", ntohs(t4v4->source),ntohs(t4v4->dest), ip_src_str, ip_dst_str); 
@@ -1629,11 +1629,11 @@ static int __addr_openvpn_n2p_fun(const struct layer_addr *paddr, char *buf, int
 		t4v6 = (const struct stream_tuple4_v6 *)paddr->tuple4_v6;
 #if IP_PORT_UNION_VERSION				
 		res = inet_ntop(AF_INET6, t4v6->saddr, ip_src_str, 64);
-		if(res <= 0){
+		if(res ==  0){
 			return -1;
 		}
 		res = inet_ntop(AF_INET6, t4v6->daddr, ip_dst_str, 64);
-		if(res <= 0){
+		if(res ==  0){
 			return -1;
 		}		
 		snprintf(buf, buf_len, "%u-%u-%s-%s", ntohs(t4v6->source),ntohs(t4v6->dest), ip_src_str, ip_dst_str);  
@@ -1856,7 +1856,7 @@ const char *stream_addr_list_ntop_inward(const struct streaminfo *pstream)
 	int ret;
 
 	ret = stream_addr_list_ntop_inward_recur(pstream, __stream_list_string[pstream->threadnum]);
-	if(ret < 0){
+	if(ret <  1){
 		return NULL;
 	}
 	__stream_list_string[pstream->threadnum][ret-1] = '\0'; /* del last delim ">" */

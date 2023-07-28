@@ -360,7 +360,7 @@ char test_get_pkt_tcp_opts_ext(struct streaminfo *a_tcp,  void **pme, int thread
 char test_tcp_uni_stream_stats(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
 	struct tcpdetail *raw_pdetail;
-	struct tcp_flow_stat *tflow_project;
+	struct tcp_flow_stat *tflow_project=NULL;
 	
 	if(-1 == test_tcp_flow_id){
 		test_tcp_flow_id = project_customer_register("tcp_flow_stat", "struct");
@@ -376,7 +376,7 @@ char test_tcp_uni_stream_stats(struct streaminfo *a_tcp,  void **pme, int thread
 		}
 
 		raw_pdetail=(struct tcpdetail *)a_tcp->pdetail;
-		DPRINT("from-detail: server pkt=%d, count=%d, client pkt=%d, count=%d\n",
+		DPRINT("from-detail: server pkt=%u, count=%u, client pkt=%u, count=%u\n",
 			raw_pdetail->serverpktnum,   raw_pdetail->serverbytes,
 			raw_pdetail->clientpktnum,    raw_pdetail->clientbytes);
 
@@ -855,7 +855,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 			DPRINT("server-pkt=%u, server-count=%u, client-pkt=%u, client-count=%u, datalen=%u, ",
 				pdetail->serverpktnum, pdetail->serverbytes,
 				pdetail->clientpktnum,pdetail->clientbytes, pdetail->datalen);
-			DPRINT("total-pkt=%d, ", pdetail->serverpktnum + pdetail->clientpktnum);
+			DPRINT("total-pkt=%u, ", pdetail->serverpktnum + pdetail->clientpktnum);
 			DPRINT("total-count=%u\n", pdetail->serverbytes + pdetail->clientbytes);       
 		
 		
@@ -864,7 +864,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 			plug_stat->C2S_pkt,plug_stat->C2S_byte,
 			plug_stat->S2C_pkt,plug_stat->S2C_byte, pdetail->datalen);
 		}
-		DPRINT("total-pkt=%d, ", plug_stat->C2S_pkt + plug_stat->S2C_pkt);
+		DPRINT("total-pkt=%u, ", plug_stat->C2S_pkt + plug_stat->S2C_pkt);
 		DPRINT("total-count=%llu\n", plug_stat->C2S_byte+plug_stat->S2C_byte);
                 free(*pme);
 
@@ -874,7 +874,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 			DPRINT("server-pkt=%u, server-count=%llu, client-pkt=%u, client-count=%llu, datalen=%u, ",
 				flow_project->C2S_pkt,flow_project->C2S_byte,
 				flow_project->S2C_pkt,flow_project->S2C_byte, pdetail->datalen);
-			DPRINT("total-pkt=%d, ", flow_project->C2S_pkt + flow_project->S2C_pkt);
+			DPRINT("total-pkt=%u, ", flow_project->C2S_pkt + flow_project->S2C_pkt);
 			DPRINT("total-count=%llu\n", flow_project->C2S_byte+flow_project->S2C_byte);       
 		}
 	}
@@ -1069,7 +1069,7 @@ test_set_stream_timeout(pstream, pme, thread_seq, a_packet);
 	{	
 		DPRINT("%17s: %s, ","tcpstream-plug", printaddr(&(pstream->addr),	pstream->threadnum));
 		//DPRINT("%17s: %s, ","tcpstream-plug", printaddr_r(&(pstream->addr),	addr_str_buf, 1024));
-		DPRINT("final_dir=%d, server pkt=%d, count=%d, client pkt=%d, count=%d\n",
+		DPRINT("final_dir=%u, server pkt=%u, count=%u, client pkt=%u, count=%u\n",
 			pstream->dir,
 			raw_pdetail->serverpktnum,   raw_pdetail->serverbytes,
 			raw_pdetail->clientpktnum,    raw_pdetail->clientbytes);
@@ -1147,7 +1147,6 @@ char tcpentry_vlink_info(struct streaminfo *pstream,void **pme, int thread_seq,v
 	char srcstr[INET6_ADDRSTRLEN], dststr[INET6_ADDRSTRLEN];
 	const struct mesa_ethernet_hdr *ehdr;
 	unsigned char inline_dev_mac[6], local_dev_mac[6];
-	unsigned int local_dev_ip;
 	
 	if(pstream->opstate== OP_STATE_PENDING)
 	{
@@ -1380,7 +1379,7 @@ char test_allpkt_v4_len(struct streaminfo *pstream,void **pme, int thread_seq,vo
 			DPRINT("udpallstream:");
 		 DPRINT(" %s ",printaddr(&(pstream->addr),  pstream->threadnum));
                 //DPRINT("index=%d,state=%d ",*(int*)((char *)(pstream)-8),*(char *)((char *)(pstream)-4));
-                DPRINT("out:%d,pktstate=%d,opstate=%d,server pkt=%d, count=%d,client pkt=%d,count=%d, datalen=%d,lostlen=%d",
+                DPRINT("out:%u,pktstate=%u,opstate=%u,server pkt=%u, count=%u,client pkt=%u,count=%u, datalen=%u,lostlen=%u",
                 pdetail_pr->link_state,pstream->pktstate,pstream->opstate,pdetail->serverpktnum,pdetail->serverbytes,
                 pdetail->clientpktnum,pdetail->clientbytes,pdetail->datalen,pdetail->lostlen);
                 DPRINT(" \t total pkt= %d,datalen=%d",(p->pktnum),p->payloadlen);
@@ -2406,7 +2405,7 @@ char test_tcp_cb(struct streaminfo *pstream,void **pme, int thread_seq,const voi
 		a_tcp = (struct tcpdetail *)pstream->pdetail;
 		//DPRINT("######### %p, %x\n", a_tcp->pdata, ((char *)a_tcp->pdata)[0]);
 		//print_tuple4(pstream);
-		DPRINT("test_tcp_cb-pending: stream:%p, %s, len:%d\n", pstream, printaddr(&pstream->addr, pstream->threadnum), a_tcp->datalen);
+		DPRINT("test_tcp_cb-pending: stream:%p, %s, len:%u\n", pstream, printaddr(&pstream->addr, pstream->threadnum), a_tcp->datalen);
 		
 		//DPRINT("cb(): recv a new tcp connection, %p, streamid is %ld, total stream num is:%ld!\n", pstream, stream_id, ++stream_num);
 		//DPRINT("cb(): recv %d data from %p!\n", a_tcp->datalen, pstream);
@@ -2933,7 +2932,7 @@ char TEST_TCP_LOST(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 	tcp_status = (struct test_tcp_lost  *)*pme;
 
 	if(a_tcp->ptcpdetail->lostlen > 0){
-		DPRINT("%s lost len:%d\n", printaddr(&a_tcp->addr, a_tcp->threadnum), a_tcp->ptcpdetail->lostlen);
+		DPRINT("%s lost len:%u\n", printaddr(&a_tcp->addr, a_tcp->threadnum), a_tcp->ptcpdetail->lostlen);
 	}
 
 	if(a_tcp->ptcpdetail->datalen > 0){
@@ -3237,12 +3236,12 @@ char INJECT_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
         if (a_tcp->routedir == DIR_ROUTE_UP)
         {
             sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_S2C_by_C2S, strlen(inject_S2C_by_C2S), a_tcp->routedir ^ 1);
-            DPRINT("Get Outbound pkt:%s, CurDir:%d, inject to S2C by raw C2S pkt, raw payload len:%d\n", printaddr(&a_tcp->addr, thread_seq), a_tcp->curdir, a_tcp->ptcpdetail->datalen);
+            DPRINT("Get Outbound pkt:%s, CurDir:%u, inject to S2C by raw C2S pkt, raw payload len:%u\n", printaddr(&a_tcp->addr, thread_seq), a_tcp->curdir, a_tcp->ptcpdetail->datalen);
         }
         else
         {
             sapp_inject_pkt(a_tcp, SIO_DEFAULT, inject_S2C_by_S2C, strlen(inject_S2C_by_S2C), a_tcp->routedir);
-            DPRINT("Get Inbound pkt:%s, CurDir:%d, inject S2C pkt by raw S2C pkt, raw payload len:%d\n", printaddr(&a_tcp->addr, thread_seq), a_tcp->curdir, a_tcp->ptcpdetail->datalen);
+            DPRINT("Get Inbound pkt:%s, CurDir:%u, inject S2C pkt by raw S2C pkt, raw payload len:%u\n", printaddr(&a_tcp->addr, thread_seq), a_tcp->curdir, a_tcp->ptcpdetail->datalen);
         }
 #if 0		
 		if((sport_host >= 10000) && (sport_host <= 19999)){

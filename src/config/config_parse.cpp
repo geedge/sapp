@@ -696,7 +696,7 @@ static int embed_layer_t_pton(char *config_val, embed_layer_t *result)
 	}
 	
 	addrtype = addr_type_abbreviation_pton(layer_type_string);
-	if(__ADDR_TYPE_MAX == addrtype){
+	if(__ADDR_TYPE_MAX-1 == addrtype){
 		return -1;
 	}
 
@@ -708,7 +708,7 @@ static int embed_layer_t_pton(char *config_val, embed_layer_t *result)
 		}
 	}else{
 		layer_index = atoi(layer_index_string);
-		if(layer_index < 0 || layer_index >= (int)__ADDR_TYPE_MAX){
+		if(layer_index < 0 || layer_index >= (int)SAPP_SUPPORT_LAYER_NUM_MAX-1){
 			return -1;
 		}
 
@@ -741,6 +741,7 @@ static const char *embed_layer_t_ntop(const embed_layer_t *layer_st, char *resul
 	}
 
 bingo:
+	if(i==__ADDR_TYPE_MAX)i=i-1;
 	for(j = 0; j < SAPP_SUPPORT_LAYER_NUM_MAX; j++){
 		if(layer_st->layer_type_index[i][j] != 0){
 			sprintf(one_layer_index_str, "%d,", j);
@@ -1427,7 +1428,7 @@ static int config_sanity_check(void)
 		}
 
 		if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "udp_socket" ,strlen("udp_socket")) == 0){
-			if(pconfig->tools.pkt_dump.command_port <=0 || pconfig->tools.pkt_dump.command_port > 65535){
+			if(pconfig->tools.pkt_dump.command_port ==0 || pconfig->tools.pkt_dump.command_port > 65535){
 				sapp_log(RLOG_LV_FATAL, ~0, ~0, "TOOLS.PKT_DUMP.command_port: %u invalid!", pconfig->tools.pkt_dump.command_port);
 				return -1;
 			}

@@ -2174,7 +2174,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 				{
 					pdetail_pr->flow_stat->S2C_ooorder_pkt++;
 				}
-				ret=stream_process_tcp(a_tcp,unorder_packet->this_ip_hdr, unorder_packet->this_tcp_hdr, &(unorder_packet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
+				stream_process_tcp(a_tcp,unorder_packet->this_ip_hdr, unorder_packet->this_tcp_hdr, &(unorder_packet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
 				a_tcp->addr.pkttype=tmpktype;
 				/* 2016-05-12 lijia add, 解决因乱序包导致unorder_list超长BUG, 此处应将流置于nouse状态 */
 				if(STREAM_LINK_DATA == last_link_state){

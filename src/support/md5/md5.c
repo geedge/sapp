@@ -269,7 +269,7 @@ unsigned char block[64])
   a multiple of 4. */
 static void Encode (
 unsigned char *output,
-UINT4 *input,
+const UINT4 *input,
 unsigned int len)
 {
   unsigned int i, j;
@@ -300,7 +300,7 @@ unsigned int len)
 
 static void MD5_memcpy (
 POINTER output,
-POINTER input,
+const POINTER input,
 unsigned int len)
 {
   unsigned int i;

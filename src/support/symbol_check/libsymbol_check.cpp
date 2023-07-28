@@ -359,7 +359,7 @@ static int symbol_convert_by_objdump(char *symbol_str, so_symbol_info_t *symbol_
 		goto err;
 	}
 	_symbol_chk_del_last_rn(section, strlen(section) +1); 
-	if(strlen(section) <= 0){
+	if(strlen(section) == 0){
 		goto err;
 	}
 	

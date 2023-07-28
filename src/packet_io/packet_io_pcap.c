@@ -780,7 +780,7 @@ int pcap_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 						int eth_carry_layer_addr_type, int dir,int thread_num,const raw_pkt_t *raw_pkt)
 {
 	pcap_send_handle *send_handle = (pcap_send_handle *)phandle;
-	int dir_reverse, ret;
+	int ret;
 	struct sockaddr *snd_addr;
 
 	/* 2018-07-26 lijia add, 增加了插件自己创建的线程发包功能, 但是必须发送完整的ethernet包, 底层mac驱动层无法填充 */

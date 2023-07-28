@@ -189,25 +189,25 @@ void sapp_global_val_sanity_check(void)
 {
 	/* 多线程全局变量size必须是64字节整数倍, 否则多核cache缓存冲突, 极大影响性能 */
 	if((sizeof(struct sapp_global_mthread_t) % 64) != 0){
-		printf("\033[1;31;40msizeof(struct sapp_global_mthread_t)=%u, is not multiple of 64B!\033[0m\n", sizeof(struct sapp_global_mthread_t));
+		printf("\033[1;31;40msizeof(struct sapp_global_mthread_t)=%zu, is not multiple of 64B!\033[0m\n", sizeof(struct sapp_global_mthread_t));
 		printf("\033[1;31;40mYou must add %d bytes padding to sapp_global_mthread_t!\033[0m\n", mem_alignment_pad(sizeof(struct sapp_global_mthread_t)));
 		abort();
 	}
 
 	if((sizeof(sapp_gval_mthread_t) % 64) != 0){
-		printf("\033[1;31;40msizeof(sapp_gval_mthread_t)=%u, is not multiple of 64B!\033[0m\n", sizeof(sapp_gval_mthread_t));
+		printf("\033[1;31;40msizeof(sapp_gval_mthread_t)=%zu, is not multiple of 64B!\033[0m\n", sizeof(sapp_gval_mthread_t));
 		printf("\033[1;31;40mYou must add %d bytes padding to sapp_gval_mthread_t!\033[0m\n", mem_alignment_pad(sizeof(sapp_gval_mthread_t)));
 		abort();
 	}
 
 	if((sizeof(sapp_gval_individual_volatile_t) % 64) != 0){
-		printf("\033[1;31;40msizeof(sapp_gval_individual_volatile_t)=%u, is not multiple of 64B!\033[0m\n", sizeof(sapp_gval_individual_volatile_t));
+		printf("\033[1;31;40msizeof(sapp_gval_individual_volatile_t)=%zu, is not multiple of 64B!\033[0m\n", sizeof(sapp_gval_individual_volatile_t));
 		printf("\033[1;31;40mYou must add %d bytes padding to sapp_gval_individual_volatile_t!\033[0m\n", mem_alignment_pad(sizeof(sapp_gval_individual_volatile_t)));
 		abort();
 	}
 	
 	if((sizeof(layer_args_t) % 64) != 0){
-		printf("\033[1;31;40msizeof(struct layer_args_t)=%u, is not multiple of 64B!\033[0m\n", sizeof(layer_args_t));
+		printf("\033[1;31;40msizeof(struct layer_args_t)=%zu, is not multiple of 64B!\033[0m\n", sizeof(layer_args_t));
 		abort();
 	}
 

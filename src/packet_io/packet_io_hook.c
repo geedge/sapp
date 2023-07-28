@@ -50,7 +50,6 @@ static int packet_io_hook_output_vlan_flipping(raw_pkt_t *raw_pkt, unsigned char
 {
 	struct mesa_ethernet_hdr *ehdr;
 	unsigned char tmp_mac_addr[ETHER_ADDR_LEN];
-	unsigned short vlan_id;
 
 	if(raw_pkt->mac_flipping_enable != 0){
 		ehdr = (struct mesa_ethernet_hdr *)raw_pkt_data;

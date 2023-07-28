@@ -43,7 +43,6 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 	struct stream_list *udpList_array = G_MESA_GLOBAL_STREAM[threadnum]->udpList;
 
 	ulen = ntohs (udph->uh_ulen);
-	datalen =ulen - sizeof (struct mesa_udp_hdr);
 
 	if(raw_pkt->is_ctrl_pkt==0)
 	{
@@ -585,9 +584,9 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	// udp有不开启流还原的功能需求，直接按单包单流处理
 	if(unlikely(0 ==udp_stream_table_size))
 	{
-		struct udpdetail_private pdetail_pr;
-		memset(&pdetail_pr, 0, sizeof(struct udpdetail_private));
-		pdetail = (struct udpdetail *)&pdetail_pr;
+		struct udpdetail_private detail_pr;
+		memset(&detail_pr, 0, sizeof(struct udpdetail_private));
+		pdetail = (struct udpdetail *)&detail_pr;
 	
 		set_transport_addr(pstream, 1, udph->uh_sport, udph->uh_dport);
 
@@ -620,9 +619,9 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_UDP_BRIDGE,thread_num);
 
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
-			pdetail_pr.flow_stat = (struct udp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_UDP_FLOW_STAT,thread_num, sizeof(struct udp_flow_stat));
-			memset(pdetail_pr.flow_stat, 0, sizeof(struct udp_flow_stat));	
-			project_req_add_struct(pstream, G_UDP_FLOW_STAT_PROJECT_ID, pdetail_pr.flow_stat);
+			detail_pr.flow_stat = (struct udp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_UDP_FLOW_STAT,thread_num, sizeof(struct udp_flow_stat));
+			memset(detail_pr.flow_stat, 0, sizeof(struct udp_flow_stat));	
+			project_req_add_struct(pstream, G_UDP_FLOW_STAT_PROJECT_ID, detail_pr.flow_stat);
 		}
 		
 		ret=stream_process_udp(pstream, (const void *)this_iphdr, (const void *)udph, raw_pkt,&tmpme,&(pstream->opstate));  
@@ -752,21 +751,16 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			ret=stream_process_udp(pstream,(const void *)this_iphdr, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate)); 
 			udp_cleardata(pstream);
 		}
-		
-     }
-	
-	if(pdetail_pr!=NULL&&pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
-		&& pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON 
-		&& DROP!=ret
-		&& (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
-	{
-		local_sys_stat->count[SAPP_STAT_UDP_OFFLOAD_STREAM]++;
-		MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
-		pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
-		return PASS;
+		pdetail_pr = (struct udpdetail_private *)(pstream->pdetail);
+		if (pdetail_pr != NULL && pdetail_pr->offload_stream_flag == SMART_OFFLOAD_FLAG_UDP && pstream_pr->stream_carry_up_layer_tunnel_type == STREAM_TUNNLE_NON && DROP != ret && (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
+		{
+			local_sys_stat->count[SAPP_STAT_UDP_OFFLOAD_STREAM]++;
+			MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
+			pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
+			return PASS;
+		}
 	}
      
-#if (COMPAT_PAPP_FOR_BENCHMARK == 0)
 	if(unlikely(DROP == ret)){ /* 插件返回DROP不再进行后续处理 */
 		return DROP;
 	}
@@ -791,7 +785,6 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		ret = gtp_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
 	}
 
-#endif
 	if(DROP == ret){
 		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 	}

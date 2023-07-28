@@ -1098,7 +1098,6 @@ static int cycle_pkt_dump_socket_init(void)
 int cycle_pkt_dump_init(int argc, char *argv[])
 {
 	int i, ret = 0;
-	char pcap_errbuf[PCAP_ERRBUF_SIZE];
 	const sapp_config_tools_pktdump_t *pktdump_cfg = &sapp_global_val->config.tools.pkt_dump;
 
 	if(0 == pktdump_cfg->enabled){

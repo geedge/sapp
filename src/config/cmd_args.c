@@ -395,7 +395,6 @@ void sapp_update_config_root_dir(const char *cfg_root_dir)
 
 void sapp_update_data_root_dir(const char *data_root_dir)
 {
-	char sapp_data_filename[PATH_MAX];
 	sapp_data_file_link_t *pdata;
 	
 	pdata = &sapp_global_val->config.data_file_path;
@@ -580,6 +579,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 		sapp_update_main_config_file(NULL);
 	}else{
 		sapp_update_main_config_file(cmd_arg_cfg_main_entry);
+		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, (void*)cmd_arg_cfg_main_entry);
 	}
 
 	/* cmd args没有顺序, 如果先指定了-D 后面加了-c参数, 也要优先解析-c */
