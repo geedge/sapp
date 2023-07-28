@@ -32,8 +32,15 @@ typedef enum{
 	PCAP_DISTMODE_OUTER_TUPLE2,
 }pcap_distmode_t;
 
-#define PCAP_MALLOC(size)		malloc(size)
-#define PCAP_FREE(ptr)			free(ptr)
+#define PCAP_MALLOC(size)  \
+    (malloc(size))
+
+
+#define PCAP_FREE(ptr)  \
+    (free(ptr))
+
+size_t pcap_malloc_cnt = 1;
+size_t pcap_free_cnt = 1;
 
 static char g_pcap_up_dev_name[DEV_NAME_STR_LEN] = "dumpfile"; /* if in parallel mode, use this arg */
 static char g_pcap_down_dev_name[DEV_NAME_STR_LEN];
@@ -840,7 +847,9 @@ void pcap_dl_io_free_rawpkt(const raw_pkt_t *raw_pkt, int thread_seq)
 	if(raw_pkt == NULL && (thread_seq < 0 || thread_seq > get_thread_count()))
 		return;
 	if(raw_pkt->__lib_raw_pkt_data != NULL)
+	{
 		PCAP_FREE((void *)(raw_pkt->__lib_raw_pkt_data));
+	}
 	return;
 }
 
@@ -946,7 +955,7 @@ static void pcap_clear_pkt_queue_left(int thread_index)
 				pcap_forward_pkt(thread_index, (unsigned char *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data, 
 							pkt_queue_node.raw_pkt.__lib_raw_pkt_len, pkt_queue_node.raw_pkt.route_dir);
 			}		
-			if(ret == DROP)
+			if(ret == DROP || CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode)
 			{
 				PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
 			}
@@ -979,7 +988,8 @@ static void *__pcap_work_thread(void *arg)
 					sapp_global_val->individual_fixed.thread_tid[thread_num],
 					sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[thread_num]);
 
-	while(sapp_get_current_state() < SAPP_STATE_PROCESSING){
+	while (sapp_get_current_state() < SAPP_STATE_PROCESSING)
+	{
 		sapp_usleep(1);
 	}
 
@@ -988,60 +998,72 @@ static void *__pcap_work_thread(void *arg)
 	*/
 	int polling_enabled = sapp_global_val->config.packet_io.polling_enabled;
 
-	while(SAPP_STATE_PROCESSING == sapp_get_current_state()){
+	while (SAPP_STATE_PROCESSING == sapp_get_current_state())
+	{
 		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_FETCH_PKT]++;
-		
-		if(0 == MESA_lqueue_get_count(work_thread_pool[thread_num].pkt_queue)){
-			if(polling_enabled && (stream_process_polling(thread_num) & POLLING_STATE_WORK)){
+
+		if (0 == MESA_lqueue_get_count(work_thread_pool[thread_num].pkt_queue))
+		{
+			if (polling_enabled && (stream_process_polling(thread_num) & POLLING_STATE_WORK))
+			{
 				polling_work_times++;
 			}
-			if(polling_enabled && (polling_stream_timeout(thread_num) & POLLING_STATE_WORK)){
+			if (polling_enabled && (polling_stream_timeout(thread_num) & POLLING_STATE_WORK))
+			{
 				polling_work_times++;
 			}
 			total_call_times++;
 
-			if(total_call_times >= 100){
+			if (total_call_times >= 100)
+			{
 				total_call_times = 0;
 				rcv_pkt_tims = 0;
 				polling_work_times = 0;
 				sapp_usleep(1);
 			}
 			continue;
-		}	
+		}
 		pthread_mutex_lock(&work_thread_pool[thread_num].mutex);
 		recv_len = sizeof(pkt_queue_t);
 		ret = MESA_lqueue_get_head(work_thread_pool[thread_num].pkt_queue, &pkt_queue_node, &recv_len);
 		pthread_mutex_unlock(&work_thread_pool[thread_num].mutex);
-		if(ret < 0){
+		if (ret < 0)
+		{
 			continue;
 		}
 
 		total_call_times++;
-		if(total_call_times >= sapp_global_val->config.packet_io.polling_priority){
+		if (total_call_times >= sapp_global_val->config.packet_io.polling_priority)
+		{
 			/* 如果流量巨大, 一直有包时, 每隔polling_priority个包也要调用polling接口 */
-			if(polling_enabled && (stream_process_polling(thread_num) & POLLING_STATE_WORK )){
+			if (polling_enabled && (stream_process_polling(thread_num) & POLLING_STATE_WORK))
+			{
 				polling_work_times++;
 			}
 		}
-		if(total_call_times >= 100){
+		if (total_call_times >= 100)
+		{
 			total_call_times = 0;
 			rcv_pkt_tims = 0;
 			polling_work_times = 0;
 			sapp_usleep(1);
 		}
 
-		if(PCAP_OP_FLAG_IDLE_POLLING == pkt_queue_node.op_flag){
+		if (PCAP_OP_FLAG_IDLE_POLLING == pkt_queue_node.op_flag)
+		{
 			idle_polling_call(thread_num);
-			polling_stream_timeout(thread_num);		
+			polling_stream_timeout(thread_num);
 			continue;
-		}else if(PCAP_OP_FLAG_EOF == pkt_queue_node.op_flag){
+		}
+		else if (PCAP_OP_FLAG_EOF == pkt_queue_node.op_flag)
+		{
 			sapp_runtime_log(RLOG_LV_INFO, "pcap work thread:%d, TID:%ld, recv EOF msg, thread stoping and exiting", thread_num, sapp_global_val->individual_fixed.thread_tid[thread_num]);
 			work_thread_pool[thread_num].op_status = PCAP_OP_FLAG_EOF;
 			break;
 		}
 
 		raw_pkt_hdr[thread_num] = (struct mesa_ethernet_hdr *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data;
-		raw_pkt_route_dir[thread_num] =  pkt_queue_node.raw_pkt.route_dir;
+		raw_pkt_route_dir[thread_num] = pkt_queue_node.raw_pkt.route_dir;
 
 #if DEBUG
 		timestamp_record(TS_LEVEL_WORK, &(pkt_queue_node.raw_pkt), thread_num);
@@ -1055,12 +1077,12 @@ static void *__pcap_work_thread(void *arg)
 				pcap_forward_pkt(thread_num, (unsigned char *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data,
 								 pkt_queue_node.raw_pkt.__lib_raw_pkt_len, pkt_queue_node.raw_pkt.route_dir);
 			}
-			PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
 		}
 		else
 		{
 			sapp_runtime_log(RLOG_LV_FATAL, "pcap work thread:%d, TID:%ld, recv abnormal rawpkt, len:%d, bypass!", thread_num, sapp_global_val->individual_fixed.thread_tid[thread_num], pkt_queue_node.raw_pkt.__lib_raw_pkt_len);
 		}
+		PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
 	}
 
 	/* pcap使用异步模式, 缓存队列中可能还有未处理的数据包 */
