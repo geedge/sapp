@@ -1759,6 +1759,12 @@ void plugctrl_destroy_all_plug()
 			sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, protocol, call [%s] destroy", pro_plug_info->plugname);
 			pro_plug_info->fun_destroy();
 		}
+		while(pro_plug_info->fun_list)
+		{
+			stProtocolFunInfo* funlist=pro_plug_info->fun_list;
+			pro_plug_info->fun_list=funlist->next;
+			free(funlist);
+		}
 		pro_plug_info = pro_plug_info->next;
 	}
 
