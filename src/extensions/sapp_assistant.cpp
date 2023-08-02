@@ -661,6 +661,7 @@ extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, 
 			enum sapp_state_t *cur_stage = (enum sapp_state_t *)opt_val;
 			*cur_stage = (enum sapp_state_t)sapp_global_val->individual_volatile->current_state;
 		}
+		break;
 
 		case SPO_CONFIG_ROOT_DIR:
 		{
