@@ -1981,7 +1981,6 @@ enum addr_type_t addr_type_abbreviation_pton(const char *addr_type_abbreviation)
 {
 	int i;
 	enum addr_type_t addrtype = __ADDR_TYPE_MAX;
-
 	for(i = __ADDR_TYPE_INIT+1; G_ADDR_CONVERT_HANDLE[i].addr_type_bin!= __ADDR_TYPE_MAX; i++){
 		if((strncasecmp(addr_type_abbreviation, G_ADDR_CONVERT_HANDLE[i].addr_type_string_abbreviation, strlen(addr_type_abbreviation)) == 0)
 		&& (strncasecmp(addr_type_abbreviation, G_ADDR_CONVERT_HANDLE[i].addr_type_string_abbreviation, strlen(G_ADDR_CONVERT_HANDLE[i].addr_type_string_abbreviation)) == 0)){

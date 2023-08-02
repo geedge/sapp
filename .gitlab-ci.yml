@@ -15,6 +15,7 @@ variables:
   INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
 
 stages:
+- cppcheck
 - build
 - test
 - envelope
@@ -28,6 +29,40 @@ stages:
     - yum makecache --disablerepo="*" --enablerepo="framework,platform"
     - yum install -y $INSTALL_DEPENDENCY_LIBRARY
     - source /etc/profile.d/framework.sh; source /etc/profile.d/mrzcpd.sh
+###############################################################################
+# cppcheck 
+###############################################################################
+.cppcheck_script:
+  stage: cppcheck
+  script:
+    - mkdir build || true
+    - cd build; cmake3 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    - >
+      cppcheck --project=compile_commands.json 
+      --enable=all 
+      --error-exitcode=1 
+      --suppress=unusedFunction 
+      --suppress=missingInclude 
+      --suppress=uselessAssignmentPtrArg
+      --suppress=unmatchedSuppression
+      --suppress=variableScope
+      --suppress=unreadVariable
+      --suppress=cstyleCast
+      --suppress=memleakOnRealloc
+      --suppress=constParameter
+      --suppress=uselessAssignmentArg
+      --suppress=uninitvar
+      --suppress=unusedStructMember
+  tags:
+    - share
+
+run_cppcheck_for_centos7:
+  extends: .cppcheck_script
+  image: $BUILD_IMAGE_CENTOS7
+
+run_cppcheck_for_centos8:
+  extends: .cppcheck_script
+  image: $BUILD_IMAGE_CENTOS8
 
 ###############################################################################
 # build 

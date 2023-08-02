@@ -696,7 +696,7 @@ static int embed_layer_t_pton(char *config_val, embed_layer_t *result)
 	}
 	
 	addrtype = addr_type_abbreviation_pton(layer_type_string);
-	if(__ADDR_TYPE_MAX-1 == addrtype){
+	if(__ADDR_TYPE_MAX == addrtype){
 		return -1;
 	}
 

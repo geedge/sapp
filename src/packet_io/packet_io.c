@@ -631,7 +631,6 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	}
 #if DEBUG
 	char raw_pkt_md5_before[16];
-	char raw_pkt_md5_after[16];
 
 	if(unlikely(g_raw_pkt_broken_check != 0)){
 		MESA_MD5_sum_bin((unsigned char *)p_raw_pkt->raw_pkt_data, p_raw_pkt->raw_pkt_len, raw_pkt_md5_before);
