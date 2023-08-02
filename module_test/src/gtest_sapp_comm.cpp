@@ -262,7 +262,7 @@ int update_plugin_inf(const char *entry_name, const char *fun_name)
 	char file_buf[1024];
 	FILE *fp;
 	
-	snprintf(file_buf, 1024, "[PLUGINFO]\nPLUGNAME=gtest\nSO_PATH=./plug/business/gtest_sapp/libgtest_sapp.so\nINIT_FUNC=gtest_sapp_slave_init\n\n[%s]\nFUNC_FLAG=ALL\nFUNC_NAME=%s\n", entry_name, fun_name);
+	snprintf(file_buf, 1024, "[PLUGINFO]\nPLUGNAME=gtest\nSO_PATH=./plug/business/gtest_sapp/libgtest_sapp.so\nINIT_FUNC=gtest_sapp_slave_init\nDESTROY_FUNC=gtest_sapp_slave_destroy\n[%s]\nFUNC_FLAG=ALL\nFUNC_NAME=%s\n", entry_name, fun_name);
 	fp = fopen("plug/business/gtest_sapp/gtest_sapp.inf", "w+");
 	if(NULL == fp){
 		printf("update_plugin_inf(): open %s error, %s\n", "plug/business/gtest_sapp/gtest_sapp.inf", strerror(errno));

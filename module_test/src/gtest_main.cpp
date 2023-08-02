@@ -2240,7 +2240,8 @@ int main(int argc, char *argv[])
 	::testing::InitGoogleTest(&to_gtest_argc, to_gtest_args);
 	::testing::FLAGS_gtest_death_test_style = "fast";
 	int ret=RUN_ALL_TESTS();
-	
+	MESA_destroy_runtime_log_handle(g_sapp_test_log_handle);	
+	MESA_handle_runtime_log_destruction();
 	return ret;
 }
 
