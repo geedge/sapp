@@ -767,7 +767,7 @@ void gtest_start_transparent_env_progress(const char *prog_name, const char *pca
 void gtest_start_sapp_progress(const char *user_argv[])
 {
 	pid_t pid;
-	int nouse_result, null_fd;
+	int nouse_result;
 	const char *__null_argv[1] = {0};
 	char **argv;
 
@@ -1322,7 +1322,7 @@ int sapp_set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mp
 		}
 	}
 
-	if(1 != this_mpls_hdr->mpls_bls) /* 超过MAX_MPLS_ADDR_LAYER, MPLS还没有结�?*/
+	if(this_mpls_hdr== NULL || 1 != this_mpls_hdr->mpls_bls) /* 超过MAX_MPLS_ADDR_LAYER, MPLS还没有结�?*/
 	{
 		return -1;
 	}

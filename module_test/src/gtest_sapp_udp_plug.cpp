@@ -1420,7 +1420,7 @@ extern "C" char udp_offload_1st_givestate_entry(struct streaminfo *pstream,void 
 		}
 
 		if(49383 != pdetail->clientbytes){
-		 printf("\033[1;31;40mudp_offload_1st_entry() error, C2S_all_byte is:%llu, but expect %d\033[0m\n", pdetail->clientbytes, 49383);
+		 printf("\033[1;31;40mudp_offload_1st_entry() error, C2S_all_byte is:%u, but expect %d\033[0m\n", pdetail->clientbytes, 49383);
 		 gtest_set_libsapp_devel_result(GTEST_SAPP_ERR); 
 		 return APP_STATE_DROPME;
 		}		 
@@ -1430,7 +1430,7 @@ extern "C" char udp_offload_1st_givestate_entry(struct streaminfo *pstream,void 
 		 return APP_STATE_DROPME;
 		}	 
 		if(140937 != pdetail->serverbytes){
-		 printf("\033[1;31;40mudp_offload_1st_entry() error, S2C_all_byte is:%llu, but expect %d\033[0m\n", pdetail->serverbytes, 140937);
+		 printf("\033[1;31;40mudp_offload_1st_entry() error, S2C_all_byte is:%u, but expect %d\033[0m\n", pdetail->serverbytes, 140937);
 		 gtest_set_libsapp_devel_result(GTEST_SAPP_ERR); 
 		 return APP_STATE_DROPME;
 		}
@@ -1489,7 +1489,7 @@ extern "C" char udp_offload_2st_giveme_entry(struct streaminfo *pstream,void **p
 		}
 
 		if(49383 != pdetail->clientbytes){
-		 printf("\033[1;31;40mudp_offload_2st_entry() error, C2S_all_byte is:%llu, but expect %d\033[0m\n", pdetail->clientbytes, 49383);
+		 printf("\033[1;31;40mudp_offload_2st_entry() error, C2S_all_byte is:%u, but expect %d\033[0m\n", pdetail->clientbytes, 49383);
 		 gtest_set_libsapp_devel_result(GTEST_SAPP_ERR); 
 		 return APP_STATE_DROPME;
 		}		 
@@ -1499,7 +1499,7 @@ extern "C" char udp_offload_2st_giveme_entry(struct streaminfo *pstream,void **p
 		 return APP_STATE_DROPME;
 		}	 
 		if(140937 != pdetail->serverbytes){
-		 printf("\033[1;31;40mudp_offload_2st_entry() error, S2C_all_byte is:%llu, but expect %d\033[0m\n", pdetail->serverbytes, 140937);
+		 printf("\033[1;31;40mudp_offload_2st_entry() error, S2C_all_byte is:%u, but expect %d\033[0m\n", pdetail->serverbytes, 140937);
 		 gtest_set_libsapp_devel_result(GTEST_SAPP_ERR); 
 		 return APP_STATE_DROPME;
 		}

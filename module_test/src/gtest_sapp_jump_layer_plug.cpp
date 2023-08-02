@@ -34,7 +34,7 @@
 static int jump_check_ipv4_pkt(const struct ip *ip4hdr, int expect_tot_len, unsigned char expect_protocol, const char *expect_src_addr_str, const char *expect_dst_addr_str)
 {
 	unsigned int expect_src_addr_net, expect_dst_addr_net;
-	
+	if(ip4hdr== NULL) return -1;
 	/* 简单判断一下ipv4头部是否正确 */
 	if(ip4hdr->ip_v != 4){
 		printf("\033[1;31;40mMESA_net_jump_to_layer(): ipv4 header check version error!\033[0m\n");
@@ -113,6 +113,7 @@ static int jump_check_ipv6_pkt(const struct ip6_hdr *ip6h, int expect_payload_le
 
 static int jump_check_tcp_pkt(const struct tcphdr *thdr, int expect_tcp_hdr_offset, unsigned short expect_sport_host, unsigned short expect_dport_host)
 {
+	if(thdr== NULL) return -1;
 	if(thdr->doff * 4 != expect_tcp_hdr_offset){
 		printf("\033[1;31;40mMESA_net_jump_to_layer(): tcp header offset error!\033[0m\n");
 		sendto_test_result(GTEST_SAPP_ERR); 
@@ -134,6 +135,7 @@ static int jump_check_tcp_pkt(const struct tcphdr *thdr, int expect_tcp_hdr_offs
 
 static int jump_check_udp_pkt(const struct udphdr *uhdr, unsigned short expect_udp_tot_len, unsigned short expect_sport_host, unsigned short expect_dport_host)
 {
+	if(uhdr== NULL) return -1;
 	if(ntohs(uhdr->len) != expect_udp_tot_len){
 		printf("\033[1;31;40mMESA_net_jump_to_layer(): udp header length error!\033[0m\n");
 		sendto_test_result(GTEST_SAPP_ERR); 
@@ -156,6 +158,7 @@ static int jump_check_udp_pkt(const struct udphdr *uhdr, unsigned short expect_u
 
 static int jump_check_vlan_pkt(const void *vlan_hdr, unsigned int expect_vlan_hex_data)
 {
+	if(vlan_hdr == NULL) return -1;
 	if(memcmp(vlan_hdr, &expect_vlan_hex_data, sizeof(int)) != 0){
 		printf("\033[1;31;40mMESA_net_jump_to_layer(): vlan header error!\033[0m\n");
 		sendto_test_result(GTEST_SAPP_ERR); 
@@ -448,29 +451,31 @@ extern "C" char jump_layer_eth_ipv4_gtp_ipv4_tcpall_entry(struct streaminfo *pst
 			printf("\033[1;31;40m MESA_net_jump_to_layer(): eth->ipv4->gtp error!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_ERR);	
 			 
-		}	
+		}
 		const struct gtp_hdr *net_gtp_hdr = (struct gtp_hdr *)next_header;
-		if(net_gtp_hdr->flags != 0x30){
-			printf("\033[1;31;40m gtp hdr flags is not 0x30!\033[0m\n");
-			sendto_test_result(GTEST_SAPP_ERR);	
-			 			
+		if (net_gtp_hdr)
+		{
+			if (net_gtp_hdr->flags != 0x30)
+			{
+				printf("\033[1;31;40m gtp hdr flags is not 0x30!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
+			if (net_gtp_hdr->msg_type != 0xFF)
+			{
+				printf("\033[1;31;40m gtp hdr msg_type is not 0xFF!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
+			if (ntohs(net_gtp_hdr->len) != 40)
+			{
+				printf("\033[1;31;40m gtp hdr length is not 40!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
+			if (ntohl(net_gtp_hdr->teid) != 0xb68311b)
+			{
+				printf("\033[1;31;40m gtp hdr teid is not 0xb68311b!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
 		}
-		if(net_gtp_hdr->msg_type != 0xFF){
-			printf("\033[1;31;40m gtp hdr msg_type is not 0xFF!\033[0m\n");
-			sendto_test_result(GTEST_SAPP_ERR);	
-			 			
-		}
-		if(ntohs(net_gtp_hdr->len) != 40){
-			printf("\033[1;31;40m gtp hdr length is not 40!\033[0m\n");
-			sendto_test_result(GTEST_SAPP_ERR);	
-			 			
-		}
-		if(ntohl(net_gtp_hdr->teid) != 0xb68311b){
-			printf("\033[1;31;40m gtp hdr teid is not 0xb68311b!\033[0m\n");
-			sendto_test_result(GTEST_SAPP_ERR);	
-			 			
-		}
-
 
 		next_header = MESA_net_jump_to_layer_greedy(pkt_header, ADDR_TYPE_MAC, ADDR_TYPE_IPV4); /* 内层ipv4 */
 		if(NULL == next_header){
@@ -604,43 +609,44 @@ extern "C" char jump_layer_eth_ip4_l2tp_ip4_tcpall_entry(struct streaminfo *pstr
 			printf("\033[1;31;40mMESA_net_jump_to_layer(): eth->ipv4->l2tp error!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_ERR);	
 			 
-		}		
+		}
 		const struct l2tp_hdr_v2 *p_l2tp_hdr = (struct l2tp_hdr_v2 *)next_header;
-		if(p_l2tp_hdr->length_present != 1){
-			printf("\033[1;31;40mMESA_net_jump_to_layer():l2tp header length flag is not 1!\033[0m\n");
-			sendto_test_result(GTEST_SAPP_ERR);	
-			 			
+		if (p_l2tp_hdr)
+		{
+			if (p_l2tp_hdr->length_present != 1)
+			{
+				printf("\033[1;31;40mMESA_net_jump_to_layer():l2tp header length flag is not 1!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
+			if (p_l2tp_hdr->version != 2)
+			{
+				printf("\033[1;31;40mMESA_net_jump_to_layer():l2tp header version is not 2!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
+			const unsigned short *short_ptr = (unsigned short *)((char *)next_header + sizeof(struct l2tp_hdr_v2));
+			if (ntohs(*short_ptr) != 64)
+			{
+				printf("\033[1;31;40mMESA_net_jump_to_layer():l2tp header lenth is not 64!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
+			short_ptr++;
+			if (ntohs(*short_ptr) != 28998)
+			{
+				printf("\033[1;31;40mMESA_net_jump_to_layer():l2tp header tunnel id is not 28998!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
+			short_ptr++;
+			if (ntohs(*short_ptr) != 2)
+			{
+				printf("\033[1;31;40mMESA_net_jump_to_layer():l2tp header session id is not 2!\033[0m\n");
+				sendto_test_result(GTEST_SAPP_ERR);
+			}
 		}
-		if(p_l2tp_hdr->version != 2){
-			printf("\033[1;31;40mMESA_net_jump_to_layer():l2tp header version is not 2!\033[0m\n");
-			sendto_test_result(GTEST_SAPP_ERR);	
-			 			
-		}		
-		const unsigned short *short_ptr = (unsigned short *)((char *)next_header + sizeof(struct l2tp_hdr_v2));
-		if(ntohs(*short_ptr) != 64){
-			printf("\033[1;31;40mMESA_net_jump_to_layer():l2tp header lenth is not 64!\033[0m\n");
-			sendto_test_result(GTEST_SAPP_ERR);	
-			 				
-		}
-		short_ptr++;
-		if(ntohs(*short_ptr) != 28998){
-			printf("\033[1;31;40mMESA_net_jump_to_layer():l2tp header tunnel id is not 28998!\033[0m\n");
-			sendto_test_result(GTEST_SAPP_ERR);	
-			 				
-		}		
-		short_ptr++;
-		if(ntohs(*short_ptr) != 2){
-			printf("\033[1;31;40mMESA_net_jump_to_layer():l2tp header session id is not 2!\033[0m\n");
-			sendto_test_result(GTEST_SAPP_ERR);	
-			 				
-		}			
-
 		/* 跳转到内层ipv4需要用greedy接口 */
 		next_header = MESA_net_jump_to_layer_greedy(pkt_header, ADDR_TYPE_MAC, ADDR_TYPE_IPV4);
 		if(NULL == next_header){
 			printf("\033[1;31;40mMESA_net_jump_to_layer(): eth->ipv4->l2tp->ipv4 error!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_ERR);	
-			 
 		}		
 		const struct ip* inner_ip4hdr = (struct ip*)next_header; 
 		jump_check_ipv4_pkt(inner_ip4hdr, 52, IPPROTO_TCP, "172.16.2.100", "10.0.6.229");		

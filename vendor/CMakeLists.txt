@@ -56,8 +56,7 @@ if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
         ExternalProject_Add(libjemalloc PREFIX libjemalloc
                 URL ${CMAKE_CURRENT_SOURCE_DIR}/jemalloc-5.3.0.tar.gz
                 URL_MD5 594dd8e0a1e8c1ef8a1b210a1a5aff5b
-                #CONFIGURE_COMMAND ./autogen.sh --prefix=<INSTALL_DIR>
-                CONFIGURE_COMMAND ./configure --enable-prof --prefix=<INSTALL_DIR>
+                CONFIGURE_COMMAND ./autogen.sh --enable-prof --prefix=<INSTALL_DIR>
                 BUILD_COMMAND make
                         BUILD_IN_SOURCE 1
                 INSTALL_COMMAND make install prefix=<INSTALL_DIR>)

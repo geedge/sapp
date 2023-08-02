@@ -45,7 +45,7 @@ extern "C" char tcp_pkt_stat(struct streaminfo *pstream,void **pme, int thread_s
 	}
 		
 	if(pstream->opstate != OP_STATE_CLOSE){
-		printf("tcp_pkt_stat, curdir:%d, data_len:%d, c2s_pkt:%d, c2s_bytes:%d, s2c_pkt:%d, s2c_bytes:%d\n", 
+		printf("tcp_pkt_stat, curdir:%u, data_len:%u, c2s_pkt:%u, c2s_bytes:%llu, s2c_pkt:%u, s2c_bytes:%llu\n", 
 			pstream->curdir, pdetail->datalen, 
 			gtest_tcp_stat.C2S_data_pkt, gtest_tcp_stat.C2S_data_byte, gtest_tcp_stat.S2C_data_pkt, gtest_tcp_stat.S2C_data_byte);
 		if(DIR_C2S == pstream->curdir){
@@ -76,7 +76,7 @@ extern "C" char tcpall_pkt_stat(struct streaminfo *pstream,void **pme, int threa
 	}
 	
 	if(pstream->pktstate != OP_STATE_CLOSE){
-		printf("tcpall_pkt_stat, curdir:%d, data_len:%d,c2s_pkt:%d, c2s_bytes:%d, s2c_pkt:%d, s2c_bytes:%d\n", pstream->curdir, pdetail->datalen
+		printf("tcpall_pkt_stat, curdir:%u, data_len:%u,c2s_pkt:%u, c2s_bytes:%llu, s2c_pkt:%u, s2c_bytes:%llu\n", pstream->curdir, pdetail->datalen
 			, gtest_tcp_stat.C2S_all_pkt, gtest_tcp_stat.C2S_all_byte, gtest_tcp_stat.S2C_all_pkt, gtest_tcp_stat.S2C_all_byte);
 		if(DIR_C2S == pstream->curdir){
 			gtest_tcp_stat.C2S_all_pkt++;
@@ -117,7 +117,7 @@ extern "C" char ip_entry_check_tcp_timeout(const struct streaminfo *pstream,
 			printf("\033[32mtcp.timeout_reset() test succ!\033[0m\n");
 			gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
 		}else{
-			printf("\033[1;31;40mtcp_timeout_reset: check data error, ip_number:%d, tcp_c2s:%d, tcp_s2c:%d, tcpall_c2s:%d, tcpall_s2c:%d!\033[0m\n",
+			printf("\033[1;31;40mtcp_timeout_reset: check data error, ip_number:%d, tcp_c2s:%u, tcp_s2c:%u, tcpall_c2s:%u, tcpall_s2c:%u!\033[0m\n",
 				ip_pkt_number, gtest_tcp_stat.C2S_data_pkt, gtest_tcp_stat.S2C_data_pkt, gtest_tcp_stat.C2S_all_pkt, gtest_tcp_stat.S2C_all_pkt);
 			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
 		}
@@ -2295,7 +2295,7 @@ extern "C" char tcpall_offload_1st_givestate_entry(struct streaminfo *pstream,vo
 			gtest_tcpall_offload_stat1.S2C_all_byte += pdetail->datalen;
 		}
 
-		printf("tcpall_pkt_stat, curdir:%d, data_len:%d,c2s_pkt:%d, c2s_bytes:%d, s2c_pkt:%d, s2c_bytes:%d\n",
+		printf("tcpall_pkt_stat, curdir:%d, data_len:%u,c2s_pkt:%u, c2s_bytes:%llu, s2c_pkt:%u, s2c_bytes:%llu\n",
 				pstream->curdir,
 				pdetail->datalen,
 				gtest_tcpall_offload_stat1.C2S_all_pkt,
@@ -2359,7 +2359,7 @@ extern "C" char tcpall_offload_2st_giveme_entry(struct streaminfo *pstream,void 
 			gtest_tcpall_offload_stat2.S2C_all_byte += pdetail->datalen;
 		}
 
-		printf("tcpall_pkt_stat, curdir:%d, data_len:%d,c2s_pkt:%d, c2s_bytes:%d, s2c_pkt:%d, s2c_bytes:%d\n",
+		printf("tcpall_pkt_stat, curdir:%d, data_len:%u,c2s_pkt:%u, c2s_bytes:%llu s2c_pkt:%u, s2c_bytes:%llu\n",
 					pstream->curdir,
 					pdetail->datalen,
 					gtest_tcpall_offload_stat2.C2S_all_pkt,
@@ -2425,7 +2425,7 @@ extern "C" char tcp_offload_1st_givestate_entry(struct streaminfo *pstream,void 
 			gtest_tcp_offload_stat1.S2C_all_byte += pdetail->datalen;
 		}
 
-		printf("tcpall_pkt_stat, curdir:%d, data_len:%d,c2s_pkt:%d, c2s_bytes:%d, s2c_pkt:%d, s2c_bytes:%d\n",
+		printf("tcpall_pkt_stat, curdir:%d, data_len:%u,c2s_pkt:%u, c2s_bytes:%llu, s2c_pkt:%u, s2c_bytes:%llu\n",
 				pstream->curdir,
 				pdetail->datalen,
 				gtest_tcp_offload_stat1.C2S_all_pkt,
@@ -2489,7 +2489,7 @@ extern "C" char tcp_offload_2st_giveme_entry(struct streaminfo *pstream,void **p
 			gtest_tcp_offload_stat2.S2C_all_byte += pdetail->datalen;
 		}
 
-		printf("tcpall_pkt_stat, curdir:%d, data_len:%d,c2s_pkt:%d, c2s_bytes:%d, s2c_pkt:%d, s2c_bytes:%d\n",
+		printf("tcpall_pkt_stat, curdir:%d, data_len:%u,c2s_pkt:%u, c2s_bytes:%llu, s2c_pkt:%u, s2c_bytes:%llu\n",
 					pstream->curdir,
 					pdetail->datalen,
 					gtest_tcp_offload_stat2.C2S_all_pkt,

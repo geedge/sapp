@@ -776,6 +776,10 @@ fail:
 /* Parse the input text into an unescaped cinput, and populate item. */
 static cJSON_bool parse_string(cJSON * const item, parse_buffer * const input_buffer)
 {
+    if(input_buffer == NULL)
+    {
+        return false;       /* no input */
+    }
     const unsigned char *input_pointer = buffer_at_offset(input_buffer) + 1;
     const unsigned char *input_end = buffer_at_offset(input_buffer) + 1;
     unsigned char *output_pointer = NULL;
@@ -832,11 +836,6 @@ static cJSON_bool parse_string(cJSON * const item, parse_buffer * const input_bu
         else
         {
             unsigned char sequence_length = 2;
-            if ((input_end - input_pointer) < 1)
-            {
-                goto fail;
-            }
-
             switch (input_pointer[1])
             {
                 case 'b':
@@ -1446,7 +1445,10 @@ static cJSON_bool parse_array(cJSON * const item, parse_buffer * const input_buf
 {
     cJSON *head = NULL; /* head of the linked list */
     cJSON *current_item = NULL;
-
+    if(input_buffer==NULL)
+    {
+        return false; /* no input */
+    }
     if (input_buffer->depth >= CJSON_NESTING_LIMIT)
     {
         return false; /* to deeply nested */
@@ -1458,8 +1460,10 @@ static cJSON_bool parse_array(cJSON * const item, parse_buffer * const input_buf
         /* not an array */
         goto fail;
     }
-
-    input_buffer->offset++;
+    if(input_buffer)
+    {
+        input_buffer->offset++;
+    }
     buffer_skip_whitespace(input_buffer);
     if (can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == ']'))
     {
@@ -1470,7 +1474,10 @@ static cJSON_bool parse_array(cJSON * const item, parse_buffer * const input_buf
     /* check if we skipped to the end of the buffer */
     if (cannot_access_at_index(input_buffer, 0))
     {
-        input_buffer->offset--;
+        if(input_buffer)
+        {
+            input_buffer->offset--;
+        }
         goto fail;
     }
 
@@ -1606,7 +1613,10 @@ static cJSON_bool parse_object(cJSON * const item, parse_buffer * const input_bu
 {
     cJSON *head = NULL; /* linked list head */
     cJSON *current_item = NULL;
-
+    if(input_buffer==NULL)
+    {
+        return false; /* no input */
+    }
     if (input_buffer->depth >= CJSON_NESTING_LIMIT)
     {
         return false; /* to deeply nested */
@@ -1617,8 +1627,10 @@ static cJSON_bool parse_object(cJSON * const item, parse_buffer * const input_bu
     {
         goto fail; /* not an object */
     }
-
-    input_buffer->offset++;
+    if(input_buffer)
+    {
+        input_buffer->offset++;
+    }
     buffer_skip_whitespace(input_buffer);
     if (can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '}'))
     {
@@ -1628,12 +1640,18 @@ static cJSON_bool parse_object(cJSON * const item, parse_buffer * const input_bu
     /* check if we skipped to the end of the buffer */
     if (cannot_access_at_index(input_buffer, 0))
     {
-        input_buffer->offset--;
+        if(input_buffer)
+        {
+            input_buffer->offset--;
+        }
         goto fail;
     }
 
     /* step back to character in front of the first element */
-    input_buffer->offset--;
+    if(input_buffer)
+    {
+        input_buffer->offset--;
+    }
     /* loop through the comma separated array elements */
     do
     {
@@ -1659,7 +1677,10 @@ static cJSON_bool parse_object(cJSON * const item, parse_buffer * const input_bu
         }
 
         /* parse the name of the child */
-        input_buffer->offset++;
+        if(input_buffer)
+        {
+            input_buffer->offset++;
+        }
         buffer_skip_whitespace(input_buffer);
         if (!parse_string(current_item, input_buffer))
         {
@@ -3194,7 +3215,7 @@ static cJSON_bool __cJSON_Compare_ignore_options_for_array(const cJSON * const a
 
 static cJSON_bool __cJSON_Compare_options_for_object(const cJSON * const allow_ignore_json, const cJSON * const all_item_json, cJSON_Compare_Opt_t opt, int *same_item_count, int ignore_exist_enable, void *log_handler)
 {
-	int i, has_same_object;
+	int i;
 	cJSON *b_element;
 	cJSON *same_name_objs[MAX_DUP_NAME_ITEM_NUM];
 	cJSON_bool res;
@@ -3217,7 +3238,6 @@ static cJSON_bool __cJSON_Compare_options_for_object(const cJSON * const allow_i
 			res = __cJSON_Compare_options_with_count(allow_ignore_json, same_name_objs[i], opt, same_item_count, log_handler);
 			if (res == true){
 				/* 因为有同名的Object, 此处是正向判断, 只要有一个相同的, 后续的就不用比较了 */
-				has_same_object++;
 				POINTER_VALUE_INC(same_item_count);
 				return res;
 			}					
@@ -3257,7 +3277,6 @@ static cJSON_bool __cJSON_Compare_options_with_count(const cJSON * const a, cons
 {
 	int ret;
 	cJSON *same_name_objs[10];
-	int i, same_name_objs_num;
 			
 	if ((a == NULL) || (b == NULL) || ((a->type & 0xFF) != (b->type & 0xFF)))
 	{

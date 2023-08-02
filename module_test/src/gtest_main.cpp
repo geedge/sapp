@@ -153,13 +153,13 @@ void call_libsapp_devel_online_mode(void)
 {
 	int ret;
 	gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
-
+	
 	if(g_slient_mode){
-		char *sapp_online_start_args[] = {(char *)"./sapp", (char *)"-s", (char *)"-n",  (char *)NULL};
-		ret = libsapp_setup_env(3, sapp_online_start_args);
+		char *sapp_online_start_args_3[] = {(char *)"./sapp", (char *)"-s", (char *)"-n",  (char *)NULL};
+		ret = libsapp_setup_env(3, sapp_online_start_args_3);
 	}else{
-		char *sapp_online_start_args[] = {(char *)"./sapp", (char *)"-n", (char *)NULL};
-		ret = libsapp_setup_env(2, sapp_online_start_args);
+		char *sapp_online_start_args_2[] = {(char *)"./sapp", (char *)"-n", (char *)NULL};
+		ret = libsapp_setup_env(2, sapp_online_start_args_2);
 	}
 
 	if(ret < 0){
