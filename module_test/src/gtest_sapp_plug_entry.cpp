@@ -129,7 +129,11 @@ extern "C" int gtest_sapp_slave_init(void)
 
 extern "C" void gtest_sapp_slave_destroy(void)
 {
-	MESA_destroy_runtime_log_handle(g_sapp_plug_log_handle);
+	if(g_sapp_plug_log_handle)
+	{
+		MESA_destroy_runtime_log_handle(g_sapp_plug_log_handle);
+		g_sapp_plug_log_handle=NULL;
+	}
 	return;
 }
 

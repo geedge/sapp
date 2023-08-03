@@ -2166,7 +2166,7 @@ extern "C" char fork_listen_port_tcp_plug(struct streaminfo *pstream,void **pme,
 			update_config_file_by_lastNline("etc/sapp.toml", "tools.pkt_dump", 2, "mode", "udp_socket");
 			update_config_file_by_lastNline("etc/sapp.toml", "tools.pkt_dump", 3, "mode", "udp_socket");
 			update_config_file("etc/sapp.toml", "command_port", "54321"); 
-			update_config_file("etc/sapp.toml", "dumpfile_sleep_time_before_exit", "0"); 
+			update_config_file("etc/sapp.toml", "monitor_thread_enabled", "0"); 
 
 			update_config_file("etc/sapp.toml", "prometheus_enabled", "0");
 

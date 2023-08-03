@@ -862,7 +862,7 @@ void find_streaminfo_v4_run(void)
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "reorder_pkt_max", "100");
 	update_config_file("etc/sapp.toml", "timeout", "0");
-	update_config_file("etc/sapp.toml", "dumpfile_sleep_time_before_exit", "3");
+	update_config_file("etc/sapp.toml", "monitor_thread_enabled", "3");
 
 	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "gtest_sapp_slave_init", NULL, "TCP_ALL", "void_entry");
 	append_plugin_inf("UDP", "void_entry");
@@ -920,7 +920,7 @@ void find_streaminfo_diff_tunnel_v4_run(void)
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "reorder_pkt_max", "100");
 	update_config_file("etc/sapp.toml", "timeout", "0");
-	update_config_file("etc/sapp.toml", "dumpfile_sleep_time_before_exit", "0");
+	update_config_file("etc/sapp.toml", "monitor_thread_enabled", "0");
 
 	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "gtest_sapp_slave_init", NULL, "TCP_ALL", "void_entry");
 	append_plugin_inf("UDP", "void_entry");
@@ -960,7 +960,7 @@ void control_fork_listen_port_run(void)
 	update_config_file_by_lastNline("etc/sapp.toml", "tools.pkt_dump", 2, "mode", "udp_socket");
 	update_config_file_by_lastNline("etc/sapp.toml", "tools.pkt_dump", 3, "mode", "udp_socket");
 	update_config_file("etc/sapp.toml", "command_port", "12345"); 
-	update_config_file("etc/sapp.toml", "dumpfile_sleep_time_before_exit", "0"); 
+	update_config_file("etc/sapp.toml", "monitor_thread_enabled", "0"); 
 	update_plugin_inf("TCP", "fork_listen_port_tcp_plug");
 	
 	set_pcap_dumpfile("tcp/tcp_simple.pcap");

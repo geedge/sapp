@@ -80,7 +80,7 @@ void app_state_kill_follow_head_pending_run(void)
 	append_conflist_inf("./plug/business/gtest_sapp_appstate_2/gtest_sapp.inf"); 
 
 	/* 更新gtest.inf */
-	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "tcp_app_state_master_init", NULL, "TCP", "as_kill_follow_head_pending");
+	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "tcp_app_state_master_init", "tcp_app_state_master_destroy", "TCP", "as_kill_follow_head_pending");
 
 	call_libsapp_devel_for_dumpfile_topspeed();
 }
