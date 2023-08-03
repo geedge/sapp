@@ -33,9 +33,12 @@ stages:
 # cppcheck 
 ###############################################################################
 .cppcheck_script:
+  variables:    
+    BUILD_TYPE: Debug
+    CAPTURE_MODE: MARSIO
+    PLATFORM_MODE: INLINE
   stage: cppcheck
   script:
-    - mkdir build || true
     - cd build; cmake3 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
     - >
       cppcheck --project=compile_commands.json 

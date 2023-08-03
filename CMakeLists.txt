@@ -20,6 +20,15 @@ find_package(SYSTEMD REQUIRED)
 
 #add_compile_options(-march=znver2)
 
+execute_process(COMMAND nproc OUTPUT_VARIABLE CPU_COUNT)
+string(STRIP ${CPU_COUNT} CPU_COUNT) # remove trailing newline
+message(STATUS "Detected ${CPU_COUNT} CPU cores")
+if (CPU_COUNT GREATER 16)
+    set(CPU_COUNT 16)
+endif()
+message(STATUS "Using ${CPU_COUNT} CPU cores")
+
+
 find_program(CMAKE_CXX_CPPCHECK NAMES cppcheck)
 if (CMAKE_CXX_CPPCHECK)
     list(
@@ -45,10 +54,10 @@ else()
 endif()
 
 
-set(CMAKE_BUILD_TYPE "DEBUG" CACHE STRING
+set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
     " set CMAKE_BUILD_TYPE chosen by the user, using DEBUG as default")
-set_property(CACHE CMAKE_BUILD_TYPE  PROPERTY STRINGS DEBUG RELEASE
-    RELWITHDEBINFO MINSIZEREL)
+set_property(CACHE CMAKE_BUILD_TYPE  PROPERTY STRINGS Debug Release
+RelWithDebInfo MinSizeRel)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 
