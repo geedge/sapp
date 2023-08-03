@@ -240,7 +240,7 @@ envelope_rpm_for_centos8:
 .setup_test_env_for_centos7:
   stage: test
   image: $BUILD_IMAGE_CENTOS7
-  allow_failure: true
+  allow_failure: false
   before_script:
     - *everything_before_script
     - ls -l /opt/MESA/lib && echo "/opt/MESA/lib" >> /etc/ld.so.conf
