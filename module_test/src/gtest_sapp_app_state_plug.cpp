@@ -65,7 +65,9 @@ static char as_check_result_follow_head_pending(struct streaminfo *pstream)
 	app_state_stat_t *pstat = app_state_get_struct(pstream);
 
 	pstat->plug_entry_times[0]++;
-	
+
+	g_app_state_stat = pstat;
+
 	if(__check_all_plug_has_inited() != 0){
 		SAPP_PLUG_LOG(RLOG_LV_FATAL, "app_state_follow_head_pending", "\033[1;31;40mtest app state follow_head_pending error, some plug has init failed!\033[0m\n");
 		gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
@@ -790,7 +792,7 @@ extern "C" char as_kill_other_tail_data(struct streaminfo *pstream,void **pme, i
 
 static void app_state_project_req_free_cb(int thread_seq, void *project_req_value)
 {
-	/* 此处故意不free内存, 因为exit之前会清空所有流结构体, 在tcp_app_state_master_destroy里计数统计就不对了 */
+	/* 此处故意不free内存, 因为exit之前会清空所有流结构体, 在里计数统计就不对了 */
 	return;
 }
 
@@ -809,8 +811,17 @@ extern "C" int tcp_app_state_master_init(void)
 
 extern "C" void tcp_app_state_master_destroy(void)
 {
+	if(g_sapp_plug_log_handle)
+	{
+		MESA_destroy_runtime_log_handle(g_sapp_plug_log_handle);
+		g_sapp_plug_log_handle=NULL;
+	}
 	if(g_check_stat_before_exit){
 		g_check_stat_before_exit();
+	}
+	if(g_app_state_stat){
+		free(g_app_state_stat);
+		g_app_state_stat = NULL;
 	}
 }
 

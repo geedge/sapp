@@ -222,7 +222,7 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{4206,4204,RLOG_LV_INFO,"packet_io.feature",	"inject_mode_single_gateway_device",	"raw_ethernet_single_gateway",cfg_value_check_inject_mode, NULL, NULL, 0},
 	{4207,4204,RLOG_LV_INFO,"packet_io.feature",	"inject_mode_single_gateway_src_mac",	"raw_ethernet_single_gateway",cfg_value_check_inject_mode, NULL, NULL, 0},
 	{4208,4204,RLOG_LV_INFO,"packet_io.feature",	"inject_mode_single_gateway_dst_mac",	"raw_ethernet_single_gateway",cfg_value_check_inject_mode, NULL, NULL, 0},
-	{4209,0,RLOG_LV_DEBUG,"packet_io.feature",	"dumpfile_sleep_time_before_exit",	NULL, cfg_value_check_integer_range, NULL, g_interger_range_array, 65535},
+	{4209,0,RLOG_LV_DEBUG,"packet_io.feature",	"monitor_thread_enabled",	NULL, cfg_value_check_integer_range, NULL, g_interger_range_array, 65535},
 	{4210,0,RLOG_LV_DEBUG,"packet_io.feature",	"extract_linkdir_from_mac_in_mirror_mode",	NULL, NULL, NULL, NULL, 0},
 	{4211,0,RLOG_LV_DEBUG,"packet_io.feature",	"pcap_distmode",	NULL,cfg_value_check_string_range, NULL, cfg_chk_value_pcap_distmode, 2},
 
@@ -1696,7 +1696,7 @@ int sapp_parse_config(void)
 	}else{
 		pconfig->packet_io.inject_mode_inline_device_sport = tmp_int;
 	}
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"dumpfile_sleep_time_before_exit", &pconfig->packet_io.dumpfile_sleep_time_before_exit, 1);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"monitor_thread_enabled", &pconfig->packet_io.monitor_thread_enabled, 1);
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"extract_linkdir_from_mac_in_mirror_mode", pconfig->packet_io.extract_linkdir_from_mac_sntax_raw_string, sizeof(pconfig->packet_io.extract_linkdir_from_mac_sntax_raw_string), "");
 	
 	MESA_load_profile_short_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"destroy_all_plug_enabled", &pconfig->packet_io.destroy_all_plug_enabled, 1);

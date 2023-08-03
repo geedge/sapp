@@ -1409,7 +1409,6 @@ void packet_io_exit(void)
 	
 	/* 读包模式下, 给其他非IO线程一些时间, 处理未完成数据, 比如异步发送日志, field_stat刷新统计数据等等. */
 	sapp_set_current_state(SAPP_STATE_READY_TO_EXIT);
-	//sleep(sapp_global_val->config.packet_io.dumpfile_sleep_time_before_exit);
 
 	sysinfo_output(); /* 最后一次写统计信息, 关闭标志位, 因为流表将被清空, 再写就没意义了 */
 	update_packet_io_status_sw = 0;

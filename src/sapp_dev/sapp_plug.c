@@ -216,11 +216,12 @@ int libsapp_setup_env(int argc, char *argv[])
 	   dumpfile模式读包完后后自动退出, 否则一直运行,
 	   或者在其他线程强行调用libsapp_destroy_env()
 	 */
-
-	pthread_t pid;
-	pthread_create(&pid, NULL, sapp_monitor_thread, NULL);
-	pthread_detach(pid);
-
+	if(sapp_global_val->config.packet_io.monitor_thread_enabled)
+	{
+		pthread_t pid;
+		pthread_create(&pid, NULL, sapp_monitor_thread, NULL);
+		pthread_detach(pid);
+	}
 	return 0;
 }
 

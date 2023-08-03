@@ -241,7 +241,7 @@ typedef struct{
 	char inject_mode_single_gateway_dst_mac_string[20];
 	char inject_mode_single_gateway_dst_mac[6]; /* gateway的MAC */
 	char inject_mode_single_gateway_src_mac[6]; /* inject_mode_single_gateway_device网卡的MAC */
-	int dumpfile_sleep_time_before_exit; /* 读包模式退出之前, 为了某些线程能还写日志, 异步发送数据等操作, 再sleep一会 */
+	int monitor_thread_enabled; /* 读包模式退出之前, 为了某些线程能还写日志, 异步发送数据等操作, 再sleep一会 */
 	sapp_dup_pkt_t dup_pkt_para; /* 重复流量识别 */
 
 	char extract_linkdir_from_mac_sntax_raw_string[32];

@@ -58,7 +58,7 @@
     inject_mode_single_gateway_src_mac="00:11:22:77:88:99"
     inject_mode_single_gateway_dst_mac="00:11:22:33:44:55"
 
-    dumpfile_sleep_time_before_exit=0
+    monitor_thread_enabled=0
 
 ### note, for example, dst mac is 01:12:34:56:78:90, src src is 02:AA:BB:CC:DD:EE:FF, 
 ### ether[0] is 0x01, dst mac first octet, ether[1] is 0x12, dst mac second octet,
