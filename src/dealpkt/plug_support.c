@@ -1693,6 +1693,33 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		}
 		break;
 
+		case MSO_STREAM_C2S_SYN_NUM:
+		case MSO_STREAM_S2C_SYN_NUM:
+		if ((STREAM_TYPE_TCP != pstream->type) || pdetail_pr->flow_stat == NULL || *opt_val_len != sizeof(unsigned int))
+		{
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_STREAM_C2S_SYN_NUM error: stream type is not tcp or empyt flow_stat!\n", printaddr(&pstream->addr, pstream->threadnum));
+				ret = -1;
+				break;
+		}
+		unsigned int *syn_cnt = (unsigned int *)opt_val;
+		if (opt == MSO_STREAM_C2S_SYN_NUM)
+		{
+				*syn_cnt = pdetail_pr->flow_stat->C2S_syn_pkt;
+				*opt_val_len = sizeof(*syn_cnt);
+				ret = 0;
+		}
+		else if (opt == MSO_STREAM_S2C_SYN_NUM)
+		{
+				*syn_cnt = pdetail_pr->flow_stat->S2C_syn_pkt;
+				*opt_val_len = sizeof(*syn_cnt);
+				ret = 0;
+		}
+		else
+		{
+				ret = -1;
+		}
+		break;
+
 		default:
 			sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n",printaddr(&pstream->addr, pstream->threadnum), (int)opt);
 			ret = -1;

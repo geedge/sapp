@@ -77,6 +77,8 @@ struct tcp_flow_stat
 	UINT64 C2S_seq_gap_loss_cnt;
 	UINT64 S2C_seq_gap_loss_cnt;
 
+	UINT32 C2S_syn_pkt;
+	UINT32 S2C_syn_pkt;
 };
 
 struct udp_flow_stat

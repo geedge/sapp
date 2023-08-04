@@ -820,6 +820,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 
 		if(0 == resetflag){
 			if(DIR_C2S == pstream->curdir){
+				pdetail_pr->flow_stat->C2S_syn_pkt++;
 				pdetail_pr->flow_stat->C2S_all_pkt++;
 				pdetail_pr->flow_stat->C2S_all_byte += datalen;
 				pdetail_pr->flow_stat->C2S_all_byte_raw += MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
@@ -828,6 +829,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 					pdetail_pr->flow_stat->C2S_ip_fragment_pkt++;
 				}
 			}else{
+				pdetail_pr->flow_stat->S2C_syn_pkt++;
 				pdetail_pr->flow_stat->S2C_all_pkt++;
 				pdetail_pr->flow_stat->S2C_all_byte += datalen;
 				pdetail_pr->flow_stat->S2C_all_byte_raw += MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
@@ -838,6 +840,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 			}
 		}else{
 			if(DIR_C2S == pstream->curdir){
+				pdetail_pr->flow_stat->C2S_syn_pkt = 1;
 				pdetail_pr->flow_stat->C2S_all_pkt = 1;
 				pdetail_pr->flow_stat->C2S_all_byte = datalen;
 				pdetail_pr->flow_stat->C2S_all_byte_raw = MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
@@ -850,6 +853,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 					pdetail_pr->flow_stat->C2S_ip_fragment_pkt=0;
 				}
 			}else{
+				pdetail_pr->flow_stat->S2C_syn_pkt = 1;
 				pdetail_pr->flow_stat->S2C_all_pkt = 1;
 				pdetail_pr->flow_stat->S2C_all_byte = datalen;
 				pdetail_pr->flow_stat->S2C_all_byte_raw = MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
@@ -2484,9 +2488,17 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 	if (th_flags & TH_SYN)
 	{
 		//syn重传 add by lqy 20100808
-#if 0		
-	   if(thisseq+1 == rcv->first_data_seq) return PASS;
-#else
+		 if (pdetail_pr->flow_stat)
+		 {
+			if (pstream->curdir == DIR_C2S)
+			{
+				pdetail_pr->flow_stat->C2S_syn_pkt++;
+			}
+			else
+			{
+				pdetail_pr->flow_stat->S2C_syn_pkt++;
+			}
+		 }
 	   if((datalen>0) || ((UINT32)thisseq+1 == rcv->first_data_seq) || ((UINT32)thisseq==rcv->first_data_seq)) 
 	   {
 		pstream->addr.pkttype = PKT_TYPE_TCPRETRANS;
@@ -2513,7 +2525,6 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 				return PASS;
 			}
 	   }
-#endif   
 	   //adjust by lqy 20150107
 	   //if(thisseq==rcv->first_data_seq) return PASS;
 	   //add by lqy 20110507 syn带数据的认为是攻击丢弃
@@ -2647,6 +2658,20 @@ static int tcp_deal_nouse_stream(struct streamindex *pindex,const void *this_iph
 		if(1 == tcp_tuple4_reuse(pstream, pdetail_pr, this_tcphdr)){
 			pdetail_pr->link_state=STREAM_LINK_REUSE_BYSYN;
 			tcp_reset_stream(pindex,this_iphdr,this_tcphdr,datalen,raw_pkt);
+		}
+		else
+		{
+			if (pdetail_pr->flow_stat)
+			{
+				if (pstream->curdir == DIR_C2S)
+				{
+					pdetail_pr->flow_stat->C2S_syn_pkt++;
+				}
+				else
+				{
+					pdetail_pr->flow_stat->S2C_syn_pkt++;
+				}
+			}
 		}
 		return PASS;
 	}
@@ -2785,24 +2810,6 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 
 		if(this_tcphdr->th_flags & TH_SYN)
 		{
-			//add by yw to detect synflood attack
-			//if(g_RunSYNFloodDetect == 1)
-			if (unlikely(TCP_SYNFLOOD_DETECT_ON & tcp_flood_detect_model))
-			{
-#if 0			
-				if( synflood_detector(pstream->threadnum) == ATTACKING)
-               	{     
-                    tcp_creatlink_model = TCP_CTEAT_LINK_BYDATA;
-					return PASS;
-               	}
-                else
-#endif                
-                {
-                	tcp_creatlink_model = TCP_CTEAT_LINK_BYSYN;
-                }
-			}
-
-			//end of add by yw to detect synflood attack		
 			if(0==(TCP_CTEAT_LINK_BYSYN & tcp_creatlink_model ))
 				return PASS;
 		
@@ -2829,7 +2836,6 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			}
 			return ret; 
 		}
-//		else if(tcplen>0)
 		else
 		{
 			/*   2017-12-07 lijia add,  
@@ -2844,19 +2850,6 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 				return PASS;		
 			if(TCP_CTEAT_LINK_BYDATA  & tcp_creatlink_model )
 			{
-				//add by yw to detect dataflood attack
-#if 0				
-				//if(tcplen < g_DataFloodPacketLen && g_RunDataFloodDetect == 1)
-				if((tcplen<tcp_dataflood_pktlen) && (1==(TCP_DATAFLOOD_DETECT_ON  & tcp_flood_detect_model)))
-				{
-					if( dataflood_detector(pstream->threadnum) == ATTACKING)
-					{
-						tcp_creatlink_model = TCP_CTEAT_LINK_BYSYN;
-						return PASS;
-					}
-				}
-#endif				
-				//end of add by yw to detect dataflood attack			
 				pindex_tcp=tcp_add_new_stream_bydata(pindex,this_tcphdr,tcplen,CTREAT_LINK, raw_pkt);
 				
 				if(likely(pindex_tcp != NULL))
