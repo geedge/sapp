@@ -949,7 +949,7 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 			default:
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+=raw_pkt->raw_pkt_len;
-				sapp_runtime_log(20, "unsupport Ipv6 protocol:%u!\n", next_hdr_type);			
+				sapp_runtime_log(RLOG_LV_INFO, "unsupport Ipv6 protocol:%u!\n", next_hdr_type);			
 				goto done;
 			break;
 		}

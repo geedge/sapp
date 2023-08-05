@@ -130,6 +130,10 @@ int IEEE_8021_entry(struct streaminfo_private *pfstream_pr,const void *this_laye
 			ret = mpls_uc_entry(pstream_pr, (const void *)next_layer_hdr, thread_num, routedir, raw_pkt, next_layer_offset);
 			break;
 
+		case ETH_P_ARP:
+			ret = PASS;
+			break;
+
 		default:
 			/* unknown protocol */	
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;

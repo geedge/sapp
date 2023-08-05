@@ -488,7 +488,7 @@ static int guess_if_l2tpv2(const struct streaminfo *a_udp, const struct mesa_udp
 				return 0;
 			}
 		}else{
-			sapp_runtime_log(RLOG_LV_INFO, "stream:%s, maybe L2TP packet, but next layer not ipv4 or ipv6!\n", printaddr(&a_udp->addr, a_udp->threadnum));
+			sapp_runtime_log(RLOG_LV_INFO, "stream:%s, maybe L2TP packet, but next layer:%u not ipv4 or ipv6!\n", *next_ip_hdr, printaddr(&a_udp->addr, a_udp->threadnum));
 			return 0;
 		}
 	}

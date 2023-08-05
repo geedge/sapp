@@ -571,6 +571,11 @@ const char *printaddr_r(const struct layer_addr *paddrinfo, char *out_buf, int o
 		return "invalid args";
 	}	
 
+	if(MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, RLOG_LV_INFO) == 0)
+	{
+		return NULL;
+	}
+	
 	if(paddrinfo->addrtype==ADDR_TYPE_IPV4)
 	{
 		paddr=(struct stream_tuple4_v4 *)paddrinfo->paddr;

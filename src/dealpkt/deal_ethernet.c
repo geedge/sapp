@@ -208,17 +208,23 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 				ret = arp_entry(pstream_pr, (const void *)next_layer_data, thread_num, dir, raw_pkt, next_layer_offset);
 			break;
 
+			/* unsupported by known protocol */
+			case ETH_P_SLOW:
+			case ETH_P_LLDP:
+				ret = PASS;
+			break;
+
 			default:
-            /* unknown protocol */
             if (eth_type == 0xaaaa &&
                 OVERLAY_MODE_NF == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)
             {
                     ret = PASS;
             }
+			/* unknown protocol */
             else
             {
                     sapp_runtime_log(20, "eth_entry() recv unknown pkt, protocol is:0x%04x, pkt seq:%llu", eth_type,
-                                     local_sys_stat->count[SAPP_STAT_RCV_LINE]);
+                                    local_sys_stat->count[SAPP_STAT_RCV_LINE]);
                     local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
                     local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += (unsigned long long)raw_pkt->raw_pkt_len;
                     if (NET_CONN_SERIAL_GDEV == g_topology_mode)

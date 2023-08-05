@@ -158,7 +158,14 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
             local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	
 			((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
-            sapp_runtime_log(20, "GTP entry: illegal left Ipv4 len %d, expect total len %d!\n", left_pkt_len, ntohs(ip4_hdr->tot_len));
+            sapp_runtime_log(RLOG_LV_DEBUG, "GTP entry: illegal left Ipv4 len %d, expect total len %d, addr:%s, type:%d, len:%d, thread:%d, rawpkt_len:%d", 
+                            left_pkt_len, 
+                            ntohs(ip4_hdr->tot_len),
+                            printaddr(&pfstream_pr->stream_public.addr, pstream->threadnum),
+                            pfstream_pr->stream_public.addr.addrtype,
+                            pfstream_pr->stream_public.addr.addrlen,
+                            pfstream_pr->stream_public.threadnum,
+                            raw_pkt->raw_pkt_len);
             return PASS;
         }
         ret = ipv4_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
@@ -170,14 +177,27 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
             local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	
 			((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
-            sapp_runtime_log(10, "GTP entry: illegal left Ipv6 len %d, expect total len %d!\n", left_pkt_len, ntohs(ip6_hdr->ip6_payload_len));
+            sapp_runtime_log(RLOG_LV_DEBUG, "GTP entry: illegal left Ipv6 len %d, expect total len %d, addr:%s, type:%d, len:%d, thread:%d, rawpkt_len:%d", 
+                            left_pkt_len, 
+                            ntohs(ip6_hdr->ip6_payload_len), 
+                            printaddr(&pfstream_pr->stream_public.addr, pstream->threadnum),                            
+                            pfstream_pr->stream_public.addr.addrtype,
+                            pfstream_pr->stream_public.addr.addrlen,
+                            pfstream_pr->stream_public.threadnum,
+                            raw_pkt->raw_pkt_len);
 			return PASS;
     	}
         ret = ipv6_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);
     }
     else
     {
-        sapp_runtime_log(20, "GTP next layer not IPv4 or IPv6, ignore this pkt!\n");
+        sapp_runtime_log(RLOG_LV_DEBUG, "GTP next layer not IPv4 or IPv6, ignore this pkt, next_layer_hdr:%c, addr:%s, type:%d, len:%d, thread:%d, rawpkt_len:%d", 
+                        *next_layer_hdr,
+                        printaddr(&pfstream_pr->stream_public.addr, pstream->threadnum),                            
+                        pfstream_pr->stream_public.addr.addrtype,
+                        pfstream_pr->stream_public.addr.addrlen,
+                        pfstream_pr->stream_public.threadnum,
+                        raw_pkt->raw_pkt_len);
         return PASS;
     }
     return ret;

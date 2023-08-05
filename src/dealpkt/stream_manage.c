@@ -1070,7 +1070,7 @@ static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_
 	/* 外层ip地址会变化, 但四个ip不可能都不一样, 有任意方向地址相同, 即可认为是来自同一个GTP隧道
 		TODO, 此处需要同GTP-C联动 ??
 	*/
-	if (pheap_stream->addr.addrlen == pstack_stream->addr.addrlen)
+	if (pheap_stream->addr.addrtype == pstack_stream->addr.addrtype && pheap_stream->addr.addrlen == pstack_stream->addr.addrlen)
 	{
 		if (pheap_stream->addr.addrtype == ADDR_TYPE_IPV4)
 		{
@@ -1121,8 +1121,20 @@ static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_
 	}
 	else
 	{
-		sapp_runtime_log(RLOG_LV_INFO, "stream:%s, curdir:%d, addrtype:%d for GTP tunnel, heap stream tuple4 addr not IPv4 or IPv6",
-						printaddr(&top_stream_pr->stream_public.addr, top_stream_pr->stream_public.threadnum), cur_pkt_dir, pheap_stream->addr.addrtype);
+		char top_addr_buff[128]= {0};
+		char stack_addr_buff[128]= {0};
+		char heap_addr_buff[128]= {0};
+
+		sapp_runtime_log(RLOG_LV_DEBUG, "top_stream:%s, curdir:%d, addrtype:%d for GTP tunnel, heap_stream tuple4 addr:%s, type:%d, len:%d, stack_stream tuple4 addr:%s, type:%d, len:%d, not equal",
+						printaddr_r(&top_stream_pr->stream_public.addr, top_addr_buff, sizeof(top_addr_buff)), 
+						cur_pkt_dir, 
+						pheap_stream->addr.addrtype,
+						printaddr_r(&pheap_stream->addr, top_addr_buff, sizeof(top_addr_buff)),
+						pheap_stream->addr.addrtype,
+						pheap_stream->addr.addrlen,
+						printaddr_r(&pstack_stream->addr, stack_addr_buff, sizeof(stack_addr_buff)),
+						pstack_stream->addr.addrtype,
+						pstack_stream->addr.addrlen);
 	}
 
 	if(0 == this_layer_is_same){ /* 本层地址全不一样, 认为不是来自一个隧道, 直接返回错误 */
