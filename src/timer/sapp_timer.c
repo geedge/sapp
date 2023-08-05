@@ -492,6 +492,26 @@ static void sapp_watch_dog(void)
 	return;
 }
 
+void *sapp_time_loop_thread(void *arg)
+{
+
+	while(sapp_global_val->individual_volatile->current_state < SAPP_STATE_PROCESSING){
+		sapp_usleep(1);
+	}
+
+	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state)
+	{
+		ABBR_CURRENT_TIME = time(NULL);
+		ABBR_CURRENT_TIME_MS = sapp_get_current_time_in_ms();
+		sapp_usleep(1);
+	}
+	if(sapp_global_val->individual_volatile->current_state >= SAPP_STATE_READY_TO_EXIT)
+	{
+		pthread_exit(NULL);
+	}
+
+	return NULL;
+}
 
 void *sapp_time_event_thread(void *arg)
 {
@@ -513,12 +533,10 @@ void *sapp_time_event_thread(void *arg)
 		sapp_usleep(100);
 	}
 
-
 	update_packet_io_status_sw = 1;
 	sapp_runtime_log(RLOG_LV_INFO, "sapp_time_event_thread, SAPP_STATE_PROCESSING state, loop start!");
 	while(SAPP_STATE_PROCESSING == sapp_global_val->individual_volatile->current_state)
 	{
-		ABBR_CURRENT_TIME = time(NULL);
 		/*
 			NOTE:
 			为什么用下面这种方式, 而不是do_something(); sleep(1);
@@ -532,13 +550,10 @@ void *sapp_time_event_thread(void *arg)
 			sapp_mem_stat_output();
 			sapp_watch_dog();
 		}
-
 		sapp_fuzzy_latency_update();
-		
-		ABBR_CURRENT_TIME_MS = sapp_get_current_time_in_ms();
-		
 		sapp_usleep(10);
 	}
+
 	if(sapp_global_val->individual_volatile->current_state >= SAPP_STATE_READY_TO_EXIT)
 	{
 		sapp_runtime_log(RLOG_LV_INFO, "sapp_time_event_thread, SAPP_STATE_READY_TO_EXIT state, keep sd_notify watchdog=1!");

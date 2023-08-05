@@ -170,7 +170,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
             local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	
 			((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
-            sapp_runtime_log(20, "GTP entry: illegal left Ipv6 len %d, expect total len %d!\n", left_pkt_len, ntohs(ip6_hdr->ip6_payload_len));
+            sapp_runtime_log(10, "GTP entry: illegal left Ipv6 len %d, expect total len %d!\n", left_pkt_len, ntohs(ip6_hdr->ip6_payload_len));
 			return PASS;
     	}
         ret = ipv6_entry(pstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offset);

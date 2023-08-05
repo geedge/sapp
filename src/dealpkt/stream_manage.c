@@ -1121,7 +1121,7 @@ static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_
 	}
 	else
 	{
-		sapp_runtime_log(RLOG_LV_FATAL, "stream:%s, curdir:%d, addrtype:%d for GTP tunnel, heap stream tuple4 addr not IPv4 or IPv6",
+		sapp_runtime_log(RLOG_LV_INFO, "stream:%s, curdir:%d, addrtype:%d for GTP tunnel, heap stream tuple4 addr not IPv4 or IPv6",
 						printaddr(&top_stream_pr->stream_public.addr, top_stream_pr->stream_public.threadnum), cur_pkt_dir, pheap_stream->addr.addrtype);
 	}
 

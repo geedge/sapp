@@ -747,7 +747,10 @@ void packet_io_run(void)
 	}
 
 	app_function_rationality_check();
-	
+
+	pthread_create(&sapp_global_val->individual_fixed.thread_timer_loop_id, NULL, sapp_time_loop_thread ,NULL);
+	pthread_detach(sapp_global_val->individual_fixed.thread_timer_loop_id);
+
 	pthread_create(&sapp_global_val->individual_fixed.thread_timer_event_id, NULL, sapp_time_event_thread ,NULL);
 	pthread_detach(sapp_global_val->individual_fixed.thread_timer_event_id);
 	

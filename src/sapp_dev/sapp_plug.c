@@ -79,6 +79,9 @@ static void sapp_wait_for_required_thread_starting(void)
 			sapp_usleep(10);
 		}
 	}
+	while(sapp_global_val->individual_fixed.thread_timer_loop_id == 0){
+		sapp_usleep(10);
+	}
 
 	while(sapp_global_val->individual_fixed.thread_timer_event_id == 0){
 		sapp_usleep(10);

@@ -124,6 +124,7 @@ void sapp_generate_example_config(const char *filename, const char *version);
 void sapp_cla_override_cfg_file(void);
 void sapp_global_val_sanity_check(void);
 void *sapp_time_event_thread(void *arg);
+void *sapp_time_loop_thread(void *arg);
 
 void sapp_fs2_update_count(int field_index, unsigned  long long value);
 void sapp_fs2_update_length(int field_index, unsigned  long long value);
