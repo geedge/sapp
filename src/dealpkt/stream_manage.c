@@ -905,7 +905,7 @@ static void update_outer_ipv4addr_for_gtp_tunnel(const struct streaminfo_private
 	}
 
 	/******** for debug log, 要放在地址更新的前面, 否则原始信息就被覆盖了 ********/
-	if(ABBR_SAPP_LOG_LEVEL <= RLOG_LV_DEBUG){
+	if(MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, RLOG_LV_DEBUG)){
 		char ip_before_src_str[INET_ADDRSTRLEN], ip_before_dst_str[INET_ADDRSTRLEN];
 		char ip_after_src_str[INET_ADDRSTRLEN], ip_after_dst_str[INET_ADDRSTRLEN];
 		unsigned int before_teid_c2s, before_teid_s2c, after_teid_c2s, after_teid_s2c;
@@ -987,7 +987,7 @@ static void update_outer_ipv6addr_for_gtp_tunnel(const struct streaminfo_private
 	}
 
 	/******** for debug log, 要放在地址更新的前面, 否则原始信息就被覆盖了 ********/
-	if(ABBR_SAPP_LOG_LEVEL <= RLOG_LV_DEBUG){
+	if( MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, RLOG_LV_DEBUG)){
 		char ip_before_src_str[INET_ADDRSTRLEN], ip_before_dst_str[INET_ADDRSTRLEN];
 		char ip_after_src_str[INET_ADDRSTRLEN], ip_after_dst_str[INET_ADDRSTRLEN];
 		unsigned int before_teid_c2s, before_teid_s2c, after_teid_c2s, after_teid_s2c;

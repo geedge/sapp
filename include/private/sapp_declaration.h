@@ -23,7 +23,6 @@ extern volatile long long g_current_time_ms;
 
 
 /* ÒòÇ¶Ì×²ã´ÎÌ«¶à, Ê¹ÓÃ¼ò³ÆÃèÊö */
-#define ABBR_SAPP_LOG_LEVEL 	sapp_global_val->config.profiling.log.enabled_log_level
 #define ABBR_SAPP_LOG_HANDLE 	sapp_global_val->individual_fixed.log_handle
 
 #define ABBR_SAPP_PLUGIN_LOG_HANDLE 	sapp_global_val->individual_fixed.plugin_log_handle
@@ -84,9 +83,10 @@ extern volatile long long g_current_time_ms;
 #define g_packet_io_cap_mode 	sapp_global_val->config.packet_io.internal.interface.type_bin
 #define g_packet_io_cap_level	sapp_global_val->individual_fixed.packet_io_cap_level
 //#define g_timestamp_record_sw	MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, sapp_global_val->config.profiling.process_latency_enabled_log_level)
-#define g_timestamp_record_sw	sapp_global_val->config.profiling.process_latency_enabled_log_level>20
 
-#define g_timestamp_record_threshold	sapp_global_val->config.profiling.process_latency_threshold_in_ns
+//#define g_timestamp_record_sw	sapp_global_val->config.profiling.process_latency_enabled_log_level>20
+
+#define g_timestamp_record_threshold	sapp_global_val->config.profiling.process_latency_threshold_in_ms
 
 #define g_discard_ack_sw		sapp_global_val->config.protocol_feature.tcp_drop_pure_ack_pkt
 #define g_tcp_syn_option_parse_enabled	sapp_global_val->config.protocol_feature.tcp_syn_option_parse_enabled
@@ -94,14 +94,22 @@ extern volatile long long g_current_time_ms;
 #define g_ipv6_send_packet_enabled    sapp_global_val->config.protocol_feature.ipv6_send_packet_enabled
 #define G_SKIP_NOT_IP_LAYER 	sapp_global_val->config.protocol_feature.skip_not_ip_layer_over_eth
 
-//#define sapp_runtime_log(log_level, format, args...)  do{if(log_level>=ABBR_SAPP_LOG_LEVEL){MESA_handle_runtime_log(ABBR_SAPP_LOG_HANDLE, log_level, "sapp", format, ##args);}}while(0)
-
 #define sapp_runtime_log(log_level, format, ...)                                                       \
 do                                                                                                     \
 {                                                                                                      \
 	if (MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, log_level))                        \
 	{                                                                                                  \
 		MESA_handle_runtime_log(ABBR_SAPP_LOG_HANDLE, log_level, "sapp ", "file %s, line %d, " format, \
+								__FILE__, __LINE__, ##__VA_ARGS__);                                    \
+	}                                                                                                  \
+} while (0)
+
+#define sapp_process_latency_log(log_level, format, ...)                                                       \
+do                                                                                                     \
+{                                                                                                      \
+	if (MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, log_level))                        \
+	{                                                                                                  \
+		MESA_handle_runtime_log(ABBR_PROCESS_LATENCY_LOG_HANDLE, log_level, "process_latency ", "file %s, line %d, " format, \
 								__FILE__, __LINE__, ##__VA_ARGS__);                                    \
 	}                                                                                                  \
 } while (0)

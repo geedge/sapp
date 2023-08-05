@@ -163,8 +163,6 @@
     [profiling.log]
     sapp_log_category="sapp_log"
     sapp_plugin_log_category="sapp_plugin_log"
-    #for profiling-related API control, e.g printaddr
-    enabled_log_level=20
     
     [profiling.metric]
         [profiling.metric.fs2]
@@ -186,9 +184,9 @@
 
     [profiling.process_latency]
     log_category="sapp_process_latency_log"
-    enabled_log_level=10
+    histogram_enabled=0
 ### note, threshold unit is microseconds (us)
-    threshold_us=100000
+    threshold_ms=1
 
     [profiling.sanity_check]
     raw_pkt_broken_enabled=0

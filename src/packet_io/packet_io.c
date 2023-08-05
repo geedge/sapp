@@ -624,7 +624,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		local_sys_stat->length[SAPP_STAT_RAW_OUTBOUND] += ((unsigned long long)p_raw_pkt->raw_pkt_len - p_raw_pkt->overlay_layer_bytes);
 	}
 
-	if(unlikely(g_timestamp_record_sw))
+	if(unlikely(sapp_global_val->config.profiling.histogram_enabled))
 	{
 		clock_gettime(CLOCK_MONOTONIC, &start);
 		//before_call = sapp_get_cpu_cycle();
@@ -668,7 +668,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 
 	//after_call = sapp_get_cpu_cycle();
 	//timecost = after_call - before_call;
-	if(unlikely(g_timestamp_record_sw))
+	if(unlikely(sapp_global_val->config.profiling.histogram_enabled))
     {
 		clock_gettime(CLOCK_MONOTONIC, &end);
     	timecost = (end.tv_sec*1000000000 +end.tv_nsec) - (start.tv_sec * 1000000000 + start.tv_nsec);

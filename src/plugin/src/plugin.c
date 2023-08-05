@@ -105,7 +105,6 @@ int stream_register_fun(int funtype,char (*x)(void), int);
 extern stProtocolPlugInfo* g_protocol_plug_info;
 extern stBusinessPlugInfo* g_business_plug_info;
 extern stProtocolPlugInfo **g_protocol_plug_info_array;
-//extern int g_timestamp_record_sw;
 extern long long g_timedelay_threshold;
 
 int g_plugin_plugid ;
@@ -1245,41 +1244,69 @@ char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* sessi
 	struct timespec before_ts, after_ts;
 	long long time_spent_ns;
 	char debug_raw_pkt_string[256];
+	long long timestamp_begin_ms, timestamp_end_ms, time_spend_ms;
+	const struct streaminfo_private *stream_pr ;
 
 	if(g_business_plug_info==NULL)
 	{
 		return rec;
 	}
-
-	if(g_timestamp_record_sw){
+	if(unlikely(sapp_global_val->config.profiling.histogram_enabled)){
 		//plug_record_start_time(g_business_plug_info->plugid, thread_seq);
 		clock_gettime(CLOCK_REALTIME, &before_ts);
 	}
+	else
+	{
+		timestamp_begin_ms=ABBR_CURRENT_TIME_MS;
+	}
+
 	rec=funelem_session->appentry(session_info,&(funelem_session->pme),thread_seq,a_stream,a_packet);
 
 	//plug_record_end_time(g_business_plug_info->plugid, thread_seq);
-	if(g_timestamp_record_sw){
+	if(unlikely(sapp_global_val->config.profiling.histogram_enabled)){
 		//plug_record_start_time(g_business_plug_info->plugid, thread_seq);
 		clock_gettime(CLOCK_REALTIME, &after_ts);
 		time_spent_ns = (after_ts.tv_sec*1000000000 + after_ts.tv_nsec) - (before_ts.tv_sec*1000000000 + before_ts.tv_nsec);
 		sapp_fs2_fuzzy_latency_update_per_entry(thread_seq, funelem_session->entry_id, time_spent_ns);
-		if(time_spent_ns >= g_timestamp_record_threshold){
+		if(time_spent_ns >= g_timestamp_record_threshold*1000000){
 			if(NULL == a_packet || (SESSION_STATE_CLOSE & session_info->session_state)){
-				sapp_runtime_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, session close process latency:%lld ns, %s", 
+				sapp_process_latency_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, session close process latency:%lld ns, addr:%s, thread:%d", 
 								g_plug_global_entry[funelem_session->entry_id].plug_name, 
 								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, time_spent_ns,
-								printaddr(&a_stream->addr, thread_seq));
+								printaddr(&a_stream->addr, thread_seq), thread_seq);
 
 			}else{
-				const struct streaminfo_private *stream_pr = (struct streaminfo_private *)a_stream;
+				stream_pr = (struct streaminfo_private *)a_stream;
 				sapp_rawpkt_ntop(stream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string));
-				sapp_runtime_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, pkt process latency:%lld ns, %s", 
+				sapp_process_latency_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, pkt process latency:%lld ns, rawpkt:%s, thread:%d", 
 								g_plug_global_entry[funelem_session->entry_id].plug_name, 
 								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, 
-								time_spent_ns,debug_raw_pkt_string);
+								time_spent_ns,debug_raw_pkt_string, thread_seq);
 			}				
 		}
 	}	
+	else
+	{
+		timestamp_end_ms=ABBR_CURRENT_TIME_MS;
+		time_spend_ms=timestamp_end_ms-timestamp_begin_ms;
+		if (unlikely(time_spend_ms > 0 && time_spend_ms >= g_timestamp_record_threshold))
+		{
+			if(NULL == a_packet || (SESSION_STATE_CLOSE & session_info->session_state)){
+				sapp_process_latency_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, session close process latency:%lld ns, addr:%s, thread:%d", 
+								g_plug_global_entry[funelem_session->entry_id].plug_name, 
+								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, time_spent_ns,
+								printaddr(&a_stream->addr, thread_seq), thread_seq);
+
+			}else{
+				stream_pr = (struct streaminfo_private *)a_stream;
+				sapp_rawpkt_ntop(stream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string));
+				sapp_process_latency_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, pkt process latency:%lld ns, rawpkt:%s, thread:%d", 
+								g_plug_global_entry[funelem_session->entry_id].plug_name, 
+								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, 
+								time_spent_ns,debug_raw_pkt_string, thread_seq);
+			}		
+		}
+	}
 
 	return rec;
 }

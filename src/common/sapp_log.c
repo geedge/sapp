@@ -82,7 +82,8 @@ void sapp_log(int level, int print_sw, int file_sw, const char *format, ...)
 		print_sw = 0;
 	}
 
-    if(level < ABBR_SAPP_LOG_LEVEL){
+    if (MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, level) == 0)
+    {
     	if((print_sw != ~0) && (file_sw != ~0)){
         	return;
         }
@@ -118,11 +119,11 @@ void sapp_log(int level, int print_sw, int file_sw, const char *format, ...)
         break;
     }
 
-    if((~0 == file_sw) || (level >= ABBR_SAPP_LOG_LEVEL)){
+    if((~0 == file_sw) || (MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, level))){
         MESA_handle_runtime_log(sapp_global_val->individual_fixed.log_handle, level, (char *)"sapp", "%s", local_log_content_buff);
     }
 
-    if((~0 == print_sw) || (level >= ABBR_SAPP_LOG_LEVEL)){
+    if((~0 == print_sw) || (MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, level))){
         fprintf(out_fp, "%s%s%s\n", log_color_start, local_log_content_buff, log_color_end);
     }
 

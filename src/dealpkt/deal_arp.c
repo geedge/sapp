@@ -38,7 +38,8 @@ extern "C" {
 	}
 
 	/* NOTE: 其他模式什么时候都不应该把原始ARP包再转发出去, 即便是inline模式下 */
-	if((ABBR_SAPP_LOG_LEVEL <= RLOG_LV_INFO ) && (NET_CONN_SERIAL_GDEV == g_topology_mode)){
+	
+	if((MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, RLOG_LV_INFO)) && (NET_CONN_SERIAL_GDEV == g_topology_mode)){
 		const struct mesa_arp_hdr *arph = (struct mesa_arp_hdr *)this_layer_hdr;
 		char sendip_str[INET6_ADDRSTRLEN];
 		char targetip_str[INET6_ADDRSTRLEN];

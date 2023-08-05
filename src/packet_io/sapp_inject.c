@@ -33,7 +33,7 @@ int sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const v
 
 	ret = __sapp_inject_pkt(stream, sio, payload, payload_len, snd_routedir, NULL);
 	
-	if(ABBR_SAPP_LOG_LEVEL <= RLOG_LV_DEBUG){
+	if(MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, RLOG_LV_DEBUG)){
 		int log_level;
 		const char *string_res;
 		/* inject使用的是routedir, 此处转换成stream dir, 

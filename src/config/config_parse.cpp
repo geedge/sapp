@@ -1636,12 +1636,11 @@ int sapp_parse_config(void)
 	/*******************************  PROFILING.LOG ***************************/
 	MESA_handle_runtime_log_creation(ABBR_SAPP_LOG_CONF_FILE);
 
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log", (char *)"enabled_log_level", (int *)&pconfig->profiling.log.enabled_log_level, 20);
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log", (char *)"sapp_log_category", pconfig->profiling.log.sapp_log_category, NAME_MAX, "sapp_runtime_log");
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log", (char *)"sapp_plugin_log_category", pconfig->profiling.log.sapp_plugin_log_category, NAME_MAX, "sapp_plugin_log");
 	
-	sapp_global_val->individual_fixed.log_handle = MESA_create_runtime_log_handle(sapp_global_val->config.profiling.log.sapp_log_category, sapp_global_val->config.profiling.log.enabled_log_level);
-	sapp_global_val->individual_fixed.plugin_log_handle = MESA_create_runtime_log_handle(sapp_global_val->config.profiling.log.sapp_plugin_log_category, sapp_global_val->config.profiling.log.enabled_log_level);
+	sapp_global_val->individual_fixed.log_handle = MESA_create_runtime_log_handle(sapp_global_val->config.profiling.log.sapp_log_category, RLOG_LV_FATAL);
+	sapp_global_val->individual_fixed.plugin_log_handle = MESA_create_runtime_log_handle(sapp_global_val->config.profiling.log.sapp_plugin_log_category, RLOG_LV_INFO);
 
 
 	/*******************************  CPU *********************************/
@@ -1793,23 +1792,22 @@ int sapp_parse_config(void)
 	}
 
 	/*******************************  PROFILING.process_latency ******************************/
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"enabled_log_level", (int *)&pconfig->profiling.process_latency_enabled_log_level, 20);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"histogram_enabled", (int *)&pconfig->profiling.histogram_enabled, 0);
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"log_category", pconfig->profiling.process_latency_log_category, NAME_MAX, "sapp_process_latency_log");
 
-	sapp_global_val->individual_fixed.process_latency_log_handle = MESA_create_runtime_log_handle(sapp_global_val->config.profiling.process_latency_log_category, sapp_global_val->config.profiling.process_latency_enabled_log_level);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"threshold_us", (int *)&pconfig->profiling.process_latency_threshold_in_ns, 500000);
-	if (pconfig->profiling.process_latency_threshold_in_ns <= 0)
+	sapp_global_val->individual_fixed.process_latency_log_handle = MESA_create_runtime_log_handle(sapp_global_val->config.profiling.process_latency_log_category, sapp_global_val->config.profiling.histogram_enabled);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"threshold_ms", (int *)&pconfig->profiling.process_latency_threshold_in_ms, 1);
+	if (pconfig->profiling.process_latency_threshold_in_ms <= 0)
 	{
-		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,999999]");
+		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,9999]");
 		return -1;
 	}
-	if (pconfig->profiling.process_latency_threshold_in_ns >= 1000000)
+	if (pconfig->profiling.process_latency_threshold_in_ms >= 9999)
 	{
-		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,999999], set to max value 999999!");
-		pconfig->profiling.process_latency_threshold_in_ns *= 999999;
+		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,9999], set to max value 9999!");
+		pconfig->profiling.process_latency_threshold_in_ms = 9999;
 	}
-	/* 为了配置文件方便查看, 避免写太多的0, 配置文件里的单位是微秒, 程序处理实际以纳秒ns为单位, 此处要乘以1000 */
-	pconfig->profiling.process_latency_threshold_in_ns *= 1000;
+
 
 	/*******************************  PROFILING.sanity_check ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.sanity_check", (char *)"raw_pkt_broken_enabled", (int *)&pconfig->profiling.sanity_check_raw_pkt_broken_enabled, 0);

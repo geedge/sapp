@@ -321,7 +321,7 @@ static int sapp_fs2_start(sapp_global_t *global_paramters)
 {
 	sapp_gval_individual_fixed_fs2_t *p_fs2_rt = &global_paramters->individual_fixed.fs2_runtime;
 	void *fs2_handle = p_fs2_rt->fs_metric_handle;
-	if (unlikely(g_timestamp_record_sw))
+	if (unlikely(sapp_global_val->config.profiling.histogram_enabled))
 	{
 		for (int i = 0; i < g_packet_io_thread_num; i++)
 		{
