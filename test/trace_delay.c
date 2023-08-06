@@ -242,7 +242,7 @@ static uint64_t get_cur_time_in_ns(void)
 	struct timespec cur_time;
 	uint64_t cur_second, cur_nano;
 
-	clock_gettime(CLOCK_REALTIME, &cur_time);
+	clock_gettime(CLOCK_MONOTONIC, &cur_time);
 
 	cur_second = cur_time.tv_sec;
 	cur_nano = cur_time.tv_nsec;

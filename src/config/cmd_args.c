@@ -421,6 +421,7 @@ void sapp_update_data_root_dir(const char *data_root_dir)
 	sapp_convert_relative_to_absolute(pdata->data_sapp_sysinfo_log_relative, (char **)&pdata->data_sapp_sysinfo_log_absolute, pdata->data_files_root_dir);
 	sapp_convert_relative_to_absolute(pdata->data_sapp_fs2_log_relative, (char **)&pdata->data_sapp_fs2_log_absolute, pdata->data_files_root_dir);
 	sapp_convert_relative_to_absolute(pdata->data_sapp_fs3_log_relative, (char **)&pdata->data_sapp_fs3_log_absolute, pdata->data_files_root_dir);
+	sapp_convert_relative_to_absolute(pdata->data_sapp_fs2_process_latency_relative, (char **)&pdata->data_sapp_fs2_process_latency_absolute, pdata->data_files_root_dir);
 	sapp_convert_relative_to_absolute(pdata->data_inline_keepalive_log_relative, (char **)&pdata->data_inline_keepalive_log_absolute, pdata->data_files_root_dir);	
 	sapp_convert_relative_to_absolute(pdata->data_load_plugin_stat_log_relative, (char **)&pdata->data_load_plugin_stat_log_absolute, pdata->data_files_root_dir);	
 	sapp_convert_relative_to_absolute(pdata->data_under_ddos_stat_log_relative, (char **)&pdata->data_under_ddos_stat_log_absolute, pdata->data_files_root_dir);	

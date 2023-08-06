@@ -286,23 +286,13 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 	long long time_spent_ns;
 	char debug_raw_pkt_string[256];
 	struct streaminfo_private *pstream_pr=(struct streaminfo_private *)a_stream;
-	long long timestamp_begin_ms, timestamp_end_ms, time_spend_ms;
 	const struct streaminfo_private *stream_pr ;
-#if SAPP_INSECTICIDE
-	const struct streaminfo_private *stream_pr = (const struct streaminfo_private *)a_stream;
-	if(a_packet != NULL){
-		assert(stream_pr->raw_pkt->io_lib_pkt_reference);
-		assert(RAW_PKT_MAGIC_NUM == stream_pr->raw_pkt->magic_num);
-	}
-#endif
-	if(unlikely(sapp_global_val->config.profiling.histogram_enabled)){
-		clock_gettime(CLOCK_REALTIME, &before_ts);
-	}
-	else
-	{
-		timestamp_begin_ms=ABBR_CURRENT_TIME_MS;
-	}
 
+	int latency_enabled=MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, RLOG_LV_INFO);
+	if(unlikely(latency_enabled))
+	{
+		clock_gettime(CLOCK_MONOTONIC_COARSE, &before_ts);
+	}
 	if(type==CALL_FUN_TYPE_RAW)
 	{
 		pstream_pr->cur_plugin_cb_func = (void *)pFunInfo;
@@ -314,57 +304,29 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 		rec=((STREAM_CB_FUN_T)pFunInfo->pfun)(a_stream,&(pFunInfo->pAppInfo),thread_seq, a_packet);
 	}
 
-	if(unlikely(sapp_global_val->config.profiling.histogram_enabled)){
-		clock_gettime(CLOCK_REALTIME, &after_ts);
+	if(unlikely(latency_enabled)){
+		clock_gettime(CLOCK_MONOTONIC_COARSE, &after_ts);
 		time_spent_ns = (after_ts.tv_sec * 1000000000 + after_ts.tv_nsec) - (before_ts.tv_sec * 1000000000 + before_ts.tv_nsec);
-		sapp_fs2_fuzzy_latency_update_per_entry(thread_seq, pFunInfo->entry_id, time_spent_ns);
+		if(sapp_global_val->config.profiling.histogram_enabled && time_spent_ns > 0)
+		{
+			sapp_fs2_fuzzy_latency_update_per_entry(thread_seq, pFunInfo->entry_id, time_spent_ns);
+		}
 		if(unlikely(time_spent_ns >= g_timestamp_record_threshold*1000000)){
 			if(NULL == a_packet || OP_STATE_CLOSE == a_stream->opstate || OP_STATE_CLOSE == a_stream->pktstate){
-				sapp_process_latency_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, stream close process latency:%lld ns, addr:%s, thread_seq:%d", 
+				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, stream close process latency:%lld ns, addr:%s, thread_seq:%d", 
 								g_plug_global_entry[pFunInfo->entry_id].plug_name, 
 								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, time_spent_ns,
 								printaddr(&a_stream->addr, thread_seq), thread_seq);
 			}else{
 				stream_pr = (struct streaminfo_private *)a_stream;
 				sapp_rawpkt_ntop(stream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string)); /* 此处优先打印最内层四元组 */
-				sapp_process_latency_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, pkt process latency:%lld ns, rawpkt:%s, thread:%s", 
+				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld ns, rawpkt:%s, thread:%d", 
 								g_plug_global_entry[pFunInfo->entry_id].plug_name, 
 								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, 
 								time_spent_ns, debug_raw_pkt_string, thread_seq);
 			}
 		}		
 	}	
-	else
-	{
-		timestamp_end_ms=ABBR_CURRENT_TIME_MS;
-		time_spend_ms=timestamp_end_ms-timestamp_begin_ms;
-		if (unlikely(time_spend_ms > 0 && time_spend_ms >= g_timestamp_record_threshold))
-		{
-			if (NULL == a_packet || OP_STATE_CLOSE == a_stream->opstate || OP_STATE_CLOSE == a_stream->pktstate)
-			{
-				sapp_process_latency_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, stream close process latency:%lld ms, %s",
-										 g_plug_global_entry[pFunInfo->entry_id].plug_name,
-										 g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, time_spend_ms,
-										 printaddr(&a_stream->addr, thread_seq));
-			}
-			else
-			{
-				stream_pr = (struct streaminfo_private *)a_stream;
-				sapp_rawpkt_ntop(stream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string)); /* 此处优先打印最内层四元组 */
-				sapp_process_latency_log(RLOG_LV_FATAL, "plug_name:%s, entry:%s, pkt process latency:%lld ms, %s",
-										 g_plug_global_entry[pFunInfo->entry_id].plug_name,
-										 g_plug_global_entry[pFunInfo->entry_id].plug_entry_name,
-										 time_spend_ms, debug_raw_pkt_string);
-			}
-		}
-	}
-
-#if SAPP_INSECTICIDE
-	if(a_packet != NULL){
-		assert(stream_pr->raw_pkt->io_lib_pkt_reference);
-		assert(RAW_PKT_MAGIC_NUM == stream_pr->raw_pkt->magic_num);
-	}
-#endif
 	return rec;
 }
 

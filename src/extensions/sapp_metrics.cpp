@@ -24,8 +24,8 @@ void sapp_fs2_update_length(int field_index, unsigned  long long value)
 
 void sapp_fs2_set_work_percent(int thead_seq, long long work_percent)
 {
-    if(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle != NULL){
-        FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle, 
+    if(sapp_global_val->individual_fixed.fs2_runtime.fs_process_lantency_handle != NULL){
+        FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_process_lantency_handle, 
         		   sapp_global_val->individual_fixed.fs2_runtime.fs_work_percent_id_array[thead_seq], 
         		   0, FS_OP_SET, work_percent);
     }
@@ -33,8 +33,8 @@ void sapp_fs2_set_work_percent(int thead_seq, long long work_percent)
 
 void sapp_fs2_set_latency(int thead_seq, long long time_cost)
 {
-    if(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle != NULL){
-        FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle, 
+    if(sapp_global_val->individual_fixed.fs2_runtime.fs_process_lantency_handle != NULL){
+        FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_process_lantency_handle, 
         		   sapp_global_val->individual_fixed.fs2_runtime.fs_latency_id_array[thead_seq], 
         		   0, FS_OP_SET, time_cost);
     }
@@ -47,8 +47,8 @@ void sapp_fs2_set_plug_entry_latency(int entry_id, long long time_cost)
 	if(unlikely(entry_id < 0 || entry_id >= SAPP_MAX_PLUG_ENTRY_NUM)){
 		return;
 	}
-    if(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle != NULL){
-        FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_metric_handle, 
+    if(sapp_global_val->individual_fixed.fs2_runtime.fs_process_lantency_handle != NULL){
+        FS_operate(sapp_global_val->individual_fixed.fs2_runtime.fs_process_lantency_handle, 
         		   sapp_global_val->individual_fixed.fs2_runtime.fs_latency_plug_entrg_id_array[entry_id], 
         		   0, FS_OP_SET, time_cost);
     }
@@ -140,6 +140,78 @@ void sapp_fuzzy_latency_update(void)
 			}
 		}
 	}
+}
+
+static int sapp_process_latency_metric_init(sapp_global_t *global_paramters)
+{
+	void *fs2_handle=NULL;
+	int fs2_opt;
+	sapp_gval_individual_fixed_fs2_t *p_fs2_rt = &global_paramters->individual_fixed.fs2_runtime;
+	if(strlen(global_paramters->config.profiling.process_latency_local_file) == 0)
+	{
+			return -1;
+	}
+	p_fs2_rt->fs_process_lantency_handle = FS_create_handle();
+	if (NULL == p_fs2_rt->fs_process_lantency_handle)
+	{
+			sapp_log(RLOG_LV_FATAL, 30, 30, "FS_create_handle() error: %s!\n", strerror(errno));
+			return -1;
+	}
+	fs2_handle = p_fs2_rt->fs_process_lantency_handle;
+	FS_set_para(fs2_handle, STAT_CYCLE, &global_paramters->config.profiling.process_latency_refresh_interval_s, sizeof(int));
+
+	fs2_opt = 1; /* 1:Rewrite ,2: Append.  */
+	FS_set_para(fs2_handle, PRINT_MODE, &fs2_opt, sizeof(int));
+
+	fs2_opt = 1;
+	FS_set_para(fs2_handle, PRINT_TRIGGER, &fs2_opt, sizeof(int));
+
+	fs2_opt = 1;
+    FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &fs2_opt, sizeof(int));	
+	FS_set_para(fs2_handle, OUTPUT_DEVICE, ABBR_PROCESS_LATENTCY_DATA_FILE, strlen(ABBR_PROCESS_LATENTCY_DATA_FILE) + 1);
+
+	for (int i = 0; i < g_packet_io_thread_num; i++)
+	{
+			char histogram_name[16];
+			sprintf(histogram_name, "TD_ns(tid_%d)", i);
+			p_fs2_rt->fs_latency_id_array[i] = FS_register_histogram(fs2_handle,	 // Field Stat句柄
+																	 FS_CALC_SPEED,	 // 输出累计值或瞬时值
+																	 histogram_name, // 统计项名称，字符串
+																	 1,				 // 可追踪的最小值
+																	 1000000,		 // 可追踪的最大值
+																	 2);			 // 精度，即小数点后几位，范围1~4
+			FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &p_fs2_rt->fs_latency_id_array[i], sizeof(int));
+	}
+
+	/* 0保留给sapp内置插件, index从1开始 */
+	for (int i = 1; i < g_plug_global_entry_index; i++)
+	{
+			p_fs2_rt->fs_latency_plug_entrg_id_array[i] = FS_register_histogram(p_fs2_rt->fs_metric_handle,				// Field Stat句柄
+																				FS_CALC_SPEED,							// 输出累计值或瞬时值
+																				g_plug_global_entry[i].plug_entry_name, // 统计项名称，字符串
+																				1,										// 可追踪的最小值
+																				1000000,								// 可追踪的最大值
+																				2);										// 精度，即小数点后几位，范围1~4
+			if (p_fs2_rt->fs_latency_plug_entrg_id_array[i] < 0)
+			{
+			sapp_runtime_log(RLOG_LV_FATAL, "FS_register_histogram() error, plug name:%s", g_plug_global_entry[i].plug_entry_name);
+			return -1;
+			}
+	}
+
+	for (int i = 0; i < g_packet_io_thread_num; i++)
+	{
+		char histogram_name[16];
+		sprintf(histogram_name, "Work(tid_%d)", i);
+		p_fs2_rt->fs_work_percent_id_array[i] = FS_register_histogram(fs2_handle,	 // Field Stat句柄
+																 FS_CALC_SPEED,	 // 输出累计值或瞬时值
+																 histogram_name, // 统计项名称，字符串
+																 1,				 // 可追踪的最小值
+																 100,		 // 可追踪的最大值
+																 1);			 // 精度，即小数点后几位，范围1~4
+		FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &p_fs2_rt->fs_work_percent_id_array[i], sizeof(int));
+	}
+	return 0;
 }
 
 /************************ C++ compiler **************************************/
@@ -321,49 +393,6 @@ static int sapp_fs2_start(sapp_global_t *global_paramters)
 {
 	sapp_gval_individual_fixed_fs2_t *p_fs2_rt = &global_paramters->individual_fixed.fs2_runtime;
 	void *fs2_handle = p_fs2_rt->fs_metric_handle;
-	if (unlikely(sapp_global_val->config.profiling.histogram_enabled))
-	{
-		for (int i = 0; i < g_packet_io_thread_num; i++)
-		{
-			char histogram_name[16];
-			sprintf(histogram_name, "TD_ns(tid_%d)", i);
-			p_fs2_rt->fs_latency_id_array[i] = FS_register_histogram(fs2_handle,	 // Field Stat句柄
-																	 FS_CALC_SPEED,	 // 输出累计值或瞬时值
-																	 histogram_name, // 统计项名称，字符串
-																	 1,				 // 可追踪的最小值
-																	 1000000,		 // 可追踪的最大值
-																	 2);			 // 精度，即小数点后几位，范围1~4
-			FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &p_fs2_rt->fs_latency_id_array[i], sizeof(int));
-		}
-
-		/* 0保留给sapp内置插件, index从1开始 */
-		for (int i = 1; i < g_plug_global_entry_index; i++)
-		{
-			p_fs2_rt->fs_latency_plug_entrg_id_array[i] = FS_register_histogram(p_fs2_rt->fs_metric_handle,				// Field Stat句柄
-																				FS_CALC_SPEED,							// 输出累计值或瞬时值
-																				g_plug_global_entry[i].plug_entry_name, // 统计项名称，字符串
-																				1,										// 可追踪的最小值
-																				1000000,								// 可追踪的最大值
-																				2);										// 精度，即小数点后几位，范围1~4
-			if (p_fs2_rt->fs_latency_plug_entrg_id_array[i] < 0)
-			{
-				sapp_runtime_log(RLOG_LV_FATAL, "FS_register_histogram() error, plug name:%s", g_plug_global_entry[i].plug_entry_name);
-				return -1;
-			}
-		}
-	}
-	for (int i = 0; i < g_packet_io_thread_num; i++)
-	{
-		char histogram_name[16];
-		sprintf(histogram_name, "Work(tid_%d)", i);
-		p_fs2_rt->fs_work_percent_id_array[i] = FS_register_histogram(fs2_handle,	 // Field Stat句柄
-																 FS_CALC_SPEED,	 // 输出累计值或瞬时值
-																 histogram_name, // 统计项名称，字符串
-																 1,				 // 可追踪的最小值
-																 100,		 // 可追踪的最大值
-																 1);			 // 精度，即小数点后几位，范围1~4
-		FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &p_fs2_rt->fs_work_percent_id_array[i], sizeof(int));
-	}
 	FS_start(fs2_handle);
 	return 0;
 }
@@ -616,6 +645,10 @@ int sapp_metric_init(void)
 	{
 		sapp_fs3_init(sapp_global_val);
 	}
+	if( sapp_global_val->config.profiling.histogram_enabled == 1)
+	{
+		sapp_process_latency_metric_init(sapp_global_val);
+	}
 	
 	return ret;
 }
@@ -631,6 +664,13 @@ int sapp_metric_start(void)
 	{
 		sapp_fs3_start(sapp_global_val);
 	}
+	if( sapp_global_val->config.profiling.histogram_enabled == 1)
+	{
+		if(sapp_global_val->individual_fixed.fs2_runtime.fs_process_lantency_handle)
+		{
+			FS_start(sapp_global_val->individual_fixed.fs2_runtime.fs_process_lantency_handle);
+		}
+	}
 	return ret;
 }
 
@@ -644,5 +684,12 @@ void sapp_metric_destroy(void)
 	if( sapp_global_val->config.profiling.fs3.enabled == 1)
 	{
 		sapp_fs3_destroy(sapp_global_val);
+	}
+	if( sapp_global_val->config.profiling.histogram_enabled == 1)
+	{
+		if (sapp_global_val->individual_fixed.fs2_runtime.fs_process_lantency_handle)
+		{
+			FS_stop(&sapp_global_val->individual_fixed.fs2_runtime.fs_process_lantency_handle);
+		}
 	}
 }

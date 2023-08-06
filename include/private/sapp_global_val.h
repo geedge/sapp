@@ -149,6 +149,8 @@ typedef struct{
 	//process_latency and sanity_check
 	char process_latency_log_category[NAME_MAX];
 	int histogram_enabled;
+	char process_latency_local_file[NAME_MAX];
+	int process_latency_refresh_interval_s;
 	int process_latency_threshold_in_ms; /* nanosecond, 配置文件里单位是microsecond, 需要乘以1000 */
 	/* 精确模式开启后, fs2自身统计也非常耗CPU, 每个包都要调用FS_operate(),
 	   如果停用精确模式, 输入fs2的是保留最近一段时间的最大值, 最小值和这一段时间的平均值, 仅调用FS_operate()三次,
@@ -312,6 +314,9 @@ typedef struct{
 	const char *data_sapp_fs3_log_relative;
 	const char *data_sapp_fs3_log_absolute;
 
+	const char *data_sapp_fs2_process_latency_relative;
+	const char *data_sapp_fs2_process_latency_absolute;
+
 	const char *data_inline_keepalive_log_relative;
 	const char *data_inline_keepalive_log_absolute;	
 
@@ -358,6 +363,8 @@ typedef struct{
 	void *fs_metric_handle; 
 	int fs_id_count_array[SAPP_STAT_NUM_MAX];
 	int fs_id_length_array[SAPP_STAT_NUM_MAX];
+
+	void *fs_process_lantency_handle; 
 	int fs_latency_id_array[SAPP_MAX_THREADS];
 	int fs_latency_plug_entrg_id_array[SAPP_MAX_PLUG_ENTRY_NUM];
 	int fs_work_percent_id_array[SAPP_MAX_THREADS];

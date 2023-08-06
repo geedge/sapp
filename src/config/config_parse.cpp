@@ -1470,6 +1470,17 @@ int sapp_get_secondary_file_path(void)
 		}
 		pconfig->data_file_path.data_sapp_fs3_log_relative = sapp_strdup(pconfig->profiling.fs3.local_file);
 	}
+
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"local_file", pconfig->profiling.process_latency_local_file, NAME_MAX, "");
+	if (strlen(pconfig->profiling.process_latency_local_file) > 0)
+	{
+		if (pconfig->data_file_path.data_sapp_fs2_process_latency_relative)
+		{
+			SAPP_GLOBAL_FREE(pconfig->data_file_path.data_sapp_fs2_process_latency_relative);
+		}
+		pconfig->data_file_path.data_sapp_fs2_process_latency_relative = sapp_strdup(pconfig->profiling.process_latency_local_file);
+	}
+
 	/*************************** SECONDARY_CONFIG_LINK *************************/
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_sapp_log", str_tmp, ARG_MAX, "etc/sapp_log.conf");
 	if(str_tmp[0] != '\0'){

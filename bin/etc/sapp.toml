@@ -185,6 +185,8 @@
     [profiling.process_latency]
     log_category="sapp_process_latency_log"
     histogram_enabled=0
+    local_file="fs2_process_latency.metrics"
+    refresh_interval_s=1
 ### note, threshold unit is microseconds (us)
     threshold_ms=10
 
