@@ -157,7 +157,7 @@ typedef struct{
 	   精确度降低了一些, 但大大减少了调用FS_operate()的次数.
 		开启pkt_latency_accurate_enable后平均值基本是对的, 但标准差就不准了.
 	   */
-	//int process_latency_accurate_enable; 
+	int process_latency_clock_id; 
 	
 	int sanity_check_raw_pkt_broken_enabled;
 	int sanity_check_symbol_conflict_enabled;

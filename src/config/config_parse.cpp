@@ -1810,15 +1810,21 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"threshold_us", (int *)&pconfig->profiling.process_latency_threshold_in_us, 1000);
 	if (pconfig->profiling.process_latency_threshold_in_us <= 0)
 	{
-		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,99999999]");
+		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold_us', valid range is [1,99999999]");
 		return -1;
 	}
 	if (pconfig->profiling.process_latency_threshold_in_us >= 99999999)
 	{
-		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,99999999], set to max value 9999!");
+		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold_us', valid range is [1,99999999], set to max value 9999!");
 		pconfig->profiling.process_latency_threshold_in_us = 99999999;
 	}
 
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"clock_gettime_id", (int *)&pconfig->profiling.process_latency_clock_id, 6);
+	if(pconfig->profiling.process_latency_clock_id < 0 || pconfig->profiling.process_latency_clock_id > 6)
+	{
+		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->clock_gettime_id', valid range is [0,6], set to default value 6!");
+		pconfig->profiling.process_latency_clock_id=6;
+	}
 
 	/*******************************  PROFILING.sanity_check ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.sanity_check", (char *)"raw_pkt_broken_enabled", (int *)&pconfig->profiling.sanity_check_raw_pkt_broken_enabled, 0);

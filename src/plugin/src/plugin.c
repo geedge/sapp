@@ -143,13 +143,13 @@ int g_plugin_version_VERSION_20170511;
 
 static inline void __plug_record_time_start(struct timespec *start)
 {
-    clock_gettime(CLOCK_MONOTONIC_COARSE, start);
+    clock_gettime(CLOCK_MONOTONIC, start);
 }
 static inline long __plug_record_time_elapse_us(struct timespec *start)
 {
     struct timespec end;
     long elapsed = 0;
-    clock_gettime(CLOCK_MONOTONIC_COARSE, &end);
+    clock_gettime(CLOCK_MONOTONIC, &end);
     elapsed = (end.tv_sec - start->tv_sec)*1000000 + (end.tv_nsec - start->tv_nsec)/1000;
     return elapsed;
 }
@@ -1253,13 +1253,13 @@ char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* sessi
 	int latency_enabled=MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, RLOG_LV_INFO);
 	if(unlikely(latency_enabled))
 	{
-		clock_gettime(CLOCK_MONOTONIC_COARSE, &before_ts);
+		clock_gettime(g_clock_gettime_clock_id, &before_ts);
 	}
 
 	rec=funelem_session->appentry(session_info,&(funelem_session->pme),thread_seq,a_stream,a_packet);
 
 	if(unlikely(latency_enabled)){
-		clock_gettime(CLOCK_MONOTONIC_COARSE, &after_ts);
+		clock_gettime(g_clock_gettime_clock_id, &after_ts);
 		time_spent_ns = (after_ts.tv_sec*1000000000 + after_ts.tv_nsec) - (before_ts.tv_sec*1000000000 + before_ts.tv_nsec);
 		if(sapp_global_val->config.profiling.histogram_enabled && time_spent_ns > 0)
 		{
@@ -1271,21 +1271,25 @@ char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* sessi
 				((raw_pkt_t *)(stream_pr->raw_pkt))->diagnose_error_to_dump=1;
 			}
 			if(NULL == a_packet || (SESSION_STATE_CLOSE & session_info->session_state)){
-				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, session close process latency:%lld us, addr:%s, datalen:%u, thread:%d", 
+				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, session close process latency:%lld us, addr:%s, datalen:%u, c:%u, s:%u, thread:%d", 
 								g_plug_global_entry[funelem_session->entry_id].plug_name, 
 								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, time_spent_ns/1000,
 								printaddr(&a_stream->addr, thread_seq), 
 								a_stream->pudpdetail->datalen,
+								a_stream->pudpdetail->clientpktnum,
+								a_stream->pudpdetail->serverpktnum,
 								thread_seq);
 
 			}else{
 				sapp_rawpkt_ntop(stream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string));
-				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld us, rawpkt:%s, addr:%s, raw_len:%d, thread:%d", 
+				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld us, rawpkt:%s, addr:%s, raw_len:%d, c:%u, s:%u, thread:%d", 
 								g_plug_global_entry[funelem_session->entry_id].plug_name, 
 								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, 
 								time_spent_ns/1000,debug_raw_pkt_string,
 								printaddr(&a_stream->addr, thread_seq), 
 								stream_pr->raw_pkt->raw_pkt_len,
+								a_stream->pudpdetail->clientpktnum,
+								a_stream->pudpdetail->serverpktnum,
 								thread_seq);
 			}				
 		}

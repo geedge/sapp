@@ -403,7 +403,7 @@ static inline long long sapp_get_current_time_in_ms(void)
 	//gettimeofday(&t, NULL);
 	//tms = t.tv_sec * 1000 + t.tv_usec/1000;
 	struct timespec t;
-    clock_gettime(CLOCK_MONOTONIC_COARSE, &t);
+    clock_gettime(CLOCK_MONOTONIC, &t);
     tms = (t.tv_sec)*1000 + (t.tv_nsec)/(1000*1000);
 
 	return tms;

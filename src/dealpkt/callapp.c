@@ -289,7 +289,7 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 	int latency_enabled=MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, RLOG_LV_INFO);
 	if(unlikely(latency_enabled))
 	{
-		clock_gettime(CLOCK_MONOTONIC_COARSE, &before_ts);
+		clock_gettime(g_clock_gettime_clock_id, &before_ts);
 	}
 	if(type==CALL_FUN_TYPE_RAW)
 	{
@@ -303,7 +303,7 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 	}
 
 	if(unlikely(latency_enabled)){
-		clock_gettime(CLOCK_MONOTONIC_COARSE, &after_ts);
+		clock_gettime(g_clock_gettime_clock_id, &after_ts);
 		time_spent_ns = (after_ts.tv_sec * 1000000000 + after_ts.tv_nsec) - (before_ts.tv_sec * 1000000000 + before_ts.tv_nsec);
 		if(sapp_global_val->config.profiling.histogram_enabled && time_spent_ns > 0)
 		{
@@ -315,21 +315,26 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 				((raw_pkt_t *)(pstream_pr->raw_pkt))->diagnose_error_to_dump=1;
 			}
 			if(NULL == a_packet || OP_STATE_CLOSE == a_stream->opstate || OP_STATE_CLOSE == a_stream->pktstate){
-				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, stream close process latency:%lld us, addr:%s, datalen:%u, thread_seq:%d", 
+				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, stream close process latency:%lld us, addr:%s, datalen:%u, c:%u, s:%u, thread_seq:%d", 
 								g_plug_global_entry[pFunInfo->entry_id].plug_name, 
-								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, time_spent_ns/1000,
+								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, 
+								time_spent_ns/1000,
 								printaddr(&a_stream->addr, thread_seq), 
 								a_stream->pudpdetail->datalen,
+								a_stream->pudpdetail->clientpktnum,
+								a_stream->pudpdetail->serverpktnum,								
 								thread_seq);
 			}else{
 				sapp_rawpkt_ntop(pstream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string)); /* 此处优先打印最内层四元组 */
-				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld us, rawpkt:%s, addr:%s, raw_len:%d, thread:%d", 
+				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld us, rawpkt:%s, addr:%s, raw_len:%d, c:%u, s:%u, thread:%d", 
 								g_plug_global_entry[pFunInfo->entry_id].plug_name, 
 								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, 
 								time_spent_ns/1000, 
 								debug_raw_pkt_string, 
 								printaddr(&a_stream->addr, thread_seq), 
 								pstream_pr->raw_pkt->raw_pkt_len,
+								a_stream->pudpdetail->clientpktnum,
+								a_stream->pudpdetail->serverpktnum,
 								thread_seq);
 			}
 		}		

@@ -189,7 +189,10 @@
     refresh_interval_s=1
 ### note, threshold unit is microseconds (us), legal_scope [1,99999999], max value is 99
     threshold_us=1000
-
+### define in time.h,use CLOCK_MONOTONIC_COARSE as default
+### 0 means CLOCK_REALTIME, 1 means CLOCK_MONOTONIC, 2 means CLOCK_PROCESS_CPUTIME_ID, 3 means CLOCK_THREAD_CPUTIME_ID
+### 4 means CLOCK_MONOTONIC_RAW, 5 means CLOCK_REALTIME_COARSE, 6 means CLOCK_MONOTONIC_COARSE
+    clock_gettime_id=6
     [profiling.sanity_check]
     raw_pkt_broken_enabled=0
     symbol_conflict_enabled=0

@@ -627,8 +627,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	int latency_enabled=MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, RLOG_LV_INFO);
 	if(unlikely(latency_enabled))
 	{
-		clock_gettime(CLOCK_MONOTONIC_COARSE, &start);
-		//before_call = sapp_get_cpu_cycle();
+		clock_gettime(g_clock_gettime_clock_id, &start);
 	}
 #if DEBUG
 	char raw_pkt_md5_before[16];
@@ -669,7 +668,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 
 	if(unlikely(latency_enabled))
     {
-		clock_gettime(CLOCK_MONOTONIC_COARSE, &end);
+		clock_gettime(g_clock_gettime_clock_id, &end);
     	timecost_ns = (end.tv_sec*1000000000 +end.tv_nsec) - (start.tv_sec * 1000000000 + start.tv_nsec);
 
 		if(sapp_global_val->config.profiling.histogram_enabled)

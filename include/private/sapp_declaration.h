@@ -87,6 +87,7 @@ extern volatile long long g_current_time_ms;
 
 //#define g_timestamp_record_sw	sapp_global_val->config.profiling.process_latency_enabled_log_level>20
 
+#define g_clock_gettime_clock_id	sapp_global_val->config.profiling.process_latency_clock_id
 #define g_timestamp_record_threshold	sapp_global_val->config.profiling.process_latency_threshold_in_us
 
 #define g_discard_ack_sw		sapp_global_val->config.protocol_feature.tcp_drop_pure_ack_pkt
