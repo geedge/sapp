@@ -676,6 +676,9 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		{
 			sapp_fs2_fuzzy_latency_update_per_thread(thread_num,  timecost);
 		}
+		if(timecost >= g_timestamp_record_threshold*1000000){
+			((raw_pkt_t *)p_raw_pkt)->diagnose_error_to_dump = 1;
+		}
 	}
 
 	if(g_platform_action_cb_fun != NULL){

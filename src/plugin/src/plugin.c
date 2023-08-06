@@ -1244,7 +1244,7 @@ char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* sessi
 	struct timespec before_ts, after_ts;
 	long long time_spent_ns;
 	char debug_raw_pkt_string[256];
-	const struct streaminfo_private *stream_pr ;
+	const struct streaminfo_private *stream_pr =(struct streaminfo_private *)a_stream;
 
 	if(g_business_plug_info==NULL)
 	{
@@ -1266,6 +1266,10 @@ char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* sessi
 			sapp_fs2_fuzzy_latency_update_per_entry(thread_seq, funelem_session->entry_id, time_spent_ns);
 		}
 		if(time_spent_ns >= g_timestamp_record_threshold*1000000){
+			if(stream_pr->raw_pkt!=NULL)
+			{
+				((raw_pkt_t *)(stream_pr->raw_pkt))->diagnose_error_to_dump=1;
+			}
 			if(NULL == a_packet || (SESSION_STATE_CLOSE & session_info->session_state)){
 				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, session close process latency:%lld ns, addr:%s, thread:%d", 
 								g_plug_global_entry[funelem_session->entry_id].plug_name, 
@@ -1273,7 +1277,6 @@ char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* sessi
 								printaddr(&a_stream->addr, thread_seq), thread_seq);
 
 			}else{
-				stream_pr = (struct streaminfo_private *)a_stream;
 				sapp_rawpkt_ntop(stream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string));
 				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld ns, rawpkt:%s, thread:%d", 
 								g_plug_global_entry[funelem_session->entry_id].plug_name, 

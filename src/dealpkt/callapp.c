@@ -286,8 +286,6 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 	long long time_spent_ns;
 	char debug_raw_pkt_string[256];
 	struct streaminfo_private *pstream_pr=(struct streaminfo_private *)a_stream;
-	const struct streaminfo_private *stream_pr ;
-
 	int latency_enabled=MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, RLOG_LV_INFO);
 	if(unlikely(latency_enabled))
 	{
@@ -312,14 +310,17 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 			sapp_fs2_fuzzy_latency_update_per_entry(thread_seq, pFunInfo->entry_id, time_spent_ns);
 		}
 		if(unlikely(time_spent_ns >= g_timestamp_record_threshold*1000000)){
+			if(pstream_pr->raw_pkt!=NULL)
+			{
+				((raw_pkt_t *)(pstream_pr->raw_pkt))->diagnose_error_to_dump=1;
+			}
 			if(NULL == a_packet || OP_STATE_CLOSE == a_stream->opstate || OP_STATE_CLOSE == a_stream->pktstate){
 				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, stream close process latency:%lld ns, addr:%s, thread_seq:%d", 
 								g_plug_global_entry[pFunInfo->entry_id].plug_name, 
 								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, time_spent_ns,
 								printaddr(&a_stream->addr, thread_seq), thread_seq);
 			}else{
-				stream_pr = (struct streaminfo_private *)a_stream;
-				sapp_rawpkt_ntop(stream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string)); /* 此处优先打印最内层四元组 */
+				sapp_rawpkt_ntop(pstream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string)); /* 此处优先打印最内层四元组 */
 				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld ns, rawpkt:%s, thread:%d", 
 								g_plug_global_entry[pFunInfo->entry_id].plug_name, 
 								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, 
