@@ -587,7 +587,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 {
 	int ret = PASS;
 	//long long before_call = 0, after_call;
-	long long timecost;
+	long long timecost_ns;
 	struct timespec start, end;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
 	local_sys_stat->count[SAPP_STAT_RCV_LINE]++;
@@ -670,13 +670,13 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	if(unlikely(latency_enabled))
     {
 		clock_gettime(CLOCK_MONOTONIC_COARSE, &end);
-    	timecost = (end.tv_sec*1000000000 +end.tv_nsec) - (start.tv_sec * 1000000000 + start.tv_nsec);
+    	timecost_ns = (end.tv_sec*1000000000 +end.tv_nsec) - (start.tv_sec * 1000000000 + start.tv_nsec);
 
 		if(sapp_global_val->config.profiling.histogram_enabled)
 		{
-			sapp_fs2_fuzzy_latency_update_per_thread(thread_num,  timecost);
+			sapp_fs2_fuzzy_latency_update_per_thread(thread_num,  timecost_ns);
 		}
-		if(timecost >= g_timestamp_record_threshold*1000000){
+		if(timecost_ns >= g_timestamp_record_threshold*1000){
 			((raw_pkt_t *)p_raw_pkt)->diagnose_error_to_dump = 1;
 		}
 	}

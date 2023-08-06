@@ -151,7 +151,7 @@ typedef struct{
 	int histogram_enabled;
 	char process_latency_local_file[NAME_MAX];
 	int process_latency_refresh_interval_s;
-	int process_latency_threshold_in_ms; /* nanosecond, 配置文件里单位是microsecond, 需要乘以1000 */
+	int process_latency_threshold_in_us; /* 配置文件里单位是microsecond, 需要乘以1000 */
 	/* 精确模式开启后, fs2自身统计也非常耗CPU, 每个包都要调用FS_operate(),
 	   如果停用精确模式, 输入fs2的是保留最近一段时间的最大值, 最小值和这一段时间的平均值, 仅调用FS_operate()三次,
 	   精确度降低了一些, 但大大减少了调用FS_operate()的次数.

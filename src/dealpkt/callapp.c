@@ -309,22 +309,28 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 		{
 			sapp_fs2_fuzzy_latency_update_per_entry(thread_seq, pFunInfo->entry_id, time_spent_ns);
 		}
-		if(unlikely(time_spent_ns >= g_timestamp_record_threshold*1000000)){
+		if(unlikely(time_spent_ns >= g_timestamp_record_threshold*1000)){
 			if(pstream_pr->raw_pkt!=NULL)
 			{
 				((raw_pkt_t *)(pstream_pr->raw_pkt))->diagnose_error_to_dump=1;
 			}
 			if(NULL == a_packet || OP_STATE_CLOSE == a_stream->opstate || OP_STATE_CLOSE == a_stream->pktstate){
-				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, stream close process latency:%lld ns, addr:%s, thread_seq:%d", 
+				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, stream close process latency:%lld us, addr:%s, datalen:%u, thread_seq:%d", 
 								g_plug_global_entry[pFunInfo->entry_id].plug_name, 
-								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, time_spent_ns,
-								printaddr(&a_stream->addr, thread_seq), thread_seq);
+								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, time_spent_ns/1000,
+								printaddr(&a_stream->addr, thread_seq), 
+								a_stream->pudpdetail->datalen,
+								thread_seq);
 			}else{
 				sapp_rawpkt_ntop(pstream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string)); /* 此处优先打印最内层四元组 */
-				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld ns, rawpkt:%s, thread:%d", 
+				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld us, rawpkt:%s, addr:%s, raw_len:%d, thread:%d", 
 								g_plug_global_entry[pFunInfo->entry_id].plug_name, 
 								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, 
-								time_spent_ns, debug_raw_pkt_string, thread_seq);
+								time_spent_ns/1000, 
+								debug_raw_pkt_string, 
+								printaddr(&a_stream->addr, thread_seq), 
+								pstream_pr->raw_pkt->raw_pkt_len,
+								thread_seq);
 			}
 		}		
 	}	

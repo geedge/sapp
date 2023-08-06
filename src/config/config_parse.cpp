@@ -1807,16 +1807,16 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"log_category", pconfig->profiling.process_latency_log_category, NAME_MAX, "sapp_process_latency_log");
 
 	sapp_global_val->individual_fixed.process_latency_log_handle = MESA_create_runtime_log_handle(sapp_global_val->config.profiling.process_latency_log_category, sapp_global_val->config.profiling.histogram_enabled);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"threshold_ms", (int *)&pconfig->profiling.process_latency_threshold_in_ms, 10);
-	if (pconfig->profiling.process_latency_threshold_in_ms <= 0)
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"threshold_us", (int *)&pconfig->profiling.process_latency_threshold_in_us, 1000);
+	if (pconfig->profiling.process_latency_threshold_in_us <= 0)
 	{
-		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,9999]");
+		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,99999999]");
 		return -1;
 	}
-	if (pconfig->profiling.process_latency_threshold_in_ms >= 9999)
+	if (pconfig->profiling.process_latency_threshold_in_us >= 99999999)
 	{
-		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,9999], set to max value 9999!");
-		pconfig->profiling.process_latency_threshold_in_ms = 9999;
+		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'profiling.pkt_latency->threshold', valid range is [1,99999999], set to max value 9999!");
+		pconfig->profiling.process_latency_threshold_in_us = 99999999;
 	}
 
 
