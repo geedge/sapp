@@ -1182,7 +1182,7 @@ int stream_process_tcp_takeover(struct streaminfo *a_tcp, const void * iphdr)
 	return  g_StreamTcpTakeover(a_tcp,NULL,a_tcp->threadnum, iphdr);
 }
 
-int stream_process_ipv4(struct streaminfo *pfstream, const struct ip* this_layer_hdr,
+int stream_process_ipv4(struct streaminfo *pfstream, const struct ip *this_layer_hdr,
 				int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt)
 {
 	int i;
@@ -1296,7 +1296,7 @@ int stream_process_ipv6(struct streaminfo *pfstream,const struct ip6_hdr *this_l
 	return platform_ret;
 }
 
-int stream_process_ipv4_frag(struct streaminfo *pstream, const struct ip* this_layer_hdr,
+int stream_process_ipv4_frag(struct streaminfo *pstream, const struct ip *this_layer_hdr,
 				int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt)
 {
 	int i=0;

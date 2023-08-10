@@ -185,15 +185,12 @@ static inline UINT64 stream_get_detail_last_mtime(const struct streamindex *pind
 
 static void stream_timeout_shift_lrulist(struct streamindex *pindex, unsigned short new_timeout)
 {
-	unsigned short global_default_timeout;
 	struct stream_list *lru_list_root;
 	const struct streaminfo *pstream = &pindex->stream.stream_public;
 	
 	if(STREAM_TYPE_TCP == pindex->stream.stream_public.type){
-		global_default_timeout = link_default_nopkt_time;
 		lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->tcpList[pstream->stream_state]);
 	}else{
-		global_default_timeout = udp_reset_time;
 		lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->udpList[pstream->stream_state]);
 	}
 
@@ -315,7 +312,6 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 {
 	int timeout_reason = STREAM_CLOSE_REASON_TIMEOUT;
 	struct streamindex *pindex_to_del = NULL;
-	struct streamindex *pindex_tmp = NULL;
 	if(plist->cnt >= plist->max_cnt-1 && plist->cnt > 0)
 	{
 		if(plist->last_update_timer_s < g_CurrentTime)
@@ -1053,7 +1049,7 @@ static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_
 	const struct streaminfo * pheap_stream = &pheap_ip_stream_pr->stream_public;
 	const struct streaminfo * pstack_stream = &pstack_ip_stream_pr->stream_public;
 	int this_layer_is_same = 0;
-	unsigned char cur_pkt_dir;
+	unsigned char cur_pkt_dir=0;
 	
 	if(pheap_ip_stream_pr==NULL){
 		if(unlikely(pstack_ip_stream_pr!=NULL)){		
@@ -1123,7 +1119,6 @@ static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_
 	{
 		char top_addr_buff[128]= {0};
 		char stack_addr_buff[128]= {0};
-		char heap_addr_buff[128]= {0};
 
 		sapp_runtime_log(RLOG_LV_DEBUG, "top_stream:%s, curdir:%d, addrtype:%d for GTP tunnel, heap_stream tuple4 addr:%s, type:%d, len:%d, stack_stream tuple4 addr:%s, type:%d, len:%d, not equal",
 						printaddr_r(&top_stream_pr->stream_public.addr, top_addr_buff, sizeof(top_addr_buff)), 
@@ -1323,7 +1318,6 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 	UCHAR threadnum = psinsert_pr->stream_public.threadnum;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
 	int stack_streaminfo_skip_layer_num = 0, heap_streaminfo_skip_layer_num = 0; /* 不需要地址比较层的数量 */
-	char cur_stack_streaminfo_more_array[__ADDR_TYPE_MAX] = {}; /* 栈里的流地址比堆里流地址层数多的地址类型标记 */
 
 	while(phead!=NULL)
 	{  
@@ -1540,10 +1534,10 @@ void hash_del_stream(struct streamindex *pindex)
         pelementcount = G_MESA_GLOBAL_STREAM[threadnum]->udp_stream_talbe_hash_count;
         local_sys_stat->count[SAPP_STAT_UDP_STREAM_DEL]++;
         if (ptmp->pudpdetail->clientpktnum + ptmp->pudpdetail->serverpktnum >=
-                sapp_global_val->config.stream.udp.meaningful_statistics_minimum_pkt &&
+                (unsigned int)(sapp_global_val->config.stream.udp.meaningful_statistics_minimum_pkt) &&
             ptmp->pudpdetail->clientbytes + ptmp->pudpdetail->serverbytes >=
-                sapp_global_val->config.stream.udp.meaningful_statistics_minimum_byte)
-        {
+                (unsigned int)(sapp_global_val->config.stream.udp.meaningful_statistics_minimum_byte))
+        	{
             if (ptmp->dir == DIR_DOUBLE)
             {
                 local_sys_stat->count[SAPP_STAT_UDP_STREAM_DOUBLE]++;
@@ -1607,9 +1601,9 @@ void hash_del_stream(struct streamindex *pindex)
         }
 
         if (ptmp->ptcpdetail->clientpktnum + ptmp->ptcpdetail->serverpktnum >=
-                sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_pkt &&
+                (unsigned int)(sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_pkt) &&
             ptmp->ptcpdetail->clientbytes + ptmp->ptcpdetail->serverbytes >=
-                sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_byte)
+                (unsigned int)(sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_byte))
         {
             if (ptmp->dir == DIR_DOUBLE)
             {
@@ -2941,7 +2935,7 @@ int find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *t
 {
 	const struct global_stream *this_thread_stream = G_MESA_GLOBAL_STREAM[thread_index];
 	struct streamindex **phashstream=NULL;
-	unsigned int hash_index, hash_max, no_use_slave_hash;
+	unsigned int hash_index, hash_max;
 	struct streamindex *stream_hash_head = NULL;
 	int ret, match_layer_dir; /* 输入的四元组与大端口做为源的规则一致 */
 	int tot_found_stream_num = 0;
@@ -2962,6 +2956,7 @@ int find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *t
 
 #if USE_LINUX_KERNEL_HASH_ALGO
 	unsigned int a,b,c,d;
+	unsigned int no_use_slave_hash;
 	/* 此处参考函数: set_transport_addr() 	  ,大端口作为客户端 */
 	if(ntohs(tuple4_v6->source) > ntohs(tuple4_v6->dest)){
 		memcpy(&a, &tuple4_v6->saddr[12], sizeof(int));

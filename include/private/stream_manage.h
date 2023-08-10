@@ -99,8 +99,6 @@ struct stream_index_list_item
 	STAILQ_ENTRY(stream_index_list_item) entries;
 };
 
-STAILQ_HEAD(STREAM_INDEX_LIST,stream_index_list_item);
-
 struct global_stream
 {
 	struct streamindex **tcp_stream_table;
@@ -111,7 +109,7 @@ struct global_stream
 	unsigned short  *udp_stream_talbe_hash_count;/* lijia comment: 一个HASH_Slot下冲突链表元素个数 */
 	struct stream_list udpList[MAX_UDP_STATE];
 
-	struct STREAM_INDEX_LIST freeList;
+	STAILQ_HEAD(STREAM_INDEX_LIST,stream_index_list_item) freeList;
 	struct stream_index_list_item *__freeList_real_head;
 	int freeList_cnt;
 	int freeList_max_cnt;
@@ -157,9 +155,9 @@ int stream_process_tcp_allpkt(struct streaminfo *a_tcp,const void *, const void 
 //int stream_process_tcp_takeover(struct streaminfo *a_tcp,const raw_pkt_t * raw_pkt);
 int stream_process_tcp_takeover(struct streaminfo *a_tcp,const void *iphdr);
 int stream_process_udp(struct streaminfo *a_udp,const void *, const void *, const raw_pkt_t * raw_pkt,void **apme,unsigned char *popstate);
-int stream_process_ipv4(struct streaminfo *pfstream,const struct ip * a_packet,int thread_num,unsigned char routedir,const raw_pkt_t *raw_pkt);
+int stream_process_ipv4(struct streaminfo *pfstream,const struct ip *a_packet,int thread_num,unsigned char routedir,const raw_pkt_t *raw_pkt);
 int stream_process_ipv6(struct streaminfo *pfstream,const struct ip6_hdr *a_packet,int thread_num,unsigned char routedir,const raw_pkt_t *raw_pkt);
-int stream_process_ipv4_frag(struct streaminfo *pfstream,const struct ip * a_packet,int thread_num,unsigned char routedir,const raw_pkt_t *raw_pkt);
+int stream_process_ipv4_frag(struct streaminfo *pfstream,const struct ip *a_packet,int thread_num,unsigned char routedir,const raw_pkt_t *raw_pkt);
 int stream_process_ipv6_frag(struct streaminfo *pfstream,const struct ip6_hdr *a_packet,int thread_num,unsigned char routedir,const raw_pkt_t *raw_pkt);
 int stream_process_polling(int thread_seq);
 int stream_process_arp(struct streaminfo *pfstream, const struct mesa_arp_hdr * this_layer_hdr, int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt);
