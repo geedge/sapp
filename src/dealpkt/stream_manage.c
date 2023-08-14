@@ -2646,6 +2646,7 @@ int polling_stream_timeout(int tid)
 			ret = del_stream_by_time(plist, NULL, tid);
 			if(ret > 0){
 				has_work = POLLING_STATE_WORK;
+				break;
 			}
 		}
 	}
@@ -2656,6 +2657,7 @@ int polling_stream_timeout(int tid)
 			ret = del_stream_by_time(plist, NULL, tid);
 			if(ret > 0){
 				has_work = POLLING_STATE_WORK;
+				break;
 			}
 		}
 	}

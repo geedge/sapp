@@ -891,15 +891,8 @@ static int packet_io_send_by_sys_routev4(MESA_send_handle *send_handle,int datal
 			return -1;
     }
 
-	/* 使用系统路由时, MAC地址由协议栈填充, 指针和长度要减去ETH头部 */
-#if 0
-	actual_data_ptr = (char *)send_handle->send_buf + sizeof(mesa_ethernet_hdr);
-	datalen -= sizeof(mesa_ethernet_hdr);
-#else
 	actual_data_ptr = (char *)send_handle->send_buf + offset;
 	datalen -= offset;
-
-#endif
 
 	ip4_hdr = (struct mesa_ip4_hdr *)actual_data_ptr;
 
@@ -908,12 +901,6 @@ static int packet_io_send_by_sys_routev4(MESA_send_handle *send_handle,int datal
 	/* build_ipv4时已经按dir方向构造好地址, 此处直接使用ip_dst即可 */
 	sock_addr_v4.sin_addr.s_addr = ip4_hdr->ip_dst.s_addr;
 
-	//if(sapp_global_single.send_fake_pkt_mode != 0){
-	//	return packet_io_send_fake_pkt_by_gdev(send_handle, ADDR_TYPE_IPV4,
-	//						actual_data_ptr+VXLAN_HDR_RESERVED_LEN, datalen, dir,
-	//						feedback_buf, feedback_buf_len);
-	//}
-	
 retry:
 	ret = sendto(send_handle->raw_ipv4_fd, actual_data_ptr, datalen, 0,
 				(struct sockaddr *)&sock_addr_v4, sizeof(struct sockaddr));
@@ -1085,106 +1072,66 @@ send_again:
 	return ret;
 }
 
-int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_type, 
+int packet_io_send(MESA_send_handle *send_handle,int datalen,int send_type, 
 					int low_layer_type, int dir,int thread_num,
 					char *feedback_buf, int *feedback_buf_len, const raw_pkt_t *raw_pkt)
 {
 	int ret;
 	UINT16 low_layer_ether_hproto;
 	const struct mesa_ethernet_hdr *ehdr = (struct mesa_ethernet_hdr *)send_handle->send_buf;
-	
-	if(g_topology_mode & __NET_CONN_PARALLEL)
+	low_layer_ether_hproto = ntohs(ehdr->ether_type);
+	switch (sapp_global_val->config.packet_io.inject_pkt_mode)
 	{
-		
-		low_layer_ether_hproto = ntohs(ehdr->ether_type);
-		
-		if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV)
-		{
-			ret = packet_io_send_fake_pkt_by_gdev(send_handle, (enum addr_type_t)low_layer_type,
-												  (char *)send_handle->send_buf, datalen, dir, feedback_buf, feedback_buf_len);
-		}
-		else if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_1_ROUTE 
-		     || sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE)
-        {
-            ret = packet_io_send_by_manual_conf(send_handle, datalen, dir, low_layer_ether_hproto);
-        }
-		else
+	case SEND_PKT_MODE_GDEV:
+		ret = packet_io_send_fake_pkt_by_gdev(send_handle, (enum addr_type_t)low_layer_type,
+											  (char *)send_handle->send_buf, datalen, dir, feedback_buf, feedback_buf_len);
+		break;
+	case SEND_PKT_MODE_STACK_2_LAYER_1_ROUTE:
+	case SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE:
+		ret = packet_io_send_by_manual_conf(send_handle, datalen, dir, low_layer_ether_hproto);
+		break;
+	case SEND_PKT_MODE_STACK_3_LAYER:
 		{
 			switch (low_layer_type)
 			{
-				case __ADDR_TYPE_IP_PAIR_V4:
-				case ADDR_TYPE_IPV4:
-					ret = packet_io_send_by_sys_routev4(send_handle, datalen, dir, feedback_buf, feedback_buf_len);
-					break;
+			case __ADDR_TYPE_IP_PAIR_V4:
+			case ADDR_TYPE_IPV4:
+				ret = packet_io_send_by_sys_routev4(send_handle, datalen, dir, feedback_buf, feedback_buf_len);
+				break;
 
-				case __ADDR_TYPE_IP_PAIR_V6:
-				case ADDR_TYPE_IPV6:
-					ret = packet_io_send_by_sys_routev6(send_handle, datalen, dir, feedback_buf, feedback_buf_len);
-					break;
+			case __ADDR_TYPE_IP_PAIR_V6:
+			case ADDR_TYPE_IPV6:
+				ret = packet_io_send_by_sys_routev6(send_handle, datalen, dir, feedback_buf, feedback_buf_len);
+				break;
 
-				default:
-					/* 并联模式下的非IP协议, 不能使用系统路由发送, 必须使用raw_eth_fd通过指定网卡发送 */
-					ret = packet_io_send_by_manual_conf(send_handle, datalen, dir, low_layer_ether_hproto);
-					break;
+			default:
+				/* 并联模式下的非IP协议, 不能使用系统路由发送, 必须使用raw_eth_fd通过指定网卡发送 */
+				//ret = packet_io_send_by_manual_conf(send_handle, datalen, dir, low_layer_ether_hproto);
+				ret=-1;
+				break;
 			}
 		}
-	}
-	else
-	{
-		if(NULL == raw_pkt){
+	break;
+	default:
+		if (NULL == raw_pkt)
+		{
 			raw_pkt = sapp_global_val->mthread_volatile[thread_num]->raw_pkt;
 		}
-	
-		ret = dl_io_fun_list.dl_io_low_level_send(send_handle->low_level_send_handle, 
-										(UINT8 *)send_handle->send_buf,
-										datalen,
-										low_layer_type,
-										dir,
-										thread_num,
-										raw_pkt);
-		if(ret < 0){
-			sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		}										
+		ret = dl_io_fun_list.dl_io_low_level_send(send_handle->low_level_send_handle,
+												  (UINT8 *)send_handle->send_buf,
+												datalen,
+												low_layer_type,
+												dir,
+												thread_num,
+												raw_pkt);
+		break;
 	}
-
+	if (ret < 0)
+	{
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+	}
 	return ret;
 }
-
-/*
-	send_type:发包类型, RST, 日志, 回传数据等;
-	low_layer_type:除MAC层之外, 最底层协议类型, 如IPv4, ipv6, VLAN等.
-	datalen		:上层APP总长, 但不含MAC层的14字节.
-*/
-int packet_io_send(MESA_send_handle *send_handle,int datalen,int send_type, 
-					int low_layer_type, int dir,int thread_num,
-					char *feedback_buf, int *feedback_buf_len, const raw_pkt_t *raw_pkt)
-{
-	int ret = -1;
-
-	switch(send_type){
-		case SEND_TYPE_LINK_INJECT:
-			ret = packet_io_send_fake_pkt(send_handle, datalen, send_type, low_layer_type, 
-									dir, thread_num, feedback_buf, feedback_buf_len, raw_pkt);
-		break;
-
-		case SEND_TYPE_LOG:
-			/* to do */
-			ret = -1;
-		break;
-
-		case SEND_TYPE_REDIRECT:
-			/* to do, 水浒原始报文转发 */
-			ret = -1;
-		break;
-
-		default:
-			break;
-	}	
-	
-	return ret;
-}
-
-
 
 send_raw_pkt_info_t *get_raw_pkt_conf_by_id(unsigned int target_id)
 {

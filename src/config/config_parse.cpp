@@ -786,7 +786,7 @@ static int update_asymmetric_presence_layer(enum addr_type_t addrtype, embed_lay
 */
 static int parse_asymmetric_addr_layer_config(void)
 {
-	int i, j, ret, asymmetric_addr_layer_config_num = 0;
+	int i, j, ret;
 	FILE *fp;
 	char line_cont[MAX_INPUT];
 	embed_layer_t embed_layer;
@@ -813,7 +813,6 @@ static int parse_asymmetric_addr_layer_config(void)
 		}
 
 		update_asymmetric_layer_info(&g_asymmetric_addr_layer_set, &embed_layer);
-		asymmetric_addr_layer_config_num++;
 	}
 
 	char one_layer_index_str[NAME_MAX];
@@ -858,7 +857,7 @@ static int set_default_stream_compare_layer(embed_layer_t *stream_compare_layer_
 */
 static int parse_stream_compare_layer_config(void)
 {
-	int i, j, ret, asymmetric_addr_layer_config_num = 0;
+	int i, j, ret;
 	FILE *fp;
 	char line_cont[MAX_INPUT];
 	embed_layer_t embed_layer;
@@ -886,7 +885,6 @@ static int parse_stream_compare_layer_config(void)
 		}
 
 		update_asymmetric_layer_info(&g_stream_compare_layer_set, &embed_layer);
-		asymmetric_addr_layer_config_num++;
 	}
 
 	char one_layer_index_str[NAME_MAX];
@@ -1168,9 +1166,12 @@ static int config_expression_convert(void)
 		pconfig->packet_io.inject_pkt_mode = SEND_PKT_MODE_STACK_2_LAYER_1_ROUTE;
 	}else if(strncasecmp("raw_ethernet_multi_gateway", pconfig->packet_io.inject_pkt_mode_string, strlen("raw_ethernet_multi_gateway")) == 0){
 		pconfig->packet_io.inject_pkt_mode = SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE;
-	}else{
-	  	sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->PACKET_IO.inject_pkt_mode error, only support:%s!", "[sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]");
-		return -1;		
+	}else if(strncasecmp("default", pconfig->packet_io.inject_pkt_mode_string, strlen("default")) == 0){
+		pconfig->packet_io.inject_pkt_mode = SEND_PKT_MODE_DEFAULT;
+	}
+	else{
+	  	sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->PACKET_IO.inject_pkt_mode set error, only support:%s!", "[default, sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]");
+		return -1;
 	}
 
 	if(strncasecmp(pconfig->packet_io.inject_pkt_mode_string, "raw_ethernet_single_gateway", strlen("raw_ethernet_single_gateway")) == 0){
@@ -2147,7 +2148,7 @@ static int sapp_config_check_sanity(sapp_config_check_t *local_cfg_check_attr)
 */
 int sapp_config_check(void)
 {
-	int i, ret1, ret2, ret3, final_ret = 0;
+	int i, ret1, ret2, final_ret = 0;
 
 	/* 全局变量中有固定不变的配置, 也有动态从配置文件读取的数据, 所以此处copy一份临时数据 */
 	sapp_config_check_t *local_cfg_check_attr = (sapp_config_check_t *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(g_sapp_cfg_check_attr)); 
@@ -2169,7 +2170,7 @@ int sapp_config_check(void)
 		goto done;			
 	}
 
-	ret3 = sapp_config_check_sanity(local_cfg_check_attr);
+	sapp_config_check_sanity(local_cfg_check_attr);
 	final_ret = SAPP_MAX(ret2, final_ret);
 done:
 

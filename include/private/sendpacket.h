@@ -411,69 +411,7 @@ extern "C"  int g_UseSendpktCard;
 #else
 extern int g_UseSendpktCard;
 #endif
-#ifdef PLATFORM_NSDPF_PAPP
-#define SENDBUF_LOCATION_TOOL			(0) /* 已经COPY到sendpacketTool结构中的数据 */
-#define SENDBUF_LOCATION_APP			(1) /* 应用层程序自己申请的内存 */
-typedef struct _sendpacketTool
-{
-    int send_fd;
-    int send_raw_eth_fd; /* 2013-11-08 LiJia add, 并联模式下发送eth包 */
-    short threadnum;//add by lqy 20090313
-    short sendtype;
-    int errflag;
-    int sendbuflen;
-    u_int64_t pkt_send;
-    u_int64_t bytes_send;
-    u_int64_t pkt_senderr;
-	unsigned char *__raw_send_buf; /* add by LiJia 2012-04-10，全部缓存区，包含以太网帧头 */
-	unsigned char *send_buf; /* modify by LiJia 2012-04-10，使用方式改变，IP层及应用层缓存区，为了和之前接口保持兼容性 */
-	unsigned char *send_ptr; /* 指向待发送的数据，根据工作模式和发包方式，可能是__raw_send_buf, send_buf, 或者是应用层自己申请的内存 */
-	//char device_name[IFNAMSIZ];//add by LiJia 2012-04-10，网卡名称
-	struct sockaddr sa; /* 2012-07-17 LiJia add, RAW_LINK模式发包时使用 */
-	struct sockaddr sa2; /* 2012-07-17 LiJia add, 基于双网卡，RAW_LINK模式发包时使用 */
-	struct sockaddr sa_raw_eth;  /* 2013-11-08 LiJia add, 并联模式下发送eth包 */
-    int protocol;//add by LiJia 2012-04-10，协议类型
-    int send_buf_location; /* 待发送的数据所在内存空间，0:已经COPY到sendpacketTool结构中的数据; 1:应用层程序自己申请的内存 */
-    unsigned char linktype;
-    unsigned char linkoffset;
-#ifdef CAPTURE_MODE_PFRING
-	pfring *pf_handle;
-	pfring_pkt_buff *pkt_handle;
-	int pfring_if_index;
-	int pfring_if_index2;
-#endif
-}sendpacketTool;
-#ifdef __cplusplus
-extern "C" {
-#endif
-int sendpacket_build_ip(u_int16_t len, u_char tos, u_int16_t id, u_int16_t frag, u_int8_t ttl,
-            u_int8_t prot, u_int32_t src, u_int32_t dst, const char *payload,
-            int payload_s, unsigned char *buf);
-int sendpacket_build_ipv4(u_int16_t len, u_int8_t tos, u_int16_t id, u_int16_t frag,
-            u_int8_t ttl, u_int8_t prot, u_int32_t src, u_int32_t dst,
-            const char *payload, int payload_s, unsigned char *buf);
-int sendpacket_build_tcp(u_int16_t sp, u_int16_t dp, u_int32_t seq, u_int32_t ack, u_int8_t control,
-            u_int16_t win, u_int16_t urg, const char *payload, int payload_s,unsigned char *buf);
-int sendpacket_build_tcp_with_option(u_int16_t sp, u_int16_t dp, u_int32_t seq, u_int32_t ack, u_int8_t control,
-            u_int16_t win, u_int16_t urg, const char *option, int option_len, const char *payload, int payload_s,
-            unsigned char *buf);
-int sendpacket_build_udp_dual_stack(u_int16_t sp, u_int16_t dp, const char *payload, int payload_s,int, unsigned char *buf);
-int sendpacket_build_ethernet(u_char *dst, u_char *src, u_short type,
-            const u_char *payload, int payload_s, u_char *buf);
-int sendpacket_build_arp(u_short hrd, u_short pro, u_char hln, u_char pln, u_short op,
-            u_char *sha, u_char *spa, u_char *tha, u_char *tpa,
-            const u_char *payload, int payload_s, u_char *buf);
-int sendpacket_do_checksum(unsigned char *buf, int protocol, int len);
-int sendpacket_init_packet(int p_size, unsigned char **buf);
-int sendpacket_tool_init(void);
-extern int sendpacket_write_new( sendpacketTool *pTool,int sendlen, char dir);
-int sendpacket_build_icmpv4_echo(u_int8_t type, u_int8_t code, u_int16_t sum,
-	u_int16_t id, u_int16_t seq, u_int8_t *payload, u_int32_t payload_s, unsigned char *buf);
 
-#ifdef __cplusplus
-}
-#endif
-#else // #ifdef PLATFORM_PAPP
 typedef struct _sendpacketTool
 {
     int send_fd;
@@ -497,9 +435,10 @@ int sendpacket_build_ipv4(u_int16_t len, u_int8_t tos, u_int16_t id, u_int16_t f
             const char *payload, int payload_s, unsigned char *buf);
 int sendpacket_build_icmpv4_echo(u_int8_t type, u_int8_t code, u_int16_t sum,
 	u_int16_t id, u_int16_t seq, u_int8_t *payload, u_int32_t payload_s, unsigned char *buf);            
-int sendpacket_build_tcp(u_int16_t sp, u_int16_t dp, u_int32_t seq, u_int32_t ack, u_int8_t control,
-            u_int16_t win, u_int16_t urg, const char *payload, int payload_s,
-            char *buf);
+
+int sendpacket_build_tcp(u_int16_t sp, u_int16_t dp, u_int32_t seq, u_int32_t ack, 
+						u_int8_t th_flags, u_int16_t win, u_int16_t urg, 
+						const char *payload, int payload_s, unsigned char *buf);
 int sendpacket_build_udp_dual_stack(u_int16_t sp, u_int16_t dp, const char *payload, int payload_s,int,unsigned char *buf);
 int sendpacket_build_ethernet(u_char *dst, u_char *src, u_short type,
             const u_char *payload, int payload_s, u_char *buf);
@@ -510,7 +449,6 @@ int sendpacket_do_checksum(unsigned char *buf, int protocol, int len);
 int sendpacket_init_packet(int p_size, char **buf);
 #ifdef __cplusplus
 }
-#endif
 #endif
 
 #ifdef __cplusplus
@@ -529,13 +467,6 @@ int sendpacket_reset(sendpacketTool *pTool);
 char * sendpacket_geterr(sendpacketTool *pTool);
 int sendpacket_write(sendpacketTool *pTool,int sendlen);
 int sendpacket_checkbufsize(sendpacketTool *pTool,int sendlen);
-
-#ifdef CAPTURE_MODE_PFRING
-void pfring_set_ifindex(sendpacketTool *pTool, u_char dir);
-int pfring_get_sendbuf(sendpacketTool *pTool);
-void pfring_release_sendbuf(sendpacketTool *pTool);
-#endif
-
 
 #ifdef __cplusplus
 }

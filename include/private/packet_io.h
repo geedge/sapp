@@ -78,6 +78,7 @@ enum send_fake_packet_mode{
     SEND_PKT_MODE_STACK_2_LAYER_1_ROUTE					= 1, /* 发送数据模式，协议栈二层发包，单一目的路由*/
 	SEND_PKT_MODE_STACK_2_LAYER_MUTI_ROUTE					= 2, /* 发送数据模式，协议栈二层发包，多个目的路由*/
 	SEND_PKT_MODE_GDEV			= 3, /* 发送数据模式， gdev注入 */
+	SEND_PKT_MODE_DEFAULT		= 4, /* 发送数据模式， 默认 */
 };
 
 typedef int (*PACKET_IO_CB_T)(const raw_pkt_t *p_raw_pkt,unsigned char dir,int thread_num);

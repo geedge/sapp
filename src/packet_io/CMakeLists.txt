@@ -43,7 +43,7 @@ set(PACKET_IO_STATIC_SOURCE cycle_pkt_dump_through_write_offset.c  packet_io_lib
 packet_io_log.c         sendpacket.c
 packet_io.c
 packet_io_status.cpp packet_io_status_new.c 
-packet_io_device.c sapp_compat_old_papp_api.c
+packet_io_device.c 
 sapp_inject.c packet_io_hook.c under_ddos.cpp)
 
 add_library(packet_io STATIC ${PACKET_IO_STATIC_SOURCE})

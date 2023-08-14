@@ -20,10 +20,6 @@ extern "C" {
 */
 
 
-extern int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio, 
-        const void *payload, int payload_len, unsigned char snd_routedir, void *user_arg);
-
-
 int sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir)
 {
 	int ret;
@@ -37,9 +33,9 @@ int sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const v
 		int log_level;
 		const char *string_res;
 		/* inject使用的是routedir, 此处转换成stream dir, 
-		   注意: 插件发包的动作可能不是由当前包触发的,  比如kni, 是从其他网卡收到数据包, 再注入链路的,
-		         不能从raw_pkt或raw_stream->routedir判断方向,
-		         要从流创建的历史记录中判断route_dir和stream_dir的关系!!!!
+		注意: 插件发包的动作可能不是由当前包触发的,  比如kni, 是从其他网卡收到数据包, 再注入链路的,
+		不能从raw_pkt或raw_stream->routedir判断方向,
+		要从流创建的历史记录中判断route_dir和stream_dir的关系!!!!
 		*/	
 		if(stream_pr->stream_c2s_route_dir == snd_routedir){
 			send_stream_dir = DIR_C2S;

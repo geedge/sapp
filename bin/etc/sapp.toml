@@ -44,16 +44,16 @@
 ### vxlan_by_inline_device: encapsulation inject packet with vxlan, and then send to inline device by udp socket.
 ### raw_ethernet_single_gateway: send layer2 ethernet packet to specific gateway in same broadcast domain. 
 ### raw_ethernet_multi_gateway: send layer2 ethernet packet to multiple gateway in same broadcast domain. 
-    inject_pkt_mode="sys_route"
+    inject_pkt_mode="default"
 
 ### note, this config is valid if inject_pkt_mode==vxlan_by_inline_device, means udp socket src port.
-    inject_mode_inline_device_sport=54789
+    #inject_mode_inline_device_sport=54789
 
 ### note, this config is valid if inject_pkt_mode==raw_ethernet_single_gateway.
-    inject_mode_single_gateway_device="eth1"
+    #inject_mode_single_gateway_device="eth1"
 ### inject_mode_single_gateway_src_mac has lower priority than get smac from inject_mode_single_gateway_device
-    inject_mode_single_gateway_src_mac="00:11:22:77:88:99"
-    inject_mode_single_gateway_dst_mac="00:11:22:33:44:55"
+    #inject_mode_single_gateway_src_mac="00:11:22:77:88:99"
+    #inject_mode_single_gateway_dst_mac="00:11:22:33:44:55"
 
     monitor_thread_enabled=1
 
@@ -67,7 +67,7 @@
     destroy_all_plug_enabled = 1
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]
-    mode="mirror"
+    mode="inline"
 
 ### note, interface.type options: [pag, pcap, marsio, tun]
 ### receive from internal interface, route dir is 0,

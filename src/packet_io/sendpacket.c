@@ -63,9 +63,6 @@ extern void *g_packet_dl_send_handle[MAX_THREAD_NUM];
 extern dl_io_fun_list_t dl_io_fun_list;
 extern int g_app_send_rst_type ;
 extern int calc_l2tp_hdr_len_by_net_pkt(const struct l2tp_hdr_v2 *l2tp_hdr, size_t left_len);
-extern int packet_io_send_fake_pkt(MESA_send_handle *send_handle,int datalen,int send_type, 
-					int low_layer_type, int dir,int thread_num,
-					char *feedback_buf, int *feedback_buf_len, const raw_pkt_t *raw_pkt);					
 static inline int dir_check(unsigned char raw_dir);
 extern int set_mpls_addr(struct layer_addr_mpls *addr, const unsigned char *raw_mpls_pkt_data);
 
@@ -959,7 +956,6 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 {
 	int  reserved_hdr_len = 0;
     struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
-    const raw_pkt_t *raw_pkt;
     int pfather_hdr_len;
 
 	if(NULL == stream){ /* 递归计算终结条件! */
@@ -969,7 +965,6 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 	if(is_proxy_stream(stream)){ /* 代理流结构为虚拟结构, 实际构造包时跳过不处理 */
 		return calc_reserved_hdr_len((struct streaminfo *)stream->pfather, net_layer_type, send_stream_dir);
 	}
-	raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
 	
 	switch(stream->addr.addrtype){
 		case ADDR_TYPE_IPV4:
@@ -1819,13 +1814,11 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_layer_type,
 								int carry_layer_len, unsigned char *buf, UCHAR send_stream_dir, const raw_pkt_t *raw_pkt)
 {
-	const struct gtp_hdr *raw_hdr;
 	struct gtp_hdr *gtp_send_hdr;
 	int gtp_net_layer_len = sizeof(struct gtp_hdr);
 	const struct layer_addr_gtp *p_gtp_layer_addr = stream_pr->stream_public.addr.gtp;
 	unsigned int this_pkt_teid;
 	
-	raw_hdr = (const struct gtp_hdr *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
 	gtp_send_hdr  = (struct gtp_hdr *)buf;
 
 	if(DIR_C2S == send_stream_dir){
@@ -2103,7 +2096,6 @@ static void sendpkt_dup_pkt_mark(const struct streaminfo *top_stream, unsigned c
 void sendpkt_dup_pkt_mark_stream(const struct streaminfo *top_stream, const char *ip_hdr)
 {
 	const struct mesa_ip4_hdr *ip4hdr;
-	const struct mesa_ip6_hdr *ip6hdr;
 	const char *transport_layer_hdr;
 	
 	if(ADDR_TYPE_IPV4 == top_stream->addr.addrtype){
@@ -2111,7 +2103,6 @@ void sendpkt_dup_pkt_mark_stream(const struct streaminfo *top_stream, const char
 		transport_layer_hdr = ip_hdr + ip4hdr->ip_hl * 4;
 		sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV4, ip_hdr, transport_layer_hdr);
 	}else{
-		ip6hdr = (struct mesa_ip6_hdr *)ip_hdr;
 		transport_layer_hdr = ip_hdr + sizeof(struct mesa_ip6_hdr);	
 		sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV6, ip_hdr, transport_layer_hdr);
 	}
@@ -2498,159 +2489,6 @@ static raw_pkt_t *update_raw_pkt(struct streaminfo_private *stream_pr, uchar snd
     return inject_raw_pkt;
 }
 
-static int __do_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt, int kill_num,
-								char *feedback_buf, int *feedback_buf_len)
-{
-	int i, ret = -1, reserved_hdr_len, send_len = 0;
-	MESA_send_handle *send_handle;
-	int thread_num;
-	int low_net_layer_type = -1;
-	tcp_rst_finger_mark_t *tcp_rst_finger;
-	const raw_pkt_t *raw_pkt = NULL;
-	struct streaminfo_private *stream_pr;
-	sapp_gval_mthread_sys_stat_t *local_sys_stat;
-	
-	(void)ext_raw_pkt;
-
-	if(NULL == stream){
-		return -1;
-	}
-	thread_num = stream->threadnum;
-	stream_pr = (struct streaminfo_private *)stream;
-	send_handle = &g_send_handle[thread_num];
-	/* 因改变了某些回调函数的原始包类型为IP包头(兼容之前papp平台), 所以不需要插件传输原始包, 信息都存储于私有流结构体内 */
-	raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
-	if((NULL == raw_pkt) || (RAW_PKT_MAGIC_NUM != raw_pkt->magic_num)){
-		return -1;
-	}
-	local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
-	send_handle->user_arg = (void *)stream;
-
-	tcp_rst_finger = make_tcp_rst_finger_mark(thread_num, (const raw_pkt_t *)raw_pkt);
-	set_build_layer_ipv4_args(thread_num, tcp_rst_finger->ip_ttl, tcp_rst_finger->ip_id_host_order);
-
-	if(0 == ABBR_INJECT_RST_SIGN){
-		set_build_layer_tcp_args(thread_num, TH_RST, tcp_rst_finger->tcp_win_host_order, 0);
-	}else{
-		set_build_layer_tcp_args(thread_num, TH_RST|TH_ACK, tcp_rst_finger->tcp_win_host_order, 0);
-	}
-	
-	for(i = 0; i < kill_num; i++){
-		/* 因MPLS非对称问题,  calc_reserved_hdr_len()需要分不同方向计算, 与当前包同向发包 */
-		reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type, stream_pr->stream_public.curdir);
-		if((reserved_hdr_len < 0) || (-1 == low_net_layer_type)){
-			sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-			sapp_runtime_log(RLOG_LV_INFO, "__do_kill_tcp() calc_reserved_hdr_len error !");
-			ret = -1;
-			goto fun_exit;
-		}
-		low_net_layer_type = get_eth_carry_layer_type(stream, stream_pr->stream_public.curdir);
-		if(low_net_layer_type < 0){
-			sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-			sapp_runtime_log(RLOG_LV_INFO, "__do_kill_tcp(): can't get ethernet carry layer type");
-			ret = -1;
-			goto fun_exit;
-		}		
-		if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){ /* gdev注入模式时预留底层封装vxlan包的空间, 避免再二次copy */
-			reserved_hdr_len += sizeof(inline_vxlan_hdr_t);
-		}
-	
-		send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
-
-		sapp_runtime_log(RLOG_LV_DEBUG, "before build_net_layer_pkt(), buf addr:%p, streamdir:%d, total layer len:%d", send_handle->send_buf, stream->curdir, reserved_hdr_len);
-		send_len = build_net_layer_pkt(stream, stream, stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 0, raw_pkt, stream->curdir);
-		if(send_len > 0){		
-			/* 修改错误判断逻辑, 构造失败不退出, 继续尝试反方向造包 */
-			ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
-								low_net_layer_type, stream_pr->stream_public.routedir, thread_num,
-								feedback_buf, feedback_buf_len, stream_pr->raw_pkt);		
-			if(ret < 0){
-				send_handle->tot_send_err++;
-			}else{
-				send_handle->tot_send_pkt++;
-				send_handle->tot_send_byte += send_len;
-			}
-			
-			packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
-			local_sys_stat->count[SAPP_STAT_SND_TCP_RST]++;
-
-			sapp_runtime_log(RLOG_LV_DEBUG, "do_kill_tcp() succ, stream:%s, streamdir:%d, routedir:%d, send_len=%d\n", 
-							printaddr(&stream->addr, thread_num),
-							stream_pr->stream_public.curdir,
-							stream_pr->stream_public.routedir, send_len);
-		}else{
-			sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-			sapp_runtime_log(RLOG_LV_INFO, "do_kill_tcp()-->build_net_layer_pkt() error, send streamdir:%d, routedir:%d, send_len=%d\n", 
-							stream_pr->stream_public.curdir ^ DIR_DOUBLE,
-							stream_pr->stream_public.routedir, send_len);
-		}
-		
- /****************************************** 
-    并联模式下, 两个方向各发一个, 总计三次, 
-    而不是先发C2S三次、再发S2C三次,
-    防止因RST包延时问题, 另一方迟迟没有包; 
- ******************************************/			
-		 /* 因MPLS非对称问题,  calc_reserved_hdr_len()需要分不同方向计算, 与当前包反向发包 */
-		 reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type, stream_pr->stream_public.curdir ^ DIR_DOUBLE);
-		 if((reserved_hdr_len < 0) || (-1 == low_net_layer_type)){
-			 sapp_runtime_log(RLOG_LV_INFO, "MESA_kill_tcp() calc_reserved_hdr_len error !");
-			 ret = -1;
-			 goto fun_exit;
-		 }
-		 if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){ /* gdev注入模式时预留底层封装vxlan包的空间, 避免再二次copy */
-			 reserved_hdr_len += sizeof(inline_vxlan_hdr_t);
-		 }
-		 low_net_layer_type = get_eth_carry_layer_type(stream, stream_pr->stream_public.curdir ^ DIR_DOUBLE);
-		 if(low_net_layer_type < 0){
-			 sapp_runtime_log(RLOG_LV_FATAL, "__do_kill_tcp(): can't get ethernet carry layer type");
-			 ret = -1;
-			 goto fun_exit;
-		 }	 
-
-		send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
-		sapp_runtime_log(10, "before build_net_layer_pkt(), buf addr:%p, streamdir:%d, total layer len:%d", send_handle->send_buf, stream->curdir ^ DIR_DOUBLE, reserved_hdr_len);
-		send_len = build_net_layer_pkt(stream, stream, stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 1, raw_pkt, stream->curdir ^ DIR_DOUBLE);
-		if(send_len > 0){
-			/* 修改错误判断逻辑, 构造失败不退出, 继续尝试反方向造包 */
-			ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
-								low_net_layer_type, stream_pr->stream_public.routedir ^ 1, thread_num,
-								feedback_buf, feedback_buf_len, stream_pr->raw_pkt);	
-			if(ret < 0){
-			send_handle->tot_send_err++;
-			}else{
-				send_handle->tot_send_pkt++;
-				send_handle->tot_send_byte += send_len;
-			}
-			packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
-			local_sys_stat->count[SAPP_STAT_SND_TCP_RST]++;
-
-			sapp_runtime_log(RLOG_LV_DEBUG, "do_kill_tcp() succ, stream:%s, streamdir:%d, routedir:%d, send_len=%d\n", 
-							printaddr(&stream->addr, thread_num),
-							stream_pr->stream_public.curdir ^ DIR_DOUBLE,
-							stream_pr->stream_public.routedir ^ 1, send_len);
-		}else{
-			sapp_runtime_log(RLOG_LV_INFO, "do_kill_tcp()-->build_net_layer_pkt() error, send streamdir:%d, routedir:%d, send_len=%d\n",
-							stream_pr->stream_public.curdir ^ DIR_DOUBLE,
-							stream_pr->stream_public.routedir ^ 1, send_len);
-		}
-	}
-
-fun_exit:
-
-	detach_build_layer_ipv4_args(thread_num);
-	detach_build_layer_tcp_args(thread_num);
-
-	stream_pr->stream_killed_flag = 1;
-
-	/* 兼容新的标志位, kill_tcp自动设置, 保持功能跟之前一致 */
-	struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private*)(stream->pdetail);
-	pdetail_pr->auto_remedy_flag = sapp_global_val->config.stream.tcp.inject.auto_remedy;
-	pdetail_pr->drop_stream_flag = 1;
-
-	return ret;
-}
-
-
 
 /*
 	LiJia note, to do:
@@ -2661,18 +2499,7 @@ fun_exit:
 	实际的seq和ack使用的是第5个包的!
 	应该使用buf_unorder中的seq和ack, 而不是当前流的原始包.
 */
-#if 0
-int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
-{
-	if(STREAM_TYPE_TCP != stream->type){
-		sapp_runtime_log(RLOG_LV_INFO, "MESA_kill_tcp error: stream type is not tcp!\n");
-		return -1;
-	}							
 
-	/* 外部调用, 第一次FD, 发送KILL_TCP_RST_NUM次. */
-	return __do_kill_tcp(stream, ext_raw_pkt, ABBR_INJECT_RST_NUM, (char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
-}
-#else //2020-10-05 lijia modify
 int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
 {
 	int ret1,ret2;
@@ -2709,221 +2536,8 @@ int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
 	return 0; 
 }
 
-#endif
-
-int MESA_kill_tcp_feedback(struct streaminfo *stream, const void *raw_pkt, char *feedback_buf, int *feedback_buf_len)
-{
-	if(STREAM_TYPE_TCP != stream->type){
-		sapp_runtime_log(RLOG_LV_INFO, "MESA_kill_tcp error: stream type is not tcp!\n");
-		return -1;
-	}	
-
-	if((NULL == feedback_buf) || (NULL == feedback_buf_len)){
-		return -2;
-	}
-	if(*feedback_buf_len <= 0){
-		return -2;
-	}
-	return __do_kill_tcp(stream, raw_pkt, ABBR_INJECT_RST_NUM, feedback_buf, feedback_buf_len);
-}
-
-/* 2016-06-15 lijia add  */
-int MESA_kill_tcp_remedy(struct streaminfo *stream, const void *ext_raw_pkt)
-{
-	struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
-	int last_send_time = g_CurrentTime % 255;
-
-	if((sapp_global_val->config.stream.tcp.inject.remedy_kill_tcp_by_inline_device != 0 ) 
-	 && (stream_pr->gdev_block_timer < last_send_time)){
-		/* 防止FD不生效频繁调用c3接口, 对于一个流, 每隔1秒调用一次C3 */
-		stream_pr->gdev_block_timer =  last_send_time;
-		gdev_block_send_rule(stream);
-	}
-	
-	/* FD补救, RST固定只发送1次. */
-	return __do_kill_tcp(stream, ext_raw_pkt, 1, (char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
-}
-
-static int __do_kill_tcp_synack(struct streaminfo *stream, const void *ext_raw_pkt, 
-							char *feedback_buf, int *feedback_buf_len)
-{
-	int i, ret, reserved_hdr_len, send_len = 0;
-	MESA_send_handle *send_handle;
-	int thread_num;
-	int low_net_layer_type;
-	tcp_rst_finger_mark_t *tcp_rst_finger;
-	const raw_pkt_t *raw_pkt = NULL;
-	struct streaminfo_private *stream_pr;
-	sapp_gval_mthread_sys_stat_t *local_sys_stat;
-
-	(void)ext_raw_pkt;
-	
-	if(NULL == stream){
-		return -1;
-	}
-	thread_num = stream->threadnum;
-	stream_pr = (struct streaminfo_private *)stream;
-	send_handle = &g_send_handle[thread_num];
-	raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
-	if((NULL == raw_pkt) || (RAW_PKT_MAGIC_NUM != raw_pkt->magic_num)){
-		return -1;
-	}
-	local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
-    //send_handle->user_arg = (void *)stream;
-    reserved_hdr_len = calc_reserved_hdr_len(stream, &low_net_layer_type, stream_pr->stream_c2s_route_dir ^ 1);
-	if((reserved_hdr_len < 0) || (-1 == low_net_layer_type)){
-		ret = -1;
-		goto fun_exit;
-	}
-	tcp_rst_finger = make_tcp_rst_finger_mark(thread_num, (const raw_pkt_t *)raw_pkt);
-	set_build_layer_ipv4_args(thread_num, tcp_rst_finger->ip_ttl, tcp_rst_finger->ip_id_host_order);
-	set_build_layer_tcp_args(thread_num, TH_SYN|TH_ACK, tcp_rst_finger->tcp_win_host_order, MESA_rand());
-
-	for(i = 0; i < KILL_TCP_SYN_ACK_NUM; i++){
-		send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);
-		
-		send_len = build_net_layer_pkt(stream, stream, stream_pr, ADDR_TYPE_TCP, 0, send_handle->send_buf + reserved_hdr_len, 1, raw_pkt, stream->curdir ^ DIR_DOUBLE);
-		if(send_len < 0){
-			ret = -1;
-			goto fun_exit;		
-		}
-		send_handle->user_arg = (void *)stream;
-		ret = packet_io_send(send_handle, reserved_hdr_len, SEND_TYPE_LINK_INJECT, 
-							low_net_layer_type, stream->routedir ^ 1, thread_num,
-							feedback_buf, feedback_buf_len, stream_pr->raw_pkt);		
-		if(ret < 0){
-			send_handle->tot_send_err++;
-		}else{
-			send_handle->tot_send_pkt++;
-			send_handle->tot_send_byte += send_len;
-		}
-		
-		packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
-		local_sys_stat->count[SAPP_STAT_SND_TCP_SYNACK]++;
-	}
-fun_exit:
-	detach_build_layer_ipv4_args(thread_num);
-	detach_build_layer_tcp_args(thread_num);
-
-	stream_pr->stream_killed_flag = 1;
-
-	return ret;
-}
-
-int MESA_kill_tcp_synack(struct streaminfo *stream, const void *ext_raw_pkt)
-{
-	return __do_kill_tcp_synack(stream, ext_raw_pkt, (char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
-}
-
-int MESA_kill_tcp_synack_feedback(struct streaminfo *stream, const void *ext_raw_pkt,
-								char *feedback_buf, int *feedback_buf_len)
-{
-	if((NULL == feedback_buf) || (NULL == feedback_buf_len)){
-		return -2;
-	}
-	if(*feedback_buf_len <= 0){
-		return -2;
-	}
-
-	return __do_kill_tcp_synack(stream, ext_raw_pkt, feedback_buf, feedback_buf_len);
-}
-
-
-/* 2014-11-15 lijia add, for drop NO-TCP protocol in serial mode. 
-    return value:
-    >= 0: success.
-    -1  : error.
-*/
-int MESA_kill_connection(struct streaminfo *stream, const void *ext_raw_pkt)
-{
-	int ret;
-	struct streaminfo_private *stream_pr;
-
-	(void)ext_raw_pkt;
-	
-	if(NULL == stream){
-		return -1;
-	}
-	stream_pr = (struct streaminfo_private *)stream;
-	
-	switch(stream->type){
-		case STREAM_TYPE_TCP:
-			//ret = MESA_kill_tcp(stream, ext_raw_pkt);
-			/* 因改变了某些回调函数的原始包类型为IP包头, 所以不需要插件传输原始包, 信息都存储于私有流结构体内 */
-			ret = MESA_kill_tcp(stream, stream_pr->raw_pkt);
-		break;
-		case STREAM_TYPE_UDP:
-			stream_pr->stream_killed_flag = 1;
-			ret = 0;
-		break;
-		
-		case STREAM_TYPE_SOCKS4:
-		case STREAM_TYPE_SOCKS5:
-		case STREAM_TYPE_HTTP_PROXY:
-		case STREAM_TYPE_PPPOE:
-			sapp_runtime_log(30, "stream type: %d, not support kill_connection!\n", stream->type);
-			return -1;
-			//assert(0);
-		break;
-
-		default:
-			ret = -1;
-			break;
-	}
-
-	return ret;
-}
-
-int MESA_kill_connection_feedback(struct streaminfo *stream, const void *ext_raw_pkt,
-							char *feedback_buf, int *feedback_buf_len)
-{
-	int ret;
-	struct streaminfo_private *stream_pr;
-
-	(void)ext_raw_pkt;
-
-	if((NULL == feedback_buf) || (NULL == feedback_buf_len)){
-		return -2;
-	}
-	if(*feedback_buf_len <= 0){
-		return -2;
-	}	
-	
-	if(NULL == stream){
-		return -1;
-	}
-	stream_pr = (struct streaminfo_private *)stream;
-	
-	switch(stream->type){
-		case STREAM_TYPE_TCP:
-			//ret = MESA_kill_tcp(stream, ext_raw_pkt);
-			/* 因改变了某些回调函数的原始包类型为IP包头, 所以不需要插件传输原始包, 信息都存储于私有流结构体内 */
-			ret = MESA_kill_tcp_feedback(stream, stream_pr->raw_pkt, feedback_buf, feedback_buf_len);
-		break;
-		case STREAM_TYPE_UDP:
-			stream_pr->stream_killed_flag = 1;
-			ret = 0;
-		break;
-		
-		case STREAM_TYPE_SOCKS4:
-		case STREAM_TYPE_SOCKS5:
-		case STREAM_TYPE_HTTP_PROXY:
-		case STREAM_TYPE_PPPOE:
-			sapp_runtime_log(30, "stream type: %d, not support kill_connection!\n", stream->type);
-			return -1;
-			//assert(0);
-		break;
-
-		default:
-			ret = -1;
-			break;
-	}
-
-	return ret;
-}
-
 static int build_tcp_rst_pkt_finger(struct streaminfo *stream,
-					unsigned short signature_seed1, unsigned short signature_seed2, tcp_rst_finger_mark_t *rst_finger)
+									unsigned short signature_seed1, unsigned short signature_seed2, tcp_rst_finger_mark_t *rst_finger)
 {
 	const raw_pkt_t *raw_pkt;
 	struct streaminfo_private *stream_pr;
@@ -2933,34 +2547,41 @@ static int build_tcp_rst_pkt_finger(struct streaminfo *stream,
 	raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
 
 	ip4_hdr = (const struct mesa_ip4_hdr *)((char *)raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr);
-	
-	if(ADDR_TYPE_IPV4 == stream->addr.addrtype){
-		if(signature_seed1 && signature_seed2){
-			trick_algo_getrandval_with_seed(stream->threadnum, 
-								  ip4_hdr->ip_src.s_addr,  
-								  ip4_hdr->ip_dst.s_addr,  
-								  &rst_finger->ip_id_host_order,
-								  &rst_finger->tcp_win_host_order,
-								  &rst_finger->ip_ttl,
-								  (int)signature_seed2,
-								  (int)signature_seed1);
 
-		}else{
-			if(sapp_global_val->config.stream.tcp.inject.rst_signature_enable != 0){
-				trick_algo_getrandval_with_seed(stream->threadnum, 
-									  ip4_hdr->ip_src.s_addr, 
-									  ip4_hdr->ip_dst.s_addr,  
-									  &rst_finger->ip_id_host_order,
-									  &rst_finger->tcp_win_host_order,
-									  &rst_finger->ip_ttl,
-									  (int)sapp_global_val->config.stream.tcp.inject.rst_signature_seed2,
-									  (int)sapp_global_val->config.stream.tcp.inject.rst_signature_seed1);
-
-			}else{
+	if (ADDR_TYPE_IPV4 == stream->addr.addrtype)
+	{
+		if (signature_seed1 && signature_seed2)
+		{
+			trick_algo_getrandval_with_seed(stream->threadnum,
+											ip4_hdr->ip_src.s_addr,
+											ip4_hdr->ip_dst.s_addr,
+											&rst_finger->ip_id_host_order,
+											&rst_finger->tcp_win_host_order,
+											&rst_finger->ip_ttl,
+											(int)signature_seed2,
+											(int)signature_seed1);
+		}
+		else
+		{
+			if (sapp_global_val->config.stream.tcp.inject.rst_signature_enable != 0)
+			{
+				trick_algo_getrandval_with_seed(stream->threadnum,
+												ip4_hdr->ip_src.s_addr,
+												ip4_hdr->ip_dst.s_addr,
+												&rst_finger->ip_id_host_order,
+												&rst_finger->tcp_win_host_order,
+												&rst_finger->ip_ttl,
+												(int)sapp_global_val->config.stream.tcp.inject.rst_signature_seed2,
+												(int)sapp_global_val->config.stream.tcp.inject.rst_signature_seed1);
+			}
+			else
+			{
 				goto use_rand_value;
 			}
 		}
-	}else{
+	}
+	else
+	{
 		goto use_rand_value;
 	}
 
@@ -2978,7 +2599,7 @@ use_rand_value:
 int __MESA_rst_tcp(struct streaminfo *stream, unsigned char rst_th_flags, int rst_pkt_num, unsigned char snd_rst_dir, 
 							unsigned short signature_seed1, unsigned short signature_seed2)
 {
-	int i, ret = -1, send_len = 0;
+	int i, ret = -1;
 	const raw_pkt_t *raw_pkt;
 	int threadnum = stream->threadnum;
 	struct streaminfo_private *stream_pr;
@@ -3081,27 +2702,28 @@ int MESA_rst_tcp(struct streaminfo *stream, struct rst_tcp_para *paras, int stru
 		return -1;
 	}
 
-	if(struct_para_len > sizeof(struct rst_tcp_para)){
+	if(struct_para_len > (int)sizeof(struct rst_tcp_para)){
 		sapp_runtime_log(RLOG_LV_INFO, "MESA_rst_tcp() warning: the caller version is newer than sapp, not support new paras!\n");
 	}
-
-	if((0 == paras->signature_seed1) && (0 == paras->signature_seed2)){
-		if(0 == sapp_global_val->config.stream.tcp.inject.rst_signature_enable){
-			tmp_signature_seed1 = 0;
-			tmp_signature_seed2 = 0;
-		}else{
+	tmp_signature_seed1 = paras->signature_seed1;
+	tmp_signature_seed2 = paras->signature_seed2;
+	if((0 == tmp_signature_seed1) && (0 == tmp_signature_seed2)){
+		if(0 != sapp_global_val->config.stream.tcp.inject.rst_signature_enable){
 			tmp_signature_seed1 = sapp_global_val->config.stream.tcp.inject.rst_signature_seed1;
 			tmp_signature_seed2 = sapp_global_val->config.stream.tcp.inject.rst_signature_seed2;
 		}
-	}else{
-		tmp_signature_seed1 = paras->signature_seed1;
-		tmp_signature_seed2 = paras->signature_seed2;
 	}
-
 	return __MESA_rst_tcp((struct streaminfo *)stream, paras->th_flags, paras->rst_pkt_num, paras->dir, 
-						  tmp_signature_seed1, tmp_signature_seed2);
+						tmp_signature_seed1, tmp_signature_seed2);
 }
 
+/* 2016-06-15 lijia add  */
+inline int MESA_kill_tcp_remedy(struct streaminfo *stream, const void *ext_raw_pkt)
+{
+	return __MESA_rst_tcp(stream, (unsigned char)(TH_RST | TH_ACK), 1, (unsigned char)(stream->curdir ^ DIR_DOUBLE), 
+						(unsigned short )sapp_global_val->config.stream.tcp.inject.rst_signature_seed1, 
+						(unsigned short )sapp_global_val->config.stream.tcp.inject.rst_signature_seed2);
+}
 
 
 int __do_inject_pkt(struct streaminfo *stream, const char *payload, int payload_len, 
@@ -3210,35 +2832,10 @@ fun_exit:
 	return ret;
 }
 
-#if 0
-int MESA_inject_pkt(struct streaminfo *stream, const char *payload, int payload_len, 
-						const void *ext_raw_pkt, UCHAR snd_routedir)
-{
-	return __do_inject_pkt(stream, payload, payload_len, ext_raw_pkt, snd_routedir, 
-				(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER);
-}
-#else //2020-10-05 lijia modify
-int MESA_inject_pkt(struct streaminfo *stream, const char *payload, int payload_len, 
+inline int MESA_inject_pkt(struct streaminfo *stream, const char *payload, int payload_len, 
 						const void *ext_raw_pkt, UCHAR snd_routedir)
 {
 	return sapp_inject_pkt(stream, SIO_DEFAULT, payload, payload_len, snd_routedir);
-}
-
-#endif
-
-int MESA_inject_pkt_feedback(struct streaminfo *stream, const char *payload, int payload_len, 
-						const void *ext_raw_pkt, UCHAR snd_routedir,
-						char *feedback_buf, int *feedback_buf_len)
-{
-	if((NULL == feedback_buf) || (NULL == feedback_buf_len)){
-		return -2;
-	}
-	if(*feedback_buf_len <= 0){
-		return -2;
-	}
-	
-	return __do_inject_pkt(stream, payload, payload_len, ext_raw_pkt, snd_routedir, 
-						feedback_buf, feedback_buf_len);
 }
 
 
@@ -3830,7 +3427,7 @@ static int __MESA_sendpacket_iplayer(int thread_index,const char *data,  int dat
 
 	memcpy(send_handle->send_buf + offset, data, data_len);
 	
-	ret = packet_io_send_fake_pkt(send_handle, data_len+sizeof(struct mesa_ethernet_hdr), SEND_TYPE_LINK_INJECT, 
+	ret = packet_io_send(send_handle, data_len+sizeof(struct mesa_ethernet_hdr), SEND_TYPE_LINK_INJECT, 
 							   layer_type, dir, thread_index,
 							   (char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 
@@ -3891,7 +3488,7 @@ int MESA_fakepacket_send_ipv4(int thread_index,u_int8_t ttl,
 
 	sendpacket_do_checksum(send_handle->send_buf+offset, IPPROTO_IP, SENDPACKET_IP_H);
 
-	ret = packet_io_send_fake_pkt(send_handle, payload_len+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
+	ret = packet_io_send(send_handle, payload_len+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
 								SEND_TYPE_LINK_INJECT, __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
 								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 							   
@@ -3939,7 +3536,7 @@ int MESA_fakepacket_send_ipv4_detail(int thread_index,u_int8_t ttl,
 
 	sendpacket_do_checksum(send_handle->send_buf+offset, IPPROTO_IP, SENDPACKET_IP_H);
 
-	ret = packet_io_send_fake_pkt(send_handle, payload_len+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
+	ret = packet_io_send(send_handle, payload_len+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
 								SEND_TYPE_LINK_INJECT, __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
 								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 							   
@@ -3998,7 +3595,7 @@ int MESA_fakepacket_send_tcp(int thread_index,u_int sip_host_order,u_int dip_hos
 	
 	sendpacket_do_checksum(send_handle->send_buf+offset, IPPROTO_IP, SENDPACKET_IP_H);
 
-	ret = packet_io_send_fake_pkt(send_handle, payload_len+sizeof(struct mesa_tcp_hdr)+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
+	ret = packet_io_send(send_handle, payload_len+sizeof(struct mesa_tcp_hdr)+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
 								SEND_TYPE_LINK_INJECT, __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
 								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 							   
@@ -4054,7 +3651,7 @@ int MESA_fakepacket_send_tcp_detail(int thread_index,u_int sip_host_order,u_int 
 	
 	sendpacket_do_checksum(send_handle->send_buf+offset, IPPROTO_IP, SENDPACKET_IP_H);
 
-	ret = packet_io_send_fake_pkt(send_handle, payload_len+sizeof(struct mesa_tcp_hdr)+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
+	ret = packet_io_send(send_handle, payload_len+sizeof(struct mesa_tcp_hdr)+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
 								SEND_TYPE_LINK_INJECT, __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
 								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 							   
@@ -4109,7 +3706,7 @@ int MESA_fakepacket_send_udp(int thread_index, u_int sip_host_order, u_int dip_h
 	
 	sendpacket_do_checksum(send_handle->send_buf+offset, IPPROTO_IP, SENDPACKET_IP_H);
 
-	ret = packet_io_send_fake_pkt(send_handle, payload_len+sizeof(struct mesa_udp_hdr)+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
+	ret = packet_io_send(send_handle, payload_len+sizeof(struct mesa_udp_hdr)+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
 								SEND_TYPE_LINK_INJECT, __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
 								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 							   
@@ -4163,7 +3760,7 @@ int MESA_fakepacket_send_udp_detail(int thread_index, u_int sip_host_order, u_in
 	
 	sendpacket_do_checksum(send_handle->send_buf+offset, IPPROTO_IP, SENDPACKET_IP_H);
 
-	ret = packet_io_send_fake_pkt(send_handle, payload_len+sizeof(struct mesa_udp_hdr)+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
+	ret = packet_io_send(send_handle, payload_len+sizeof(struct mesa_udp_hdr)+sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), 
 								SEND_TYPE_LINK_INJECT, __ADDR_TYPE_IP_PAIR_V4, dir, thread_index,
 								(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER, NULL);
 							   
@@ -4177,725 +3774,6 @@ int MESA_fakepacket_send_udp_detail(int thread_index, u_int sip_host_order, u_in
 	return ret;	
 }
 
-#if IOMODE_MARSIO
-
-static struct mr_instance *dl_io_marsio4_instance = NULL;
-extern struct mr_instance *sapp_marsio4_instance;
-extern int marsio_send_burst_with_options_for_tcpdumpmesa(struct mr_sendpath * sendpath, queue_id_t sid, marsio_buff_t * mbufs[], int nr_mbufs, uint16_t options);
-extern int (*ptr_marsio_buff_malloc_global)(struct mr_instance * instance, marsio_buff_t *marsio_buff[], unsigned int nr_mbufs, int socket_id, int thread_id);
-extern  char * (*ptr_marsio_buff_append)(marsio_buff_t *m, uint16_t len);
-extern void (*ptr_marsio_buff_ctrlzone_set)(marsio_buff_t *m, uint8_t id, void* ptr_data, uint8_t size);
-extern int (*ptr_marsio_send_burst)(struct mr_sendpath * sendpath,  queue_id_t qid, marsio_buff_t * mbufs[], int nr_mbufs);
-extern marsio_buff_t * (*ptr_marsio_buff_clone_with_options)(struct mr_instance * instance, marsio_buff_t * md, int socket_id, int thread_id, uint16_t options);
-extern void (*ptr_marsio_buff_set_rehash_index)(marsio_buff_t *m, uint32_t hash);
-extern void (*ptr_marsio_buff_free)(struct mr_instance * instance, marsio_buff_t *marsio_buff[],unsigned int nr_mbufs, int socket_id, int thread_id);
-struct mr_instance *sapp_get_marsio_instance(void)
-{
-	dl_io_marsio4_instance = sapp_marsio4_instance;
-	return dl_io_marsio4_instance; 
-}
-
-
-static void sapp_fakepacket_set_vxlan_options(struct mr_tunnat_ctrlzone *mr_ctrlzone, SAPP_TLV_T *option)
-{
-	switch(option->type){
-		case SAPP_SEND_OPT_GDEV_DMAC:
-			memcpy(mr_ctrlzone->g_device_mac, option->array_value, 6);
-		break;
-
-		case SAPP_SEND_OPT_GDEV_SMAC:
-			memcpy(mr_ctrlzone->l_device_mac, option->array_value, 6);
-		break;
-
-		case SAPP_SEND_OPT_GDEV_DIP:
-			mr_ctrlzone->g_device_in_addr = option->int_value;
-		break;
-		
-		case SAPP_SEND_OPT_GDEV_SIP:
-			mr_ctrlzone->l_device_in_addr = option->int_value;
-		break;
-
-		case SAPP_SEND_OPT_GDEV_UDP_DPORT:
-			/* default 4789, do nothing */
-		break;
-
-		case SAPP_SEND_OPT_GDEV_UDP_SPORT:
-			mr_ctrlzone->l4_src_port = option->short_value;
-		break;
-
-		case SAPP_SEND_OPT_VXLAN_VPN_ID:
-			mr_ctrlzone->g_device_vpn_id = option->int_value;
-			mr_ctrlzone->action |= TUNNAT_CZ_ACTION_ENCAP_NO_SESSION;  /* 直接构造好整个包再发送, 不需要驱动查表 */
-		break;	
-
-		case SAPP_SEND_OPT_VXLAN_LINK_ID:
-			mr_ctrlzone->g_device_linkpair = option->int_value;
-			mr_ctrlzone->action |= TUNNAT_CZ_ACTION_ENCAP_NO_SESSION;  /* 直接构造好整个包再发送, 不需要驱动查表 */
-		break;
-
-		case SAPP_SEND_OPT_VXLAN_LINK_ENCAP_TYPE:
-			mr_ctrlzone->g_device_outer_encap_type = option->char_value;
-		break;
-
-		case SAPP_SEND_OPT_VXLAN_LINK_DIR:
-			mr_ctrlzone->route_dir = option->char_value;
-			mr_ctrlzone->action |= TUNNAT_CZ_ACTION_ENCAP_NO_SESSION;  /* 直接构造好整个包再发送, 不需要驱动查表 */
-		break;
-
-		case SAPP_SEND_OPT_INNER_LINK_ENCAP_TYPE:
-			mr_ctrlzone->g_device_inner_encap_type = option->char_value;
-		break;
-
-		case SAPP_SEND_OPT_VIRTUAL_LINK_ID:
-			mr_ctrlzone->virtual_link_id = option->long_value;
-			mr_ctrlzone->action |= TUNNAT_CZ_ACTION_ENCAP_VIRTUAL_LINK_ID; 
-		break;
-
-		case SAPP_SEND_OPT_REHASH_INDEX:
-			/* rehash_index不能在ctrlzone里设置, 要通过接口marsio_buff_set_rehash_index() */
-			//mr_ctrlzone->rehash_index = option->long_value;
-			//mr_ctrlzone->action |= TUNNAT_CZ_ACTION_ENCAP_VIRTUAL_LINK_ID;
-			sapp_runtime_log(30, "sendpacket set vxlan options error, cat't set REHASH_INDEX in ctrlzone\n");
-		break;
-
-		case SAPP_SEND_OPT_VXLAN_FLAGS:
-			//dpdk driver not support, use fix value 0x08
-		break;
-
-		default:
-			sapp_runtime_log(20, "sendpacket set vxlan options error, invalid opt type:%d\n", option->type);
-		break;
-	}
-
-	return;
-}
-
-/*
-	此函数由ipv4, ipv6发包函数共用, 靠ether_type_host参数区别.
-	data: 包含ip头部的整个ip包;
-	data_len: 包含ip头部长度.
-*/
-static int __MESA_sendpacket_iplayer_options(int thread_index,const char *data,  int data_len, 
-    u_int8_t dir, SAPP_TLV_T *options, int opt_num, unsigned short ether_type_host)
-{
-	/* marsio系列函数0表示正常, -1表示错误, g_serial系列函数正常返回字节数, 错误返回-1 */
-	int inner_ret;
-	marsio_buff_t *send_mbuf[1];
-	unsigned char *real_buf;
-	struct mr_tunnat_ctrlzone mr_ctrlzone;
-	int i;
-	
-	if(NULL == dl_io_marsio4_instance){
-		dl_io_marsio4_instance = sapp_get_marsio_instance();
-	}
-	
-	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-	if(inner_ret < 0){
-		sapp_runtime_log(RLOG_LV_INFO, "call marsio_buff_malloc_global() failed!\n");
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}	
-	
-	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], data_len+sizeof(struct mesa_ethernet_hdr));
-	if(NULL == real_buf){
-		ptr_marsio_buff_free(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}	
-	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
-	inner_ehdr->ether_type = ntohs(ether_type_host);/* 底层设为ethernet */
-
-	/* 此处只处理跟IP层相关的选项, vxlan相关选项在公共函数sapp_fakepacket_set_vxlan_options()设置 */
-	memset(&mr_ctrlzone, 0 , sizeof(struct mr_tunnat_ctrlzone));
-	for(i = 0; i < opt_num; i++){
-		if(SAPP_SEND_OPT_INNER_SMAC == options[i].type){
-			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
-			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
-		}else{
-			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
-		}
-	}
-	memcpy(real_buf + sizeof(struct mesa_ethernet_hdr), data, data_len);
-
-	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
-	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
-	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
-								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
-	if(inner_ret < 0){
-		return -1;
-	}
-								    	
-	return data_len;
-}
-
-
-int MESA_sendpacket_iplayer_options(int thread_index,const char *data,  int data_len, 
-    u_int8_t dir, SAPP_TLV_T *options, int opt_num)
-{
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
-	int ret;
-
-	ret = __MESA_sendpacket_iplayer_options(thread_index, data, data_len, dir, options, opt_num, ETHERTYPE_IP);
-	if(ret > 0){
-		local_sys_stat->count[SAPP_STAT_SND_IPV4]++;
-		local_sys_stat->length[SAPP_STAT_SND_IPV4]+= data_len;	
-	}
-
-	return ret;
-}
-
-int MESA_sendpacket_ipv6_layer_options(int thread_index,const char *data,  int data_len, 
-    u_int8_t dir, SAPP_TLV_T *options, int opt_num)
-{
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
-	int ret;
-
-	ret = __MESA_sendpacket_iplayer_options(thread_index, data, data_len, dir, options, opt_num, ETHERTYPE_IPv6);
-
-	if(ret > 0){
-		local_sys_stat->count[SAPP_STAT_SND_IPV6]++;
-		local_sys_stat->length[SAPP_STAT_SND_IPV6]+= data_len;	
-	}
-
-	return ret;	
-}
-
-int MESA_fakepacket_send_ipv4_options(const struct streaminfo *stream, uint8_t protocol,
-							uint32_t sip_host_order, uint32_t dip_host_order, 
-							const char *payload, int payload_len, uint8_t dir, 
-							SAPP_TLV_T *options, int opt_num)
-{
-	int snd_len, inner_ret;
-	marsio_buff_t *send_mbuf[1];
-	u_int16_t ipid = MESA_rand() & 0xFFFF;
-	u_int8_t ip_ttl = MESA_rand() % 64 + 32;
-	int thread_index = stream->threadnum;
-	int i;
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
-	
-	struct mr_tunnat_ctrlzone mr_ctrlzone;
-	unsigned char *real_buf;
-
-	if(NULL == dl_io_marsio4_instance){
-		dl_io_marsio4_instance = sapp_get_marsio_instance();
-	}
-	
-	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-	if(inner_ret < 0){
-		sapp_runtime_log(RLOG_LV_INFO, "MESA_fakepacket_send_ipv4_options-> marsio_buff_malloc_global() failed!\n");
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}	
-
-	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr));
-	if(NULL == real_buf){
-		ptr_marsio_buff_free(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}		
-	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
-	inner_ehdr->ether_type = ntohs(ETHERTYPE_IP);/* 底层设为ethernte */
-	
-	/* 此处只处理跟IP层相关的选项, vxlan相关选项在公共函数sapp_fakepacket_set_vxlan_options()设置 */
-	memset(&mr_ctrlzone, 0 , sizeof(struct mr_tunnat_ctrlzone));
-	for(i = 0; i < opt_num; i++){
-		if(SAPP_SEND_OPT_IP_ID == options[i].type){
-			ipid = options[i].short_value;
-		}else if(SAPP_SEND_OPT_IP_TTL == options[i].type){
-			ip_ttl = options[i].char_value;
-		}else if(SAPP_SEND_OPT_INNER_SMAC == options[i].type){
-			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
-			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
-		}else{
-			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
-		}
-	}
-	sendpacket_build_ipv4(payload_len, 0, ipid, 0 , ip_ttl, protocol, 
-						htonl(sip_host_order), htonl(dip_host_order), payload, payload_len, 
-						(unsigned char *)real_buf + sizeof(struct mesa_ethernet_hdr));
-
-	sendpacket_do_checksum(real_buf + sizeof(struct mesa_ethernet_hdr), IPPROTO_IP, SENDPACKET_IP_H);
-	
-	if(payload){
-		memcpy(real_buf + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr), payload, payload_len);
-	}
-
-	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
-	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
-	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
-								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
-
-	if(inner_ret < 0){
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}
-
-	snd_len = sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr) + payload_len;
-	local_sys_stat->count[SAPP_STAT_SND_IPV4]++;
-	local_sys_stat->length[SAPP_STAT_SND_IPV4]+= snd_len;
-
-	
-	return snd_len;	
-}
-
-int MESA_fakepacket_send_ipv6_options(const struct streaminfo *stream, uint8_t protocol,
-							struct in6_addr *sip, struct in6_addr *dip,
-							const char *payload, int payload_len, uint8_t dir, 
-							SAPP_TLV_T *options, int opt_num)
-{
-	int inner_ret, snd_len;
-	u_int8_t ip_ttl = MESA_rand() % 64 + 32;
-	int thread_index = stream->threadnum;
-	int i;
-	marsio_buff_t *send_mbuf[1];
-	struct mr_tunnat_ctrlzone mr_ctrlzone;
-	unsigned char *real_buf;
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
-
-	if(NULL == dl_io_marsio4_instance){
-		dl_io_marsio4_instance = sapp_get_marsio_instance();
-	}
-	
-	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-	if(inner_ret < 0){
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}	
-
-	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr));
-	if(NULL == real_buf){
-		ptr_marsio_buff_free(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}		
-	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
-	inner_ehdr->ether_type = ntohs(ETHERTYPE_IPv6);/* 底层设为ethernet */
-	
-	/* 此处只处理跟IP层相关的选项, vxlan相关选项在公共函数sapp_fakepacket_set_vxlan_options()设置 */
-	memset(&mr_ctrlzone, 0 , sizeof(struct mr_tunnat_ctrlzone));
-	for(i = 0; i < opt_num; i++){
-		if(SAPP_SEND_OPT_IP_TTL == options[i].type){
-			ip_ttl = options[i].char_value;
-		}else if(SAPP_SEND_OPT_INNER_SMAC == options[i].type){
-			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
-			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
-		}else{
-			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
-		}
-	}
-	sendpacket_build_ipv6(0, 0, payload_len, protocol, ip_ttl, sip, dip, 
-						payload, payload_len, 
-						(unsigned char *)real_buf + sizeof(struct mesa_ethernet_hdr));
-
-	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
-	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
-	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
-								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
-	if(inner_ret < 0){
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}
-
-	snd_len = sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr) + payload_len;
-	local_sys_stat->count[SAPP_STAT_SND_IPV6]++;
-	local_sys_stat->length[SAPP_STAT_SND_IPV6]+= snd_len;
-
-	return snd_len;	
-}
-
-int MESA_fakepacket_send_tcp_options(const struct streaminfo *stream,
-							u_int sip_host_order,u_int dip_host_order,
-							u_short sport_host_order,u_short dport_host_order,
-							u_int sseq_host_order,u_int sack_host_order,
-							u_char control,
-							const char* payload,int payload_len, u_int8_t dir,
-							SAPP_TLV_T *options, int opt_num)
-{
-	int i, snd_len, inner_ret, offset = sizeof(struct mesa_ethernet_hdr);
-	int thread_index = stream->threadnum;
-	marsio_buff_t *send_mbuf[1];
-	struct mr_tunnat_ctrlzone mr_ctrlzone;
-	unsigned char *real_buf;
-	unsigned short ipid = MESA_rand() & 0xFFFF;
-	unsigned short tcp_win = MESA_rand_range(8192, 32768);
-	unsigned char ip_ttl = MESA_rand_range(32,65);
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
-
-	if(NULL == dl_io_marsio4_instance){
-		dl_io_marsio4_instance = sapp_get_marsio_instance();
-	}
-	
-	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-	if(inner_ret < 0){
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		sapp_runtime_log(RLOG_LV_INFO, "MESA_fakepacket_send_tcp_options()-> marsio_buff_malloc_global() failed!\n");
-		return -1;
-	}	
-
-	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_tcp_hdr) + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr));
-	if(NULL == real_buf){
-		ptr_marsio_buff_free(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}			
-	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
-	inner_ehdr->ether_type = ntohs(ETHERTYPE_IP);/* 底层设为ethernte */
-	
-	memset(&mr_ctrlzone, 0 , sizeof(struct mr_tunnat_ctrlzone));
-	for(i = 0; i < opt_num; i++){
-		if(SAPP_SEND_OPT_IP_ID == options[i].type){
-			ipid = options[i].short_value;
-		}else if(SAPP_SEND_OPT_IP_TTL == options[i].type){
-			ip_ttl = options[i].char_value;
-		}if(SAPP_SEND_OPT_TCP_WIN == options[i].type){
-			tcp_win = options[i].short_value;
-		}else if(SAPP_SEND_OPT_INNER_SMAC == options[i].type){
-			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
-			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
-		}else{
-			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
-		}
-	}
-	
-	sendpacket_build_tcp(sport_host_order, dport_host_order, sseq_host_order, sack_host_order,
-						control, tcp_win, 0, payload, payload_len, real_buf+offset+sizeof(struct mesa_ip4_hdr));
-						
-	sendpacket_build_ipv4(payload_len+SENDPACKET_TCP_H, 0, ipid, 0, ip_ttl, IPPROTO_TCP, 
-						htonl(sip_host_order), htonl(dip_host_order), NULL, 0, real_buf+offset);
-
-	sendpacket_do_checksum(real_buf+offset, IPPROTO_TCP, SENDPACKET_TCP_H+payload_len);
-	
-	sendpacket_do_checksum(real_buf+offset, IPPROTO_IP, SENDPACKET_IP_H);
-
-	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
-	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
-	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
-								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
-
-	if(inner_ret < 0){
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}
-
-	snd_len = sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr) +sizeof(struct mesa_tcp_hdr) + payload_len;
-	
-	local_sys_stat->count[SAPP_STAT_SND_TCP]++;
-	local_sys_stat->length[SAPP_STAT_SND_TCP]+= snd_len;
-	
-	return snd_len;	
-}
-
-
-int MESA_fakepacket_send_ipv6_tcp_options(const struct streaminfo *stream,
-							struct in6_addr *sip, struct in6_addr *dip,
-							u_short sport_host_order,u_short dport_host_order,
-							u_int sseq_host_order,u_int sack_host_order,
-							u_char control,
-							const char* payload,int payload_len, u_int8_t dir,
-							SAPP_TLV_T *options, int opt_num)
-{
-	int i, snd_len, inner_ret, offset = sizeof(struct mesa_ethernet_hdr);
-	int thread_index = stream->threadnum;
-	marsio_buff_t *send_mbuf[1];
-	struct mr_tunnat_ctrlzone mr_ctrlzone;
-	unsigned char *real_buf;
-	unsigned short tcp_win = MESA_rand_range(8192, 32768);
-	unsigned char ip_ttl = MESA_rand_range(32,65);
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
-
-	if(NULL == dl_io_marsio4_instance){
-		dl_io_marsio4_instance = sapp_get_marsio_instance();
-	}
-	
-	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-	if(inner_ret < 0){
-		sapp_runtime_log(RLOG_LV_INFO, "MESA_fakepacket_send_ipv6_tcp_options-> marsio_buff_malloc_global() failed!\n");
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}	
-
-	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_tcp_hdr) + sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr));
-	if(NULL == real_buf){
-		ptr_marsio_buff_free(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}		
-	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
-	inner_ehdr->ether_type = ntohs(ETHERTYPE_IPv6);/* 底层设为ethernte */
-	
-	memset(&mr_ctrlzone, 0 , sizeof(struct mr_tunnat_ctrlzone));
-	for(i = 0; i < opt_num; i++){
-		if(SAPP_SEND_OPT_IP_TTL == options[i].type){
-			ip_ttl = options[i].char_value;
-		}if(SAPP_SEND_OPT_TCP_WIN == options[i].type){
-			tcp_win = options[i].short_value;
-		}else if(SAPP_SEND_OPT_INNER_SMAC == options[i].type){
-			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
-			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
-		}else{
-			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
-		}
-	}
-	
-	sendpacket_build_tcp(sport_host_order, dport_host_order, sseq_host_order, sack_host_order,
-						control, tcp_win, 0, payload, payload_len, real_buf+offset+sizeof(struct mesa_ip6_hdr));
-						
-	sendpacket_build_ipv6(0, 0, payload_len + sizeof(struct mesa_tcp_hdr), IPPROTO_TCP, ip_ttl, sip, dip, 
-						NULL, 0, 
-						(unsigned char *)real_buf + sizeof(struct mesa_ethernet_hdr));
-
-	sendpacket_do_checksum(real_buf+offset, IPPROTO_TCP, SENDPACKET_TCP_H+payload_len);
-
-	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
-	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
-	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
-								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
-	if(inner_ret < 0){
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}
-
-	snd_len = sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr) +sizeof(struct mesa_tcp_hdr) + payload_len;
-	local_sys_stat->count[SAPP_STAT_SND_TCP]++;
-	local_sys_stat->length[SAPP_STAT_SND_TCP]+= snd_len;
-
-	return snd_len;	
-}
-
-int MESA_fakepacket_send_udp_options(const struct streaminfo *stream,
-							u_int sip_host_order, u_int dip_host_order, 
-							u_short sport_host_order,u_short dport_host_order, 
-							const char *payload, int payload_len,u_int8_t dir,
-							SAPP_TLV_T *options, int opt_num)
-{
-	int i, snd_len, inner_ret, offset = sizeof(struct mesa_ethernet_hdr);
-	int thread_index = stream->threadnum;
-	marsio_buff_t *send_mbuf[1];
-	struct mr_tunnat_ctrlzone mr_ctrlzone;
-	unsigned char *real_buf;
-	unsigned short ipid = MESA_rand();
-	unsigned char ip_ttl = MESA_rand_range(32, 64);
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
-
-	if(NULL == dl_io_marsio4_instance){
-		dl_io_marsio4_instance = sapp_get_marsio_instance();
-	}
-	
-	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-	if(inner_ret < 0){
-		sapp_runtime_log(30, "call marsio_buff_malloc_global() failed!\n");
-		return -1;
-	}	
-
-	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr));
-	if(NULL == real_buf){
-		ptr_marsio_buff_free(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}			
-	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
-	inner_ehdr->ether_type = ntohs(ETHERTYPE_IP);/* 底层设为ethernte */
-	
-	memset(&mr_ctrlzone, 0 , sizeof(struct mr_tunnat_ctrlzone));
-	for(i = 0; i < opt_num; i++){
-		if(SAPP_SEND_OPT_IP_ID == options[i].type){
-			ipid = options[i].short_value;
-		}else if(SAPP_SEND_OPT_IP_TTL == options[i].type){
-			ip_ttl = options[i].char_value;
-		}else if(SAPP_SEND_OPT_INNER_SMAC == options[i].type){
-			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
-			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
-		}else{
-			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
-		}
-	}
-	
-	sendpacket_build_udp(sport_host_order, dport_host_order, payload, payload_len,
-						real_buf+offset+sizeof(struct mesa_ip4_hdr));
-						
-	sendpacket_build_ipv4(payload_len+SENDPACKET_UDP_H, 0, ipid, 0, ip_ttl, IPPROTO_UDP, 
-						htonl(sip_host_order), htonl(dip_host_order), NULL, 0, real_buf+offset);
-
-	sendpacket_do_checksum(real_buf+offset, IPPROTO_UDP, SENDPACKET_UDP_H+payload_len);
-	
-	sendpacket_do_checksum(real_buf+offset, IPPROTO_IP, SENDPACKET_IP_H);
-
-	if((mr_ctrlzone.action & TUNNAT_CZ_ACTION_ENCAP_NO_SESSION) == 0){
-		mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
-	}
-	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
-#if 0
-	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
-								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
-#else
-	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
-									send_mbuf, 1, 0);	
-#endif
-	if(inner_ret < 0){
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}
-
-	snd_len = sizeof(struct mesa_ip4_hdr)+sizeof(struct mesa_ethernet_hdr) +sizeof(struct mesa_udp_hdr) + payload_len;
-
-	local_sys_stat->count[SAPP_STAT_SND_TCP]++;
-	local_sys_stat->length[SAPP_STAT_SND_TCP]+= snd_len;		
-	return snd_len;	
-}
-
-int MESA_fakepacket_send_ipv6_udp_options(const struct streaminfo *stream,
-							struct in6_addr *sip, struct in6_addr *dip,
-							u_short sport_host_order,u_short dport_host_order, 
-							const char *payload, int payload_len,u_int8_t dir,
-							SAPP_TLV_T *options, int opt_num)
-{
-	int i, snd_len, inner_ret, offset = sizeof(struct mesa_ethernet_hdr);
-	int thread_index = stream->threadnum;
-	marsio_buff_t *send_mbuf[1];
-	struct mr_tunnat_ctrlzone mr_ctrlzone;
-	unsigned char *real_buf;
-	unsigned char ip_ttl = MESA_rand_range(32, 64);
-	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_index]->sys_stat;
-
-	if(NULL == dl_io_marsio4_instance){
-		dl_io_marsio4_instance = sapp_get_marsio_instance();
-	}
-	
-	inner_ret = ptr_marsio_buff_malloc_global(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-	if(inner_ret < 0){
-		sapp_runtime_log(RLOG_LV_INFO, "MESA_fakepacket_send_ipv6_udp_options-> marsio_buff_malloc_global() failed!\n");
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}	
-
-	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
-	real_buf = (unsigned char *)ptr_marsio_buff_append(send_mbuf[0], payload_len + sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr));
-	if(NULL == real_buf){
-		ptr_marsio_buff_free(dl_io_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_index);
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}		
-	struct mesa_ethernet_hdr *inner_ehdr = (struct mesa_ethernet_hdr *)real_buf;
-	inner_ehdr->ether_type = ntohs(ETHERTYPE_IPv6);/* 底层设为ethernte */
-	
-	memset(&mr_ctrlzone, 0 , sizeof(struct mr_tunnat_ctrlzone));
-	for(i = 0; i < opt_num; i++){
-		if(SAPP_SEND_OPT_IP_TTL == options[i].type){
-			ip_ttl = options[i].char_value;
-		}else if(SAPP_SEND_OPT_INNER_SMAC == options[i].type){
-			memcpy(inner_ehdr->ether_shost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_INNER_DMAC == options[i].type){
-			memcpy(inner_ehdr->ether_dhost, options[i].array_value, ETHER_ADDR_LEN);
-		}else if(SAPP_SEND_OPT_REHASH_INDEX == options[i].type){
-			ptr_marsio_buff_set_rehash_index(send_mbuf[0], options[i].int_value);
-		}else{
-			sapp_fakepacket_set_vxlan_options(&mr_ctrlzone, &options[i]);
-		}
-	}
-	
-	sendpacket_build_udp(sport_host_order, dport_host_order, payload, payload_len,
-						real_buf+offset+sizeof(struct mesa_ip6_hdr));
-						
-	sendpacket_build_ipv6(0, 0, payload_len + sizeof(struct mesa_udp_hdr), IPPROTO_UDP, ip_ttl, sip, dip, 
-						NULL, 0, 
-						(unsigned char *)real_buf + sizeof(struct mesa_ethernet_hdr));
-
-	sendpacket_do_checksum(real_buf+offset, IPPROTO_UDP, SENDPACKET_UDP_H+payload_len);
-
-	mr_ctrlzone.action |= TUNNAT_CZ_ACTION_ENCAP_INNER | TUNNAT_CZ_ACTION_ENCAP_OUTER;
-	mr_ctrlzone.route_dir = dir; /* 通过选项也可设置, 但还是保留了接口直接设置dir的参数, 接口dir优先 */
-	ptr_marsio_buff_ctrlzone_set(send_mbuf[0], 0, &mr_ctrlzone, sizeof(struct mr_tunnat_ctrlzone));
-	inner_ret = marsio_send_burst_with_options_for_tcpdumpmesa((struct mr_sendpath *)g_packet_device_alias[0].dl_io_param, thread_index, 
-								    send_mbuf, 1, MARSIO_SEND_OPT_FAST);	
-	if(inner_ret < 0){
-		sapp_global_val->mthread_volatile[thread_index]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
-		return -1;
-	}
-
-	snd_len = sizeof(struct mesa_ip6_hdr)+sizeof(struct mesa_ethernet_hdr) +sizeof(struct mesa_udp_hdr) + payload_len;
-	local_sys_stat->count[SAPP_STAT_SND_UDP]++;
-	local_sys_stat->length[SAPP_STAT_SND_UDP]+= snd_len;
-	
-	return snd_len;	
-}
-#endif
-
-int sapp_forward_current_pkt(const struct streaminfo *stream, unsigned int target_id)
-{
-	int ret;
-	marsio_buff_t *raw_mbuf, *new_clone_buf;
-	const struct streaminfo_private *stream_pr = (const struct streaminfo_private *)stream;
-
-	if(NULL == dl_io_marsio4_instance){
-		dl_io_marsio4_instance = sapp_get_marsio_instance();
-	}
-
-	if(NULL == stream_pr->raw_pkt){ /* 可能是流超时淘汰结束, 插件仍调用此接口 */
-		return 0;
-	}
-
-	/* TODO: 
-	   判断当前包是否是乱序包, 主从分流挂载到TCPALL层,
-	   乱序包的io_lib_pkt_reference指向dpdk的内存, 并没有复制保存,
-	   发包时会导致内存混乱.
-
-	   NOTE:
-	   其实上述担心无必要, 转发流插件挂载到TCPALL层, 但deal_unorder函数根本不会调用TCPALL接口!
-	*/
-	if((stream->addr.pkttype & PKT_TYPE_TCPREORDER) != 0){
-		return 0;
-	}
-	raw_mbuf = (marsio_buff_t *)stream_pr->raw_pkt->io_lib_pkt_reference;
-
-	assert(raw_mbuf);
-	
-	/* NOTE, 
-		marsio在同时给收包卡和虚拟从应用网卡发送时会有问题,
-		所以此处给从应用网卡发送之前, 先clone一份new_clone_buf, 发送后会自动free.
-		回注原始包的还用原来的raw_mbuf. 
-	*/	
-	new_clone_buf = ptr_marsio_buff_clone_with_options(dl_io_marsio4_instance, raw_mbuf, 
-										MARSIO_SOCKET_ID_ANY, stream->threadnum, 
-										MR_BUFF_CLONE_BUFF  | MR_BUFF_CLONE_CTRLZONE);
-
-	assert(new_clone_buf);
-
-	ret = ptr_marsio_send_burst((struct mr_sendpath *)g_packet_device_alias[target_id].dl_io_param, 
-									stream->threadnum, &new_clone_buf, 1); 
-	
-
-	return ret;
-}
-
 
 int MESA_send_smart_offload(const struct streaminfo *pstream, const void *raw_pkt, int thread_num)
 {
@@ -4907,13 +3785,13 @@ int MESA_send_smart_offload(const struct streaminfo *pstream, const void *raw_pk
 	switch(pstream->type)
 	{
 		case	STREAM_TYPE_TCP:
-			if(sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_pkt>=(pstream->ptcpdetail->serverpktnum+pstream->ptcpdetail->clientpktnum))
+			if(sapp_global_val->config.stream.tcp.meaningful_statistics_minimum_pkt>=(int)(pstream->ptcpdetail->serverpktnum+pstream->ptcpdetail->clientpktnum))
 			{
 				return 0;
 			}
 			break;
 		case	STREAM_TYPE_UDP:
-			if(sapp_global_val->config.stream.udp.meaningful_statistics_minimum_pkt>=(pstream->pudpdetail->serverpktnum+pstream->pudpdetail->clientpktnum))
+			if(sapp_global_val->config.stream.udp.meaningful_statistics_minimum_pkt>=(int)(pstream->pudpdetail->serverpktnum+pstream->pudpdetail->clientpktnum))
 			{
 				return 0;
 			}
@@ -4923,8 +3801,6 @@ int MESA_send_smart_offload(const struct streaminfo *pstream, const void *raw_pk
 	}
 
 	const raw_pkt_t *_raw_pkt=(raw_pkt_t *)raw_pkt;
-
-	MESA_send_handle *send_handle = packet_io_get_send_handle(thread_num);
 	
 	return dl_io_fun_list.dl_io_smart_offload(_raw_pkt->device_index, 
 										(unsigned char *)_raw_pkt->__lib_raw_pkt_data,
