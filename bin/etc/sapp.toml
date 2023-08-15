@@ -55,16 +55,14 @@
     #inject_mode_single_gateway_src_mac="00:11:22:77:88:99"
     #inject_mode_single_gateway_dst_mac="00:11:22:33:44:55"
 
-    monitor_thread_enabled=1
-
 ### note, for example, dst mac is 01:12:34:56:78:90, src src is 02:AA:BB:CC:DD:EE:FF, 
 ### ether[0] is 0x01, dst mac first octet, ether[1] is 0x12, dst mac second octet,
 ### ether[6] is 0x02, src mac first octet, ether[11] is 0xFF, src mac sixth octet.
 ### the bit field is from 0 to 7, the 0 is least significant bit, the 7 is most significant bit.
     ##extract_linkdir_from_mac_in_mirror_mode="ether[4]:0"  ## for Xj example
-    extract_linkdir_from_mac_in_mirror_mode=""
+    #extract_linkdir_from_mac_in_mirror_mode=""
    
-    destroy_all_plug_enabled = 1
+    #destroy_all_plug_enabled = 1
 ### note, depolyment.mode options: [mirror, inline, transparent]
     [packet_io.depolyment]
     mode="inline"
@@ -222,7 +220,7 @@
 ### note, file size unit: MB
         file_size_max_per_thread=10000 
 
-[breakpad]
+[BREAKPAD]
     disable_coredump=0
     enable_breakpad=0
     breakpad_minidump_dir="/tmp/crashreport"
