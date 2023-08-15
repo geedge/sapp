@@ -798,10 +798,6 @@ static int packet_io_calc_ethernet_offset_to_ip(const unsigned char *sendbuf)
 {
 	int offset;
 
-	if(sapp_global_val->config.packet_io.inject_pkt_mode == SEND_PKT_MODE_GDEV){
-		sendbuf += VXLAN_HDR_RESERVED_LEN; /* vxlan模式下预留了vxlan和外层mac,ip,udp头部, 跳转到内层mac头 */
-	}
-	
     switch(g_packet_io_cap_level){
         case CAP_LEVEL_IPV4:
 			offset = 0;
@@ -1000,7 +996,7 @@ retry:
 
 static int packet_io_get_sendroute_mac(char dev_id, char link_id, unsigned char *out_mac_addr)
 {
-    char *p_mac_addr = (char *)&g_send_gateway_mac_table[dev_id][link_id][0];
+    char *p_mac_addr = (char *)&g_send_gateway_mac_table[(size_t)dev_id][(size_t)link_id][0];
     if(G_SND_ROUTE_INFO_NUM <= 0 || strlen(p_mac_addr) == 0){
     	return -1;
     }else{
@@ -1027,7 +1023,6 @@ static int packet_io_send_by_manual_conf(MESA_send_handle *send_handle,int datal
 		
 	*/	
 
-	const struct streaminfo_private *pstrem_pr =  (const struct streaminfo_private *)send_handle->user_arg;
 	const struct streaminfo *pstream = (const struct streaminfo *)send_handle->user_arg;
 	const struct streaminfo *tmpstream = pstream;
 	struct vxlan_info mim_mem_hdr;

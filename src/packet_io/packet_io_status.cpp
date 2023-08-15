@@ -11,8 +11,6 @@ extern "C" {
 
 volatile int update_packet_io_status_sw = 1;
 
-static unsigned long long sysinfo_old[COUNTER_NUM] = {0};
-
 static unsigned long long cur_count[SAPP_STAT_NUM_MAX] = {0};
 static unsigned long long cur_length[SAPP_STAT_NUM_MAX] = {0};
 
@@ -248,8 +246,8 @@ static void sysinfo_output_per_layer_stat(FILE *fp)
 	int layer_type;
 	sapp_gval_mthread_t **mstat = sapp_global_val->mthread_volatile;
 	unsigned long long stat_sum;
-	unsigned long long sum_count_per_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX] = {0};
-	unsigned long long sum_length_per_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX] = {0};
+	unsigned long long sum_count_per_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX] = {{0}};
+	unsigned long long sum_length_per_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX] = {{0}};
 	char layer_length_human_str[SAPP_SUPPORT_LAYER_NUM_MAX][STATS_STR_LEN];
 
 	for(i=0;i<g_packet_io_thread_num;i++){

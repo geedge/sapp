@@ -255,7 +255,7 @@ struct segment_id_list
 int append_sid_to_rawpkt(const void *rawpkt, struct segment_id_list *sid_list);
 int prepend_sid_to_rawpkt(const void *rawpkt, struct segment_id_list *sid_list);
 
-
+struct streaminfo;
 /*
 	plug call MESA_set_stream_opt() to set feature of specified stream.
 		opt: option type, refer to enum MESA_stream_opt;
@@ -282,6 +282,7 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt opt, void *opt_val, int *opt_val_len);
 
 
+struct tcphdr;
 /*
 	Get options from tcphdr, and store them in raw_result.
 	return value:
