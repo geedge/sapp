@@ -237,9 +237,9 @@ envelope_rpm_for_centos8:
 # test 
 ###############################################################################
 
-.setup_test_env_for_centos7:
+.setup_test_env_for_centos8:
   stage: test
-  image: $BUILD_IMAGE_CENTOS7
+  image: $BUILD_IMAGE_CENTOS8
   allow_failure: false
   before_script:
     - *everything_before_script
@@ -249,16 +249,16 @@ envelope_rpm_for_centos8:
     - cd build; make test; pwd 
     - cd testing/ && ldd $TEST_NAME
   dependencies:
-    - branch_build_debug_for_centos7
-    - develop_build_debug_for_centos7
-    - release_build_debug_for_centos7
-    - release_build_release_for_centos7
+    - branch_build_debug_for_centos8
+    - develop_build_debug_for_centos8
+    - release_build_debug_for_centos8
+    - release_build_release_for_centos8
   tags:
     - share    
 
 
-benchmark_test_for_centos7:
-  extends: .setup_test_env_for_centos7
+benchmark_test_for_centos8:
+  extends: .setup_test_env_for_centos8
   script:
 #run module v2.0 with death test
     - ./$TEST_NAME -f control.*
@@ -270,15 +270,15 @@ benchmark_test_for_centos7:
     - ./$TEST_NAME -f benchmark_inject.inline_same_dir
     - ./$TEST_NAME -f benchmark_inject.inline_reverse_dir
 
-inline_test_for_centos7:
-  extends: .setup_test_env_for_centos7
+inline_test_for_centos8:
+  extends: .setup_test_env_for_centos8
   script:
 #run module v2.0 with death test
     - ./$TEST_NAME -f inline_mode.*
 #    - ./$TEST_NAME -f transparent.*
 
-basic_test_for_centos7:
-  extends: .setup_test_env_for_centos7
+basic_test_for_centos8:
+  extends: .setup_test_env_for_centos8
   script:
 #run module v2.0 immediately
     - ./$TEST_NAME -f ipv4.*
