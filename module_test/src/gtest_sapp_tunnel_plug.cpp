@@ -570,14 +570,14 @@ extern "C" char l2tp_tunnel_stream_pfather_iterate_entry(struct streaminfo *pstr
 	}	
 
 	pstream = pstream->pfather;
-	if((NULL == pstream) || (pstream->addr.addrtype != ADDR_TYPE_IPV4)){
+	if((pstream->addr.addrtype != ADDR_TYPE_IPV4)){
 		printf("\033[1;31;40maddr type is not outer tuple4v4!\033[0m\n");
 		sendto_test_result(GTEST_SAPP_ERR);		
 		return APP_STATE_DROPME;
 	}	
 	
 	pstream = pstream->pfather;
-	if((NULL == pstream) || (pstream->addr.addrtype != ADDR_TYPE_MAC)){
+	if((pstream->addr.addrtype != ADDR_TYPE_MAC)){
 		printf("\033[1;31;40maddr type is not mac!\033[0m\n");
 		sendto_test_result(GTEST_SAPP_ERR);		
 		return APP_STATE_DROPME;
@@ -599,21 +599,21 @@ extern "C" char pptp_tunnel_stream_pfather_iterate_entry(struct streaminfo *pstr
 		return APP_STATE_DROPME;
 	}
 	pstream = pstream->pfather;
-	if((NULL == pstream) || (pstream->addr.addrtype != ADDR_TYPE_PPTP)){
+	if((pstream->addr.addrtype != ADDR_TYPE_PPTP)){
 		printf("\033[1;31;40maddr type is not pptp!\033[0m\n");
 		sendto_test_result(GTEST_SAPP_ERR);		
 		return APP_STATE_DROPME;
 	}	
 
 	pstream = pstream->pfather;
-	if((NULL == pstream) || (pstream->addr.addrtype != __ADDR_TYPE_IP_PAIR_V4)){
+	if((pstream->addr.addrtype != __ADDR_TYPE_IP_PAIR_V4)){
 		printf("\033[1;31;40maddr type is not outer pure ipv4!\033[0m\n");
 		sendto_test_result(GTEST_SAPP_ERR);		
 		return APP_STATE_DROPME;
 	}	
 	
 	pstream = pstream->pfather;
-	if((NULL == pstream) || (pstream->addr.addrtype != ADDR_TYPE_MAC)){
+	if((pstream->addr.addrtype != ADDR_TYPE_MAC)){
 		printf("\033[1;31;40maddr type is not mac!\033[0m\n");
 		sendto_test_result(GTEST_SAPP_ERR);		
 		return APP_STATE_DROPME;

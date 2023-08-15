@@ -76,6 +76,8 @@ static int jump_check_ipv4_pkt(const struct ip *ip4hdr, int expect_tot_len, unsi
 
 static int jump_check_ipv6_pkt(const struct ip6_hdr *ip6h, int expect_payload_len, unsigned char expect_protocol, const char *expect_src_addr_str, const char *expect_dst_addr_str)
 {
+	if(ip6h== NULL) return -1;
+	
 	if((*(char *)ip6h & 0xF0) != 0x60){
 		printf("\033[1;31;40mMESA_net_jump_to_layer(): ipv6 header check version error!\033[0m\n");
 		sendto_test_result(GTEST_SAPP_ERR); 

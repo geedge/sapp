@@ -22,58 +22,18 @@
 ### note, since 2020-10-01, L2-L3 tunnel(VLAN,MPLS,PPPOE,etc.) is process and offload by mrtunnat, 	
 ### after 2020-10-01, sapp support L2-L3 tunnel(VLAN,MPLS,PPPOE,etc.) without mrtunnat.
     l2_l3_tunnel_support=1
-
 ### note, optional value is [none, vxlan]
     overlay_mode="none"
-
     [packet_io.feature]
-### note, used to represent inbound or outbound direction value,
-### because it comes from Third party device, so it needs to be specified manually,
-### if inbound_route_dir=1, then outbound_route_dir=0, vice versa,
-### in other words, outbound_route_dir = 1 ^ inbound_route_dir;
     inbound_route_dir=1
-
-### note, BSD_packet_filter, if you do not want to set any filter rule, keep it empty as ""
     BSD_packet_filter=""
-
-### note, same as tcpdump -Q/-P arg, possible values are `in', `out' and `inout', default is "in"
     pcap_capture_direction="in"
-
-### note, support two mode: "inner_tuple2", "outer_tuple2"
     pcap_distmode="inner_tuple2"
-
-### note, deployment.mode options: [sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]
-### sys_route: send ip(ipv6) packet by system route table, this is default mode in mirror mode;
-### vxlan_by_inline_device: encapsulation inject packet with vxlan, and then send to inline device by udp socket.
-### raw_ethernet_single_gateway: send layer2 ethernet packet to specific gateway in same broadcast domain. 
-### raw_ethernet_multi_gateway: send layer2 ethernet packet to multiple gateway in same broadcast domain. 
     inject_pkt_mode="default"
-
-### note, this config is valid if inject_pkt_mode==vxlan_by_inline_device, means udp socket src port.
-    #inject_mode_inline_device_sport=54789
-
-### note, this config is valid if inject_pkt_mode==raw_ethernet_single_gateway.
-    #inject_mode_single_gateway_device="eth1"
-### inject_mode_single_gateway_src_mac has lower priority than get smac from inject_mode_single_gateway_device
-    #inject_mode_single_gateway_src_mac="00:11:22:77:88:99"
-    #inject_mode_single_gateway_dst_mac="00:11:22:33:44:55"
-
     monitor_thread_enabled=0
 
-### note, for example, dst mac is 01:12:34:56:78:90, src src is 02:AA:BB:CC:DD:EE:FF, 
-### ether[0] is 0x01, dst mac first octet, ether[1] is 0x12, dst mac second octet,
-### ether[6] is 0x02, src mac first octet, ether[11] is 0xFF, src mac sixth octet.
-### the bit field is from 0 to 7, the 0 is least significant bit, the 7 is most significant bit.
-    ##extract_linkdir_from_mac_in_mirror_mode="ether[4]:0"  ## for Xj example
-    #extract_linkdir_from_mac_in_mirror_mode=""
-   
-### note, deployment.mode options: [mirror, inline, transparent]
     [packet_io.deployment]
     mode="mirror"
-
-### note, interface.type options: [pag, pcap, marsio, tun]
-### receive from internal interface, route dir is 0,
-### receive from external interface, route dir is 1.
     [packet_io.internal.interface]
     type="pcap"
     name="lo"
@@ -84,7 +44,6 @@
     
     [packet_io.polling]
     enabled=1    
-### note, polling_priority = call sapp_recv_pkt every call polling_entry times,     
     polling_priority=1
 
     [packet_io.under_ddos]

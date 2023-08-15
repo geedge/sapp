@@ -45,7 +45,6 @@ enum gdev_keepalive_fs2_column_t{
 	__FS2_COLUMN_MAX,
 };
 
-static int gdev_keepalive_fs2_column_id_array[__FS2_COLUMN_MAX];
 
 /*
 	每个线程, 每个Inline-DEV-IP, 每个业务分别统计.
@@ -125,11 +124,14 @@ static int gdev_kp_action_judge(int service_id)
 */
 static const char *fs2_inet_ntop(unsigned int gip_net, char *buf, int buf_len)
 {
-	const unsigned char *ip_char_array = (unsigned char *)&gip_net;
-	
-	snprintf(buf, buf_len, "%u_%u_%u_%u", ip_char_array[0], ip_char_array[1],ip_char_array[2], ip_char_array[3]);
+    unsigned char ip_byte1 = (gip_net >> 24) & 0xFF;
+    unsigned char ip_byte2 = (gip_net >> 16) & 0xFF;
+    unsigned char ip_byte3 = (gip_net >> 8) & 0xFF;
+    unsigned char ip_byte4 = gip_net & 0xFF;
 
-	return buf;
+    snprintf(buf, buf_len, "%u_%u_%u_%u", ip_byte1, ip_byte2, ip_byte3, ip_byte4);
+
+    return buf;
 }
 
 
