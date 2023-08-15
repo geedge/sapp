@@ -13,10 +13,10 @@ extern "C" {
 extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];  
 
 /*
-	è¯´æ˜:
-		_sapp_toml_sample_file_imageæ•°ç»„, _sapp_toml_sample_file_image_lenå˜é‡æ˜¯é å‘½ä»¤xxd -i è‡ªåŠ¨ç”Ÿæˆçš„, 
-		ä¿å­˜åœ¨åŠ¨æ€åˆ›å»ºçš„æ–‡ä»¶sapp.toml.hex.array.cé‡Œ,
-		æ­¤æ–‡ä»¶æ— éœ€åŠ å…¥gitä»“åº“.
+	ËµÃ÷:
+		_sapp_toml_sample_file_imageÊı×é, _sapp_toml_sample_file_image_len±äÁ¿ÊÇ¿¿ÃüÁîxxd -i ×Ô¶¯Éú³ÉµÄ, 
+		±£´æÔÚ¶¯Ì¬´´½¨µÄÎÄ¼şsapp.toml.hex.array.cÀï,
+		´ËÎÄ¼şÎŞĞè¼ÓÈëgit²Ö¿â.
 */
 extern const unsigned char _sapp_toml_sample_file_image[];
 extern const int _sapp_toml_sample_file_image_len;
@@ -24,14 +24,14 @@ extern const int _sapp_toml_sample_file_image_len;
 #define SAPP_CFG_OBSOLETE_FLAG  99999999
 typedef struct __sapp_config_check{
 	int global_id;
-	int depend_id; /* 1:å¿…é¡»çš„å‚æ•°, ä¸ä¾èµ–å…¶ä»–å‚æ•°, ä¹Ÿä¸èƒ½ç¼ºå¤±;  0:å¯é€‰çš„, å¯ä»¥æ²¡æœ‰, ä¸å½±å“sappä¸»ä½“åŠŸèƒ½; >=1000:æ‚¬è€Œæœªå†³çš„, å–å†³äºå…¶ä»–é…ç½®å‚æ•°æ˜¯å¦å¼€å¯, æ¯”å¦‚transparentæ¨¡å¼å¿…é¡»é…ç½®packet_io.external.interface */
-	int err_log_level; /* 10,20,30, é”™è¯¯æ—¥å¿—ç­‰çº§ */
+	int depend_id; /* 1:±ØĞëµÄ²ÎÊı, ²»ÒÀÀµÆäËû²ÎÊı, Ò²²»ÄÜÈ±Ê§;  0:¿ÉÑ¡µÄ, ¿ÉÒÔÃ»ÓĞ, ²»Ó°ÏìsappÖ÷Ìå¹¦ÄÜ; >=1000:Ğü¶øÎ´¾öµÄ, È¡¾öÓÚÆäËûÅäÖÃ²ÎÊıÊÇ·ñ¿ªÆô, ±ÈÈçtransparentÄ£Ê½±ØĞëÅäÖÃpacket_io.external.interface */
+	int err_log_level; /* 10,20,30, ´íÎóÈÕÖ¾µÈ¼¶ */
 	const char *section;
 	const char *cfg_key;
-	const char *depend_cfg_value; /* ä»…å½“depend_id>1000æ—¶æœ‰æ•ˆ, è¡¨ç¤ºä¾èµ–å‚æ•°çš„å€¼ç¬¦åˆé¢„å…ˆå®šä¹‰æ—¶, æ‰æ£€æŸ¥å½“å‰å‚æ•°æ˜¯å¦åˆæ³•, æ¯”å¦‚mirroæ¨¡å¼ä¸‹æ ¹æœ¬ä¸éœ€è¦æ£€æŸ¥ packet_io.external.interface */
+	const char *depend_cfg_value; /* ½öµ±depend_id>1000Ê±ÓĞĞ§, ±íÊ¾ÒÀÀµ²ÎÊıµÄÖµ·ûºÏÔ¤ÏÈ¶¨ÒåÊ±, ²Å¼ì²éµ±Ç°²ÎÊıÊÇ·ñºÏ·¨, ±ÈÈçmirroÄ£Ê½ÏÂ¸ù±¾²»ĞèÒª¼ì²é packet_io.external.interface */
 	int (*cfg_value_check_fun)(const struct __sapp_config_check *sapp_cfg_check_attr, int this_cfg_id, int depend_cfg_id, const char *cfg_value, const void *range_array, int array_num);
 	char *cfg_value; /* NULL is not found */
-	const void *expect_range_array; /* ç”¨äºæ£€æµ‹å‚æ•°å€¼çš„å¯é€‰èŒƒå›´æ•°ç»„, æ ¹æ®ç±»å‹çš„ä¸åŒå¯ä»¥æ˜¯int *, æˆ–è€…æ˜¯char **ç±»å‹ */
+	const void *expect_range_array; /* ÓÃÓÚ¼ì²â²ÎÊıÖµµÄ¿ÉÑ¡·¶Î§Êı×é, ¸ù¾İÀàĞÍµÄ²»Í¬¿ÉÒÔÊÇint *, »òÕßÊÇchar **ÀàĞÍ */
 	int expect_array_num;
 }sapp_config_check_t;
 
@@ -46,7 +46,7 @@ static const char *sapp_cfg_get_value_from_attr_by_id(const sapp_config_check_t 
 static const char *sapp_cfg_get_value_from_attr_by_section_key(const sapp_config_check_t *sapp_cfg_check_attr, const char *section, const char *key);
 static int cfg_value_check_inject_mode(const sapp_config_check_t *sapp_cfg_check_attr,int this_cfg_id,int depend_cfg_id, const char *raw_cfg_value, const void *expect_range_array, int array_num);
 
-static int g_interger_range_array[65536]; /* ä¸€ä¸ªintå‹çš„æ•°ç»„, æ•°å€¼ä¸‹æ ‡å’Œæ•°å€¼ä¸€æ ·, å³ g_interger_range_array[0]=0, g_interger_range_array[1]=1, ç”¨äºåˆ¤æ–­æ•°å€¼å‚æ•°èŒƒå›´åˆæ³•æ€§ */
+static int g_interger_range_array[65536]; /* Ò»¸öintĞÍµÄÊı×é, ÊıÖµÏÂ±êºÍÊıÖµÒ»Ñù, ¼´ g_interger_range_array[0]=0, g_interger_range_array[1]=1, ÓÃÓÚÅĞ¶ÏÊıÖµ²ÎÊı·¶Î§ºÏ·¨ĞÔ */
 
 
 static int cfg_value_check_integer_range(const sapp_config_check_t *sapp_cfg_check_attr,int this_cfg_id,int depend_cfg_id, const char *raw_cfg_value, const void *expect_range_array, int array_num)
@@ -127,11 +127,11 @@ static int cfg_value_check_bind_mask(const sapp_config_check_t *sapp_cfg_check_a
 	long bind_mask_array[SAPP_MAX_THREADS];
 	int ret;
 
-	/* æš‚æ—¶æ²¡æœ‰ç›´æ¥è§£æraw_cfg_valueçš„å‡½æ•°, æ­¤å¤„å†è¯»å–ä¸€éé…ç½®æ–‡ä»¶ */
+	/* ÔİÊ±Ã»ÓĞÖ±½Ó½âÎöraw_cfg_valueµÄº¯Êı, ´Ë´¦ÔÙ¶ÁÈ¡Ò»±éÅäÖÃÎÄ¼ş */
 	ret = tomlc99_wrap_load_long_array(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"CPU", (char *)"bind_mask", bind_mask_array, &bind_mask_array_num);
 	if(ret < 0){
 		unsigned int load_profile_array[SAPP_MAX_THREADS];
-		/* å¸¦èŒƒå›´çš„é…ç½®, å¦‚1-10,10-20ç­‰å‚æ•°ä½¿ç”¨MESA_load_profile_uint_rangeè§£æ, æ­¤æ—¶è¦ç”¨å­—ç¬¦ä¸²æ¨¡å¼!!! */
+		/* ´ø·¶Î§µÄÅäÖÃ, Èç1-10,10-20µÈ²ÎÊıÊ¹ÓÃMESA_load_profile_uint_range½âÎö, ´ËÊ±ÒªÓÃ×Ö·û´®Ä£Ê½!!! */
 		ret = MESA_load_profile_uint_range(
 			ABBR_CFG_FILE_MAIN_ENTRY, (char *)"CPU", (char *)"bind_mask",
 			SAPP_MAX_THREADS, (unsigned int *)load_profile_array);
@@ -143,7 +143,7 @@ static int cfg_value_check_bind_mask(const sapp_config_check_t *sapp_cfg_check_a
 	}
 
 	if(0 == bind_mask_array_num){
-		return 0; /* å…è®¸ç©ºæ•°ç»„, å³ä¸ç»‘å®šCPU,ä¸ç®—é”™è¯¯ */
+		return 0; /* ÔÊĞí¿ÕÊı×é, ¼´²»°ó¶¨CPU,²»Ëã´íÎó */
 	}
 
 	const char *raw_cfg_worker_threads_value = sapp_cfg_get_value_from_attr_by_id(sapp_cfg_check_attr, depend_cfg_id);
@@ -173,7 +173,7 @@ static int cfg_value_check_stream_id_base_time(const sapp_config_check_t *sapp_c
 	struct tm local_tm;
 	
 	if(NULL == raw_cfg_value || strlen(raw_cfg_value) == 0){
-		return 0; /* å¯ä»¥ä¸ºNULL,ä¸ç®—é”™è¯¯ */
+		return 0; /* ¿ÉÒÔÎªNULL,²»Ëã´íÎó */
 	}
 	
 	if(strptime(raw_cfg_value, "%Y-%m-%d %H:%M:%S", &local_tm) == NULL){
@@ -207,7 +207,7 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{2002,0,RLOG_LV_DEBUG, "CPU",		"send_only_threads_max",	NULL,NULL, NULL, NULL, 0},
 	{2003,2001,RLOG_LV_FATAL,"CPU",	"bind_mask",	"",cfg_value_check_bind_mask, NULL, NULL, 0},
 
-	{3001,0, RLOG_LV_INFO,"MEM",		"dictator_enable",	NULL,cfg_value_check_integer_range, NULL, g_interger_range_array, 2}, /* åªèƒ½æ˜¯0æˆ–1, æ‰€ä»¥å°±ç”¨å‰2ä¸ªå…ƒç´  */
+	{3001,0, RLOG_LV_INFO,"MEM",		"dictator_enable",	NULL,cfg_value_check_integer_range, NULL, g_interger_range_array, 2}, /* Ö»ÄÜÊÇ0»ò1, ËùÒÔ¾ÍÓÃÇ°2¸öÔªËØ */
 
 	{4000,0,RLOG_LV_DEBUG,"PACKET_IO", NULL,	NULL, NULL,NULL, NULL, 0},
 	
@@ -352,7 +352,7 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{9201,0,RLOG_LV_INFO, "LIBRARY_LINK",	"marsio_library_path",	NULL,NULL, NULL, NULL, 0},
 
 	/******************************************************************************************************************/
-	/*********** ä»¥ä¸‹æ˜¯å†å²ä¸Šæ›¾ç»å‡ºç°è¿‡çš„é…ç½®, ä¹Ÿä¸ç®—é”™è¯¯,ä¹Ÿä¸ç®—ä¸æ”¯æŒ,è¾“å‡ºå‘Šè­¦ä¿¡æ¯è¡¨ç¤ºè¢«åºŸå¼ƒæ‰äº† *********************/
+	/*********** ÒÔÏÂÊÇÀúÊ·ÉÏÔø¾­³öÏÖ¹ıµÄÅäÖÃ, Ò²²»Ëã´íÎó,Ò²²»Ëã²»Ö§³Ö,Êä³ö¸æ¾¯ĞÅÏ¢±íÊ¾±»·ÏÆúµôÁË *********************/
 	/******************************************************************************************************************/
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"overlay_tunnel_definition","stream_compare_layer_cfg_file",NULL, NULL, NULL,NULL, 0},
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"overlay_tunnel_definition","vlan_flipping_cfg_file",NULL, NULL, NULL,NULL, 0},
@@ -437,7 +437,7 @@ static int cfg_value_check_inject_mode(const sapp_config_check_t *sapp_cfg_check
 	depend_cfg_index = cfg_get_index_by_depend_id(depend_cfg_id);
 	depend_cfg_value = sapp_cfg_check_attr[depend_cfg_index].cfg_value;
 
-	/* raw_cfg_valueå¯èƒ½æ˜¯NULL, æ­¤æ—¶åº”è¯¥å…ˆåˆ¤æ–­depend_cfg_value, è¿™ä¸ªæ˜¯ä¾èµ–é…ç½®, ä¸å¤ªå¯èƒ½æ˜¯ç©º */
+	/* raw_cfg_value¿ÉÄÜÊÇNULL, ´ËÊ±Ó¦¸ÃÏÈÅĞ¶Ïdepend_cfg_value, Õâ¸öÊÇÒÀÀµÅäÖÃ, ²»Ì«¿ÉÄÜÊÇ¿Õ */
 
 	if(strncasecmp(depend_cfg_value, "vxlan_by_inline_device", strlen("vxlan_by_inline_device")) == 0){
 		expect_cfg_index = cfg_get_index_by_key_name("inject_mode_inline_device_sport");
@@ -526,7 +526,7 @@ static inline int is_file_exist(const char *filename)
 
 static void update_overlay_vxlan_layer_set(void);
 
-/* å¯¹äºç›¸åŒç±»å‹çš„é…ç½®, å‘½ä»¤è¡Œå‚æ•°ä¼˜å…ˆ, è¦†ç›–sapp.tomlä¸­çš„é…ç½® */
+/* ¶ÔÓÚÏàÍ¬ÀàĞÍµÄÅäÖÃ, ÃüÁîĞĞ²ÎÊıÓÅÏÈ, ¸²¸Çsapp.tomlÖĞµÄÅäÖÃ */
 void sapp_cla_override_cfg_file(void)
 {
 	char *cmd_args;
@@ -537,7 +537,7 @@ void sapp_cla_override_cfg_file(void)
 	}
 	
 	if (sapp_get_cla_raw("dumpfile", &cmd_args) >= 0)
-	{ /* dumpfileæ¨¡å¼è‡ªåŠ¨è¦†ç›–interfaceé…ç½® */
+	{ /* dumpfileÄ£Ê½×Ô¶¯¸²¸ÇinterfaceÅäÖÃ */
 		strncpy(pconfig->packet_io.depolyment_mode_str, "dumpfile", NAME_MAX);
 		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
 		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
@@ -627,7 +627,7 @@ static int parse_vlan_flipping_map_config(void)
 	fp = fopen(ABBR_VLAN_FLIPPING_CONF_FILE, "r");
 	if(NULL == fp){
 		sapp_log(RLOG_LV_INFO, ~0, ~0, "[warning]can't open vlan_flipping_cfg_file:%s", ABBR_VLAN_FLIPPING_CONF_FILE);
-		/* å‘å‰å…¼å®¹, å¦‚æœæ–‡ä»¶ä¸å­˜åœ¨, ä¸ç®—é”™è¯¯ */
+		/* ÏòÇ°¼æÈİ, Èç¹ûÎÄ¼ş²»´æÔÚ, ²»Ëã´íÎó */
 		return 0;
 	}
 
@@ -796,7 +796,7 @@ static int parse_asymmetric_addr_layer_config(void)
 	fp = fopen(ABBR_ASYM_LAYER_ADDR_CONF_FILE, "r");
 	if(NULL == fp){
  		sapp_log(RLOG_LV_INFO, ~0, ~0, "[Warning]can't open asymmetric_addr_layer_cfg_file:%s", ABBR_ASYM_LAYER_ADDR_CONF_FILE);
-		/* å‘å‰å…¼å®¹, å¦‚æœæ–‡ä»¶ä¸å­˜åœ¨, ä¸ç®—é”™è¯¯ */
+		/* ÏòÇ°¼æÈİ, Èç¹ûÎÄ¼ş²»´æÔÚ, ²»Ëã´íÎó */
 		return 0; 
 	}
 
@@ -869,7 +869,7 @@ static int parse_stream_compare_layer_config(void)
 	fp = fopen(ABBR_STREAM_CMP_LAYER_CONF_FILE, "r");
 	if(NULL == fp){
 		sapp_log(RLOG_LV_INFO, ~0, ~0, "[Warning]can't open stream compare layer cfg_file:%s", ABBR_STREAM_CMP_LAYER_CONF_FILE);
-		/* å‘å‰å…¼å®¹, å¦‚æœæ–‡ä»¶ä¸å­˜åœ¨, ä¸ç®—é”™è¯¯ */
+		/* ÏòÇ°¼æÈİ, Èç¹ûÎÄ¼ş²»´æÔÚ, ²»Ëã´íÎó */
 		return 0; 
 	}
 
@@ -913,7 +913,7 @@ static void update_overlay_vxlan_layer_set(void)
 	g_overlay_layer_set[ADDR_TYPE_MAC][0] = 1;	
 	g_overlay_layer_set[ADDR_TYPE_IPV4][1] = 1;	
 	g_overlay_layer_set[__ADDR_TYPE_IP_PAIR_V4][1] = 1;	
-	g_overlay_layer_set[ADDR_TYPE_UDP][1] = 1;	/* IPå’Œudpåˆå¹¶ç®—ä¸ºä¸€å±‚, æ‰€ä»¥æ­¤å¤„è¿˜æ˜¯ç”¨1 */
+	g_overlay_layer_set[ADDR_TYPE_UDP][1] = 1;	/* IPºÍudpºÏ²¢ËãÎªÒ»²ã, ËùÒÔ´Ë´¦»¹ÊÇÓÃ1 */
 	g_overlay_layer_set[ADDR_TYPE_VXLAN][2] = 1;	
 }
 
@@ -941,7 +941,7 @@ static int parse_well_known_port_config(void)
 {
 	FILE *fp;
 	char line_buf[256];
-	int last_section_proto = -1; /* æ®µè½æ ‡è¯†: TCP or UDP */
+	int last_section_proto = -1; /* ¶ÎÂä±êÊ¶: TCP or UDP */
 	unsigned short *port_array = NULL;
 	int port_array_num = 0;
 	int tmpnum;
@@ -949,7 +949,7 @@ static int parse_well_known_port_config(void)
 
 	fp = fopen(ABBR_WELL_KNOWN_PORT_CONF_FILE, "r");
 	if(NULL == fp){
-		return 0; /* æ²¡æœ‰æ­¤æ–‡ä»¶, ä¸ç®—é”™è¯¯ */
+		return 0; /* Ã»ÓĞ´ËÎÄ¼ş, ²»Ëã´íÎó */
 	}
 
 	while(fgets(line_buf, sizeof(line_buf), fp)){
@@ -959,9 +959,9 @@ static int parse_well_known_port_config(void)
 		sapp_memmove_for_blank_table(line_buf, sizeof(line_buf));
 		del_last_rn(line_buf, sizeof(line_buf));
 
-		if('[' == line_buf[0]){ /* [] ä¸€ä¸ªæ®µè½çš„èµ·å§‹ */
+		if('[' == line_buf[0]){ /* [] Ò»¸ö¶ÎÂäµÄÆğÊ¼ */
 			if(port_array != NULL){
-				/* ä¸Šä¸€ä¸ªæ®µè½åˆšç»“æŸ */
+				/* ÉÏÒ»¸ö¶ÎÂä¸Õ½áÊø */
 				update_well_known_port_array(last_section_proto, port_array, port_array_num);
 				port_array = NULL; 
 				port_array_num = 0;
@@ -1053,7 +1053,7 @@ static int parse_extract_linkdir_from_mac_cfg(void)
 	return 0;
 }
 
-/* é…ç½®æ ¼å¼è½¬æ¢, å¦‚å­—ç¬¦ä¸²ç±»å‹è½¬ä¸ºintç±»å‹,ä¾¿äºç¨‹åºå¤„ç† */
+/* ÅäÖÃ¸ñÊ½×ª»», Èç×Ö·û´®ÀàĞÍ×ªÎªintÀàĞÍ,±ãÓÚ³ÌĞò´¦Àí */
 static int config_expression_convert(void)
 {
 	sapp_config_t *pconfig;
@@ -1296,9 +1296,9 @@ static inline void old_config_file_detect(const char *old_filename, const char *
 
 
 /*
-	é…ç½®æ–‡ä»¶åˆæ³•æ€§ã€ç›¸å…³æ€§æ£€æŸ¥.
+	ÅäÖÃÎÄ¼şºÏ·¨ĞÔ¡¢Ïà¹ØĞÔ¼ì²é.
 
-	TODO: ä¸å‚æ•°æ£€æµ‹å¼•æ“ g_sapp_cfg_check_attr[] å¾…åˆå¹¶, æŸäº›å‚æ•°æ£€æµ‹åŠŸèƒ½æ˜¯é‡å¤çš„!!!
+	TODO: Óë²ÎÊı¼ì²âÒıÇæ g_sapp_cfg_check_attr[] ´ıºÏ²¢, Ä³Ğ©²ÎÊı¼ì²â¹¦ÄÜÊÇÖØ¸´µÄ!!!
 	
 	return value:
 		 0: succ;
@@ -1313,7 +1313,7 @@ static int config_sanity_check(void)
 	struct streaminfo_private phony_stream_pr;
 
 	phony_stream_pr.layer_index = 0xF;
-	assert(SAPP_SUPPORT_LAYER_NUM_MAX == phony_stream_pr.layer_index); /* ç”¨äºåˆ¤æ–­æ— æ„ä¸­ä¿®æ”¹äº†layer_indexæˆ–SAPP_SUPPORT_LAYER_NUM_MAX, ä¸¤ä¸ªå˜é‡ä¸ä¸€è‡´çš„æƒ…å†µ */
+	assert(SAPP_SUPPORT_LAYER_NUM_MAX == phony_stream_pr.layer_index); /* ÓÃÓÚÅĞ¶ÏÎŞÒâÖĞĞŞ¸ÄÁËlayer_index»òSAPP_SUPPORT_LAYER_NUM_MAX, Á½¸ö±äÁ¿²»Ò»ÖÂµÄÇé¿ö */
 	if(SAPP_SUPPORT_LAYER_NUM_MAX != phony_stream_pr.layer_index){
 		sapp_log(RLOG_LV_FATAL, ~0, ~0, "SAPP_SUPPORT_LAYER_NUM_MAX is:%d, but streaminfo_private->layer_index max is:%d", SAPP_SUPPORT_LAYER_NUM_MAX, phony_stream_pr.layer_index); 
 		return -1;
@@ -1445,7 +1445,7 @@ static int config_sanity_check(void)
 
 
 /*
-	æ”¯æŒè¯»å†™åˆ†ç¦»æ¨¡å¼, æ›´æ–°å„ç§é…ç½®æ–‡ä»¶è·¯å¾„, æœ¬åœ°æ•°æ®æ–‡ä»¶è·¯å¾„.
+	Ö§³Ö¶ÁĞ´·ÖÀëÄ£Ê½, ¸üĞÂ¸÷ÖÖÅäÖÃÎÄ¼şÂ·¾¶, ±¾µØÊı¾İÎÄ¼şÂ·¾¶.
 */
 int sapp_get_secondary_file_path(void)
 {
@@ -1618,7 +1618,7 @@ int sapp_get_secondary_file_path(void)
 }
 
 
-/* è¯»å–é…ç½®æ–‡ä»¶sapp.toml, æœ¬å‡½æ•°åªLoad, ä¸åšè§£æå’Œé”™è¯¯å¤„ç† */
+/* ¶ÁÈ¡ÅäÖÃÎÄ¼şsapp.toml, ±¾º¯ÊıÖ»Load, ²»×ö½âÎöºÍ´íÎó´¦Àí */
 int sapp_parse_config(void)
 {
 	int ret;
@@ -1640,7 +1640,7 @@ int sapp_parse_config(void)
 	/*******************************  SYSTEM *********************************/
 	ret = tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SYSTEM", (char *)"instance_name", pconfig->system.instance_name, NAME_MAX, "sapp_v4.2");
 	if(TOMLC99_RET_PATTERN_ERROR == ret){
-		/* é¦–æ¬¡è§£æåˆ¤æ–­å¦‚æœæ˜¯PATTERN_ERROR, è¯´æ˜tomlæ ¼å¼æœ‰é—®é¢˜, ä¸å†ç»§ç»­è§£æ */
+		/* Ê×´Î½âÎöÅĞ¶ÏÈç¹ûÊÇPATTERN_ERROR, ËµÃ÷toml¸ñÊ½ÓĞÎÊÌâ, ²»ÔÙ¼ÌĞø½âÎö */
 		sapp_log(30, ~0, ~0, "parse config file %s error!", ABBR_CFG_FILE_MAIN_ENTRY);
 		exit(1);
 	}
@@ -1663,7 +1663,7 @@ int sapp_parse_config(void)
 
 	tomlc99_wrap_load_long_array(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"CPU", (char *)"bind_mask", pconfig->cpu.bind_mask_array, &pconfig->cpu.bind_mask_array_num);
 
-	/* å¸¦èŒƒå›´çš„é…ç½®, å¦‚1-10,10-20ç­‰å‚æ•°ä½¿ç”¨MESA_load_profile_uint_rangeè§£æ, æ­¤æ—¶è¦ç”¨å­—ç¬¦ä¸²æ¨¡å¼!!! */
+	/* ´ø·¶Î§µÄÅäÖÃ, Èç1-10,10-20µÈ²ÎÊıÊ¹ÓÃMESA_load_profile_uint_range½âÎö, ´ËÊ±ÒªÓÃ×Ö·û´®Ä£Ê½!!! */
 	int tmp_bind_mask[SAPP_MAX_THREADS] = {};
 	ret = MESA_load_profile_uint_range(
 		ABBR_CFG_FILE_MAIN_ENTRY, (char *)"CPU", (char *)"bind_mask",
@@ -1700,6 +1700,7 @@ int sapp_parse_config(void)
 		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"inject_mode_single_gateway_device", pconfig->packet_io.inject_mode_single_gateway_device, NAME_MAX, "lo");
 		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"inject_mode_single_gateway_dst_mac", pconfig->packet_io.inject_mode_single_gateway_dst_mac_string, sizeof(pconfig->packet_io.inject_mode_single_gateway_dst_mac_string), "$");
 	}
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"inject_pkt_prepend_segment_id", &pconfig->packet_io.inject_pkt_prepend_segment_id, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"inject_mode_inline_device_sport", &tmp_int, 54789);
 	if(tmp_int <= 0 || tmp_int > 65535){
 		sapp_log(30, ~0, ~0, "config parse error! invalid value of 'packet_io.feature.inject_mode_inline_device_sport %d'", tmp_int);
@@ -1734,7 +1735,7 @@ int sapp_parse_config(void)
 	pconfig->packet_io.dup_pkt_para.bloom_error_rate = strtod(str_tmp, NULL);
 
 	/*******************************  packet_io.under_ddos ******************************/
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"stream_bypass_enabled", &pconfig->packet_io.under_ddos_config.enabled, 0); //å‘å‰å…¼å®¹, é»˜è®¤ä¸å¼€å¯
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"stream_bypass_enabled", &pconfig->packet_io.under_ddos_config.enabled, 0); //ÏòÇ°¼æÈİ, Ä¬ÈÏ²»¿ªÆô
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"get_cpu_usage_interval", &pconfig->packet_io.under_ddos_config.get_cpu_usage_interval, 50);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"smooth_avg_window", &pconfig->packet_io.under_ddos_config.smooth_avg_window, 3);
 
@@ -1881,9 +1882,9 @@ int sapp_parse_config(void)
 }
 
 /*
-	0: ä¸è®¤è¯†é…ç½®æ–‡ä»¶ä¸­çš„key-value;
-	1: è¯†åˆ«å¹¶å­˜å‚¨é…ç½®æ–‡ä»¶ä¸­çš„key-value;
-	2: åŒ…æ‹¬æŸäº›å·²ç»è¢«åºŸå¼ƒçš„å‚æ•°.
+	0: ²»ÈÏÊ¶ÅäÖÃÎÄ¼şÖĞµÄkey-value;
+	1: Ê¶±ğ²¢´æ´¢ÅäÖÃÎÄ¼şÖĞµÄkey-value;
+	2: °üÀ¨Ä³Ğ©ÒÑ¾­±»·ÏÆúµÄ²ÎÊı.
 */
 static int sapp_config_check_update_option(sapp_config_check_t *local_cfg_check_attr, const char *section, const char *key, const char *value)
 {
@@ -1892,7 +1893,7 @@ static int sapp_config_check_update_option(sapp_config_check_t *local_cfg_check_
 	int found_cfg = 0;
 	
 	for(i = 0; local_cfg_check_attr[i].global_id != -1; i++){
-		if(NULL == local_cfg_check_attr[i].cfg_key){ /* [PACKET_IO], []DUPLICATE_PKT] ç­‰é…ç½®åªæœ‰ä¸ªsection, ä½†æ˜¯æ²¡æœ‰key */
+		if(NULL == local_cfg_check_attr[i].cfg_key){ /* [PACKET_IO], []DUPLICATE_PKT] µÈÅäÖÃÖ»ÓĞ¸ösection, µ«ÊÇÃ»ÓĞkey */
 			continue;
 		}
 		section_max_len = SAPP_MAX(strlen(local_cfg_check_attr[i].section), strlen(section));
@@ -1904,7 +1905,7 @@ static int sapp_config_check_update_option(sapp_config_check_t *local_cfg_check_
 				return 2;
 			}else{
 				if(NULL == value){
-					local_cfg_check_attr[i].cfg_value = sapp_strdup(""); /* æ²¡æœ‰é…ç½®æœ‰æ„çš„å€¼, æ¯”å¦‚bpfè¿‡æ»¤æ¡ä»¶ä¸ºç©º, ä½†æ˜¯keyæ˜¯å­˜åœ¨çš„, ä¹Ÿç®—é…ç½®æ‰¾åˆ°äº† */
+					local_cfg_check_attr[i].cfg_value = sapp_strdup(""); /* Ã»ÓĞÅäÖÃÓĞÒâµÄÖµ, ±ÈÈçbpf¹ıÂËÌõ¼şÎª¿Õ, µ«ÊÇkeyÊÇ´æÔÚµÄ, Ò²ËãÅäÖÃÕÒµ½ÁË */
 				}else{
 					local_cfg_check_attr[i].cfg_value = sapp_strdup(value);
 				}
@@ -1923,7 +1924,7 @@ extern char *sapp_memmove_for_blank_table(char *data, int max_len);
 
 
 /*
-	æ˜¯å¦éœ€è¦æ£€æŸ¥å½“å‰é…ç½®çš„åˆæ³•æ€§.
+	ÊÇ·ñĞèÒª¼ì²éµ±Ç°ÅäÖÃµÄºÏ·¨ĞÔ.
 */
 static int cfg_value_need_be_check(const sapp_config_check_t *local_cfg_check_array, const sapp_config_check_t *this_cfg_check_attr)
 {
@@ -1932,7 +1933,7 @@ static int cfg_value_need_be_check(const sapp_config_check_t *local_cfg_check_ar
 	if(1 == this_cfg_check_attr->depend_id){
 		return 1;
 	}
-	if(0 == this_cfg_check_attr->depend_id){ /* å¯é€‰çš„é…ç½®ä¹Ÿæ£€æŸ¥ */
+	if(0 == this_cfg_check_attr->depend_id){ /* ¿ÉÑ¡µÄÅäÖÃÒ²¼ì²é */
 		return 1;
 	}	
 
@@ -1950,11 +1951,11 @@ static int cfg_value_need_be_check(const sapp_config_check_t *local_cfg_check_ar
 }
 
 /*
-	å®Œå…¨éå†ä¸€éå½“å‰çš„sapp.toml, æ£€æŸ¥æ˜¯å¦æœ‰ä¸è®¤è¯†çš„é…ç½®, å¦‚æœæœ‰è¯´æ˜:
-	    1)sappæ¯”sapp.tomlçš„ç‰ˆæœ¬æ—§;
-	    2)æŸäº›å†å²ä¸Šçš„å‚æ•°å·²ç»è¢«åºŸå¼ƒ, ä½†æ˜¯sapp.tomlè¿˜å­˜åœ¨;	
+	ÍêÈ«±éÀúÒ»±éµ±Ç°µÄsapp.toml, ¼ì²éÊÇ·ñÓĞ²»ÈÏÊ¶µÄÅäÖÃ, Èç¹ûÓĞËµÃ÷:
+	    1)sapp±Èsapp.tomlµÄ°æ±¾¾É;
+	    2)Ä³Ğ©ÀúÊ·ÉÏµÄ²ÎÊıÒÑ¾­±»·ÏÆú, µ«ÊÇsapp.toml»¹´æÔÚ;	
 
-	æ­¤å¤„ä¸ç”¨prof_loadè€Œæ˜¯è‡ªè¡Œç”¨fgetsé€è¡Œè¯»å–, å› ä¸ºäº‹å…ˆä¸çŸ¥é“è¦è·å–ä»€ä¹ˆ, è¦æŠŠæ‰€æœ‰çš„è¡Œéƒ½éå†ä¸€é.
+	´Ë´¦²»ÓÃprof_load¶øÊÇ×ÔĞĞÓÃfgetsÖğĞĞ¶ÁÈ¡, ÒòÎªÊÂÏÈ²»ÖªµÀÒª»ñÈ¡Ê²Ã´, Òª°ÑËùÓĞµÄĞĞ¶¼±éÀúÒ»±é.
 */
 static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr)
 {
@@ -1964,7 +1965,7 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 	char section_string[128] = {};
 	char *cfg_key;
 	char *cfg_value;
-	const char *kname_delim = "="; /* å‚æ•°çš„å€¼åªèƒ½ç”¨=åˆ†å‰², å¦åˆ™ä¼šæŠŠkeyçš„å€¼é‡Œçš„ç©ºæ ¼\tåˆ é™¤, æ¯”å¦‚bpf filter */ 
+	const char *kname_delim = "="; /* ²ÎÊıµÄÖµÖ»ÄÜÓÃ=·Ö¸î, ·ñÔò»á°ÑkeyµÄÖµÀïµÄ¿Õ¸ñ\tÉ¾³ı, ±ÈÈçbpf filter */ 
 	const char *section_delim = "[] \t";
 	char *key_save_ptr, *section_save_ptr;
 	FILE *fp;
@@ -1982,12 +1983,12 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 		if('#' == raw_config_line[0]){
 			continue;
 		}
-		if('\0' == raw_config_line[0]){ /* çº¯ç©ºè¡Œ */
+		if('\0' == raw_config_line[0]){ /* ´¿¿ÕĞĞ */
 			continue;
 		}		
 
 		memcpy(config_line, raw_config_line, sizeof(raw_config_line));
-		if('[' == raw_config_line[0]){ /* ä»¥[å¼€å¤´è¡¨ç¤ºæ˜¯sectionæ®µè½å¼€å§‹ */
+		if('[' == raw_config_line[0]){ /* ÒÔ[¿ªÍ·±íÊ¾ÊÇsection¶ÎÂä¿ªÊ¼ */
 			char *pure_sesion_str = strtok_r(config_line, section_delim, &section_save_ptr);
 			strncpy(section_string, pure_sesion_str, sizeof(section_string));
 			while(strtok_r(NULL, section_delim, &section_save_ptr));
@@ -2010,7 +2011,7 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 
 		sapp_memmove_for_blank_table(cfg_value, strlen(cfg_value));
 
-		const char *kkvalue_delim = "\"'";  /* å‚æ•°çš„å€¼å¯èƒ½è¢«åŒå¼•å·ä¿æŠ¤äº†, æ­¤æ—¶åªèƒ½å»æ‰å¼•å·ä½†æ˜¯ä¸èƒ½å†ç”¨ç©ºæ ¼\tåˆ†å‰²äº†, æ¯”å¦‚bpf_filter */
+		const char *kkvalue_delim = "\"'";  /* ²ÎÊıµÄÖµ¿ÉÄÜ±»Ë«ÒıºÅ±£»¤ÁË, ´ËÊ±Ö»ÄÜÈ¥µôÒıºÅµ«ÊÇ²»ÄÜÔÙÓÃ¿Õ¸ñ\t·Ö¸îÁË, ±ÈÈçbpf_filter */
 		char *pure_cfg_value_save_ptr;
 		char *pure_cfg_value = strtok_r(cfg_value, kkvalue_delim, &pure_cfg_value_save_ptr);
 		ret = sapp_config_check_update_option(local_cfg_check_attr, section_string, cfg_key, pure_cfg_value);
@@ -2028,8 +2029,8 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 }
 
 /*
-	æŠŠæ‰€æœ‰å·²çŸ¥çš„å‚æ•°ä»sapp.tomlé‡Œè¯»å–ä¸€é, æ£€æŸ¥æ˜¯å¦æœ‰ä¸å­˜åœ¨çš„é…ç½®, å¦‚æœæœ‰:
-	    1)sappæ¯”sapp.tomlçš„ç‰ˆæœ¬æ–°;
+	°ÑËùÓĞÒÑÖªµÄ²ÎÊı´Ósapp.tomlÀï¶ÁÈ¡Ò»±é, ¼ì²éÊÇ·ñÓĞ²»´æÔÚµÄÅäÖÃ, Èç¹ûÓĞ:
+	    1)sapp±Èsapp.tomlµÄ°æ±¾ĞÂ;
 */
 static int sapp_config_check_missing(sapp_config_check_t *local_cfg_check_attr)
 {
@@ -2039,10 +2040,10 @@ static int sapp_config_check_missing(sapp_config_check_t *local_cfg_check_attr)
 	int fun_ret = 0;
 	
 	for(i = 0; local_cfg_check_attr[i].global_id != -1; i++){
-		if(NULL == local_cfg_check_attr[i].cfg_key){ /* [PACKET_IO], []DUPLICATE_PKT] ç­‰é…ç½®åªæœ‰ä¸ªsection, ä»…ä½œä¸ºæ®µè½æ ‡è¯†, ä½†æ˜¯æ²¡æœ‰key */
+		if(NULL == local_cfg_check_attr[i].cfg_key){ /* [PACKET_IO], []DUPLICATE_PKT] µÈÅäÖÃÖ»ÓĞ¸ösection, ½ö×÷Îª¶ÎÂä±êÊ¶, µ«ÊÇÃ»ÓĞkey */
 			continue;
 		}	
-		if(SAPP_CFG_OBSOLETE_FLAG == local_cfg_check_attr[i].global_id){ /* å·²ç»åºŸå¼ƒçš„é…ç½®, ä¸ç”¨äºæ£€æŸ¥missing */
+		if(SAPP_CFG_OBSOLETE_FLAG == local_cfg_check_attr[i].global_id){ /* ÒÑ¾­·ÏÆúµÄÅäÖÃ, ²»ÓÃÓÚ¼ì²émissing */
 			continue;
 		}			
 		if(cfg_value_need_be_check(local_cfg_check_attr, &local_cfg_check_attr[i]) == 0){
@@ -2050,24 +2051,24 @@ static int sapp_config_check_missing(sapp_config_check_t *local_cfg_check_attr)
 		}
 		ret1 = MESA_load_profile_string_nodef(ABBR_CFG_FILE_MAIN_ENTRY, local_cfg_check_attr[i].section, local_cfg_check_attr[i].cfg_key, cfg_value, sizeof(cfg_value));
 		if(ret1 < 0){
-			/* ç”¨profileæ¥å£è¯»å–ä¸åˆ°æœ‰å¯èƒ½æ˜¯tomlæ ¼å¼çš„æ•°ç»„, å†ç”¨tomlæ•°ç»„å°è¯•è§£æä¸€ä¸‹ */
+			/* ÓÃprofile½Ó¿Ú¶ÁÈ¡²»µ½ÓĞ¿ÉÄÜÊÇtoml¸ñÊ½µÄÊı×é, ÔÙÓÃtomlÊı×é³¢ÊÔ½âÎöÒ»ÏÂ */
 			array_num = 1024;
 			ret2 = tomlc99_wrap_load_int_array(ABBR_CFG_FILE_MAIN_ENTRY, local_cfg_check_attr[i].section, (char *)local_cfg_check_attr[i].cfg_key, cfg_array, &array_num);
 			if(ret2 < 0){
-				/* ä½¿ç”¨tomlæ•°ç»„ä¹Ÿæ²¡æœ‰è¯»å–åˆ°é…ç½®, æ£€æŸ¥æ˜¯å¦ä¾èµ–å…¶ä»–é…ç½®é¡¹ */
+				/* Ê¹ÓÃtomlÊı×éÒ²Ã»ÓĞ¶ÁÈ¡µ½ÅäÖÃ, ¼ì²éÊÇ·ñÒÀÀµÆäËûÅäÖÃÏî */
 				if((local_cfg_check_attr[i].depend_id != 0) && (local_cfg_check_attr[i].cfg_value_check_fun != NULL)){
 					ret3 = local_cfg_check_attr[i].cfg_value_check_fun(local_cfg_check_attr, local_cfg_check_attr[i].global_id, local_cfg_check_attr[i].depend_id, 
 																 local_cfg_check_attr[i].cfg_value, local_cfg_check_attr[i].expect_range_array, local_cfg_check_attr[i].expect_array_num);
 					if(ret3 != 0){
 						fun_ret = SAPP_MAX(local_cfg_check_attr[i].err_log_level, fun_ret); 
 						sapp_printf_colorful(fun_ret, "missing sapp.toml config: [%s] -> %s\n", local_cfg_check_attr[i].section, local_cfg_check_attr[i].cfg_key);
-						/* æ³¨æ„: æ­¤å¤„ä¸è¦break, æ£€æŸ¥æ‰€æœ‰çš„é…ç½®æ–‡ä»¶å‚æ•° */
+						/* ×¢Òâ: ´Ë´¦²»Òªbreak, ¼ì²éËùÓĞµÄÅäÖÃÎÄ¼ş²ÎÊı */
 					}
 				}else{
 					fun_ret = SAPP_MAX(local_cfg_check_attr[i].err_log_level, fun_ret);
 					sapp_printf_colorful(fun_ret, "missing sapp.toml config: [%s] -> %s\n", local_cfg_check_attr[i].section, local_cfg_check_attr[i].cfg_key);
 					
-					/* æ³¨æ„: æ­¤å¤„ä¸è¦break, æ£€æŸ¥æ‰€æœ‰çš„é…ç½®æ–‡ä»¶å‚æ•° */
+					/* ×¢Òâ: ´Ë´¦²»Òªbreak, ¼ì²éËùÓĞµÄÅäÖÃÎÄ¼ş²ÎÊı */
 				}
 			}
 		}
@@ -2081,7 +2082,7 @@ static int sapp_config_check_missing_and_unsupport(sapp_config_check_t *local_cf
 {
 	int ret;
 
-	/* æ³¨æ„:   check_unsupportæ”¾åœ¨å‰é¢, å› ä¸ºè¿˜æœ‰ä¸ªé™„åŠ ä½œç”¨, å°±æ˜¯æŠŠæ‰€æœ‰é…ç½®çš„å€¼è¯»å–åˆ°å…¨å±€å˜é‡: g_sapp_cfg_check_attr ä¸­*/
+	/* ×¢Òâ:   check_unsupport·ÅÔÚÇ°Ãæ, ÒòÎª»¹ÓĞ¸ö¸½¼Ó×÷ÓÃ, ¾ÍÊÇ°ÑËùÓĞÅäÖÃµÄÖµ¶ÁÈ¡µ½È«¾Ö±äÁ¿: g_sapp_cfg_check_attr ÖĞ*/
 	ret = sapp_config_check_unsupport(local_cfg_check_attr);
 	if(ret != 0){
 		sapp_printf_colorful(ret, "maybe a typo, maybe some config is obsolete, or sapp is older than sapp.toml version!\n");
@@ -2098,7 +2099,7 @@ static int sapp_config_check_missing_and_unsupport(sapp_config_check_t *local_cf
 }
 
 /*
-	æ£€æŸ¥æ¯ä¸ªå‚æ•°è‡ªèº«çš„åˆæ³•æ€§, åªæ˜¯å•çº¯çœ‹å‚æ•°çš„å€¼åˆä¸åˆæ³•, ä¸åšå…³è”æ€§æ£€æŸ¥.
+	¼ì²éÃ¿¸ö²ÎÊı×ÔÉíµÄºÏ·¨ĞÔ, Ö»ÊÇµ¥´¿¿´²ÎÊıµÄÖµºÏ²»ºÏ·¨, ²»×ö¹ØÁªĞÔ¼ì²é.
 */
 static int sapp_config_check_single_validity(sapp_config_check_t *local_cfg_check_attr)
 {
@@ -2126,9 +2127,9 @@ static int sapp_config_check_single_validity(sapp_config_check_t *local_cfg_chec
 }
 
 /*
-	å¤šä¸ªä»å‚æ•°ä¹‹é—´çš„å…³è”æ€§æ£€æŸ¥, 
-	    æ¯”å¦‚æ‹“æ‰‘ä¸ºtransparentæ¨¡å¼, å¿…é¡»å¼€å¯packet_io.external.interface;
-	    æ¯”å¦‚å¼€å¯äº†prometheus_enabled, å¿…é¡»æœ‰prometheus_portå’Œprometheus_url_path;
+	¶à¸ö´Ó²ÎÊıÖ®¼äµÄ¹ØÁªĞÔ¼ì²é, 
+	    ±ÈÈçÍØÆËÎªtransparentÄ£Ê½, ±ØĞë¿ªÆôpacket_io.external.interface;
+	    ±ÈÈç¿ªÆôÁËprometheus_enabled, ±ØĞëÓĞprometheus_portºÍprometheus_url_path;
 */
 static int sapp_config_check_sanity(sapp_config_check_t *local_cfg_check_attr)
 {
@@ -2142,15 +2143,15 @@ static int sapp_config_check_sanity(sapp_config_check_t *local_cfg_check_attr)
 
 /*
 	check_level:
-		t1: åªæ£€æŸ¥æ”¯æŒçš„å‚æ•°åœ¨ä¸åœ¨, æ˜¯å¦æœ‰ä¸æ”¯æŒçš„æ–°å‚æ•°;
-		t2: æ£€æŸ¥æ¯ä¸ªå‚æ•°çš„å€¼æ˜¯å¦åˆæ³•, æ¯”å¦‚packet_io.mode ä¸æ˜¯mirror, inline, tansparentç­‰;
-		t3: ä¸ä»…æ£€æŸ¥å•ä¸ªå‚æ•°, å°½å¯èƒ½çš„æ£€æŸ¥æ‰€æœ‰å‚æ•°çš„ç›¸å…³æ€§ä¾èµ–é—®é¢˜, æ¯”å¦‚transparentæ¨¡å¼æ²¡æœ‰é…ç½®externalç½‘å¡;
+		t1: Ö»¼ì²éÖ§³ÖµÄ²ÎÊıÔÚ²»ÔÚ, ÊÇ·ñÓĞ²»Ö§³ÖµÄĞÂ²ÎÊı;
+		t2: ¼ì²éÃ¿¸ö²ÎÊıµÄÖµÊÇ·ñºÏ·¨, ±ÈÈçpacket_io.mode ²»ÊÇmirror, inline, tansparentµÈ;
+		t3: ²»½ö¼ì²éµ¥¸ö²ÎÊı, ¾¡¿ÉÄÜµÄ¼ì²éËùÓĞ²ÎÊıµÄÏà¹ØĞÔÒÀÀµÎÊÌâ, ±ÈÈçtransparentÄ£Ê½Ã»ÓĞÅäÖÃexternalÍø¿¨;
 */
 int sapp_config_check(void)
 {
 	int i, ret1, ret2, final_ret = 0;
 
-	/* å…¨å±€å˜é‡ä¸­æœ‰å›ºå®šä¸å˜çš„é…ç½®, ä¹Ÿæœ‰åŠ¨æ€ä»é…ç½®æ–‡ä»¶è¯»å–çš„æ•°æ®, æ‰€ä»¥æ­¤å¤„copyä¸€ä»½ä¸´æ—¶æ•°æ® */
+	/* È«¾Ö±äÁ¿ÖĞÓĞ¹Ì¶¨²»±äµÄÅäÖÃ, Ò²ÓĞ¶¯Ì¬´ÓÅäÖÃÎÄ¼ş¶ÁÈ¡µÄÊı¾İ, ËùÒÔ´Ë´¦copyÒ»·İÁÙÊ±Êı¾İ */
 	sapp_config_check_t *local_cfg_check_attr = (sapp_config_check_t *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(g_sapp_cfg_check_attr)); 
 	memcpy(local_cfg_check_attr, g_sapp_cfg_check_attr, sizeof(g_sapp_cfg_check_attr));
 

@@ -2962,26 +2962,30 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	inject_stream = raw_stream;
 	inject_stream_pr = (struct streaminfo_private *)raw_stream;
 	local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
-	if((SIO_EXCLUDE_THIS_LAYER_HDR & sio) != 0){
-		/* 跳过当前层 */
-		inject_stream = raw_stream->pfather;
-		inject_stream_pr = (struct streaminfo_private *)inject_stream;
-		/* 如果插件发包时指定了SIO_EXCLUDE_THIS_LAYER_HDR, 说明内层四元组是由插件构造的, 比如kni, 
-		   一般不会再走到build_pkt的函数中, 此处需要解析ip包并加入bloom filter */
-		if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0){
-			sendpkt_dup_pkt_mark_stream(raw_stream, (char *)payload);
-		}
-	}else{
-		/* 
-		   2021-09-18 fix bug:
-		   原来仅Ipv4增加build-args, 原意是在ipv4和tcp包头增加指纹,
-		   改为ipv6也加 build_args, 
-		   否则在build_net_layer_tcp()时判断build_tcp_args是NULL, 会使用随机序号, 发包就不对了!! 
-		 */
-		set_build_layer_tcp_args(thread_num, TH_PUSH|TH_ACK, MESA_rand_range(1000, 1460), 0);
-	}
-	
-	raw_stream_pr = (struct streaminfo_private *)raw_stream;
+    if ((SIO_EXCLUDE_THIS_LAYER_HDR & sio) != 0)
+    {
+        /* 跳过当前层 */
+        inject_stream = raw_stream->pfather;
+        inject_stream_pr = (struct streaminfo_private *)inject_stream;
+        /* 如果插件发包时指定了SIO_EXCLUDE_THIS_LAYER_HDR, 说明内层四元组是由插件构造的, 比如kni,
+           一般不会再走到build_pkt的函数中, 此处需要解析ip包并加入bloom filter */
+        if (sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
+        {
+            sendpkt_dup_pkt_mark_stream(raw_stream, (char *)payload);
+        }
+    }
+    else
+    {
+        /*
+           2021-09-18 fix bug:
+           原来仅Ipv4增加build-args, 原意是在ipv4和tcp包头增加指纹,
+           改为ipv6也加 build_args,
+           否则在build_net_layer_tcp()时判断build_tcp_args是NULL, 会使用随机序号, 发包就不对了!!
+         */
+        set_build_layer_tcp_args(thread_num, TH_PUSH | TH_ACK, MESA_rand_range(1000, 1460), 0);
+    }
+
+    raw_stream_pr = (struct streaminfo_private *)raw_stream;
 	/* 因改变了某些回调函数的原始包类型为IP包头, 所以不需要插件传输原始包, 信息都存储于私有流结构体内 */
 	raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_routedir_reverse);
 	if(NULL == raw_pkt){
@@ -2993,12 +2997,21 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	if(raw_stream_pr->sid_append_list != NULL)
 	{
 		((raw_pkt_t *)raw_pkt)->append_list=raw_stream_pr->sid_append_list;
-	}
-	if(raw_stream_pr->sid_prepend_list != NULL)
-	{
-		((raw_pkt_t *)raw_pkt)->prepend_list=raw_stream_pr->sid_prepend_list;
-	}
-	if (raw_stream_pr->stream_trace_id != 0)
+    }
+    if (sapp_global_val->config.packet_io.inject_pkt_prepend_segment_id > 0) // update sid_prepend_list, insert inject_pkt_prepend_segment_id to head
+    {
+        struct segment_id_list inject_sid = {
+            {(unsigned int)sapp_global_val->config.packet_io.inject_pkt_prepend_segment_id}, 1};
+        if (raw_stream_pr->sid_prepend_list != NULL)
+        {
+			for(unsigned int i=1; i < MIN(raw_stream_pr->sid_prepend_list->sz_sidlist, MAX_SID_NUM-1); i++)
+			{
+				inject_sid.sid_list[i] = raw_stream_pr->sid_prepend_list->sid_list[i];
+			}
+        }
+        ((raw_pkt_t *)raw_pkt)->prepend_list = &inject_sid;
+    }
+    if (raw_stream_pr->stream_trace_id != 0)
 	{
 		((raw_pkt_t *)raw_pkt)->stream_trace_id = raw_stream_pr->stream_trace_id;
 	}
@@ -3037,7 +3050,7 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	if(payload_len + reserved_hdr_len > MTU_MAX){
 		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
 		sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_pkt() error! payload_len too long:%d.\n", 
-		                 payload_len + reserved_hdr_len);	
+		                payload_len + reserved_hdr_len);	
 		return -1;
 	}
 
@@ -3070,7 +3083,7 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 			local_sys_stat->length[SAPP_STAT_SND_UDP]+= raw_pkt->raw_pkt_len;		
 		}
 	}
-
+    ((raw_pkt_t *)raw_pkt)->prepend_list = raw_stream_pr->sid_prepend_list;// set back stream sid_prepend_list
 err:	
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, thread_num);	
 

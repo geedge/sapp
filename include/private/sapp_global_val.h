@@ -236,6 +236,7 @@ typedef struct{
 	char pcap_capture_direction[NAME_MAX]; /* in, out, inout */
 	char inject_pkt_mode_string[NAME_MAX];
 	int inject_pkt_mode; /* 包注入方式二进制值, 详见: enum send_fake_packet_mode */
+	int inject_pkt_prepend_segment_id;
 	unsigned short inject_mode_inline_device_sport; /* udp socket绑定的本端源端口, host order, 主机序 */
 	char inject_mode_single_gateway_device[NAME_MAX];
 	char inject_mode_single_gateway_src_mac_string[20];

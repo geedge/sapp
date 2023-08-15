@@ -45,7 +45,7 @@
 ### raw_ethernet_single_gateway: send layer2 ethernet packet to specific gateway in same broadcast domain. 
 ### raw_ethernet_multi_gateway: send layer2 ethernet packet to multiple gateway in same broadcast domain. 
     inject_pkt_mode="default"
-
+    inject_pkt_prepend_segment_id=0
 ### note, this config is valid if inject_pkt_mode==vxlan_by_inline_device, means udp socket src port.
     #inject_mode_inline_device_sport=54789
 
