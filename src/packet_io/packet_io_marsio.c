@@ -1311,6 +1311,7 @@ int marsio_set_vlan_id_to_mbuff(void *pkt_reference, unsigned int vlan_id_host_o
 	return ret;
 }
 
+#include <sched.h>
 
 int marsio_dl_io_init(int argc, char *argv[])
 {

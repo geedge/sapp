@@ -354,49 +354,6 @@ void sysinfo_output(void)
 
 	fprintf(fp,"\n*********************** %s *********************\n", time_string);
 	fprintf(fp,"*********************** \033[41m%s\033[0m *************************\n", "sysinfo exactly");
-#if 0
-	fprintf(fp,"%-12s %12s %12s %12s %12s\n","Layer", "total_pkt", "total_len","pps", "Bps");
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_work", (unsigned long long)0, (unsigned long long)0,(cur_count[SAPP_POLLING_WORK]-history_count[SAPP_POLLING_WORK]),(unsigned long long)0);
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Polling_idle", (unsigned long long)0,(unsigned long long)0,(cur_count[SAPP_POLLING_IDLE]-history_count[SAPP_POLLING_IDLE]),(unsigned long long)0);
-
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Line", cur_count[SAPP_STAT_RCV_LINE],cur_length[SAPP_STAT_RCV_LINE],(cur_count[SAPP_STAT_RCV_LINE]-history_count[SAPP_STAT_RCV_LINE]),(cur_length[SAPP_STAT_RCV_LINE]-history_length[SAPP_STAT_RCV_LINE]));
-
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Raw", cur_count[SAPP_STAT_RCV_RAW],cur_length[SAPP_STAT_RCV_RAW],(cur_count[SAPP_STAT_RCV_RAW]-history_count[SAPP_STAT_RCV_RAW]),(cur_length[SAPP_STAT_RCV_RAW]-history_length[SAPP_STAT_RCV_RAW]));
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "Ethernet", cur_count[SAPP_STAT_RCV_ETHERNET],cur_length[SAPP_STAT_RCV_ETHERNET],(cur_count[SAPP_STAT_RCV_ETHERNET]-history_count[SAPP_STAT_RCV_ETHERNET]),(cur_length[SAPP_STAT_RCV_ETHERNET]-history_length[SAPP_STAT_RCV_ETHERNET]));
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n", "IPv4", cur_count[SAPP_STAT_RCV_IPV4],cur_length[SAPP_STAT_RCV_IPV4],(cur_count[SAPP_STAT_RCV_IPV4]-history_count[SAPP_STAT_RCV_IPV4]),(cur_length[SAPP_STAT_RCV_IPV4]-history_length[SAPP_STAT_RCV_IPV4]));
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n","IPv6",cur_count[SAPP_STAT_RCV_IPV6],cur_length[SAPP_STAT_RCV_IPV6],(cur_count[SAPP_STAT_RCV_IPV6]-history_count[SAPP_STAT_RCV_IPV6]),(cur_length[SAPP_STAT_RCV_IPV6]-history_length[SAPP_STAT_RCV_IPV6]));
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n","TCP",cur_count[SAPP_STAT_RCV_TCP],cur_length[SAPP_STAT_RCV_TCP],(cur_count[SAPP_STAT_RCV_TCP]-history_count[SAPP_STAT_RCV_TCP]),(cur_length[SAPP_STAT_RCV_TCP]-history_length[SAPP_STAT_RCV_TCP]));
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n","UDP",cur_count[SAPP_STAT_RCV_UDP],cur_length[SAPP_STAT_RCV_UDP],(cur_count[SAPP_STAT_RCV_UDP]-history_count[SAPP_STAT_RCV_UDP]),(cur_length[SAPP_STAT_RCV_UDP]-history_length[SAPP_STAT_RCV_UDP]));
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n","Unknown",cur_count[SAPP_STAT_RCV_UNKNOWN],cur_length[SAPP_STAT_RCV_UNKNOWN],(cur_count[SAPP_STAT_RCV_UNKNOWN]-history_count[SAPP_STAT_RCV_UNKNOWN]),(cur_length[SAPP_STAT_RCV_UNKNOWN]-history_length[SAPP_STAT_RCV_UNKNOWN]));
-	fprintf(fp,"%-12s %12llu %12llu %12llu %12llu\n","Sapp_Drop",
-				cur_count[SAPP_STAT_DROP_ETHERNET]+cur_count[SAPP_STAT_DROP_IPV4]+cur_count[SAPP_STAT_DROP_IPV6],
-				(cur_length[SAPP_STAT_DROP_ETHERNET]+cur_length[SAPP_STAT_DROP_IPV4]+cur_length[SAPP_STAT_DROP_IPV6]),
-				(cur_count[SAPP_STAT_DROP_ETHERNET]+cur_count[SAPP_STAT_DROP_IPV4]+cur_count[SAPP_STAT_DROP_IPV6]-history_count[SAPP_STAT_DROP_ETHERNET]-history_count[SAPP_STAT_DROP_IPV4]-history_count[SAPP_STAT_DROP_IPV6]),
-				((cur_count[SAPP_STAT_DROP_ETHERNET]+cur_count[SAPP_STAT_DROP_IPV4]+cur_count[SAPP_STAT_DROP_IPV6]-history_count[SAPP_STAT_DROP_ETHERNET]-history_count[SAPP_STAT_DROP_IPV4]-history_count[SAPP_STAT_DROP_IPV6])));
-
-	fprintf(fp,"\n***************************************************************\n");
-	fprintf(fp,"%-10s %12s %12s %12s %12s\n","SND-PKT", "total_pkt", "total_len","pps", "Bps");
-	fprintf(fp,"%-10s %12llu %12llu %12llu %12llu\n", "TCP_RST", cur_count[SAPP_STAT_SND_TCP_RST],cur_length[SAPP_STAT_SND_TCP_RST],(cur_count[SAPP_STAT_SND_TCP_RST]-history_count[SAPP_STAT_SND_TCP_RST]),(cur_length[SAPP_STAT_SND_TCP_RST]-history_length[SAPP_STAT_SND_TCP_RST]));
-	fprintf(fp,"%-10s %12llu %12llu %12llu %12llu\n", "TCP_S/A", cur_count[SAPP_STAT_SND_TCP_SYNACK],cur_length[SAPP_STAT_SND_TCP_SYNACK],(cur_count[SAPP_STAT_SND_TCP_SYNACK]-history_count[SAPP_STAT_SND_TCP_SYNACK]),(cur_length[SAPP_STAT_SND_TCP_SYNACK]-history_length[SAPP_STAT_SND_TCP_SYNACK]));
-	fprintf(fp,"%-10s %12llu %12llu %12llu %12llu\n", "UDP", cur_count[SAPP_STAT_SND_UDP],cur_length[SAPP_STAT_SND_UDP],(cur_count[SAPP_STAT_SND_UDP]-history_count[SAPP_STAT_SND_UDP]),(cur_length[SAPP_STAT_SND_UDP]-history_length[SAPP_STAT_SND_UDP]));
-	fprintf(fp,"%-10s %12llu %12llu %12llu %12llu\n", "SEND-ERR", cur_count[SAPP_STAT_SND_ERROR], cur_length[SAPP_STAT_SND_ERROR], (cur_count[SAPP_STAT_SND_ERROR]-history_count[SAPP_STAT_SND_ERROR]), cur_length[SAPP_STAT_SND_ERROR]-history_length[SAPP_STAT_SND_ERROR]);
-
-	fprintf(fp,"\n%-10s %12s %12s\n", "TUNNEL", "total_pkt", "total_len");	
-	fprintf(fp,"%-10s %12llu %12llu\n", "6over4", cur_count[SAPP_STAT_TUNNEL_6OVER4], cur_length[SAPP_STAT_TUNNEL_6OVER4]); 
-	fprintf(fp,"%-10s %12llu %12llu\n","teredo",cur_count[SAPP_STAT_TUNNEL_TEREDO], cur_length[SAPP_STAT_TUNNEL_TEREDO]);
-	fprintf(fp,"%-10s %12llu %12llu\n","GTP",cur_count[SAPP_STAT_TUNNEL_GTP], cur_length[SAPP_STAT_TUNNEL_GTP]);
-	fprintf(fp,"%-10s %12llu %12llu\n","L2TP",cur_count[SAPP_STAT_TUNNEL_L2TP], cur_length[SAPP_STAT_TUNNEL_L2TP]);
-	fprintf(fp,"%-10s %12llu %12llu\n","PPTP",cur_count[SAPP_STAT_TUNNEL_PPTP], cur_length[SAPP_STAT_TUNNEL_PPTP]);
-
-	fprintf(fp,"\n%-10s %12s\n", "Drop_by_lib", "total_pkt");
-	fprintf(fp,"%-10s %12ld\n", "app", packet_io_get_app_drop_num_tot());
-	fprintf(fp,"%-10s %12ld\n\n", "lib", packet_io_get_lib_drop_num());
-	
-	fprintf(fp,"\n%12s %12s %12s\n", "Drop_by_sapp", "total_pkt", "total_len");
-	fprintf(fp,"%12s %12llu %12llu\n", "ETH", cur_count[SAPP_STAT_DROP_ETHERNET], cur_length[SAPP_STAT_DROP_ETHERNET]);
-	fprintf(fp,"%12s %12llu %12llu\n", "IPV4", cur_count[SAPP_STAT_DROP_IPV4], cur_length[SAPP_STAT_DROP_IPV4]);
-	fprintf(fp,"%12s %12llu %12llu\n", "IPV6", cur_count[SAPP_STAT_DROP_IPV6], cur_length[SAPP_STAT_DROP_IPV6]);
-#endif
 
 	fprintf(fp,"\n|------------------------------------------------ TCP statistics detail ----------------------------------------------|\n");
 	fprintf(fp,"%3s %6s %3s %-27s %-19s %-27s %-27s\n", "", "", "","|-----------Current---------|", "|------Realtime-----|",

@@ -82,8 +82,6 @@ static int packet_io_hook_output_vxlan(raw_pkt_t *raw_pkt, void *raw_pkt_data, u
 	struct mesa_ip4_hdr *send_ip4h = (struct mesa_ip4_hdr *)((char *)raw_pkt_data + sizeof(struct mesa_ethernet_hdr));
 	/* vxlan udp层不用翻转, checksum设为0即可 */
 	struct mesa_udp_hdr *send_outer_udp_hdr = (struct mesa_udp_hdr *)((char *)raw_pkt_data + sizeof(struct mesa_ethernet_hdr)+sizeof(struct mesa_ip4_hdr));
-	const inline_vxlan_hdr_t *raw_vxlan_hdr = (inline_vxlan_hdr_t *)((char *)raw_pkt->raw_pkt_data + sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_udp_hdr));
-	inline_vxlan_hdr_t *send_vxlan_hdr = (inline_vxlan_hdr_t *)((char *)raw_pkt_data + sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_udp_hdr));
 	unsigned char tmp_mac_addr[ETH_ALEN];
 	unsigned int tmp_ip_addr;
 	/* 注意, 在forward时,raw_pkt->raw_pkt_data和raw_pkt_data实际上是一个地址, 需要暂存一下,不能直接像下面这样copy:  */
@@ -261,7 +259,7 @@ int packet_io_hook_input_mirror(raw_pkt_t *raw_pkt, unsigned char dir, int threa
 
 int packet_io_hook_forward(raw_pkt_t *raw_pkt, unsigned char route_dir, int thread_num)
 {
-	int ret;
+	int ret=0;
 
 	if(raw_pkt->vlan_flipping_couple[0] > 1){
 		ret = packet_io_hook_output_vlan_flipping(raw_pkt, route_dir, (void *)raw_pkt->raw_pkt_data, (void *)raw_pkt->io_lib_pkt_reference, "forward pkt");
@@ -283,11 +281,9 @@ int packet_io_hook_forward(raw_pkt_t *raw_pkt, unsigned char route_dir, int thre
 
 int packet_io_hook_sendto(const raw_pkt_t *raw_pkt, unsigned char route_dir, char *send_pkt_data, void *send_pkt_io_reference)
 {
-	int ret;
-
+	int ret=0;
 	if(raw_pkt->vlan_flipping_couple[0] > 1){
-		ret = packet_io_hook_output_vlan_flipping((raw_pkt_t *)raw_pkt, route_dir, (void *)send_pkt_data, send_pkt_io_reference, "send pkt");
-		return ret;
+		return packet_io_hook_output_vlan_flipping((raw_pkt_t *)raw_pkt, route_dir, (void *)send_pkt_data, send_pkt_io_reference, "send pkt");
 	}
 
 	marsio_dl_io_set_rawpkt_meta(raw_pkt, send_pkt_io_reference, route_dir);

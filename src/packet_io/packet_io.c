@@ -330,7 +330,7 @@ long packet_io_get_app_drop_num_tot(void)
 		ret += packet_io_get_app_drop_num(i);
 	}
 
-	return 0;
+	return ret;
 }
 
 long packet_io_get_lib_drop_num(void)
