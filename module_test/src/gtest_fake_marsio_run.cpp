@@ -30,6 +30,7 @@ static void fake_marsio_set_default_env(int mac_flapping_enable)
 	update_config_file("etc/sapp.toml", "l2_l3_tunnel_support", "1");
 	update_config_file("etc/sapp.toml", "overlay_mode", "none");
 	update_config_file_by_lastline("etc/sapp.toml", "packet_io.depolyment", "mode", "inline");
+	update_config_file_by_lastline("etc/sapp.toml", "packet_io.feature", "inject_pkt_mode", "default");
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 1, "name", "lo"); /* 此处name叫什么名其实无所谓了, 并不是真正从网卡获取数据包 */
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 2, "name", "lo"); /* 此处name叫什么名其实无所谓了, 并不是真正从网卡获取数据包 */
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 1, "type", "marsio");  
