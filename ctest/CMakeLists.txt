@@ -17,8 +17,6 @@ add_test(NAME COPY_PPTP_DIR COMMAND sh -c "mkdir -p ${CMAKE_BINARY_DIR}/testing/
 add_test(NAME COPY_PPTP_INF COMMAND sh -c "cp ${CMAKE_SOURCE_DIR}/bin/plug/protocol/pptp_protocol_plug/pptp_protocol_plug.inf ${CMAKE_BINARY_DIR}/testing/plug/protocol/pptp_protocol_plug/")
 add_test(NAME COPY_PPTP_SO COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/src/extensions/pptp_protocol_plug.so ${CMAKE_BINARY_DIR}/testing/plug/protocol/pptp_protocol_plug/")
 
-add_test(NAME COPY_TSHARK COMMAND sh -c "cp ${CMAKE_SOURCE_DIR}/benchmark/vendor/tshark_v3.2.17/tshark ${CMAKE_BINARY_DIR}/testing/bin")
-add_test(NAME COPY_ADD_X_TSHARK COMMAND sh -c "chmod +x ${CMAKE_BINARY_DIR}/testing/bin/tshark")
 add_test(NAME COPY_BENCHMARK_PLUG COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/benchmark/example/test_benchmark_plug.so ${CMAKE_BINARY_DIR}/testing/plug/business/gtest_sapp/")
 add_test(NAME COPY_LIBBENCHMARK COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/benchmark/src/libsapp_benchmark.so ${CMAKE_BINARY_DIR}/testing/plug/business/gtest_sapp/")
 add_test(NAME COPY_GTEST_SAPP COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/module_test/src/gtest_sapp_v4 ${CMAKE_BINARY_DIR}/testing/")

@@ -39,8 +39,6 @@ google_test_for_centos7:
     - cp -r example/TEST_PCAP /home/mesasoft/sapp_run/
     - cp -r example/TEST_PROFILE /home/mesasoft/sapp_run/
     - mkdir -p /opt/MESA/bin
-    - cp vendor/tshark_v3.2.17/tshark /opt/MESA/bin/tshark
-    - chmod +x /opt/MESA/bin/tshark
     - echo "/opt/MESA/lib" >> /etc/ld.so.conf
     - ldconfig
     - cd /home/mesasoft/sapp_run/
@@ -83,8 +81,6 @@ google_test_for_centos8:
     - cp -r example/TEST_PCAP /home/mesasoft/sapp_run/
     - cp -r example/TEST_PROFILE /home/mesasoft/sapp_run/
     - mkdir -p /opt/MESA/bin
-    - cp vendor/tshark_v3.2.17/tshark /opt/MESA/bin/tshark
-    - chmod +x /opt/MESA/bin/tshark
     - echo "/opt/MESA/lib" >> /etc/ld.so.conf
     - ldconfig
     - cd /home/mesasoft/sapp_run/

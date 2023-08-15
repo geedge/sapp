@@ -48,7 +48,7 @@ extern "C" {
 
 #define SAPP_BCHMK_TEST_JSON_DIR		"./TEST_PROFILE"
 
-#define TSHARK_TOOLS_PATH "./bin/tshark"
+#define TSHARK_TOOLS_PATH "/usr/bin/tshark"
 
 #define SAPP_BCHMK_OUTPUT_PCAP_FILE  "/tmp/.sapp_benchmark_output.pcap"
 
