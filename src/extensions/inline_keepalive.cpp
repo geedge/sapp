@@ -885,7 +885,7 @@ int gdev_keepalive_plug_init(void)
 
 void gdev_keepalive_plug_destroy(void)
 {
-	if(DEPOLYMENT_MODE_INLINE != sapp_global_val->config.packet_io.depolyment_mode_bin){
+	if(DEPLOYMENT_MODE_INLINE != sapp_global_val->config.packet_io.deployment_mode_bin){
 		return;
 	}
 

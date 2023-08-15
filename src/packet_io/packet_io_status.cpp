@@ -43,8 +43,8 @@ static void packet_io_update_metrics_fs2(void)
 	sapp_fs2_update_count(SAPP_STAT_RCV_ETHERNET, cur_count[SAPP_STAT_RCV_ETHERNET]);
 	sapp_fs2_update_length(SAPP_STAT_RCV_ETHERNET, 8 *( cur_length[SAPP_STAT_RCV_ETHERNET])); /* to bps, bit per second */
 
-	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
-	 || (DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin)){
+	if((DEPLOYMENT_MODE_INLINE == sapp_global_val->config.packet_io.deployment_mode_bin)
+	 || (DEPLOYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.deployment_mode_bin)){
 		sapp_fs2_update_count(SAPP_STAT_ETH_INBOUND, cur_count[SAPP_STAT_ETH_INBOUND]);
 		sapp_fs2_update_length(SAPP_STAT_ETH_INBOUND, 8 *( cur_length[SAPP_STAT_ETH_INBOUND])); /* to bps, bit per second */
 
@@ -142,8 +142,8 @@ static void packet_io_update_metrics_fs3(void)
 	sapp_fs3_metric_incrby(0, SAPP_STAT_RCV_ETHERNET,cur_count[SAPP_STAT_RCV_ETHERNET]-history_count[SAPP_STAT_RCV_ETHERNET]);
 	sapp_fs3_metric_incrby(1, SAPP_STAT_RCV_ETHERNET, 8 *( cur_length[SAPP_STAT_RCV_ETHERNET]-history_length[SAPP_STAT_RCV_ETHERNET])); /* to bps, bit per second */
 
-	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
-	 || (DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin)){
+	if((DEPLOYMENT_MODE_INLINE == sapp_global_val->config.packet_io.deployment_mode_bin)
+	 || (DEPLOYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.deployment_mode_bin)){
 		sapp_fs3_metric_incrby(0, SAPP_STAT_ETH_INBOUND, cur_count[SAPP_STAT_ETH_INBOUND] - history_count[SAPP_STAT_ETH_INBOUND]);
 		sapp_fs3_metric_incrby(1, SAPP_STAT_ETH_INBOUND, 8 * (cur_length[SAPP_STAT_ETH_INBOUND] - history_length[SAPP_STAT_ETH_INBOUND])); /* to bps, bit per second */
 

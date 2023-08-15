@@ -210,25 +210,28 @@ int sapp_bchmk_create_process_engine(benchmark_engine_t *bch_engine)
 
 	process_engine = (pkt_process_engine_t *)calloc(1, sizeof(pkt_process_engine_t));
 
-	ret = MESA_load_profile_string_nodef(SAPP_DEFAULT_MAIN_CONFIG_FILE, (char *)"packet_io.depolyment", (char *)"mode", tmp_str, CONFIG_MAX_LEN);
+	ret = MESA_load_profile_string_nodef(SAPP_DEFAULT_MAIN_CONFIG_FILE, (char *)"packet_io.deployment", (char *)"mode", tmp_str, CONFIG_MAX_LEN);
 	if(ret < 0){
-		sapp_bchmk_log(bch_engine, RLOG_LV_FATAL, "not found sapp.toml config [packet_io.depolyment]->mode");
+		sapp_bchmk_log(bch_engine, RLOG_LV_FATAL, "not found sapp.toml config [packet_io.deployment]->mode");
+		free(process_engine);
 		return -1;
 	}
 	if(strncasecmp(tmp_str, "mirror", strlen("mirror")) == 0){
-		process_engine->sapp_deploy_mode = DEPOLYMENT_MODE_MIRROR;
+		process_engine->sapp_deploy_mode = DEPLOYMENT_MODE_MIRROR;
 	}else if(strncasecmp(tmp_str, "transparent", strlen("transparent")) == 0){
-		process_engine->sapp_deploy_mode = DEPOLYMENT_MODE_TRANSPARENT;
+		process_engine->sapp_deploy_mode = DEPLOYMENT_MODE_TRANSPARENT;
 	}else if(strncasecmp(tmp_str, "inline", strlen("inline")) == 0){
-		process_engine->sapp_deploy_mode = DEPOLYMENT_MODE_INLINE;
+		process_engine->sapp_deploy_mode = DEPLOYMENT_MODE_INLINE;
 	}else{
-		sapp_bchmk_log(bch_engine,RLOG_LV_FATAL, "not support sapp.toml config [packet_io.depolyment]->mode: %s", tmp_str);
+		sapp_bchmk_log(bch_engine,RLOG_LV_FATAL, "not support sapp.toml config [packet_io.deployment]->mode: %s", tmp_str);
+		free(process_engine);
 		return -1;
 	}
 
 	ret = MESA_load_profile_string_nodef(SAPP_DEFAULT_MAIN_CONFIG_FILE, "packet_io.internal.interface", "name", tap_dev_name_up, TAP_DEV_NAME_MAX_LEN);
 	if(ret < 0){
 		sapp_bchmk_log(bch_engine,RLOG_LV_FATAL, "not found config [packet_io.internal.interface]->name");
+		free(process_engine);
 		return -1;
 	}
 	process_engine->tap_internal_fd = tuntap_dev_create(tap_dev_name_up, IFF_TAP | IFF_MULTI_QUEUE | IFF_NO_PI);
@@ -239,7 +242,7 @@ int sapp_bchmk_create_process_engine(benchmark_engine_t *bch_engine)
 		sapp_bchmk_log(bch_engine,RLOG_LV_DEBUG, "create packet_io.internal.interface device '%s' success", tap_dev_name_up);
 	}
 	
-	if(DEPOLYMENT_MODE_TRANSPARENT == process_engine->sapp_deploy_mode){
+	if(DEPLOYMENT_MODE_TRANSPARENT == process_engine->sapp_deploy_mode){
 		ret = MESA_load_profile_string_nodef(SAPP_DEFAULT_MAIN_CONFIG_FILE, "packet_io.external.interface", "name", tap_dev_name_up, TAP_DEV_NAME_MAX_LEN);
 		if(ret < 0){
 			sapp_bchmk_log(bch_engine,RLOG_LV_FATAL, "not found config [packet_io.external.interface]->name");

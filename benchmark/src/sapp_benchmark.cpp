@@ -511,7 +511,7 @@ static void sapp_bchmk_replay_pkt(benchmark_engine_t *bchmk_engine, int pkt_inde
 	pcap_pkt_image_t *pcap_pkt_image = bchmk_engine->pcap_pkt_image;
 	int ret, route_dir, reply_dev_fd;
 
-	if(DEPOLYMENT_MODE_TRANSPARENT == bchmk_engine->process_engine->sapp_deploy_mode){
+	if(DEPLOYMENT_MODE_TRANSPARENT == bchmk_engine->process_engine->sapp_deploy_mode){
 		route_dir = sapp_bchmk_determine_routedir(pcap_pkt_image->pkt_array[pkt_index].pkt_data);
 		if(route_dir >= 0){
 			reply_dev_fd = bchmk_engine->process_engine->tap_internal_fd;
@@ -665,7 +665,7 @@ static int sapp_bchmk_recv_pkt(benchmark_engine_t *bchmk_engine, char *pkt_buf, 
 	time_t first_recv_time;
 	char debug_ip_string[256];
 
-	if(DEPOLYMENT_MODE_TRANSPARENT == bchmk_engine->process_engine->sapp_deploy_mode){
+	if(DEPLOYMENT_MODE_TRANSPARENT == bchmk_engine->process_engine->sapp_deploy_mode){
 		if(reverse_dir){
 			/* 双臂模式的反向还是从注入网卡读取 */
 			recv_fd = bchmk_engine->process_engine->last_replay_fd;
@@ -857,7 +857,7 @@ static sapp_benchmark_result_t sapp_bchmk_check_forward_pkt(benchmark_engine_t *
 	/*********  先检查DROP策略 ************/
 	need_drop_flag = sapp_bchmk_need_drop_cur_pkt(bchmk_engine, carray_pkt_index);
 
-	if(DEPOLYMENT_MODE_TRANSPARENT == bchmk_engine->process_engine->sapp_deploy_mode){
+	if(DEPLOYMENT_MODE_TRANSPARENT == bchmk_engine->process_engine->sapp_deploy_mode){
 		reverse_dir = 1;
 	}else{
 		reverse_dir = 0;

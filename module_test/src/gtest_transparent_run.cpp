@@ -19,7 +19,7 @@
 void transparent_network_env_init(void)
 {
 	update_config_file("etc/sapp.toml", "overlay_mode", "none");
-	update_config_file_by_lastline("etc/sapp.toml", "packet_io.depolyment", "mode", "transparent");
+	update_config_file_by_lastline("etc/sapp.toml", "packet_io.deployment", "mode", "transparent");
 	update_config_file("etc/sapp.toml", "pcap_capture_direction", "\"in\"");
 
 	/* name,type顺序不固定, 不一定在第一行或第二行, 所以都尝试一遍 */

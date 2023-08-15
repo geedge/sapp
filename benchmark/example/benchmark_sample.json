@@ -23,7 +23,7 @@
 			{"file_name":"./etc/sapp.toml",
 			 "file_content": 
 			    [
-					{"section":"packet_io.depolyment", "key": "mode", "value": "inline"},
+					{"section":"packet_io.deployment", "key": "mode", "value": "inline"},
 					{"section":"packet_io.external.interface", "key": "type", "value":"pcap"},
 					{"section":"packet_io.external.interface", "key": "name", "value":"tap0"},
 					{"section":"stream.tcp", "key": "syn_mandatory", "value":"0"}

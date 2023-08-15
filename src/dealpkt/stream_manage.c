@@ -2598,7 +2598,7 @@ struct streaminfo_private *copy_stream_info_to_heap(int mem_used_type,const stru
 	heap_stream_pr->pfather_pr = copy_stream_info_to_heap(mem_used_type, stack_stream_pr->pfather_pr, reverse);
 	pfather_pr = stack_stream_pr->pfather_pr;
 	if((pfather_pr != NULL)
-	  && (DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	  && (DEPLOYMENT_MODE_INLINE == sapp_global_val->config.packet_io.deployment_mode_bin)
 	  && (g_overlay_layer_set[pfather_pr->stream_public.addr.addrtype][pfather_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay层的pfather设为NULL, 插件不可见 */
 		heap_stream->pfather = NULL;
 	}else{
@@ -2610,7 +2610,7 @@ struct streaminfo_private *copy_stream_info_to_heap(int mem_used_type,const stru
 
 int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_pkt_t *rawpkt)
 {
-	if(DEPOLYMENT_MODE_INLINE != sapp_global_val->config.packet_io.depolyment_mode_bin && CAP_MODEL_PCAP_DUMPFILE != sapp_global_val->config.packet_io.internal.interface.type_bin){
+	if(DEPLOYMENT_MODE_INLINE != sapp_global_val->config.packet_io.deployment_mode_bin && CAP_MODEL_PCAP_DUMPFILE != sapp_global_val->config.packet_io.internal.interface.type_bin){
 		return 0;
 	}
 

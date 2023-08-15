@@ -617,7 +617,7 @@ void set_default_config(void)
 	update_config_file("etc/sapp.toml", "interval", "1");
 	update_config_file("etc/sapp.toml", "dumpfile_sleep_time_before_exit", "0");
 	update_config_file("etc/sapp.toml", "overlay_mode", "none");
-	update_config_file_by_lastline("etc/sapp.toml", "packet_io.depolyment", "mode", "mirror");
+	update_config_file_by_lastline("etc/sapp.toml", "packet_io.deployment", "mode", "mirror");
 	update_config_file_by_lastline("etc/sapp.toml", "tools.pkt_dump", "enabled", "0"); /* 默认关闭捕包功能, 特殊测试用例单独打开 */
 	update_config_file("etc/sapp.toml", "l2_l3_tunnel_support", "0");
 	update_config_file("etc/sapp.toml", "skip_not_ip_layer_over_eth", "0");

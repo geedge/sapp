@@ -1079,7 +1079,7 @@ void get_deployment_mode_inline(void)
 	set_default_config();
 	update_config_file("etc/sapp.toml", "l2_l3_tunnel_support", "1");
 	update_config_file("etc/sapp.toml", "overlay_mode", "vxlan");
-	update_config_file_by_lastline("etc/sapp.toml", "packet_io.depolyment", "mode", "inline");
+	update_config_file_by_lastline("etc/sapp.toml", "packet_io.deployment", "mode", "inline");
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 1, "name", "lo");
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 2, "name", "lo");
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 1, "type", "pcap");  /* 此处用pcap模式测试, 不需要借助fake marsio */

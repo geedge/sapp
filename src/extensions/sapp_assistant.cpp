@@ -629,13 +629,13 @@ extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, 
 
 		case SPO_DEPLOYMENT_MODE_STR:
 		{
-			if(*opt_val_len <= (int)strlen(sapp_global_val->config.packet_io.depolyment_mode_str)){
+			if(*opt_val_len <= (int)strlen(sapp_global_val->config.packet_io.deployment_mode_str)){
 				ret = -1;
 				
 				sapp_runtime_log(RLOG_LV_INFO, "sapp_get_platform_opt() SPO_DEPLOYMENT_MODE_STR error:opt_val_len:%d is not enough!\n", *opt_val_len);
 				break;
 			}
-			strncpy((char *)opt_val, sapp_global_val->config.packet_io.depolyment_mode_str, *opt_val_len);
+			strncpy((char *)opt_val, sapp_global_val->config.packet_io.deployment_mode_str, *opt_val_len);
 		}
 		break;
 
@@ -647,7 +647,7 @@ extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, 
 				break;
 			}	
 			enum sapp_deploment_mode_t *dep_mode = (enum sapp_deploment_mode_t *)opt_val;
-			*dep_mode = (enum sapp_deploment_mode_t)sapp_global_val->config.packet_io.depolyment_mode_bin;			
+			*dep_mode = (enum sapp_deploment_mode_t)sapp_global_val->config.packet_io.deployment_mode_bin;			
 		}
 		break;
 

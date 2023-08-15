@@ -1702,7 +1702,7 @@ int pcap_dl_io_init(int argc, char *argv[])
 	}
 	else /* 网络抓包模式 */
 	{
-		if((strncasecmp(sapp_global_val->config.packet_io.depolyment_mode_str, "transparent", strlen("transparent")) == 0)
+		if((strncasecmp(sapp_global_val->config.packet_io.deployment_mode_str, "transparent", strlen("transparent")) == 0)
 		  && (strstr(sapp_global_val->config.packet_io.pcap_capture_direction, "out") != NULL)){
 			printf("\033[1;31;40m[Error]in transparent mode, pcap_capture_direction must set 'in'![0m\n");
 			return -1;

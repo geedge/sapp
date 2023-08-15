@@ -181,12 +181,12 @@ int MESA_platform_init(int argc, char *argv[])
 
 	packet_io_set_capdev_parallel(sapp_global_val->config.packet_io.internal.interface.name);
 	
-	if(DEPOLYMENT_MODE_TRANSPARENT == g_topology_mode_raw){
+	if(DEPLOYMENT_MODE_TRANSPARENT == g_topology_mode_raw){
 		packet_io_set_capdev_serial(sapp_global_val->config.packet_io.internal.interface.name, 
 									sapp_global_val->config.packet_io.external.interface.name);
 	}	
 
-	packet_io_set_topology_mode(sapp_global_val->config.packet_io.depolyment_mode_bin);
+	packet_io_set_topology_mode(sapp_global_val->config.packet_io.deployment_mode_bin);
 	
 	if(sapp_global_val->config.packet_io.input_bpf_filter != NULL){
 		printf("\033[33m[Warning] pcap filter is '%s'.\033[0m\n", sapp_global_val->config.packet_io.input_bpf_filter);
@@ -232,7 +232,7 @@ int MESA_platform_init(int argc, char *argv[])
 	stream_register_udp(udp_l2tp_identify_entry);
 
 	/* 2020-12-23 lijia add, vxlan保活插件内置 */
-	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
+	if(DEPLOYMENT_MODE_INLINE == sapp_global_val->config.packet_io.deployment_mode_bin){
 		stream_register_overlay_ip((IPv4_CB_FUN_T)gdev_keepalive_ip_entry);
 		stream_register_overlay_udp(gdev_keepalive_udp_entry);
 

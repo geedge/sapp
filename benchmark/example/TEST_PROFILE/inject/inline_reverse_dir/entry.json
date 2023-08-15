@@ -13,7 +13,7 @@
 			    [
 					{"section":"overlay_tunnel_definition", "key": "l2_l3_tunnel_support", "value": "1"},
 					{"section":"overlay_tunnel_definition", "key": "overlay_mode", "value": "vxlan"},				
-					{"section":"packet_io.depolyment", "key": "mode", "value": "inline"},
+					{"section":"packet_io.deployment", "key": "mode", "value": "inline"},
 					{"section":"packet_io.internal.interface", "key": "type", "value":"pcap"},
 					{"section":"packet_io.internal.interface", "key": "name", "value":"tap0"},
 					{"section":"stream.tcp", "key": "syn_mandatory", "value":"0"}

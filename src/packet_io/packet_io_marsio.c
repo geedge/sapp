@@ -1176,7 +1176,7 @@ static int marsio_dl_get_function_entry(void)
 	}
 
 	/* for vlan flipping */
-	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
+	if(DEPLOYMENT_MODE_INLINE == sapp_global_val->config.packet_io.deployment_mode_bin){
 		ptr_marsio_buff_get_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_get_metadata");
 		if(NULL == ptr_marsio_buff_get_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_get_metadata", ABBR_MARSIO_LIBRARY_FILE);

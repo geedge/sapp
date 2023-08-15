@@ -79,8 +79,8 @@ extern volatile long long g_current_time_ms;
 #define tcp_closing_timeout		sapp_global_val->config.stream.tcp.closing_timeout
 #define tcp_opening_timeout		sapp_global_val->config.stream.tcp.opening_timeout
 #define udp_reset_time			sapp_global_val->config.stream.udp.timeout
-#define g_topology_mode			sapp_global_val->individual_fixed.depolyment_mode_private
-#define g_topology_mode_raw		sapp_global_val->config.packet_io.depolyment_mode_bin
+#define g_topology_mode			sapp_global_val->individual_fixed.deployment_mode_private
+#define g_topology_mode_raw		sapp_global_val->config.packet_io.deployment_mode_bin
 #define g_packet_io_cap_mode 	sapp_global_val->config.packet_io.internal.interface.type_bin
 #define g_packet_io_cap_level	sapp_global_val->individual_fixed.packet_io_cap_level
 //#define g_timestamp_record_sw	MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, sapp_global_val->config.profiling.process_latency_enabled_log_level)

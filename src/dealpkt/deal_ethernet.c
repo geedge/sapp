@@ -109,7 +109,7 @@ int eth_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 
 		if((fstream_pr != NULL)
-		  && (DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+		  && (DEPLOYMENT_MODE_INLINE == sapp_global_val->config.packet_io.deployment_mode_bin)
 		  && (g_overlay_layer_set[fstream_pr->stream_public.addr.addrtype][fstream_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, 当前ethernet的pfather不为NULL, 非常可能下面层是overlay层, 将pfather设为NULL, 插件打印日志时不可见, sapp靠pfather_pr维持层次关系 */
 			pstream->pfather = NULL;
 		}else{

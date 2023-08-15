@@ -595,13 +595,13 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 
 	sapp_global_val->mthread_volatile[thread_num]->raw_pkt = p_raw_pkt;
 	
-	if(DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin){
+	if(DEPLOYMENT_MODE_INLINE == sapp_global_val->config.packet_io.deployment_mode_bin){
 		ret = packet_io_hook_input((raw_pkt_t *)p_raw_pkt, dir, thread_num);
 		if(ret < 0){
 			cycle_pkt_dump_by_classify(thread_num, p_raw_pkt, PKT_CLASSIFY_DROP);
 			return DROP;
 		}
-	}else if(DEPOLYMENT_MODE_MIRROR == sapp_global_val->config.packet_io.depolyment_mode_bin){
+	}else if(DEPLOYMENT_MODE_MIRROR == sapp_global_val->config.packet_io.deployment_mode_bin){
 		if(sapp_global_val->config.packet_io.extract_linkdir_from_mac_enabled != 0){
 			packet_io_hook_input_mirror((raw_pkt_t *)p_raw_pkt, dir, thread_num);
 		}
@@ -681,7 +681,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 	}
 
 	if(g_platform_action_cb_fun != NULL){
-		ret = g_platform_action_cb_fun(sapp_global_val->config.packet_io.depolyment_mode_bin, ret);
+		ret = g_platform_action_cb_fun(sapp_global_val->config.packet_io.deployment_mode_bin, ret);
 	}
 
 	if(p_raw_pkt->diagnose_error_to_dump){
@@ -693,7 +693,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 		ret = DROP;
 	}
 
-	if (DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	if (DEPLOYMENT_MODE_INLINE == sapp_global_val->config.packet_io.deployment_mode_bin)
 	{
 		if ((p_raw_pkt->is_overlay_pkt) && (PASS == ret))
 		{
@@ -716,7 +716,7 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 			ret = DROP;
 		}
 	}
-	if (DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	if (DEPLOYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.deployment_mode_bin)
 	{
 		if (p_raw_pkt->d_pkt != NULL)
 		{

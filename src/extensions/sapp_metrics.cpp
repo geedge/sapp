@@ -281,8 +281,8 @@ static int sapp_fs2_init(sapp_global_t *global_paramters)
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Eth_Pkt");
 	p_fs2_rt->fs_id_length_array[SAPP_STAT_RCV_ETHERNET] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Eth_Bit");
 
-	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
-	 || (DEPOLYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.depolyment_mode_bin)){
+	if((DEPLOYMENT_MODE_INLINE == sapp_global_val->config.packet_io.deployment_mode_bin)
+	 || (DEPLOYMENT_MODE_TRANSPARENT == sapp_global_val->config.packet_io.deployment_mode_bin)){
 		p_fs2_rt->fs_id_count_array[SAPP_STAT_ETH_INBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Pkt_Inbound");
 		p_fs2_rt->fs_id_length_array[SAPP_STAT_ETH_INBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Bit_Inbound");	 
 		p_fs2_rt->fs_id_count_array[SAPP_STAT_ETH_OUTBOUND] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Pkt_Outbound");

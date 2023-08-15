@@ -123,7 +123,7 @@ static void sapp_graceful_exit(void)
 
 	sapp_runtime_log(RLOG_LV_FATAL, "graceful_exit begin!");
 
-	if((DEPOLYMENT_MODE_INLINE == sapp_global_val->config.packet_io.depolyment_mode_bin)
+	if((DEPLOYMENT_MODE_INLINE == sapp_global_val->config.packet_io.deployment_mode_bin)
 	 && (OVERLAY_MODE_VXLAN == sapp_global_val->config.packet_io.packet_io_tunnel.overlay_mode_bin)){
 		SAPP_TLV_T stop_keepalive_opt = {};
 		stop_keepalive_opt.type = GDEV_KEEPALIVE_OPT_GLOBAL_SWITCH;

@@ -2156,7 +2156,7 @@ extern "C" char fork_listen_port_tcp_plug(struct streaminfo *pstream,void **pme,
 
 			/* 再次执行一次sapp, 保证不能再打开12345等监听端口, 且使用在线模式, 不退出 */
 
-			update_config_file_by_lastline("etc/sapp.toml", "packet_io.depolyment", "mode", "mirror");
+			update_config_file_by_lastline("etc/sapp.toml", "packet_io.deployment", "mode", "mirror");
 			update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 1, "name", "lo");
 			update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 2, "name", "lo");
 			update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 1, "type", "pcap");  /* 此处用pcap模式测试, 不需要借助fake marsio */
@@ -2316,7 +2316,7 @@ static char __get_deployment_mode_entry(struct streaminfo *pstream,void **pme, i
 		/* 用了一个插件入口函数, 使用不同的dumpfile来表示不同的拓扑模式 */
 		gtest_file_md5sum("dumpfile", file_md5, sizeof(file_md5));
 		if(strncasecmp(file_md5, "df138740a6a22ca9c977052f21f7a470", strlen("df138740a6a22ca9c977052f21f7a470")) == 0){
-			if(dep_mode != DEPOLYMENT_MODE_MIRROR){
+			if(dep_mode != DEPLOYMENT_MODE_MIRROR){
 				SAPP_PLUG_LOG(RLOG_LV_FATAL, "get_deployment_mode", "\033[1;31;40mget_deployment_mode_entry get SPO_DEPLOYMENT_MODE error, actual is:%d, but expect MIRROR !\033[0m\n", dep_mode);
 				sendto_test_result(GTEST_SAPP_ERR);	
 				fprintf(stderr,	"\033[1;31;40mget_deployment_mode_entry get SPO_DEPLOYMENT_MODE error, actual is:%d, but expect MIRROR !\033[0m\n", dep_mode);
@@ -2333,7 +2333,7 @@ static char __get_deployment_mode_entry(struct streaminfo *pstream,void **pme, i
 			}	
 			res_value = GTEST_SAPP_SUCC;
 		}else if(strncasecmp(file_md5, "a5d0d96ee6f44f729d79aeac5cc2fee0", strlen("a5d0d96ee6f44f729d79aeac5cc2fee0")) == 0){
-			if(dep_mode != DEPOLYMENT_MODE_TRANSPARENT){
+			if(dep_mode != DEPLOYMENT_MODE_TRANSPARENT){
 				SAPP_PLUG_LOG(RLOG_LV_FATAL, "get_deployment_mode", "\033[1;31;40mget_deployment_mode_entry get SPO_DEPLOYMENT_MODE error, actual is:%d, but expect TRANSPARENT !\033[0m\n", dep_mode);
 				sendto_test_result(GTEST_SAPP_ERR);
 				fprintf(stderr,	"\033[1;31;40mget_deployment_mode_entry get SPO_DEPLOYMENT_MODE error, actual is:%d, but expect TRANSPARENT !\033[0m\n", dep_mode);
@@ -2348,7 +2348,7 @@ static char __get_deployment_mode_entry(struct streaminfo *pstream,void **pme, i
 			}			
 			res_value = GTEST_TRANSPARENT_TO_SAPP_SUCC;
 		}else if(strncasecmp(file_md5, "917fd6b8bc70e02812a036adf637479b", strlen("917fd6b8bc70e02812a036adf637479b")) == 0){
-			if(dep_mode != DEPOLYMENT_MODE_INLINE){
+			if(dep_mode != DEPLOYMENT_MODE_INLINE){
 				SAPP_PLUG_LOG(RLOG_LV_FATAL, "get_deployment_mode", "\033[1;31;40mget_deployment_mode_entry get SPO_DEPLOYMENT_MODE error, actual is:%d, but expect INLINE !\033[0m\n", dep_mode);
 				sendto_test_result(GTEST_SAPP_ERR);
 				fprintf(stderr,	"\033[1;31;40mget_deployment_mode_entry get SPO_DEPLOYMENT_MODE error, actual is:%d, but expect INLINE !\033[0m\n", dep_mode);

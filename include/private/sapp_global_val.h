@@ -176,7 +176,7 @@ typedef struct{
 }sapp_config_packet_io_dev_t;
 
 
-enum __sapp_config_packet_io_depolyment_mode{
+enum __sapp_config_packet_io_deployment_mode{
 	SAPP_CFG_PKT_IO_DEPOLY_MODE_MIRROR,
 	SAPP_CFG_PKT_IO_DEPOLY_MODE_INLINE,
 	SAPP_CFG_PKT_IO_DEPOLY_MODE_TRANSPARENT,
@@ -223,8 +223,8 @@ typedef struct{
 typedef struct{
 	sapp_config_packet_io_tunnel_t packet_io_tunnel;
 	const char *input_bpf_filter;
-	char depolyment_mode_str[NAME_MAX]; /* [mirror, inline, transparent, dumpfile] */
-	enum sapp_deploment_mode_t depolyment_mode_bin; /* 方便程序内处理, 转成数值形式, 如1:mirror; 2:transparent; 3:inline等, 详见: enum sapp_deploment_mode_t */
+	char deployment_mode_str[NAME_MAX]; /* [mirror, inline, transparent, dumpfile] */
+	enum sapp_deploment_mode_t deployment_mode_bin; /* 方便程序内处理, 转成数值形式, 如1:mirror; 2:transparent; 3:inline等, 详见: enum sapp_deploment_mode_t */
 	sapp_config_packet_io_dev_t internal;
 	sapp_config_packet_io_dev_t external;
 	char pcap_dumpfile_name[NAME_MAX];
@@ -387,7 +387,7 @@ typedef struct{
 	void *sapp_timer_handle[SAPP_MAX_THREADS];
 	void *sapp_standalone_timer;
 	time_t sapp_start_time;
-	int depolyment_mode_private; /* 根据配置sapp_global_val->config.packet_io.depolyment_mode_bin转换得到的内部值,例如:NET_CONN_PARALLEL  */
+	int deployment_mode_private; /* 根据配置sapp_global_val->config.packet_io.deployment_mode_bin转换得到的内部值,例如:NET_CONN_PARALLEL  */
 	unsigned char create_stream_mode; /* 兼容原来的逻辑, 值从配置stream.tcp.syn_mandatory转换得到 */
 	int packet_io_cap_level; 
 

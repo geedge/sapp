@@ -193,7 +193,7 @@ static int cfg_value_check_stream_id_base_time(const sapp_config_check_t *sapp_c
 static const char *cfg_chk_value_overlay_mode[2] = {"none", "vxlan"};
 static const char *cfg_chk_value_pcap_capture_direction[3] = {"in", "out", "inout"};
 static const char *cfg_chk_value_inject_pkt_mode[4] = {"sys_route", "vxlan_by_inline_device", "raw_ethernet_single_gateway", "raw_ethernet_multi_gateway"};
-static const char *cfg_chk_value_depolyment_mode[4] = {"mirror", "inline", "transparent", "dumpfile"};
+static const char *cfg_chk_value_deployment_mode[4] = {"mirror", "inline", "transparent", "dumpfile"};
 static const char *cfg_chk_value_interface_type[2] = {"pcap", "marsio"};
 static const char *cfg_chk_value_pkt_dump_mode[2] = {"storage", "udp_socket"};
 static const char *cfg_chk_value_pcap_distmode[2] = {"inner_tuple2", "outer_tuple2"};
@@ -226,7 +226,7 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{4210,0,RLOG_LV_DEBUG,"packet_io.feature",	"extract_linkdir_from_mac_in_mirror_mode",	NULL, NULL, NULL, NULL, 0},
 	{4211,0,RLOG_LV_DEBUG,"packet_io.feature",	"pcap_distmode",	NULL,cfg_value_check_string_range, NULL, cfg_chk_value_pcap_distmode, 2},
 
-	{4301,1,RLOG_LV_FATAL,"packet_io.depolyment",	"mode",	NULL,cfg_value_check_string_range, NULL, cfg_chk_value_depolyment_mode, 3},
+	{4301,1,RLOG_LV_FATAL,"packet_io.deployment",	"mode",	NULL,cfg_value_check_string_range, NULL, cfg_chk_value_deployment_mode, 3},
 	{4302,1,RLOG_LV_FATAL,"packet_io.internal.interface",	"type",	NULL,cfg_value_check_string_range, NULL, cfg_chk_value_interface_type, 2},
 	{4303,1,RLOG_LV_FATAL,"packet_io.internal.interface",	"name",	NULL,cfg_value_check_string_non_null, NULL, NULL, 0},
 	{4304,4301,RLOG_LV_FATAL,"packet_io.external.interface",	"type",	"transparent",cfg_value_check_string_range, NULL, cfg_chk_value_interface_type, 2},
@@ -538,9 +538,9 @@ void sapp_cla_override_cfg_file(void)
 	
 	if (sapp_get_cla_raw("dumpfile", &cmd_args) >= 0)
 	{ /* dumpfile模式自动覆盖interface配置 */
-		strncpy(pconfig->packet_io.depolyment_mode_str, "dumpfile", NAME_MAX);
-		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
-		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
+		strncpy(pconfig->packet_io.deployment_mode_str, "dumpfile", NAME_MAX);
+		pconfig->packet_io.deployment_mode_bin = DEPLOYMENT_MODE_MIRROR;
+		sapp_global_val->individual_fixed.deployment_mode_private = NET_CONN_PARALLEL;
 		strncpy(pconfig->packet_io.internal.interface.type_str, "pcap", NAME_MAX);
 		pconfig->packet_io.internal.interface.type_bin = CAP_MODEL_PCAP_DUMPFILE;
 		if(OVERLAY_MODE_VXLAN == pconfig->packet_io.packet_io_tunnel.overlay_mode_bin)
@@ -1023,7 +1023,7 @@ static int parse_extract_linkdir_from_mac_cfg(void)
 	
 	pconfig = &sapp_global_val->config;
 	
-	if(pconfig->packet_io.depolyment_mode_bin != DEPOLYMENT_MODE_MIRROR){
+	if(pconfig->packet_io.deployment_mode_bin != DEPLOYMENT_MODE_MIRROR){
 		pconfig->packet_io.extract_linkdir_from_mac_enabled = 0;
 		return 0;
 	}
@@ -1081,21 +1081,21 @@ static int config_expression_convert(void)
 			2: serial mode with two card;
 			3: logic serial mode with G device.
 	*/	
-	tmp_str = pconfig->packet_io.depolyment_mode_str;
+	tmp_str = pconfig->packet_io.deployment_mode_str;
 	if(strncasecmp(tmp_str, "mirror", strlen("mirror")) == 0){
-		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
-		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
+		pconfig->packet_io.deployment_mode_bin = DEPLOYMENT_MODE_MIRROR;
+		sapp_global_val->individual_fixed.deployment_mode_private = NET_CONN_PARALLEL;
 	}else if(strncasecmp(tmp_str, "dumpfile", strlen("dumpfile")) == 0){
-		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_MIRROR;
-		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_PARALLEL;
+		pconfig->packet_io.deployment_mode_bin = DEPLOYMENT_MODE_MIRROR;
+		sapp_global_val->individual_fixed.deployment_mode_private = NET_CONN_PARALLEL;
 	}else if(strncasecmp(tmp_str, "inline", strlen("inline")) == 0){
-		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_INLINE;
-		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_SERIAL_GDEV;
+		pconfig->packet_io.deployment_mode_bin = DEPLOYMENT_MODE_INLINE;
+		sapp_global_val->individual_fixed.deployment_mode_private = NET_CONN_SERIAL_GDEV;
 	}else if(strncasecmp(tmp_str, "transparent", strlen("transparent")) == 0){
-		pconfig->packet_io.depolyment_mode_bin = DEPOLYMENT_MODE_TRANSPARENT;
-		sapp_global_val->individual_fixed.depolyment_mode_private = NET_CONN_SERIAL_2CARD;
+		pconfig->packet_io.deployment_mode_bin = DEPLOYMENT_MODE_TRANSPARENT;
+		sapp_global_val->individual_fixed.deployment_mode_private = NET_CONN_SERIAL_2CARD;
 	}else{
-		sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->PACKET_IO.depolyment.mode error, only support:%s!", "[mirror, inline, transparent]");
+		sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->PACKET_IO.deployment.mode error, only support:%s!", "[mirror, inline, transparent]");
 		return -1;
 	}
 
@@ -1112,7 +1112,7 @@ static int config_expression_convert(void)
 		return -1;
 	}
 
-	if((pconfig->packet_io.depolyment_mode_bin == DEPOLYMENT_MODE_INLINE)
+	if((pconfig->packet_io.deployment_mode_bin == DEPLOYMENT_MODE_INLINE)
 	&& (OVERLAY_MODE_VXLAN == pconfig->packet_io.packet_io_tunnel.overlay_mode_bin)){
 		update_overlay_vxlan_layer_set();
 	}
@@ -1365,12 +1365,12 @@ static int config_sanity_check(void)
 
 	/*******************************  Packet IO  ******************************/
 	
-	tmp_str = pconfig->packet_io.depolyment_mode_str;
+	tmp_str = pconfig->packet_io.deployment_mode_str;
 	if((strncasecmp(tmp_str, "mirror", strlen("mirror")) != 0)
 	  &&(strncasecmp(tmp_str, "inline", strlen("inline")) != 0)
 	  &&(strncasecmp(tmp_str, "transparent", strlen("transparent")) != 0)
 	  &&(strncasecmp(tmp_str, "dumpfile", strlen("dumpfile")) != 0)){
-	  	sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->PACKET_IO.depolyment.mode error, only support:%s!\n", "[mirror, inline, transparent, dumpfile]");
+	  	sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->PACKET_IO.deployment.mode error, only support:%s!\n", "[mirror, inline, transparent, dumpfile]");
 		return -1;
 	}
 
@@ -1379,14 +1379,14 @@ static int config_sanity_check(void)
 		 || (strlen(pconfig->packet_io.internal.interface.name) == 0)
 		 ||(pconfig->packet_io.internal.interface.type_str[0] == '\0')
 		 || (strlen(pconfig->packet_io.internal.interface.type_str) == 0)){
-			sapp_log(RLOG_LV_FATAL, ~0, ~0, "depolyment_mode is transparent, must set internal interface parameters!");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "deployment_mode is transparent, must set internal interface parameters!");
 			return -1;
 		}
 		if((pconfig->packet_io.external.interface.name[0] == '\0')
 		 || (strlen(pconfig->packet_io.external.interface.name) == 0)
 		 ||(pconfig->packet_io.external.interface.type_str[0] == '\0')
 		 || (strlen(pconfig->packet_io.external.interface.type_str) == 0)){
-			sapp_log(RLOG_LV_FATAL, ~0, ~0, "depolyment_mode is transparent, must set external interface parameters!");
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "deployment_mode is transparent, must set external interface parameters!");
 			return -1;
 		}
 
@@ -1714,7 +1714,7 @@ int sapp_parse_config(void)
 	MESA_load_profile_short_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"destroy_all_plug_enabled", &pconfig->packet_io.destroy_all_plug_enabled, 1);
 	MESA_load_profile_short_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"infinite_loop_enabled", &pconfig->packet_io.infinite_loop_enabled, 0);
 
-	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.depolyment", (char *)"mode", pconfig->packet_io.depolyment_mode_str, NAME_MAX, "mirror");
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.deployment", (char *)"mode", pconfig->packet_io.deployment_mode_str, NAME_MAX, "mirror");
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.internal.interface", (char *)"type", pconfig->packet_io.internal.interface.type_str, NAME_MAX, "pcap");
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.internal.interface", (char *)"name", pconfig->packet_io.internal.interface.name, NAME_MAX, "lo");
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.external.interface", (char *)"type", pconfig->packet_io.external.interface.type_str, NAME_MAX, "");

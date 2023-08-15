@@ -33,7 +33,7 @@ struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const vo
 	if(p_rawpkt->d_pkt)return NULL; // rawpkt can be retained only once
 	if(p_rawpkt->drop_current_pkt_flag == 1)return NULL; // rawpkt need to be drop, can not be retained
 
-	if(sapp_global_val->config.packet_io.depolyment_mode_bin != DEPOLYMENT_MODE_INLINE)return NULL;
+	if(sapp_global_val->config.packet_io.deployment_mode_bin != DEPLOYMENT_MODE_INLINE)return NULL;
 
 	struct detain_pkt *d_pkt = (struct detain_pkt*)sapp_mem_calloc(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum,  sizeof(struct detain_pkt));
 	d_pkt->original = (const raw_pkt_t *)rawpkt;
@@ -285,7 +285,7 @@ static int get_vxlan_info_from_streaminfo(const struct streaminfo_private *pstre
 	const raw_pkt_t *rawpkt;
 	const inline_vxlan_hdr_t *p_vxlan_hdr;
 
-	if(DEPOLYMENT_MODE_INLINE != g_topology_mode_raw){
+	if(DEPLOYMENT_MODE_INLINE != g_topology_mode_raw){
 		sapp_runtime_log(RLOG_LV_INFO, "get_rawpkt_opt_from_streaminfo() error: can't support option type: %d in no inline mode!", type);
 		return -1;
 	}
@@ -1504,7 +1504,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		break;
 
 		case MSO_STREAM_VXLAN_INFO:
-			if(DEPOLYMENT_MODE_MIRROR != g_topology_mode_raw){
+			if(DEPLOYMENT_MODE_MIRROR != g_topology_mode_raw){
 				sapp_runtime_log(RLOG_LV_INFO, "MESA_get_stream_opt() error: can't support option MSO_STREAM_VXLAN_INFO in no mirror mode!");
 				return -1;
 			}		

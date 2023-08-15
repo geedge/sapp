@@ -312,7 +312,7 @@ void l2tp_tunnel_pfather_iterate_run(void)
 	/* 此处故意设成inline vxlan模式, 但是读包时不应该受这些参数影响 */
 	update_config_file("etc/sapp.toml", "l2_l3_tunnel_support", "1");
 	update_config_file("etc/sapp.toml", "overlay_mode", "none");
-	update_config_file_by_lastline("etc/sapp.toml", "packet_io.depolyment", "mode", "inline");
+	update_config_file_by_lastline("etc/sapp.toml", "packet_io.deployment", "mode", "inline");
 	update_config_file_by_lastline("etc/sapp.toml", "packet_io.internal.interface", "name", "lo");
 
 	/* l2tp识别目前需要挂载l2tp_protocol插件 */
@@ -335,7 +335,7 @@ void pptp_tunnel_pfather_iterate_run(void)
 	/* 此处故意设成inline vxlan模式, 但是读包时不应该受这些参数影响 */
 	update_config_file("etc/sapp.toml", "l2_l3_tunnel_support", "1");
 	update_config_file("etc/sapp.toml", "overlay_mode", "none");
-	update_config_file_by_lastline("etc/sapp.toml", "packet_io.depolyment", "mode", "inline");
+	update_config_file_by_lastline("etc/sapp.toml", "packet_io.deployment", "mode", "inline");
 	update_config_file_by_lastline("etc/sapp.toml", "packet_io.internal.interface", "name", "lo");
 
 	insert_into_conflist_inf("protocol", "./plug/protocol/pptp_protocol_plug/pptp_protocol_plug.inf");

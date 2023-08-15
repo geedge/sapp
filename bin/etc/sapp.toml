@@ -39,7 +39,7 @@
 ### note, support two mode: "inner_tuple2", "outer_tuple2"
     pcap_distmode="inner_tuple2"
 
-### note, depolyment.mode options: [sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]
+### note, deployment.mode options: [sys_route, vxlan_by_inline_device, raw_ethernet_single_gateway, raw_ethernet_multi_gateway]
 ### sys_route: send ip(ipv6) packet by system route table, this is default mode in mirror mode;
 ### vxlan_by_inline_device: encapsulation inject packet with vxlan, and then send to inline device by udp socket.
 ### raw_ethernet_single_gateway: send layer2 ethernet packet to specific gateway in same broadcast domain. 
@@ -63,8 +63,8 @@
     #extract_linkdir_from_mac_in_mirror_mode=""
    
     #destroy_all_plug_enabled = 1
-### note, depolyment.mode options: [mirror, inline, transparent]
-    [packet_io.depolyment]
+### note, deployment.mode options: [mirror, inline, transparent]
+    [packet_io.deployment]
     mode="inline"
 
 ### note, interface.type options: [pag, pcap, marsio, tun]

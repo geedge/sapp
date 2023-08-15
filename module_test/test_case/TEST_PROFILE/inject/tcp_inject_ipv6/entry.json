@@ -12,7 +12,7 @@
 			 "file_content": 
 			    [
 					{"section":"overlay_tunnel_definition", "key": "overlay_mode", "value": "none"},
-					{"section":"packet_io.depolyment", "key": "mode", "value": "mirror"},
+					{"section":"packet_io.deployment", "key": "mode", "value": "mirror"},
 					{"section":"packet_io.feature", "key": "inject_pkt_mode", "value":"sys_route"},
 					{"section":"packet_io.internal.interface", "key": "type", "value":"pcap"},
 					{"section":"packet_io.internal.interface", "key": "name", "value":"tap0"},

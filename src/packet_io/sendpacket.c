@@ -1220,7 +1220,7 @@ static int build_net_layer_ethernet(const struct streaminfo *top_stream, struct 
 	   此时也不关心配置文件etc/asymmetric_addr_layer.conf的ethernet[0]是否开启, 从而导致单向流的反向发包无效.
 	*/
 	if((NULL == stream_pr->pfather_pr)  
-	 && (DEPOLYMENT_MODE_MIRROR == sapp_global_val->config.packet_io.depolyment_mode_bin)){
+	 && (DEPLOYMENT_MODE_MIRROR == sapp_global_val->config.packet_io.deployment_mode_bin)){
 		return sizeof(struct mesa_ethernet_hdr);
 	}
 

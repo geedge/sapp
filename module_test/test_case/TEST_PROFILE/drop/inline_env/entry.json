@@ -11,7 +11,7 @@
 			{"file_name":"./etc/sapp.toml",
 			 "file_content": 
 			    [
-					{"section":"packet_io.depolyment", "key": "mode", "value": "inline"},
+					{"section":"packet_io.deployment", "key": "mode", "value": "inline"},
 					{"section":"overlay_tunnel_definition", "key": "overlay_mode", "value": "vxlan"},
 					{"section":"packet_io.internal.interface", "key": "type", "value":"pcap"},
 					{"section":"packet_io.internal.interface", "key": "name", "value":"tap0"},
