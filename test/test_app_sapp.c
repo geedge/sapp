@@ -1764,57 +1764,7 @@ char test_kill_tunnel(struct streaminfo *stream,void **pme, int thread_seq,const
 	return ret;
 }
 
-char test_kill_connection( struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
-{
-	char ip1[16], ip2[16];
-	struct stream_tuple4_v4 *tuple_v4;
 
-	if(OP_STATE_DATA != stream->opstate){ /* ֻ��DATA״̬����KILL */
-		return APP_STATE_GIVEME;
-	}
-
-	tuple_v4 = (struct stream_tuple4_v4 *)(stream->addr.tuple4_v4);
-	
-	// for test MESA_kill_tcp
-	//if((0xC0A80A9F) == ntohl(tuple_v4->daddr)
-	 //|| (0xC0A80A9F) == ntohl(tuple_v4->saddr))
-	{
-		if(1){
-			inet_ntop(AF_INET, &tuple_v4->saddr, ip1, 16);
-			inet_ntop(AF_INET, &tuple_v4->daddr, ip2, 16);
-			MESA_kill_connection((struct streaminfo *)stream, raw_pkt);
-			DPRINT("Kill connection: ,%s:%u -- %s:%u\n", ip1, ntohs(tuple_v4->source),
-				 ip2, ntohs(tuple_v4->dest));
-		}
-	}
-	
-	return APP_STATE_GIVEME;
-}
-
-
-char test_kill_tcp_syn_ack(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
-{
-	//struct layer_addr *tuple;
-	char ip1[16], ip2[16];
-	struct stream_tuple4_v4 *tuple_v4;
-
-	if(OP_STATE_DATA != stream->opstate){
-		return APP_STATE_GIVEME;
-	}
-	
-	tuple_v4 = (struct stream_tuple4_v4 *)(stream->addr.paddr);
-	
-	// for test MESA_kill_tcp
-		if(1){
-			inet_ntop(AF_INET, &tuple_v4->saddr, ip1, 16);
-			inet_ntop(AF_INET, &tuple_v4->daddr, ip2, 16);
-			MESA_kill_tcp_synack(stream, raw_pkt);
-			DPRINT("Send fake SYN/ACK: ,%s:%u -- %s:%u\n", ip1, ntohs(tuple_v4->source),
-				 ip2, ntohs(tuple_v4->dest));
-		}
-	
-	return APP_STATE_GIVEME;
-}
 
 char test_send_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
@@ -3082,51 +3032,6 @@ char IPV6_PKT_DUMP( struct streaminfo *f_stream,unsigned char routedir,int threa
 	return APP_STATE_GIVEME;
 }
 
-char KILL_STREAM_FEEDBACK(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
-{
-	char pkt_buf[1500];
-	int pkt_len = 1500;
-	int ret;
-	FILE *fp;
-	pcap_file_hdr_t pfile_hdr;
-	pcap_pkt_hdr_t pkt_hdr;
-
-	if((80 != ntohs(a_tcp->addr.ipv4->source)) && (80 != ntohs(a_tcp->addr.ipv4->dest))){
-		return APP_STATE_GIVEME;
-	}
-
-	if(a_packet != NULL){	
-		ret = MESA_kill_tcp_feedback(a_tcp, a_packet, pkt_buf, &pkt_len);
-		if(1500 == pkt_len){
-			DPRINT("MESA_kill_tcp_feedback error!\n");
-		}else{
-			memset(&pfile_hdr, 0, sizeof(pfile_hdr));
-			memset(&pkt_hdr, 0, sizeof(pkt_hdr));
-			pfile_hdr.magic = 0xA1B2C3D4;
-			pfile_hdr.version_major = 2;
-			pfile_hdr.version_minor = 4;
-			pfile_hdr.linktype = 1;
-			pfile_hdr.snaplen = 65535;
-
-			pkt_hdr.caplen = pkt_len;
-			pkt_hdr.len = pkt_len;
-
-			fp = fopen("feedback.pcap", "w+");
-			fwrite(&pfile_hdr, sizeof(pcap_file_hdr_t), 1, fp);
-			fwrite(&pkt_hdr, sizeof(pcap_pkt_hdr_t), 1, fp);
-			fwrite(pkt_buf, pkt_len, 1, fp);
-			fclose(fp);
-		}
-	}
-	return APP_STATE_GIVEME;
-}
-
-
-char KILL_STREAM_SYNACK(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
-{
-	MESA_kill_tcp_synack(a_tcp, a_packet);
-	return APP_STATE_GIVEME;
-}
 
 char SLEEP_ENTRY(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
@@ -3136,8 +3041,8 @@ char SLEEP_ENTRY(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_p
 
 char KILL_STREAM(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
-	if(OP_STATE_CLOSE != a_tcp->opstate){
-		MESA_kill_connection(a_tcp, a_packet);
+	if(OP_STATE_CLOSE != a_tcp->opstate && a_tcp->type == STREAM_TYPE_TCP){
+		MESA_kill_tcp(a_tcp, a_packet);
 	}
 	return APP_STATE_GIVEME | APP_STATE_DROPPKT;
 }

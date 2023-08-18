@@ -21,7 +21,6 @@ extern "C" {
 	#define __sapp_cache_aligned __sapp_aligned(RTE_CACHE_LINE_SIZE)
 #endif
 
-/* 虚假指针, 用于MESA_kill_tcp和MESA_kill_tcp_feedback区分, 是否需要反馈数据包 */
 #define KILL_TCP_PHONY_POINTER			((void *)0x1A2B3C4D5E6F)
 #define INDEPENDENT_SEND_QUEUE_MAX_NUM	(128) /* 插件自己创建的线程, 支持的最大发送队列数量, 此值主要受限于marsio模式, 其他比如libpcap其实无影响, 为了统一, 不能高于64!! */
 

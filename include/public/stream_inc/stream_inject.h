@@ -14,8 +14,6 @@ extern "C" {
 	ENG : to force terminate a stream;
 
 	MESA_kill_tcp: use RST to terminate a TCP stream;
-	MESA_kill_tcp_synack: send phony SYN/ACK packet to cheat client and server.
-	MESA_kill_connection: for non-TCP stream, such as UDP stream, only available in serial mode.
 
     return value:
 		>= 0: success.
