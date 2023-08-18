@@ -2998,16 +2998,18 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	{
 		((raw_pkt_t *)raw_pkt)->append_list=raw_stream_pr->sid_append_list;
     }
+    struct segment_id_list inject_sid = {
+        {(unsigned int)sapp_global_val->config.packet_io.inject_pkt_prepend_segment_id}, 1};
     if (sapp_global_val->config.packet_io.inject_pkt_prepend_segment_id > 0) // update sid_prepend_list, insert inject_pkt_prepend_segment_id to head
     {
-        struct segment_id_list inject_sid = {
-            {(unsigned int)sapp_global_val->config.packet_io.inject_pkt_prepend_segment_id}, 1};
         if (raw_stream_pr->sid_prepend_list != NULL)
         {
-			for(unsigned int i=1; i < MIN(raw_stream_pr->sid_prepend_list->sz_sidlist, MAX_SID_NUM-1); i++)
+			unsigned int i=1;
+			for(; i < MIN(raw_stream_pr->sid_prepend_list->sz_sidlist, MAX_SID_NUM-1); i++)
 			{
 				inject_sid.sid_list[i] = raw_stream_pr->sid_prepend_list->sid_list[i];
 			}
+			inject_sid.sz_sidlist=i;
         }
         ((raw_pkt_t *)raw_pkt)->prepend_list = &inject_sid;
     }

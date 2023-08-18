@@ -898,7 +898,7 @@ char testtcpApp_3_dropme_killother(struct streaminfo *pstream,void **pme, int th
 
 	if(pdetail->clientpktnum >3)
 	{
-		return APP_STATE_DROPME|APP_STATE_KILL_OTHER;
+		return (char)(APP_STATE_DROPME|APP_STATE_KILL_OTHER);
 	}
 	else 
 	{
