@@ -246,7 +246,7 @@ envelope_rpm_for_centos8:
     - ls -l /opt/MESA/lib && echo "/opt/MESA/lib" >> /etc/ld.so.conf
     - ldconfig && sysctl -w net.ipv6.conf.all.disable_ipv6=0 && ifconfig && ulimit -c unlimited
     - ip neigh show && ip -6 neigh show
-    - cd build; make test; pwd 
+    - cd build; ctest3; pwd 
     - cd testing/ && ldd $TEST_NAME
   dependencies:
     - branch_build_debug_for_centos8
