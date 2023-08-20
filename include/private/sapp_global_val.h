@@ -255,6 +255,7 @@ typedef struct{
 	short not_exit_for_dumpfile_mode; /* 读包结束后不退出进程, 方便插件自测试, 多次循环读取多个包 */
 	short infinite_loop_enabled;
 	short destroy_all_plug_enabled;
+	short dlclose_all_plug_enabled;
 }sapp_config_packet_io_t;
 
 

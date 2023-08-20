@@ -1797,7 +1797,10 @@ void plugctrl_destroy_all_plug()
 	plug_info = g_business_plug_info;
 	while(plug_info){
 		sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, business, dlcose [%s]", plug_info->plugname);
-		dlclose(plug_info->filepoint);
+		if(sapp_global_val->config.packet_io.dlclose_all_plug_enabled == 1)
+		{
+			dlclose(plug_info->filepoint);
+		}
 		plug_next = plug_info->next;
 		if(plug_info->plugname != NULL)
 		{
@@ -1812,7 +1815,10 @@ void plugctrl_destroy_all_plug()
 	pro_plug_info = g_protocol_plug_info;
 	while(pro_plug_info){
 		sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, protocol, dlcose [%s]", pro_plug_info->plugname);
-		dlclose(pro_plug_info->filepoint);
+		if(sapp_global_val->config.packet_io.dlclose_all_plug_enabled == 1)
+		{
+			dlclose(pro_plug_info->filepoint);
+		}
 		pro_plug_next = pro_plug_info->next;
 		if(pro_plug_info->plugname != NULL)
 		{
@@ -1827,7 +1833,10 @@ void plugctrl_destroy_all_plug()
 	plug_info = g_platform_plug_info;
 	while(plug_info){
 		sapp_runtime_log(RLOG_LV_INFO, "plugctrl_destroy_all_plug, platform, dlcose [%s]", plug_info->plugname);
-		dlclose(plug_info->filepoint);
+		if(sapp_global_val->config.packet_io.dlclose_all_plug_enabled == 1)
+		{
+			dlclose(plug_info->filepoint);
+		}
 		plug_next = plug_info->next;
 		if(plug_info->plugname != NULL)
 		{

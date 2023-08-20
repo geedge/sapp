@@ -1711,6 +1711,7 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"monitor_thread_enabled", &pconfig->packet_io.monitor_thread_enabled, 1);
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"extract_linkdir_from_mac_in_mirror_mode", pconfig->packet_io.extract_linkdir_from_mac_sntax_raw_string, sizeof(pconfig->packet_io.extract_linkdir_from_mac_sntax_raw_string), "");
 	
+	MESA_load_profile_short_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"dlclose_all_plug_enabled", &pconfig->packet_io.dlclose_all_plug_enabled, 1);
 	MESA_load_profile_short_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"destroy_all_plug_enabled", &pconfig->packet_io.destroy_all_plug_enabled, 1);
 	MESA_load_profile_short_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"infinite_loop_enabled", &pconfig->packet_io.infinite_loop_enabled, 0);
 
