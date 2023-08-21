@@ -50,10 +50,34 @@ static void signal_term_handler(int signo)
 	sapp_global_val->individual_volatile->recv_signal_SIGTERM = 1;
 }
 
+
+static void signal_usr1_handler(int signo)
+{
+	printf("signal_term_handler, SIGUSR1 recviced!\n");
+#if defined(USE_JEMALLOC)
+	#include "jemalloc/jemalloc.h"
+	char tmp[32];
+	unsigned narenas = 0;
+	size_t sz = sizeof(unsigned);
+	/*获取arenas的个数，然后调用jemalloc的接口进行清理 */
+	if (!mallctl("arenas.narenas", &narenas, &sz, NULL, 0))
+	{
+		sprintf(tmp, "arena.%u.purge", narenas);
+		if (!mallctl(tmp, NULL, 0, NULL, 0))
+		{
+			printf("jemalloc purge arena %u success\n", narenas);
+			return;
+		}
+	}
+	printf( "Error purging dirty pages\n");
+#endif
+}
+
 static void signal_take_over(void)
 {
 	signal(SIGHUP, signal_hup_handler);
 	signal(SIGTERM, signal_term_handler);
+	signal(SIGUSR1, signal_usr1_handler);
 }
 
 

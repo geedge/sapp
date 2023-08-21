@@ -18,6 +18,9 @@ add_executable(gtest_sapp_v4 gtest_main.cpp gtest_sapp_ipv4.cpp gtest_sapp_ipv6.
 		../test_case/auto_gen_test_functions.cpp ../test_case/test_function_common.cpp)
 
 target_link_libraries(gtest_sapp_v4 gtest-static pthread pcap m dl MESA_jump_layer MESA_field_stat2 fieldstat3 MESA_htable MESA_handle_logger MESA_prof_load breakpad_mini systemd sapp_benchmark sapp_devel)
+if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
+	target_link_libraries(gtest_sapp_v4 libjemalloc-static)
+endif()
 
 add_executable(transparent_test_sapp_v4 gtest_transparent_env.cpp gtest_sapp_comm.cpp)
 target_link_libraries(transparent_test_sapp_v4 pthread pcap m dl MESA_jump_layer MESA_handle_logger)
