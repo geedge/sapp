@@ -203,9 +203,9 @@ release_build_release_for_centos8:
 ###############################################################################
 # envelope 
 ###############################################################################
-.define_before_envelope_centos7:
+.define_before_envelope_centos8:
   stage: envelope
-  extends: .build_by_travis_for_centos7
+  extends: .build_by_travis_for_centos8
   variables:
     BUILD_TYPE: RelWithDebInfo
     MEM_POOL: JEMALLOC_STATIC  
@@ -218,15 +218,8 @@ release_build_release_for_centos8:
   tags:
     - share 
 
-envelope_rpm_for_centos7:
-  extends: .define_before_envelope_centos7
-  artifacts:
-    name: "$SYMBOL_TARGET-pr-$CI_COMMIT_REF_NAME-release"
-    paths:
-      - build/*-pr-*.rpm
-
 envelope_rpm_for_centos8:
-  extends: .define_before_envelope_centos7
+  extends: .define_before_envelope_centos8
   image: $BUILD_IMAGE_CENTOS8
   artifacts:
     name: "$SYMBOL_TARGET-pr-$CI_COMMIT_REF_NAME-release"
@@ -324,14 +317,6 @@ rpm_upload_for_centos7:
     - release_build_release_for_centos7
   script:
     - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *.rpm    
-
-envelope_rpm_upload_for_centos7:
-  extends: .define_before_upload_centos7
-  dependencies:
-    - envelope_rpm_for_centos7
-  script:
-    - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *-pr-*.rpm    
-
 
 .define_before_upload_centos8:
   stage: upload
