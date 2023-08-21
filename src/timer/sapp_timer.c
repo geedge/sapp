@@ -461,6 +461,7 @@ static void sapp_watch_dog(void)
 				sapp_runtime_log(RLOG_LV_FATAL, "##### detect deadlock in PID:%ld, at timestamp:%ld,  thread index:%d, TID(LWP):%u, sd_notify_enable:%d, deadlock_detected:%d, deadlock_cnt:%d #####",
 							getpid(), ABBR_CURRENT_TIME, thread_index, sapp_global_val->individual_fixed.thread_tid[thread_index], sd_notify_enable, deadlock_detected, deadlock_cnt);
 			}
+			pthread_kill(sapp_global_val->individual_fixed.thread_obtain_id[thread_index], SIGUSR2);
 			break;
 
 		}

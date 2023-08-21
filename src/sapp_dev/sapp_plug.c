@@ -39,38 +39,55 @@ static volatile unsigned long g_destory_env_per_thread_running_state[MAX_THREAD_
 
 static void signal_hup_handler(int signo)
 {
-	printf("SIGHUP recviced!\n");
+	printf("%s, SIGNAL:%d recviced!\n", __FUNCTION__, signo);
 	MESA_handle_runtime_log_reconstruction(NULL);
 }
 
 
 static void signal_term_handler(int signo)
 {
-	printf("signal_term_handler, SIGTERM recviced!\n");
+	printf("%s, SIGNAL:%d recviced!\n", __FUNCTION__, signo);
 	sapp_global_val->individual_volatile->recv_signal_SIGTERM = 1;
 }
 
 
 static void signal_usr1_handler(int signo)
 {
-	printf("signal_term_handler, SIGUSR1 recviced!\n");
+	printf("%s, SIGNAL:%d recviced!\n", __FUNCTION__, signo);
 #if defined(USE_JEMALLOC)
 	#include "jemalloc/jemalloc.h"
-	char tmp[32];
+	char tmp[128];
 	unsigned narenas = 0;
 	size_t sz = sizeof(unsigned);
+	printf("%s: jemalloc enabled, starting purge dirty pages at %llu\n", __FUNCTION__, (unsigned long long)time(NULL));
 	/*获取arenas的个数，然后调用jemalloc的接口进行清理 */
 	if (!mallctl("arenas.narenas", &narenas, &sz, NULL, 0))
 	{
 		sprintf(tmp, "arena.%u.purge", narenas);
 		if (!mallctl(tmp, NULL, 0, NULL, 0))
 		{
-			printf("jemalloc purge arena %u success\n", narenas);
+			printf("%s:jemalloc purge arena %u success at %llu\n", __FUNCTION__, narenas, (unsigned long long)time(NULL));
 			return;
 		}
 	}
-	printf( "Error purging dirty pages\n");
+	printf( "%s: Error purging dirty pages, no narenas found\n", __FUNCTION__);
 #endif
+}
+
+#include <execinfo.h>
+#define MAX_STACK_FRAMES 128
+static void signal_usr2_handler(int signo)
+{
+	printf("%s, SIGNAL:%d recviced!\n", __FUNCTION__, signo);
+    void *stack_buffer[MAX_STACK_FRAMES]={0};
+    int stack_frames_size = backtrace(stack_buffer, MAX_STACK_FRAMES);
+    char **symbols = backtrace_symbols(stack_buffer, stack_frames_size);
+	pid_t tid = syscall(SYS_gettid);
+    for (int i = 0; i < stack_frames_size; i++)
+    {
+		sapp_process_latency_log(RLOG_LV_FATAL, "TID:%d recv signal SIGUSR2, backtrace:%s", tid, symbols[i]);
+    }
+    free(symbols);
 }
 
 static void signal_take_over(void)
@@ -78,6 +95,7 @@ static void signal_take_over(void)
 	signal(SIGHUP, signal_hup_handler);
 	signal(SIGTERM, signal_term_handler);
 	signal(SIGUSR1, signal_usr1_handler);
+	signal(SIGUSR2, signal_usr2_handler);
 }
 
 
