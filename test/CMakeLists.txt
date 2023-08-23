@@ -23,7 +23,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/sapp_devel.cpp "")
 set(LIBS sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
 			config inline_keepalive gdev_assistant sapp_assistant sapp_metrics plugctrl project timer
 			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
-			MESA_sleep dpdk_ip_hash  cpu_limit timeout libdabloom-static )
+			MESA_sleep dpdk_ip_hash  cpu_limit timeout libdabloom )
 
 if(LIBEVENT_ENABLED)
             set(LIBS ${LIBS} libevent-static)

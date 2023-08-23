@@ -21,23 +21,6 @@ if(LIBEVENT_ENABLED)
         set_property(TARGET libevent-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
 endif()
 
-## dabloom
-ExternalProject_Add(libdabloom PREFIX libdabloom
-        URL ${CMAKE_CURRENT_SOURCE_DIR}/dablooms-v1.0.1.tar.gz
-        URL_MD5 d18efc5e34bad9f96abd7104e6c0913f
-        CONFIGURE_COMMAND cd .
-        BUILD_COMMAND  BUILD_COMMAND make -j${CPU_COUNT}
-	BUILD_IN_SOURCE 1
-        INSTALL_COMMAND make install prefix=<INSTALL_DIR>)
-
-ExternalProject_Get_Property(libdabloom INSTALL_DIR)
-file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
-
-add_library(libdabloom-static STATIC IMPORTED GLOBAL)
-add_dependencies(libdabloom-static libdabloom)
-set_property(TARGET libdabloom-static PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/libdablooms.a)
-set_property(TARGET libdabloom-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
-
 ### jemalloc
 if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
         ExternalProject_Add(libjemalloc PREFIX libjemalloc
