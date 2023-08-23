@@ -102,7 +102,7 @@ static inline int sapp_set_dup_pkt_key(enum addr_type_t addr_type, enum stream_t
     }
     if (addr_type == ADDR_TYPE_IPV6)
     {
-        sapp_dup_pkt_key_v4_t *key_v6 = (sapp_dup_pkt_key_v4_t *)key;
+        sapp_dup_pkt_key_v6_t *key_v6 = (sapp_dup_pkt_key_v6_t *)key;
         const struct mesa_ip6_hdr *ip6hdr = (const struct mesa_ip6_hdr *)iphdr;
         memcpy(&key_v6->ip_addr.sip, &ip6hdr->ip6_src, sizeof(struct in6_addr));
         memcpy(&key_v6->ip_addr.dip, &ip6hdr->ip6_dst, sizeof(struct in6_addr));
@@ -163,7 +163,8 @@ int sapp_dup_pkt_init(void)
 	int i;
 	const sapp_dup_pkt_t *p_dup_conf = &sapp_global_val->config.packet_io.dup_pkt_para;
 	
-	if((0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject)
+	if( (0 == sapp_global_val->config.packet_io.dup_pkt_para.kickout_udp_stream_enabled)
+	  && (0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject)
 	  && (0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp)
 	  && (0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp)){
 		return 0;

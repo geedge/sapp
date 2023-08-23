@@ -338,6 +338,10 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 				pindex_to_del->stream.stream_public.ptcpdetail->createtime,
 				pindex_to_del->stream.stream_public.ptcpdetail->lastmtime,
 				g_CurrentTime);
+		if(pindex_to_del->stream.stream_public.type == STREAM_TYPE_UDP && sapp_global_val->config.packet_io.dup_pkt_para.kickout_udp_stream_enabled)
+		{
+			sapp_dup_stream_add(&pindex_to_del->stream.stream_public);
+		}
 		del_stream(pindex_to_del, timeout_reason);
 	}
 	

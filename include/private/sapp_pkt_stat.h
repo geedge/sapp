@@ -189,6 +189,8 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_UDP_OFFLOAD_PKTS,
 	SAPP_STAT_UDP_OFFLOAD_BYTES,	
 
+	SAPP_STAT_UDP_DUP_KICK_STREAM,
+
 	
 	/*************  memory stat  *******************/
 

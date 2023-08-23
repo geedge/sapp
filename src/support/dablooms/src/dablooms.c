@@ -524,7 +524,7 @@ error_out:
 }
 
 int expiry_dablooms_element_count_get(struct expiry_dablooms_handle *handle, uint64_t *count){
-    if(handle->cur_bloom == NULL){
+    if(handle == NULL || handle->cur_bloom == NULL){
         return EXPIRY_DABLOOMS_ERRNO_BLOOM_NULL;
     }
     *count = handle->cur_bloom_inc_id;
@@ -532,7 +532,7 @@ int expiry_dablooms_element_count_get(struct expiry_dablooms_handle *handle, uin
 }
 
 static int bloom_expired_check(struct expiry_dablooms_handle *handle, time_t cur_time){
-    if(handle->cur_bloom == NULL){
+    if(handle == NULL || handle->cur_bloom == NULL){
         return EXPIRY_DABLOOMS_ERRNO_BLOOM_NULL;
     }
     time_t delta_time = cur_time - handle->cur_bloom_start;
@@ -559,15 +559,16 @@ static int bloom_expired_check(struct expiry_dablooms_handle *handle, time_t cur
 }
 
 int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, size_t len,  time_t cur_time){
+    if(key==NULL || len ==0 || handle == NULL)
+    {
+        return -1;
+    }
     int ret = bloom_expired_check(handle, cur_time);
     if(ret < 0)
     {
         return ret;
     }
-    if(key==NULL || len ==0)
-    {
-        return -1;
-    }
+
     scaling_bloom_add(handle->cur_bloom, key, len, handle->cur_bloom_inc_id);
     handle->cur_bloom_inc_id++;
     time_t delta_time = cur_time - handle->cur_bloom_start;
@@ -589,14 +590,14 @@ int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, 
 }
 
 int expiry_dablooms_search(struct expiry_dablooms_handle *handle, const char *key, size_t len,  time_t cur_time){
+    if(key==NULL || len ==0 || handle == NULL)
+    {
+        return -1;
+    }
     int ret = bloom_expired_check(handle, cur_time);
     if(ret < 0)
     {
         return ret;
-    }
-    if(key == NULL || len == 0)
-    {
-        return 0;
     }
     int bloom_hit = scaling_bloom_check(handle->cur_bloom, key, len);
     return bloom_hit;

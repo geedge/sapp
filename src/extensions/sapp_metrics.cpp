@@ -369,6 +369,8 @@ static int sapp_fs2_init(sapp_global_t *global_paramters)
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_STM");	
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_OFFLOAD_PKTS] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Pkt");
 	p_fs2_rt->fs_id_length_array[SAPP_STAT_UDP_OFFLOAD_BYTES] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_Offload_Bit");
+
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_UDP_DUP_KICK_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Udp_DUP_STM");
 	
 	return 0;
 }
@@ -609,6 +611,9 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 								NULL, 0);	
 	fs3_rt->metrics_ids[1][SAPP_STAT_UDP_OFFLOAD_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_Bit", 
 								NULL, 0);	
+								
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_DUP_KICK_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_DUP_STM", 
+								NULL, 0);									
 
 	return 0;
 }

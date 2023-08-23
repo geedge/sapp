@@ -111,6 +111,7 @@
 
 [DUPLICATE_PKT]
 [dup_pkt.traffic.original]
+    kickout_udp_stream_enabled=1
     original_ipv4_tcp_enabled=1
     original_ipv4_udp_enabled=0
 ### note, can't distinguish between duplicate traffic and application retransmit traffic for IPv6 packets,
@@ -122,7 +123,7 @@
 [dup_pkt.parameters]
     bloom_capacity=1000000
     bloom_error_rate=0.00001
-    bloom_timeout=10
+    bloom_timeout=30
 
 
 [STREAM]

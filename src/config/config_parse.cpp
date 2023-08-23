@@ -1726,6 +1726,7 @@ int sapp_parse_config(void)
 	
 
 	/**  duplicate packet config **/
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.original", (char *)"kickout_udp_stream_enabled", &pconfig->packet_io.dup_pkt_para.kickout_udp_stream_enabled, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.original", (char *)"original_ipv4_tcp_enabled", &pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.original", (char *)"original_ipv4_udp_enabled", &pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.inject", (char *)"inject_all_enabled", &pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject, 0);

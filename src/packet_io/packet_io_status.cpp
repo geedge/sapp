@@ -126,6 +126,8 @@ static void packet_io_update_metrics_fs2(void)
 	sapp_fs2_update_count(SAPP_STAT_UDP_OFFLOAD_STREAM,  cur_count[SAPP_STAT_UDP_OFFLOAD_STREAM]);
 	sapp_fs2_update_count(SAPP_STAT_UDP_OFFLOAD_PKTS,  cur_count[SAPP_STAT_UDP_OFFLOAD_PKTS]);
 	sapp_fs2_update_length(SAPP_STAT_UDP_OFFLOAD_BYTES,  cur_length[SAPP_STAT_UDP_OFFLOAD_BYTES]);
+
+	sapp_fs2_update_count(SAPP_STAT_UDP_DUP_KICK_STREAM,  cur_count[SAPP_STAT_UDP_DUP_KICK_STREAM]);
 }
 
 static void packet_io_update_metrics_fs3(void)
@@ -223,6 +225,9 @@ static void packet_io_update_metrics_fs3(void)
 	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OFFLOAD_STREAM,cur_count[SAPP_STAT_UDP_OFFLOAD_STREAM]-history_count[SAPP_STAT_UDP_OFFLOAD_STREAM]);
 	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OFFLOAD_PKTS,cur_count[SAPP_STAT_UDP_OFFLOAD_PKTS]-history_count[SAPP_STAT_UDP_OFFLOAD_PKTS]);
 	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OFFLOAD_BYTES,cur_count[SAPP_STAT_UDP_OFFLOAD_BYTES]-history_count[SAPP_STAT_UDP_OFFLOAD_BYTES]);
+
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_DUP_KICK_STREAM,cur_count[SAPP_STAT_UDP_DUP_KICK_STREAM]-history_count[SAPP_STAT_UDP_DUP_KICK_STREAM]);
 	
 	return;
 }

@@ -4,6 +4,7 @@
 20130530 :增加强制udp流淘汰功能，
 */
 #include "sapp_api.h"
+#include "sapp_pkt_stat.h"
 #include "sapp_private_api.h"
 #include "sapp_declaration.h"
 
@@ -638,8 +639,16 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		a_index =(struct streamindex * ) findstreamindex (pindex, raw_pkt);
 		if (unlikely(!a_index)){
 			//a_index = udp_add_new_stream (ptmp, udph);
-			a_index = udp_add_new_stream(pindex, udph, raw_pkt);
-		}
+            if(sapp_global_val->config.packet_io.dup_pkt_para.kickout_udp_stream_enabled)
+            {
+                if (sapp_dup_stream_search(pstream) == 1)
+                {
+					local_sys_stat->count[SAPP_STAT_UDP_DUP_KICK_STREAM]++;
+                    return PASS;
+                }
+            }
+            a_index = udp_add_new_stream(pindex, udph, raw_pkt);
+        }
 		//add by lqy 只有当链接未重置时进行lru
 		else 
 		{
@@ -886,7 +895,15 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		a_index =(struct streamindex *)findstreamindex (pindex, raw_pkt);
 		if(unlikely(!a_index))
 		{
-			a_index = udp_add_new_stream(pindex, udph, raw_pkt);
+            if (sapp_global_val->config.packet_io.dup_pkt_para.kickout_udp_stream_enabled)
+            {
+                if (sapp_dup_stream_search(pstream) == 1)
+                {
+                    local_sys_stat->count[SAPP_STAT_UDP_DUP_KICK_STREAM]++;
+                    return PASS;
+                }
+            }
+            a_index = udp_add_new_stream(pindex, udph, raw_pkt);
 		}
 		else 
 		{

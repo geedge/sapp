@@ -201,7 +201,7 @@ typedef struct{
 
 
 typedef struct{
-	//int dup_pkt_distinguish_enable;
+	int kickout_udp_stream_enabled;
 	int dup_pkt_distinguish_all_inject;
 	int dup_pkt_distinguish_ipv4_tcp;
 	int dup_pkt_distinguish_ipv4_udp;

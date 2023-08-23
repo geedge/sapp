@@ -14,12 +14,12 @@
 struct sapp_dup_key_ip4_tuple{
 	unsigned int sip;
 	unsigned int dip;
-};
+}__attribute__((packed, aligned(1)));
 
 struct sapp_dup_key_ip6_tuple{
 	struct in6_addr sip;
 	struct in6_addr dip;
-};
+}__attribute__((packed, aligned(1)));
 
 struct __sapp_dup_pkt_key_l4{
 	unsigned int tcp_seq;
