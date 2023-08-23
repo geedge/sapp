@@ -2775,7 +2775,7 @@ static int deal_tcp_stream_dup_pkt_check(int tid, struct streaminfo_private *pst
 	}
 	
 	if(dup_check_enabled != 0){
-		is_dup_pkt = sapp_dup_pkt_identify_tcp(tid, pstream_pr, this_iphdr, this_tcphdr, need_add_bloom_filter);
+		is_dup_pkt = sapp_dup_pkt_identify(tid, pstream_pr, this_iphdr, this_tcphdr, need_add_bloom_filter);
 	}
 	
 	
@@ -2805,7 +2805,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		/* 每个流的首包无需检测, 也无法得知是否重复, 但要加入bloom filter */
 		if((ADDR_TYPE_IPV4 == pstream->addr.addrtype) 
 		  && sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp){
-			sapp_dup_pkt_mark_tcp(pstream->threadnum,pstream->addr.addrtype, this_iphdr, this_tcphdr);
+			sapp_dup_pkt_mark_l4(pstream, this_iphdr, (const void *)this_tcphdr);
 		}
 
 		if(this_tcphdr->th_flags & TH_SYN)

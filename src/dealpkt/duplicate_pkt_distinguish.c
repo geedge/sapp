@@ -25,85 +25,111 @@ extern "C" {
        2)如果开启了firewall的drop策略, 第一次drop成功了, 但应用层会重传, 重传包被识别成了重复包的话, sapp就直接PASS了, 导致CT.
 */
 
-static const char *dup_pkt_key_ntop_v4(const sapp_dup_pkt_key_v4_t *key, char *strbuf, int buflen)
+
+
+static inline int sapp_set_dup_pkt_key(enum addr_type_t addr_type, enum stream_type_t stream_type, const void *iphdr,
+                                              const void *l4_hdr, void *key)
 {
-	char sip_str[INET_ADDRSTRLEN], dip_str[INET_ADDRSTRLEN];
+    struct __sapp_dup_pkt_key_l4 *l4 = (struct __sapp_dup_pkt_key_l4 *)key;
+	size_t key_len = 0;
+    if (stream_type == STREAM_TYPE_TCP)
+    {
+		const struct mesa_tcp_hdr *thdr = (const struct mesa_tcp_hdr *)l4_hdr;
+        l4->tcp_seq = thdr->th_seq;
+        l4->tcp_ack = thdr->th_ack;
+        l4->sport = thdr->th_sport;
+        l4->dport = thdr->th_dport;
+        l4->checksum = thdr->th_sum;
+    }
+	if (stream_type == STREAM_TYPE_UDP)
+    {
+		const struct mesa_udp_hdr *uhdr = (const struct mesa_udp_hdr *)l4_hdr;
+        l4->tcp_seq = 0x5A5A5A5A; /* udp没有, 但设成0可能对某些hash函数不友好, 此处设个固定值 */
+        l4->tcp_ack = 0xA5A5A5A5; /* udp没有, 但设成0可能对某些hash函数不友好, 此处设个固定值 */
+        l4->sport = uhdr->uh_sport;
+        l4->dport = uhdr->uh_dport;
+        l4->checksum = uhdr->uh_sum;
+    }
+    if (addr_type == ADDR_TYPE_IPV4)
+    {
+        sapp_dup_pkt_key_v4_t *key_v4 = (sapp_dup_pkt_key_v4_t *)key;
+        const struct mesa_ip4_hdr *ip4hdr = (const struct mesa_ip4_hdr *)iphdr;
+        key_v4->ip_addr.sip = ip4hdr->ip_src.s_addr;
+        key_v4->ip_addr.dip = ip4hdr->ip_dst.s_addr;
+        key_v4->ip_id = ip4hdr->ip_id;
+		key_len = sizeof(sapp_dup_pkt_key_v4_t);
+    }
+    if (addr_type == ADDR_TYPE_IPV6)
+    {
+        sapp_dup_pkt_key_v4_t *key_v6 = (sapp_dup_pkt_key_v4_t *)key;
+        const struct mesa_ip6_hdr *ip6hdr = (const struct mesa_ip6_hdr *)iphdr;
+        memcpy(&key_v6->ip_addr.sip, &ip6hdr->ip6_src, sizeof(struct in6_addr));
+        memcpy(&key_v6->ip_addr.dip, &ip6hdr->ip6_dst, sizeof(struct in6_addr));
+		key_len = sizeof(sapp_dup_pkt_key_v6_t);
+    }
+    return key_len;
+}
+
+
+union sapp_dup_pkt_key
+{
+	sapp_dup_pkt_key_v4_t v4;
+	sapp_dup_pkt_key_v6_t v6;
+};
+
+int sapp_dup_pkt_identify(int tid, struct streaminfo_private *pstream_pr, 
+		const void *ip_hdr, const void *l4_hdr, int need_add_bloom_filter)
+{
+	int is_dup_pkt = 0;
+	union sapp_dup_pkt_key dup_bloom_key;
 	
-	inet_ntop(AF_INET, &key->ip_addr.sip, sip_str, INET_ADDRSTRLEN);
-	inet_ntop(AF_INET, &key->ip_addr.dip, dip_str, INET_ADDRSTRLEN);
+	size_t key_len = sapp_set_dup_pkt_key((enum addr_type_t)pstream_pr->stream_public.addr.addrtype, (enum stream_type_t)pstream_pr->stream_public.type, ip_hdr, (void *)l4_hdr, &dup_bloom_key);			
+	is_dup_pkt= expiry_dablooms_search((struct expiry_dablooms_handle *)sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, 
+										(const char *)&dup_bloom_key, key_len, (time_t)g_CurrentTime);
+	if(is_dup_pkt != 0){
+		pstream_pr->has_duplicate_pkt = 1;
+	}else{
+		if(need_add_bloom_filter){
+			int ret = expiry_dablooms_add((struct expiry_dablooms_handle *)sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle,
+										 (const char *)&dup_bloom_key, key_len, (time_t)g_CurrentTime);
+			if(ret < 0){
+				sapp_global_val->mthread_volatile[tid]->sys_stat.count[SAPP_STAT_DUP_IDENTIFY_ERR]++;
+			}
+		}
+	}
+	return is_dup_pkt;
+}
+void sapp_dup_pkt_mark_l4(struct streaminfo *a_stream, const void *ip_hdr, const void *l4_hdr)
+{
+	int tid = a_stream->threadnum;
+    union sapp_dup_pkt_key dup_bloom_key;
+    size_t key_len = 0;
+    int ret = 0;
+    key_len = sapp_set_dup_pkt_key((enum addr_type_t)a_stream->addr.addrtype, (enum stream_type_t)a_stream->type, ip_hdr, l4_hdr, &dup_bloom_key);
+    ret = expiry_dablooms_add(
+        (struct expiry_dablooms_handle *)sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle,
+        (const char *)&dup_bloom_key, key_len, (time_t)g_CurrentTime);
 
-	snprintf(strbuf, buflen, "%s:%u-->%s:%u, ipv4_id:%u, checksum:%u, seq:%u, ack:%u", 
-			sip_str, ntohs(key->sport), dip_str, ntohs(key->dport), ntohs(key->ip_id), ntohs(key->checksum), ntohl(key->tcp_seq), ntohl(key->tcp_ack) );
-
-	return strbuf;
+    if (ret < 0)
+    {
+        sapp_global_val->mthread_volatile[tid]->sys_stat.count[SAPP_STAT_DUP_IDENTIFY_ERR]++;
+    }
+    return;
 }
 
-
-static const char *dup_pkt_key_ntop_v6(const sapp_dup_pkt_key_v6_t *key, char *strbuf, int buflen)
+void sendpkt_dup_pkt_mark_stream(struct streaminfo *top_stream, const char *ip_hdr)
 {
-	char sip_str[INET6_ADDRSTRLEN], dip_str[INET6_ADDRSTRLEN];
+	const struct mesa_ip4_hdr *ip4hdr;
+	const char *transport_layer_hdr;
 	
-	inet_ntop(AF_INET6, &key->ip_addr.sip, sip_str, INET6_ADDRSTRLEN);
-	inet_ntop(AF_INET6, &key->ip_addr.dip, dip_str, INET6_ADDRSTRLEN);
-
-	snprintf(strbuf, buflen, "%s:%u-->%s:%u, checksum:%u, seq:%u, ack:%u", 
-			sip_str, ntohs(key->sport), dip_str, ntohs(key->dport), ntohs(key->checksum), ntohl(key->tcp_seq), ntohl(key->tcp_ack) );
-
-	return strbuf;
-}
-
-
-int sapp_dup_pkt_mark_v4(int tid, const sapp_dup_pkt_key_v4_t *key)
-{
-	int ret;
-	char ntop_buf[1024];
-
-	ret = expiry_dablooms_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v4_t), time(NULL));
-	if(ret < 0){
-		sapp_global_val->mthread_volatile[tid]->sys_stat.count[SAPP_STAT_DUP_IDENTIFY_ERR]++;
-		sapp_runtime_log(RLOG_LV_INFO, "sapp dup distinguish ipv4 pkt add bloom key error, %s", dup_pkt_key_ntop_v4(key,ntop_buf,sizeof(ntop_buf)));
+	if(ADDR_TYPE_IPV4 == top_stream->addr.addrtype){
+		ip4hdr = (struct mesa_ip4_hdr *)ip_hdr;
+		transport_layer_hdr = ip_hdr + ip4hdr->ip_hl * 4;
 	}else{
-		sapp_runtime_log(RLOG_LV_DEBUG, "sapp dup distinguish ipv4 pkt add bloom key succ, %s", dup_pkt_key_ntop_v4(key,ntop_buf,sizeof(ntop_buf)));
+		transport_layer_hdr = ip_hdr + sizeof(struct mesa_ip6_hdr);	
 	}
-
-	return ret;
+	sapp_dup_pkt_mark_l4(top_stream, ip_hdr, (const void *)transport_layer_hdr);
 }
-
-int sapp_dup_pkt_mark_v6(int tid, const sapp_dup_pkt_key_v6_t *key)
-{
-	int ret;
-	char ntop_buf[1024];
-
-	ret = expiry_dablooms_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v6_t),time(NULL));
-	if(ret < 0){
-		sapp_global_val->mthread_volatile[tid]->sys_stat.count[SAPP_STAT_DUP_IDENTIFY_ERR]++;
-		sapp_runtime_log(RLOG_LV_INFO, "sapp dup distinguish ipv6 pkt add bloom key error, %s", dup_pkt_key_ntop_v6(key,ntop_buf,sizeof(ntop_buf)));
-	}else{
-		sapp_runtime_log(RLOG_LV_DEBUG, "sapp dup distinguish ipv6 pkt add bloom key succ, %s", dup_pkt_key_ntop_v6(key,ntop_buf,sizeof(ntop_buf)));
-	}
-
-	return ret;
-}
-
-int sapp_dup_pkt_identify_v4(int tid, const sapp_dup_pkt_key_v4_t *key)
-{
-	int ret;
-
-	ret = expiry_dablooms_search(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v4_t), time(NULL));
-
-	return ret;
-}
-
-int sapp_dup_pkt_identify_v6(int tid, const sapp_dup_pkt_key_v6_t *key)
-{
-	int ret;
-
-	ret = expiry_dablooms_search(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v6_t), time(NULL));
-
-	return ret;
-
-}
-
 
 int sapp_dup_pkt_init(void)
 {

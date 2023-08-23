@@ -498,7 +498,7 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
 	}
 	
 	if(dup_check_enabled != 0){
-	    is_dup_pkt = sapp_dup_pkt_identify_udp_v4(tid, pstream_pr, this_iphdr, udph, need_add_bloom_filter);
+	    is_dup_pkt = sapp_dup_pkt_identify(tid, pstream_pr, this_iphdr, udph, need_add_bloom_filter);
 	}
 	
 	
@@ -921,7 +921,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	但是, 要支持注入流量识别!!  
 */
 		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
-		  && (sapp_dup_pkt_identify_udp_v6(thread_num, pstream_pr, a_packet, udph) != 0)){
+		  && (sapp_dup_pkt_identify(thread_num, pstream_pr, a_packet, udph, 0) != 0)){
 			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
 			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
 			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);

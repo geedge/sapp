@@ -2082,31 +2082,8 @@ static int build_net_layer_l2tp(const struct streaminfo *top_stream, struct stre
 /* 
     此函数内部不用再判断是否需要加入bloom filter, 在函数外部已经判断.
 */
-static void sendpkt_dup_pkt_mark(const struct streaminfo *top_stream, unsigned char addrtype, const char *this_iphdr, const char *this_transport_hdr)
-{
-	if(STREAM_TYPE_TCP == top_stream->type){
-		sapp_dup_pkt_mark_tcp(top_stream->threadnum, addrtype, this_iphdr, (const struct mesa_tcp_hdr *)(this_transport_hdr));
-	}else{
-		sapp_dup_pkt_mark_udp(top_stream->threadnum, addrtype, this_iphdr, (const struct mesa_udp_hdr *)(this_transport_hdr));
-	}
 
-	return;
-}
 
-void sendpkt_dup_pkt_mark_stream(const struct streaminfo *top_stream, const char *ip_hdr)
-{
-	const struct mesa_ip4_hdr *ip4hdr;
-	const char *transport_layer_hdr;
-	
-	if(ADDR_TYPE_IPV4 == top_stream->addr.addrtype){
-		ip4hdr = (struct mesa_ip4_hdr *)ip_hdr;
-		transport_layer_hdr = ip_hdr + ip4hdr->ip_hl * 4;
-		sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV4, ip_hdr, transport_layer_hdr);
-	}else{
-		transport_layer_hdr = ip_hdr + sizeof(struct mesa_ip6_hdr);	
-		sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV6, ip_hdr, transport_layer_hdr);
-	}
-}
 
 extern int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_pkt_t *rawpkt);
 /* 
@@ -2174,7 +2151,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			*/
 			if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
 			 && (sapp_is_overlay_layer(stream_pr, raw_pkt) == 0)){
-				sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV4, (char *)buf, (const char *)buf+sizeof(struct mesa_ip4_hdr));
+				sapp_dup_pkt_mark_l4((struct streaminfo *)top_stream, (const void *)buf, (const char *)buf+sizeof(struct mesa_ip4_hdr));
 			}
 		}	
 		break;
@@ -2204,7 +2181,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 
 			/* 重复流量识别, 加到这里是因为如果有隧道, 可能会有多层, 且不用再经过jump_layer跳转到内部udp/tcp层了 */
 			if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0){
-				sendpkt_dup_pkt_mark(top_stream, ADDR_TYPE_IPV6, (char *)buf, (const char*)buf+sizeof(struct mesa_ip6_hdr));
+				sapp_dup_pkt_mark_l4((struct streaminfo *)top_stream, (const void *)buf, (const char *)buf+sizeof(struct mesa_ip6_hdr));
 			}			
 		break;
 		
@@ -2971,7 +2948,7 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
            一般不会再走到build_pkt的函数中, 此处需要解析ip包并加入bloom filter */
         if (sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
         {
-            sendpkt_dup_pkt_mark_stream(raw_stream, (char *)payload);
+            sendpkt_dup_pkt_mark_stream(raw_stream, (const char *)payload);
         }
     }
     else
