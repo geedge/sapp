@@ -58,7 +58,7 @@ int sapp_dup_pkt_mark_v4(int tid, const sapp_dup_pkt_key_v4_t *key)
 	int ret;
 	char ntop_buf[1024];
 
-	ret = expiry_dablooms_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v4_t));
+	ret = expiry_dablooms_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v4_t), time(NULL));
 	if(ret < 0){
 		sapp_global_val->mthread_volatile[tid]->sys_stat.count[SAPP_STAT_DUP_IDENTIFY_ERR]++;
 		sapp_runtime_log(RLOG_LV_INFO, "sapp dup distinguish ipv4 pkt add bloom key error, %s", dup_pkt_key_ntop_v4(key,ntop_buf,sizeof(ntop_buf)));
@@ -74,7 +74,7 @@ int sapp_dup_pkt_mark_v6(int tid, const sapp_dup_pkt_key_v6_t *key)
 	int ret;
 	char ntop_buf[1024];
 
-	ret = expiry_dablooms_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v6_t));
+	ret = expiry_dablooms_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v6_t),time(NULL));
 	if(ret < 0){
 		sapp_global_val->mthread_volatile[tid]->sys_stat.count[SAPP_STAT_DUP_IDENTIFY_ERR]++;
 		sapp_runtime_log(RLOG_LV_INFO, "sapp dup distinguish ipv6 pkt add bloom key error, %s", dup_pkt_key_ntop_v6(key,ntop_buf,sizeof(ntop_buf)));
@@ -89,7 +89,7 @@ int sapp_dup_pkt_identify_v4(int tid, const sapp_dup_pkt_key_v4_t *key)
 {
 	int ret;
 
-	ret = expiry_dablooms_search(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v4_t));
+	ret = expiry_dablooms_search(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v4_t), time(NULL));
 
 	return ret;
 }
@@ -98,7 +98,7 @@ int sapp_dup_pkt_identify_v6(int tid, const sapp_dup_pkt_key_v6_t *key)
 {
 	int ret;
 
-	ret = expiry_dablooms_search(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v6_t));
+	ret = expiry_dablooms_search(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (char *)key, sizeof(sapp_dup_pkt_key_v6_t), time(NULL));
 
 	return ret;
 
@@ -120,7 +120,7 @@ int sapp_dup_pkt_init(void)
 	   拆分句柄多耗费内存, 且判断时每个包需要扫描多个句柄, 
 	   可能好处只是准确率高了一点点而已 */
 	for(i = 0; i < sapp_global_val->config.cpu.worker_threads; i++){
-		sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle = (void *)expiry_dablooms_init(p_dup_conf->bloom_capacity, p_dup_conf->bloom_error_rate, p_dup_conf->bloom_timeout);
+		sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle = (void *)expiry_dablooms_init(p_dup_conf->bloom_capacity, p_dup_conf->bloom_error_rate, time(NULL), p_dup_conf->bloom_timeout);
 		if(NULL == sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle){
 			sapp_log(RLOG_LV_FATAL, 1, 1, "dup_pkt_distinguish init error!");
 			return -1;

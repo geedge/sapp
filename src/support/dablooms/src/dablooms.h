@@ -84,9 +84,9 @@ enum expiry_dablooms_errno{
 };
 char* expiry_dablooms_errno_trans(enum expiry_dablooms_errno _errno);
 void expiry_dablooms_destroy(struct expiry_dablooms_handle *handle);
-struct expiry_dablooms_handle* expiry_dablooms_init(unsigned int capacity, double error_rate, int expiry_time);
+struct expiry_dablooms_handle* expiry_dablooms_init(unsigned int capacity, double error_rate, time_t cur_time, int expiry_time);
 int expiry_dablooms_element_count_get(struct expiry_dablooms_handle *handle, uint64_t *count);
-int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, size_t len);
-int expiry_dablooms_search(struct expiry_dablooms_handle *handle, const char *key, size_t len);
+int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, size_t len,  time_t cur_time);
+int expiry_dablooms_search(struct expiry_dablooms_handle *handle, const char *key, size_t len,  time_t cur_time);
 
 #endif
