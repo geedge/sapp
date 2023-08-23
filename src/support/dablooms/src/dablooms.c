@@ -560,8 +560,13 @@ static int bloom_expired_check(struct expiry_dablooms_handle *handle, time_t cur
 
 int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, size_t len,  time_t cur_time){
     int ret = bloom_expired_check(handle, cur_time);
-    if(ret < 0){
+    if(ret < 0)
+    {
         return ret;
+    }
+    if(key==NULL || len ==0)
+    {
+        return -1;
     }
     scaling_bloom_add(handle->cur_bloom, key, len, handle->cur_bloom_inc_id);
     handle->cur_bloom_inc_id++;
@@ -585,8 +590,13 @@ int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, 
 
 int expiry_dablooms_search(struct expiry_dablooms_handle *handle, const char *key, size_t len,  time_t cur_time){
     int ret = bloom_expired_check(handle, cur_time);
-    if(ret < 0){
+    if(ret < 0)
+    {
         return ret;
+    }
+    if(key == NULL || len == 0)
+    {
+        return 0;
     }
     int bloom_hit = scaling_bloom_check(handle->cur_bloom, key, len);
     return bloom_hit;

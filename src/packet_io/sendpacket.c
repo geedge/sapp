@@ -2948,7 +2948,19 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
            一般不会再走到build_pkt的函数中, 此处需要解析ip包并加入bloom filter */
         if (sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
         {
-            sendpkt_dup_pkt_mark_stream(raw_stream, (const char *)payload);
+            const struct mesa_ip4_hdr *ip4hdr;
+            const char *transport_layer_hdr;
+
+            if (ADDR_TYPE_IPV4 == raw_stream->addr.addrtype)
+            {
+                ip4hdr = (struct mesa_ip4_hdr *)payload;
+                transport_layer_hdr = (char*)payload + ip4hdr->ip_hl * 4;
+            }
+            else
+            {
+                transport_layer_hdr = (char*)payload + sizeof(struct mesa_ip6_hdr);
+            }
+            sapp_dup_pkt_mark_l4(raw_stream, payload, (const void *)transport_layer_hdr);
         }
     }
     else

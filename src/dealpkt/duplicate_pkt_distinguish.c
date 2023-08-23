@@ -27,6 +27,47 @@ extern "C" {
 
 
 
+int sapp_dup_stream_search(struct streaminfo *a_stream)
+{
+	void *key=NULL;
+	int key_len=0;
+	if(a_stream->addr.addrtype == ADDR_TYPE_IPV4)
+	{
+		key = (void *)&a_stream->addr.tuple4_v4;
+		key_len=sizeof(struct stream_tuple4_v4);
+	}
+	if(a_stream->addr.addrtype == ADDR_TYPE_IPV6)
+	{
+		key = (void *)&a_stream->addr.tuple4_v6;
+		key_len=sizeof(struct stream_tuple4_v6);
+	}
+	return expiry_dablooms_search((struct expiry_dablooms_handle *)sapp_global_val->mthread_volatile[a_stream->threadnum]->dup_pkt_distinguish_handle, 
+										(const char *)key, key_len, (time_t)g_CurrentTime);
+}
+
+void sapp_dup_stream_add(struct streaminfo *a_stream)
+{
+	void *key=NULL;
+	int key_len=0;
+	if(a_stream->addr.addrtype == ADDR_TYPE_IPV4)
+	{
+		key = (void *)&a_stream->addr.tuple4_v4;
+		key_len=sizeof(struct stream_tuple4_v4);
+	}
+	if(a_stream->addr.addrtype == ADDR_TYPE_IPV6)
+	{
+		key = (void *)&a_stream->addr.tuple4_v6;
+		key_len=sizeof(struct stream_tuple4_v6);
+	}
+    int ret = expiry_dablooms_add(
+        (struct expiry_dablooms_handle *)sapp_global_val->mthread_volatile[a_stream->threadnum]->dup_pkt_distinguish_handle,
+        (const char *)key, key_len, (time_t)g_CurrentTime);
+    if (ret < 0)
+    {
+        sapp_global_val->mthread_volatile[a_stream->threadnum]->sys_stat.count[SAPP_STAT_DUP_IDENTIFY_ERR]++;
+    }
+}
+
 static inline int sapp_set_dup_pkt_key(enum addr_type_t addr_type, enum stream_type_t stream_type, const void *iphdr,
                                               const void *l4_hdr, void *key)
 {
@@ -115,20 +156,6 @@ void sapp_dup_pkt_mark_l4(struct streaminfo *a_stream, const void *ip_hdr, const
         sapp_global_val->mthread_volatile[tid]->sys_stat.count[SAPP_STAT_DUP_IDENTIFY_ERR]++;
     }
     return;
-}
-
-void sendpkt_dup_pkt_mark_stream(struct streaminfo *top_stream, const char *ip_hdr)
-{
-	const struct mesa_ip4_hdr *ip4hdr;
-	const char *transport_layer_hdr;
-	
-	if(ADDR_TYPE_IPV4 == top_stream->addr.addrtype){
-		ip4hdr = (struct mesa_ip4_hdr *)ip_hdr;
-		transport_layer_hdr = ip_hdr + ip4hdr->ip_hl * 4;
-	}else{
-		transport_layer_hdr = ip_hdr + sizeof(struct mesa_ip6_hdr);	
-	}
-	sapp_dup_pkt_mark_l4(top_stream, ip_hdr, (const void *)transport_layer_hdr);
 }
 
 int sapp_dup_pkt_init(void)

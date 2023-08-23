@@ -49,12 +49,10 @@ int sapp_dup_pkt_init(void);
 void sapp_dup_pkt_destroy(void);
 
 void sapp_dup_pkt_mark_l4(struct streaminfo *a_stream, const void *ip_hdr, const void *l4_hdr);
-void sendpkt_dup_pkt_mark_stream(struct streaminfo *top_stream, const char *ip_hdr);
-
-
 int sapp_dup_pkt_identify(int tid, struct streaminfo_private *pstream_pr, 
 		const void *ip_hdr, const void *l4_hdr, int need_add_bloom_filter);
 
-
+int sapp_dup_stream_search(struct streaminfo *a_stream);
+void sapp_dup_stream_add(struct streaminfo *a_stream);
 #endif
 
