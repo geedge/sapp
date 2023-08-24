@@ -721,9 +721,9 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		}
 		
 		update_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr, raw_pkt);
-		
+		pstream_pr->packet_process_context=1;	
 		udp_change_stream_state(a_index,udph, raw_pkt, offset_to_raw_pkt_hdr);
-
+		pstream_pr->packet_process_context=0;	
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 
@@ -737,8 +737,10 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 
 				return DROP;
 			}
+			pstream_pr->packet_process_context=1;	
 			ret = vxlan_entry(stack_stream_pr, (char *)udph+sizeof(struct mesa_udp_hdr), thread_num, routedir, raw_pkt, next_layer_offset);
 			udp_cleardata(pstream);
+			pstream_pr->packet_process_context=0;	
 			/* overlay UDP层不再继续后续的隧道检测 */
 			return ret;
 		}
@@ -773,11 +775,12 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	if(unlikely(DROP == ret)){ /* 插件返回DROP不再进行后续处理 */
 		return DROP;
 	}
-	
+	pstream_pr->packet_process_context=1;	
 	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_TEREDO){
 		ret = teredo_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);	
 		if(DROP == ret){
 			sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+			pstream_pr->packet_process_context=0;	
 			return ret;
 		}		
 	}
@@ -786,6 +789,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		ret = l2tpv2_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);	
 		if(DROP == ret){
 			sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+			pstream_pr->packet_process_context=0;	
 			return ret;
 		}			
 	}
@@ -793,7 +797,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNEL_GPRS_TUNNEL){
 		ret = gtp_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
 	}
-
+	pstream_pr->packet_process_context=0;	
 	if(DROP == ret){
 		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 	}
@@ -980,9 +984,9 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			update_opposite_addr_info(pstream_pr, (struct streaminfo_private *)(pstream_pr->pfather_pr),
 					(struct streaminfo_private *)(pindex->stream.pfather_pr), pstream->curdir);
 		}
-		
+		pstream_pr->packet_process_context=1;
 		udp_change_stream_state(a_index,udph, raw_pkt, offset_to_raw_pkt_hdr);
-
+		pstream_pr->packet_process_context=0;
 		/* 更新pstream指针 */
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);
@@ -1004,6 +1008,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			local_sys_stat->length[SAPP_STAT_UDP_OFFLOAD_BYTES]+= ulen;
 			MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
 			pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
+			pstream_pr->packet_process_context=0;
 			return PASS;
 		}
 	
@@ -1014,6 +1019,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		udp_cleardata(pstream);
 	}
 
+/*
 	if(pdetail_pr!=NULL
 		&&pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
 		&& pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON 
@@ -1025,21 +1031,22 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
 		return PASS;
 	}
-
+*/
+	pstream_pr->packet_process_context=1;
 	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_L2TP){
 		ret = l2tpv2_entry(pstream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);	
 		if(DROP == ret){
 			sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
-			return ret;
 		}		
 	}
 
 	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNEL_GPRS_TUNNEL){
 		ret = gtp_entry(pstream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
+		//ret = gtp_entry(&pindex->stream, udph, thread_num, routedir, raw_pkt, next_layer_offset);
 	}
 
 	/* TODO 2, 基于IPv6的UDP port 1701 L2TP协议 */
-
+	pstream_pr->packet_process_context=0;	
 	if(DROP == ret){
 		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 	}

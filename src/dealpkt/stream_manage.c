@@ -240,7 +240,7 @@ int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned s
 		goto err; /* 仅支持TCP和UDP流 */
 	}
 
-	if(pstream_pr->packet_io_context != 0)
+	if(pstream_pr->plugin_process_context != 0)
 	{
 		stream_timeout_shift_lrulist(pindex, timeout);
 	}
@@ -324,11 +324,15 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 		struct timeout *t = NULL;
 		TIMEOUTS_FOREACH(t, plist->streamindex_timer, TIMEOUTS_ALL)
 		{
-			break;
+			pindex_to_del = container_of(t, struct streamindex, timeout);
+			if(pindex_to_del->stream.packet_process_context==0)
+			{
+				break;
+			}
 		}
 		timeout_reason = STREAM_CLOSE_REASON_LRUOUT;
-		assert(t != NULL);
-		pindex_to_del = container_of(t, struct streamindex, timeout);
+		assert(t != NULL && pindex_to_del != NULL);
+		
 		sapp_runtime_log(RLOG_LV_DEBUG, "streamaddlist trggier kickout: %s, reason:%d,  thread:%d, stream_type:%d, stream_state:%d, create_time:%ld, lastmtime:%ld, curtime:%ld!",
 				printaddr(&pindex_to_del->stream.stream_public.addr, pindex_to_del->stream.stream_public.threadnum),
 				timeout_reason,

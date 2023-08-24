@@ -398,7 +398,7 @@ static int get_vxlan_info_from_streaminfo(const struct streaminfo_private *pstre
 const void *get_rawpkt_from_streaminfo(const struct streaminfo *pstream)
 {
 	const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
-	if(pstream_pr->packet_io_context != 0)
+	if(pstream_pr->plugin_process_context != 0)
 	{
 		return pstream_pr->raw_pkt;
 	}

@@ -220,9 +220,10 @@ struct streaminfo_private
 	unsigned int hash_slave; /* 2015-12-14 lijia add, 使用linux_jhash计算时, 可以同时得到两个以上的HASH值, 主HASH用于确定在HASH表的SLOT位置, slave_HASH用于快速比较地址是否相等 */
 	unsigned char hash_not_head_times;/* 2015-12-15 lijia add, 当前index不在HASH SLOT的第一位的次数 */
 	unsigned char cur_layer_raw_hdr_len; /* 2017-10-31 lijia add, 当前层的原始包地址长度, 因ppp头部压缩, 原来版本无法保存这个状态, 发包时也无法得知地址如何填充 */
-	unsigned char __pad:2;
+	unsigned char __pad:1;
+	unsigned char packet_process_context:1;
 	unsigned char is_ctrl_pkt:1;
-	unsigned char packet_io_context:1; /* 2019-09-07 lijia add, for polling entry send packet */
+	unsigned char plugin_process_context:1; /* 2019-09-07 lijia add, for polling entry send packet */
 	unsigned char stream_close_reason:4; /* 2019-02-14 lijia add, 对于TCP使用tcpdetail_private的link_state变量, 对于UDP之前没有, 拆分pad新增此变量 */
 	unsigned char gdev_block_timer;
 	/* ===8 bytes=== */

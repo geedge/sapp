@@ -2413,7 +2413,7 @@ static raw_pkt_t *update_raw_pkt(struct streaminfo_private *stream_pr, uchar snd
 {
     raw_pkt_t *inject_raw_pkt = NULL;
 
-    if (stream_pr->packet_io_context != 0)
+    if (stream_pr->plugin_process_context != 0)
     {
             /* 在包处理上下文, 或者没有开启polling, do nothing */
             *inject_dir_reverse = ((snd_dir == stream_pr->stream_public.routedir) ? 0 : 1);

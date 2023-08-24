@@ -33,12 +33,12 @@ int sapp_dup_stream_search(struct streaminfo *a_stream)
 	int key_len=0;
 	if(a_stream->addr.addrtype == ADDR_TYPE_IPV4)
 	{
-		key = (void *)&a_stream->addr.tuple4_v4;
+		key = (void *)a_stream->addr.tuple4_v4;
 		key_len=sizeof(struct stream_tuple4_v4);
 	}
 	if(a_stream->addr.addrtype == ADDR_TYPE_IPV6)
 	{
-		key = (void *)&a_stream->addr.tuple4_v6;
+		key = (void *)a_stream->addr.tuple4_v6;
 		key_len=sizeof(struct stream_tuple4_v6);
 	}
 	return expiry_dablooms_search((struct expiry_dablooms_handle *)sapp_global_val->mthread_volatile[a_stream->threadnum]->dup_pkt_distinguish_handle, 
@@ -51,12 +51,12 @@ void sapp_dup_stream_add(struct streaminfo *a_stream)
 	int key_len=0;
 	if(a_stream->addr.addrtype == ADDR_TYPE_IPV4)
 	{
-		key = (void *)&a_stream->addr.tuple4_v4;
+		key = (void *)a_stream->addr.tuple4_v4;
 		key_len=sizeof(struct stream_tuple4_v4);
 	}
 	if(a_stream->addr.addrtype == ADDR_TYPE_IPV6)
 	{
-		key = (void *)&a_stream->addr.tuple4_v6;
+		key = (void *)a_stream->addr.tuple4_v6;
 		key_len=sizeof(struct stream_tuple4_v6);
 	}
     int ret = expiry_dablooms_add(

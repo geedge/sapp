@@ -1094,10 +1094,10 @@ int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const v
 	
 	if(raw_pkt!=NULL)
 	{	
-		a_tcp_pr->packet_io_context = 1;
+		a_tcp_pr->plugin_process_context = 1;
 	}
 	ret = stream_process(a_tcp, this_iphdr, transport_hdr, raw_pkt,g_StreamTcpFunNum, g_StreamTcpFun,apme,popstate, SMART_OFFLOAD_FLAG_TCP);	
-	a_tcp_pr->packet_io_context = 0;
+	a_tcp_pr->plugin_process_context = 0;
 	
 	return ret;
 }
@@ -1119,10 +1119,10 @@ int stream_process_udp(struct streaminfo *a_udp, const void *this_iphdr, const v
 
 	if(raw_pkt!=NULL)
 	{	
-		a_udp_pr->packet_io_context = 1;
+		a_udp_pr->plugin_process_context = 1;
 	}
 	ret = stream_process(a_udp, this_iphdr, transport_hdr, raw_pkt, g_StreamUdpFunNum, g_StreamUdpFun, apme, popstate, SMART_OFFLOAD_FLAG_UDP);
-	a_udp_pr->packet_io_context = 0;
+	a_udp_pr->plugin_process_context = 0;
 	
 #if (0 == HIGH_PERF)		
 	raw_ip_frag_list_stream_detach(a_udp);
@@ -1140,9 +1140,9 @@ int stream_process_overlay_udp(struct streaminfo *a_udp, const void *this_iphdr,
 	struct streaminfo_private *a_udp_pr = (struct streaminfo_private *)a_udp;
 
 
-	a_udp_pr->packet_io_context = 1;
+	a_udp_pr->plugin_process_context = 1;
 	ret = stream_process(a_udp, this_iphdr, transport_hdr, raw_pkt, g_OverlayUdpFunNum, g_OverlayUdpFun, apme, popstate, SMART_OFFLOAD_FLAG_UNKNOWN);
-	a_udp_pr->packet_io_context = 0;
+	a_udp_pr->plugin_process_context = 0;
 	
 	return ret;
 }
@@ -1165,10 +1165,10 @@ int stream_process_tcp_allpkt(struct streaminfo *a_tcp,const void *this_iphdr, c
 
 	if(raw_pkt!=NULL)
 	{	
-		a_tcp_pr->packet_io_context = 1;
+		a_tcp_pr->plugin_process_context = 1;
 	}
 	ret = stream_process(a_tcp, this_iphdr, transport_hdr, raw_pkt, g_StreamTcpAllFunNum, g_StreamTcpAllFun, apme, popstate, SMART_OFFLOAD_FLAG_TCPALL);
-	a_tcp_pr->packet_io_context = 0;
+	a_tcp_pr->plugin_process_context = 0;
 	
 #if (0 == HIGH_PERF)		
 	raw_ip_frag_list_stream_detach(a_tcp);
