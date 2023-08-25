@@ -24,13 +24,15 @@ set(LIBS sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common
 			MESA_sleep dpdk_ip_hash  cpu_limit timeout libdabloom )
 
 if(LIBEVENT_ENABLED)
-            set(LIBS ${LIBS} libevent-static)
+        set(LIBS ${LIBS} libevent-static)
 endif()
 
 add_library(sapp_devel SHARED sapp_devel.cpp)
 target_link_libraries(sapp_devel -Wl,--whole-archive ${LIBS} -Wl,--no-whole-archive)
 
-#add_library(sapp_devel_static STATIC sapp_devel.cpp)
+if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
+    target_link_libraries(sapp_devel libjemalloc-static)
+endif()
 
 set(OBJECTS_DIR ${CMAKE_CURRENT_BINARY_DIR}/temp_objs)
 
@@ -55,15 +57,13 @@ add_custom_target(sapp_devel_static ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/lib
 
 
 add_library(test_app_sapp SHARED test_app_sapp.c)
+set_target_properties(test_app_sapp  PROPERTIES PREFIX "")
+
 #add_executable(test_sapp_dev test_sapp_dev.c)
 #target_link_libraries(test_sapp_dev sapp_devel)
 #target_link_libraries(test_sapp_dev pthread dl m pcap systemd MESA_htable MESA_handle_logger MESA_prof_load  MESA_field_stat2 fieldstat3 breakpad_mini MESA_jump_layer)
-#if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
-#	target_link_libraries(test_sapp_dev libjemalloc-static)
-#endif()
 
 #add_library(test_sendpacket_performance SHARED test_sendpacket_performance.c)
-set_target_properties(test_app_sapp  PROPERTIES PREFIX "")
 #set_target_properties(test_sendpacket_performance PROPERTIES PREFIX "")
 
 

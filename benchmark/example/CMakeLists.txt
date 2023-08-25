@@ -15,15 +15,9 @@ add_definitions(-std=c++11)
 
 #add_executable(test_cjson_compare test_cjson_compare.cpp)
 #target_link_libraries(test_cjson_compare sapp_benchmark)
-#if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
-#	target_link_libraries(test_cjson_compare libjemalloc-static)
-#endif()
 
 #add_executable(test_sapp_benchmark test_sapp_benchmark.cpp)
 #target_link_libraries(test_sapp_benchmark sapp_benchmark)
-#if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
-#	target_link_libraries(test_sapp_benchmark libjemalloc-static)
-#endif()
 
 add_library(test_benchmark_plug SHARED test_plug.cpp)		
 target_link_libraries(test_benchmark_plug sapp_benchmark)
