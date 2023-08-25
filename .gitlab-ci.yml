@@ -76,6 +76,7 @@ run_cppcheck_for_centos8:
   script:
     - ./ci/travis.sh
   variables:    
+    BUILD_TEST: "ON"
     BUILD_TYPE: Debug
     CAPTURE_MODE: MARSIO
     PLATFORM_MODE: INLINE
