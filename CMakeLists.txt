@@ -221,9 +221,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
-#for sapp_module_test
-option(SAPP_V4 "test for sapp v4.0" TRUE)
-
 add_subdirectory(./vendor)
 add_subdirectory(./src/support)
 add_subdirectory(./src/dealpkt)
@@ -239,12 +236,16 @@ add_subdirectory(./src/entry)
 add_subdirectory(./test)
 add_subdirectory(./service)
 add_subdirectory(./tools)
+
+option(BUILD_TEST "Enable test build" ON)
+if(BUILD_TEST STREQUAL "ON")
+#for sapp_module_test
 add_subdirectory(./benchmark)
 add_subdirectory(./module_test)
 
 enable_testing()
 add_subdirectory(./ctest)
-
+endif()
 #by default, not include sapp_module_test dir
 #add_subdirectory(./test/sapp_module_test/src)
 

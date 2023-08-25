@@ -207,6 +207,7 @@ release_build_release_for_centos8:
   stage: envelope
   extends: .build_by_travis_for_centos8
   variables:
+    BUILD_TEST : "OFF"
     BUILD_TYPE: RelWithDebInfo
     MEM_POOL: JEMALLOC_STATIC  
     HASP_ENABLED: "ON"
