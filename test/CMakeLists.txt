@@ -5,8 +5,6 @@ include_directories(${CMAKE_SOURCE_DIR}/include/private)
 include_directories(${CMAKE_SOURCE_DIR}/include/public)
 include_directories(${CMAKE_SOURCE_DIR}/include/public/stream_inc)
 include_directories(${CMAKE_SOURCE_DIR}/include/support)
-include_directories(${MESA_SDK_PREFIX}/include)
-include_directories(${MESA_SDK_PREFIX}/include/MESA)
 
 
 if(CAPTURE_MODE STREQUAL "MARSIO")
