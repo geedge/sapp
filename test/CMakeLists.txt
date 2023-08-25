@@ -55,12 +55,12 @@ add_custom_target(sapp_devel_static ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/lib
 
 
 add_library(test_app_sapp SHARED test_app_sapp.c)
-add_executable(test_sapp_dev test_sapp_dev.c)
-target_link_libraries(test_sapp_dev sapp_devel)
-target_link_libraries(test_sapp_dev pthread dl m pcap systemd MESA_htable MESA_handle_logger MESA_prof_load  MESA_field_stat2 fieldstat3 breakpad_mini MESA_jump_layer)
-if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
-	target_link_libraries(test_sapp_dev libjemalloc-static)
-endif()
+#add_executable(test_sapp_dev test_sapp_dev.c)
+#target_link_libraries(test_sapp_dev sapp_devel)
+#target_link_libraries(test_sapp_dev pthread dl m pcap systemd MESA_htable MESA_handle_logger MESA_prof_load  MESA_field_stat2 fieldstat3 breakpad_mini MESA_jump_layer)
+#if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
+#	target_link_libraries(test_sapp_dev libjemalloc-static)
+#endif()
 
 #add_library(test_sendpacket_performance SHARED test_sendpacket_performance.c)
 set_target_properties(test_app_sapp  PROPERTIES PREFIX "")
