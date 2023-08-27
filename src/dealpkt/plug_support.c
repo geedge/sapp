@@ -405,6 +405,22 @@ const void *get_rawpkt_from_streaminfo(const struct streaminfo *pstream)
 	return NULL;
 }
 
+const struct streaminfo *get_streaminfo_from_rawpkt(const void *rawpkt)
+{
+	if(NULL == rawpkt)return NULL;
+	const raw_pkt_t *p_rawpkt = (const raw_pkt_t *)rawpkt;
+	if(p_rawpkt->magic_num != RAW_PKT_MAGIC_NUM || p_rawpkt->io_lib_pkt_reference == NULL)
+	{
+		return NULL;
+	}
+	const struct streaminfo_private *pstream_pr = container_of(rawpkt, struct streaminfo_private, raw_pkt);
+	if(pstream_pr)
+	{
+		return &pstream_pr->stream_public;
+	}
+	return NULL;
+}
+
 int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, void *out_value)
 {
 	int ret = -1;
@@ -636,10 +652,11 @@ void layer_addr_free(struct layer_addr *paddrinfo)
 	free(paddrinfo);
 }
 
-int get_thread_count(void)
+	int get_thread_count(void)
 {
 	return g_packet_io_thread_num;
 }
+
 
 time_t get_timestamp_s(void)
 {

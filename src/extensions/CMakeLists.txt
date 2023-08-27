@@ -4,9 +4,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/include/private)
 include_directories(${CMAKE_SOURCE_DIR}/include/public)
 include_directories(${CMAKE_SOURCE_DIR}/include/support)
-include_directories(${MESA_SDK_PREFIX}/include)
-include_directories(${MESA_SDK_PREFIX}/include/MESA)
-include_directories(${MESA_SDK_PREFIX}/include/MESA/stream_inc)
+
 
 if(CAPTURE_MODE STREQUAL "MARSIO")
     include_directories(${MARSIO_SDK_PREFIX}/include)
@@ -26,6 +24,7 @@ set_target_properties(isakmp_protocol_plug  PROPERTIES PREFIX "")
 
 add_library(inline_keepalive STATIC inline_keepalive.cpp)
 
+add_library(platform_support STATIC platform_support.cpp)
 add_library(sapp_assistant STATIC sapp_assistant.cpp)
 add_library(gdev_assistant STATIC gdev_assistant.c)
 

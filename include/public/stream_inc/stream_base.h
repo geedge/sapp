@@ -517,6 +517,9 @@ int get_thread_count(void);
 time_t get_timestamp_s(void);
 long long get_timestamp_ms(void);
 
+//if return -1, it means caller not in worker thread context
+int get_current_worker_thread_id();
+
 /* CHN : 将地enum addr_type_t址类型转换成可打印的字符串形式 */
 /* ENG : transform binary addr_type_t to string mode */
 const char *addr_type_to_string(enum addr_type_t type);
