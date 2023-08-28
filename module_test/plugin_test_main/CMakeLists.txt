@@ -1,6 +1,6 @@
+include_directories(${PROJECT_SOURCE_DIR}/include/public)
 add_executable(plugin_test_main plugin_test_main.cpp)
 target_link_libraries(plugin_test_main sapp_devel)
-target_link_libraries(plugin_test_main gtest)
-target_link_libraries(plugin_test_main MESA_htable MESA_handle_logger MESA_prof_load  MESA_field_stat2 breakpad_mini MESA_jump_layer)
-target_link_libraries(plugin_test_main cjson pthread pcap systemd nsl dl m)
+target_link_libraries(plugin_test_main gtest-static)
+target_link_libraries(plugin_test_main ${SAPP_DEPEND_DYN_LIB})
 

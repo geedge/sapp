@@ -11,7 +11,6 @@ LINK_DIRECTORIES(/opt/MESA/lib)
 
 add_definitions(-D_DEFAULT_SOURCE -D_DEFAULT_SOURCE -D__DEFAULT_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
 add_definitions(-fPIC)
-add_definitions(-std=c++11)
 
 #add_executable(test_cjson_compare test_cjson_compare.cpp)
 #target_link_libraries(test_cjson_compare sapp_benchmark)

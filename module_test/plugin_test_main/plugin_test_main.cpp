@@ -82,10 +82,10 @@ TEST(PROTOCOL, compare_result_json)
 			ret = cJSON_Compare(t_load, t_test, 0);
 			if(ret != 1)
 			{
-				char *load_json_str = cJSON_Print(t_load);
+				load_json_str = cJSON_Print(t_load);
 				printf("LOAD Diff:\n%s\n", load_json_str);
 				free(load_json_str);
-				char *result_json_str = cJSON_Print(t_test);
+				result_json_str = cJSON_Print(t_test);
 				printf("TEST Diff:\n%s\n", result_json_str);
 				free(result_json_str);
 				ASSERT_EQ(1,ret);

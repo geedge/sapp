@@ -26,11 +26,8 @@ endif()
 
 add_executable(sapp sapp_main.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
-target_link_libraries(sapp pthread dl pcap)
-target_link_libraries(sapp MESA_handle_logger MESA_prof_load)
-target_link_libraries(sapp sapp_assistant sapp_metrics platform_support)
-target_link_libraries(sapp breakpad_mini)
 target_include_directories(sapp PRIVATE ${SYSTEMD_INCLUDE_DIRS})
+target_link_libraries(sapp ${SAPP_DEPEND_DYN_LIB})
 
 if(HASP_ENABLED STREQUAL "ON")
 	find_library(HASP_TOOLS_LIB NAMES hasp-tools PATHS /opt/tsg/hasp-tools/lib)
@@ -42,7 +39,8 @@ set(SAPP_MODULES timestamp_record md5
 	packet_io dealpkt project plugctrl common 
 	config timer tomlc99_wrap dpdk_ip_hash  
 	gdev_assistant inline_keepalive libdabloom 
-	sapp_dev sapp_assistant sapp_metrics cpu_limit timeout)
+	sapp_dev sapp_assistant sapp_metrics 
+	platform_support cpu_limit timeout)
 
 if(LIBEVENT_ENABLED STREQUAL "ON")
 	set(SAPP_MODULES ${SAPP_MODULES} libevent-static)
@@ -56,7 +54,7 @@ if(MEM_POOL STREQUAL "MIMALLOC")
 	set(SAPP_MODULES ${SAPP_MODULES} libmimalloc-static)
 endif()
 
-target_link_libraries(sapp -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive ${SAPP_DEPEND_DYN_LIB} ${SYSTEMD_LIBRARIES})
+target_link_libraries(sapp -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive)
 
 target_link_libraries(sapp packet_io_pcap)
 if(CAPTURE_MODE STREQUAL "MARSIO")

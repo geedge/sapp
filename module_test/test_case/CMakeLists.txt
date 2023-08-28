@@ -6,7 +6,6 @@ include_directories(${CMAKE_SOURCE_DIR}/include/public/)
 include_directories(${CMAKE_SOURCE_DIR}/include/public/stream_inc)
 
 add_definitions(-fPIC)
-add_definitions(-std=c++11)
 
 execute_process(COMMAND sh ${CMAKE_SOURCE_DIR}/module_test/test_case/auto_gen_test_functions.sh  ${CMAKE_SOURCE_DIR}/module_test/test_case)
 			

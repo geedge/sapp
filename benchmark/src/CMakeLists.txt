@@ -11,7 +11,6 @@ LINK_DIRECTORIES(/opt/MESA/lib)
 
 add_definitions(-D_DEFAULT_SOURCE -D_DEFAULT_SOURCE -D__DEFAULT_SOURCE -D__FAVOR_BSD -DHAVE_NET_ETHERNET_H)
 add_definitions(-fPIC)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 execute_process(COMMAND  xxd -i ${PROJECT_SOURCE_DIR}/benchmark/sapp_default_config/etc/asymmetric_addr_layer.conf  ${CMAKE_BINARY_DIR}/src/asymmetric_addr_layer.conf.c)
 execute_process(COMMAND   bash "-c"  "sed -i '1 s/.*/const unsigned char templete_asymmetric_addr_layer[] = {/' ${CMAKE_BINARY_DIR}/src/asymmetric_addr_layer.conf.c")
@@ -46,7 +45,8 @@ set(AUTO_CONF_C ${CMAKE_BINARY_DIR}/src/asymmetric_addr_layer.conf.c ${CMAKE_BIN
 add_library(sapp_benchmark SHARED sapp_benchmark.cpp sapp_benchmark_comm.cpp sapp_benchmark_utils.cpp wrap_cJSON.c wrap_cJSON_Utils.c ${AUTO_CONF_C})		
 set_target_properties(${lib_name}  PROPERTIES PREFIX "")  
 
-target_link_libraries(sapp_benchmark  pthread pcap MESA_jump_layer MESA_htable MESA_field_stat2  fieldstat3 MESA_handle_logger MESA_prof_load breakpad_mini dl systemd sapp_devel)
+target_link_libraries(sapp_benchmark ${SAPP_DEPEND_DYN_LIB})
+target_link_libraries(sapp_benchmark sapp_devel)
 
 #add_test(NAME COPY_LIBBENCHMARK COMMAND sh -c "cp ${CMAKE_BINARY_DIR}/benchmark/src/libsapp_benchmark.so ${CMAKE_BINARY_DIR}/testing/plug/business/gtest_sapp/")
 
