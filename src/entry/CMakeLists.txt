@@ -27,7 +27,7 @@ endif()
 add_executable(sapp sapp_main.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
 target_include_directories(sapp PRIVATE ${SYSTEMD_INCLUDE_DIRS})
-target_link_libraries(sapp ${SAPP_DEPEND_DYN_LIB})
+
 
 if(HASP_ENABLED STREQUAL "ON")
 	find_library(HASP_TOOLS_LIB NAMES hasp-tools PATHS /opt/tsg/hasp-tools/lib)
@@ -55,7 +55,7 @@ if(MEM_POOL STREQUAL "MIMALLOC")
 endif()
 
 target_link_libraries(sapp -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive)
-
+target_link_libraries(sapp ${SAPP_DEPEND_DYN_LIB})
 target_link_libraries(sapp packet_io_pcap)
 if(CAPTURE_MODE STREQUAL "MARSIO")
 	target_link_libraries(sapp packet_io_marsio)

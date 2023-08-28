@@ -197,7 +197,7 @@ endif()
 add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
     -D__USE_BSD=1 -D_GNU_SOURCE=1  -DMESA_SAPP_PLATFORM=1)
 
-set(SAPP_DEPEND_DYN_LIB MESA_handle_logger MESA_prof_load MESA_htable pthread MESA_field_stat2 fieldstat3 cjson MESA_jump_layer breakpad_mini ${SYSTEMD_LIBRARIES} pthread dl pcap)
+set(SAPP_DEPEND_DYN_LIB MESA_handle_logger MESA_prof_load MESA_htable  MESA_field_stat2 fieldstat3 cjson MESA_jump_layer breakpad_mini ${SYSTEMD_LIBRARIES} pthread dl pcap)
 
 
 file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_base.h MD5_STREAM_BASE)
