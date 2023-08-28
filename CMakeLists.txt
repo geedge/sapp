@@ -35,6 +35,7 @@ if (CMAKE_CXX_CPPCHECK)
         APPEND CMAKE_CXX_CPPCHECK 
             "--enable=all"
             "--error-exitcode=1"
+			"--std=c++11"
             "--suppress=unusedFunction"
             "--suppress=missingInclude"
             "--suppress=uselessAssignmentPtrArg"
@@ -294,6 +295,7 @@ install(FILES bin/plug/business/test_app/test_app.inf DESTINATION plug/business/
 install(FILES ${CMAKE_BINARY_DIR}/test/test_app_sapp.so DESTINATION plug/business/test_app COMPONENT LIBRARY)
 
 install(PROGRAMS ${CMAKE_BINARY_DIR}/tools/stream_id_decode DESTINATION ./tools/ COMPONENT EXECUTABLE)
+install(PROGRAMS ${CMAKE_BINARY_DIR}/module_test/plugin_test_main/plugin_test_main DESTINATION ./tools/ COMPONENT EXECUTABLE)
 
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream.h DESTINATION /opt/MESA/include/MESA/ COMPONENT HEADER)
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_base.h DESTINATION /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
