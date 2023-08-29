@@ -18,7 +18,7 @@ cJSON *g_load_result_root = NULL;
 
 int g_ret = 0;
 
-int commit_test_result_json(cJSON *node, const char *name)
+extern "C" int commit_test_result_json(cJSON *node, const char *name)
 {
 	assert(node != NULL || name != NULL);
 	if(g_test_result_root)
