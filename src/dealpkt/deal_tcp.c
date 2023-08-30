@@ -2948,13 +2948,20 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			return PASS;
 	}
 
-	if(unlikely(pdetail_pr->drop_stream_flag != 0)){
+	if(unlikely(pdetail_pr->drop_stream_flag != 0) ){
 		sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, has been set drop flag, curdir:%d, return DROP.", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 		pdetail->lastmtime = g_CurrentTime;
 		pstream_pr->stream_lastupdate_timestamp_ms = g_CurrentTime_ms;
 		lrustream(pindex_tcp);
-		return DROP;
+		if((this_tcphdr->th_flags & TH_RST) && tcplen == 0)
+		{
+			return PASS;
+		}
+		else
+		{
+			return DROP;
+		}
 	}
 
 // 对于kill remedy，drop stream和重复流量，sapp直接处理，不再追加流上的sid,避免转发到service chain上引起其他SF的歧义
