@@ -14,7 +14,7 @@ extern "C" {
 
 
 #ifndef MAX_THREAD_NUM
-#define MAX_THREAD_NUM 	128
+#define MAX_THREAD_NUM 	256
 #endif
 
 #define PLUGTYPE_PROTOCOL		1

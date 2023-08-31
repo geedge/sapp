@@ -37,11 +37,15 @@ typedef struct
     uint64_t tcks[NUM_TCK_TYPES];
 } cpu_tck_t;
 
+#ifndef MAX_CORE_NUM
+#define MAX_CORE_NUM 256
+#endif
+
 typedef struct{
-	unsigned long long last_create_stream_new_sum[MAX_THREAD_NUM];
-	double last_time_cpu_total[MAX_THREAD_NUM];
-	double last_time_cpu_idle[MAX_THREAD_NUM];
-	cpu_tck_t all_cpu_usage[MAX_THREAD_NUM];
+	unsigned long long last_create_stream_new_sum[MAX_CORE_NUM];
+	double last_time_cpu_total[MAX_CORE_NUM];
+	double last_time_cpu_idle[MAX_CORE_NUM];
+	cpu_tck_t all_cpu_usage[MAX_CORE_NUM];
 }under_sapp_user_args_t;
 
 
