@@ -78,15 +78,17 @@ static void signal_usr1_handler(int signo)
 #define MAX_STACK_FRAMES 128
 static void signal_usr2_handler(int signo)
 {
-	printf("%s, SIGNAL:%d recviced!\n", __FUNCTION__, signo);
+	pid_t tid = syscall(SYS_gettid);
+	printf("(%llu):%s, TID(%d) recv SIGNAL:%d!\n", (unsigned long long)time(NULL), __FUNCTION__, tid, signo);
     void *stack_buffer[MAX_STACK_FRAMES]={0};
     int stack_frames_size = backtrace(stack_buffer, MAX_STACK_FRAMES);
     char **symbols = backtrace_symbols(stack_buffer, stack_frames_size);
-	pid_t tid = syscall(SYS_gettid);
+	sapp_process_latency_log(RLOG_LV_FATAL, "TID:%d recv signal SIGUSR2, backtrace start----------------\n", tid);
     for (int i = 0; i < stack_frames_size; i++)
     {
-		sapp_process_latency_log(RLOG_LV_FATAL, "TID:%d recv signal SIGUSR2, backtrace:%s", tid, symbols[i]);
+		sapp_process_latency_log(RLOG_LV_FATAL, "TID:%d backtrace:%s", tid, symbols[i]);
     }
+	sapp_process_latency_log(RLOG_LV_FATAL, "TID:%d recv signal SIGUSR2, backtrace end----------------\n", tid);
     free(symbols);
 }
 
