@@ -92,12 +92,34 @@ static void signal_usr2_handler(int signo)
     free(symbols);
 }
 
+static void signal_nouse_handler(int signo)
+{
+	printf("%s, SIGNAL:%d recviced!\n", __FUNCTION__, signo);
+#if defined(USE_JEMALLOC)
+	#include "jemalloc/jemalloc.h"
+	bool active = true;
+	int ret;
+	ret=mallctl("prof.dump", NULL, NULL, NULL, 0); 
+	printf("mallctl prof.dump return %d\n", ret);
+  	ret=mallctl("prof.active", NULL, NULL, &active, sizeof(bool)); 
+	printf("mallctl prof.active:%d return %d\n", active, ret);
+	sleep(10);
+	active = false;
+	ret=mallctl("prof.active", NULL, NULL, &active, sizeof(bool)); 
+	printf("mallctl prof.active:%d return %d\n", active, ret);
+	ret=mallctl("prof.dump", NULL, NULL, NULL, 0); 
+	printf("mallctl prof.dump return %d\n", ret);
+
+#endif
+}
+
 static void signal_take_over(void)
 {
 	signal(SIGHUP, signal_hup_handler);
 	signal(SIGTERM, signal_term_handler);
 	signal(SIGUSR1, signal_usr1_handler);
 	signal(SIGUSR2, signal_usr2_handler);
+	signal(SIGSYS, signal_nouse_handler);
 }
 
 
