@@ -345,7 +345,8 @@ void libsapp_destroy_env(void)
 	
 	sapp_runtime_log(RLOG_LV_INFO, "libsapp_destroy_env excuting, call wait_for_all_io_threads() !");	
 	wait_for_all_io_threads();
-	sapp_runtime_log(RLOG_LV_INFO, "libsapp_destroy_env excuting, call packet_io_exit() !");	
+	sapp_runtime_log(RLOG_LV_INFO, "libsapp_destroy_env excuting, sleep(%d) and call packet_io_exit() !", sapp_global_val->config.packet_io.dumpfile_sleep_time_before_exit);	
+	sleep(sapp_global_val->config.packet_io.dumpfile_sleep_time_before_exit);
 	packet_io_exit();
 
 	/* 所有资源都free了, 减去引用计数 */

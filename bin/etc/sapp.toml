@@ -64,6 +64,7 @@
    
     #destroy_all_plug_enabled = 1
     #dlclose_all_plug_enabled = 1
+    dumpfile_sleep_time_before_exit=0
 ### note, deployment.mode options: [mirror, inline, transparent]
     [packet_io.deployment]
     mode="inline"

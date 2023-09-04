@@ -781,7 +781,7 @@ void control_get_root_dir_run(void)
 
 	set_default_config();
 
-	update_config_file("./etc/sapp.toml", "dumpfile_sleep_time_before_exit", "4");
+	update_config_file("./etc/sapp.toml", "dumpfile_sleep_time_before_exit", "0");
 
 	/* 因为配置文件路径里包括'/', 会和sed命令冲突, 需要使用二次转义, 
        第一次用两个连续的\\, 表示真实的'\',
@@ -889,7 +889,7 @@ void find_streaminfo_v6_run(void)
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "reorder_pkt_max", "100");
 	update_config_file("etc/sapp.toml", "timeout", "0");
-	update_config_file("etc/sapp.toml", "dumpfile_sleep_time_before_exit", "3");
+	update_config_file("etc/sapp.toml", "dumpfile_sleep_time_before_exit", "0");
 
 	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "gtest_sapp_slave_init", NULL, "TCP_ALL", "void_entry");
 	append_plugin_inf("UDP", "void_entry");
