@@ -828,11 +828,6 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 	set_ipv6_stream(pfstream_pr, &tmp_index, &ip6_addr, a_packet, routedir, thread_num, raw_pkt, offset_to_raw_pkt_hdr);
 
 	plocal_stream->addr.pkttype = sapp_global_mthread[thread_num].ipv6_pkt_type_flag;/* 2014-12-25 lijia add */
-#if 0 /* to do, gdev check! */
-	if(DROP == gdev_check_pkt(__ADDR_TYPE_IP_PAIR_V6, this_layer_hdr)){
-		return DROP;
-	}
-#endif
 
 	/* 2015-02-03 lijia add */
 	if(PKT_TYPE_NORMAL == plocal_stream->addr.pkttype){
@@ -880,16 +875,17 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 						  (struct ipv6_frag_hdr *)next_hdr_ptr, last_hdr-(uchar *)a_packet, raw_pkt); 
 				if(new_ip6h)
 				{
-					assert(new_ip6h->ip6_nxt_hdr != NEXTHDR_FRAGMENT); /* 强制校验, 分片重组的包不可能再是分片, 就死循环了!! */
+					//assert(new_ip6h->ip6_nxt_hdr != NEXTHDR_FRAGMENT); /* 强制校验, 分片重组的包不可能再是分片, 就死循环了!! */
+					if(new_ip6h->ip6_nxt_hdr == NEXTHDR_FRAGMENT)
+					{
+						need_free=1;
+						goto done;
+					}
 					/* 重新设置IP地址信息 */
 					set_ipv6_stream(pfstream_pr, &(tmp_index), &ip6_addr, new_ip6h, routedir, thread_num, raw_pkt, skip_len+offset_to_raw_pkt_hdr);
 					/* 递归调用自身一次,跳过IPv6的扩展头部,调用上层处理模块 */
-#if 0					
-					action = ipv6_entry(&(tmp_index.stream), (const void *)new_ip6h, thread_num, routedir, raw_pkt,
-#else
 					sapp_global_mthread[thread_num].ipv6_pkt_type_flag = PKT_TYPE_IPREBUILD;
 					action = ipv6_entry(pfstream_pr, (const void *)new_ip6h, thread_num, routedir, raw_pkt,
-#endif
 									skip_len+offset_to_raw_pkt_hdr); /* 分片重组的包递归调用自身, 不需加上sizeof(struct mesa_ip6_hdr)头 */
 					need_free = 1;
 					sapp_global_mthread[thread_num].ipv6_pkt_type_flag = PKT_TYPE_NORMAL;
