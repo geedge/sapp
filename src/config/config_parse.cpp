@@ -1717,6 +1717,7 @@ int sapp_parse_config(void)
 
 
 	MESA_load_profile_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"dumpfile_sleep_time_before_exit", &pconfig->packet_io.dumpfile_sleep_time_before_exit, 0);
+	MESA_load_profile_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"watchdog_enabled", &pconfig->packet_io.watchdog_enabled, 1);
 
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.deployment", (char *)"mode", pconfig->packet_io.deployment_mode_str, NAME_MAX, "inline");
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.internal.interface", (char *)"type", pconfig->packet_io.internal.interface.type_str, NAME_MAX, "pcap");

@@ -549,7 +549,7 @@ void *sapp_time_event_thread(void *arg)
 			last_log_time = ABBR_CURRENT_TIME;
 			sysinfo_output();
 			sapp_mem_stat_output();
-			sapp_watch_dog();
+			if(sapp_global_val->config.packet_io.watchdog_enabled==1)sapp_watch_dog();
 		}
 		sapp_fuzzy_latency_update();
 		sapp_usleep(10);

@@ -257,6 +257,7 @@ typedef struct{
 	short destroy_all_plug_enabled;
 	short dlclose_all_plug_enabled;
 	int dumpfile_sleep_time_before_exit;
+	int watchdog_enabled;
 }sapp_config_packet_io_t;
 
 
