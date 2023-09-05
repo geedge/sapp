@@ -199,6 +199,9 @@
     raw_pkt_broken_enabled=0
     symbol_conflict_enabled=0
 
+    [profiling.memory]
+    memory_used_stat_interval_s=10
+
 [TOOLS]
     [tools.pkt_dump]
     enabled=1

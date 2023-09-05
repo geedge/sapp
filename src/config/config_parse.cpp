@@ -1838,6 +1838,8 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.sanity_check", (char *)"raw_pkt_broken_enabled", (int *)&pconfig->profiling.sanity_check_raw_pkt_broken_enabled, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.sanity_check", (char *)"symbol_conflict_enabled", (int *)&pconfig->profiling.sanity_check_symbol_conflict_enabled, 0);
 
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.memory", (char *)"memory_used_stat_interval_s", (int *)&pconfig->profiling.memory_used_stat_interval_s, 10);
+
 	/************************  PROTOCOL_FEATURE **********************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"ipv6_decapsulation_enabled", (int *)&pconfig->protocol_feature.ipv6_decapsulation_enabled, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"ipv6_send_packet_enabled", (int *)&pconfig->protocol_feature.ipv6_send_packet_enabled, 1);

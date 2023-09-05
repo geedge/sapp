@@ -161,6 +161,7 @@ typedef struct{
 	
 	int sanity_check_raw_pkt_broken_enabled;
 	int sanity_check_symbol_conflict_enabled;
+	int memory_used_stat_interval_s;
 }sapp_config_profiling_t;
 
 typedef struct{

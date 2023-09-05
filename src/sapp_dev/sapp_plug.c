@@ -103,7 +103,7 @@ static void signal_nouse_handler(int signo)
 	printf("mallctl prof.dump return %d\n", ret);
   	ret=mallctl("prof.active", NULL, NULL, &active, sizeof(bool)); 
 	printf("mallctl prof.active:%d return %d\n", active, ret);
-	sleep(10);
+	sleep(sapp_global_val->config.profiling.memory_used_stat_interval_s);
 	active = false;
 	ret=mallctl("prof.active", NULL, NULL, &active, sizeof(bool)); 
 	printf("mallctl prof.active:%d return %d\n", active, ret);
