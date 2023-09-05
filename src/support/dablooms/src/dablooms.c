@@ -27,14 +27,20 @@ const char *dablooms_version(void)
 
 void free_bitmap(bitmap_t *bitmap)
 {
+#if 0
     if ((munmap(bitmap->array, bitmap->bytes)) < 0) {
         perror("Error, unmapping memory");
     }
+#else
+    free(bitmap->array);
+#endif
     free(bitmap);
 }
 
 bitmap_t *bitmap_resize(bitmap_t *bitmap, size_t old_size, size_t new_size)
 {   
+
+#if 0
     /* resize if mmap exists and possible on this os, else new mmap */
     if (bitmap->array != NULL) {
 #if __linux
@@ -61,7 +67,30 @@ bitmap_t *bitmap_resize(bitmap_t *bitmap, size_t old_size, size_t new_size)
             return NULL;
         }
     }
-    
+#else
+    if (bitmap->array != NULL)
+    {
+        bitmap->array = (char *)realloc(bitmap->array, new_size);
+        if (bitmap->array == NULL)
+        {
+            perror("Error resizing memory");
+            free_bitmap(bitmap);
+            return NULL;
+        }
+        memset(bitmap->array + old_size, 0, new_size - old_size);
+    }
+    else 
+    {
+        bitmap->array = (char *)malloc(new_size);
+        if (bitmap->array == NULL)
+        {
+            perror("Error init memory");
+            free_bitmap(bitmap);
+            return NULL;
+        }
+        memset(bitmap->array, 0, new_size);
+    }
+#endif
     bitmap->bytes = new_size;
     return bitmap;
 }
@@ -90,6 +119,7 @@ int bitmap_increment(bitmap_t *bitmap, unsigned int index, long offset)
 {
     long access = index / 2 + offset;
     uint8_t temp;
+    __builtin_prefetch(&(bitmap->array[access]), 0, 1);
     uint8_t n = bitmap->array[access];
     if (index % 2 != 0) {
         temp = (n & 0x0f);
@@ -104,6 +134,7 @@ int bitmap_increment(bitmap_t *bitmap, unsigned int index, long offset)
         return -1;
     }
     
+    __builtin_prefetch(&(bitmap->array[access]), 1, 1);
     bitmap->array[access] = n;
     return 0;
 }
@@ -145,12 +176,16 @@ int bitmap_check(bitmap_t *bitmap, unsigned int index, long offset)
 
 int bitmap_flush(bitmap_t *bitmap)
 {
+#if 0
     if ((msync(bitmap->array, bitmap->bytes, MS_SYNC) < 0)) {
         perror("Error, flushing bitmap to disk");
         return -1;
     } else {
         return 0;
     }
+#else
+    return 0;
+#endif
 }
 
 /*
@@ -472,6 +507,7 @@ struct expiry_dablooms_handle{
     scaling_bloom_t *next_bloom;
     time_t cur_bloom_start;
     time_t next_bloom_start;
+    time_t last_bloom_check;
     uint64_t cur_bloom_inc_id;
     uint64_t next_bloom_inc_id;
     unsigned int capacity;
@@ -535,6 +571,9 @@ static int bloom_expired_check(struct expiry_dablooms_handle *handle, time_t cur
     if(handle == NULL || handle->cur_bloom == NULL){
         return EXPIRY_DABLOOMS_ERRNO_BLOOM_NULL;
     }
+    if(cur_time <= handle->last_bloom_check){
+        return 0;
+    }
     time_t delta_time = cur_time - handle->cur_bloom_start;
     handle->cur_time=cur_time;
     if(delta_time >= handle->expiry_time){
@@ -544,6 +583,7 @@ static int bloom_expired_check(struct expiry_dablooms_handle *handle, time_t cur
             handle->cur_bloom_start = handle->next_bloom_start;
             handle->cur_bloom_inc_id = handle->next_bloom_inc_id;
             handle->next_bloom = NULL;
+            handle->last_bloom_check=0;
         }
         else{
             scaling_bloom_t *cur_bloom = new_scaling_bloom(handle->capacity, handle->error_rate);
@@ -553,7 +593,12 @@ static int bloom_expired_check(struct expiry_dablooms_handle *handle, time_t cur
             handle->cur_bloom = cur_bloom;
             handle->cur_bloom_inc_id = 0;
             handle->cur_bloom_start=cur_time;
+             handle->last_bloom_check=0;
         }
+    }
+    else 
+    {
+        handle->last_bloom_check=cur_time;
     }
     return 0;
 }
