@@ -369,31 +369,27 @@ int MESA_mac_pton(const char *str, int delim, char *mac)
 }
 
 
-int sendpacket_in_cksum(u_int16_t *addr, int len)
+int sendpacket_in_cksum(const char *addr, size_t len)
 {
-    int sum;
-    int nleft;
-    u_int16_t ans;
-    u_int16_t *w;
-
-    sum = 0;
-    ans = 0;
-    nleft = len;
-    w = addr;
+    int sum = 0;
+    size_t nleft = len;
+    uint16_t ans;
 
     while (nleft > 1)
     {
-        sum += *w++;
+        sum += *((uint16_t *)addr);
+        addr += 2;
         nleft -= 2;
     }
+
     if (nleft == 1)
     {
-        *(char *)(&ans) = *(char *)w;
+        *(char *)(&ans) = *addr;
         sum += ans;
     }
+
     return (sum);
 }
-
 
 int sendpacket_do_checksum(unsigned char *buf, int protocol, int len)
 {
@@ -447,14 +443,14 @@ int sendpacket_do_checksum(unsigned char *buf, int protocol, int len)
             /* 2012-03-19 LiJia add, for IPv6 */
             if(is_ipv6)
             {
-                sum = sendpacket_in_cksum((u_int16_t *)&ip6h_p->ip6_src, 32);
+                sum = sendpacket_in_cksum((const char *)&ip6h_p->ip6_src, 32);
             }
             else
             {
-                sum = sendpacket_in_cksum((u_int16_t *)&iph_p->ip_src, 8);
+                sum = sendpacket_in_cksum((const char *)&iph_p->ip_src, 8);
             }    
             sum += ntohs(IPPROTO_TCP + len);
-            sum += sendpacket_in_cksum((u_int16_t *)tcph_p, len);
+            sum += sendpacket_in_cksum((const char *)tcph_p, len);
             tcph_p->th_sum = SENDPACKET_CKSUM_CARRY(sum);
             break;
         }
@@ -468,14 +464,14 @@ int sendpacket_do_checksum(unsigned char *buf, int protocol, int len)
             /* 2012-03-19 LiJia add, for IPv6 */
             if(is_ipv6)
             {
-                sum = sendpacket_in_cksum((u_int16_t *)&ip6h_p->ip6_src, 32);
+                sum = sendpacket_in_cksum((const char *)&ip6h_p->ip6_src, 32);
             }
             else
             {
-                sum = sendpacket_in_cksum((u_int16_t *)&iph_p->ip_src, 8);
+                sum = sendpacket_in_cksum((const char *)&iph_p->ip_src, 8);
             }   
             sum += ntohs(IPPROTO_UDP + len);
-            sum += sendpacket_in_cksum((u_int16_t *)udph_p, len);
+            sum += sendpacket_in_cksum((const char *)udph_p, len);
             udph_p->uh_sum = SENDPACKET_CKSUM_CARRY(sum);
             break;
         }
@@ -483,7 +479,7 @@ int sendpacket_do_checksum(unsigned char *buf, int protocol, int len)
         case IPPROTO_IP: /* Dummy protocol for TCP.  */
         {
             iph_p->ip_sum = 0;
-            sum = sendpacket_in_cksum((u_int16_t *)iph_p, len);
+            sum = sendpacket_in_cksum((const char *)iph_p, len);
             iph_p->ip_sum = SENDPACKET_CKSUM_CARRY(sum);
             break;
         }
@@ -494,7 +490,7 @@ int sendpacket_do_checksum(unsigned char *buf, int protocol, int len)
                 (struct mesa_icmp_hdr *)(buf + ip_hl);
 
             icmph_p->icmp_sum = 0;
-            sum = sendpacket_in_cksum((u_short *)icmph_p, len);
+            sum = sendpacket_in_cksum((const char *)icmph_p, len);
             icmph_p->icmp_sum = SENDPACKET_CKSUM_CARRY(sum);
             break;
         }
