@@ -1849,6 +1849,10 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"reverse_ethernet_addr", (int *)&pconfig->protocol_feature.reverse_ethernet_addr_enabled, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"skip_gtp_S_PN_E_field_for_inject", (int *)&pconfig->protocol_feature.skip_gtp_S_PN_E_field_for_inject, 1);
 
+
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"ipv4_reassembly_enabled", (int *)&pconfig->protocol_feature.ipv4_reassembly_enabled, 1);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"ipv6_reassembly_enabled", (int *)&pconfig->protocol_feature.ipv6_reassembly_enabled, 1);
+
 	/*******************************  TOOLS **********************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"tools.signal_handler", (char *)"signal", (int *)&pconfig->tools.signal_handler.signal, 0);
 

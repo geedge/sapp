@@ -10,6 +10,7 @@
   
 */
 
+#include "stream_internal.h"
 #include <MESA_handle_logger.h>
 #include <sysinfo.h>
 #include <sys/types.h>
@@ -710,35 +711,40 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	offset = ntohs(a_packet->ip_off);
 	flags = offset & ~IPv4_FRAG_OFFSET;
 	offset &= IPv4_FRAG_OFFSET;
-	
-	if(unlikely(((flags & IPv4_FRAG_MF) != 0) || (offset != 0))){
-		pstream->addr.pktipfragtype = PKT_TYPE_IP_FRAG;
-#if USE_MESA_STREAM_HASH
-		/* 基于隧道嵌套模式, 使用本层流结构, 而非father->stream */
-		new_iph =  (struct mesa_ip4_hdr *)process_ipv4_frag(&ptmp->stream, a_packet, thread_num,raw_pkt);
-#else
-	    	new_iph =  (struct mesa_ip4_hdr *)process_ipv4_frag(pfstream_pr, a_packet, thread_num,raw_pkt);
-#endif	    	
-	    	if(NULL == new_iph)
-	    	{
-				local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;
-				local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG]++;
-				/* 纯IP分片, 还未重组完成, 此处只调用IPFRAG, 
-				   不必看sapp_global_single.ipentry_priority_over_ipfrag,
-				   如果是最后一个分片到达, 且全部IP包重组完成, 需要判断sapp_global_single.ipentry_priority_over_ipfrag,
-				   决定先调用ip_entry, 还是ip_frag_entry.
-				*/
-				stream_process_ipv4_frag(pstream, (const struct ip *)a_packet,
-										thread_num, routedir, raw_pkt);	
-				return PASS;
-	    	}
-	    	a_packet = new_iph;
-	    	need_free = 1;
-	    	pstream->addr.pktipfragtype = PKT_TYPE_IPREBUILD | PKT_TYPE_IP_FRAG_LAST;
-	    	
-  	}
 
-	if(need_free){
+    if (unlikely(((flags & IPv4_FRAG_MF) != 0) || (offset != 0)))
+    {
+        if (unlikely(sapp_global_val->config.protocol_feature.ipv4_reassembly_enabled == 0))
+        {
+            local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;
+            local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG]++;
+            return PASS;
+        }
+        pstream->addr.pktipfragtype = PKT_TYPE_IP_FRAG;
+#if USE_MESA_STREAM_HASH
+        /* 基于隧道嵌套模式, 使用本层流结构, 而非father->stream */
+        new_iph = (struct mesa_ip4_hdr *)process_ipv4_frag(&ptmp->stream, a_packet, thread_num, raw_pkt);
+#else
+        new_iph = (struct mesa_ip4_hdr *)process_ipv4_frag(pfstream_pr, a_packet, thread_num, raw_pkt);
+#endif
+        if (NULL == new_iph)
+        {
+            local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;
+            local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG]++;
+            /* 纯IP分片, 还未重组完成, 此处只调用IPFRAG,
+               不必看sapp_global_single.ipentry_priority_over_ipfrag,
+               如果是最后一个分片到达, 且全部IP包重组完成, 需要判断sapp_global_single.ipentry_priority_over_ipfrag,
+               决定先调用ip_entry, 还是ip_frag_entry.
+            */
+            stream_process_ipv4_frag(pstream, (const struct ip *)a_packet, thread_num, routedir, raw_pkt);
+            return PASS;
+        }
+        a_packet = new_iph;
+        need_free = 1;
+        pstream->addr.pktipfragtype = PKT_TYPE_IPREBUILD | PKT_TYPE_IP_FRAG_LAST;
+    }
+
+    if(need_free){
 		local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;
 		local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG] += this_layer_len;
 	}else{

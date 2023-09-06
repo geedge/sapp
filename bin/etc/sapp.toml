@@ -110,6 +110,8 @@
     tcp_syn_option_parse_enabled=1 
     skip_not_ip_layer_over_eth=0
     skip_gtp_S_PN_E_field_for_inject=0
+    ipv4_reassembly_enabled=1
+    ipv6_reassembly_enabled=1
 
 [DUPLICATE_PKT]
 [dup_pkt.traffic.original]

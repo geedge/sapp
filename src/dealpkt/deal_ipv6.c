@@ -10,6 +10,7 @@
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 #include "sapp_declaration.h"
+#include "stream_internal.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -866,7 +867,10 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 			break;
 
 			case NEXTHDR_FRAGMENT:		
-				
+				if(unlikely(sapp_global_val->config.protocol_feature.ipv6_reassembly_enabled == 0))
+				{
+					goto done;
+				}
 				/* 2015-02-03 lijia add */
 				plocal_stream->addr.pktipfragtype = PKT_TYPE_IP_FRAG;
 				stream_process_ipv6_frag(plocal_stream, (const struct ip6_hdr *)this_layer_hdr,
