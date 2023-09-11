@@ -1046,7 +1046,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 
 		case ADDR_TYPE_ARP:
 			//printf("Sendpacket use ARP!\n");
-			sapp_runtime_log(RLOG_LV_FATAL, "calc_reserved_hdr_len(): Sendpacket use ARP.\n");		
+			sapp_runtime_log(RLOG_LV_INFO, "calc_reserved_hdr_len(): Sendpacket use ARP.\n");		
 			return -1;
 			//assert(0);
 		break;
@@ -2254,20 +2254,20 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 					buf -= this_layer_len;
 					ret = build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir ^ DIR_DOUBLE, raw_pkt);
 					if(ret < 0){
-						sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_vlan() error!\n", printaddr(&top_stream->addr, stream->threadnum));
+						sapp_runtime_log(RLOG_LV_INFO, "%s, build_net_layer_vlan() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 						return -1;
 					}	
 					carry_layer_type = ADDR_TYPE_VLAN;					
 					sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_vlan() build vlan layer, but no addr of dir:%d, use opposite_addr.\n", send_stream_dir);
 				}else{
-					sapp_runtime_log(RLOG_LV_FATAL, "build_net_layer_vlan() error, send streamdir:%d, layer len is 0, but create_vlan_anyway is disable!\n", send_stream_dir);
+					sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_vlan() error, send streamdir:%d, layer len is 0, but create_vlan_anyway is disable!\n", send_stream_dir);
 					return -1;
 				}
 			}else{
 				buf -= this_layer_len;
 				ret = build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
 				if(ret < 0){
-					sapp_runtime_log(RLOG_LV_FATAL, "%s,build_net_layer_vlan() error!\n", printaddr(&top_stream->addr, stream->threadnum));
+					sapp_runtime_log(RLOG_LV_INFO, "%s,build_net_layer_vlan() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 					return -1;
 				}					
 				carry_layer_type = ADDR_TYPE_VLAN;
@@ -2282,7 +2282,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			*/
 			unsigned short eth_type_host = net_layer_to_ethernet_protocol_by_stream(up_stream);
 			if((unsigned short)-1 == eth_type_host){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s,build_net_layer_mac() error, unsupport carry_layer_type:0x%x!\n", printaddr(&stream->addr, stream->threadnum), carry_layer_type);
+				sapp_runtime_log(RLOG_LV_INFO, "%s,build_net_layer_mac() error, unsupport carry_layer_type:0x%x!\n", printaddr(&stream->addr, stream->threadnum), carry_layer_type);
 				return -1;
 			}
 
@@ -2306,7 +2306,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			buf -= this_layer_len;
 		ret = build_net_layer_gre(top_stream, stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
 			if(ret < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_gre() error!\n", printaddr(&top_stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_INFO, "%s, build_net_layer_gre() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_GRE;
@@ -2324,7 +2324,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 				buf -= this_layer_len;
 				ret = build_net_layer_mpls(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
 				if(ret < 0){
-					sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_mpls() error!\n", printaddr(&top_stream->addr, stream->threadnum));
+					sapp_runtime_log(RLOG_LV_INFO, "%s, build_net_layer_mpls() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 					return -1;
 				}				
 				carry_layer_type = ADDR_TYPE_MPLS;
@@ -2337,13 +2337,13 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 		case ADDR_TYPE_GPRS_TUNNEL:
 			this_layer_len = calc_gtp_hdr_len(stream_pr, send_stream_dir);
 			if(this_layer_len < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, calc_gtp_hdr_len() error!\n", printaddr(&top_stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_INFO, "%s, calc_gtp_hdr_len() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;
 			}	
 			buf -= this_layer_len;
 			ret = build_net_layer_gtp(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt);
 			if(ret < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_gtp() error!\n", printaddr(&top_stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_INFO, "%s, build_net_layer_gtp() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_GPRS_TUNNEL;
@@ -2375,13 +2375,13 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 		case ADDR_TYPE_L2TP:
 			this_layer_len = calc_l2tp_hdr_len(stream_pr, send_stream_dir);
 			if(this_layer_len < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, calc_l2tp_hdr_len() error!\n", printaddr(&top_stream->addr, top_stream->threadnum));
+				sapp_runtime_log(RLOG_LV_INFO, "%s, calc_l2tp_hdr_len() error!\n", printaddr(&top_stream->addr, top_stream->threadnum));
 				return -1;
 			}
 			buf -= this_layer_len;
 			ret = build_net_layer_l2tp(top_stream, stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt, this_layer_len);
 			if(ret < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_l2tp() error!\n", printaddr(&top_stream->addr, top_stream->threadnum));
+				sapp_runtime_log(RLOG_LV_INFO, "%s, build_net_layer_l2tp() error!\n", printaddr(&top_stream->addr, top_stream->threadnum));
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_L2TP;
@@ -2399,7 +2399,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			gre_layer_len = calc_gre_hdr_len(
 						 (const struct mesa_gre_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
 			if(gre_layer_len < 0){
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, pptp calc_gre_hdr_len() error!\n", printaddr(&top_stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_INFO, "%s, pptp calc_gre_hdr_len() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;
 			}						 
 			ppp_hdr_len = stream_pr->cur_layer_raw_hdr_len - gre_layer_len;
@@ -2416,7 +2416,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			buf -= gre_layer_len;
 			ret = build_net_layer_gre(top_stream, stream_pr, ADDR_TYPE_PPP, carry_layer_len, buf, reverse, raw_pkt);
 			if(ret < 0){ 
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, pptp build_net_layer_gre() error!\n", printaddr(&top_stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_INFO, "%s, pptp build_net_layer_gre() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_GRE;
@@ -2430,7 +2430,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			this_layer_len = vxaddr_pr->actual_total_len;
 			ret = build_net_layer_vxlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir, raw_pkt, vxaddr_pr);
 			if(ret < 0){ 
-				sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_vxlan() error!\n", printaddr(&top_stream->addr, stream->threadnum));
+				sapp_runtime_log(RLOG_LV_INFO, "%s, build_net_layer_vxlan() error!\n", printaddr(&top_stream->addr, stream->threadnum));
 				return -1;
 			}
 			carry_layer_type = ADDR_TYPE_VXLAN;		
@@ -2438,7 +2438,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 		break;
 		
 		default:
-			sapp_runtime_log(RLOG_LV_FATAL, "%s, build_net_layer_pkt(): unsupport addr type:%d!\n", printaddr(&stream->addr, stream->threadnum), stream->addr.addrtype);
+			sapp_runtime_log(RLOG_LV_INFO, "%s, build_net_layer_pkt(): unsupport addr type:%d!\n", printaddr(&stream->addr, stream->threadnum), stream->addr.addrtype);
 			goto err;
 			break;
 	}
@@ -2962,7 +2962,7 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 
 	reserved_hdr_len = calc_reserved_hdr_len(inject_stream, &low_net_layer_type, send_stream_dir);
 	if(reserved_hdr_len < 0){
-		sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_pkt()->calc_reserved_hdr_len() error");
+		sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_pkt()->calc_reserved_hdr_len() error");
 		return -1;
 	}
 
