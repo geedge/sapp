@@ -457,6 +457,10 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 			return get_vxlan_info_from_streaminfo(pstream_pr, type, out_value);
 		break;
 	}
+	if(pstream_pr->polling_inject_context == NULL)
+	{
+		return ret;
+	}
 	switch(type)
 	{
 		case RAW_PKT_GET_ROUTE_CTX:

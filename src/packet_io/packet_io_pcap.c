@@ -998,7 +998,7 @@ static void *__pcap_work_thread(void *arg)
 	/* for perf optimize
 	   频繁调用stream_process_polling()等函数, 此处先在函数外部判断一下是否需要调用.
 	*/
-	int polling_enabled = sapp_global_val->config.packet_io.polling_enabled;
+	int polling_enabled = sapp_global_val->config.packet_io.polling_priority;
 
 	while (SAPP_STATE_PROCESSING == sapp_get_current_state())
 	{

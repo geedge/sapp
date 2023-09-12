@@ -1724,7 +1724,6 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.internal.interface", (char *)"name", pconfig->packet_io.internal.interface.name, NAME_MAX, "lo");
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.external.interface", (char *)"type", pconfig->packet_io.external.interface.type_str, NAME_MAX, "");
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.external.interface", (char *)"name", pconfig->packet_io.external.interface.name, NAME_MAX, "");
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"enabled", &pconfig->packet_io.polling_enabled, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"polling_priority", &pconfig->packet_io.polling_priority, 100);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"work_percent", &pconfig->packet_io.work_percent, 90);
 	

@@ -2420,7 +2420,7 @@ int update_polling_inject_context(int mem_used_type,struct streaminfo_private *p
 {
 	int thread_index;
 
-	if(0 == sapp_global_val->config.packet_io.polling_enabled){
+	if(0 == sapp_global_val->config.packet_io.polling_priority){
 		return 0;
 	}
 
@@ -2450,7 +2450,7 @@ int save_polling_inject_context(int mem_used_type, struct streaminfo_private *ps
 {
 	int thread_index;
 
-	if(0 == sapp_global_val->config.packet_io.polling_enabled){
+	if(0 == sapp_global_val->config.packet_io.polling_priority){
 		return 0;
 	}
 
@@ -2484,7 +2484,7 @@ void free_polling_inject_context(int mem_used_type, struct streaminfo_private *p
 {
 	int thread_index;
 	
-	if(0 == sapp_global_val->config.packet_io.polling_enabled){
+	if(0 == sapp_global_val->config.packet_io.polling_priority){
 		return;
 	}
 

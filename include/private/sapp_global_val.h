@@ -229,7 +229,6 @@ typedef struct{
 	sapp_config_packet_io_dev_t internal;
 	sapp_config_packet_io_dev_t external;
 	char pcap_dumpfile_name[NAME_MAX];
-	int polling_enabled;
 	int polling_priority; /* call sapp_recv_pkt every call polling_entry times, 调用多少次polling后调用一次recv pkt, 1表示两者优先级相同 */
 	int work_percent;
 	int without_usleep; /* 性能测试模式, 不会调用usleep, CPU会100% */
