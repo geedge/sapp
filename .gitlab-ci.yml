@@ -246,7 +246,7 @@ envelope_rpm_for_centos8:
   dependencies:
     - branch_build_debug_for_centos8
     - develop_build_debug_for_centos8
-    - release_build_debug_for_centos8
+#    - release_build_debug_for_centos8
     - release_build_release_for_centos8
   tags:
     - share    
