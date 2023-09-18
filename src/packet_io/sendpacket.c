@@ -1124,12 +1124,13 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 		
 		default:
 			/* to do */
-			sapp_runtime_log(30, "calc_reserved_hdr_len(): Not support addrtype:%d\n", stream->addr.addrtype);
+			sapp_runtime_log(RLOG_LV_FATAL, "calc_reserved_hdr_len(): Not support addrtype:%d\n", stream->addr.addrtype);
 			reserved_hdr_len = -1;
 			break;
 	}
 
 	if(reserved_hdr_len < 0){
+		sapp_runtime_log(RLOG_LV_FATAL, "calc_reserved_hdr_len() < 0 stream_type:%d, addrtype:%d\n", stream->type, stream->addr.addrtype);	
 		return -1;
 	}
 
@@ -1157,6 +1158,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 	
 	pfather_hdr_len = calc_reserved_hdr_len((struct streaminfo *)stream_pr->pfather_pr, net_layer_type, send_stream_dir);
 	if(pfather_hdr_len < 0){
+		sapp_runtime_log(RLOG_LV_FATAL, "pfather_hdr_len < 0 stream_type:%d, addrtype:%d\n", stream->type, stream->addr.addrtype);	
 		return -1;
 	}
 	
