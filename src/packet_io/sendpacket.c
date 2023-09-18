@@ -1,3 +1,4 @@
+#include <MESA_handle_logger.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -2847,6 +2848,72 @@ static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream
     return ret;
 }
 
+int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir)
+{
+	if(dir_check(snd_routedir) < 0){
+		return -1;
+	}
+	int snd_routedir_reverse;
+    struct streaminfo_private *raw_stream_pr = (struct streaminfo_private *)stream;
+	const raw_pkt_t *raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_routedir_reverse);
+	if(NULL == raw_pkt){
+		sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_ctrl_pkt() error, not found raw_pkt!");
+		return -1;
+	}	
+	if(raw_stream_pr->sid_append_list != NULL)
+	{
+		((raw_pkt_t *)raw_pkt)->append_list=raw_stream_pr->sid_append_list;
+    }
+	if (raw_stream_pr->stream_trace_id != 0)
+	{
+		((raw_pkt_t *)raw_pkt)->stream_trace_id = raw_stream_pr->stream_trace_id;
+	}
+
+    int low_net_layer_type = get_eth_carry_layer_type(stream, stream->curdir);
+	int raw_pkt_l3_hdr_len=raw_pkt->offset_to_raw_pkt_hdr - raw_pkt->overlay_layer_bytes;
+	int raw_pkt_l4_hdr_len=0;
+	if(stream->type==STREAM_TYPE_TCP)
+	{
+		struct mesa_tcp_hdr *tcph = (struct mesa_tcp_hdr *)((char *)raw_pkt->raw_pkt_data + raw_pkt_l3_hdr_len);
+		raw_pkt_l4_hdr_len = tcph->th_off<<2;
+	}
+	else if(stream->type==STREAM_TYPE_UDP)
+	{
+		raw_pkt_l4_hdr_len = sizeof(struct mesa_udp_hdr);
+	}
+	else 
+	{
+		sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error! not support stream_type:%d.\n",
+                        stream->type);
+		return -1;
+	}
+    if (payload_len + raw_pkt_l3_hdr_len + raw_pkt_l4_hdr_len > MTU_MAX)
+    {
+        sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_ctrl_pkt() error! payload_len too long:%d.\n",
+                        payload_len + raw_pkt_l3_hdr_len);
+        return -1;
+    }
+	MESA_send_handle *send_handle = &g_send_handle[stream->threadnum];
+	send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, stream->threadnum);
+	send_handle->user_arg = (void *)stream;
+    memcpy(send_handle->send_buf, (const char *)(raw_pkt->raw_pkt_data)+raw_pkt->overlay_layer_bytes, raw_pkt_l3_hdr_len+raw_pkt_l4_hdr_len);
+	memcpy(send_handle->send_buf+raw_pkt_l3_hdr_len+raw_pkt_l4_hdr_len, payload, payload_len);
+	((raw_pkt_t *)raw_pkt)->is_ctrl_pkt=1;
+	int raw_payload_len=((raw_pkt_t *)raw_pkt)->payload_len;
+	((raw_pkt_t *)raw_pkt)->payload_len=payload_len;
+	int ret = packet_io_send(send_handle, raw_pkt_l4_hdr_len+raw_pkt_l3_hdr_len+payload_len, SEND_TYPE_LINK_INJECT, 
+						low_net_layer_type, snd_routedir, stream->threadnum,
+						(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER,
+						raw_pkt);	
+	((raw_pkt_t *)raw_pkt)->is_ctrl_pkt=0;
+	((raw_pkt_t *)raw_pkt)->payload_len=raw_payload_len;
+	if(ret < 0)
+	{
+		sapp_runtime_log(RLOG_LV_FATAL, "packet_io_send() ret < 0, stream_type:%d, addrtype:%d\n", stream->type, stream->addr.addrtype);					 
+	}
+	return ret;
+}
+
 int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio, 
   const void *payload, int payload_len, unsigned char snd_routedir, void *user_arg)
 
@@ -2943,13 +3010,6 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	{
 		((raw_pkt_t *)raw_pkt)->stream_trace_id = raw_stream_pr->stream_trace_id;
 	}
-
-	if (raw_stream_pr->is_ctrl_pkt==1)
-	{
-		((raw_pkt_t *)raw_pkt)->is_ctrl_pkt=1;
-		((raw_pkt_t *)raw_pkt)->payload_len=payload_len;
-	}
-
 	/* inject使用的是routedir, 此处转换成stream dir, 
 	   注意: 插件发包的动作可能不是由当前包触发的,  比如kni, 是从其他网卡收到数据包, 再注入链路的,
 	         不能从raw_pkt或raw_stream->routedir判断方向!!!!

@@ -179,7 +179,9 @@ int __MESA_rst_tcp(struct streaminfo *stream, unsigned char rst_th_flags, int rs
 							unsigned short signature_seed1, unsigned short signature_seed2);
 int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio, 
         const void *payload, int payload_len, unsigned char snd_routedir, void *user_arg);			
-						
+
+int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir);
+
 int packet_io_hook_input(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num);
 int packet_io_hook_input_mirror(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num);
 int packet_io_hook_forward(raw_pkt_t *raw_pkt, unsigned char dir, int thread_num);

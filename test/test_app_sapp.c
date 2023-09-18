@@ -2128,6 +2128,7 @@ static char test_sapp_inject_pkt(struct streaminfo *stream,void **pme, int threa
 
 	MESA_inject_pkt(stream, MESA_inject_pkt_payload, strlen(MESA_inject_pkt_payload), raw_pkt, send_route_dir);
 	sapp_inject_pkt(stream, SIO_DEFAULT, sapp_inject_pkt_def_payload, strlen(sapp_inject_pkt_def_payload), send_route_dir);
+	sapp_inject_ctrl_pkt(stream, SIO_DEFAULT, sapp_inject_pkt_def_payload, strlen(sapp_inject_pkt_def_payload), send_route_dir);
 
 	struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)sapp_inject_pkt_no_hdr_payload;
 	struct mesa_tcp_hdr *thdr = (struct mesa_tcp_hdr *)((char *)ip4hdr + sizeof(struct mesa_ip4_hdr)); //no options
