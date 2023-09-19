@@ -2860,6 +2860,10 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 		sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_ctrl_pkt() error, not found raw_pkt!");
 		return -1;
 	}	
+	if(raw_stream_pr->sid_prepend_list != NULL)
+	{
+		((raw_pkt_t *)raw_pkt)->prepend_list=raw_stream_pr->sid_prepend_list;
+    }
 	if(raw_stream_pr->sid_append_list != NULL)
 	{
 		((raw_pkt_t *)raw_pkt)->append_list=raw_stream_pr->sid_append_list;
