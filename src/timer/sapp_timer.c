@@ -2,6 +2,7 @@
 #include "sapp_private_api.h"
 #include "public/sapp_timer.h"
 #include "sapp_declaration.h"
+#include <bits/time.h>
 
 #ifdef LIBEVENT_ENABLED
 #include "support/event2/event.h"
@@ -403,7 +404,7 @@ static inline long long sapp_get_current_time_in_ms(void)
 	//gettimeofday(&t, NULL);
 	//tms = t.tv_sec * 1000 + t.tv_usec/1000;
 	struct timespec t;
-    clock_gettime(CLOCK_MONOTONIC, &t);
+    clock_gettime(CLOCK_REALTIME, &t);
     tms = (t.tv_sec)*1000 + (t.tv_nsec)/(1000*1000);
 
 	return tms;
