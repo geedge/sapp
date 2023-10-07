@@ -227,6 +227,9 @@ envelope_rpm_for_centos8:
     name: "$SYMBOL_TARGET-pr-$CI_COMMIT_REF_NAME-release"
     paths:
       - build/*-pr-*.rpm
+  dependencies:
+    - release_build_release_for_centos8
+
 
 ###############################################################################
 # test 
