@@ -2915,6 +2915,7 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 	{
 		sapp_runtime_log(RLOG_LV_FATAL, "packet_io_send() ret < 0, stream_type:%d, addrtype:%d\n", stream->type, stream->addr.addrtype);					 
 	}
+	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, stream->threadnum);		
 	return ret;
 }
 
