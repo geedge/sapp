@@ -94,6 +94,7 @@ extern PACKET_IO_CB_T G_DEFAULT_PKT_CB;
 struct rawpkt_metadata
 {
 	char data[MAX_METADATA_LEN];
+	unsigned int link_id;
 	unsigned int sz_data;
 	struct segment_id_list raw_sid_list;
 };

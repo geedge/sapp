@@ -460,6 +460,9 @@ struct rawpkt_metadata *marsio_dl_io_get1_rawpkt_meta(const raw_pkt_t *raw_pkt, 
                         {
                             meta->sz_data = ret;
                         }
+						ret = ptr_marsio_buff_get_metadata((marsio_buff_t *)raw_pkt->io_lib_pkt_reference,
+                                MR_BUFF_LINK_ID, &meta->link_id, sizeof(meta->link_id));
+
             }
             if (ptr_marsio_buff_get_sid_list)
             {
