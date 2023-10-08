@@ -307,6 +307,12 @@ void udp_free_stream(struct streamindex *pindex)
 
 	udp_update_close_reason_stat(threadnum, pstream_pr);
 
+	if(pstream_pr->raw_pkt)
+	{
+		((raw_pkt_t *)pstream_pr->raw_pkt)->append_list=NULL;
+		((raw_pkt_t *)pstream_pr->raw_pkt)->prepend_list=NULL;
+	}
+
 	pstream_pr->raw_pkt = NULL; /* 2015-02-04 lijia add, 不能因此调用而触发MESA_kill_xxx */
 
 	if(pdetail_pr->apme!=NULL)
@@ -401,6 +407,11 @@ static int udp_reset_stream(struct streamindex *pindex)
 	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
 	pstream_pr->stream_bridge = NULL;
 
+	if(pstream_pr->raw_pkt)
+	{
+		((raw_pkt_t *)pstream_pr->raw_pkt)->append_list=NULL;
+		((raw_pkt_t *)pstream_pr->raw_pkt)->prepend_list=NULL;
+	}
 	// free_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr);
 	if (pstream_pr->sid_append_list)
 	{

@@ -1468,6 +1468,12 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 		pstream_pr->sid_prepend_list = NULL;
 	}	
 
+	if(raw_pkt)
+	{
+		((raw_pkt_t *)raw_pkt)->append_list=NULL;
+		((raw_pkt_t *)raw_pkt)->prepend_list=NULL;
+	}
+
 
 	free_streamindex(threadnum,pindex);
 	
@@ -1614,6 +1620,11 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 		pstream_pr->sid_prepend_list = NULL;
 	}	
 
+	if(raw_pkt)
+	{
+		((raw_pkt_t *)raw_pkt)->append_list=NULL;
+		((raw_pkt_t *)raw_pkt)->prepend_list=NULL;
+	}
 
 	if (pstream_pr->timeout > link_default_nopkt_time)
 	{ /* 链接独有超时时间, 减少计数 */
