@@ -89,20 +89,7 @@ run_cppcheck_for_centos8:
   image: $BUILD_IMAGE_CENTOS7
 
 
-branch_build_debug_for_centos7:
-  extends: .build_by_travis_for_centos7
-  variables:
-    BUILD_TYPE: Debug
-  artifacts:
-    paths:
-    - build/*
-  except:
-    - /^dev*.*$/i
-    - /^rel*.*$/i
-    - /^master.*$/i
-    - tags
-
-develop_build_debug_for_centos7:
+develop_build_for_centos7:
   extends: .build_by_travis_for_centos7
   variables:
     BUILD_TYPE: RelWithDebInfo
@@ -110,10 +97,8 @@ develop_build_debug_for_centos7:
     name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-debug"
     paths:
       - build/*
-  only:
-    - /^dev*.*$/i
-    - /^rel*.*$/i
-    - /^master.*$/i
+  except:
+    - tags
 
 release_build_debug_for_centos7:
   extends: .build_by_travis_for_centos7
@@ -131,7 +116,7 @@ release_build_debug_for_centos7:
   only:
     - tags
 
-release_build_release_for_centos7:
+release_build_for_centos7:
   extends: .build_by_travis_for_centos7
   variables:
     BUILD_TYPE: RelWithDebInfo
@@ -149,20 +134,7 @@ release_build_release_for_centos7:
   image: $BUILD_IMAGE_CENTOS8
   extends: .build_before_script
 
-branch_build_debug_for_centos8:
-  extends: .build_by_travis_for_centos8
-  variables:
-    BUILD_TYPE: Debug
-  artifacts:
-    paths:
-    - build/*   
-  except:
-    - /^dev*.*$/i
-    - /^rel*.*$/i
-    - /^master.*$/i
-    - tags
-
-develop_build_debug_for_centos8:
+develop_build_for_centos8:
   extends: .build_by_travis_for_centos8
   variables:
     BUILD_TYPE: RelWithDebInfo
@@ -170,10 +142,8 @@ develop_build_debug_for_centos8:
     name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-debug"
     paths:
       - build/*
-  only:
-    - /^dev*.*$/i
-    - /^rel*.*$/i
-    - /^master.*$/i
+  except:
+    - tags
 
 release_build_debug_for_centos8:
   extends: .build_by_travis_for_centos8
@@ -188,7 +158,7 @@ release_build_debug_for_centos8:
   only:
     - tags
 
-release_build_release_for_centos8:
+release_build_for_centos8:
   extends: .build_by_travis_for_centos8
   variables:
     BUILD_TYPE: RelWithDebInfo
@@ -228,7 +198,7 @@ envelope_rpm_for_centos8:
     paths:
       - build/*-pr-*.rpm
   dependencies:
-    - release_build_release_for_centos8
+    - release_build_for_centos8
 
 
 ###############################################################################
@@ -247,10 +217,8 @@ envelope_rpm_for_centos8:
     - cd build; ctest3; pwd 
     - cd testing/ && ldd $TEST_NAME
   dependencies:
-    - branch_build_debug_for_centos8
-    - develop_build_debug_for_centos8
-#    - release_build_debug_for_centos8
-    - release_build_release_for_centos8
+    - develop_build_for_centos8
+    - release_build_for_centos8
   tags:
     - share    
 
@@ -319,7 +287,7 @@ rpm_upload_for_centos7:
   extends: .define_before_upload_centos7
   dependencies:
     - release_build_debug_for_centos7
-    - release_build_release_for_centos7
+    - release_build_for_centos7
   script:
     - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *.rpm    
 
@@ -341,7 +309,7 @@ rpm_upload_for_centos8:
   extends: .define_before_upload_centos8
   dependencies:
     - release_build_debug_for_centos8
-    - release_build_release_for_centos8
+    - release_build_for_centos8
   script:
     - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *.rpm    
 
