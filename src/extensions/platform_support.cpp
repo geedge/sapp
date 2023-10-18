@@ -16,7 +16,7 @@ int get_current_worker_thread_id()
             if (my_pid == sapp_global_val->individual_fixed.thread_tid[i])
             {
                 local_worker_thread_id = i;
-                break;
+                return local_worker_thread_id;
             }
         }
 		local_worker_thread_id=-1;
