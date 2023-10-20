@@ -346,7 +346,7 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	int ret;
 	marsio_buff_t *send_mbuf[1];
 	char *real_buf;
-	uint16_t send_option = 0;
+	uint16_t send_option = MARSIO_SEND_OPT_REHASH;
 
 	ret = ptr_marsio_buff_malloc_global(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
 	if((ret < 0) || (NULL == send_mbuf[0])){
