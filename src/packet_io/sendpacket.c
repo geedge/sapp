@@ -1304,12 +1304,11 @@ static int build_net_layer_tcp(struct streaminfo_private *stream_pr, int carry_l
 	UINT32 tcp_seq;
 	int tcp_data_len = a_tcp->datalen;
 	bulid_layer_tcp_args_t *build_tcp_args;
-
-#if 0 /* 2015-12-30 lijia modify, IP和端口存储在一层 */
-	raw_tcp_hdr = (struct mesa_tcp_hdr *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
-#else
+	if(raw_pkt->raw_pkt_len < (int)(stream_pr->offset_to_raw_pkt_hdr + stream_pr->offset_to_ip_hdr + sizeof(struct mesa_tcp_hdr)))
+	{
+		return -1;
+	}
 	raw_tcp_hdr = (struct mesa_tcp_hdr *)(stream_pr->offset_to_raw_pkt_hdr + stream_pr->offset_to_ip_hdr + (char *)raw_pkt->raw_pkt_data);
-#endif
 
 	build_tcp_args = (bulid_layer_tcp_args_t *)g_build_pkt_args[stream_pr->stream_public.threadnum].layer_args[ADDR_TYPE_TCP];
 
@@ -2156,6 +2155,12 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 	stream = &stream_pr->stream_public;
 	carry_layer_stream = stream;
 
+	if((stream->addr.pktipfragtype&PKT_TYPE_IP_FRAG_LAST)!=0 || (stream->addr.pktipfragtype&PKT_TYPE_IP_FRAG)!=0)
+	{
+		sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_vlan() error, send streamdir:%d, fragment packet, type:%c!\n", send_stream_dir, stream->addr.pktipfragtype);
+		return -1;
+	}
+
 	if(is_proxy_stream(stream)){ /* 代理流结构为虚拟结构, 实际的包不存在此层, 构造包时跳过不处理 */
 		return build_net_layer_pkt(top_stream, carry_layer_stream, (struct streaminfo_private *)stream->pfather, carry_layer_type, 
 								this_layer_len+carry_layer_len, buf, reverse, raw_pkt, send_stream_dir);
@@ -2878,6 +2883,12 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 	int raw_pkt_l4_hdr_len=0;
 	if(stream->type==STREAM_TYPE_TCP)
 	{
+		if(raw_pkt->raw_pkt_len < raw_pkt_l3_hdr_len + (int)sizeof(struct mesa_tcp_hdr))
+		{
+			sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error! raw_pkt_len:%d < raw_pkt_l3_hdr_len:%d+tcphdr_len:d\n",
+                        raw_pkt->raw_pkt_len, raw_pkt_l3_hdr_len, (int)sizeof(struct mesa_tcp_hdr));
+			return -1;
+		}
 		struct mesa_tcp_hdr *tcph = (struct mesa_tcp_hdr *)((char *)raw_pkt->raw_pkt_data + raw_pkt_l3_hdr_len);
 		raw_pkt_l4_hdr_len = tcph->th_off<<2;
 	}
@@ -2890,6 +2901,13 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 		sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error! not support stream_type:%d.\n",
                         stream->type);
 		return -1;
+	}
+
+	if(raw_pkt_l3_hdr_len + raw_pkt_l4_hdr_len > raw_pkt->raw_pkt_len)
+	{
+        sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_ctrl_pkt() error! l3_hdr_len:%d + l4_hdr_len:%d > raw_pkt_len:%d.\n",
+                         raw_pkt_l3_hdr_len, raw_pkt_l3_hdr_len, raw_pkt->raw_pkt_len);
+        return -1;
 	}
     if (payload_len + raw_pkt_l3_hdr_len + raw_pkt_l4_hdr_len > MTU_MAX)
     {
