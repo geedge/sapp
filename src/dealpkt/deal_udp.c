@@ -326,6 +326,13 @@ void udp_free_stream(struct streamindex *pindex)
 		
 	}
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[pstream->stream_state]);
+
+	project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, threadnum, pstream_pr->pproject);
+	pstream_pr->pproject = NULL;
+
+	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
+	pstream_pr->stream_bridge = NULL;
+	
 	streamleavlist(pindex, plist);
 	hash_del_stream(pindex);
 	sapp_runtime_log(RLOG_LV_DEBUG, "udp_free_stream: %s, thread:%d, stream_type:%d, stream_state:%d, curtime:%ld!",
@@ -339,11 +346,7 @@ void udp_free_stream(struct streamindex *pindex)
 		sapp_mem_free(SAPP_MEM_DYN_UDP_DETAIL, threadnum,pstream->pdetail);
 	}
 	pstream->pdetail=NULL;
-	project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, threadnum, pstream_pr->pproject);
-	pstream_pr->pproject = NULL;
 
-	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
-	pstream_pr->stream_bridge = NULL;
 
 	if(pstream_pr->timeout > udp_reset_time){ /* 链接独有超时时间, 减少计数 */
 		sapp_global_mthread[threadnum].udp_stream_special_timeout_num--;

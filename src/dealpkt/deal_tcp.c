@@ -1401,14 +1401,6 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 			pkt_ret = stream_process_tcp(pstream, this_ip_hdr, transport_hdr, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));  
 			pdetail_pr->apme=NULL;
 		}
-		if(pclient){
-				tcp_free_half(pclient,threadnum);
-				pclient = NULL;
-		}
-		if(pserver){
-				tcp_free_half(pserver,threadnum);
-				pserver = NULL;
-		}
 	}
 
 	//不论任何状态回调全包处理函数链表
@@ -1425,7 +1417,21 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 			pdetail_pr->pAllpktpme=NULL;
 	}
 
-	/* 调用完插件后再从结构中移除, 因为调用插件时, 可能会调用stream_set_single_stream_timeout(), 会操作当前流在LRU链表中的位置 */
+	project_requirement_destroy(SAPP_MEM_DYN_TCP_PROJECT, threadnum, pstream_pr->pproject);
+	pstream_pr->pproject = NULL;
+	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_TCP_BRIDGE, pstream, pstream_pr->stream_bridge);
+	pstream_pr->stream_bridge = NULL;
+    if (pclient)
+    {
+            tcp_free_half(pclient, threadnum);
+            pclient = NULL;
+    }
+    if (pserver)
+    {
+            tcp_free_half(pserver, threadnum);
+            pserver = NULL;
+    }
+    /* 调用完插件后再从结构中移除, 因为调用插件时, 可能会调用stream_set_single_stream_timeout(), 会操作当前流在LRU链表中的位置 */
 	streamleavlist(pindex, plist);
 	hash_del_stream(pindex);
 	
@@ -1435,10 +1441,7 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 		pstream->pdetail=NULL;
 	}
 
-	project_requirement_destroy(SAPP_MEM_DYN_TCP_PROJECT, threadnum, pstream_pr->pproject);
-	pstream_pr->pproject = NULL;
-	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_TCP_BRIDGE, pstream, pstream_pr->stream_bridge);
-	pstream_pr->stream_bridge = NULL;
+
 
 	if(pstream_pr->timeout > link_default_nopkt_time){ /* 链接独有超时时间, 减少计数 */
 		sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
@@ -1584,14 +1587,16 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 			pdetail_pr->pAllpktpme=NULL;
 	}
 
-	/* 调用完插件后再从结构中移除, 因为调用插件时, 可能会调用stream_set_single_stream_timeout(), 会操作当前流在LRU链表中的位置 */
-	streamleavlist(pindex, plist);
-	
 	project_requirement_destroy(SAPP_MEM_DYN_TCP_PROJECT, threadnum, pstream_pr->pproject);
 	pstream_pr->pproject = NULL;
 
 	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_TCP_BRIDGE, pstream, pstream_pr->stream_bridge);
 	pstream_pr->stream_bridge = NULL;
+	
+	/* 调用完插件后再从结构中移除, 因为调用插件时, 可能会调用stream_set_single_stream_timeout(), 会操作当前流在LRU链表中的位置 */
+	streamleavlist(pindex, plist);
+	
+
 
 	/* 恢复之前存储的raw_pkt */
 	pstream_pr->raw_pkt = saved_raw_pkt;
