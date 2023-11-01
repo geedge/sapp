@@ -3015,7 +3015,7 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 		((raw_pkt_t *)raw_pkt)->append_list=raw_stream_pr->sid_append_list;
     }
     struct segment_id_list inject_sid = {
-        {(unsigned int)sapp_global_val->config.packet_io.inject_pkt_prepend_segment_id}, 1};
+        {(unsigned short)sapp_global_val->config.packet_io.inject_pkt_prepend_segment_id}, 1};
     if (sapp_global_val->config.packet_io.inject_pkt_prepend_segment_id > 0 && raw_stream_pr->is_ctrl_pkt == 0) // update sid_prepend_list, insert inject_pkt_prepend_segment_id to head
     {
         if (raw_stream_pr->sid_prepend_list != NULL)
