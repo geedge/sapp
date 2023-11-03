@@ -693,7 +693,9 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	void  (*fun_destroy)() = NULL;	
 	void (*fun_getplugid)(unsigned short plugid) = NULL;
 	int priority=0;
-
+	struct timespec start;
+	long time_cost_us = 0;
+	
 	//load FILENAME 
 	MESA_load_profile_string_nodef(filename,SECTION_PLUGINFO,KEYWORD_FILENAME,buf_sofilename,PLUGIN_MAX_CONFLEN);
 	if(buf_sofilename[0] == '\0')
@@ -758,8 +760,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 		MESA_handle_runtime_log(g_plugin_runtime_handle,RLOG_LV_INFO, PLUGIN_LOGNAME, "%s not found PLUGNAME",filename);
 	}
 			
-	struct timespec start;
-	long time_cost_us = 0;
+
 	__plug_record_time_start(&start);
 	rec = fun_init();
 	if(rec < 0)

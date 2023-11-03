@@ -137,7 +137,7 @@ static void plug_necessary_htable_free_cb(void *data)
 static MESA_htable_handle create_plug_necessary_htable(void)
 {
 	MESA_htable_handle htable;
-	int ret, opt_int;
+	int opt_int;
 	
 	htable = MESA_htable_born();
 	assert(htable != NULL);
@@ -164,7 +164,7 @@ static MESA_htable_handle create_plug_necessary_htable(void)
 
 	MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  (void *)plug_necessary_htable_free_cb, sizeof(void *));	
 	
-	ret = MESA_htable_mature(htable);
+	MESA_htable_mature(htable);
 	
 	return htable;
 }
@@ -181,7 +181,7 @@ static void plug_uniq_htable_free_cb(void *data)
 static MESA_htable_handle create_plug_uniq_htable(void)
 {
 	MESA_htable_handle htable;
-	int ret, opt_int;
+	int opt_int;
 	
 	htable = MESA_htable_born();
 	assert(htable != NULL);
@@ -208,7 +208,7 @@ static MESA_htable_handle create_plug_uniq_htable(void)
 
 	MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  (void *)plug_uniq_htable_free_cb, sizeof(void *));	
 	
-	ret = MESA_htable_mature(htable);
+	MESA_htable_mature(htable);
 	
 	return htable;
 }
@@ -279,7 +279,7 @@ static void plug_manage_key_free_cb(uchar *key, uint key_size)
 static MESA_htable_handle create_plug_manage_htable(void)
 {
 	MESA_htable_handle htable;
-	int ret, opt_int;
+	int opt_int;
 	
 	htable = MESA_htable_born();
 	assert(htable != NULL);
@@ -314,7 +314,7 @@ static MESA_htable_handle create_plug_manage_htable(void)
 	//MESA_htable_set_opt(htable, MHO_CBFUN_DATA_FREE,  NULL, sizeof(void *));	
 	//MESA_htable_set_opt(htable, MHO_CBFUN_COMPLEX_KEY_FREE,  (void *)&ipv4_frag_key_free, sizeof(void *));	
 	
-	ret = MESA_htable_mature(htable);
+	MESA_htable_mature(htable);
 	
 	return htable;
 }
