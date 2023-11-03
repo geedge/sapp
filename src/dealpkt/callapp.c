@@ -547,10 +547,6 @@ static int stream_state_pending_process(struct streaminfo *a_stream,const void *
 		tmp_runtime.entry_id=(p_plugin_entrys+i)->entry_id;
 		tmp_runtime.next=NULL;
 		entry_ret = call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, &tmp_runtime);
-		if(entry_ret & APP_STATE_DROPPKT)	
-		{
-			ret=DROP;
-		}	
 		if((entry_ret&APP_STATE_DROPME) != APP_STATE_DROPME)
 		{
 			StreamFunInfo *new_plugin_runtime=(StreamFunInfo *)sapp_mem_calloc(SAPP_MEM_DYN_PLUG_CTRL, a_stream->threadnum, sizeof(StreamFunInfo));	
@@ -606,7 +602,11 @@ static int stream_state_pending_process(struct streaminfo *a_stream,const void *
                 ++i;
             }
         }
-
+		if(entry_ret & APP_STATE_DROPPKT)	
+		{
+			ret=DROP;
+			break;
+		}	
 	}
 
 	if(p_plugin_runtime_list != NULL)
@@ -645,10 +645,6 @@ static int stream_state_data_process(struct streaminfo *a_stream,const void *thi
             continue;
         }
         entry_ret = call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, current);
-		if(entry_ret & APP_STATE_DROPPKT)	
-		{
-			ret=DROP;
-		}
         if ((entry_ret & APP_STATE_GIVESTATE) == APP_STATE_GIVESTATE)
         {
             current->appState = APP_STATE_GIVESTATE;
@@ -716,6 +712,11 @@ static int stream_state_data_process(struct streaminfo *a_stream,const void *thi
             prev = current;
             current = current->next;
         }
+		if(entry_ret & APP_STATE_DROPPKT)	
+		{
+			ret=DROP;
+			break;
+		}
 	}
 	if(head != NULL)
 	{
