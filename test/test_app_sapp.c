@@ -1777,7 +1777,7 @@ char test_send_pkt(struct streaminfo *stream,void **pme, int thread_seq,const vo
 	if(iphdr->ip_v != 4){
 		DPRINT("not ipv4!\n");
 	}
-	MESA_sendpacket_ethlayer(stream->threadnum, (char *)raw_pkt-14, 14+ntohs(iphdr->ip_len), 0);
+	//MESA_sendpacket_ethlayer(stream->threadnum, (char *)raw_pkt-14, 14+ntohs(iphdr->ip_len), 0);
 
 	return APP_STATE_GIVEME;
 }
@@ -1802,7 +1802,7 @@ char test_send_iplayer_pkt(struct streaminfo *stream,void **pme, int thread_seq,
 		0x00,0x00,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF
 	};
 
-	MESA_sendpacket_iplayer(stream->threadnum, (char *)snd_pkt_data, sizeof(snd_pkt_data), 0);
+	//MESA_sendpacket_iplayer(stream->threadnum, (char *)snd_pkt_data, sizeof(snd_pkt_data), 0);
 
 	return APP_STATE_GIVEME;
 }
@@ -1822,23 +1822,20 @@ char test_sendfake_ipv4_pkt(struct streaminfo *stream,void **pme, int thread_seq
 		0x00,0x00,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF
 	};
 
-	MESA_fakepacket_send_ipv4(stream->threadnum, 128, 1, 0x0A0A066C, 0x0A00063B, 
-							snd_pkt_payload, sizeof(snd_pkt_payload), 0);
+	//MESA_fakepacket_send_ipv4(stream->threadnum, 128, 1, 0x0A0A066C, 0x0A00063B, snd_pkt_payload, sizeof(snd_pkt_payload), 0);
 
 	return APP_STATE_GIVEME;
 }
 
 char test_sendfake_tcp_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
-	MESA_fakepacket_send_tcp(stream->threadnum, 0x0A0A066C, 0x0A00063B, 0x1111,0x2222,
-							0x12345678, 0x87654321, 0x10, "TCP payload test", strlen("TCP payload test"), 0);	
+	//MESA_fakepacket_send_tcp(stream->threadnum, 0x0A0A066C, 0x0A00063B, 0x1111,0x2222, 0x12345678, 0x87654321, 0x10, "TCP payload test", strlen("TCP payload test"), 0);	
 	return APP_STATE_GIVEME;
 }
 
 char test_sendfake_udp_pkt(struct streaminfo *stream,void **pme, int thread_seq,const void *raw_pkt)
 {
-	MESA_fakepacket_send_udp(stream->threadnum, 0x0A0A066C, 0x0A00063B, 0x1111,0x2222,
-							"UDP payload test", strlen("UDP payload test"), 0);	
+	//MESA_fakepacket_send_udp(stream->threadnum, 0x0A0A066C, 0x0A00063B, 0x1111,0x2222, "UDP payload test", strlen("UDP payload test"), 0);	
 	return APP_STATE_GIVEME;
 }
 
