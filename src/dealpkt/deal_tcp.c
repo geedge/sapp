@@ -1417,10 +1417,10 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 			pdetail_pr->pAllpktpme=NULL;
 	}
 
-	project_requirement_destroy(SAPP_MEM_DYN_TCP_PROJECT, threadnum, pstream_pr->pproject);
-	pstream_pr->pproject = NULL;
 	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_TCP_BRIDGE, pstream, pstream_pr->stream_bridge);
 	pstream_pr->stream_bridge = NULL;
+	project_requirement_destroy(SAPP_MEM_DYN_TCP_PROJECT, threadnum, pstream_pr->pproject);
+	pstream_pr->pproject = NULL;
     if (pclient)
     {
             tcp_free_half(pclient, threadnum);
@@ -1586,12 +1586,13 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 			stream_process_tcp_allpkt(pstream,NULL,NULL,NULL,&(pdetail_pr->pAllpktpme),&(pstream->pktstate));  
 			pdetail_pr->pAllpktpme=NULL;
 	}
-
+	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_TCP_BRIDGE, pstream, pstream_pr->stream_bridge);
+	pstream_pr->stream_bridge = NULL;
+	
 	project_requirement_destroy(SAPP_MEM_DYN_TCP_PROJECT, threadnum, pstream_pr->pproject);
 	pstream_pr->pproject = NULL;
 
-	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_TCP_BRIDGE, pstream, pstream_pr->stream_bridge);
-	pstream_pr->stream_bridge = NULL;
+
 	
 	/* 调用完插件后再从结构中移除, 因为调用插件时, 可能会调用stream_set_single_stream_timeout(), 会操作当前流在LRU链表中的位置 */
 	streamleavlist(pindex, plist);

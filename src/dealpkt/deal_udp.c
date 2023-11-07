@@ -327,11 +327,13 @@ void udp_free_stream(struct streamindex *pindex)
 	}
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[pstream->stream_state]);
 
+	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
+	pstream_pr->stream_bridge = NULL;
+
 	project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, threadnum, pstream_pr->pproject);
 	pstream_pr->pproject = NULL;
 
-	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
-	pstream_pr->stream_bridge = NULL;
+
 	
 	streamleavlist(pindex, plist);
 	hash_del_stream(pindex);
@@ -639,13 +641,14 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			project_req_add_struct(pstream, G_UDP_FLOW_STAT_PROJECT_ID, detail_pr.flow_stat);
 		}
 		
-		ret=stream_process_udp(pstream, (const void *)this_iphdr, (const void *)udph, raw_pkt,&tmpme,&(pstream->opstate));  
-		project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, thread_num, pstream_pr->pproject);
-		pstream_pr->pproject = NULL;
+		ret=stream_process_udp(pstream, (const void *)this_iphdr, (const void *)udph, raw_pkt,&tmpme,&(pstream->opstate));
 
-		stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);	
-		pstream_pr->stream_bridge = NULL;
-	}
+        stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
+        pstream_pr->stream_bridge = NULL;
+
+        project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, thread_num, pstream_pr->pproject);
+        pstream_pr->pproject = NULL;
+    }
 	else	
 	{
 		set_transport_addr(pstream, 1, udph->uh_sport, udph->uh_dport);
@@ -901,10 +904,12 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		}
 		
 		ret=stream_process_udp(pstream, (const void *)a_packet, (const void *)udph, raw_pkt,&tmpme, &pstream->opstate);  
+		stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);	
+		pstream_pr->stream_bridge = NULL;	
+		
 		project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, thread_num, pstream_pr->pproject);
 		pstream_pr->pproject = NULL;
-		stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);	
-		pstream_pr->stream_bridge = NULL;		
+	
 	}
 	else	
 	{
