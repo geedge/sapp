@@ -2879,17 +2879,17 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 	}
 
     int low_net_layer_type = get_eth_carry_layer_type(stream, stream->curdir);
-	int raw_pkt_l3_hdr_len=raw_pkt->offset_to_raw_pkt_hdr - raw_pkt->overlay_layer_bytes;
+	int raw_pkt_l2_l3_hdr_len=raw_pkt->offset_to_raw_pkt_hdr - raw_pkt->overlay_layer_bytes;
 	int raw_pkt_l4_hdr_len=0;
 	if(stream->type==STREAM_TYPE_TCP)
 	{
-		if(raw_pkt->raw_pkt_len < raw_pkt_l3_hdr_len + (int)sizeof(struct mesa_tcp_hdr))
+		if(raw_pkt->raw_pkt_len < raw_pkt_l2_l3_hdr_len + (int)sizeof(struct mesa_tcp_hdr))
 		{
 			sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error! raw_pkt_len:%d < raw_pkt_l3_hdr_len:%d+tcphdr_len:d\n",
-                        raw_pkt->raw_pkt_len, raw_pkt_l3_hdr_len, (int)sizeof(struct mesa_tcp_hdr));
+                        raw_pkt->raw_pkt_len, raw_pkt_l2_l3_hdr_len, (int)sizeof(struct mesa_tcp_hdr));
 			return -1;
 		}
-		struct mesa_tcp_hdr *tcph = (struct mesa_tcp_hdr *)((char *)raw_pkt->raw_pkt_data + raw_pkt_l3_hdr_len);
+		struct mesa_tcp_hdr *tcph = (struct mesa_tcp_hdr *)((char *)raw_pkt->raw_pkt_data + raw_pkt->offset_to_raw_pkt_hdr);
 		raw_pkt_l4_hdr_len = tcph->th_off<<2;
 	}
 	else if(stream->type==STREAM_TYPE_UDP)
@@ -2903,27 +2903,27 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 		return -1;
 	}
 
-	if(raw_pkt_l3_hdr_len + raw_pkt_l4_hdr_len > raw_pkt->raw_pkt_len)
+	if(raw_pkt->overlay_layer_bytes + raw_pkt_l2_l3_hdr_len + raw_pkt_l4_hdr_len > raw_pkt->raw_pkt_len)
 	{
-        sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_ctrl_pkt() error! l3_hdr_len:%d + l4_hdr_len:%d > raw_pkt_len:%d.\n",
-                         raw_pkt_l3_hdr_len, raw_pkt_l3_hdr_len, raw_pkt->raw_pkt_len);
+        sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_ctrl_pkt() error! overlay_len:%d, l3_hdr_len:%d + l4_hdr_len:%d > raw_pkt_len:%d.\n",
+                        raw_pkt->overlay_layer_bytes, raw_pkt_l2_l3_hdr_len, raw_pkt_l2_l3_hdr_len, raw_pkt->raw_pkt_len);
         return -1;
 	}
-    if (payload_len + raw_pkt_l3_hdr_len + raw_pkt_l4_hdr_len > MTU_MAX)
+    if (payload_len + raw_pkt_l2_l3_hdr_len + raw_pkt_l4_hdr_len > MTU_MAX)
     {
         sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_ctrl_pkt() error! payload_len too long:%d.\n",
-                        payload_len + raw_pkt_l3_hdr_len);
+                        payload_len + raw_pkt_l2_l3_hdr_len);
         return -1;
     }
 	MESA_send_handle *send_handle = &g_send_handle[stream->threadnum];
 	send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, stream->threadnum);
 	send_handle->user_arg = (void *)stream;
-    memcpy(send_handle->send_buf, (const char *)(raw_pkt->raw_pkt_data)+raw_pkt->overlay_layer_bytes, raw_pkt_l3_hdr_len+raw_pkt_l4_hdr_len);
-	memcpy(send_handle->send_buf+raw_pkt_l3_hdr_len+raw_pkt_l4_hdr_len, payload, payload_len);
+    memcpy(send_handle->send_buf, (const char *)(raw_pkt->raw_pkt_data)+raw_pkt->overlay_layer_bytes, raw_pkt_l2_l3_hdr_len+raw_pkt_l4_hdr_len);
+	memcpy(send_handle->send_buf+raw_pkt_l2_l3_hdr_len+raw_pkt_l4_hdr_len, payload, payload_len);
 	((raw_pkt_t *)raw_pkt)->is_ctrl_pkt=1;
 	int raw_payload_len=((raw_pkt_t *)raw_pkt)->payload_len;
 	((raw_pkt_t *)raw_pkt)->payload_len=payload_len;
-	int ret = packet_io_send(send_handle, raw_pkt_l4_hdr_len+raw_pkt_l3_hdr_len+payload_len, SEND_TYPE_LINK_INJECT, 
+	int ret = packet_io_send(send_handle, raw_pkt_l4_hdr_len+raw_pkt_l2_l3_hdr_len+payload_len, SEND_TYPE_LINK_INJECT, 
 						low_net_layer_type, snd_routedir, stream->threadnum,
 						(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER,
 						raw_pkt);	
