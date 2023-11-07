@@ -109,7 +109,9 @@ const void *get_this_layer_header(const struct streaminfo *pstream);
 */
 const void *MESA_jump_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
 
-const void *get_rawpkt_from_streaminfo(const struct streaminfo *pstream);
+const void *get_current_rawpkt_from_streaminfo(const struct streaminfo *pstream);
+
+const void *get_rawpkt_from_streaminfo(const struct streaminfo *pstream, int route_direction);
 
 struct detain_pkt;
 struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const void *rawpkt);
