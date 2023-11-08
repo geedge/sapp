@@ -15,7 +15,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "sapp_benchmark.h"
+#include "../include/sapp_benchmark.h"
 
 #ifdef __cplusplus
 extern "C" {

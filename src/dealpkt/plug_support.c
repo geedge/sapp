@@ -1236,7 +1236,6 @@ static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_
 {
 	int ret = 0;
 	struct mso_plug_pme *in_arg;
-	const struct streaminfo_private *stream_pr;
 	struct tcpdetail_private *ptcp_detail_pr;
 	struct udpdetail_private *pudp_detail_pr;
 	
@@ -1252,7 +1251,6 @@ static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_
 	}
 
 	in_arg = (struct mso_plug_pme *)opt_val;
-	stream_pr = (struct streaminfo_private *)pstream;
 	in_arg->plug_pme = NULL;
 
 	this_plug_entry = plugin_get_plug_entry(in_arg->plug_name, in_arg->plug_entry_type);
@@ -1264,19 +1262,19 @@ static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_
 
 	if(STREAM_TYPE_TCP == pstream->type){
 		ptcp_detail_pr=(struct tcpdetail_private *)(pstream->pdetail);
-		plug_pme = MESA_get_stream_plug_pme_from_platform_entry(ptcp_detail_pr->apme, this_plug_entry);
+		plug_pme = MESA_get_stream_plug_pme_from_platform_entry((const StreamFunInfo *)(ptcp_detail_pr->apme), this_plug_entry);
 		if(plug_pme != NULL){
 			in_arg->plug_pme = plug_pme;
 			goto bingo;
 		}
-		plug_pme = MESA_get_stream_plug_pme_from_platform_entry(ptcp_detail_pr->pAllpktpme, this_plug_entry);
+		plug_pme = MESA_get_stream_plug_pme_from_platform_entry((const StreamFunInfo *)(ptcp_detail_pr->pAllpktpme), this_plug_entry);
 		if(plug_pme != NULL){
 			in_arg->plug_pme = plug_pme;
 			goto bingo;
 		}		
 	}else if(STREAM_TYPE_UDP == pstream->type){
 		pudp_detail_pr = (struct udpdetail_private *)(pstream->pdetail);
-		plug_pme = MESA_get_stream_plug_pme_from_platform_entry(pudp_detail_pr->apme, this_plug_entry);
+		plug_pme = MESA_get_stream_plug_pme_from_platform_entry((const StreamFunInfo *)(pudp_detail_pr->apme), this_plug_entry);
 		if(plug_pme != NULL){
 			in_arg->plug_pme = plug_pme;
 			goto bingo;
