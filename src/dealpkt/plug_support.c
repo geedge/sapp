@@ -1,6 +1,6 @@
 /*
-	´ËÎÄ¼þ·ÇÆ½Ì¨×ÔÉíÐèÒªµÄ¹¦ÄÜºÍº¯Êý,
-	ÊÇÌá¹©¸øÆäËûÒµÎñ²å¼þµÄ½Ó¿Ú, ÈçMESA_set_stream_opt, printaddrµÈ,
+	ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Æ½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ä¹ï¿½ï¿½ÜºÍºï¿½ï¿½ï¿½,
+	ï¿½ï¿½ï¿½á¹©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½Ä½Ó¿ï¿½, ï¿½ï¿½MESA_set_stream_opt, printaddrï¿½ï¿½,
 */
 #include "sapp_api.h"
 #include "sapp_private_api.h"
@@ -159,7 +159,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		return -1;
 	}
 
-	if(RAW_PKT_MAGIC_NUM != rawpkt->magic_num){ /* ¿ÉÄÜÀ´Ô´ÓÚpappÆ½Ì¨, ²»Ö§³Ö´ËÀà¹¦ÄÜ */
+	if(RAW_PKT_MAGIC_NUM != rawpkt->magic_num){ /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½pappÆ½Ì¨, ï¿½ï¿½Ö§ï¿½Ö´ï¿½ï¿½à¹¦ï¿½ï¿½ */
 		return -1;
 	}
 	
@@ -230,7 +230,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		break;
 
 
-		/* ÓÃÓÚ²å¼þ»ñÈ¡×îµ×²ãÕæÊµmacµØÖ·, ÎÞÂÛÊ²Ã´Ä£Ê½, ÓÐÃ»ÓÐmrtunnat, ¶¼ÓÃÕâÒ»¸ö½Ó¿Ú */
+		/* ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½×²ï¿½ï¿½ï¿½Êµmacï¿½ï¿½Ö·, ï¿½ï¿½ï¿½ï¿½Ê²Ã´Ä£Ê½, ï¿½ï¿½Ã»ï¿½ï¿½mrtunnat, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ó¿ï¿½ */
         case RAW_PKT_GET_ORIGINAL_LOWEST_ETH_SMAC: {
             const struct mesa_ethernet_hdr *lowest_ehdr;
             lowest_ehdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
@@ -239,7 +239,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
         }
         break;
 
-        /* ÓÃÓÚ²å¼þ»ñÈ¡×îµ×²ãÕæÊµmacµØÖ·, ÎÞÂÛÊ²Ã´Ä£Ê½, ÓÐÃ»ÓÐmrtunnat, ¶¼ÓÃÕâÒ»¸ö½Ó¿Ú */
+        /* ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½×²ï¿½ï¿½ï¿½Êµmacï¿½ï¿½Ö·, ï¿½ï¿½ï¿½ï¿½Ê²Ã´Ä£Ê½, ï¿½ï¿½Ã»ï¿½ï¿½mrtunnat, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ó¿ï¿½ */
         case RAW_PKT_GET_ORIGINAL_LOWEST_ETH_DMAC: {
             const struct mesa_ethernet_hdr *lowest_ehdr;
             lowest_ehdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
@@ -357,7 +357,7 @@ static int get_vxlan_info_from_streaminfo(const struct streaminfo_private *pstre
 			pip4_hdr = (struct mesa_ip4_hdr *)((char *)rawpkt->raw_pkt_data + carry_vxlan_ip_layer->offset_to_raw_pkt_hdr);
 			pudp_hdr = (struct mesa_udp_hdr *)((char *)pip4_hdr + pip4_hdr->ip_hl*4);
 			unsigned short *out_value = (unsigned short *)void_value;
-			*out_value = pudp_hdr->uh_sport; /* ´ÓÊÕ°üµÄ½Ç¶ÈÀ´¿´, src portÊÇinlineÉè±¸µÄsport */
+			*out_value = pudp_hdr->uh_sport; /* ï¿½ï¿½ï¿½Õ°ï¿½ï¿½Ä½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½, src portï¿½ï¿½inlineï¿½è±¸ï¿½ï¿½sport */
 		}
 		break;
 
@@ -375,7 +375,7 @@ static int get_vxlan_info_from_streaminfo(const struct streaminfo_private *pstre
 		}
 		break;
 
-		/* ´ÓÊÕ°üµÄ½Ç¶ÈÀ´¿´, src hostÊÇinlineÉè±¸µÄmac */
+		/* ï¿½ï¿½ï¿½Õ°ï¿½ï¿½Ä½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½, src hostï¿½ï¿½inlineï¿½è±¸ï¿½ï¿½mac */
 		case RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC:
 		{
 			const struct mesa_ethernet_hdr *p_eth_hdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
@@ -383,7 +383,7 @@ static int get_vxlan_info_from_streaminfo(const struct streaminfo_private *pstre
 		}
 		break;
 
-		/* ´ÓÊÕ°üµÄ½Ç¶ÈÀ´¿´, dst hostÊÇ±¾»úµÄmac */
+		/* ï¿½ï¿½ï¿½Õ°ï¿½ï¿½Ä½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½, dst hostï¿½Ç±ï¿½ï¿½ï¿½ï¿½ï¿½mac */
 		case RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC:
 		{
 			const struct mesa_ethernet_hdr *p_eth_hdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
@@ -458,7 +458,7 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 		return ret;
 	}
 
-	/* sappv4.2Ö®ºó, Ã»ÓÐmrtunnat, ÎÞ·¨´Óctrlzone»ñÈ¡ÕâÐ©vxlanÏà¹ØµÄÖµ, Òª¿¿streaminfo->pfatherÆ«ÒÆ»ñÈ¡ */
+	/* sappv4.2Ö®ï¿½ï¿½, Ã»ï¿½ï¿½mrtunnat, ï¿½Þ·ï¿½ï¿½ï¿½ctrlzoneï¿½ï¿½È¡ï¿½ï¿½Ð©vxlanï¿½ï¿½Øµï¿½Öµ, Òªï¿½ï¿½streaminfo->pfatherÆ«ï¿½Æ»ï¿½È¡ */
 	switch(type){
 		case RAW_PKT_GET_GDEV_IP:
 		case RAW_PKT_GET_VXLAN_ID:
@@ -1125,10 +1125,10 @@ static void sapp_mac_addr_to_long(const unsigned char *mac_addr, unsigned long l
 	int i;
 	char *ptr = (char *)smac_integer_type;
 
-	ptr += 5; /* Ö¸Ïòlong long µÄµÚ6¸ö×Ö½Ú */
+	ptr += 5; /* Ö¸ï¿½ï¿½long long ï¿½Äµï¿½6ï¿½ï¿½ï¿½Ö½ï¿½ */
 
 	for(i = 0; i < 6; i++){
-		*ptr-- = *mac_addr++; /* ÍøÂçÊý¾Ý°üÖÐmacµÄ×îµÍÎ», copyÖÁlong longÕûÊýµÄ×î¸ßÎ»(³ýÈ¥×î¸ß2¸ö×Ö½Úºó) */
+		*ptr-- = *mac_addr++; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½macï¿½ï¿½ï¿½ï¿½ï¿½Î», copyï¿½ï¿½long longï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»(ï¿½ï¿½È¥ï¿½ï¿½ï¿½2ï¿½ï¿½ï¿½Ö½Úºï¿½) */
 	}
 }
 
@@ -1145,9 +1145,9 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
 	const struct layer_addr_mac_in_mac *mim_addr;
 	const struct layer_addr_mac *mac_addr;
 	unsigned char *ptr;
-	unsigned long long smac_integer_type; /* 48bit mac×ª»»Îª64bitµÄ³¤ÕûÐÍÊý×Ö´æ´¢, ±ãÓÚ²Ù×÷ */
+	unsigned long long smac_integer_type; /* 48bit mac×ªï¿½ï¿½Îª64bitï¿½Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´æ´¢, ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ */
 
-	while(mim_stream){//¶ÔÓÚ¶à²ãmacµØÖ·µÄÇé¿ö£¬Ö»´Ó×îÍâ²ãMACµØÖ·È¡vxlan_info
+	while(mim_stream){//ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½macï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MACï¿½ï¿½Ö·È¡vxlan_info
 		if((ADDR_TYPE_MAC_IN_MAC == mim_stream->addr.addrtype || ADDR_TYPE_MAC == mim_stream->addr.addrtype) &&
 				(mim_stream->pfather == NULL)){
 			break;
@@ -1184,14 +1184,14 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
         for(i = 0; i < 6; i++, ptr += 3){
             sprintf((char *)ptr, "%02x:", mim_addr->inner_src_mac[i]);
         }
-        vxinfo->inner_smac[17] = '\0'; /* ×îºóÒ»Î»ÇåÁã */
+        vxinfo->inner_smac[17] = '\0'; /* ï¿½ï¿½ï¿½Ò»Î»ï¿½ï¿½ï¿½ï¿½ */
         memcpy(vxinfo->inner_smac_hex, mim_addr->inner_src_mac, 6);
 
         ptr = vxinfo->inner_dmac;
         for(i = 0; i < 6; i++, ptr += 3){
             sprintf((char *)ptr, "%02x:", mim_addr->inner_dst_mac[i]);
         }
-        vxinfo->inner_dmac[17] = '\0'; /* ×îºóÒ»Î»ÇåÁã */
+        vxinfo->inner_dmac[17] = '\0'; /* ï¿½ï¿½ï¿½Ò»Î»ï¿½ï¿½ï¿½ï¿½ */
         memcpy(vxinfo->inner_dmac_hex, mim_addr->inner_dst_mac, 6);
     }
     else
@@ -1200,14 +1200,14 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
 		for(i = 0; i < 6; i++, ptr += 3){
 			sprintf((char *)ptr, "%02x:", mac_addr->src_addr.h_source[i]);
 		}
-		vxinfo->inner_smac[17] = '\0'; /* ×îºóÒ»Î»ÇåÁã */
+		vxinfo->inner_smac[17] = '\0'; /* ï¿½ï¿½ï¿½Ò»Î»ï¿½ï¿½ï¿½ï¿½ */
 		memcpy(vxinfo->inner_smac_hex, mac_addr->src_addr.h_source, 6);
 
         ptr = vxinfo->inner_dmac;
         for(i = 0; i < 6; i++, ptr += 3){
             sprintf((char *)ptr, "%02x:", mac_addr->src_addr.h_dest[i]);
         }
-        vxinfo->inner_dmac[17] = '\0'; /* ×îºóÒ»Î»ÇåÁã */
+        vxinfo->inner_dmac[17] = '\0'; /* ï¿½ï¿½ï¿½Ò»Î»ï¿½ï¿½ï¿½ï¿½ */
         memcpy(vxinfo->inner_dmac_hex, mac_addr->src_addr.h_dest, 6);
     }
 	return 0;
@@ -1230,7 +1230,7 @@ static void *MESA_get_stream_plug_pme_from_platform_entry(const StreamFunInfo *p
 }
 
 /*
-	¸ù¾Ý²å¼þÈë¿Úº¯ÊýºÍÀàÐÍ, »ñÈ¡²å¼þµÄË½ÓÐ´æ´¢¿Õ¼äÖ¸Õëpme.
+	ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ë½ï¿½Ð´æ´¢ï¿½Õ¼ï¿½Ö¸ï¿½ï¿½pme.
 */
 static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_val, const int *opt_val_len)
 {
@@ -1314,9 +1314,9 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 		return 0;
 	}
 
-	/* ¿ªÆôÁËÖØ¸´°ü¼ì²â¹¦ÄÜ,µ«»¹Ã»·¢ÏÖÓÐÖØ¸´°ü   */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½â¹¦ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½   */
 	if(STREAM_TYPE_TCP == pstream->type){
-		if(pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){ /* °üÌ«ÉÙ, ²»×ãÒÔÅÐ¶ÏÓÐÃ»ÓÐÖØ¸´°ü */
+		if(pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){ /* ï¿½ï¿½Ì«ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ */
 			*res_val = -2;
 			sapp_runtime_log(RLOG_LV_DEBUG, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT, duplicate pkt state is pending, because has only recv %d pkt", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum); 			
@@ -1324,7 +1324,7 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 			*res_val = 0;
 		}
 	}else if(STREAM_TYPE_UDP == pstream->type){
-		if(pstream->pudpdetail->clientpktnum  + pstream->pudpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){ /* °üÌ«ÉÙ, ²»×ãÒÔÅÐ¶ÏÓÐÃ»ÓÐÖØ¸´°ü */
+		if(pstream->pudpdetail->clientpktnum  + pstream->pudpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){ /* ï¿½ï¿½Ì«ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ */
 			sapp_runtime_log(RLOG_LV_DEBUG, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT, duplicate pkt state is pending, because has only recv %d pkt", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum); 		
 			*res_val = -2;
@@ -1480,7 +1480,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			struct tcp_option **out_val = (struct tcp_option **)opt_val;
 			if((pstream_pr->syn_opt_array != NULL) && (pstream_pr->syn_opt_num > 0)){
 				*out_val = pstream_pr->syn_opt_array;
-				*opt_val_len = pstream_pr->syn_opt_num; /* ´Ë´¦²»ÊÇ³¤¶È, ±íÊ¾opt_arrayµÄ¸öÊý */
+				*opt_val_len = pstream_pr->syn_opt_num; /* ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ç³ï¿½ï¿½ï¿½, ï¿½ï¿½Ê¾opt_arrayï¿½Ä¸ï¿½ï¿½ï¿½ */
 				ret = 0;
 			}else{
 				ret = -1;
@@ -1493,7 +1493,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			struct tcp_option **out_val = (struct tcp_option **)opt_val;
 			if((pstream_pr->synack_opt_array != NULL) && (pstream_pr->synack_opt_num > 0)){
 				*out_val = pstream_pr->synack_opt_array;
-				*opt_val_len = pstream_pr->synack_opt_num;  /* ´Ë´¦²»ÊÇ³¤¶È, ±íÊ¾opt_arrayµÄ¸öÊý */
+				*opt_val_len = pstream_pr->synack_opt_num;  /* ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ç³ï¿½ï¿½ï¿½, ï¿½ï¿½Ê¾opt_arrayï¿½Ä¸ï¿½ï¿½ï¿½ */
 				ret = 0;
 			}else{
 				ret = -1;
@@ -1839,6 +1839,36 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			 ret=0;
 		}
 		break;
+		case MSO_STREAM_APPLEND_SEGMENT_ID_LIST:
+		{
+			if(sizeof(struct segment_id_list) != *opt_val_len){
+				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_STREAM_APPLEND_SEGMENT_ID_LIST error:opt_val_len invalid, must be sizeof(struct segment_id_list)\n",printaddr(&pstream->addr, pstream->threadnum));
+				ret = -1;
+				break;
+			}
+
+			if(pstream_pr->sid_append_list!=NULL)
+			{
+				memcpy(opt_val, pstream_pr->sid_append_list, sizeof(struct segment_id_list));
+				ret=0;
+			}
+			break;
+		}
+		case MSO_STREAM_PREPLEND_SEGMENT_ID_LIST:
+		{
+			if(sizeof(struct segment_id_list) != *opt_val_len){
+				sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_STREAM_PREPLEND_SEGMENT_ID_LIST error:opt_val_len invalid, must be sizeof(struct segment_id_list)\n",printaddr(&pstream->addr, pstream->threadnum));
+				ret = -1;
+				break;
+			}
+
+			if(pstream_pr->sid_prepend_list!=NULL)
+			{
+				memcpy(opt_val, pstream_pr->sid_prepend_list, sizeof(struct segment_id_list));
+				ret=0;
+			}
+			break;
+		}
         default:
 			sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n",printaddr(&pstream->addr, pstream->threadnum), (int)opt);
 			ret = -1;
@@ -1895,9 +1925,9 @@ int get_current_thread_cpu_affinity_id(void)
 	int tot_cpu_core = get_nprocs();
 	int tot_cpu_set_count = CPU_COUNT(&current_cpu_mask);
 	if((tot_cpu_set_count == tot_cpu_core) || (tot_cpu_set_count > 1)){
-		/* È«²¿¶¼ÉèÖÃÁË, ÆäÊµ¾ÍÊÇÃ»ÓÐ°ó¶¨, 
-		   µ«Èç¹ûÉèÖÃÁËisolcpus, ¼´±ã²»°óºË, CPU_COUNTºÍ×ÜºËÐÄÊý²¢²»ÏàµÈ, 
-		   ·´Õý³¬¹ý1¸ö¿Ï¶¨ÊÇÃ»ÓÐ¾«È·°ó¶¨µ½Ä³¸öºËÐÄ */
+		/* È«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ð°ï¿½, 
+		   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½isolcpus, ï¿½ï¿½ï¿½ã²»ï¿½ï¿½ï¿½, CPU_COUNTï¿½ï¿½ï¿½Üºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, 
+		   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½1ï¿½ï¿½ï¿½Ï¶ï¿½ï¿½ï¿½Ã»ï¿½Ð¾ï¿½È·ï¿½ó¶¨µï¿½Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		return -1;
 	}
 	
@@ -1941,7 +1971,7 @@ void *dictator_realloc(int thread_seq, void *ptr, size_t size)
 	return realloc(ptr, size);
 }
 
-/* ½«ÒµÎñ²å¼þ·µ»ØµÄÖµ×ª»»³ÉÆ½Ì¨¶¨ÒåµÄÖµ, ¼´½«PROT_STATE_xxx×ª»»ÎªAPP_STATE_xxx */
+/* ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½Öµ×ªï¿½ï¿½ï¿½ï¿½Æ½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½Öµ, ï¿½ï¿½ï¿½ï¿½PROT_STATE_xxx×ªï¿½ï¿½ÎªAPP_STATE_xxx */
 char biz_retval_to_platform(char biz_ret)
 {
 	char plat_ret = 0;
@@ -1961,7 +1991,7 @@ char biz_retval_to_platform(char biz_ret)
 	return plat_ret;
 }
 
-/* ½«Æ½Ì¨µÄstateÖµ×ª»»³ÉÒµÎñ²å¼þµÄÖµ, ¼´½«OP_STATE_PENDING×ªÎªSESSION_STATE_PENDING */
+/* ï¿½ï¿½Æ½Ì¨ï¿½ï¿½stateÖµ×ªï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ, ï¿½ï¿½ï¿½ï¿½OP_STATE_PENDING×ªÎªSESSION_STATE_PENDING */
 char plat_state_to_biz(char plat_state)
 {
 	char biz_ret = SESSION_STATE_CLOSE;
