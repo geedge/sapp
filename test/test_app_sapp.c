@@ -3,6 +3,7 @@
 #include "sapp_private_api.h"
 #include "gdev_keepalive.h"
 #include "stream_base.h"
+#include <netinet/in.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -270,11 +271,17 @@ char print_stream_tunnel_type(struct streaminfo *a_tcp,  void **pme, int thread_
 }
 char test_get_this_layer_header(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
-	struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)get_this_layer_header(a_tcp);
+    if (a_packet)
+    {
+        struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)get_current_layer3_header(a_tcp);
+        DPRINT("iphdr:%p, ip->v=%d, ip->hl=%d, ip->len=%u\n", ip4hdr, ip4hdr->ip_v, ip4hdr->ip_hl * 4,
+               ntohs(ip4hdr->ip_len));
+		struct mesa_tcp_hdr *tcphdr = (struct mesa_tcp_hdr *)get_current_layer4_header(a_tcp);
+		 DPRINT("tcphdr:%p, tcp->flags=%hhu, tcp->off=%hhu, tcp->sport=%hu, tcp->dport->%hu\n", tcphdr, tcphdr->th_flags, tcphdr->th_off,
+               ntohs(tcphdr->th_sport), ntohs(tcphdr->th_dport));
+    }
 
-	DPRINT("iphdr:%p, ip->v=%d, ip->hl=%d, ip->len=%u\n", ip4hdr, ip4hdr->ip_v, ip4hdr->ip_hl*4, ntohs(ip4hdr->ip_len));
-
-	return APP_STATE_GIVEME;
+    return APP_STATE_GIVEME;
 }
 
 static void test_get_tcp_opts_show_detail(struct tcp_option *opt_array, int optnum)

@@ -83,10 +83,11 @@ int get_opt_from_rawpkt(const void *rawpkt, int type, void *out_value);
 int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, void *out_value);
 
 /* 	
-	获取本层流在原始包中对应的头部地址,
-	注意: 如果本层流类型为TCP或UDP, 调用此函数后, 得到原始包中对应的承载本层传输层的IP头部地址.
+	TCP UDP only 
+	获取流在当前包中对应的l3或者l4头部起始位置,
 */
-const void *get_this_layer_header(const struct streaminfo *pstream);
+const void *get_current_layer3_header(const struct streaminfo *pstream);
+const void *get_current_layer4_header(const struct streaminfo *pstream);
 
 /*
 	CHN : 数据包头部偏移函数.
