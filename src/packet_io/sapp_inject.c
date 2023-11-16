@@ -98,6 +98,11 @@ int sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, co
 	return __sapp_inject_ctrl_pkt(stream, sio, payload, payload_len, snd_routedir);
 }
 
+extern int marsio_send_ctrl_data(unsigned char *data,int datalen, struct segment_id_list *sids, int thread_seq);
+int sapp_inject_ctrl_data(unsigned char *data,int datalen, struct segment_id_list *sids, int thread_seq)
+{
+	return marsio_send_ctrl_data(data, datalen, sids, thread_seq);
+}
 
 #ifdef __cplusplus
 }

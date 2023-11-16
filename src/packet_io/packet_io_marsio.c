@@ -488,7 +488,40 @@ struct rawpkt_metadata *marsio_dl_io_get1_rawpkt_meta(const raw_pkt_t *raw_pkt, 
 	return  meta;
 }
 
+int marsio_send_ctrl_data(unsigned char *data,int datalen, struct segment_id_list *sids, int thread_seq)
+{
+	if(data == NULL || datalen <= 0 || sids == NULL) return -1;
 
+	if(!ptr_marsio_buff_free || !ptr_marsio_buff_malloc_global || 
+		!ptr_marsio_buff_set_ctrlbuf || !ptr_marsio_buff_set_metadata || 
+		!ptr_marsio_buff_set_sid_list || !ptr_marsio_buff_append || !ptr_marsio_send_burst_with_options)return -1;
+
+	int ret;
+	marsio_buff_t *send_mbuf[1];
+	uint16_t send_option = MARSIO_SEND_OPT_REHASH;
+	ret = ptr_marsio_buff_malloc_global(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
+	if((ret < 0) || (NULL == send_mbuf[0]))return -1;
+		
+	/* 此处使用append而不是mtod, append内部实际包括了set datalen的操作 */
+	char *real_buf = ptr_marsio_buff_append(send_mbuf[0], datalen);
+	if(NULL == real_buf){
+		ptr_marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
+		return -1;
+	}
+	memcpy(real_buf, data, datalen);
+	int zero=0;
+	ptr_marsio_buff_set_ctrlbuf(send_mbuf[0]);
+	ptr_marsio_buff_set_metadata(send_mbuf[0], MR_BUFF_PAYLOAD_OFFSET, (void *)&(zero), sizeof(unsigned short));
+	ptr_marsio_buff_set_metadata(send_mbuf[0], MR_BUFF_SESSION_ID, (void *)&(zero), sizeof(unsigned long));
+	ptr_marsio_buff_set_sid_list(send_mbuf[0], sids->sid_list, sids->sz_sidlist);
+
+	for(int i = 0; i < g_mr4_device_num; i++)
+	{
+		marsio_pkt_dump(thread_seq, send_mbuf[0], PKT_CLASSIFY_INJECT);
+		ret = ptr_marsio_send_burst_with_options(g_mr4_sendpath_up_set[i], thread_seq, send_mbuf, 1, send_option);
+	}
+	return ret;
+}
 
 void marsio_dl_io_set_rawpkt_meta(const raw_pkt_t *raw_pkt, void *send_pkt_io_reference, unsigned char route_dir)
 {

@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include "stream_base.h"
+#include "stream_control.h"
 
 enum sapp_inject_opt{
 	SIO_DEFAULT = (1<<0), /* 调用者只传入纯负载, 由平台根据协议规范构造当前层的传输层和IP头部, 如果是隧道, 还包括所有嵌套层的头部 */
@@ -29,6 +30,7 @@ int sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const v
 
 int sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir);
 
+int sapp_inject_ctrl_data(unsigned char *data,int datalen, struct segment_id_list *sids, int thread_seq);
 
 #ifdef __cplusplus
 }
