@@ -18,42 +18,14 @@ LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/test)
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/sapp_devel.cpp "")
 
-set(LIBS sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
-			config inline_keepalive gdev_assistant sapp_assistant sapp_metrics plugctrl project timer
-			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
-			MESA_sleep dpdk_ip_hash  cpu_limit timeout libdabloom )
 
-if(LIBEVENT_ENABLED)
-        set(LIBS ${LIBS} libevent-static)
-endif()
 
 add_library(sapp_devel SHARED sapp_devel.cpp)
-target_link_libraries(sapp_devel -Wl,--whole-archive ${LIBS} -Wl,--no-whole-archive)
+target_link_libraries(sapp_devel -Wl,--whole-archive ${SAPP_INNER_STATIC_LIB} -Wl,--no-whole-archive)
 
 if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
     target_link_libraries(sapp_devel libjemalloc-static)
 endif()
-
-set(OBJECTS_DIR ${CMAKE_CURRENT_BINARY_DIR}/temp_objs)
-
-file(MAKE_DIRECTORY ${OBJECTS_DIR})
-
-foreach(lib IN LISTS LIBS)
-    add_custom_command(OUTPUT "${OBJECTS_DIR}/${lib}_objects"
-        COMMAND ${CMAKE_COMMAND} -E chdir "${OBJECTS_DIR}" ${CMAKE_AR} -x "$<TARGET_FILE:${lib}>"
-        DEPENDS ${lib}
-        )
-        list(APPEND ALL_OBJECTS_TARGETS "${OBJECTS_DIR}/${lib}_objects")
-endforeach()
-
-file(GLOB_RECURSE OBJECTS "${OBJECTS_DIR}/*.o")
-
-add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/libsapp_devel.a"
-    COMMAND ${CMAKE_AR} -qc "${CMAKE_CURRENT_BINARY_DIR}/libsapp_devel.a" ${OBJECTS}
-    DEPENDS ${ALL_OBJECTS_TARGETS}
-)
-
-add_custom_target(sapp_devel_static ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/libsapp_devel.a")
 
 
 add_library(test_app_sapp SHARED test_app_sapp.c)

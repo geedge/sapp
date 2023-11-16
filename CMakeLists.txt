@@ -198,7 +198,14 @@ add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
     -D__USE_BSD=1 -D_GNU_SOURCE=1  -DMESA_SAPP_PLATFORM=1)
 
 set(SAPP_DEPEND_DYN_LIB MESA_handle_logger MESA_prof_load MESA_htable  MESA_field_stat2 fieldstat3 cjson MESA_jump_layer breakpad_mini ${SYSTEMD_LIBRARIES} pthread dl pcap)
+set(SAPP_INNER_STATIC_LIB sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
+			config inline_keepalive gdev_assistant sapp_assistant sapp_metrics plugctrl project timer
+			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
+			MESA_sleep dpdk_ip_hash  cpu_limit timeout libdabloom)
 
+if(LIBEVENT_ENABLED)
+    set(SAPP_INNER_STATIC_LIB ${SAPP_INNER_STATIC_LIB} libevent-static)
+endif()
 
 file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_base.h MD5_STREAM_BASE)
 file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_control.h MD5_STREAM_CONTROL)
@@ -311,7 +318,6 @@ install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/sapp_inject.h DEST
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_bridge.h DESTINATION  /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/gdev_keepalive.h DESTINATION  /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
 
-install(FILES ${CMAKE_BINARY_DIR}/test/libsapp_devel.a  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib COMPONENT HEADER)
 install(FILES ${CMAKE_BINARY_DIR}/test/libsapp_devel.so DESTINATION ${CMAKE_INSTALL_PREFIX}/lib COMPONENT HEADER)
 install(FILES ${CMAKE_BINARY_DIR}/service/sapp.service DESTINATION /usr/lib/systemd/system/ COMPONENT PROFILE)
 
