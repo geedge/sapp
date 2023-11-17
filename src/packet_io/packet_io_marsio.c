@@ -509,7 +509,7 @@ int marsio_send_ctrl_data(unsigned char *data,int datalen, struct segment_id_lis
 		return -1;
 	}
 	memcpy(real_buf, data, datalen);
-	int zero=0;
+	unsigned long long zero=0;
 	ptr_marsio_buff_set_ctrlbuf(send_mbuf[0]);
 	ptr_marsio_buff_set_metadata(send_mbuf[0], MR_BUFF_PAYLOAD_OFFSET, (void *)&(zero), sizeof(unsigned short));
 	ptr_marsio_buff_set_metadata(send_mbuf[0], MR_BUFF_SESSION_ID, (void *)&(zero), sizeof(unsigned long));
