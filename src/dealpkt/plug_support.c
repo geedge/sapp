@@ -1761,9 +1761,9 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
         if ((STREAM_TYPE_TCP != pstream->type) || pdetail_pr->flow_stat == NULL || *opt_val_len != sizeof(unsigned int))
         {
                 sapp_runtime_log(RLOG_LV_INFO,
-                                 "%s,MESA_get_stream_opt() MSO_STREAM_C2S_SYN_NUM error: stream type is not tcp or "
-                                 "empyt flow_stat!\n",
-                                 printaddr(&pstream->addr, pstream->threadnum));
+                                "%s,MESA_get_stream_opt() MSO_STREAM_C2S_SYN_NUM error: stream type is not tcp or "
+                                "empyt flow_stat!\n",
+                                printaddr(&pstream->addr, pstream->threadnum));
                 ret = -1;
         }
         else
@@ -1869,6 +1869,32 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			}
 			break;
 		}
+		case MSO_STREAM_INBOND_ROUTE_CTX:
+		{
+            ret = -1;
+            *opt_val_len = 0;
+			void **value = (void **)opt_val;
+            if (pstream_pr->polling_inject_context->meta[DIR_ROUTE_DOWN])
+            {
+                *value = (void *)pstream_pr->polling_inject_context->meta[DIR_ROUTE_DOWN]->data;
+                *opt_val_len = sizeof(pstream_pr->polling_inject_context->meta[DIR_ROUTE_DOWN]->sz_data);
+                ret = 0;
+            }
+			break;
+        }
+		case MSO_STREAM_OUTBOND_ROUTE_CTX:
+		{
+            ret = -1;
+            *opt_val_len = 0;
+			void **value = (void **)opt_val;
+            if (pstream_pr->polling_inject_context->meta[DIR_ROUTE_UP])
+            {
+                *value = (void *)pstream_pr->polling_inject_context->meta[DIR_ROUTE_UP]->data;
+                *opt_val_len = sizeof(pstream_pr->polling_inject_context->meta[DIR_ROUTE_UP]->sz_data);
+                ret = 0;
+            }
+			break;
+        }
         default:
 			sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n",printaddr(&pstream->addr, pstream->threadnum), (int)opt);
 			ret = -1;
