@@ -1877,8 +1877,8 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
             if (pstream_pr->polling_inject_context->meta[DIR_ROUTE_DOWN])
             {
                 *value = (void *)pstream_pr->polling_inject_context->meta[DIR_ROUTE_DOWN]->data;
-                *opt_val_len = sizeof(pstream_pr->polling_inject_context->meta[DIR_ROUTE_DOWN]->sz_data);
-                ret = 0;
+                *opt_val_len = (pstream_pr->polling_inject_context->meta[DIR_ROUTE_DOWN]->sz_data);
+                ret = (pstream_pr->polling_inject_context->meta[DIR_ROUTE_DOWN]->sz_data);
             }
 			break;
         }
@@ -1890,8 +1890,8 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
             if (pstream_pr->polling_inject_context->meta[DIR_ROUTE_UP])
             {
                 *value = (void *)pstream_pr->polling_inject_context->meta[DIR_ROUTE_UP]->data;
-                *opt_val_len = sizeof(pstream_pr->polling_inject_context->meta[DIR_ROUTE_UP]->sz_data);
-                ret = 0;
+                *opt_val_len = (pstream_pr->polling_inject_context->meta[DIR_ROUTE_UP]->sz_data);
+                ret = (pstream_pr->polling_inject_context->meta[DIR_ROUTE_DOWN]->sz_data);
             }
 			break;
         }
