@@ -1144,6 +1144,13 @@ static int process_conflist_single(char* filename, int plug_type, const char *wa
 		}
 
 		if(rec < 0){
+            int priority = 0;
+            if (plugin_is_necessary(buf_confname, &priority))
+            {
+                sapp_log(RLOG_LV_FATAL, 1, 1, "%s init error, but this plug is necessary, priority:%d, exit!", filename,
+                         priority);
+                exit(1);
+            }
 			plugin_load_state_update(rec, 0, buf_confname, NULL);
 		}
 	}
