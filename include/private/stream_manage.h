@@ -4,6 +4,7 @@
 #include "stream_internal.h" 
 #include "stream_register.h"
 #include "timeout.h" 
+#include "token_bucket.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -91,6 +92,7 @@ struct stream_list
 	long last_update_timer_s;
 	long interval_to_next_timeout_s;
 	timeout_error_t timer_error;
+	struct token_bucket *timeout_ratelimiter;
 };
 
 struct stream_index_list_item
@@ -118,6 +120,10 @@ struct global_stream
 	long user_define_timer_cnt;
 	long interval_to_next_timeout_s;
 	timeout_error_t timer_error;
+	struct token_bucket *tcp_timeout_ratelimiter;
+	struct token_bucket *udp_timeout_ratelimiter;
+	struct token_bucket *udp_opening_ratelimiter;
+	struct token_bucket *tcp_opening_ratelimiter;
 };
 
 typedef struct _stStreamFunInfo

@@ -751,8 +751,14 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		if(pstream_pr->create_dir_by_well_known_port != 1)
 		{
 			pstream_pr->under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
-		}
-	}
+            if (pstream_pr->under_ddos_bypass == 0 && G_MESA_GLOBAL_STREAM[threadnum]->tcp_opening_ratelimiter != NULL)
+            {
+				if(token_bucket_consume(G_MESA_GLOBAL_STREAM[threadnum]->tcp_opening_ratelimiter, 1,
+                                         g_current_time_ms) == 0)
+                pstream_pr->under_ddos_bypass = 1;
+            }
+        }
+    }
 
 	/* 2014-07-31 LiJia add, for set one stream unorder number */
 	if(pdetail_pr->pclient){

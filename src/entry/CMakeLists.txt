@@ -40,7 +40,7 @@ set(SAPP_MODULES timestamp_record md5
 	config timer tomlc99_wrap dpdk_ip_hash  
 	gdev_assistant inline_keepalive libdabloom 
 	sapp_dev sapp_assistant sapp_metrics 
-	platform_support cpu_limit timeout)
+	platform_support cpu_limit timeout token_bucket)
 
 if(LIBEVENT_ENABLED STREQUAL "ON")
 	set(SAPP_MODULES ${SAPP_MODULES} libevent-static)
