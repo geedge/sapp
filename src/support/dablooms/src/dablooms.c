@@ -20,6 +20,10 @@
 #define ERROR_TIGHTENING_RATIO 0.5
 #define SALT_CONSTANT 0x97c29b3a
 
+
+#define ALLOC(type, number) ((type *)calloc(sizeof(type), number))
+#define	FREE(p)	{free(p);p=NULL;}
+
 const char *dablooms_version(void)
 {
     return DABLOOMS_VERSION;
@@ -32,9 +36,9 @@ void free_bitmap(bitmap_t *bitmap)
         perror("Error, unmapping memory");
     }
 #else
-    free(bitmap->array);
+    FREE(bitmap->array);
 #endif
-    free(bitmap);
+    FREE(bitmap);
 }
 
 bitmap_t *bitmap_resize(bitmap_t *bitmap, size_t old_size, size_t new_size)
@@ -81,14 +85,7 @@ bitmap_t *bitmap_resize(bitmap_t *bitmap, size_t old_size, size_t new_size)
     }
     else 
     {
-        bitmap->array = (char *)malloc(new_size);
-        if (bitmap->array == NULL)
-        {
-            perror("Error init memory");
-            free_bitmap(bitmap);
-            return NULL;
-        }
-        memset(bitmap->array, 0, new_size);
+        bitmap->array = ALLOC(char, new_size);
     }
 #endif
     bitmap->bytes = new_size;
@@ -101,12 +98,9 @@ bitmap_t *new_bitmap(size_t bytes)
 {
     bitmap_t *bitmap;
     
-    if ((bitmap = (bitmap_t *)malloc(sizeof(bitmap_t))) == NULL) {
-        return NULL;
-    }
-    
+
+    bitmap = ALLOC(bitmap_t, 1); 
     bitmap->bytes = bytes;
-    bitmap->array = NULL;
     
     if ((bitmap = bitmap_resize(bitmap, 0, bytes)) == NULL) {
         return NULL;
@@ -199,14 +193,13 @@ int bitmap_flush(bitmap_t *bitmap)
  */
 void hash_func(counting_bloom_t *bloom, const char *key, size_t key_len, uint32_t *hashes)
 {
-    int i;
     uint32_t checksum[4];
     
     MurmurHash3_x64_128(key, key_len, SALT_CONSTANT, checksum);
     uint32_t h1 = checksum[0];
     uint32_t h2 = checksum[1];
     
-    for (i = 0; i < bloom->nfuncs; i++) {
+    for (size_t i = 0; i < bloom->nfuncs; i++) {
         hashes[i] = (h1 + i * h2) % bloom->counts_per_func;
     }
 }
@@ -214,10 +207,10 @@ void hash_func(counting_bloom_t *bloom, const char *key, size_t key_len, uint32_
 int free_counting_bloom(counting_bloom_t *bloom)
 {
     if (bloom != NULL) {
-        free(bloom->hashes);
+        FREE(bloom->hashes);
         bloom->hashes = NULL;
         free_bitmap(bloom->bitmap);
-        free(bloom);
+        FREE(bloom);
         bloom = NULL;
     }
     return 0;
@@ -227,10 +220,7 @@ counting_bloom_t *counting_bloom_init(unsigned int capacity, double error_rate, 
 {
     counting_bloom_t *bloom;
     
-    if ((bloom = malloc(sizeof(counting_bloom_t))) == NULL) {
-        fprintf(stderr, "Error, could not realloc a new bloom filter\n");
-        return NULL;
-    }
+    bloom = ALLOC(counting_bloom_t, 1);
     bloom->bitmap = NULL;
     bloom->capacity = capacity;
     bloom->error_rate = error_rate;
@@ -240,7 +230,7 @@ counting_bloom_t *counting_bloom_init(unsigned int capacity, double error_rate, 
     bloom->size = bloom->nfuncs * bloom->counts_per_func;
     /* rounding-up integer divide by 2 of bloom->size */
     bloom->num_bytes = ((bloom->size + 1) / 2) + sizeof(counting_bloom_header_t);
-    bloom->hashes = calloc(bloom->nfuncs, sizeof(uint32_t));
+    bloom->hashes = ALLOC(uint32_t, bloom->nfuncs);
     
     return bloom;
 }
@@ -310,28 +300,27 @@ int free_scaling_bloom(scaling_bloom_t *bloom)
 {
     int i;
     for (i = bloom->num_blooms - 1; i >= 0; i--) {
-        free(bloom->blooms[i]->hashes);
+        FREE(bloom->blooms[i]->hashes);
         bloom->blooms[i]->hashes = NULL;
-        free(bloom->blooms[i]);
+        FREE(bloom->blooms[i]);
         bloom->blooms[i] = NULL;
     }
-    free(bloom->blooms);
+    FREE(bloom->blooms);
     free_bitmap(bloom->bitmap);
-    free(bloom);
+    FREE(bloom);
     return 0;
 }
 
 /* creates a new counting bloom filter from a given scaling bloom filter, with count and id */
 counting_bloom_t *new_counting_bloom_from_scale(scaling_bloom_t *bloom)
 {
-    int i;
     long offset;
     double error_rate;
     counting_bloom_t *cur_bloom;
     
     error_rate = bloom->error_rate * (pow(ERROR_TIGHTENING_RATIO, bloom->num_blooms + 1));
     
-    if ((bloom->blooms = realloc(bloom->blooms, (bloom->num_blooms + 1) * sizeof(counting_bloom_t *))) == NULL) {
+    if ((bloom->blooms = (counting_bloom_t **)realloc(bloom->blooms, (bloom->num_blooms + 1) * sizeof(counting_bloom_t *))) == NULL) {
         fprintf(stderr, "Error, could not realloc a new bloom filter\n");
         return NULL;
     }
@@ -346,7 +335,7 @@ counting_bloom_t *new_counting_bloom_from_scale(scaling_bloom_t *bloom)
     
     /* Set the pointers for these header structs to the right location since mmap may have moved */
     bloom->num_blooms++;
-    for (i = 0; i < bloom->num_blooms; i++) {
+    for (unsigned int i = 0; i < bloom->num_blooms; i++) {
         offset = bloom->blooms[i]->offset - sizeof(counting_bloom_header_t);
         bloom->blooms[i]->header = (counting_bloom_header_t *) (bloom->bitmap->array + offset);
     }
@@ -462,9 +451,7 @@ scaling_bloom_t *scaling_bloom_init(unsigned int capacity, double error_rate)
 {
     scaling_bloom_t *bloom;
     
-    if ((bloom = malloc(sizeof(scaling_bloom_t))) == NULL) {
-        return NULL;
-    }
+    bloom = ALLOC(scaling_bloom_t, 1);
     if ((bloom->bitmap = new_bitmap(sizeof(scaling_bloom_header_t))) == NULL) {
         fprintf(stderr, "Error, Could not create bitmap with file\n");
         free_scaling_bloom(bloom);
@@ -535,7 +522,7 @@ void expiry_dablooms_destroy(struct expiry_dablooms_handle *handle){
         if(handle->next_bloom != NULL){
             free_scaling_bloom(handle->next_bloom);
         }
-        FREE(&handle);
+        FREE(handle);
     }   
 }
 

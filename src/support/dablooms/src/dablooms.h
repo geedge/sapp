@@ -5,9 +5,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define ALLOC(type, number) ((type *)calloc(sizeof(type), number))
-#define	FREE(p)	{free(*p);*p=NULL;}
-
 const char *dablooms_version(void);
 
 typedef struct {
