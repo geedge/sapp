@@ -1,7 +1,7 @@
 /*
-	´ËÎÄ¼þ·ÇÆ½Ì¨ºËÐÄ¹¦ÄÜºÍº¯Êý(Ip·ÖÆ¬, Á÷»¹Ô­, ËíµÀ½âÎö, ²å¼þ¹ÜÀíµÈ), 
-	ÊÇÌá¹©¸øÆäËûÒµÎñ²å¼þµÄ½Ó¿Ú, Èçsapp_get_platform_optµÈ, ×öÎªÒ»¸ö.soÎÄ¼þ¹ÒÔØµ½Æ½Ì¨,
-	±ãÓÚ¸üÐÂ²¿Êð.
+	ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Æ½Ì¨ï¿½ï¿½ï¿½Ä¹ï¿½ï¿½ÜºÍºï¿½ï¿½ï¿½(Ipï¿½ï¿½Æ¬, ï¿½ï¿½ï¿½ï¿½Ô­, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½), 
+	ï¿½ï¿½ï¿½á¹©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½Ä½Ó¿ï¿½, ï¿½ï¿½sapp_get_platform_optï¿½ï¿½, ï¿½ï¿½ÎªÒ»ï¿½ï¿½.soï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Øµï¿½Æ½Ì¨,
+	ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½Â²ï¿½ï¿½ï¿½.
 */
 #include "sapp_api.h"
 #include "sapp_private_api.h"
@@ -29,14 +29,14 @@ void * (*dl_marsio_buff_ctrlzone)(void *m, uint8_t id);
 extern void * (*ptr_marsio_buff_ctrlzone)(marsio_buff_t *m, uint8_t id);
 
 
-/* Ê¶±ðÊÇ·ñËíµÀÄÚ²¿Êý¾Ý°ü           , ËíµÀÄÚµÄ°üÓ¦¸ÃÎÞÌõ¼þ×ª·¢/»Ø×¢        */
+/* Ê¶ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½Ý°ï¿½           , ï¿½ï¿½ï¿½ï¿½ï¿½ÚµÄ°ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½/ï¿½ï¿½×¢        */
 int sapp_identify_tunnel_inner_pkt(const raw_pkt_t *raw_pkt)
 {
 	int ret = 0;
 #if IOMODE_MARSIO
 	if (CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode)
 	{
-		/* Ã»ÓÐmrtunnatÊ±, Èç¹û¿ªÆôl2_l3_tunnel_support, ÒªÅÐ¶ÏoverlayÀàÐÍ, ÊÇ·ñÊÇ¸ø±¾»úµÄ, ÊÇ·ñÊÇ¾­¹ýoverlayÔ­Ê¼Á´Â·ÀïµÄ°ü    */
+		/* Ã»ï¿½ï¿½mrtunnatÊ±, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½l2_l3_tunnel_support, Òªï¿½Ð¶ï¿½overlayï¿½ï¿½ï¿½ï¿½, ï¿½Ç·ï¿½ï¿½Ç¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ç·ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½overlayÔ­Ê¼ï¿½ï¿½Â·ï¿½ï¿½Ä°ï¿½    */
 		if (raw_pkt->is_overlay_pkt)
 		{
 			ret = 1;
@@ -56,13 +56,13 @@ int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt
 	}
 
 	if(memcmp(G_BROADCAST_ADDR, p_eth_hdr->ether_dhost, ETH_ALEN) == 0){
-		/* G´®ÁªÄ£Ê½ÏÂ£¬·ÇARPÐ­ÒéµÄ¹ã²¥°ü£¬Ö±½Ó¶ªÆú! ·ÀÖ¹ÔÙ»Ø×¢µ½ÍøÂçÖÐ, Ôì³É¹ã²¥·ç±©µÈÍøÂçÎÊÌâ */
+		/* Gï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Â£ï¿½ï¿½ï¿½ARPÐ­ï¿½ï¿½Ä¹ã²¥ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó¶ï¿½ï¿½ï¿½! ï¿½ï¿½Ö¹ï¿½Ù»ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½É¹ã²¥ï¿½ç±©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		if(eth_type != ETH_P_ARP){
 			return 1;
 		}
 	}else{
-		/* 2017-10-10 lijia add, ×é²¥MACµØÖ·, Í¨³£Îª¾ÖÓòÍøÄÚ¿ØÖÆÀàÊý¾Ý°ü, ÈçLLMNR, STPµÈÐ­Òé, Ò»°ãÎÞÐè´¦Àí 
-			²Î¿¼:https://en.wikipedia.org/wiki/Multicast_address 
+		/* 2017-10-10 lijia add, ï¿½é²¥MACï¿½ï¿½Ö·, Í¨ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½, ï¿½ï¿½LLMNR, STPï¿½ï¿½Ð­ï¿½ï¿½, Ò»ï¿½ï¿½ï¿½ï¿½ï¿½è´¦ï¿½ï¿½ 
+			ï¿½Î¿ï¿½:https://en.wikipedia.org/wiki/Multicast_address 
 		*/
 		if((p_eth_hdr->ether_dhost[0]  == 0x01)
 		  &&(p_eth_hdr->ether_dhost[1] == 0x00)
@@ -112,7 +112,7 @@ static inline unsigned long long __get_platform_opt_traffic(int ctype, sapp_sys_
 	return tmp_long;
 }
 
-/* 2017-09-04 lijia add, for Íø¹ÜÐèÇó, ²å¼þ»ñÈ¡Æ½Ì¨ÄÚ²¿²ÎÊý */
+/* 2017-09-04 lijia add, for ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½È¡Æ½Ì¨ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ */
 extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_val_len)
 {
 	int ret = 0;
@@ -252,7 +252,7 @@ extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, 
 				break;
 			}
 			unsigned long long *tot_num = (unsigned long long *)opt_val;
-			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_UDP_STREAM_TWO);
+			*tot_num = __get_platform_opt_traffic('c', SAPP_STAT_UDP_STREAM_MORE);
 		}
 		break;	
 		
@@ -560,7 +560,7 @@ extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, 
 		}
 		break;
 
-		/* Íâ²¿²å¼þÆµ·±µ÷ÓÃrandµÈº¯Êý±È½ÏÏûºÄCPU, Ê¹ÓÃCPUµ±Ç°µÄÊ±ÖÓÖÜÆÚÊý, ºÍµ±Ç°Æ½Ì¨´¦ÀíµÄ°üÊýÆ´³ÉÒ»¸öËæ»úÊý */
+		/* ï¿½â²¿ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½randï¿½Èºï¿½ï¿½ï¿½ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½CPU, Ê¹ï¿½ï¿½CPUï¿½ï¿½Ç°ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Íµï¿½Ç°Æ½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½Ä°ï¿½ï¿½ï¿½Æ´ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		case SPO_RAND_NUMBER:
 		{
 			if(*opt_val_len != sizeof(long long)){
@@ -592,11 +592,11 @@ extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, 
 			int id_index = -1;
 			int *opt_int = (int *)opt_val;
 			int i;
-			pthread_t this_pid = pthread_self(); /* »ñÈ¡µ±Ç°Ïß³Ìid */
+			pthread_t this_pid = pthread_self(); /* ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ß³ï¿½id */
 			
 			pthread_mutex_lock(&g_plug_Independent_thread_mutex);
 
-			/* Îª±ÜÃâÒ»¸öÏß³Ì¶à´Îµ÷ÓÃ´Ë½Ó¿Ú, ÏÈ²éÕÒÖ®Ç°ÊÇ·ñ±£´æ¹ý */
+			/* Îªï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ß³Ì¶ï¿½Îµï¿½ï¿½Ã´Ë½Ó¿ï¿½, ï¿½È²ï¿½ï¿½ï¿½Ö®Ç°ï¿½Ç·ñ±£´ï¿½ï¿½ */
 			for(i = 0; i < sapp_global_val->config.cpu.send_only_threads_max_num; i++){
 				if(g_plug_Independent_thread_pid[i] == this_pid){
 					id_index = i;
@@ -604,14 +604,14 @@ extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, 
 				}
 			}
 
-			if(-1 == id_index){ /* µ±Ç°Ïß³ÌµÚÒ»´Î´´½¨, Ã»ÕÒµ½ */
+			if(-1 == id_index){ /* ï¿½ï¿½Ç°ï¿½ß³Ìµï¿½Ò»ï¿½Î´ï¿½ï¿½ï¿½, Ã»ï¿½Òµï¿½ */
 				for(i = 0; i < sapp_global_val->config.cpu.send_only_threads_max_num; i++){
 					if(0 == g_plug_Independent_thread_pid[i]){
 						g_plug_Independent_thread_pid[i] = this_pid;
 						break;
 					}
 				}
-				if(i >= sapp_global_val->config.cpu.send_only_threads_max_num ){  /* ³¬¹ý·¢°üÏß³Ì×î´óÊýÁ¿ */
+				if(i >= sapp_global_val->config.cpu.send_only_threads_max_num ){  /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 					sapp_runtime_log(RLOG_LV_FATAL, "Independent_thread num more than CPU->send_only_threads_max:%d!\n", 
 									sapp_global_val->config.cpu.send_only_threads_max_num);
 					*opt_int = -1;
