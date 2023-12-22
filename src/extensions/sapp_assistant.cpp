@@ -1,5 +1,5 @@
 /*
-	���ļ���ƽ̨���Ĺ��ܺͺ���(Ip��Ƭ, ����ԭ, ��������, ���������), 
+	���ļ���ƽ̨���Ĺ��ܺͺ���(Ip��Ƭ, ����ԭ, ��������, ���������?), 
 	���ṩ������ҵ�����Ľӿ�, ��sapp_get_platform_opt��, ��Ϊһ��.so�ļ����ص�ƽ̨,
 	���ڸ��²���.
 */
@@ -36,7 +36,7 @@ int sapp_identify_tunnel_inner_pkt(const raw_pkt_t *raw_pkt)
 #if IOMODE_MARSIO
 	if (CAP_MODEL_MARSIOV4 == g_packet_io_cap_mode)
 	{
-		/* û��mrtunnatʱ, �������l2_l3_tunnel_support, Ҫ�ж�overlay����, �Ƿ��Ǹ�������, �Ƿ��Ǿ���overlayԭʼ��·��İ�    */
+		/* û��mrtunnatʱ, �������l2_l3_tunnel_support, Ҫ�ж�overlay����, �Ƿ��Ǹ�������, �Ƿ��Ǿ���overlayԭʼ��·��İ�?    */
 		if (raw_pkt->is_overlay_pkt)
 		{
 			ret = 1;
@@ -56,7 +56,7 @@ int sapp_identify_broad_multicast_pkt(const void *this_layer_data, const raw_pkt
 	}
 
 	if(memcmp(G_BROADCAST_ADDR, p_eth_hdr->ether_dhost, ETH_ALEN) == 0){
-		/* G����ģʽ�£���ARPЭ��Ĺ㲥����ֱ�Ӷ���! ��ֹ�ٻ�ע��������, ��ɹ㲥�籩���������� */
+		/* G����ģʽ�£���ARPЭ��Ĺ㲥����ֱ�Ӷ���?! ��ֹ�ٻ�ע��������, ��ɹ㲥�籩����������? */
 		if(eth_type != ETH_P_ARP){
 			return 1;
 		}
@@ -112,7 +112,7 @@ static inline unsigned long long __get_platform_opt_traffic(int ctype, sapp_sys_
 	return tmp_long;
 }
 
-/* 2017-09-04 lijia add, for ��������, �����ȡƽ̨�ڲ����� */
+/* 2017-09-04 lijia add, for ��������, �����ȡƽ�?�ڲ����� */
 extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, int *opt_val_len)
 {
 	int ret = 0;
@@ -560,7 +560,7 @@ extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, 
 		}
 		break;
 
-		/* �ⲿ���Ƶ������rand�Ⱥ����Ƚ�����CPU, ʹ��CPU��ǰ��ʱ��������, �͵�ǰƽ̨�����İ���ƴ��һ������� */
+		/* �ⲿ���Ƶ������rand�Ⱥ����Ƚ�����CPU, ʹ��CPU��ǰ��ʱ��������, �͵�ǰƽ̨�����İ���ƴ��һ�������? */
 		case SPO_RAND_NUMBER:
 		{
 			if(*opt_val_len != sizeof(long long)){
@@ -596,7 +596,7 @@ extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, 
 			
 			pthread_mutex_lock(&g_plug_Independent_thread_mutex);
 
-			/* Ϊ����һ���̶߳�ε��ô˽ӿ�, �Ȳ���֮ǰ�Ƿ񱣴�� */
+			/* Ϊ����һ���̶߳�ε��ô˽ӿ�?, �Ȳ���֮ǰ�Ƿ񱣴��? */
 			for(i = 0; i < sapp_global_val->config.cpu.send_only_threads_max_num; i++){
 				if(g_plug_Independent_thread_pid[i] == this_pid){
 					id_index = i;
@@ -611,7 +611,7 @@ extern "C" int sapp_get_platform_opt(enum sapp_platform_opt opt, void *opt_val, 
 						break;
 					}
 				}
-				if(i >= sapp_global_val->config.cpu.send_only_threads_max_num ){  /* ���������߳�������� */
+				if(i >= sapp_global_val->config.cpu.send_only_threads_max_num ){  /* ���������߳��������? */
 					sapp_runtime_log(RLOG_LV_FATAL, "Independent_thread num more than CPU->send_only_threads_max:%d!\n", 
 									sapp_global_val->config.cpu.send_only_threads_max_num);
 					*opt_int = -1;
