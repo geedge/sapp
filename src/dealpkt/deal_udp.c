@@ -307,7 +307,7 @@ void udp_free_stream(struct streamindex *pindex)
 
 	udp_update_close_reason_stat(threadnum, pstream_pr);
 
-	if(pstream_pr->raw_pkt)
+	if(pstream_pr->raw_pkt && pstream_pr->stream_close_reason == STREAM_CLOSE_REASON_LRUOUT)
 	{
 		((raw_pkt_t *)pstream_pr->raw_pkt)->append_list=NULL;
 		((raw_pkt_t *)pstream_pr->raw_pkt)->prepend_list=NULL;

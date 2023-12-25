@@ -491,34 +491,6 @@ int MESA_stream_list_cmp(struct streaminfo_private *stream1_pr, struct streaminf
 
 
 
-#if 0
-/* 获取本层流对应的原始包头起始地址 */
-const void *get_this_layer_header(const struct streaminfo *pstream)
-{
-	const void *this_layer_hdr = NULL;
-	const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
-
-	if(OP_STATE_CLOSE == pstream->opstate){
-		if(STREAM_TYPE_TCP == pstream->type){ 
-			const struct tcpdetail_private *pr_tcpdetail=(struct tcpdetail_private *)pstream->pdetail;
-			if((STREAM_LINK_TIMEOUT == pr_tcpdetail->link_state) || (STREAM_LINK_LRU_OUT == pr_tcpdetail->link_state)){
-				this_layer_hdr = NULL;
-			}
-		}else if(STREAM_TYPE_UDP == pstream->type){
-			this_layer_hdr = NULL; /* UDP全是靠时间淘汰, 当前包肯定为NULL */
-		}else{
-			this_layer_hdr = (const void *)
-					 ((const char *)(pstream_pr->raw_pkt->raw_pkt_data) + pstream_pr->raw_pkt->offset_to_raw_pkt_hdr);
-		}
-	}else{
-		this_layer_hdr = (const void *)
-					 ((const char *)(pstream_pr->raw_pkt->raw_pkt_data) + pstream_pr->raw_pkt->offset_to_raw_pkt_hdr);
-	}
-	
-	return this_layer_hdr;
-}
-#endif
-
 const void *get_current_layer3_header(const struct streaminfo *pstream)
 {
 	if(STREAM_TYPE_UDP != pstream->type && STREAM_TYPE_TCP != pstream->type)
