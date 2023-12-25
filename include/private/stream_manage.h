@@ -89,8 +89,8 @@ struct stream_list
 	int cnt;
 	int max_cnt;
 	struct timeouts *streamindex_timer;
-	long last_update_timer_s;
-	long interval_to_next_timeout_s;
+	long last_update_timer_ms;
+	long interval_to_next_timeout_ms;
 	timeout_error_t timer_error;
 	struct token_bucket *timeout_ratelimiter;
 };
@@ -118,7 +118,7 @@ struct global_stream
 
 	struct timeouts *user_define_timer;
 	long user_define_timer_cnt;
-	long interval_to_next_timeout_s;
+	long interval_to_next_timeout_ms;
 	timeout_error_t timer_error;
 	struct token_bucket *tcp_timeout_ratelimiter;
 	struct token_bucket *udp_timeout_ratelimiter;

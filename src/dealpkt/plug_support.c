@@ -1001,7 +1001,7 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				timeout_init(&funinfo->timeout, TIMEOUT_ABS);
 				G_MESA_GLOBAL_STREAM[pstream->threadnum]->user_define_timer_cnt+=1;
 			}
-			timeouts_add(G_MESA_GLOBAL_STREAM[pstream->threadnum]->user_define_timer, &funinfo->timeout, set_timer_s+g_CurrentTime);
+			timeouts_add(G_MESA_GLOBAL_STREAM[pstream->threadnum]->user_define_timer, &funinfo->timeout, set_timer_s*1000+g_CurrentTime_ms);
 			ret = 0;
 		}
 		break;		

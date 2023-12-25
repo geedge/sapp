@@ -223,7 +223,7 @@ static void stream_timeout_shift_lrulist(struct streamindex *pindex, unsigned sh
 		lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->udpList[pstream->stream_state]);
 	}
 
-	timeouts_add(lru_list_root->streamindex_timer, &pindex->timeout, new_timeout+g_CurrentTime);
+	timeouts_add(lru_list_root->streamindex_timer, &pindex->timeout, new_timeout*1000+g_CurrentTime_ms);
 
 	return;
 }
@@ -343,11 +343,11 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 	struct streamindex *pindex_to_del = NULL;
 	if(plist->cnt >= plist->max_cnt-1 && plist->cnt > 0)
 	{
-		if(plist->last_update_timer_s < g_CurrentTime)
+		if(plist->last_update_timer_ms < g_CurrentTime_ms)
 		{
-			timeouts_update(plist->streamindex_timer, g_CurrentTime);
-			plist->last_update_timer_s = g_CurrentTime;
-			plist->interval_to_next_timeout_s=timeouts_timeout(plist->streamindex_timer);
+			timeouts_update(plist->streamindex_timer, g_CurrentTime_ms);
+			plist->last_update_timer_ms = g_CurrentTime_ms;
+			plist->interval_to_next_timeout_ms=timeouts_timeout(plist->streamindex_timer);
 		}
 		struct timeout *t = NULL;
 		TIMEOUTS_FOREACH(t, plist->streamindex_timer, TIMEOUTS_ALL)
@@ -378,30 +378,30 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 	}
 	
 	struct streaminfo *pstream=(struct streaminfo *)(&(pindex->stream));
-	time_t next_timeout_s=0;
+	time_t next_timeout_ms=0;
 	timeout_init(&pindex->timeout, TIMEOUT_ABS);
 	if(pstream->stream_state==TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP)
 	{
-		next_timeout_s= tcp_closing_timeout+g_CurrentTime;
+		next_timeout_ms= tcp_closing_timeout*1000+g_CurrentTime_ms;
 	}
 	else if(pstream->stream_state==TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
 	{
-		next_timeout_s= tcp_opening_timeout+g_CurrentTime;
+		next_timeout_ms= tcp_opening_timeout*1000+g_CurrentTime_ms;
 	}
 	else
 	{
 		long set_timeout = pindex->stream.timeout;
 		if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
-		next_timeout_s=set_timeout+g_CurrentTime;
+		next_timeout_ms=set_timeout*1000+g_CurrentTime_ms;
 	}
-	timeouts_add(plist->streamindex_timer, &pindex->timeout, next_timeout_s);
+	timeouts_add(plist->streamindex_timer, &pindex->timeout, next_timeout_ms);
 	sapp_runtime_log(RLOG_LV_DEBUG, "streamaddlist timeout_add: %s, thread:%d, stream_type:%d, stream_state:%d, curtime:%ld, next_timeout_s:%ld!",
 				 printaddr(&pindex->stream.stream_public.addr, pindex->stream.stream_public.threadnum),
 				 pindex->stream.stream_public.threadnum,
 				 pstream->type,
 				 pstream->stream_state,
 				 g_CurrentTime,
-				 next_timeout_s);	
+				 next_timeout_ms);	
 	plist->cnt++;
 
 	update_stream_status(pstream->threadnum, pstream->type, pstream->stream_state, 1);
@@ -477,18 +477,18 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 	int ret = DEL_STREAM_BY_TIME_RET_NORMAL;
 	struct timeout *t=NULL;
 	struct global_stream *g_stream = G_MESA_GLOBAL_STREAM[thread_id];
-	if(unlikely(plist->last_update_timer_s < g_CurrentTime))
+	if(unlikely(plist->last_update_timer_ms < g_CurrentTime_ms))
 	{
-		timeouts_update(plist->streamindex_timer, g_CurrentTime);
+		timeouts_update(plist->streamindex_timer, g_CurrentTime_ms);
 		if(g_stream->user_define_timer_cnt > 0)
 		{
-			timeouts_update(g_stream->user_define_timer, g_CurrentTime);
-			g_stream->interval_to_next_timeout_s = timeouts_timeout(g_stream->user_define_timer);
+			timeouts_update(g_stream->user_define_timer, g_CurrentTime_ms);
+			g_stream->interval_to_next_timeout_ms = timeouts_timeout(g_stream->user_define_timer);
 		}
-		plist->last_update_timer_s = g_CurrentTime;
-		plist->interval_to_next_timeout_s=timeouts_timeout(plist->streamindex_timer);
+		plist->last_update_timer_ms = g_CurrentTime_ms;
+		plist->interval_to_next_timeout_ms=timeouts_timeout(plist->streamindex_timer);
 	}
-    if (plist->interval_to_next_timeout_s == 0)
+    if (plist->interval_to_next_timeout_ms == 0)
     {
         if ( plist->timeout_ratelimiter == NULL || token_bucket_consume(plist->timeout_ratelimiter, 1, g_current_time_ms) > 0)
         {
@@ -527,7 +527,7 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
             }
         }
     }
-    if(g_stream->user_define_timer_cnt > 0 && g_stream->interval_to_next_timeout_s == 0)
+    if(g_stream->user_define_timer_cnt > 0 && g_stream->interval_to_next_timeout_ms == 0)
 	{
 		t = timeouts_get(g_stream->user_define_timer);
 		if (t != NULL)
@@ -544,7 +544,7 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 
 			if(app_ret == APP_STATE_GIVEME)
 			{
-				timeouts_add(g_stream->user_define_timer, t, funinfo->set_timer_s+g_CurrentTime);
+				timeouts_add(g_stream->user_define_timer, t, funinfo->set_timer_s*1000+g_CurrentTime_ms);
 			}
 			else
 			{
@@ -584,18 +584,18 @@ int lrustream(struct streamindex *pindex)
 	{
 		if (pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP)
 		{
-			timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout + g_CurrentTime);
+			timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout*1000 + g_CurrentTime_ms);
 		}
 		else if (pstream->stream_state == TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
 		{
-			timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout + g_CurrentTime);
+			timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout*1000 + g_CurrentTime_ms);
 		}
 		else
 		{
 			long set_timeout = pindex->stream.timeout;
 			if (set_timeout == 0)
 				set_timeout = MAX_DEFALUT_TIMEOUT_S;
-			timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout + g_CurrentTime);
+			timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout*1000 + g_CurrentTime_ms);
 		}
 	}
 	return 0;
