@@ -45,6 +45,7 @@ typedef struct{
 	unsigned long long last_create_stream_new_sum[MAX_CORE_NUM];
 	double last_time_cpu_total[MAX_CORE_NUM];
 	double last_time_cpu_idle[MAX_CORE_NUM];
+	double ewma_cpu_usage[MAX_CORE_NUM];
 	cpu_tck_t all_cpu_usage[MAX_CORE_NUM];
 }under_sapp_user_args_t;
 
@@ -126,7 +127,7 @@ static void read_cpu_usage_from_proc(cpu_tck_t *per_cpu_core_stat, int max_cpu_n
 
 static double sapp_get_cpu_usage_cb(cpu_limit_handle h, int _thread_index, void *_void_user_arg)
 {
-	double cpu_usage;
+	double current_cpu_usage;
 	uint64_t this_total_tcks, this_idle_tcks;
 	int cpu_core_id;
 	int sys_actual_cpu_core_num = get_nprocs();
@@ -151,21 +152,24 @@ static double sapp_get_cpu_usage_cb(cpu_limit_handle h, int _thread_index, void 
 	this_total_tcks = calc_total_ticks(&ud_usr_arg->all_cpu_usage[cpu_core_id]);
 	this_idle_tcks = ud_usr_arg->all_cpu_usage[cpu_core_id].tcks[TCK_IDLE];
 
-	if(0 == ud_usr_arg->last_time_cpu_total[cpu_core_id]){
-		/* 第一次为0, 为了避免误差, 此次不计算 */
-		ud_usr_arg->last_time_cpu_total[cpu_core_id] = this_total_tcks;
-		ud_usr_arg->last_time_cpu_idle[cpu_core_id] = this_idle_tcks;
-		return 0.0;
-	}
-
 	/* 间隔一段时间, 连续两次used的差值除以两次总数的差值, 
 	   不能直接用总数, 那是表示自机器加电启动以来cpu占用率的总平均值, 
 	*/
-	cpu_usage = 100.0 * ((this_total_tcks - this_idle_tcks)-(ud_usr_arg->last_time_cpu_total[cpu_core_id] - ud_usr_arg->last_time_cpu_idle[cpu_core_id]))/(this_total_tcks - ud_usr_arg->last_time_cpu_total[cpu_core_id]);
+	current_cpu_usage = 100.0 * ((this_total_tcks - this_idle_tcks)-(ud_usr_arg->last_time_cpu_total[cpu_core_id] - ud_usr_arg->last_time_cpu_idle[cpu_core_id]))/(this_total_tcks - ud_usr_arg->last_time_cpu_total[cpu_core_id]);
+
+#define EWMA_FACTOR 0.8
+	if(ud_usr_arg->ewma_cpu_usage[cpu_core_id] == 0)
+	{
+		ud_usr_arg->ewma_cpu_usage[cpu_core_id] = current_cpu_usage;
+	}
+	else
+	{
+		ud_usr_arg->ewma_cpu_usage[cpu_core_id] = (EWMA_FACTOR * current_cpu_usage) + ((1 - EWMA_FACTOR) * ud_usr_arg->ewma_cpu_usage[cpu_core_id]);
+	}
 	ud_usr_arg->last_time_cpu_total[cpu_core_id] = this_total_tcks;
 	ud_usr_arg->last_time_cpu_idle[cpu_core_id]  = this_idle_tcks;	
 
-	return cpu_usage;
+	return ud_usr_arg->ewma_cpu_usage[cpu_core_id];
 
 }
 

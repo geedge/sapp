@@ -91,16 +91,16 @@
     stream_bypass_enabled=0
 ### note, cpu usage value is percent, for example, config value is 85, means 85%, valid range: [1,100]    
 ### sapp change to bypass state immediately when realtime cpu usage > bypass_trigger_cpu_usage
-    bypass_trigger_cpu_usage=85    
+    bypass_trigger_cpu_usage=95    
 ### note, unit of get_cpu_usage_interval is milliseconds(ms)     
     get_cpu_usage_interval=500
 ### note, use the average of the last $smooth_avg_window times as current realtime value 
-    smooth_avg_window=2
+    smooth_avg_window=0
 
     decrease_ratio="0.95"
     increase_ratio="1.005"
 ### note, unit of bypass_observe_time is second(s)     
-    recovery_observe_time=30
+    recovery_observe_time=3
 
 
 [PROTOCOL_FEATURE]
