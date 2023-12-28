@@ -491,6 +491,7 @@ int MESA_stream_list_cmp(struct streaminfo_private *stream1_pr, struct streaminf
 
 
 
+
 const void *get_current_layer3_header(const struct streaminfo *pstream)
 {
 	if(STREAM_TYPE_UDP != pstream->type && STREAM_TYPE_TCP != pstream->type)
@@ -505,6 +506,11 @@ const void *get_current_layer3_header(const struct streaminfo *pstream)
 					 ((const char *)(pstream_pr->raw_pkt->raw_pkt_data) + pstream_pr->offset_to_raw_pkt_hdr);
 	}
 	return this_layer_hdr;
+}
+
+const void *get_this_layer_header(const struct streaminfo *pstream)
+{
+	return get_current_layer3_header(pstream);
 }
 
 const void *get_current_layer4_header(const struct streaminfo *pstream)
