@@ -1,3 +1,4 @@
+#include "stream_inc/stream_base.h"
 #include <MESA_handle_logger.h>
 #ifdef __cplusplus
 extern "C" {
@@ -2470,6 +2471,18 @@ static raw_pkt_t *update_raw_pkt(struct streaminfo_private *stream_pr, uchar snd
     }
     else if (stream_pr->polling_inject_context != NULL)
     {
+		if(snd_dir == stream_pr->stream_c2s_route_dir) // if send dir is same as c2s route dir, return c2s raw_pkt
+		{
+				inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S-1];
+				*inject_dir_reverse=0;
+		}
+		else
+		{
+				inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C-1];
+				*inject_dir_reverse=1;
+		}
+
+#if 0		
             if ((DIR_ROUTE_DOWN & snd_dir) == DIR_ROUTE_DOWN)
             {
                 inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_down;
@@ -2498,6 +2511,7 @@ static raw_pkt_t *update_raw_pkt(struct streaminfo_private *stream_pr, uchar snd
                     *inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 0 : 1);
                 }
             }
+#endif			
     }
     else
             ;
@@ -2508,8 +2522,8 @@ static raw_pkt_t *update_raw_pkt(struct streaminfo_private *stream_pr, uchar snd
 
     if (stream_pr->polling_inject_context != NULL)
     {
-            inject_raw_pkt->meta[0]=stream_pr->polling_inject_context->meta[0];
-            inject_raw_pkt->meta[1]=stream_pr->polling_inject_context->meta[1];
+            inject_raw_pkt->meta[0]=stream_pr->polling_inject_context->meta_stream_dir[0];
+            inject_raw_pkt->meta[1]=stream_pr->polling_inject_context->meta_stream_dir[1];
     }
 
     return inject_raw_pkt;

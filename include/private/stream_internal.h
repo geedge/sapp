@@ -185,9 +185,8 @@ struct half_tcpstream
 
 /* 保存每个流两个方向第一个包, 用于polling entry发包使用 */
 typedef struct {
-	const raw_pkt_t *raw_pkt_up;
-	const raw_pkt_t *raw_pkt_down;
-	struct rawpkt_metadata* meta[2];// 每个流的metadata按方向存储在polling_inject_context中, update_raw_pkt函数调用时，按方向填充到返回的rawpkt中
+	const raw_pkt_t *raw_pkt_stream_dir[2];
+	struct rawpkt_metadata* meta_stream_dir[2];// 每个流的metadata按方向存储在polling_inject_context中, update_raw_pkt函数调用时，按方向填充到返回的rawpkt中
 }polling_inject_context_t;
 
 struct streaminfo_private
