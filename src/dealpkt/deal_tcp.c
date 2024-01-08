@@ -2511,17 +2511,6 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 	if (th_flags & TH_SYN)
 	{
 		//syn重传 add by lqy 20100808
-		 if (pdetail_pr->flow_stat)
-		 {
-			if (pstream->curdir == DIR_C2S)
-			{
-				pdetail_pr->flow_stat->C2S_syn_pkt++;
-			}
-			else
-			{
-				pdetail_pr->flow_stat->S2C_syn_pkt++;
-			}
-		 }
 	   if((datalen>0) || ((UINT32)thisseq+1 == rcv->first_data_seq) || ((UINT32)thisseq==rcv->first_data_seq)) 
 	   {
 		pstream->addr.pkttype = PKT_TYPE_TCPRETRANS;
@@ -3031,6 +3020,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	/* flow_stat是全包无状态记录, 不关心重传、乱序问题 */
 	if(G_TCP_FLOW_STAT_PROJECT_ID != -1 && raw_pkt->is_ctrl_pkt == 0){
 		if(DIR_C2S == pstream->curdir){
+			pdetail_pr->flow_stat->C2S_syn_pkt+=((this_tcphdr->th_flags & TH_SYN) ? 1 : 0);
 			pdetail_pr->flow_stat->C2S_all_pkt++;
 			pdetail_pr->flow_stat->C2S_all_byte += tcplen;
 			pdetail_pr->flow_stat->C2S_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
@@ -3039,6 +3029,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 				pdetail_pr->flow_stat->C2S_ip_fragment_pkt++;
 			}
 		}else{
+			pdetail_pr->flow_stat->S2C_syn_pkt+=((this_tcphdr->th_flags & TH_SYN) ? 1 : 0);
 			pdetail_pr->flow_stat->S2C_all_pkt++;
 			pdetail_pr->flow_stat->S2C_all_byte += tcplen;
 			pdetail_pr->flow_stat->S2C_all_byte_raw += raw_pkt->raw_pkt_len - raw_pkt->overlay_layer_bytes;
