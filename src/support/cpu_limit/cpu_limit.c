@@ -280,7 +280,7 @@ static void cl_analysis(cpu_limit_inner_t *h)
 			cl_analysis_reduce_state(h, tid, this_stat);
 			if(this_stat->realtime_res_val >= 99.9 && MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, RLOG_LV_FATAL))
 			{
-				sapp_process_latency_log(RLOG_LV_FATAL, "[cpu_limit] thread:%d usage:%.2f over 99.9%%, send SIGUSR2 to tid:%d", tid, this_stat->realtime_res_val, sapp_global_val->individual_fixed.thread_obtain_id[tid]);
+				sapp_process_latency_log(RLOG_LV_FATAL, "[cpu_limit] thread:%d usage:%.2f over 99.9%%, send SIGUSR2 to thread_index:%d, tid:%llu", tid, this_stat->realtime_res_val, tid, sapp_global_val->individual_fixed.thread_obtain_id[tid]);
 				pthread_kill(sapp_global_val->individual_fixed.thread_obtain_id[tid], SIGUSR2);
 			}
 		}else{
