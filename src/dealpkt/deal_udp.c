@@ -407,11 +407,13 @@ static int udp_reset_stream(struct streamindex *pindex)
 
 	stream_process_udp(pstream, NULL, NULL, NULL, &(pdetail_pr->apme), &(pstream->opstate));
 
-	project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, threadnum, pstream_pr->pproject);
-	pstream_pr->pproject = NULL;
+
 	stream_bridge_destroy_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, pstream, pstream_pr->stream_bridge);
 	pstream_pr->stream_bridge = NULL;
 
+	project_requirement_destroy(SAPP_MEM_DYN_UDP_PROJECT, threadnum, pstream_pr->pproject);
+	pstream_pr->pproject = NULL;
+	
 	if(pstream_pr->raw_pkt)
 	{
 		((raw_pkt_t *)pstream_pr->raw_pkt)->append_list=NULL;
