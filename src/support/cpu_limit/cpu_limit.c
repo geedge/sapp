@@ -278,10 +278,13 @@ static void cl_analysis(cpu_limit_inner_t *h)
 		
 		if(this_stat->realtime_res_val >= h->user_trigger_value){//超最高限制阈值
 			cl_analysis_reduce_state(h, tid, this_stat);
-			if(this_stat->realtime_res_val >= 99.9 && MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, RLOG_LV_FATAL))
+			if(this_stat->realtime_res_val >= 99.9)
 			{
-				sapp_process_latency_log(RLOG_LV_FATAL, "[cpu_limit] thread:%d usage:%.2f over 99.9%%, send SIGUSR2 to thread_index:%d, tid:%llu", tid, this_stat->realtime_res_val, tid, sapp_global_val->individual_fixed.thread_obtain_id[tid]);
-				pthread_kill(sapp_global_val->individual_fixed.thread_obtain_id[tid], SIGUSR2);
+				sapp_process_latency_log(RLOG_LV_FATAL, "[cpu_limit] thread_index:%d usage:%.2f over 99.9%%, send SIGUSR2 to tid:%llu", tid, this_stat->realtime_res_val, sapp_global_val->individual_fixed.thread_obtain_id[tid]);
+				if(MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, RLOG_LV_INFO))
+				{
+					pthread_kill(sapp_global_val->individual_fixed.thread_obtain_id[tid], SIGUSR2);
+				}
 			}
 		}else{
 			cl_analysis_observe_state(h, tid, this_stat); /* 可能是从没有过攻击, 可能是刚从攻击状态bypass之后恢复过来 */

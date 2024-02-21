@@ -463,7 +463,10 @@ static void sapp_watch_dog(void)
 							getpid(), ABBR_CURRENT_TIME, thread_index, sapp_global_val->individual_fixed.thread_tid[thread_index], sd_notify_enable, deadlock_detected, deadlock_cnt);
 			}
 			sapp_process_latency_log(RLOG_LV_FATAL, "sapp_watch_dog detect deadlock at timestamp:%ld, send SIGUSR2 to thread index:%d, tid:%llu", ABBR_CURRENT_TIME, thread_index, sapp_global_val->individual_fixed.thread_obtain_id[thread_index]);
-			pthread_kill(sapp_global_val->individual_fixed.thread_obtain_id[thread_index], SIGUSR2);
+			if(MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, RLOG_LV_FATAL))
+			{
+				pthread_kill(sapp_global_val->individual_fixed.thread_obtain_id[thread_index], SIGUSR2);
+			}
 			break;
 
 		}
