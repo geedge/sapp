@@ -2824,7 +2824,8 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		{
 			if(0==(TCP_CTEAT_LINK_BYSYN & tcp_creatlink_model ))
 				return PASS;
-		
+			if(raw_pkt->is_ctrl_pkt==1)
+				return PASS;	
 			pindex_tcp=tcp_add_new_stream_bysyn(pindex,this_iphdr, this_tcphdr,tcplen,CTREAT_LINK,raw_pkt);
 			if(likely(pindex_tcp != NULL))
 			{

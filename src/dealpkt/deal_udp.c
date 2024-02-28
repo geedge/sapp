@@ -666,7 +666,14 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
                     return PASS;
                 }
             }
-            a_index = udp_add_new_stream(pindex, udph, raw_pkt);
+			if(raw_pkt->is_ctrl_pkt==0)
+			{
+   	        	a_index = udp_add_new_stream(pindex, udph, raw_pkt);
+			}
+			else
+			{
+				return PASS;
+			}
         }
 		//add by lqy 只有当链接未重置时进行lru
 		else 
@@ -928,7 +935,14 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
                     return PASS;
                 }
             }
-            a_index = udp_add_new_stream(pindex, udph, raw_pkt);
+			if(raw_pkt->is_ctrl_pkt==0)
+			{
+            	a_index = udp_add_new_stream(pindex, udph, raw_pkt);
+			}
+			else
+			{
+				return PASS;
+			}
 		}
 		else 
 		{
