@@ -841,7 +841,9 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 		switch(next_hdr_type)
 		{			
 			case NEXTHDR_TCP:			
+				plocal_stream_pr->plugin_process_context=1;
 				ret=stream_process_ipv6(plocal_stream,(const struct ip6_hdr *)a_packet,thread_num,routedir,raw_pkt);
+				plocal_stream_pr->plugin_process_context=0;
 				if(ret==DROP){
 					goto prosecc_pkt_drop;
 				}	
@@ -855,7 +857,9 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 			break;
 				
 			case NEXTHDR_UDP:		
+				plocal_stream_pr->plugin_process_context=1;
 				ret=stream_process_ipv6(plocal_stream,(const struct ip6_hdr *)a_packet,thread_num,routedir,raw_pkt);
+				plocal_stream_pr->plugin_process_context=0;
 				if(ret==DROP){
 					goto prosecc_pkt_drop;
 				}	
@@ -913,7 +917,9 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 			break;
 
 			case NEXTHDR_ICMP:		
+				plocal_stream_pr->plugin_process_context=1;
 				ret=stream_process_ipv6(plocal_stream,(const struct ip6_hdr *)a_packet,thread_num,routedir, raw_pkt);
+				plocal_stream_pr->plugin_process_context=0;
 				if(ret==DROP){
 					goto prosecc_pkt_drop;
 				}	
@@ -926,7 +932,9 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 #if COMPAT_PAPP_FOR_BENCHMARK
 				return PASS;
 #endif			
+				plocal_stream_pr->plugin_process_context=1;
 				ret=stream_process_ipv6(plocal_stream,(const struct ip6_hdr *)a_packet,thread_num,routedir, raw_pkt);
+				plocal_stream_pr->plugin_process_context=0;
 				if(ret==DROP){
 					goto prosecc_pkt_drop;
 				}					
@@ -939,7 +947,9 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 			
 			case NEXTHDR_OSPF_IGP:			
 			case NEXTHDR_ESP:
+				plocal_stream_pr->plugin_process_context=1;
 				ret=stream_process_ipv6(plocal_stream,(const struct ip6_hdr *)a_packet,thread_num,routedir, raw_pkt);
+				plocal_stream_pr->plugin_process_context=0;
 				if(ret==DROP){
 					goto prosecc_pkt_drop;
 				}				

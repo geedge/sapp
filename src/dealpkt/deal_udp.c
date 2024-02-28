@@ -1098,8 +1098,9 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
      int next_layer_offest;
      struct streaminfo_private *pfstream_pr = &(pfindex->stream); 
      sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
-
+	pfstream_pr->plugin_process_context=1;
 	ret=stream_process_ipv4(&(pfstream_pr->stream_public),(const struct ip *)a_packet,thread_num,routedir, raw_pkt);
+	pfstream_pr->plugin_process_context=0;
 	if(unlikely(ret==DROP)){
 		return DROP;
 	}	
