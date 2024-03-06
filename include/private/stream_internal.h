@@ -116,7 +116,7 @@ typedef struct {
 
 
 	struct detain_pkt *d_pkt;
-	struct rawpkt_metadata *meta[2];// 发送所需的metadata, 用于在调用low_level_send时, 填充marsio 4.6后需要的信息.
+	struct rawpkt_metadata *meta_route_dir[2];// 发送所需的metadata, 用于在调用low_level_send时, 填充marsio 4.6后需要的信息.
 	struct segment_id_list *append_list;
 	struct segment_id_list *prepend_list;
 	unsigned long long stream_trace_id;
@@ -186,7 +186,7 @@ struct half_tcpstream
 /* 保存每个流两个方向第一个包, 用于polling entry发包使用 */
 typedef struct {
 	const raw_pkt_t *raw_pkt_stream_dir[2];
-	struct rawpkt_metadata* meta_stream_dir[2];// 每个流的metadata按方向存储在polling_inject_context中, update_raw_pkt函数调用时，按方向填充到返回的rawpkt中
+	struct rawpkt_metadata* meta_stream_dir[2];// 每个流的metadata按[0:c2s, 1:s2c]方向存储在polling_inject_context中, update_raw_pkt函数调用时，按方向填充到返回的rawpkt中
 }polling_inject_context_t;
 
 struct streaminfo_private

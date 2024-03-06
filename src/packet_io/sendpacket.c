@@ -2522,8 +2522,22 @@ static raw_pkt_t *update_raw_pkt(struct streaminfo_private *stream_pr, uchar snd
 
     if (stream_pr->polling_inject_context != NULL)
     {
-            inject_raw_pkt->meta[0]=stream_pr->polling_inject_context->meta_stream_dir[0];
-            inject_raw_pkt->meta[1]=stream_pr->polling_inject_context->meta_stream_dir[1];
+		inject_raw_pkt->meta_route_dir[stream_pr->stream_c2s_route_dir]=stream_pr->polling_inject_context->meta_stream_dir[DIR_C2S-1];
+        inject_raw_pkt->meta_route_dir[stream_pr->stream_c2s_route_dir^1]=stream_pr->polling_inject_context->meta_stream_dir[DIR_S2C-1];
+
+#if 0
+		if(snd_dir==stream_pr->stream_c2s_route_dir)
+		{
+			inject_raw_pkt->meta_route_dir[snd_dir]=stream_pr->polling_inject_context->meta_stream_dir[DIR_C2S-1];
+			inject_raw_pkt->meta_route_dir[snd_dir^1]=stream_pr->polling_inject_context->meta_stream_dir[DIR_S2C-1];
+		}
+		else
+		{
+			inject_raw_pkt->meta_route_dir[snd_dir]=stream_pr->polling_inject_context->meta_stream_dir[DIR_S2C-1];
+			inject_raw_pkt->meta_route_dir[snd_dir^1]=stream_pr->polling_inject_context->meta_stream_dir[DIR_C2S-1];
+
+		}
+#endif		
     }
 
     return inject_raw_pkt;

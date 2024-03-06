@@ -525,19 +525,19 @@ int marsio_send_ctrl_data(unsigned char *data,int datalen, struct segment_id_lis
 
 void marsio_dl_io_set_rawpkt_meta(const raw_pkt_t *raw_pkt, void *send_pkt_io_reference, unsigned char route_dir)
 {
-	if(raw_pkt->meta[0]== NULL && (raw_pkt->meta[1]== NULL))
+	if(raw_pkt->meta_route_dir[0]== NULL && (raw_pkt->meta_route_dir[1]== NULL))
 	{
 		return ;
 	}
 	
 	struct rawpkt_metadata *snd_meta = NULL;
-	if(raw_pkt->meta[route_dir]!=NULL)
+	if(raw_pkt->meta_route_dir[route_dir]!=NULL)
 	{
-		snd_meta=raw_pkt->meta[route_dir];
+		snd_meta=raw_pkt->meta_route_dir[route_dir];
 	}
 	else // failover 
 	{
-		snd_meta=raw_pkt->meta[route_dir^1];
+		snd_meta=raw_pkt->meta_route_dir[route_dir^1];
 	}
 	if(ptr_marsio_buff_set_metadata)
 	{
@@ -791,8 +791,8 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	raw_pkt->stream_trace_id=0;
 	raw_pkt->prepend_list=NULL;
 	raw_pkt->append_list=NULL;
-	raw_pkt->meta[0]=NULL;
-	raw_pkt->meta[1]=NULL;
+	raw_pkt->meta_route_dir[0]=NULL;
+	raw_pkt->meta_route_dir[1]=NULL;
 
 	ret = (*g_marsio4_work_fun)((const raw_pkt_t *)raw_pkt, dir, tid);
 	
