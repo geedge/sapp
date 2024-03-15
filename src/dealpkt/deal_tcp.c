@@ -2929,7 +2929,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 
 
 	/* 2014-10-11 lijia add, Fd补救由平台实现 */
-	if(unlikely(pstream_pr->stream_killed_flag != 0)){
+	if(unlikely(pstream_pr->stream_killed_flag != 0) && raw_pkt->is_ctrl_pkt==0){
 		if((pdetail_pr->auto_remedy_flag != 0) && (tcplen > 0)){ /* 防止flood攻击, 只有带数据的包才发RST */
 			sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, kill_tcp remedy, curdir:%d, send RST pkt.", 
 				printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
@@ -2961,7 +2961,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			return PASS;
 	}
 
-	if(unlikely(pdetail_pr->drop_stream_flag != 0) ){
+	if(unlikely(pdetail_pr->drop_stream_flag != 0) && raw_pkt->is_ctrl_pkt==0){
 		sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, has been set drop flag, curdir:%d, return DROP.", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 		pdetail->lastmtime = g_CurrentTime;

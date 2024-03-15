@@ -708,11 +708,11 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		}
 
         /* 2014-11-15 lijia add, for udp serial kill udp */
-		if(unlikely(a_index->stream.stream_killed_flag != 0)){
+		if(unlikely(a_index->stream.stream_killed_flag != 0 && raw_pkt->is_ctrl_pkt==0)){
 			return DROP;
 		}
 
-		if(unlikely(pdetail_pr->drop_stream_flag != 0)){ /* 2020-06-02 lijia add */
+		if(unlikely(pdetail_pr->drop_stream_flag != 0) && raw_pkt->is_ctrl_pkt==0 ){ /* 2020-06-02 lijia add */
 			return DROP;
 		}
 
@@ -998,11 +998,11 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
         }
 
         /* 2014-11-15 lijia add, for udp serial kill udp */
-		if(unlikely(a_index->stream.stream_killed_flag != 0)){
+		if(unlikely(a_index->stream.stream_killed_flag != 0) && raw_pkt->is_ctrl_pkt==0){
 			return DROP;
 		}
 
-		if(unlikely(pdetail_pr->drop_stream_flag != 0)){ /* 2020-06-02 lijia add */
+		if(unlikely(pdetail_pr->drop_stream_flag != 0) && raw_pkt->is_ctrl_pkt==0){ /* 2020-06-02 lijia add */
 			return DROP;
 		}
 
