@@ -24,8 +24,8 @@ enum{
 	RAW_PKT_GET_VXLAN_VPNID, // network-order, VPN_ID, value type is int, out_value should be int *
 	RAW_PKT_GET_VXLAN_LOCAL_IP, // network-order, VXLAN Local IP, value type is int, out_value should be int *
 
-	RAW_PKT_GET_ORIGINAL_LOWEST_ETH_SMAC, /* value type is char[6],ÕæÊµÔ­Ê¼°ü×îÍâ²ãµÄsmacµØÖ·,mirrorÄ£Ê½ÏÂ, µÈÍ¬ÓÚRAW_PKT_GET_DATA, »òÕßÊ¹ÓÃstream->pfather×ÔĞĞÆ«ÒÆ; inline + vxlan + mrtunnatÄ£Ê½ÏÂ, µÈÍ¬ÓÚRAW_PKT_GET_VXLAN_OUTER_GDEV_MAC; */
-	RAW_PKT_GET_ORIGINAL_LOWEST_ETH_DMAC, /* value type is char[6],ÕæÊµÔ­Ê¼°ü×îÍâ²ãµÄdmacµØÖ·,mirrorÄ£Ê½ÏÂ, µÈÍ¬ÓÚRAW_PKT_GET_DATA, »òÕßÊ¹ÓÃstream->pfather×ÔĞĞÆ«ÒÆ; inline + vxlan + mrtunnatÄ£Ê½ÏÂ, µÈÍ¬ÓÚRAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC; */
+	RAW_PKT_GET_ORIGINAL_LOWEST_ETH_SMAC, /* value type is char[6],çœŸå®åŸå§‹åŒ…æœ€å¤–å±‚çš„smacåœ°å€,mirroræ¨¡å¼ä¸‹, ç­‰åŒäºRAW_PKT_GET_DATA, æˆ–è€…ä½¿ç”¨stream->pfatherè‡ªè¡Œåç§»; inline + vxlan + mrtunnatæ¨¡å¼ä¸‹, ç­‰åŒäºRAW_PKT_GET_VXLAN_OUTER_GDEV_MAC; */
+	RAW_PKT_GET_ORIGINAL_LOWEST_ETH_DMAC, /* value type is char[6],çœŸå®åŸå§‹åŒ…æœ€å¤–å±‚çš„dmacåœ°å€,mirroræ¨¡å¼ä¸‹, ç­‰åŒäºRAW_PKT_GET_DATA, æˆ–è€…ä½¿ç”¨stream->pfatherè‡ªè¡Œåç§»; inline + vxlan + mrtunnatæ¨¡å¼ä¸‹, ç­‰åŒäºRAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC; */
 
 	RAW_PKT_GET_ROUTE_CTX, /* get current stream route_dir route_ctx, max value size  char[64] */
 	RAW_PKT_GET_SID_LIST, /* get current stream route_dir route_ctx, value defined in stream_control.h, struct segment_id_list */
@@ -42,7 +42,7 @@ extern "C" {
 	get option from raw packet.
 
 for example:
-	CHN : »ñÈ¡Ô­Ê¼°üÊı¾İ, (¸ù¾İ²¶°üÀàĞÍµÄ²»Í¬, ¿ÉÄÜ´ÓMAC¿ªÊ¼, Ò²¿ÉÄÜ´ÓIPÍ·²¿¿ªÊ¼, ĞèÒªÊ¹ÓÃRAW_PKT_GET_RAW_PKT_TYPE»ñÈ¡);
+	CHN : è·å–åŸå§‹åŒ…æ•°æ®, (æ ¹æ®æ•åŒ…ç±»å‹çš„ä¸åŒ, å¯èƒ½ä»MACå¼€å§‹, ä¹Ÿå¯èƒ½ä»IPå¤´éƒ¨å¼€å§‹, éœ€è¦ä½¿ç”¨RAW_PKT_GET_RAW_PKT_TYPEè·å–);
 	ENG : get raw packet header, header's type depend on raw pacekt type, you should use RAW_PKT_GET_RAW_PKT_TYPE first;
 	
 	void *raw_pkt_data;
@@ -55,17 +55,17 @@ for example:
 		error!
 	}
 	
-	CHN : »ñÈ¡Ô­Ê¼°ü×Ü³¤¶È;
+	CHN : è·å–åŸå§‹åŒ…æ€»é•¿åº¦;
 	ENG : get raw packet size;
 	int tot_len;
 	get_opt_from_rawpkt(voidpkt, RAW_PKT_GET_TOT_LEN, &tot_len);
 	 
-	CHN : »ñÈ¡±¾²ã°üÍ·ÆğÊ¼µØÖ·:
+	CHN : è·å–æœ¬å±‚åŒ…å¤´èµ·å§‹åœ°å€:
 	ENG : get this layer header;
 	void *this_layer_hdr;
 	get_opt_from_rawpkt(voidpkt, RAW_PKT_GET_THIS_LAYER_HDR, &this_layer_hdr); 
 
-	CHN : »ñÈ¡Ô­Ê¼°üÊ±¼ä´Á, Èç¹ûÍø¿¨»òµ×²ã²¶°ü¿â²»Ö§³ÖÊ±¼ä´Á¹¦ÄÜ, ÖµÎªÈ«0:
+	CHN : è·å–åŸå§‹åŒ…æ—¶é—´æˆ³, å¦‚æœç½‘å¡æˆ–åº•å±‚æ•åŒ…åº“ä¸æ”¯æŒæ—¶é—´æˆ³åŠŸèƒ½, å€¼ä¸ºå…¨0:
 	ENG : get raw packet timestamp, maybe zero if network card or library not support.
 	struct timeval pkt_stamp;
 	get_opt_from_rawpkt(voidpkt, RAW_PKT_GET_TIMESTAMP, &pkt_stamp); 
@@ -77,34 +77,34 @@ for example:
 int get_opt_from_rawpkt(const void *rawpkt, int type, void *out_value);
 
 /*
-	CHN: ¹¦ÄÜÍ¬ÉÏ, ´«Èë²ÎÊı²»Í¬.
+	CHN: åŠŸèƒ½åŒä¸Š, ä¼ å…¥å‚æ•°ä¸åŒ.
 	ENG: Function ibid, except args pstream.
 */
 int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, void *out_value);
 
 /* 	
 	TCP UDP only 
-	»ñÈ¡Á÷ÔÚµ±Ç°°üÖĞ¶ÔÓ¦µÄl3»òÕßl4Í·²¿ÆğÊ¼Î»ÖÃ,
+	è·å–æµåœ¨å½“å‰åŒ…ä¸­å¯¹åº”çš„l3æˆ–è€…l4å¤´éƒ¨èµ·å§‹ä½ç½®,
 */
 const void *get_current_layer3_header(const struct streaminfo *pstream);
 const void *get_current_layer4_header(const struct streaminfo *pstream);
 
 /*
-	CHN : Êı¾İ°üÍ·²¿Æ«ÒÆº¯Êı.
+	CHN : æ•°æ®åŒ…å¤´éƒ¨åç§»å‡½æ•°.
 	ENG : 
 
-	²ÎÊı:
-		raw_data: µ±Ç°²ãµÄÍ·²¿Ö¸Õë;
-		raw_layer_type: µ±Ç°²ãµÄµØÖ·ÀàĞÍ, Ïê¼û: enum addr_type_t ;
-		expect_layer_type: ÆÚÍûÌø×ªµ½µÄµØÖ·ÀàĞÍ, Ïê¼û:  enum addr_type_t ;
+	å‚æ•°:
+		raw_data: å½“å‰å±‚çš„å¤´éƒ¨æŒ‡é’ˆ;
+		raw_layer_type: å½“å‰å±‚çš„åœ°å€ç±»å‹, è¯¦è§: enum addr_type_t ;
+		expect_layer_type: æœŸæœ›è·³è½¬åˆ°çš„åœ°å€ç±»å‹, è¯¦è§:  enum addr_type_t ;
 
-	·µ»ØÖµ:
-		NULL: ÎŞ´ËµØÖ·;
-		NON-NULL: ¶ÔÓ¦²ãµÄÍ·²¿µØÖ·.
+	è¿”å›å€¼:
+		NULL: æ— æ­¤åœ°å€;
+		NON-NULL: å¯¹åº”å±‚çš„å¤´éƒ¨åœ°å€.
 	
 
-	¾ÙÀı:
-		¼ÙÉèµ±Ç°²ãÎªEthernet, ÆğÊ¼°üÍ·µØÖ·Îªthis_layer_hdr, ÏëÌø×ªµ½IPv6²ãÍ·²¿:
+	ä¸¾ä¾‹:
+		å‡è®¾å½“å‰å±‚ä¸ºEthernet, èµ·å§‹åŒ…å¤´åœ°å€ä¸ºthis_layer_hdr, æƒ³è·³è½¬åˆ°IPv6å±‚å¤´éƒ¨:
 		struct ip6_hdr *ip6_header;
 		ip6_header = MESA_jump_layer(this_layer_hdr, ADDR_TYPE_MAC, ADDR_TYPE_IPV6);
 */
@@ -113,6 +113,7 @@ const void *MESA_jump_layer(const void *raw_data,  int raw_layer_type, int expec
 const void *get_current_rawpkt_from_streaminfo(const struct streaminfo *pstream);
 
 const void *get_rawpkt_from_streaminfo(const struct streaminfo *pstream, int route_direction);
+const void *get_rawpkt_by_stream_dir(const struct streaminfo *pstream, int stream_direction);
 
 struct detain_pkt;
 struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const void *rawpkt);

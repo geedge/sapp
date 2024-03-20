@@ -59,6 +59,10 @@ enum MESA_stream_opt{
 	MSO_STREAM_C2S_ROUTE_DIRECTION,
 	MSO_STREAM_INBOND_ROUTE_CTX,
 	MSO_STREAM_OUTBOND_ROUTE_CTX,
+	MSO_STREAM_C2S_LINK_ID,
+	MSO_STREAM_S2C_LINK_ID,
+	MSO_STREAM_C2S_ROUTE_CTX,
+	MSO_STREAM_S2C_ROUTE_CTX,	
 	__MSO_MAX,
 };
 
@@ -154,8 +158,8 @@ enum stream_timer_return_value{
 };
 
 
-#define MAX_TCP_OPT_LEN	(38) /* TCPÍ·²¿³¤¶È×î³¤Îª60×Ö½Ú, È¥³ı±ê×¼Í·²¿Ê£ÓàÑ¡Ïî²¿·Ö×î³¤40×Ö½Ú, Ñ¡ÏîÊı¾İ²¿·Ö×î³¤38×Ö½Ú */
-#define MAX_TCP_OPT_NUM	(20) /* µ¥¸öTCP°ü×î´óÑ¡ÏîÊıÁ¿ */
+#define MAX_TCP_OPT_LEN	(38) /* TCPå¤´éƒ¨é•¿åº¦æœ€é•¿ä¸º60å­—èŠ‚, å»é™¤æ ‡å‡†å¤´éƒ¨å‰©ä½™é€‰é¡¹éƒ¨åˆ†æœ€é•¿40å­—èŠ‚, é€‰é¡¹æ•°æ®éƒ¨åˆ†æœ€é•¿38å­—èŠ‚ */
+#define MAX_TCP_OPT_NUM	(20) /* å•ä¸ªTCPåŒ…æœ€å¤§é€‰é¡¹æ•°é‡ */
 
 enum tcp_option_value{
 	TCP_OPT_EOL = 0,
@@ -202,21 +206,21 @@ struct tcp_option_ext{
 } __attribute__((packed, aligned(1)));
 
 
-/* 2018-10-24 lijia add, for pangu ÏîÄ¿mac_in_mac»ØÁ÷.
-   ÀíÂÛÉÏ, sappÆ½Ì¨²»Ó¦¸Ã¹ØĞÄºÍÒµÎñÃÜÇĞÏà¹ØµÄ¶«Î÷, ±ÈÈçmacÀïÄÄ¸ö×Ö¶ÎÊÇlink_id, ÄÄ¸öÊÇdev_id,
-   µ«Õâ¸öÍæÒâÌ«µ×²ãÁË, Æ½Ì¨½èÓÃGDEV·¢ËÍRST°üÒ²ÒªÌî³äÕâĞ©Öµ, ±ØĞëÆ½Ì¨´¦Àí!!
+/* 2018-10-24 lijia add, for pangu é¡¹ç›®mac_in_macå›æµ.
+   ç†è®ºä¸Š, sappå¹³å°ä¸åº”è¯¥å…³å¿ƒå’Œä¸šåŠ¡å¯†åˆ‡ç›¸å…³çš„ä¸œè¥¿, æ¯”å¦‚macé‡Œå“ªä¸ªå­—æ®µæ˜¯link_id, å“ªä¸ªæ˜¯dev_id,
+   ä½†è¿™ä¸ªç©æ„å¤ªåº•å±‚äº†, å¹³å°å€Ÿç”¨GDEVå‘é€RSTåŒ…ä¹Ÿè¦å¡«å……è¿™äº›å€¼, å¿…é¡»å¹³å°å¤„ç†!!
 */
-/* ÎªÁË·½±ãÒµÎñ²å¼ş»ñÈ¡mac_in_macµØÖ·ÀïµÄ¾ßÌåĞÅÏ¢, ²»ÔÙÊ¹ÓÃÔ­Ê¼µÄbitÎ»Óò, ×ª»»³É±äÁ¿ĞÎÊ½ */
+/* ä¸ºäº†æ–¹ä¾¿ä¸šåŠ¡æ’ä»¶è·å–mac_in_macåœ°å€é‡Œçš„å…·ä½“ä¿¡æ¯, ä¸å†ä½¿ç”¨åŸå§‹çš„bitä½åŸŸ, è½¬æ¢æˆå˜é‡å½¢å¼ */
 struct vxlan_info{
-	unsigned char encap_type; /* Ô­Ê¼¶ş²ã·â×°¸ñÊ½ */
-	unsigned char entrance_id; /* Éè±¸ËùÔÚ³öÈë¿ÚID */
-	unsigned char dev_id; /* Éè±¸ID */
-	unsigned char link_id; /* Á´Â·ID */
-	unsigned char link_dir; /* Á´Â··½Ïò, Ö¸µ±Ç°ËÄÔª×éµÄIP±»²¶»ñÊ±µÄ´«Êä·½Ïò, ¶ÔÓÚTCP, SYN°üµÄ´«Êä·½Ïò; ¶ÔÓÚUDP, ¶Ë¿Ú´óIPµÄ´«Êä·½Ïò */
-	unsigned char inner_smac[18]; /* ÄÚ²ãÕæÊµSMAC, stringÀàĞÍ, Àı: "11:22:33:44:55:66"  */
-	unsigned char inner_dmac[18]; /* ÄÚ²ãÕæÊµDMAC, stringÀàĞÍ, Àı: "11:22:33:44:55:66"  */
-	unsigned char inner_smac_hex[6]; /* ÄÚ²ãÕæÊµSMAC, Ô­Ê¼¶ş½øÖÆÀàĞÍ  */
-	unsigned char inner_dmac_hex[6]; /* ÄÚ²ãÕæÊµDMAC, Ô­Ê¼¶ş½øÖÆÀàĞÍ  */	
+	unsigned char encap_type; /* åŸå§‹äºŒå±‚å°è£…æ ¼å¼ */
+	unsigned char entrance_id; /* è®¾å¤‡æ‰€åœ¨å‡ºå…¥å£ID */
+	unsigned char dev_id; /* è®¾å¤‡ID */
+	unsigned char link_id; /* é“¾è·¯ID */
+	unsigned char link_dir; /* é“¾è·¯æ–¹å‘, æŒ‡å½“å‰å››å…ƒç»„çš„IPè¢«æ•è·æ—¶çš„ä¼ è¾“æ–¹å‘, å¯¹äºTCP, SYNåŒ…çš„ä¼ è¾“æ–¹å‘; å¯¹äºUDP, ç«¯å£å¤§IPçš„ä¼ è¾“æ–¹å‘ */
+	unsigned char inner_smac[18]; /* å†…å±‚çœŸå®SMAC, stringç±»å‹, ä¾‹: "11:22:33:44:55:66"  */
+	unsigned char inner_dmac[18]; /* å†…å±‚çœŸå®DMAC, stringç±»å‹, ä¾‹: "11:22:33:44:55:66"  */
+	unsigned char inner_smac_hex[6]; /* å†…å±‚çœŸå®SMAC, åŸå§‹äºŒè¿›åˆ¶ç±»å‹  */
+	unsigned char inner_dmac_hex[6]; /* å†…å±‚çœŸå®DMAC, åŸå§‹äºŒè¿›åˆ¶ç±»å‹  */	
 };
 
 
@@ -334,14 +338,14 @@ int sapp_get_device_opt(const char *device, enum sapp_device_opt opt_type, void 
 
 /*************************************************************************************** 	
 	NOTE:
-		ÔÚ±»¶¯Ä£Ê½ÏÂ, ²å¼şÎŞĞè¹ØĞÄroute_dirµÄ¾ø¶ÔÖµ, Ö»ĞèÒªÀí½âÍ¬ÏòºÍ·´Ïò¼´¿É,
-		µ«Ö÷¶¯·¢°ü±ØĞëÒª¾«È·Àí½âroute_dirÊÇ0»¹ÊÇ1, ÒòÍâ½çÍøÂçÍØÆËÄ£Ê½²»Í¬, ¿ÉÄÜËæÊ±»á±ä»¯,
-		ËùÒÔÉèÖÃ´Ë½Ó¿Ú, ²å¼şÖ»Ğè´«ÈëÈËÒ×Àí½âµÄ·½Ïòhuman_dir, ·µ»Øµ±Ç°Á´Â·µÄlink route dir,
-		×¢ÒâÊ×´Î²¿ÊğÊ±, etc/sapp.toml->inbound_route_dirÒ»¶¨ÒªÉèÖÃÕıÈ·.
+		åœ¨è¢«åŠ¨æ¨¡å¼ä¸‹, æ’ä»¶æ— éœ€å…³å¿ƒroute_dirçš„ç»å¯¹å€¼, åªéœ€è¦ç†è§£åŒå‘å’Œåå‘å³å¯,
+		ä½†ä¸»åŠ¨å‘åŒ…å¿…é¡»è¦ç²¾ç¡®ç†è§£route_diræ˜¯0è¿˜æ˜¯1, å› å¤–ç•Œç½‘ç»œæ‹“æ‰‘æ¨¡å¼ä¸åŒ, å¯èƒ½éšæ—¶ä¼šå˜åŒ–,
+		æ‰€ä»¥è®¾ç½®æ­¤æ¥å£, æ’ä»¶åªéœ€ä¼ å…¥äººæ˜“ç†è§£çš„æ–¹å‘human_dir, è¿”å›å½“å‰é“¾è·¯çš„link route dir,
+		æ³¨æ„é¦–æ¬¡éƒ¨ç½²æ—¶, etc/sapp.toml->inbound_route_dirä¸€å®šè¦è®¾ç½®æ­£ç¡®.
 
-	args: ±íÊ¾·¢°üÄ¿±êÏà¶ÔÓÚµ±Ç°Éè±¸ËùÔÚµÄµØÀíÎ»ÖÃ,
-		'E' or 'e': ±íÊ¾Êı¾İ°ü´«Êä·½ÏòÊÇ´ÓInternal to External.
-		'I' or 'i': ±íÊ¾Êı¾İ°ü´«Êä·½ÏòÊÇ´ÓExternal to Internal.
+	args: è¡¨ç¤ºå‘åŒ…ç›®æ ‡ç›¸å¯¹äºå½“å‰è®¾å¤‡æ‰€åœ¨çš„åœ°ç†ä½ç½®,
+		'E' or 'e': è¡¨ç¤ºæ•°æ®åŒ…ä¼ è¾“æ–¹å‘æ˜¯ä»Internal to External.
+		'I' or 'i': è¡¨ç¤ºæ•°æ®åŒ…ä¼ è¾“æ–¹å‘æ˜¯ä»External to Internal.
 
 	return value:
 		0 or 1: success.
@@ -351,19 +355,19 @@ int MESA_dir_human_to_link(int human_dir);
 
 /*
 	args:
-		Á´Â·´«Êä·½Ïò: 0»ò1, Í¨³£À´×Ôstream->routedir;
+		é“¾è·¯ä¼ è¾“æ–¹å‘: 0æˆ–1, é€šå¸¸æ¥è‡ªstream->routedir;
 	
-	·µ»ØÖµ:
-		'E' or 'e': ±íÊ¾Êı¾İ°ü´«Êä·½ÏòÊÇ´ÓInternal to External.
-		'I' or 'i': ±íÊ¾Êı¾İ°ü´«Êä·½ÏòÊÇ´ÓExternal to Internal.
-		'x': ²ÎÊı´íÎó;
+	è¿”å›å€¼:
+		'E' or 'e': è¡¨ç¤ºæ•°æ®åŒ…ä¼ è¾“æ–¹å‘æ˜¯ä»Internal to External.
+		'I' or 'i': è¡¨ç¤ºæ•°æ®åŒ…ä¼ è¾“æ–¹å‘æ˜¯ä»External to Internal.
+		'x': å‚æ•°é”™è¯¯;
 */
 int MESA_dir_link_to_human(int link_route_dir);
 
 
 
 /****************************************************************************************
-	CHN : ÒòÎªÀúÊ·ÒÅÁôÎÊÌâ,´ËÀàº¯Êı±£Áô½öÎªÏòºó¼æÈİ,ÇëÊ¹ÓÃĞÂ½Ó¿Ú:MESA_set_stream_opt().
+	CHN : å› ä¸ºå†å²é—ç•™é—®é¢˜,æ­¤ç±»å‡½æ•°ä¿ç•™ä»…ä¸ºå‘åå…¼å®¹,è¯·ä½¿ç”¨æ–°æ¥å£:MESA_set_stream_opt().
 	ENG : for compat old version, keep these functions, but we suggest you use new API MESA_set_stream_opt().
 *****************************************************************************************/
 int tcp_set_single_stream_max_unorder(const struct streaminfo *stream, unsigned char dir, unsigned short unorder_num);

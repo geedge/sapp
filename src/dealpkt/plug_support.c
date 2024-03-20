@@ -410,11 +410,33 @@ const void *get_rawpkt_from_streaminfo(const struct streaminfo *pstream, int rou
 {
 	const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
 	if(pstream_pr->polling_inject_context == NULL)return NULL;
-    if (pstream_pr->stream_c2s_route_dir == DIR_ROUTE_UP)
+	int c2s_route_dir=MESA_dir_link_to_human(pstream_pr->stream_c2s_route_dir);
+    if (c2s_route_dir==(int)'E')
     {
-        return pstream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S - 1];
+		if(route_direction == DIR_ROUTE_UP)
+        	return pstream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S - 1];
+		else
+			return pstream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C - 1];
     }
-    else if (pstream_pr->stream_c2s_route_dir == DIR_ROUTE_DOWN)
+    if (c2s_route_dir==(int)'I')
+    {
+		if(route_direction == DIR_ROUTE_UP)
+			return pstream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C - 1];
+		else
+        	return pstream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S - 1];
+    }
+    return NULL;
+}
+
+const void *get_rawpkt_by_stream_dir(const struct streaminfo *pstream, int stream_direction)
+{
+	const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
+	if(pstream_pr->polling_inject_context == NULL)return NULL;
+    if (stream_direction==DIR_C2S)
+    {
+		return pstream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S - 1];
+    }
+    if (stream_direction==DIR_S2C)
     {
         return pstream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C - 1];
     }
@@ -1756,7 +1778,8 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		{
 			ret = -1;
 			struct rawpkt_metadata *meta = NULL;
-			if (pstream_pr->stream_c2s_route_dir == DIR_ROUTE_UP)
+			int c2s_route_dir=MESA_dir_link_to_human(pstream_pr->stream_c2s_route_dir);
+			if (c2s_route_dir==(int)'E')
 			{
 					if (opt == MSO_STREAM_OUTBOND_LINK_ID)
 					{
@@ -1872,6 +1895,50 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
             }
         }
         break;
+		case MSO_STREAM_C2S_LINK_ID:
+		case MSO_STREAM_S2C_LINK_ID:
+		{
+			ret = -1;
+			struct rawpkt_metadata *meta = NULL;
+			if (opt == MSO_STREAM_C2S_LINK_ID)
+			{
+				meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_C2S - 1];
+			}			
+			else
+			{
+				meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_S2C - 1];
+			}
+			if (meta)
+			{
+					*(unsigned int *)(opt_val) = meta->link_id;
+					*opt_val_len = sizeof(meta->link_id);
+					ret = 0;
+			}			
+		}
+		break;
+		case MSO_STREAM_C2S_ROUTE_CTX:
+		case MSO_STREAM_S2C_ROUTE_CTX:
+		{
+			ret = -1;
+			*opt_val_len = 0;
+            void **value = (void **)opt_val;
+			struct rawpkt_metadata *meta = NULL;
+			if (opt == MSO_STREAM_C2S_ROUTE_CTX)
+			{
+				meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_C2S - 1];
+			}			
+			else
+			{
+				meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_S2C - 1];
+			}
+			if (meta)
+			{
+                *value = (void *)meta->data;
+                *opt_val_len = meta->sz_data;
+                ret = meta->sz_data;
+			}	
+		}
+		break;		
         default:
 			sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n",printaddr(&pstream->addr, pstream->threadnum), (int)opt);
 			ret = -1;
