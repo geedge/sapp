@@ -1825,33 +1825,43 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			break;
 		}
         case MSO_STREAM_INBOND_ROUTE_CTX:
+		{
+            ret = -1;
+            *opt_val_len = 0;
+            void **value = (void **)opt_val;
+            struct rawpkt_metadata *meta = NULL;
+			int dir=MESA_dir_link_to_human(pstream_pr->stream_c2s_route_dir);
+            if (dir==(int)'I')
+            {
+                meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_C2S - 1];
+            }
+            else
+            {
+ 				meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_S2C - 1];
+            }
+
+            if (meta)
+            {
+                *value = (void *)meta->data;
+                *opt_val_len = meta->sz_data;
+                ret = meta->sz_data;
+            }
+        }		
+		break;
         case MSO_STREAM_OUTBOND_ROUTE_CTX: 
 		{
             ret = -1;
             *opt_val_len = 0;
             void **value = (void **)opt_val;
             struct rawpkt_metadata *meta = NULL;
-            if (pstream_pr->stream_c2s_route_dir == DIR_ROUTE_UP)
+			int dir=MESA_dir_link_to_human(pstream_pr->stream_c2s_route_dir);
+            if (dir==(int)'E')
             {
-                if (opt == MSO_STREAM_OUTBOND_ROUTE_CTX)
-                {
                 meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_C2S - 1];
-                }
-                else
-                {
-                meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_S2C - 1];
-                }
             }
             else
             {
-                if (opt == MSO_STREAM_OUTBOND_ROUTE_CTX)
-                {
-                meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_S2C - 1];
-                }
-                else
-                {
-                meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_C2S - 1];
-                }
+ 				meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_S2C - 1];
             }
 
             if (meta)
