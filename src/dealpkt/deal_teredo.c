@@ -24,12 +24,10 @@ int guess_if_teredo(const struct streaminfo *pstream,  struct mesa_udp_hdr *udph
 	}
 
 	 /* 2018-03-13 lijia close, 某些Teredo隧道使用非标准端口, 逃避检测, 不再判断端口 */
-#if 0	 
 	if((TEREDO_DEFAULT_PORT != ntohs(udphdr->uh_sport))
 	&& (TEREDO_DEFAULT_PORT != ntohs(udphdr->uh_dport))){
 		return 0;
 	}
-#endif
 
     udp_payuload_len = ntohs(udphdr->uh_ulen) - sizeof(struct mesa_udp_hdr);
     if(udp_payuload_len < (int)sizeof(struct mesa_ip6_hdr)){ /* 负载还不够一个完整IPv6包头 */
