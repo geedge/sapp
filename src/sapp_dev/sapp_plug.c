@@ -92,10 +92,12 @@ static void signal_usr2_handler(int signo)
     free(symbols);
 }
 
+
 static void signal_nouse_handler(int signo)
 {
 	printf("%s, SIGNAL:%d recviced!\n", __FUNCTION__, signo);
 #if defined(USE_JEMALLOC)
+	#include "tomlc99_wrap.h"
 	#include "jemalloc/jemalloc.h"
 	bool active = true;
 	int ret;
@@ -103,7 +105,9 @@ static void signal_nouse_handler(int signo)
 	printf("mallctl prof.dump return %d\n", ret);
   	ret=mallctl("prof.active", NULL, NULL, &active, sizeof(bool)); 
 	printf("mallctl prof.active:%d return %d\n", active, ret);
-	sleep(sapp_global_val->config.profiling.memory_used_stat_interval_s);
+	int prof_interval_s=10;
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.memory", (char *)"memory_used_stat_interval_s", (int *)&prof_interval_s, 10);
+	sleep(prof_interval_s);
 	active = false;
 	ret=mallctl("prof.active", NULL, NULL, &active, sizeof(bool)); 
 	printf("mallctl prof.active:%d return %d\n", active, ret);
@@ -113,15 +117,50 @@ static void signal_nouse_handler(int signo)
 #endif
 }
 
-static void signal_take_over(void)
+
+sigset_t takeover_signal_set;
+static void signal_take_over_start(void)
 {
-	signal(SIGHUP, signal_hup_handler);
-	signal(SIGTERM, signal_term_handler);
-	signal(SIGUSR1, signal_usr1_handler);
+	sigemptyset(&takeover_signal_set);
+    sigaddset(&takeover_signal_set, SIGHUP);
+    sigaddset(&takeover_signal_set, SIGTERM);
+    sigaddset(&takeover_signal_set, SIGUSR1);
+    sigaddset(&takeover_signal_set, SIGSYS);
+
+	pthread_sigmask(SIG_BLOCK, &takeover_signal_set, NULL);
+
+    struct sigaction sa;
+    sa.sa_handler = signal_hup_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGHUP, &sa, NULL);
+
+    sa.sa_handler = signal_term_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGTERM, &sa, NULL);
+
+    sa.sa_handler = signal_usr1_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGUSR1, &sa, NULL);
+
+    sa.sa_handler = signal_nouse_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGSYS, &sa, NULL);
+
+	//signal(SIGSYS, signal_nouse_handler);
+    //signal(SIGHUP, signal_hup_handler);
+	//signal(SIGTERM, signal_term_handler);
+	//signal(SIGUSR1, signal_usr1_handler);
 	signal(SIGUSR2, signal_usr2_handler);
-	signal(SIGSYS, signal_nouse_handler);
 }
 
+static void signal_take_over_finish(void)
+{
+	pthread_sigmask(SIG_UNBLOCK, &takeover_signal_set, NULL);	
+}
 
 static void show_mesa_log(void)
 {
@@ -269,7 +308,7 @@ int libsapp_setup_env(int argc, char *argv[])
 #endif
 	
 	sapp_init_breakpad_mini();
-	signal_take_over();
+	signal_take_over_start();
 	
 	if(MESA_platform_init(argc, argv) < 0){
 		return -1;
@@ -291,6 +330,7 @@ int libsapp_setup_env(int argc, char *argv[])
 		pthread_create(&pid, NULL, sapp_monitor_thread, NULL);
 		pthread_detach(pid);
 	}
+	signal_take_over_finish();
 	return 0;
 }
 

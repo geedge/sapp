@@ -304,6 +304,9 @@ install(FILES ${CMAKE_BINARY_DIR}/test/test_app_sapp.so DESTINATION plug/busines
 
 install(PROGRAMS ${CMAKE_BINARY_DIR}/tools/stream_id_decode DESTINATION ./tools/ COMPONENT EXECUTABLE)
 install(PROGRAMS ${CMAKE_BINARY_DIR}/module_test/plugin_test_main/plugin_test_main DESTINATION ./tools/ COMPONENT EXECUTABLE)
+if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
+	install(PROGRAMS ${CMAKE_BINARY_DIR}/vendor/libjemalloc/bin/jeprof DESTINATION ./tools/ COMPONENT EXECUTABLE)	
+endif()
 
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream.h DESTINATION /opt/MESA/include/MESA/ COMPONENT HEADER)
 install(FILES ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_base.h DESTINATION /opt/MESA/include/MESA/stream_inc COMPONENT HEADER)
