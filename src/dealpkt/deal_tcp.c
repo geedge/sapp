@@ -2933,7 +2933,9 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		if((pdetail_pr->auto_remedy_flag != 0) && (tcplen > 0)){ /* 防止flood攻击, 只有带数据的包才发RST */
 			sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, kill_tcp remedy, curdir:%d, send RST pkt.", 
 				printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
+			pstream_pr->plugin_process_context=1;
 			MESA_kill_tcp_remedy(pstream, raw_pkt);
+			pstream_pr->plugin_process_context=0;
 		}
 		
 #if 0 /* MSO_TCPALL_VALID_AFTER_KILL option is obsoleted! */ 
