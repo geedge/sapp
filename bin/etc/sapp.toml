@@ -213,7 +213,7 @@
 
 [TOOLS]
     [tools.pkt_dump]
-    enabled=1
+    enabled=0
 ### note, mode options value:[storage, udp_socket]
     mode="udp_socket"
     BSD_packet_filter=""

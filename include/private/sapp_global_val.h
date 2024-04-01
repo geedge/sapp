@@ -213,6 +213,7 @@ typedef struct{
  	int bloom_capacity;
 	double bloom_error_rate;
 	int bloom_timeout;
+	int bloom_slice_num;
 }sapp_dup_pkt_t;
 
 typedef struct{

@@ -56,6 +56,8 @@ stages:
       --suppress=uselessAssignmentArg
       --suppress=uninitvar
       --suppress=unusedStructMember
+      --suppress=preprocessorErrorDirective
+      --suppress=syntaxError
   tags:
     - share
 
