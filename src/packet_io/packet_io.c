@@ -661,6 +661,8 @@ static int mesa_default_pkt_cb(const raw_pkt_t *p_raw_pkt, unsigned char dir, in
 			break;
 
 			default:
+				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
+                local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += (unsigned long long)p_raw_pkt->raw_pkt_len;
 				return PASS;
 			break;
 		}

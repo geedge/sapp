@@ -1244,14 +1244,12 @@ void plug_record_end_time(int plug_id, int thread_seq)
 	}
 }
 
-extern const char *sapp_rawpkt_ntop(const raw_pkt_t *raw_pkt, int greedy, char *out_buf, int buf_len);
 
 char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* session_info,int thread_seq,struct streaminfo *a_stream,const void *a_packet)
 {
 	char rec=APP_STATE_DROPME;
 	struct timespec before_ts, after_ts;
 	long long time_spent_ns;
-	char debug_raw_pkt_string[256];
 	const struct streaminfo_private *stream_pr =(struct streaminfo_private *)a_stream;
 
 	if(g_business_plug_info==NULL)
@@ -1289,11 +1287,10 @@ char plugin_call_appentry(stSessionFunInfo* funelem_session,stSessionInfo* sessi
 								thread_seq);
 
 			}else{
-				sapp_rawpkt_ntop(stream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string));
-				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld us, rawpkt:%s, addr:%s, raw_len:%d, c:%u, s:%u, thread:%d", 
+				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld us, addr:%s, raw_len:%d, c:%u, s:%u, thread:%d", 
 								g_plug_global_entry[funelem_session->entry_id].plug_name, 
 								g_plug_global_entry[funelem_session->entry_id].plug_entry_name, 
-								time_spent_ns/1000,debug_raw_pkt_string,
+								time_spent_ns/1000,
 								printaddr(&a_stream->addr, thread_seq), 
 								stream_pr->raw_pkt->raw_pkt_len,
 								a_stream->pudpdetail->clientpktnum,

@@ -169,9 +169,9 @@ static inline int checkipv6pkt(const struct mesa_ip6_hdr * iph, int payload_len,
 	}
 	
 	switch(iph->ip6_nxt_hdr){
-#if 0	
 		case  NEXTHDR_TCP			:  
 		case  NEXTHDR_UDP			:  
+#if 0	
 		case  NEXTHDR_IPV6			:
 		case  NEXTHDR_HOP			:  
 		case  NEXTHDR_IPIP			:

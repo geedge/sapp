@@ -274,7 +274,6 @@ int stream_register_overlay_udp(STREAM_CB_FUN_T x)
 	return stream_register_funtoArray(FUN_TYPE_UDP,(char (*)())x,g_OverlayUdpFun,&g_OverlayUdpFunNum, 0);
 }
 
-extern const char *sapp_rawpkt_ntop(const raw_pkt_t *raw_pkt, int greedy_inner_layer, char *out_buf, int buf_len);
 /*
 	lijia 2015-01-12 add this_iphdr, 
 	如果是IP分片重组的包, 必须显式的传递IP包头, 否则只传raw_hdr, 无法获取重组后的IP包头.
@@ -284,7 +283,6 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 	char rec;
 	struct timespec before_ts, after_ts;
 	long long time_spent_ns;
-	char debug_raw_pkt_string[256];
 	struct streaminfo_private *pstream_pr=(struct streaminfo_private *)a_stream;
 	int latency_enabled=MESA_handle_runtime_log_level_enabled(ABBR_PROCESS_LATENCY_LOG_HANDLE, RLOG_LV_INFO);
 	if(unlikely(latency_enabled))
@@ -325,12 +323,10 @@ char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo 
 								a_stream->pudpdetail->serverpktnum,								
 								thread_seq);
 			}else{
-				sapp_rawpkt_ntop(pstream_pr->raw_pkt, 1, debug_raw_pkt_string, sizeof(debug_raw_pkt_string)); /* 此处优先打印最内层四元组 */
-				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld us, rawpkt:%s, addr:%s, raw_len:%d, c:%u, s:%u, thread:%d", 
+				sapp_process_latency_log(RLOG_LV_INFO, "plug_name:%s, entry:%s, pkt process latency:%lld us, addr:%s, raw_len:%d, c:%u, s:%u, thread:%d", 
 								g_plug_global_entry[pFunInfo->entry_id].plug_name, 
 								g_plug_global_entry[pFunInfo->entry_id].plug_entry_name, 
 								time_spent_ns/1000, 
-								debug_raw_pkt_string, 
 								printaddr(&a_stream->addr, thread_seq), 
 								pstream_pr->raw_pkt->raw_pkt_len,
 								a_stream->pudpdetail->clientpktnum,
