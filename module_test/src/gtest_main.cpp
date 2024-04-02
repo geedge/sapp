@@ -24,7 +24,7 @@ int g_slient_mode = 0;
 
 const char *for_test_sapp_version = "4.2.68_c9193fe";
 
-static int g_libsapp_devel_res = GTEST_SAPP_ERR; /* 使用lisapp_devel.so在同一个进程内运行的测试结�?*/
+static int g_libsapp_devel_res = GTEST_SAPP_ERR; /* 使用lisapp_devel.so在同一个进程内运行的测试结�?*/
 int gtest_set_libsapp_devel_result(int res_value)
 {
 	g_libsapp_devel_res = res_value;
@@ -170,7 +170,7 @@ void call_libsapp_devel_online_mode(void)
 	while(sapp_get_current_state() != SAPP_STATE_PROCESSING){
 		usleep(100);
 	}
-	sleep(3); /* TODO: 此处不用超时, 而是靠一个标志位或特定状�?*/
+	sleep(3); /* TODO: 此处不用超时, 而是靠一个标志位或特定状�?*/
 	libsapp_destroy_env();
 
 }
@@ -200,13 +200,14 @@ TEST(ipv4, frag_out_of_order)
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 
+#if (0 == HIGH_PERF)	
 #define ipv4_frag_assemble_udp 1  // for SI symbol view
 TEST(ipv4, frag_assemble_udp)
 {
 	ipv4_frag_udp_assemble_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
-
+#endif
 
 /********************************* IPv6 Test ******************************/
 
@@ -228,14 +229,14 @@ TEST(ipv6, frag_out_of_order)
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 
-
+#if (0 == HIGH_PERF)	
 #define ipv6_frag_assemble_udp 1  // for SI symbol view
 TEST(ipv6, frag_assemble_udp)
 {
 	ipv6_frag_udp_assemble_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
-
+#endif
 
 /*************************** UDP simple Test ********************************/
 #define udp_simple 1  // for SI symbol view
@@ -340,12 +341,14 @@ TEST(offload, udp_givestate_and_giveme_entry)
 
 
 /*************************** TCPALL simple Test ********************************/
+#if (0 == HIGH_PERF)	
 #define _tcpall_simple 1  // for SI symbol view
 TEST(tcpall, simple)
 {
 	tcpall_simple_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
+#endif
 
 /*************************** TCP simple Test **********************************/
 #define _tcp_simple 1  // for SI symbol view
@@ -407,12 +410,14 @@ TEST(tcp, lost_pkt_manual)
 
 
 /************************* TCP timeout and reset Test **************************/
+#if (0 == HIGH_PERF)	
 #define tcp_timeout_reset 1  // for SI symbol view
 TEST(tcp, timeout_reset)
 {
 	tcp_timeout_reset_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
+#endif
 
 /************************* TCP deduce flow stat Test **************************/
 #define tcp_deduce_test 1  // for SI symbol view
@@ -521,14 +526,14 @@ TEST(tcp, overlap)
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 
-
+#if (0 == HIGH_PERF)	
 #define tcp_first_unorder_pkt 1  // for SI symbol view
 TEST(tcp, first_unorder_pkt)
 {
 	tcp_first_unorder_rawpkt_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
-
+#endif
 
 #define tcp_over_gtp_with_seq_no_ext 1  // for SI symbol view
 TEST(tcp, gtp_with_seq_no_ext)
@@ -537,13 +542,14 @@ TEST(tcp, gtp_with_seq_no_ext)
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 
-
+#if (0 == HIGH_PERF)	
 #define tcp_over_gtp_with_seq_and_ext 1  // for SI symbol view
 TEST(tcp, gtp_with_seq_and_ext)
 {
 	gtp_with_seq_and_ext_tcp_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
+#endif
 
 #define tcp_over_gtp_without_seq_and_ext 1  // for SI symbol view
 TEST(tcp, gtp_without_seq_and_ext)
@@ -586,14 +592,14 @@ TEST(offload, tcp_givestate_and_giveme_entry)
 
 
 /************************** stream_control.h API test *************************/
-
+#if (0 == HIGH_PERF)
 #define control_tcp_need_ack 1  // for SI symbol view
 TEST(control, tcp_need_ack)
 {
 	control_tcp_need_ack_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
-
+#endif
 
 #define control_takeover 1  // for SI symbol view
 TEST(control, takeover)
@@ -736,13 +742,14 @@ TEST(control, platform_opt)
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 
-
+#if (0 == HIGH_PERF)	
 #define control_stream_and_traffic 1  // for SI symbol view
 TEST(control, stream_and_traffic)
 {
 	control_stream_and_traffic_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
+#endif
 
 #define control_stream_create_timestamp_ms 1  // for SI symbol view
 TEST(control, stream_create_timestamp_ms)
@@ -816,12 +823,14 @@ TEST(control, plug_dup_pkt_udp)
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
 }
 
+#if (0 == HIGH_PERF)	
 #define control_find_streaminfo_v4 1 
 TEST(control, find_streaminfo_v4)
 {
 	find_streaminfo_v4_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
 }
+#endif
 
 #define control_find_streaminfo_v6 1 
 TEST(control, find_streaminfo_v6)
@@ -1273,7 +1282,7 @@ TEST(timer, simple)
 /********************* inject rst packet Test ***********************/
 #if SAPP_V4 //rst_tcp only support in sapp-v4.0
 
-#if 0 /* 改成用sapp_benchmark框架测试, 不需要写代码、不用重新编�?*/
+#if 0 /* 改成用sapp_benchmark框架测试, 不需要写代码、不用重新编�?*/
 #define inject_rst_packet_test_v4 1  // for SI symbol view
 TEST(inject, rst_pkt_v4)
 {
@@ -1284,7 +1293,7 @@ TEST(inject, rst_pkt_v4)
 
 /********************* inject  rst packet Test ***********************/
 #define inject_rst_packet_test_v6 1  // for SI symbol view
-#if 0 /* 改成用sapp_benchmark框架测试, 不需要写代码、不用重新编�?*/
+#if 0 /* 改成用sapp_benchmark框架测试, 不需要写代码、不用重新编�?*/
 TEST(inject, rst_pkt_v6)
 {
 	MESA_rst_tcp_test_v6_run();
@@ -1882,12 +1891,13 @@ TEST(inline_mode, get_rawpkt_data)
 	EXPECT_EXIT(inline_get_rawpkt_data_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
+#if (0 == HIGH_PERF)	
 #define inline_raw_ip_frag_list 1  
 TEST(inline_mode, raw_ip_frag_list)
 {
 	EXPECT_EXIT(inline_raw_ip_frag_list_run(), testing::ExitedWithCode(0),  "test succ");
 }
-
+#endif
 
 #define inline_get_vxlan_info 1  
 TEST(inline_mode, get_vxlan_info)
@@ -1990,7 +2000,7 @@ TEST(proxy, simple)
 #define _proxy_kill_tcp 1   
 /* 
 	TODO:
-		使用libsapp_devel实测, 两个用例不能顺序执行, 疑似与解析层dlopen有关�? 暂未定位原因, 待解�?!!!
+		使用libsapp_devel实测, 两个用例不能顺序执行, 疑似与解析层dlopen有关�? 暂未定位原因, 待解�?!!!
 */
 #if 0 
 TEST(proxy, kill_tcp)
@@ -2112,7 +2122,7 @@ TEST(fake_marsio, vlan_flip_and_symmetric_mpls1vs2)
 #define _fake_marsio_vlan_mac_flip_inject_no_asymmetric 1   
 TEST(fake_marsio, vlan_mac_flip_inject_no_asymmetric)
 {
-	/* 别着�? 不是BUG!
+	/* 别着�? 不是BUG!
 	   这个测试用例就是应该错的 !!!
 	*/
 	EXPECT_EXIT(fake_marsio_vlan_mac_flipping_inject_run(0), testing::ExitedWithCode(1),  "index:4, mac addr error");

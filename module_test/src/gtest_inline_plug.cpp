@@ -543,21 +543,30 @@ extern "C" char inline_polling_timeout_tcpall_entry(struct streaminfo *pstream,v
 
 extern "C" char inline_cheat_dup_tcp_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
-	if(pstream->opstate == OP_STATE_CLOSE){
-		if((3 == pstream->ptcpdetail->serverpktnum)
-		 &&(186 == pstream->ptcpdetail->serverbytes)
-		 &&(2 == pstream->ptcpdetail->clientpktnum)
-		 &&(271 == pstream->ptcpdetail->clientbytes)){
-		 	SAPP_PLUG_LOG(RLOG_LV_INFO,"inline_cheat_dup_tcp_entry", "\033[32minline_cheat_dup_tcp_entry test succ!\033[0m\n");
-			 fprintf(stderr,"\033[32minline_cheat_dup_tcp_entry test succ!\033[0m\n");
+	if (pstream->opstate == OP_STATE_CLOSE)
+	{
+		if ((2 == pstream->ptcpdetail->serverpktnum) 
+		&& (186 == pstream->ptcpdetail->serverbytes) 
+		&& (2 == pstream->ptcpdetail->clientpktnum) 
+		&& (271 == pstream->ptcpdetail->clientbytes))
+		{
+			SAPP_PLUG_LOG(RLOG_LV_INFO, "inline_cheat_dup_tcp_entry", 
+						"\033[32minline_cheat_dup_tcp_entry test succ!\033[0m\n");
+			fprintf(stderr, "\033[32minline_cheat_dup_tcp_entry test succ!\033[0m\n");
 			gtest_set_libsapp_devel_result(GTEST_INLINE_TO_SAPP_SUCC);
 			exit(0);
-		}else{
-			SAPP_PLUG_LOG(RLOG_LV_FATAL,"inline_cheat_dup_tcp_entry","\033[1;31;40minline_cheat_dup_tcp_entry(): check tcp stat error!\033[0m\n");
+		}
+		else
+		{
+			SAPP_PLUG_LOG(RLOG_LV_FATAL, "inline_cheat_dup_tcp_entry", 
+						"\033[1;31;40minline_cheat_dup_tcp_entry(): check tcp stat error!\
+						serverpktnum=%u,serverbytes=%u,clientpktnum=%u,clientbytes=%u.\033[0m\n",
+						pstream->ptcpdetail->serverpktnum, pstream->ptcpdetail->serverbytes,
+						pstream->ptcpdetail->clientpktnum, pstream->ptcpdetail->clientbytes);
 			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
 		}
 	}
-	
+
 	return APP_STATE_GIVEME;
 }
 

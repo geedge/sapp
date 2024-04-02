@@ -555,6 +555,7 @@ void control_up_layer_tunnel_gtp_run(void)
 
 	/* gtp_dns.pcap有几个重复数据包, 得关闭重复包检测功能 */
 	update_config_file("etc/sapp.toml", "original_ipv4_udp_enabled", "0");
+	update_config_file("etc/sapp.toml", "inject_all_enabled", "0");
 
 	update_plugin_inf("UDP", "up_layer_tunnel_gtp_entry");
 	append_plugin_inf("TCP", "void_entry");

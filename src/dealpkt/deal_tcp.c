@@ -2766,9 +2766,10 @@ static int deal_tcp_stream_dup_pkt_check(int tid, struct streaminfo_private *pst
 	int is_dup_pkt = 0;
 	int need_add_bloom_filter = 0;
 	int dup_check_enabled = 0;
-	
-	if((ADDR_TYPE_IPV4 == pstream_pr->stream_public.addr.addrtype)
-	 && sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp){
+
+	if ((ADDR_TYPE_IPV4 == pstream_pr->stream_public.addr.addrtype) 
+	&& (sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp || sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject))
+	{
 		// 对于原始输入包, 只判断前N个包, 如果没发现重复流量, 就认为以后的都不是重复包!
 		// todo: 此处是否要通过配置文件指定？
 		if((0 == pstream_pr->has_duplicate_pkt) 
@@ -2780,19 +2781,19 @@ static int deal_tcp_stream_dup_pkt_check(int tid, struct streaminfo_private *pst
 			need_add_bloom_filter = 1;
 		}
 	}
-	
-	if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject){
-		/* 对于注入包查询来说, 此处只查询但不加入bloom filter, 发包时已经加过一次了 */
+
+	/* 24.04: 对于IPv6来说, 因为不支持原始流量重复检测, 所以注入包识别也不支持快速路径. */
+	if ((ADDR_TYPE_IPV6 == pstream_pr->stream_public.addr.addrtype) 
+	  && (sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0))
+	{
 		dup_check_enabled = 1;
 	}
 	
 	if(dup_check_enabled != 0){
 		is_dup_pkt = sapp_dup_pkt_identify(tid, pstream_pr, this_iphdr, this_tcphdr, need_add_bloom_filter);
 	}
-	
-	
-return is_dup_pkt; 
 
+	return is_dup_pkt;
 }
 
 

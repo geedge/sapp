@@ -497,7 +497,8 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
 		return 0;
 	}
 
-	if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp)
+	if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp
+	|| sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject)
 	{
 		// 对于原始输入包, 只判断前N个包, 如果没发现重复流量, 就认为以后的都不是重复包!
 		// todo: 此处是否要通过配置文件指定？
@@ -510,21 +511,13 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
 			need_add_bloom_filter = 1;
 		}
 	}
-
-	if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject){
-		/* 对于注入包查询来说, 只查询但不加入bloom filter, 发包时已经加过一次了 */
-		dup_check_enabled = 1;
-	}
 	
 	if(dup_check_enabled != 0){
 	    is_dup_pkt = sapp_dup_pkt_identify(tid, pstream_pr, this_iphdr, udph, need_add_bloom_filter);
 	}
-	
-	
-return is_dup_pkt; 
+
+	return is_dup_pkt;
 }
-
-
 
 int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_iphdr,
 		int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
@@ -966,7 +959,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			return PASS;
 		}
 
-		/* 
+		/*
 	2021-05-18 lijia close ipv6 original dup pkt check:
 	IPv6因为没有Ipid字段, 无法区别真正的应用层重传和重复流量, 开启了会导致断网或者CT, 所以不支持原始流量识别!
 
@@ -974,17 +967,19 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	   1)如果开启了代理策略, 重传包被识别成了重复包的话, sapp就直接PASS了, 实际那个包是真实通信双方发的, 没有经过tfe处理, 可能就断网了.
 	   2)如果开启了firewall的drop策略, 第一次drop成功了, 但应用层会重传, 重传包被识别成了重复包的话, sapp就直接PASS了, 导致CT.
 
-	但是, 要支持注入流量识别!!  
+	但是, 要支持注入流量识别!!
+
+	24.04: 对于IPv6来说, 因为不支持原始流量重复检测, 所以注入包识别也不支持快速路径.
 */
 		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
-		  && (sapp_dup_pkt_identify(thread_num, pstream_pr, a_packet, udph, 0) != 0)){
-			local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
-			local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;	
-			cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
-			return PASS;
+		&& (sapp_dup_pkt_identify(thread_num, pstream_pr, a_packet, udph, 0) != 0)){
+					local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
+					local_sys_stat->length[SAPP_STAT_RCV_DUP_UDP] += ulen;
+					cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_REPEAT);
+					return PASS;
 		}
 
-        if (pstream_pr->sid_append_list != NULL)
+		if (pstream_pr->sid_append_list != NULL)
         {
             ((raw_pkt_t *)raw_pkt)->append_list = pstream_pr->sid_append_list;
         }

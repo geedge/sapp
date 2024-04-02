@@ -496,7 +496,7 @@ void inline_cheat_dup_tcp_run(void)
 	set_default_asymmetric_addr_layer_conf("vlan[*]\nmpls[*]\ngre[*]\ngtp[*]\n\n");
 
 	set_pcap_dumpfile("for_gtest_only/duplicate_packet/inline_cheat_dup_tcp.pcap");
-	ASSERT_EQ(file_md5_checksum("dumpfile", "f51735e23e24c83e583040cf20e79b57"),0);
+	ASSERT_EQ(file_md5_checksum("dumpfile", "0d8f03c71780c9c93e0702409484012b"),0);
 	gtest_start_inline_env_progress(GTEST_INLINE_PROG_NAME, "../benchmark_pcap/for_gtest_only/duplicate_packet/inline_cheat_dup_tcp.pcap", g_inline_test_timeout_s);
 	
 	start_run_stop_libsapp(5);
@@ -697,6 +697,7 @@ void inline_get_rawpkt_data_run(void)
 }
 
 
+#if (0 == HIGH_PERF)
 void inline_raw_ip_frag_list_run(void)
 {
 	set_default_sapp_inline_env();
@@ -715,6 +716,7 @@ void inline_raw_ip_frag_list_run(void)
 	gtest_set_timeout_default_result(GTEST_SAPP_ERR);
 	start_run_stop_libsapp(5);
 }
+#endif
 
 /* inline模式获取vxlan info参数 */
 void inline_vxlan_info_run(void)
