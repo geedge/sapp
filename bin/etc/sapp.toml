@@ -128,6 +128,9 @@
     bloom_capacity=1000000
     bloom_error_rate=0.000001
     bloom_timeout=60
+    bloom_slice_num=3
+    # 0:disable bloom filter, 1:dabloom, 2:apbloom
+    bloom_library=1
 
 
 [STREAM]
