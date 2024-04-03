@@ -6,6 +6,7 @@ extern "C" {
 #include "sapp_declaration.h"
 
 #include "ap_bloom.h"
+#include "dablooms.h"
 
 /*
 	识别因路由策略导致的重复流量, 首次收到数据包加入bloom filter,
@@ -26,6 +27,63 @@ extern "C" {
 */
 
 
+static inline void *bloom_new(const sapp_dup_pkt_t *dup_conf, struct timeval now)
+{
+	switch(dup_conf->bloom_library)
+	{
+		case BLOOM_LIBRARY_APBLOOM:
+			return AP_bloom_new(now, dup_conf->bloom_error_rate, dup_conf->bloom_capacity, dup_conf->bloom_timeout*1000, dup_conf->bloom_slice_num);
+		case BLOOM_LIBRARY_DABLOOM:
+			return expiry_dablooms_init(dup_conf->bloom_capacity, dup_conf->bloom_error_rate, now.tv_sec, dup_conf->bloom_timeout);
+		default:
+			return NULL;
+	}
+}
+
+static inline void bloom_free(void *bloom_filter, const sapp_dup_pkt_t *dup_conf)
+{
+	switch(dup_conf->bloom_library)
+	{
+		case BLOOM_LIBRARY_APBLOOM:
+			 AP_bloom_free(bloom_filter);
+		case BLOOM_LIBRARY_DABLOOM:
+			expiry_dablooms_destroy(bloom_filter);
+		default:
+			break;
+	}
+	return;
+}
+
+static inline int bloom_check(void *bloom_filter, const char *key, int key_len, const sapp_dup_pkt_t *dup_conf, struct timeval now)
+{
+	switch(dup_conf->bloom_library)
+	{
+		case BLOOM_LIBRARY_APBLOOM:
+			return AP_bloom_check((const struct AP_bloom *)bloom_filter, 
+										now, (const char *)key, key_len);		
+		case BLOOM_LIBRARY_DABLOOM:
+			return expiry_dablooms_search((struct expiry_dablooms_handle *)bloom_filter, 
+										(const char *)key, key_len, (time_t)now.tv_sec);
+		default:
+			return 0;
+	}
+}
+
+static inline void bloom_add(void *bloom_filter, const char *key, int key_len, const sapp_dup_pkt_t *dup_conf, struct timeval now)
+{
+	switch(dup_conf->bloom_library)
+	{
+		case BLOOM_LIBRARY_APBLOOM:
+			AP_bloom_add((struct AP_bloom *)bloom_filter, 
+										now, (const char *)key, key_len);		
+		case BLOOM_LIBRARY_DABLOOM:
+			expiry_dablooms_add((struct expiry_dablooms_handle *)bloom_filter, 
+										(const char *)key, key_len, (time_t)now.tv_sec);
+		default:
+			break;
+	}
+	return;
+}
 
 int sapp_dup_stream_search(struct streaminfo *a_stream)
 {
@@ -42,12 +100,10 @@ int sapp_dup_stream_search(struct streaminfo *a_stream)
 		key_len=sizeof(struct stream_tuple4_v6);
 	}
 
-	struct timeval now;
-	now.tv_sec = g_CurrentTime;
-	now.tv_usec=0;
-	return AP_bloom_check((const struct AP_bloom *)sapp_global_val->mthread_volatile[a_stream->threadnum]->dup_pkt_distinguish_handle, 
-										now, (const char *)key, key_len);		
+	struct timeval now={g_CurrentTime, 0};
+	return bloom_check(sapp_global_val->mthread_volatile[a_stream->threadnum]->dup_pkt_distinguish_handle, key, key_len, &sapp_global_val->config.packet_io.dup_pkt_para, now);
 }
+
 
 void sapp_dup_stream_add(struct streaminfo *a_stream)
 {
@@ -63,13 +119,8 @@ void sapp_dup_stream_add(struct streaminfo *a_stream)
 		key = (void *)a_stream->addr.tuple4_v6;
 		key_len=sizeof(struct stream_tuple4_v6);
 	}
-	struct timeval now;
-	now.tv_sec = g_CurrentTime;
-	now.tv_usec=0;	
-    AP_bloom_add(
-        (struct AP_bloom *)sapp_global_val->mthread_volatile[a_stream->threadnum]->dup_pkt_distinguish_handle,
-		now,
-        (const char *)key, key_len);
+	struct timeval now={g_CurrentTime, 0};
+	bloom_add(sapp_global_val->mthread_volatile[a_stream->threadnum]->dup_pkt_distinguish_handle, key, key_len, &sapp_global_val->config.packet_io.dup_pkt_para, now);
 }
 
 static inline int sapp_set_dup_pkt_key(enum addr_type_t addr_type, enum stream_type_t stream_type, const void *iphdr,
@@ -127,19 +178,15 @@ int sapp_dup_pkt_identify(int tid, struct streaminfo_private *pstream_pr,
 {
 	int is_dup_pkt = 0;
 	union sapp_dup_pkt_key dup_bloom_key;
-	struct timeval now;
-	now.tv_sec = g_CurrentTime;
-	now.tv_usec=0;		
+	struct timeval now={g_CurrentTime, 0};	
 
 	size_t key_len = sapp_set_dup_pkt_key((enum addr_type_t)pstream_pr->stream_public.addr.addrtype, (enum stream_type_t)pstream_pr->stream_public.type, ip_hdr, (void *)l4_hdr, &dup_bloom_key);			
-	is_dup_pkt= AP_bloom_check((const struct AP_bloom *)sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, 
-										now, (const char *)&dup_bloom_key, key_len);
+	is_dup_pkt= bloom_check(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (const char*)&dup_bloom_key, key_len, &sapp_global_val->config.packet_io.dup_pkt_para, now);
 	if(is_dup_pkt != 0){
 		pstream_pr->has_duplicate_pkt = 1;
 	}else{
 		if(need_add_bloom_filter){
-			AP_bloom_add((struct AP_bloom *)sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle,
-										now,  (const char *)&dup_bloom_key, key_len);
+			bloom_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (const char*)&dup_bloom_key, key_len, &sapp_global_val->config.packet_io.dup_pkt_para, now);
 		}
 	}
 	return is_dup_pkt;
@@ -150,14 +197,9 @@ void sapp_dup_pkt_mark_l4(struct streaminfo *a_stream, const void *ip_hdr, const
     union sapp_dup_pkt_key dup_bloom_key;
     size_t key_len = 0;
     int ret = 0;
-	struct timeval now;
-	now.tv_sec = g_CurrentTime;
-	now.tv_usec=0;		
+	struct timeval now={g_CurrentTime, 0};		
     key_len = sapp_set_dup_pkt_key((enum addr_type_t)a_stream->addr.addrtype, (enum stream_type_t)a_stream->type, ip_hdr, l4_hdr, &dup_bloom_key);
-    AP_bloom_add(
-        (struct AP_bloom *)sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle,
-        now, (const char *)&dup_bloom_key, key_len);
-
+	bloom_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (const char*)&dup_bloom_key, key_len, &sapp_global_val->config.packet_io.dup_pkt_para, now);
     return;
 }
 
@@ -176,17 +218,14 @@ int sapp_dup_pkt_init(void)
 	/* 流量入口有三个开关, 识别句柄只有一个, 
 	   拆分句柄多耗费内存, 且判断时每个包需要扫描多个句柄, 
 	   可能好处只是准确率高了一点点而已 */
-	struct timeval now;
-	now.tv_sec = time(NULL);
-	now.tv_usec=0;	
+	struct timeval now={time(NULL), 0};	
 	for(i = 0; i < sapp_global_val->config.cpu.worker_threads; i++){
-		sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle = (void *)AP_bloom_new(now, p_dup_conf->bloom_error_rate, p_dup_conf->bloom_capacity, p_dup_conf->bloom_timeout*1000, p_dup_conf->bloom_slice_num);
+		sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle = bloom_new(p_dup_conf, now);
 		if(NULL == sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle){
 			sapp_log(RLOG_LV_FATAL, 1, 1, "dup_pkt_distinguish init error!");
 			return -1;
 		}
 	}
-
 	sapp_log(RLOG_LV_DEBUG, 1, 1, "dup_pkt_distinguish init success");
 
 	return 0;
@@ -195,10 +234,10 @@ int sapp_dup_pkt_init(void)
 void sapp_dup_pkt_destroy(void)
 {
 	int i;
-	
+	const sapp_dup_pkt_t *p_dup_conf = &sapp_global_val->config.packet_io.dup_pkt_para;
 	for(i = 0; i < sapp_global_val->config.cpu.worker_threads; i++){
 		if(sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle){
-			AP_bloom_free(sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle);
+			bloom_free(sapp_global_val->mthread_volatile[i]->dup_pkt_distinguish_handle,p_dup_conf);
 		}
 	}
 

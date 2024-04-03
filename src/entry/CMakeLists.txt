@@ -38,7 +38,7 @@ set(SAPP_MODULES timestamp_record md5
 	symbol_check MESA_sleep MESA_socket_wrap 
 	packet_io dealpkt project plugctrl common 
 	config timer tomlc99_wrap dpdk_ip_hash  
-	gdev_assistant inline_keepalive ap_bloom 
+	gdev_assistant inline_keepalive ap_bloom libdabloom
 	sapp_dev sapp_assistant sapp_metrics 
 	platform_support cpu_limit timeout token_bucket)
 

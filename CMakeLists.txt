@@ -203,7 +203,7 @@ set(SAPP_DEPEND_DYN_LIB MESA_handle_logger MESA_prof_load MESA_htable  MESA_fiel
 set(SAPP_INNER_STATIC_LIB sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
 			config inline_keepalive gdev_assistant sapp_assistant sapp_metrics plugctrl project timer
 			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
-			MESA_sleep dpdk_ip_hash  cpu_limit timeout ap_bloom token_bucket)
+			MESA_sleep dpdk_ip_hash  cpu_limit timeout ap_bloom libdabloom token_bucket)
 
 if(LIBEVENT_ENABLED)
     set(SAPP_INNER_STATIC_LIB ${SAPP_INNER_STATIC_LIB} libevent-static)
