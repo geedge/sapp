@@ -59,6 +59,7 @@ static void signal_usr1_handler(int signo)
 	char tmp[128];
 	unsigned narenas = 0;
 	size_t sz = sizeof(unsigned);
+	malloc_stats_print(NULL, NULL, NULL);
 	printf("%s: jemalloc enabled, starting purge dirty pages at %llu\n", __FUNCTION__, (unsigned long long)time(NULL));
 	/*获取arenas的个数，然后调用jemalloc的接口进行清理 */
 	if (!mallctl("arenas.narenas", &narenas, &sz, NULL, 0))
