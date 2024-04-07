@@ -18,9 +18,9 @@ enum pkt_dump_mode{
 
 
 /*
-	vxlanºÍvlan_flippingÊÇ¿ÉÒÔ¹²´æµÄ,
-	vxlanÓÃÓÚÔÚÏßÁ÷Á¿,
-	vlan_flippingÓÃÓÚ±¾»ú×Ô¼ìÁ÷Á¿,
+	vxlanï¿½ï¿½vlan_flippingï¿½Ç¿ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½ï¿½,
+	vxlanï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,
+	vlan_flippingï¿½ï¿½ï¿½Ú±ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½,
 */
 enum overlay_mode_config{
 	OVERLAY_MODE_NONE			= 0,
@@ -42,10 +42,10 @@ typedef struct{
 
 typedef struct{
 	int worker_threads;
-	int send_only_threads_max_num; /* ´¿·¢°üÏß³Ì×î´óÊýÁ¿, ÊÇ²å¼þ¶¯Ì¬´´½¨µÄ, sapp¿ÉÄÜÎÞ·¨Ô¤Öª, Ö»ÄÜÉè¸ö×î´óÖµ */
+	int send_only_threads_max_num; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ç²ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, sappï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½Ô¤Öª, Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ */
 	int bind_mask_array_num;
 	long bind_mask_array[SAPP_MAX_THREADS];
-	long bind_mask; /* bind_mask_arrayÖÐµÄÃ¿¸ö±äÁ¿×öÎªbit_index×ª³ÉµÄÕûÊýÖµ */
+	long bind_mask; /* bind_mask_arrayï¿½Ðµï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªbit_index×ªï¿½Éµï¿½ï¿½ï¿½ï¿½ï¿½Öµ */
 }sapp_config_cpu_t;
 
 
@@ -65,8 +65,8 @@ typedef struct{
 	char *storge_path;
 	int dump_all_thread_enabled;
 	int dump_thread_id_array_num;
-	int dump_thread_id_array[SAPP_MAX_THREADS]; /* ÓÃ»§ÅäÖÃÎÄ¼þÔ­Ê¼Êý×é, ¸ñÊ½: [0,1,2,3], ±íÊ¾µÚ0,1,2,3ºÅÏß³ÌÆôÓÃ²¶°ü */
-	unsigned char dump_thread_id_mask[SAPP_MAX_THREADS]; /* ¸ù¾ÝÔ­Ê¼Êý×é½âÎöºóµÄÑÚÂëÊý×é, ÓÃÏß³Ìid×öÎªÏÂ±ê, Öµ²»Îª0±íÊ¾µ±Ç°Ïß³Ì¿ªÆô²¶°ü, Öµ:{1,1,1,1} */
+	int dump_thread_id_array[SAPP_MAX_THREADS]; /* ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ê½: [0,1,2,3], ï¿½ï¿½Ê¾ï¿½ï¿½0,1,2,3ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½ */
+	unsigned char dump_thread_id_mask[SAPP_MAX_THREADS]; /* ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ß³ï¿½idï¿½ï¿½Îªï¿½Â±ï¿½, Öµï¿½ï¿½Îª0ï¿½ï¿½Ê¾ï¿½ï¿½Ç°ï¿½ß³Ì¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Öµ:{1,1,1,1} */
 	int pkt_dump_ratio; /* capture one packet every 'pkt_dump_ratio' packets */
 }sapp_config_tools_pktdump_t;
 
@@ -81,13 +81,13 @@ typedef struct{
 
 
 typedef struct{
-	int auto_remedy; /* Æ½Ì¨È«¾ÖÅäÖÃ, ¶ÔÓÚÃ¿¸öÁ÷, ¿ÉÒÔÉèÖÃauto_remedy_flag, ÓÅÏÈ¼¶¸ßÓÚÈ«¾Öauto_remedy */
+	int auto_remedy; /* Æ½Ì¨È«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½auto_remedy_flag, ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½auto_remedy */
 	int rst_signature_enable;
 	int rst_num;
 	int rst_signature_seed1;
 	int rst_signature_seed2;
 	int link_mss;
-	int remedy_kill_tcp_by_inline_device; /* ²¢ÁªFD²»ÉúÐ§Ê±, ½èÖúinline deviceÏÂ·¢DROP¹æÔò */
+	int remedy_kill_tcp_by_inline_device; /* ï¿½ï¿½ï¿½ï¿½FDï¿½ï¿½ï¿½ï¿½Ð§Ê±, ï¿½ï¿½ï¿½ï¿½inline deviceï¿½Â·ï¿½DROPï¿½ï¿½ï¿½ï¿½ */
 }sapp_config_stream_tcp_inject_t;
 
 
@@ -102,11 +102,12 @@ typedef struct{
 	int meaningful_statistics_minimum_byte;
 	sapp_config_stream_tcp_inject_t inject;
 	int well_known_ports_array_num;
-	unsigned short *well_known_ports_array; /* ÓÃÓÚ°´data½¨Á¬½ÓÈ·¶¨server¶Ë */
+	unsigned short *well_known_ports_array; /* ï¿½ï¿½ï¿½Ú°ï¿½dataï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½serverï¿½ï¿½ */
 	int closing_timeout;
 	int opening_timeout;
 	int max_timeouts_per_sec;
 	int max_opening_per_sec;
+	int reorder_on_closing;
 }sapp_config_stream_tcp_t;
 
 
@@ -115,7 +116,7 @@ typedef struct{
 	int timeout;
 	int meaningful_statistics_minimum_pkt;
 	int meaningful_statistics_minimum_byte;	
-	unsigned short *well_known_ports_array; /* ÓÃÓÚÐÂ½¨Á¬½ÓÈ·¶¨server¶Ë, ±ÈÈç4001->8000, Êµ¼ÊÉÏÊÇOICQµÄC2S·½ÏòÊý¾Ý°ü,Ö®Ç°µÄ°æ±¾»á±»ÎóÊ¶±ðÎªS2C·½ÏòµÄ */
+	unsigned short *well_known_ports_array; /* ï¿½ï¿½ï¿½ï¿½ï¿½Â½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½serverï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½4001->8000, Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½OICQï¿½ï¿½C2Sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½,Ö®Ç°ï¿½Ä°æ±¾ï¿½á±»ï¿½ï¿½Ê¶ï¿½ï¿½ÎªS2Cï¿½ï¿½ï¿½ï¿½ï¿½ */
 	int well_known_ports_array_num;	
 	int max_timeouts_per_sec;
 	int max_opening_per_sec;
@@ -155,11 +156,11 @@ typedef struct{
 	int histogram_enabled;
 	char process_latency_local_file[NAME_MAX];
 	int process_latency_refresh_interval_s;
-	int process_latency_threshold_in_us; /* ÅäÖÃÎÄ¼þÀïµ¥Î»ÊÇmicrosecond, ÐèÒª³ËÒÔ1000 */
-	/* ¾«È·Ä£Ê½¿ªÆôºó, fs2×ÔÉíÍ³¼ÆÒ²·Ç³£ºÄCPU, Ã¿¸ö°ü¶¼Òªµ÷ÓÃFS_operate(),
-	   Èç¹ûÍ£ÓÃ¾«È·Ä£Ê½, ÊäÈëfs2µÄÊÇ±£Áô×î½üÒ»¶ÎÊ±¼äµÄ×î´óÖµ, ×îÐ¡ÖµºÍÕâÒ»¶ÎÊ±¼äµÄÆ½¾ùÖµ, ½öµ÷ÓÃFS_operate()Èý´Î,
-	   ¾«È·¶È½µµÍÁËÒ»Ð©, µ«´ó´ó¼õÉÙÁËµ÷ÓÃFS_operate()µÄ´ÎÊý.
-		¿ªÆôpkt_latency_accurate_enableºóÆ½¾ùÖµ»ù±¾ÊÇ¶ÔµÄ, µ«±ê×¼²î¾Í²»×¼ÁË.
+	int process_latency_threshold_in_us; /* ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ïµ¥Î»ï¿½ï¿½microsecond, ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½1000 */
+	/* ï¿½ï¿½È·Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, fs2ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½Ò²ï¿½Ç³ï¿½ï¿½ï¿½CPU, Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½FS_operate(),
+	   ï¿½ï¿½ï¿½Í£ï¿½Ã¾ï¿½È·Ä£Ê½, ï¿½ï¿½ï¿½ï¿½fs2ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ, ï¿½ï¿½Ð¡Öµï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Æ½ï¿½ï¿½Öµ, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½FS_operate()ï¿½ï¿½ï¿½ï¿½,
+	   ï¿½ï¿½È·ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»Ð©, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½ï¿½FS_operate()ï¿½Ä´ï¿½ï¿½ï¿½.
+		ï¿½ï¿½ï¿½ï¿½pkt_latency_accurate_enableï¿½ï¿½Æ½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½Ç¶Ôµï¿½, ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½Í²ï¿½×¼ï¿½ï¿½.
 	   */
 	int process_latency_clock_id; 
 	
@@ -171,7 +172,7 @@ typedef struct{
 typedef struct{
 	char type_str[NAME_MAX]; /* pag,pcap,marsio */
 	char name[NAME_MAX];
-	enum cap_mode_t type_bin; /* ÓÉ×Ö·û´®type×ª»»Îª¶þ½øÖÆÊýÖµ */
+	enum cap_mode_t type_bin; /* ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½type×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ */
 }sapp_config_packet_io_interface_t;
 
 
@@ -187,10 +188,10 @@ enum __sapp_config_packet_io_deployment_mode{
 	SAPP_CFG_PKT_IO_DEPOLY_MODE_TRANSPARENT,
 };
 
-#define MAX_VLAN_FLIPPING_MAP_NUM	(4096) /* vlan_id×î´ó·¶Î§ÊÇ0~4095, Êý×é³¤¶ÈÊÇ4096 */
+#define MAX_VLAN_FLIPPING_MAP_NUM	(4096) /* vlan_idï¿½ï¿½ï¿½Î§ï¿½ï¿½0~4095, ï¿½ï¿½ï¿½é³¤ï¿½ï¿½ï¿½ï¿½4096 */
 
 typedef struct{
-	unsigned short couple_vlan_id; /* vlan flippingÊÇ³É¶Ô´æÔÚ, Êý×éÏÂ±ê±íÊ¾Ò»¸övlanid, ÔªËØµÄÖµÊÇÁíÒ»¸övlanid, host order */
+	unsigned short couple_vlan_id; /* vlan flippingï¿½Ç³É¶Ô´ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Â±ï¿½ï¿½Ê¾Ò»ï¿½ï¿½vlanid, Ôªï¿½Øµï¿½Öµï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½vlanid, host order */
 	unsigned char this_vlan_route_location; // 'C' or 'I'
 	unsigned char mac_flipping_enable;
 }sapp_vlan_flipping_map_t;
@@ -225,46 +226,46 @@ typedef struct{
 
 typedef struct{
 	int enabled;
-	int get_cpu_usage_interval; //µ¥Î»:ºÁÃë, milliseconds(ms)
-	int smooth_avg_window; //ÓÃ×î½üN´ÎµÄÆ½¾ùÖµ´úÌæÊµÊ±Öµ, ±ÜÃâ¶¶¶¯
+	int get_cpu_usage_interval; //ï¿½ï¿½Î»:ï¿½ï¿½ï¿½ï¿½, milliseconds(ms)
+	int smooth_avg_window; //ï¿½ï¿½ï¿½ï¿½ï¿½Nï¿½Îµï¿½Æ½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ÊµÊ±Öµ, ï¿½ï¿½ï¿½â¶¶ï¿½ï¿½
 	double bypass_trigger_cpu_usage;
 	double factor_decrease_ratio;
 	double factor_increase_ratio;
-	int recovery_observe_time; //µ¥Î»:Ãë, second(s)
+	int recovery_observe_time; //ï¿½ï¿½Î»:ï¿½ï¿½, second(s)
 }sapp_under_ddos_config_t;
 
 typedef struct{
 	sapp_config_packet_io_tunnel_t packet_io_tunnel;
 	const char *input_bpf_filter;
 	char deployment_mode_str[NAME_MAX]; /* [mirror, inline, transparent, dumpfile] */
-	enum sapp_deploment_mode_t deployment_mode_bin; /* ·½±ã³ÌÐòÄÚ´¦Àí, ×ª³ÉÊýÖµÐÎÊ½, Èç1:mirror; 2:transparent; 3:inlineµÈ, Ïê¼û: enum sapp_deploment_mode_t */
+	enum sapp_deploment_mode_t deployment_mode_bin; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½, ×ªï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½Ê½, ï¿½ï¿½1:mirror; 2:transparent; 3:inlineï¿½ï¿½, ï¿½ï¿½ï¿½: enum sapp_deploment_mode_t */
 	sapp_config_packet_io_dev_t internal;
 	sapp_config_packet_io_dev_t external;
 	char pcap_dumpfile_name[NAME_MAX];
-	int polling_priority; /* call sapp_recv_pkt every call polling_entry times, µ÷ÓÃ¶àÉÙ´Îpollingºóµ÷ÓÃÒ»´Îrecv pkt, 1±íÊ¾Á½ÕßÓÅÏÈ¼¶ÏàÍ¬ */
+	int polling_priority; /* call sapp_recv_pkt every call polling_entry times, ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½Ù´ï¿½pollingï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½recv pkt, 1ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½Í¬ */
 	int work_percent;
-	int without_usleep; /* ÐÔÄÜ²âÊÔÄ£Ê½, ²»»áµ÷ÓÃusleep, CPU»á100% */
-	int inbound_route_dir; /* ±íÊ¾Èë¾³, I2C·½ÏòµÄÖµÊÇ0»¹ÊÇ1 */
+	int without_usleep; /* ï¿½ï¿½ï¿½Ü²ï¿½ï¿½ï¿½Ä£Ê½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½usleep, CPUï¿½ï¿½100% */
+	int inbound_route_dir; /* ï¿½ï¿½Ê¾ï¿½ë¾³, I2Cï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½1 */
 	char pcap_capture_direction[NAME_MAX]; /* in, out, inout */
 	char inject_pkt_mode_string[NAME_MAX];
-	int inject_pkt_mode; /* °ü×¢Èë·½Ê½¶þ½øÖÆÖµ, Ïê¼û: enum send_fake_packet_mode */
+	int inject_pkt_mode; /* ï¿½ï¿½×¢ï¿½ë·½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ, ï¿½ï¿½ï¿½: enum send_fake_packet_mode */
 	int inject_pkt_prepend_segment_id;
-	unsigned short inject_mode_inline_device_sport; /* udp socket°ó¶¨µÄ±¾¶ËÔ´¶Ë¿Ú, host order, Ö÷»úÐò */
+	unsigned short inject_mode_inline_device_sport; /* udp socketï¿½ó¶¨µÄ±ï¿½ï¿½ï¿½Ô´ï¿½Ë¿ï¿½, host order, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	char inject_mode_single_gateway_device[NAME_MAX];
 	char inject_mode_single_gateway_src_mac_string[20];
 	char inject_mode_single_gateway_dst_mac_string[20];
-	char inject_mode_single_gateway_dst_mac[6]; /* gatewayµÄMAC */
-	char inject_mode_single_gateway_src_mac[6]; /* inject_mode_single_gateway_deviceÍø¿¨µÄMAC */
-	int monitor_thread_enabled; /* ¶Á°üÄ£Ê½ÍË³öÖ®Ç°, ÎªÁËÄ³Ð©Ïß³ÌÄÜ»¹Ð´ÈÕÖ¾, Òì²½·¢ËÍÊý¾ÝµÈ²Ù×÷, ÔÙsleepÒ»»á */
-	sapp_dup_pkt_t dup_pkt_para; /* ÖØ¸´Á÷Á¿Ê¶±ð */
+	char inject_mode_single_gateway_dst_mac[6]; /* gatewayï¿½ï¿½MAC */
+	char inject_mode_single_gateway_src_mac[6]; /* inject_mode_single_gateway_deviceï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MAC */
+	int monitor_thread_enabled; /* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Ë³ï¿½Ö®Ç°, Îªï¿½ï¿½Ä³Ð©ï¿½ß³ï¿½ï¿½Ü»ï¿½Ð´ï¿½ï¿½Ö¾, ï¿½ì²½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÝµÈ²ï¿½ï¿½ï¿½, ï¿½ï¿½sleepÒ»ï¿½ï¿½ */
+	sapp_dup_pkt_t dup_pkt_para; /* ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ */
 
 	char extract_linkdir_from_mac_sntax_raw_string[32];
 	char extract_linkdir_from_mac_enabled;
-	unsigned char extract_linkdir_from_mac_byte_index; /* ´ÓmacµØÖ·µÄµÚ¼¸¸ö×Ö½Ú»ñÈ¡Á´Â··½Ïò, ´Ó0¿ªÊ¼µ½11½áÊø, ×Ü¼Æ12×Ö½Ú */
-	unsigned char extract_linkdir_from_mac_bit_value; /* ´ÓÄ³¸ö×Ö½Ú»ñÈ¡Á´Â··½ÏòµÄbitÖµ, ¶ø²»ÊÇindex, ¿ÉÒÔÖ±½Ó½øÐÐ&ÔËËã */
+	unsigned char extract_linkdir_from_mac_byte_index; /* ï¿½ï¿½macï¿½ï¿½Ö·ï¿½ÄµÚ¼ï¿½ï¿½ï¿½ï¿½Ö½Ú»ï¿½È¡ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½0ï¿½ï¿½Ê¼ï¿½ï¿½11ï¿½ï¿½ï¿½ï¿½, ï¿½Ü¼ï¿½12ï¿½Ö½ï¿½ */
+	unsigned char extract_linkdir_from_mac_bit_value; /* ï¿½ï¿½Ä³ï¿½ï¿½ï¿½Ö½Ú»ï¿½È¡ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½bitÖµ, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½index, ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó½ï¿½ï¿½ï¿½&ï¿½ï¿½ï¿½ï¿½ */
 
 	sapp_under_ddos_config_t under_ddos_config;
-	short not_exit_for_dumpfile_mode; /* ¶Á°ü½áÊøºó²»ÍË³ö½ø³Ì, ·½±ã²å¼þ×Ô²âÊÔ, ¶à´ÎÑ­»·¶ÁÈ¡¶à¸ö°ü */
+	short not_exit_for_dumpfile_mode; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	short infinite_loop_enabled;
 	short destroy_all_plug_enabled;
 	short dlclose_all_plug_enabled;
@@ -277,7 +278,7 @@ typedef struct{
 typedef struct{
 	const char *cfg_files_root_dir;
 	
-	const char *cfg_main_entry_relative; /* Ö÷ÅäÖÃÎÄ¼þ, ¹Ì¶¨ÊÇsapp.toml, Â·¾¶¿ÉÒÔ¿¿-c²ÎÊýÖ¸¶¨ */
+	const char *cfg_main_entry_relative; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½, ï¿½Ì¶ï¿½ï¿½ï¿½sapp.toml, Â·ï¿½ï¿½ï¿½ï¿½ï¿½Ô¿ï¿½-cï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ */
 	const char *cfg_main_entry_absolute; /* /home/project_xxx/sapp/sapp.toml */
 
 	const char *cfg_sapp_log_relative;
@@ -301,7 +302,7 @@ typedef struct{
 	const char *cfg_file_inline_dev_relative;
 	const char *cfg_file_inline_dev_absolute;
 
-	const char *cfg_file_necessary_plug_relative;  /* ±ØÒª²å¼þÁÐ±í, Èç¹û¼ÓÔØÊ§°Üsapp¾ÍÍË³ö */
+	const char *cfg_file_necessary_plug_relative;  /* ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ð±ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½sappï¿½ï¿½ï¿½Ë³ï¿½ */
 	const char *cfg_file_necessary_plug_absolute;
 
 	const char *cfg_file_stream_compare_layer_relative;
@@ -347,17 +348,17 @@ typedef struct{
 }sapp_data_file_link_t;
 
 typedef struct{
-	const char *libmarsio_file_path; /* libmarsio.soÊÇ¶¯Ì¬dlopenµÄ, µ«sappÊÂÏÈ²»Ò»¶¨ÖªµÀÔÚÄÄ¸öÂ·¾¶, ´ÓÅäÖÃÎÄ¼þ»ñÈ¡ */
+	const char *libmarsio_file_path; /* libmarsio.soï¿½Ç¶ï¿½Ì¬dlopenï¿½ï¿½, ï¿½ï¿½sappï¿½ï¿½ï¿½È²ï¿½Ò»ï¿½ï¿½Öªï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½Â·ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½È¡ */
 }sapp_library_file_link_t;
 
 typedef struct{
-	int ipv6_decapsulation_enabled; /* ÊÇ·ñ½âÎöipv6Êý¾Ý°ü */
-	int ipv6_send_packet_enabled; /* ÊÇ·ñÖ§³Ö·¢ËÍipv6Êý¾Ý°ü, ´ËÏîÒÀÀµÏµÍ³ipv6ÄÚºËÄ£¿éÊÇ·ñ¼ÓÔØ */
-	int tcp_drop_pure_ack_pkt; /* ¶ªÆúÃ»ÓÐ¸ºÔØµÄ´¿ack°ü, ¿ÉÒÔ½ÚÔ¼Ò»´ÎÁ÷±í²éÑ¯, ¸ù¾ÝÒµÎñÐèÇóÉèÖÃ */
-	int tcp_syn_option_parse_enabled; /* ÊÇ·ñ½âÎötcp syn°üÍ·²¿Ñ¡Ïî */
-	int skip_not_ip_layer_over_eth; /* Ìø¹ý·Çip²ã, ±£Ö¤ÔÚ²¢ÁªÄ£Ê½ÏÂ, ¿ÉÒÔÍ¨¹ýÏµÍ³Â·ÓÉ·¢ËÍrst°ü */
-	int reverse_ethernet_addr_enabled;  /* smacµØÖ·ÖÐ°üº¬ÌØÊâÐÅÏ¢Ê±ÎÞÐè·­×ª */
-	int skip_gtp_S_PN_E_field_for_inject; /* GTPËíµÀ×¢ÈëÊý¾Ý°üÊ±ºöÂÔÀ©Õ¹×Ö¶Î:sequence,N-PDU, extension */
+	int ipv6_decapsulation_enabled; /* ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ipv6ï¿½ï¿½ï¿½Ý°ï¿½ */
+	int ipv6_send_packet_enabled; /* ï¿½Ç·ï¿½Ö§ï¿½Ö·ï¿½ï¿½ï¿½ipv6ï¿½ï¿½ï¿½Ý°ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÍ³ipv6ï¿½Úºï¿½Ä£ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ */
+	int tcp_drop_pure_ack_pkt; /* ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ð¸ï¿½ï¿½ØµÄ´ï¿½ackï¿½ï¿½, ï¿½ï¿½ï¿½Ô½ï¿½Ô¼Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¯, ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	int tcp_syn_option_parse_enabled; /* ï¿½Ç·ï¿½ï¿½ï¿½ï¿½tcp synï¿½ï¿½Í·ï¿½ï¿½Ñ¡ï¿½ï¿½ */
+	int skip_not_ip_layer_over_eth; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ipï¿½ï¿½, ï¿½ï¿½Ö¤ï¿½Ú²ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ÏµÍ³Â·ï¿½É·ï¿½ï¿½ï¿½rstï¿½ï¿½ */
+	int reverse_ethernet_addr_enabled;  /* smacï¿½ï¿½Ö·ï¿½Ð°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢Ê±ï¿½ï¿½ï¿½è·­×ª */
+	int skip_gtp_S_PN_E_field_for_inject; /* GTPï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¹ï¿½Ö¶ï¿½:sequence,N-PDU, extension */
 	int ipv4_reassembly_enabled; 
 	int ipv6_reassembly_enabled; 
 }sapp_protocol_feature_t;
@@ -404,29 +405,29 @@ typedef struct{
 	void *sapp_timer_handle[SAPP_MAX_THREADS];
 	void *sapp_standalone_timer;
 	time_t sapp_start_time;
-	int deployment_mode_private; /* ¸ù¾ÝÅäÖÃsapp_global_val->config.packet_io.deployment_mode_bin×ª»»µÃµ½µÄÄÚ²¿Öµ,ÀýÈç:NET_CONN_PARALLEL  */
-	unsigned char create_stream_mode; /* ¼æÈÝÔ­À´µÄÂß¼­, Öµ´ÓÅäÖÃstream.tcp.syn_mandatory×ª»»µÃµ½ */
+	int deployment_mode_private; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sapp_global_val->config.packet_io.deployment_mode_bin×ªï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½Ú²ï¿½Öµ,ï¿½ï¿½ï¿½ï¿½:NET_CONN_PARALLEL  */
+	unsigned char create_stream_mode; /* ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½, Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½stream.tcp.syn_mandatory×ªï¿½ï¿½ï¿½Ãµï¿½ */
 	int packet_io_cap_level; 
 
 	sapp_gval_individual_fixed_fs2_t fs2_runtime;
 	sapp_gval_individual_fixed_fs3_t fs3_runtime;
 
-	pthread_t thread_obtain_id[SAPP_MAX_THREADS]; /* pthread_create·µ»ØµÄid */
-	pid_t thread_tid[SAPP_MAX_THREADS]; /* gdb »ò top ²é¿´µÄid */
+	pthread_t thread_obtain_id[SAPP_MAX_THREADS]; /* pthread_createï¿½ï¿½ï¿½Øµï¿½id */
+	pid_t thread_tid[SAPP_MAX_THREADS]; /* gdb ï¿½ï¿½ top ï¿½é¿´ï¿½ï¿½id */
 	pthread_t thread_timer_event_id;
 	pthread_t thread_timer_loop_id;
-	int cpu_bind_core_id_per_thread[SAPP_MAX_THREADS]; /* Èç¹ûÉèÖÃÁËbind_mask, ¼ÇÂ¼Ã¿¸öIO¹¤×÷Ïß³Ì°ó¶¨µÄcpu core id */
+	int cpu_bind_core_id_per_thread[SAPP_MAX_THREADS]; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½bind_mask, ï¿½ï¿½Â¼Ã¿ï¿½ï¿½IOï¿½ï¿½ï¿½ï¿½ï¿½ß³Ì°ó¶¨µï¿½cpu core id */
 	void *breakpad;
-	char overlay_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX]; /* ±íÊ¾ÔÚÔ­Ê¼±¨ÎÄ»ù´¡ÉÏ·â×°µÄËíµÀ, Èçvxlan, ÕâÐ©²ã²»Ó¦¸Ãµ÷ÓÃ²å¼þ, »Ø×¢Ê±ÐèÒªÌØÊâ´¦Àí */
-	char prune_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   /* ±íÊ¾×¢Èë°üÊ±ÐèÒªÌø¹ýµÄ²ã, ÓÃÓÚ´úÌæ×îÔçµÄÅäÖÃÎÄ¼þ: skip_not_iop_layer, ±ÈÈçvlan, mplsµÈ, ÓÃÓÚmirrorÄ£Ê½ÏÂ, ½ÓÈëµãºÍ×¢Èëµã²»Ò»ÑùµÄÍøÂç»·¾³ */
+	char overlay_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX]; /* ï¿½ï¿½Ê¾ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½Ï·ï¿½×°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½vxlan, ï¿½ï¿½Ð©ï¿½ã²»Ó¦ï¿½Ãµï¿½ï¿½Ã²ï¿½ï¿½, ï¿½ï¿½×¢Ê±ï¿½ï¿½Òªï¿½ï¿½ï¿½â´¦ï¿½ï¿½ */
+	char prune_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   /* ï¿½ï¿½Ê¾×¢ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½, ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½: skip_not_iop_layer, ï¿½ï¿½ï¿½ï¿½vlan, mplsï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½mirrorÄ£Ê½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ã²»Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ç»·ï¿½ï¿½ */
 
 	void *under_ddos_handle;
 	pthread_t gdev_keepalive_log_thread_id;
 }sapp_gval_individual_fixed_t;
 
 typedef struct{
-	unsigned long long count[SAPP_STAT_NUM_MAX];  /* ¼ÆÊýÀà, Èç°üÊý, ÐÂ½¨Á´½ÓÊý, ²¢·¢Á´½ÓÊýµÈ */
-	unsigned long long length[SAPP_STAT_NUM_MAX]; /* ³¤¶ÈÀà, ÈçÊý¾Ý°ü×Ü×Ö½ÚÊý */
+	unsigned long long count[SAPP_STAT_NUM_MAX];  /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Â½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	unsigned long long length[SAPP_STAT_NUM_MAX]; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½ */
 	unsigned long long count_per_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
 	unsigned long long length_per_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
 	unsigned long long count_project_in_use[PROJECT_REQ_MAX_PLUG_NUM];
@@ -435,7 +436,7 @@ typedef struct{
 
 
 typedef struct{
-	int stat_count; /* Ò»¶ÎÊ±¼äÄÚ, ¼ÇÂ¼µÄÊý¾Ý°üÑÓÊ±×ÜÊý, time_cost_sum/stat_count¼´Æ½¾ùÑÓÊ± */
+	int stat_count; /* Ò»ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½, time_cost_sum/stat_countï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½Ê± */
 	int min_time_cost;
 	int max_time_cost;
 	long long time_cost_sum;
@@ -448,11 +449,11 @@ typedef struct{
 
 struct __sapp_gval_mthread{
 	sapp_gval_mthread_sys_stat_t sys_stat;
-	unsigned short stream_seq_per_thread; /* ÓÃÓÚ¼ÆËãÈ«¾ÖÁ÷ID */
+	unsigned short stream_seq_per_thread; /* ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½ID */
 	sapp_fuzzy_latency_stat_t fuzzy_pkt_latency_stat_per_thread;
 	sapp_fuzzy_latency_stat_t fuzzy_pkt_latency_stat_per_entry_per_thread[SAPP_MAX_PLUG_ENTRY_NUM];
-	const raw_pkt_t *raw_pkt; /* ÒòÎªMESA_fakepacket_send_xxxÏµÁÐº¯ÊýÃ»ÓÐraw_pkt²ÎÊý, Ò²Ã»ÓÐstream_info, ÎªÁËÏòÇ°¼æÈÝ, ²»ºÃÐÞ¸Ä½Ó¿Ú, Ôö¼ÓÈ«¾Ö±äÁ¿ÓÃÓÚ´æ´¢µ±Ç°°ü */
-	void *dup_pkt_distinguish_handle; /* Èý¸öÁ÷Á¿Èë¿Ú¿ª¹Ø, inject, ipv4_tcp, ipv4_udp, ¹²Í¬Ê¹ÓÃÒ»¸öbloom¾ä±ú */
+	const raw_pkt_t *raw_pkt; /* ï¿½ï¿½ÎªMESA_fakepacket_send_xxxÏµï¿½Ðºï¿½ï¿½ï¿½Ã»ï¿½ï¿½raw_pktï¿½ï¿½ï¿½ï¿½, Ò²Ã»ï¿½ï¿½stream_info, Îªï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Þ¸Ä½Ó¿ï¿½, ï¿½ï¿½ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´æ´¢ï¿½ï¿½Ç°ï¿½ï¿½ */
+	void *dup_pkt_distinguish_handle; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½, inject, ipv4_tcp, ipv4_udp, ï¿½ï¿½Í¬Ê¹ï¿½ï¿½Ò»ï¿½ï¿½bloomï¿½ï¿½ï¿½ */
 	volatile int destory_env_done; //0:do nothing; 1:doing; 2:done
 	sapp_mem_used_stat_t mem_used_stat;
 }__attribute__ ((aligned (64))); /* for multi-thread, must 64byte alignment */
@@ -461,8 +462,8 @@ typedef struct __sapp_gval_mthread sapp_gval_mthread_t;
 
 struct __sapp_gval_individual_volatile{
 	volatile int current_state; /* refer to enum sapp_state_t  */
-	volatile int recv_signal_SIGTERM; /* ÊÕµ½SIGTERMÐÅºÅ, ÓÅÑÅµÄÍË³ö */
-	sapp_mem_used_stat_t mem_used_stat; /* È«¾Ö±äÁ¿»ò³õÊ¼»¯¾Í²»±äµÄÄÚ´æ */
+	volatile int recv_signal_SIGTERM; /* ï¿½Õµï¿½SIGTERMï¿½Åºï¿½, ï¿½ï¿½ï¿½Åµï¿½ï¿½Ë³ï¿½ */
+	sapp_mem_used_stat_t mem_used_stat; /* È«ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Í²ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ */
 }__attribute__ ((aligned (64)));
 typedef struct __sapp_gval_individual_volatile sapp_gval_individual_volatile_t;
 
@@ -470,17 +471,17 @@ typedef struct __sapp_gval_individual_volatile sapp_gval_individual_volatile_t;
 typedef struct{
 	sapp_cmd_args_val_t **cmd_args_array;
 	int cmd_args_num;
-	char **dumpfie_list_array; /* ²ÎÊý--dumpfile-listÃüÁîÖ´ÐÐºó, µÃµ½µÄÎÄ¼þÁÐ±í, ×Ö·û´®Ö¸ÕëÊý×é */
-	int slient_mode; /* ¾²Ä¬Ä£Ê½, Ç°Ì¨²»Êä³öÈÎºÎÐÅÏ¢ */
+	char **dumpfie_list_array; /* ï¿½ï¿½ï¿½ï¿½--dumpfile-listï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ðºï¿½, ï¿½Ãµï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ð±ï¿½, ï¿½Ö·ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	int slient_mode; /* ï¿½ï¿½Ä¬Ä£Ê½, Ç°Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½Ï¢ */
 }sapp_cla_t;
 
 
 typedef struct{
 	sapp_cla_t cla;
 	sapp_config_t config;
-	sapp_gval_individual_fixed_t individual_fixed; /* ³õÊ¼»¯ºó²»ÔÙ¸Ä±äµÄ±äÁ¿ */
-	sapp_gval_individual_volatile_t *individual_volatile; /* ³ÌÐòÆô¶¯ºó»áÊµÊ±¸üÐÂµÄ¶ÀÁ¢±äÁ¿ */
-	sapp_gval_mthread_t *mthread_volatile[SAPP_MAX_THREADS]; /* ³ÌÐòÆô¶¯ºó»áÊµÊ±¸üÐÂµÄ¶àÏß³Ì±äÁ¿ */
+	sapp_gval_individual_fixed_t individual_fixed; /* ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ù¸Ä±ï¿½Ä±ï¿½ï¿½ï¿½ */
+	sapp_gval_individual_volatile_t *individual_volatile; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÊµÊ±ï¿½ï¿½ï¿½ÂµÄ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	sapp_gval_mthread_t *mthread_volatile[SAPP_MAX_THREADS]; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÊµÊ±ï¿½ï¿½ï¿½ÂµÄ¶ï¿½ï¿½ß³Ì±ï¿½ï¿½ï¿½ */
 }sapp_global_t;
 
 extern embed_layer_t g_stream_compare_layer_set; 

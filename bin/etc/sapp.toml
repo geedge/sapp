@@ -146,6 +146,7 @@
     analyse_option_enabled=1
     tuple4_reuse_time_interval=30
 
+    #reorder_on_closing=1
     #max_opening_per_sec=5000
     #max_timeouts_per_sec=5000
 

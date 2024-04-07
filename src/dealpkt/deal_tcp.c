@@ -2201,7 +2201,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 				{
 					pdetail_pr->flow_stat->S2C_ooorder_pkt++;
 				}
-				if(orderflag==CHECK_ORDER_DATA)
+				if(orderflag==CHECK_ORDER_DATA || sapp_global_val->config.stream.tcp.reorder_on_closing == 1)
 				{
 					stream_process_tcp(a_tcp,unorder_packet->this_ip_hdr, unorder_packet->this_tcp_hdr, &(unorder_packet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
 				}
@@ -2249,7 +2249,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 						{
 							pdetail_pr->flow_stat->S2C_ooorder_pkt++;
 						}
-						if(orderflag==CHECK_ORDER_DATA)
+						if(orderflag==CHECK_ORDER_DATA || sapp_global_val->config.stream.tcp.reorder_on_closing == 1)
 						{
 							ret=stream_process_tcp(a_tcp,unorder_packet->this_ip_hdr,unorder_packet->this_tcp_hdr,&(unorder_packet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
 						}
