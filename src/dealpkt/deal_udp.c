@@ -244,8 +244,20 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 		project_req_add_struct(pstream_udp, G_UDP_FLOW_STAT_PROJECT_ID, pdetail_pr->flow_stat);
 	}
 
-	save_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_udp_pr, raw_pkt);
-	if(createdir==DIR_C2S){
+    extern int identify_gtp(const struct streaminfo *pstream, const char *payload, unsigned int udp_payload_len);
+    if (1 == identify_gtp(pstream_udp, (char *)this_udphdr + sizeof(struct mesa_udp_hdr),
+                          pstream_udp_pr->raw_pkt->raw_pkt_len -
+                              ((const char *)this_udphdr - (const char *)pstream_udp_pr->raw_pkt->raw_pkt_data) -
+                              sizeof(struct mesa_udp_hdr)))
+    {
+        pstream_udp_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNEL_GPRS_TUNNEL;
+    }
+    else
+    {
+        save_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_udp_pr, raw_pkt);
+    }
+
+    if(createdir==DIR_C2S){
 		pstream_udp_pr->stream_c2s_route_dir = raw_pkt->route_dir;
 	}else{
 		pstream_udp_pr->stream_c2s_route_dir = raw_pkt->route_dir ^ 1;

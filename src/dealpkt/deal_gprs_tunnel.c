@@ -204,7 +204,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
 }
 
 //仅识别GTP-U协议，用于进行隧道处理
-static int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned int udp_payload_len)
+int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned int udp_payload_len)
 {
     if (udp_payload_len >= sizeof(struct gtp_hdr))
     {

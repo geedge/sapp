@@ -228,7 +228,7 @@ int MESA_platform_init(int argc, char *argv[])
 
 	/* 平台内置固定开启的插件 */
 	stream_register_udp_raw(udp_teredo_identify_entry);
-	stream_register_udp_raw(udp_gtp_identify_entry);
+	//stream_register_udp_raw(udp_gtp_identify_entry);
 	stream_register_udp(udp_l2tp_identify_entry);
 
 	/* 2020-12-23 lijia add, vxlan保活插件内置 */
