@@ -2571,11 +2571,11 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 
 		
 		//当上层关闭链接，或者处理到了乱序的rst报文
-		if((pstream->opstate==OP_STATE_CLOSE)&&(pdetail_pr->link_state!=STREAM_LINK_RESET))
+		if((pstream->opstate==OP_STATE_CLOSE)&&(pstream->pktstate==OP_STATE_CLOSE )&&(pdetail_pr->link_state!=STREAM_LINK_RESET))
 		{	
 			tcp_change_stream_tonouse(pindex);
 			return ret;
-        	}
+        }
 
 		if(ret==DROP)
 			return DROP;
@@ -2587,8 +2587,8 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		//当上层关闭链接，或者处理到了乱序的rst报文
 		/* 2017-08-01 lijia modify, 还要判断TCPALL插件状态, 单独只挂载TCPALL插件时, opstate已经是CLOSE了, 不能置于NOUSE态 */
 		if((pstream->opstate==OP_STATE_CLOSE)
-		 && (OP_STATE_CLOSE == pstream->pktstate)
-		 &&(pdetail_pr->link_state!=STREAM_LINK_RESET))
+		&& (OP_STATE_CLOSE == pstream->pktstate)
+		&&(pdetail_pr->link_state!=STREAM_LINK_RESET))
 		{	
 			tcp_change_stream_tonouse(pindex);
 			return ret;

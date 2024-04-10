@@ -91,6 +91,7 @@
 ### note, stream_id_base_time format is "%Y-%m-%d %H:%M:%S" 
     stream_id_base_time="2021-01-01 00:00:00"
     [stream.tcp]
+    reorder_on_closing=1
     max=10000
     timeout=60
     syn_mandatory=1
