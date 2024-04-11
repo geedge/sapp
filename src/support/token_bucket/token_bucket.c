@@ -32,7 +32,7 @@ void token_bucket_free(struct token_bucket *t)
 
 int token_bucket_consume(struct token_bucket *t, long long tokens, long long now_ms) 
 {
-    if (t == NULL || tokens <= 0 || now_ms <= 0)return 0;
+    if (t == NULL || tokens <= 0 || now_ms <= 0)return 1;
 	if (tokens > t->CBS)return 0;
 	if (now_ms < t->last_refill_timestamp_ms) return 0;
 
@@ -42,7 +42,7 @@ int token_bucket_consume(struct token_bucket *t, long long tokens, long long now
 	if(delta_ms > DEFALUT_REFILL_INTERVAL_MS && refill > 0)
 	{
 		
-		t->tokens += MIN(refill, t->CBS);
+		t->tokens = MIN(refill, t->CBS);
 		t->last_refill_timestamp_ms = now_ms;
 	}
 

@@ -472,11 +472,12 @@ enum del_stream_by_time_returen_code
 	DEL_STREAM_BY_TIME_RET_NO_TOKEN = 3,
 };
 
-int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index, int thread_id)
+int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index, int tid, enum stream_type_t type)
 {
 	int ret = DEL_STREAM_BY_TIME_RET_NORMAL;
 	struct timeout *t=NULL;
-	struct global_stream *g_stream = G_MESA_GLOBAL_STREAM[thread_id];
+	struct global_stream *g_stream = G_MESA_GLOBAL_STREAM[tid];
+	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[tid]->sys_stat;
 	if(unlikely(plist->last_update_timer_ms < g_CurrentTime_ms))
 	{
 		timeouts_update(plist->streamindex_timer, g_CurrentTime_ms);
@@ -488,28 +489,34 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
 		plist->last_update_timer_ms = g_CurrentTime_ms;
 		plist->interval_to_next_timeout_ms=timeouts_timeout(plist->streamindex_timer);
 	}
+	else
+	{
+		plist->interval_to_next_timeout_ms=timeouts_timeout(plist->streamindex_timer);
+	}
     if (plist->interval_to_next_timeout_ms == 0)
     {
-        if ( plist->timeout_ratelimiter == NULL || token_bucket_consume(plist->timeout_ratelimiter, 1, g_current_time_ms) > 0)
+        t = timeouts_get(plist->streamindex_timer);
+        if (t != NULL)
         {
-            t = timeouts_get(plist->streamindex_timer);
-            if (t != NULL)
-            {
-                struct streamindex *pindex =
-                    (struct streamindex *)sapp_get_struct_header(t, struct streamindex, timeout);
-                struct streaminfo_private *pstream_pr = &(pindex->stream);
-                struct streaminfo *pstream = &(pstream_pr->stream_public);
+			if(type==STREAM_TYPE_UDP)local_sys_stat->count[SAPP_STAT_UDP_TRY_TIMEOUTS]++;
+			else if(type==STREAM_TYPE_TCP)local_sys_stat->count[SAPP_STAT_TCP_TRY_TIMEOUTS]++;
 
-                if (pindex == current_drive_index)
-                { /* 当前包所在的流超时, 说明之前很长时间没有包到来, 此时不用free, 而是返回1, 再调用reset */
-                    if (STREAM_TYPE_TCP == pstream->type)
-                    {
-                        /* 2016-12-15 lijia add, 超时reset之前, 先要设置link_state */
-                        ((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
-                    }
-                    ret = DEL_STREAM_BY_TIME_RET_DEL_SELF;
+            struct streamindex *pindex = (struct streamindex *)sapp_get_struct_header(t, struct streamindex, timeout);
+            struct streaminfo_private *pstream_pr = &(pindex->stream);
+            struct streaminfo *pstream = &(pstream_pr->stream_public);
+
+            if (pindex == current_drive_index)
+            { /* 当前包所在的流超时, 说明之前很长时间没有包到来, 此时不用free, 而是返回1, 再调用reset */
+                if (STREAM_TYPE_TCP == pstream->type)
+                {
+                    /* 2016-12-15 lijia add, 超时reset之前, 先要设置link_state */
+                    ((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
                 }
-                else
+                ret = DEL_STREAM_BY_TIME_RET_DEL_SELF;
+            }
+            else
+            {
+                if (token_bucket_consume(plist->timeout_ratelimiter, 1, g_current_time_ms) > 0)
                 {
                     if (STREAM_TYPE_TCP == pstream->type)
                     {
@@ -523,6 +530,13 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
                         udp_free_stream(pindex);
                         ret = DEL_STREAM_BY_TIME_RET_DEL_OTHER;
                     }
+                }
+                else
+                {
+                    if (type == STREAM_TYPE_UDP)
+                        local_sys_stat->count[SAPP_STAT_UDP_TIMEOUTS_OVERSPEED]++;
+                    else if (type == STREAM_TYPE_TCP)
+                        local_sys_stat->count[SAPP_STAT_TCP_TIMEOUTS_OVERSPEED]++;
                 }
             }
         }
@@ -576,7 +590,7 @@ int lrustream(struct streamindex *pindex)
 		plist=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->tcpList[pstream->stream_state]);
 
 	}
-	if(1 == del_stream_by_time(plist, pindex, pstream->threadnum))
+	if(1 == del_stream_by_time(plist, pindex, pstream->threadnum, pstream->type))
 	{
 		return 1;	
 	}
@@ -1570,6 +1584,7 @@ void hash_add_stream(struct streamindex *pindex)
                                          g_current_time_ms) == 0)
                 {
                     pindex->stream.under_ddos_bypass = 1;
+					local_sys_stat->count[SAPP_STAT_UDP_OPENING_OVERSPEED]++;
                 }
             }            
 			if (STREAM_TYPE_TCP == ptmp->type && G_MESA_GLOBAL_STREAM[threadnum]->tcp_opening_ratelimiter != NULL)
@@ -1578,6 +1593,7 @@ void hash_add_stream(struct streamindex *pindex)
                                          g_current_time_ms) == 0)
                 {
                     pindex->stream.under_ddos_bypass = 1;
+					local_sys_stat->count[SAPP_STAT_TCP_OPENING_OVERSPEED]++;
                 }
             }
         }
@@ -2725,7 +2741,7 @@ int polling_stream_timeout(int tid)
         plist = &(G_MESA_GLOBAL_STREAM[tid]->udpList[i]);
         if (plist->cnt > 0)
         {
-            ret = del_stream_by_time(plist, NULL, tid);
+            ret = del_stream_by_time(plist, NULL, tid, STREAM_TYPE_UDP);
             if (ret > 0)
             {
                     has_work = POLLING_STATE_WORK;
@@ -2739,7 +2755,7 @@ int polling_stream_timeout(int tid)
         plist = &(G_MESA_GLOBAL_STREAM[tid]->tcpList[i]);
         if (plist->cnt > 0)
         { /* polling阶段可能还没有流, 或者没有此状态的流, plist可能为NULL */
-            ret = del_stream_by_time(plist, NULL, tid);
+            ret = del_stream_by_time(plist, NULL, tid, STREAM_TYPE_TCP);
             if (ret > 0)
             {
                     has_work = POLLING_STATE_WORK;

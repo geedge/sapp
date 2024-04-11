@@ -598,23 +598,39 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 	fs3_rt->metrics_ids[1][SAPP_STAT_UDP_BYPASS_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Bypass_Bit", 
 								NULL, 0);	
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OFFLOAD_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Offload_STM", 
-								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OFFLOAD_PKTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Offload_Pkt", 
-								NULL, 0);	
-	fs3_rt->metrics_ids[1][SAPP_STAT_TCP_OFFLOAD_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Offload_Bit", 
-								NULL, 0);	
+	//fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OFFLOAD_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Offload_STM", 
+	//							NULL, 0);	
+	//fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OFFLOAD_PKTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Offload_Pkt", 
+	//							NULL, 0);	
+	//fs3_rt->metrics_ids[1][SAPP_STAT_TCP_OFFLOAD_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Offload_Bit", 
+	//							NULL, 0);	
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OFFLOAD_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_STM", 
-								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OFFLOAD_PKTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_Pkt", 
-								NULL, 0);	
-	fs3_rt->metrics_ids[1][SAPP_STAT_UDP_OFFLOAD_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_Bit", 
-								NULL, 0);	
+	//fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OFFLOAD_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_STM", 
+	//							NULL, 0);	
+	//fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OFFLOAD_PKTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_Pkt", 
+	//							NULL, 0);	
+	//fs3_rt->metrics_ids[1][SAPP_STAT_UDP_OFFLOAD_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_Bit", 
+	//							NULL, 0);	
 								
 	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_DUP_KICK_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_DUP_STM", 
 								NULL, 0);									
 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OPENING_OVERSPEED] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_OPEN_SPD", 
+								NULL, 0);									
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OPENING_OVERSPEED] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_OPEN_SPD", 
+								NULL, 0);									
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_TIMEOUTS_OVERSPEED] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_TIMED_SPD", 
+								NULL, 0);									
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_TIMEOUTS_OVERSPEED] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_TIMED_SPD", 
+								NULL, 0);									
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_TRY_TIMEOUTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_TRY_TIMED", 
+								NULL, 0);	
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_TRY_TIMEOUTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_TRY_TIMED", 
+								NULL, 0);									
 	return 0;
 }
 

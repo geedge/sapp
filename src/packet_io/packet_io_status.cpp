@@ -218,17 +218,25 @@ static void packet_io_update_metrics_fs3(void)
 	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_BYPASS_PKTS,cur_count[SAPP_STAT_UDP_BYPASS_PKTS]-history_count[SAPP_STAT_UDP_BYPASS_PKTS]);
 	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_BYPASS_BYTES,cur_count[SAPP_STAT_UDP_BYPASS_BYTES]-history_count[SAPP_STAT_UDP_BYPASS_BYTES]);
 	
-	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_OFFLOAD_STREAM,cur_count[SAPP_STAT_TCP_OFFLOAD_STREAM]-history_count[SAPP_STAT_TCP_OFFLOAD_STREAM]);
-	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_OFFLOAD_PKTS,cur_count[SAPP_STAT_TCP_OFFLOAD_PKTS]-history_count[SAPP_STAT_TCP_OFFLOAD_PKTS]);
-	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_OFFLOAD_BYTES,cur_count[SAPP_STAT_TCP_OFFLOAD_BYTES]-history_count[SAPP_STAT_TCP_OFFLOAD_BYTES]);
+	//sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_OFFLOAD_STREAM,cur_count[SAPP_STAT_TCP_OFFLOAD_STREAM]-history_count[SAPP_STAT_TCP_OFFLOAD_STREAM]);
+	//sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_OFFLOAD_PKTS,cur_count[SAPP_STAT_TCP_OFFLOAD_PKTS]-history_count[SAPP_STAT_TCP_OFFLOAD_PKTS]);
+	//sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_OFFLOAD_BYTES,cur_count[SAPP_STAT_TCP_OFFLOAD_BYTES]-history_count[SAPP_STAT_TCP_OFFLOAD_BYTES]);
 	
-	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OFFLOAD_STREAM,cur_count[SAPP_STAT_UDP_OFFLOAD_STREAM]-history_count[SAPP_STAT_UDP_OFFLOAD_STREAM]);
-	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OFFLOAD_PKTS,cur_count[SAPP_STAT_UDP_OFFLOAD_PKTS]-history_count[SAPP_STAT_UDP_OFFLOAD_PKTS]);
-	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OFFLOAD_BYTES,cur_count[SAPP_STAT_UDP_OFFLOAD_BYTES]-history_count[SAPP_STAT_UDP_OFFLOAD_BYTES]);
+	//sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OFFLOAD_STREAM,cur_count[SAPP_STAT_UDP_OFFLOAD_STREAM]-history_count[SAPP_STAT_UDP_OFFLOAD_STREAM]);
+	//sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OFFLOAD_PKTS,cur_count[SAPP_STAT_UDP_OFFLOAD_PKTS]-history_count[SAPP_STAT_UDP_OFFLOAD_PKTS]);
+	//sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OFFLOAD_BYTES,cur_count[SAPP_STAT_UDP_OFFLOAD_BYTES]-history_count[SAPP_STAT_UDP_OFFLOAD_BYTES]);
 
 
 	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_DUP_KICK_STREAM,cur_count[SAPP_STAT_UDP_DUP_KICK_STREAM]-history_count[SAPP_STAT_UDP_DUP_KICK_STREAM]);
 	
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_OPENING_OVERSPEED,cur_count[SAPP_STAT_TCP_OPENING_OVERSPEED]-history_count[SAPP_STAT_TCP_OPENING_OVERSPEED]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_OPENING_OVERSPEED,cur_count[SAPP_STAT_UDP_OPENING_OVERSPEED]-history_count[SAPP_STAT_UDP_OPENING_OVERSPEED]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_TIMEOUTS_OVERSPEED,cur_count[SAPP_STAT_TCP_TIMEOUTS_OVERSPEED]-history_count[SAPP_STAT_TCP_TIMEOUTS_OVERSPEED]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_TIMEOUTS_OVERSPEED,cur_count[SAPP_STAT_UDP_TIMEOUTS_OVERSPEED]-history_count[SAPP_STAT_UDP_TIMEOUTS_OVERSPEED]);
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_TRY_TIMEOUTS,cur_count[SAPP_STAT_TCP_TRY_TIMEOUTS]-history_count[SAPP_STAT_TCP_TRY_TIMEOUTS]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_TRY_TIMEOUTS,cur_count[SAPP_STAT_UDP_TRY_TIMEOUTS]-history_count[SAPP_STAT_UDP_TRY_TIMEOUTS]);
 	return;
 }
 

@@ -54,7 +54,7 @@ static inline void update_stream_list_raw_pkt_pointer(struct streaminfo_private 
 void addr_reverse_memcpy(const struct streaminfo_private *stack_pr,void *daddr, const void *saddr, int addrtype, int addrlen);
 int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *pstream_stack, int reverse);
 void iterate_stream_list(const struct streaminfo *stream);
-int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index, int thread_id);
+int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index, int thread_id, enum stream_type_t type);
 
 //int g_kill_tcp_remedy_sw = 0; /* 2016-06-21 lijia add, 是否进行FD补救 */
 
@@ -755,7 +755,11 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
             {
 				if(token_bucket_consume(G_MESA_GLOBAL_STREAM[threadnum]->tcp_opening_ratelimiter, 1,
                                          g_current_time_ms) == 0)
-                pstream_pr->under_ddos_bypass = 1;
+				{						 
+                	pstream_pr->under_ddos_bypass = 1;
+					sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
+					local_sys_stat->count[SAPP_STAT_TCP_OPENING_OVERSPEED]++;
+				}
             }
         }
     }
@@ -1296,7 +1300,7 @@ static void tcp_change_stream_tonouse(struct streamindex *pindex)
 	   无法将TCP_NOUSE_STATE状态下的流淘汰出去,
 	   所以此处再扫描一次TCP_NOUSE_STATE的超时流.
 	 */
-	del_stream_by_time(plist, pindex, threadnum);
+	del_stream_by_time(plist, pindex, threadnum, STREAM_TYPE_TCP);
 }
 
 
