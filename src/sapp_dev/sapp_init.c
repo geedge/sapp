@@ -103,7 +103,7 @@ int MESA_platform_init(int argc, char *argv[])
 	ipv4_frag_init(g_iThreadNum, 1024 * 512);
 	ipv6_frag_init(g_iThreadNum, 1024 * 256);
 	tcp_set_stream_num(max_tcp_stream_num*3,max_tcp_stream_num,max_tcp_stream_num*2);
-	udp_set_stream_num(max_udp_stream_num*3,max_udp_stream_num,max_udp_stream_num*2);
+	udp_set_stream_num(sapp_global_val->config.stream.udp.max_opening,sapp_global_val->config.stream.udp.max_pair,sapp_global_val->config.stream.udp.max);
 
 	MESA_load_profile_int_def("conf/main.conf","Module", "timedelay_threshold", &int_tmp, 10000000);
 	g_timedelay_threshold = (long long)int_tmp;

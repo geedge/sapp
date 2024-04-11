@@ -120,6 +120,8 @@ typedef struct{
 	int well_known_ports_array_num;	
 	int max_timeouts_per_sec;
 	int max_opening_per_sec;
+	int max_opening;
+	int max_pair;
 }sapp_config_stream_udp_t;
 
 

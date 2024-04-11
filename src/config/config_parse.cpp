@@ -1789,6 +1789,8 @@ int sapp_parse_config(void)
 
 	/*******************************  STREAM.UDP ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"max", (int *)&pconfig->stream.udp.max, 5000);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"max_opening", (int *)&pconfig->stream.udp.max_opening, pconfig->stream.udp.max*3);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"max_pair", (int *)&pconfig->stream.udp.max_pair, pconfig->stream.udp.max);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"timeout", (int *)&pconfig->stream.udp.timeout, 60);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"meaningful_statistics_minimum_pkt", (int *)&pconfig->stream.udp.meaningful_statistics_minimum_pkt, 3);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"meaningful_statistics_minimum_byte", (int *)&pconfig->stream.udp.meaningful_statistics_minimum_byte, 5);
