@@ -249,7 +249,7 @@ int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned s
 	pindex = sapp_get_struct_header(pstream_pr, struct streamindex, stream);
 	if (STREAM_TYPE_UDP == pstream->type)
 	{
-		if (pstream_pr->timeout == udp_reset_time)
+		if (pstream_pr->set_special_timeout == 0)
 		{
 			/* 允许插件多次设置超时时间, 当前流第一次设置超时时间记录计数 */
 			sapp_global_mthread[pstream->threadnum].udp_stream_special_timeout_num++;
@@ -257,7 +257,7 @@ int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned s
 	}
 	else if (STREAM_TYPE_TCP == pstream->type)
 	{
-		if (pstream_pr->timeout == link_default_nopkt_time)
+		if (pstream_pr->set_special_timeout == 0)
 		{
 			/* 允许插件多次设置超时时间, 当前流第一次设置超时时间记录计数 */
 			sapp_global_mthread[pstream->threadnum].tcp_stream_special_timeout_num++;
@@ -267,13 +267,13 @@ int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned s
 	{
 		goto err; /* 仅支持TCP和UDP流 */
 	}
-
 	if(pstream_pr->plugin_process_context != 0)
 	{
 		stream_timeout_shift_lrulist(pindex, timeout);
 	}
 	
 	pstream_pr->timeout=timeout;
+	pstream_pr->set_special_timeout=1;
 	return ret;
 
 err:
@@ -378,23 +378,26 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
 	}
 	
 	struct streaminfo *pstream=(struct streaminfo *)(&(pindex->stream));
+	struct streaminfo_private *pstream_pr  = (struct streaminfo_private *)(&(pindex->stream));
 	time_t next_timeout_ms=0;
 	timeout_init(&pindex->timeout, TIMEOUT_ABS);
-	if(pstream->stream_state==TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP)
-	{
-		next_timeout_ms= tcp_closing_timeout*1000+g_CurrentTime_ms;
-	}
-	else if(pstream->stream_state==TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
-	{
-		next_timeout_ms= tcp_opening_timeout*1000+g_CurrentTime_ms;
-	}
-	else
-	{
-		long set_timeout = pindex->stream.timeout;
-		if(set_timeout == 0)set_timeout = MAX_DEFALUT_TIMEOUT_S;
-		next_timeout_ms=set_timeout*1000+g_CurrentTime_ms;
-	}
-	timeouts_add(plist->streamindex_timer, &pindex->timeout, next_timeout_ms);
+    if (pstream->stream_state == TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
+    {
+        next_timeout_ms = tcp_opening_timeout * 1000 + g_CurrentTime_ms;
+    }
+    else if ((pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP) &&
+             (pstream_pr->set_special_timeout == 0 || sapp_global_val->config.stream.tcp.nouse_set_special_timeout == 0))
+    {
+		next_timeout_ms = tcp_closing_timeout * 1000 + g_CurrentTime_ms;
+    }
+    else
+    {
+        long set_timeout = pindex->stream.timeout;
+        if (set_timeout == 0)
+            set_timeout = MAX_DEFALUT_TIMEOUT_S;
+        next_timeout_ms = set_timeout * 1000 + g_CurrentTime_ms;
+    }
+    timeouts_add(plist->streamindex_timer, &pindex->timeout, next_timeout_ms);
 	sapp_runtime_log(RLOG_LV_DEBUG, "streamaddlist timeout_add: %s, thread:%d, stream_type:%d, stream_state:%d, curtime:%ld, next_timeout_s:%ld!",
 				 printaddr(&pindex->stream.stream_public.addr, pindex->stream.stream_public.threadnum),
 				 pindex->stream.stream_public.threadnum,
@@ -596,22 +599,23 @@ int lrustream(struct streamindex *pindex)
 	}
 	else
 	{
-		if (pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP)
-		{
-			timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout*1000 + g_CurrentTime_ms);
-		}
-		else if (pstream->stream_state == TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
-		{
-			timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout*1000 + g_CurrentTime_ms);
-		}
-		else
-		{
-			long set_timeout = pindex->stream.timeout;
-			if (set_timeout == 0)
-				set_timeout = MAX_DEFALUT_TIMEOUT_S;
-			timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout*1000 + g_CurrentTime_ms);
-		}
-	}
+        if (pstream->stream_state == TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
+        {
+            timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout * 1000 + g_CurrentTime_ms);
+        }
+        else if (pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP &&
+                 (pstream_pr->set_special_timeout == 0 || sapp_global_val->config.stream.tcp.nouse_set_special_timeout == 0))
+        {
+            timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout * 1000 + g_CurrentTime_ms);
+        }
+        else
+        {
+            long set_timeout = pindex->stream.timeout;
+            if (set_timeout == 0)
+                set_timeout = MAX_DEFALUT_TIMEOUT_S;
+            timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout * 1000 + g_CurrentTime_ms);
+        }
+    }
 	return 0;
 }
 

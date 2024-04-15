@@ -771,7 +771,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	if(pdetail_pr->pserver){
 		pdetail_pr->pserver->maxunorder = tcp_default_unorder;
 	}
-	
+	pstream_pr->set_special_timeout=0;
 	pstream_pr->timeout=link_default_nopkt_time;
 	pdetail_pr->creat_mod=TCP_CTEAT_LINK_BYSYN;	
 	
@@ -804,7 +804,6 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		//pdetail->serverpkt++; //adjust by lqy 20140515 只有新建时计数
 		pdetail_pr->C2S_first_ack_seq = ntohl (this_tcphdr->th_ack);
 	}
-	pstream_pr->timeout=link_default_nopkt_time;
 	pdetail->lastmtime=g_CurrentTime;	
 	pstream_pr->stream_lastupdate_timestamp_ms=g_CurrentTime_ms;	
 	pdetail_pr->link_state=STREAM_LINK_JUST_EST;	
@@ -1046,7 +1045,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		//set_stream_addr(pstream->pfather, this_tcphdr->th_dport, this_tcphdr->th_sport, pstream);
 	}
 #endif
-
+	pstream_pr->set_special_timeout=0;
 	pstream_pr->timeout=link_default_nopkt_time;
 	pdetail_pr->creat_mod=TCP_CTEAT_LINK_BYDATA;	
 	pstream->opstate=OP_STATE_PENDING;
@@ -1453,7 +1452,7 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 
 
 
-	if(pstream_pr->timeout > link_default_nopkt_time){ /* 链接独有超时时间, 减少计数 */
+	if(pstream_pr->set_special_timeout != 0){ /* 链接独有超时时间, 减少计数 */
 		sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
 	}
 	
@@ -1642,7 +1641,7 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 		((raw_pkt_t *)raw_pkt)->prepend_list=NULL;
 	}
 
-	if (pstream_pr->timeout > link_default_nopkt_time)
+	if (pstream_pr->set_special_timeout != 0)
 	{ /* 链接独有超时时间, 减少计数 */
 		sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
 	}
@@ -2575,7 +2574,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 
 		
 		//当上层关闭链接，或者处理到了乱序的rst报文
-		if((pstream->opstate==OP_STATE_CLOSE)&&(pstream->pktstate==OP_STATE_CLOSE )&&(pdetail_pr->link_state!=STREAM_LINK_RESET))
+		if((pstream->opstate==OP_STATE_CLOSE)&&(pdetail_pr->link_state!=STREAM_LINK_RESET))
 		{	
 			tcp_change_stream_tonouse(pindex);
 			return ret;
@@ -2697,6 +2696,13 @@ static int tcp_deal_nouse_stream(struct streamindex *pindex,const void *this_iph
 		}
 		return PASS;
 	}
+
+	if(this_tcphdr->th_flags & TH_FIN || this_tcphdr->th_flags & TH_RST)
+	{
+		struct stream_list *lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->tcpList[pstream->stream_state]);
+		timeouts_add(lru_list_root->streamindex_timer, &pindex->timeout, tcp_closing_timeout*1000+g_CurrentTime_ms);
+	}
+
 	return PASS;	
 }
 

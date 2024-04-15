@@ -108,6 +108,7 @@ typedef struct{
 	int max_timeouts_per_sec;
 	int max_opening_per_sec;
 	int reorder_on_closing;
+	int nouse_set_special_timeout;
 }sapp_config_stream_tcp_t;
 
 

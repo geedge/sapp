@@ -207,6 +207,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->udpList[UDP_ONE_STATE]);
 	pstream_udp->stream_state=UDP_ONE_STATE;
 
+	pstream_udp_pr->set_special_timeout=0;
 	pstream_udp_pr->timeout=udp_reset_time;
 
 	hash_add_stream(pindex_udp);
@@ -362,7 +363,7 @@ void udp_free_stream(struct streamindex *pindex)
 	pstream->pdetail=NULL;
 
 
-	if(pstream_pr->timeout > udp_reset_time){ /* 链接独有超时时间, 减少计数 */
+	if(pstream_pr->set_special_timeout != 0){ /* 链接独有超时时间, 减少计数 */
 		sapp_global_mthread[threadnum].udp_stream_special_timeout_num--;
 	}
 
