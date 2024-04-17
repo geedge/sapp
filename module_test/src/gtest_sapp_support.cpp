@@ -1096,3 +1096,15 @@ void get_deployment_mode_inline(void)
 	call_libsapp_devel_with_args(1, sapp_inline_start_args);
 }
 
+void control_get_ip_ttl_run(void)
+{
+	set_default_config();
+	
+	update_plugin_inf("TCP_ALL", "get_ip_ttl_entry");
+	append_plugin_inf("UDP", "get_ip_ttl_entry");
+	
+	set_pcap_dumpfile("for_gtest_only/control/get_ip_ttl_hybrid.pcap");
+
+	ASSERT_EQ(file_md5_checksum("dumpfile", "434d6a566709f0f78c44c7f3cb7b934b"),0);
+	call_libsapp_devel_for_dumpfile_topspeed();
+}

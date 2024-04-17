@@ -3071,6 +3071,14 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	}
 
 	update_polling_inject_context(SAPP_MEM_DYN_TCP_POLLING_RAW_PKT, pstream_pr, raw_pkt);
+
+	/* update ip ttl */
+	if(unlikely(0 == pstream_pr->ip_ttl_c2s) && (DIR_C2S == pstream->curdir)) {
+		pstream_pr->ip_ttl_c2s = pindex->stream.ip_ttl_c2s;
+	}
+	if(unlikely(0 == pstream_pr->ip_ttl_s2c) && (DIR_S2C == pstream->curdir)) {
+		pstream_pr->ip_ttl_s2c = pindex->stream.ip_ttl_c2s; /* Not a mistake, that's it! */
+	}
 	
 	/* note: reset会重置计数, 放在clientbytes+=, clientpktnum++代码之后 */
 	if(1 == lrustream(pindex_tcp)){
@@ -3299,6 +3307,9 @@ int dealipv4tcppkt(struct streamindex *pfindex, const struct mesa_ip4_hdr *this_
 	}
 #endif	
 
+	/* temporarily stored in the stack memory, use fix val c2s */
+	pfindex->stream.ip_ttl_c2s = this_iphdr->ip_ttl;
+
 	//return dealtcppkt(pfstream, this_tcphdr, thread_num, routedir, datalen, iplen, raw_pkt);
 	return dealtcppkt(pfindex, (const void *)this_iphdr, this_tcphdr, thread_num, routedir, datalen, raw_pkt, offset_to_raw_pkt_hdr);
 }
@@ -3321,6 +3332,9 @@ int dealipv6tcppkt(struct streamindex *pfindex, const struct mesa_ip6_hdr *this_
 	if(unlikely(datalen < 0)){
 		return PASS;
 	}
+
+	/* temporarily stored in the stack memory, use fix val c2s */
+	pfindex->stream.ip_ttl_c2s = this_iphdr->ip6_hop;
 
 	return dealtcppkt(pfindex,(const void *)this_iphdr, this_tcphdr,thread_num, routedir, datalen, raw_pkt, offset_to_raw_pkt_hdr);
 }

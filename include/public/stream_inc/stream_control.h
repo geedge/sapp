@@ -63,6 +63,8 @@ enum MESA_stream_opt{
 	MSO_STREAM_S2C_LINK_ID,
 	MSO_STREAM_C2S_ROUTE_CTX,
 	MSO_STREAM_S2C_ROUTE_CTX,	
+	MSO_IP_TTL_C2S, /* opt_val type must be unsigned char, IPv4 is TTL, IPv6 is Hop Limit */
+	MSO_IP_TTL_S2C, /* opt_val type must be unsigned char, IPv4 is TTL, IPv6 is Hop Limit */
 	__MSO_MAX,
 };
 
@@ -158,7 +160,7 @@ enum stream_timer_return_value{
 };
 
 
-#define MAX_TCP_OPT_LEN	(38) /* TCP头部长度最长为60字节, 去除标准头部剩余选项部分最长40字节, 选项数据部分最长38字节 */
+#define MAX_TCP_OPT_LEN	(38) /* TCP头部长度最长为60字节, 去除标准头部剩余选项部分最�?40字节, 选项数据部分最�?38字节 */
 #define MAX_TCP_OPT_NUM	(20) /* 单个TCP包最大选项数量 */
 
 enum tcp_option_value{
@@ -207,20 +209,20 @@ struct tcp_option_ext{
 
 
 /* 2018-10-24 lijia add, for pangu 项目mac_in_mac回流.
-   理论上, sapp平台不应该关心和业务密切相关的东西, 比如mac里哪个字段是link_id, 哪个是dev_id,
-   但这个玩意太底层了, 平台借用GDEV发送RST包也要填充这些值, 必须平台处理!!
+   理论�?, sapp平台不应该关心和业务密切相关的东�?, 比如mac里哪个字段是link_id, 哪个是dev_id,
+   但这个玩意太底层�?, 平台借用GDEV发送RST包也要填充这些�?, 必须平台处理!!
 */
-/* 为了方便业务插件获取mac_in_mac地址里的具体信息, 不再使用原始的bit位域, 转换成变量形式 */
+/* 为了方便业务插件获取mac_in_mac地址里的具体信息, 不再使用原始的bit位域, 转换成变量形�? */
 struct vxlan_info{
 	unsigned char encap_type; /* 原始二层封装格式 */
 	unsigned char entrance_id; /* 设备所在出入口ID */
 	unsigned char dev_id; /* 设备ID */
 	unsigned char link_id; /* 链路ID */
-	unsigned char link_dir; /* 链路方向, 指当前四元组的IP被捕获时的传输方向, 对于TCP, SYN包的传输方向; 对于UDP, 端口大IP的传输方向 */
-	unsigned char inner_smac[18]; /* 内层真实SMAC, string类型, 例: "11:22:33:44:55:66"  */
-	unsigned char inner_dmac[18]; /* 内层真实DMAC, string类型, 例: "11:22:33:44:55:66"  */
-	unsigned char inner_smac_hex[6]; /* 内层真实SMAC, 原始二进制类型  */
-	unsigned char inner_dmac_hex[6]; /* 内层真实DMAC, 原始二进制类型  */	
+	unsigned char link_dir; /* 链路方向, 指当前四元组的IP被捕获时的传输方�?, 对于TCP, SYN包的传输方向; 对于UDP, 端口大IP的传输方�? */
+	unsigned char inner_smac[18]; /* 内层真实SMAC, string类型, �?: "11:22:33:44:55:66"  */
+	unsigned char inner_dmac[18]; /* 内层真实DMAC, string类型, �?: "11:22:33:44:55:66"  */
+	unsigned char inner_smac_hex[6]; /* 内层真实SMAC, 原始二进制类�?  */
+	unsigned char inner_dmac_hex[6]; /* 内层真实DMAC, 原始二进制类�?  */	
 };
 
 
@@ -338,10 +340,10 @@ int sapp_get_device_opt(const char *device, enum sapp_device_opt opt_type, void 
 
 /*************************************************************************************** 	
 	NOTE:
-		在被动模式下, 插件无需关心route_dir的绝对值, 只需要理解同向和反向即可,
-		但主动发包必须要精确理解route_dir是0还是1, 因外界网络拓扑模式不同, 可能随时会变化,
+		在被动模式下, 插件无需关心route_dir的绝对�?, 只需要理解同向和反向即可,
+		但主动发包必须要精确理解route_dir�?0还是1, 因外界网络拓扑模式不�?, 可能随时会变�?,
 		所以设置此接口, 插件只需传入人易理解的方向human_dir, 返回当前链路的link route dir,
-		注意首次部署时, etc/sapp.toml->inbound_route_dir一定要设置正确.
+		注意首次部署�?, etc/sapp.toml->inbound_route_dir一定要设置正确.
 
 	args: 表示发包目标相对于当前设备所在的地理位置,
 		'E' or 'e': 表示数据包传输方向是从Internal to External.
@@ -355,9 +357,9 @@ int MESA_dir_human_to_link(int human_dir);
 
 /*
 	args:
-		链路传输方向: 0或1, 通常来自stream->routedir;
+		链路传输方向: 0�?1, 通常来自stream->routedir;
 	
-	返回值:
+	返回�?:
 		'E' or 'e': 表示数据包传输方向是从Internal to External.
 		'I' or 'i': 表示数据包传输方向是从External to Internal.
 		'x': 参数错误;

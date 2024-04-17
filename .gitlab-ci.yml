@@ -229,44 +229,44 @@ benchmark_test_for_centos8:
   extends: .setup_test_env_for_centos8
   script:
 #run module v2.0 with death test
-    - ./$TEST_NAME -f control.*
-    - ./$TEST_NAME -f fake_marsio.*
+    - ./$TEST_NAME -s -f control.*
+    - ./$TEST_NAME -s -f fake_marsio.*
 #run module v3.0
-    - ./$TEST_NAME -f benchmark_drop.*
-    - ./$TEST_NAME -f benchmark_forward.*
-    - ./$TEST_NAME -f benchmark_inject.tcp*
-    - ./$TEST_NAME -f benchmark_inject.inline_same_dir
-    - ./$TEST_NAME -f benchmark_inject.inline_reverse_dir
+    - ./$TEST_NAME -s -f benchmark_drop.*
+    - ./$TEST_NAME -s -f benchmark_forward.*
+    - ./$TEST_NAME -s -f benchmark_inject.tcp*
+    - ./$TEST_NAME -s -f benchmark_inject.inline_same_dir
+    - ./$TEST_NAME -s -f benchmark_inject.inline_reverse_dir
 
 inline_test_for_centos8:
   extends: .setup_test_env_for_centos8
   script:
 #run module v2.0 with death test
-    - ./$TEST_NAME -f inline_mode.*
-#    - ./$TEST_NAME -f transparent.*
+    - ./$TEST_NAME -s -f inline_mode.*
+#    - ./$TEST_NAME -s -f transparent.*
 
 basic_test_for_centos8:
   extends: .setup_test_env_for_centos8
   script:
 #run module v2.0 immediately
-    - ./$TEST_NAME -f ipv4.*
-    - ./$TEST_NAME -f ipv6.*
-    - ./$TEST_NAME -f udp.*
-    - ./$TEST_NAME -f appstate.*
-    - ./$TEST_NAME -f timer.*
-    - ./$TEST_NAME -f proxy.*
-    - ./$TEST_NAME -f asymmetric.*
-    - ./$TEST_NAME -f pkt_dump.*
-    - ./$TEST_NAME -f project.*
-    - ./$TEST_NAME -f stream_bridge.*
-    - ./$TEST_NAME -f tunnel.*
-    - ./$TEST_NAME -f plug_ctrl.*
-    - ./$TEST_NAME -f jump_layer.*
-    - ./$TEST_NAME -f hybrid.*
-#    - ./$TEST_NAME -f inject.*
-    - ./$TEST_NAME -f offload.*
-    - ./$TEST_NAME -f tcp.*
-    - ./$TEST_NAME -f tcpall.*
+    - ./$TEST_NAME -s -f ipv4.*
+    - ./$TEST_NAME -s -f ipv6.*
+    - ./$TEST_NAME -s -f udp.*
+    - ./$TEST_NAME -s -f appstate.*
+    - ./$TEST_NAME -s -f timer.*
+    - ./$TEST_NAME -s -f proxy.*
+    - ./$TEST_NAME -s -f asymmetric.*
+    - ./$TEST_NAME -s -f pkt_dump.*
+    - ./$TEST_NAME -s -f project.*
+    - ./$TEST_NAME -s -f stream_bridge.*
+    - ./$TEST_NAME -s -f tunnel.*
+    - ./$TEST_NAME -s -f plug_ctrl.*
+    - ./$TEST_NAME -s -f jump_layer.*
+    - ./$TEST_NAME -s -f hybrid.*
+#    - ./$TEST_NAME -s -f inject.*
+    - ./$TEST_NAME -s -f offload.*
+    - ./$TEST_NAME -s -f tcp.*
+    - ./$TEST_NAME -s -f tcpall.*
 
 ###############################################################################
 # upload 

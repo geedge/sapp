@@ -2423,7 +2423,80 @@ extern "C" char plug_indifferent_not_call_entry(struct streaminfo *pstream,void 
 	return APP_STATE_GIVEME;
 }
 
+extern "C" char get_ip_ttl_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
+{
+	unsigned char ip_ttl_c2s, ip_ttl_s2c;
+	int opt_len = 1;
+	static int stream_succ_num = 0;
 
+	if(pstream->opstate == OP_STATE_CLOSE || pstream->pktstate == OP_STATE_CLOSE){
+		MESA_get_stream_opt(pstream, MSO_IP_TTL_C2S, &ip_ttl_c2s, &opt_len);
+		MESA_get_stream_opt(pstream, MSO_IP_TTL_S2C, &ip_ttl_s2c, &opt_len);
+
+		if(STREAM_TYPE_TCP == pstream->type){
+			if(ADDR_TYPE_IPV4 == pstream->addr.addrtype){
+				if(ip_ttl_c2s != 128){
+					printf("\033[1;31;40mget_ip_ttl_entry error: tcpv4 ip_ttl_c2s is not 128!\033[0m\n");
+					gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+					return APP_STATE_DROPME;
+				}
+				if(ip_ttl_s2c != 43){
+					printf("\033[1;31;40mget_ip_ttl_entry error: tcpv4 ip_ttl_s2c is not 43!\033[0m\n");
+					gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+					return APP_STATE_DROPME;
+				}
+				stream_succ_num++;
+			}else{
+				if(ip_ttl_c2s != 64){
+					printf("\033[1;31;40mget_ip_ttl_entry error: tcpv6 ip_ttl_c2s is not 64!\033[0m\n");
+					gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+					return APP_STATE_DROPME;
+				}
+				if(ip_ttl_s2c != 45){
+					printf("\033[1;31;40mget_ip_ttl_entry error: tcpv6 ip_ttl_s2c is not 45!\033[0m\n");
+					gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+					return APP_STATE_DROPME;
+				}
+				stream_succ_num++;
+			}
+		}
+		
+		if(STREAM_TYPE_UDP == pstream->type){
+			if(ADDR_TYPE_IPV4 == pstream->addr.addrtype){
+				if(ip_ttl_c2s != 128){
+					printf("\033[1;31;40mget_ip_ttl_entry error: udpv4 ip_ttl_c2s is not 128!\033[0m\n");
+					gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+					return APP_STATE_DROPME;
+				}
+				if(ip_ttl_s2c != 63){
+					printf("\033[1;31;40mget_ip_ttl_entry error: udpv4 ip_ttl_s2c is not 63!\033[0m\n");
+					gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+					return APP_STATE_DROPME;
+				}
+				stream_succ_num++;
+			}else{
+				if(ip_ttl_c2s != 64){
+					printf("\033[1;31;40mget_ip_ttl_entry error: udpv6 ip_ttl_c2s is not 64!\033[0m\n");
+					gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+					return APP_STATE_DROPME;
+				}
+				if(ip_ttl_s2c != 59){
+					printf("\033[1;31;40mget_ip_ttl_entry error: udpv6 ip_ttl_s2c is not 59!\033[0m\n");
+					gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
+					return APP_STATE_DROPME;
+				}
+				stream_succ_num++;
+			}
+		}
+
+		if(4 == stream_succ_num){
+			printf("\033[32mget_ip_ttl_entry test success!\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
+		}
+	}
+
+	return APP_STATE_GIVEME;	
+}
 
 #endif
 

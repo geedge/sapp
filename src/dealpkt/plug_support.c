@@ -481,7 +481,7 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 		return ret;
 	}
 
-	/* sappv4.2֮��, û��mrtunnat, �޷���ctrlzone��ȡ��Щvxlan��ص�ֵ, Ҫ��streaminfo->pfatherƫ�ƻ�ȡ */
+	/* sappv4.2֮��, û��mrtunnat, �޷���ctrlzone��ȡ��Щvxlan��ص��?, Ҫ��streaminfo->pfatherƫ�ƻ�ȡ */
 	switch(type){
 		case RAW_PKT_GET_GDEV_IP:
 		case RAW_PKT_GET_VXLAN_ID:
@@ -1151,7 +1151,7 @@ static void sapp_mac_addr_to_long(const unsigned char *mac_addr, unsigned long l
 	ptr += 5; /* ָ��long long �ĵ�6���ֽ� */
 
 	for(i = 0; i < 6; i++){
-		*ptr-- = *mac_addr++; /* �������ݰ���mac�����λ, copy��long long���������λ(��ȥ���2���ֽں�) */
+		*ptr-- = *mac_addr++; /* �������ݰ���mac������?, copy��long long����������?(��ȥ���?2���ֽں�) */
 	}
 }
 
@@ -1207,14 +1207,14 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
         for(i = 0; i < 6; i++, ptr += 3){
             sprintf((char *)ptr, "%02x:", mim_addr->inner_src_mac[i]);
         }
-        vxinfo->inner_smac[17] = '\0'; /* ���һλ���� */
+        vxinfo->inner_smac[17] = '\0'; /* ���һλ����? */
         memcpy(vxinfo->inner_smac_hex, mim_addr->inner_src_mac, 6);
 
         ptr = vxinfo->inner_dmac;
         for(i = 0; i < 6; i++, ptr += 3){
             sprintf((char *)ptr, "%02x:", mim_addr->inner_dst_mac[i]);
         }
-        vxinfo->inner_dmac[17] = '\0'; /* ���һλ���� */
+        vxinfo->inner_dmac[17] = '\0'; /* ���һλ����? */
         memcpy(vxinfo->inner_dmac_hex, mim_addr->inner_dst_mac, 6);
     }
     else
@@ -1223,14 +1223,14 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
 		for(i = 0; i < 6; i++, ptr += 3){
 			sprintf((char *)ptr, "%02x:", mac_addr->src_addr.h_source[i]);
 		}
-		vxinfo->inner_smac[17] = '\0'; /* ���һλ���� */
+		vxinfo->inner_smac[17] = '\0'; /* ���һλ����? */
 		memcpy(vxinfo->inner_smac_hex, mac_addr->src_addr.h_source, 6);
 
         ptr = vxinfo->inner_dmac;
         for(i = 0; i < 6; i++, ptr += 3){
             sprintf((char *)ptr, "%02x:", mac_addr->src_addr.h_dest[i]);
         }
-        vxinfo->inner_dmac[17] = '\0'; /* ���һλ���� */
+        vxinfo->inner_dmac[17] = '\0'; /* ���һλ����? */
         memcpy(vxinfo->inner_dmac_hex, mac_addr->src_addr.h_dest, 6);
     }
 	return 0;
@@ -1337,7 +1337,7 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 		return 0;
 	}
 
-	/* �������ظ�����⹦��,����û�������ظ���   */
+	/* �������ظ�����⹦��?,����û�������ظ���   */
 	if(STREAM_TYPE_TCP == pstream->type){
 		if(pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){ /* ��̫��, �������ж���û���ظ��� */
 			*res_val = -2;
@@ -1939,6 +1939,23 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			}	
 		}
 		break;		
+
+		case MSO_IP_TTL_C2S:
+			if(0 == pstream_pr->ip_ttl_c2s){
+				ret = -1;
+			}else{
+				*((unsigned char *)opt_val) = pstream_pr->ip_ttl_c2s;
+				*opt_val_len = sizeof(char);
+			}
+		break;
+		case MSO_IP_TTL_S2C:
+			if(0 == pstream_pr->ip_ttl_s2c){
+				ret = -1;
+			}else{
+				*((unsigned char *)opt_val) = pstream_pr->ip_ttl_s2c;
+				*opt_val_len = sizeof(char);
+			}
+		break;
         default:
 			sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n",printaddr(&pstream->addr, pstream->threadnum), (int)opt);
 			ret = -1;
@@ -1996,7 +2013,7 @@ int get_current_thread_cpu_affinity_id(void)
 	int tot_cpu_set_count = CPU_COUNT(&current_cpu_mask);
 	if((tot_cpu_set_count == tot_cpu_core) || (tot_cpu_set_count > 1)){
 		/* ȫ����������, ��ʵ����û�а�, 
-		   �����������isolcpus, ���㲻���, CPU_COUNT���ܺ������������, 
+		   �����������isolcpus, ���㲻���?, CPU_COUNT���ܺ������������?, 
 		   ��������1���϶���û�о�ȷ�󶨵�ĳ������ */
 		return -1;
 	}
@@ -2041,7 +2058,7 @@ void *dictator_realloc(int thread_seq, void *ptr, size_t size)
 	return realloc(ptr, size);
 }
 
-/* ��ҵ�������ص�ֵת����ƽ̨�����ֵ, ����PROT_STATE_xxxת��ΪAPP_STATE_xxx */
+/* ��ҵ�������ص�ֵת����ƽ̨������?, ����PROT_STATE_xxxת��ΪAPP_STATE_xxx */
 char biz_retval_to_platform(char biz_ret)
 {
 	char plat_ret = 0;

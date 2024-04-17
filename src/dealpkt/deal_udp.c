@@ -759,6 +759,14 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 
+		/* update ip ttl */
+		if(unlikely(0 == pstream_pr->ip_ttl_c2s) && (DIR_C2S == pstream->curdir)) {
+			pstream_pr->ip_ttl_c2s = this_iphdr->ip_ttl;
+		}
+		if(unlikely(0 == pstream_pr->ip_ttl_s2c) && (DIR_S2C == pstream->curdir)) {
+			pstream_pr->ip_ttl_s2c = this_iphdr->ip_ttl;
+		}
+
 		if(is_overlay_udp_layer != 0){
 			if(ulen < (int)(sizeof(struct ethhdr) + sizeof(struct layer_addr_vxlan_private)))
 			{
@@ -1054,7 +1062,15 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			pstream_pr->packet_process_context=0;
 			return PASS;
 		}
-	
+
+		/* update ip ttl */
+		if(unlikely(0 == pstream_pr->ip_ttl_c2s) && (DIR_C2S == pstream->curdir)) {
+			pstream_pr->ip_ttl_c2s = a_packet->ip6_hop;
+		}
+		if(unlikely(0 == pstream_pr->ip_ttl_s2c) && (DIR_S2C == pstream->curdir)) {
+			pstream_pr->ip_ttl_s2c = a_packet->ip6_hop;
+		}
+
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)a_packet;
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);

@@ -936,6 +936,13 @@ TEST(control, get_udp_flow_stat)
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
 }
 
+#define control_get_ip_ttl 1 
+TEST(control, get_ip_ttl)
+{
+	control_get_ip_ttl_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
+}
+
 
 /************************ project_requirement.h API test ***********************/
 #define project_simple 1  // for SI symbol view
@@ -2191,7 +2198,7 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int to_gtest_argc = 1;
-	char *to_gtest_args[4] = {};
+	char *to_gtest_args[4] = {(char *)"gtest_sapp_v4", NULL,NULL,NULL};
 	char temp_string[1024] = {};
 	int user_log_level = RLOG_LV_DEBUG;
 

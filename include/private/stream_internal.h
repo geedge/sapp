@@ -256,9 +256,11 @@ struct streaminfo_private
 	char __pad2:3;
 	char has_duplicate_pkt; /* 当前流曾经有过重复数据包, 后续的流量应该每个都检测 */
 	char under_ddos_bypass;
-	char __pad3[5];
+	char __pad3[3];
 	/* ===8 bytes=== */
 	
+	unsigned char ip_ttl_c2s;
+	unsigned char ip_ttl_s2c;
 	void   *stream_bridge;	/* 20210425 lijia add, 类似project功能, 支持同步和异步两种模式, 原有project类似异步模式 */
 };
 
