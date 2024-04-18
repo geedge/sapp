@@ -242,7 +242,7 @@ int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned s
 	struct streaminfo_private *pstream_pr=(struct streaminfo_private *)pstream;
 	struct streamindex *pindex;
 
-	if(OP_STATE_CLOSE == pstream->opstate){/* 当前流已结束, 再设超时也没有意义了 */
+	if(OP_STATE_CLOSE == pstream->opstate && OP_STATE_CLOSE == pstream->pktstate){/* 当前流已结束, 再设超时也没有意义了 */
 		return -1;
 	}
 
@@ -386,9 +386,16 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
         next_timeout_ms = tcp_opening_timeout * 1000 + g_CurrentTime_ms;
     }
     else if ((pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP) &&
-             (pstream_pr->set_special_timeout == 0 || sapp_global_val->config.stream.tcp.nouse_set_special_timeout == 0))
+            (pstream_pr->set_special_timeout == 0 || sapp_global_val->config.stream.tcp.nouse_set_special_timeout == 0))
     {
-		next_timeout_ms = tcp_closing_timeout * 1000 + g_CurrentTime_ms;
+		if(pstream->opstate == OP_STATE_CLOSE && pstream->pktstate == OP_STATE_CLOSE)
+		{
+			next_timeout_ms = tcp_closing_timeout * 1000 + g_CurrentTime_ms;
+		}
+		else
+		{
+			next_timeout_ms = pindex->stream.timeout * 1000 + g_CurrentTime_ms;
+		}
     }
     else
     {
@@ -606,7 +613,14 @@ int lrustream(struct streamindex *pindex)
         else if (pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP &&
                  (pstream_pr->set_special_timeout == 0 || sapp_global_val->config.stream.tcp.nouse_set_special_timeout == 0))
         {
-            timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout * 1000 + g_CurrentTime_ms);
+			if(pstream->opstate == OP_STATE_CLOSE && pstream->pktstate == OP_STATE_CLOSE)
+			{
+   	         	timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout * 1000 + g_CurrentTime_ms);
+			}
+			else
+			{
+				 timeouts_add(plist->streamindex_timer, &pindex->timeout, pindex->stream.timeout * 1000 + g_CurrentTime_ms);
+			}
         }
         else
         {
