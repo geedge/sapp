@@ -125,8 +125,8 @@
     inject_all_enabled=0
 
 [dup_pkt.parameters]
-    bloom_capacity=10000000
-    bloom_error_rate=0.0000001
+    bloom_capacity=1000000
+    bloom_error_rate=0.000001
     bloom_timeout=60
 
 
