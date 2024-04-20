@@ -1734,11 +1734,10 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.original", (char *)"original_ipv4_udp_enabled", &pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.inject", (char *)"inject_all_enabled", &pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject, 0);
 	
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameter", (char *)"bloom_capacity", &pconfig->packet_io.dup_pkt_para.bloom_capacity, 10000000);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameter", (char *)"bloom_timeout", &pconfig->packet_io.dup_pkt_para.bloom_timeout, 60);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameter", (char *)"bloom_slice_num", &pconfig->packet_io.dup_pkt_para.bloom_slice_num, 3);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameter", (char *)"bloom_library", (int *)&pconfig->packet_io.dup_pkt_para.bloom_library, 1);//defaut bloom_library dabloom
-	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameter", (char *)"bloom_error_rate", str_tmp, sizeof(str_tmp), "0.000001");
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameter", (char *)"bloom_capacity", &pconfig->packet_io.dup_pkt_para.bloom_capacity, 1000000);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameter", (char *)"bloom_timeout", &pconfig->packet_io.dup_pkt_para.bloom_timeout, 10);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameter", (char *)"bloom_slice_num", &pconfig->packet_io.dup_pkt_para.bloom_slice_num, 10);
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameter", (char *)"bloom_error_rate", str_tmp, sizeof(str_tmp), "0.00001");
 	pconfig->packet_io.dup_pkt_para.bloom_error_rate = strtod(str_tmp, NULL);
 
 	/*******************************  packet_io.under_ddos ******************************/

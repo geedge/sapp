@@ -209,22 +209,15 @@ typedef struct{
 }sapp_config_packet_io_tunnel_t;
 
 
-enum bloom_library{
-	BLOOM_LIBRARY_NONE=0,
-	BLOOM_LIBRARY_DABLOOM,
-	BLOOM_LIBRARY_APBLOOM,
-};
-
 typedef struct{
 	int kickout_udp_stream_enabled;
 	int dup_pkt_distinguish_all_inject;
 	int dup_pkt_distinguish_ipv4_tcp;
 	int dup_pkt_distinguish_ipv4_udp;
  	int bloom_capacity;
+	double bloom_error_rate;
 	int bloom_timeout;
 	int bloom_slice_num;
-	enum bloom_library bloom_library;
-	double bloom_error_rate;
 }sapp_dup_pkt_t;
 
 typedef struct{
