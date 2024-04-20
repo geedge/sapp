@@ -1763,6 +1763,7 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"max", (int *)&pconfig->stream.tcp.max, 50000);
 
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"timeout", (int *)&pconfig->stream.tcp.timeout, 180);
+	if(pconfig->stream.tcp.timeout == 0)pconfig->stream.tcp.timeout=MAX_DEFALUT_TIMEOUT_S;
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"syn_mandatory", (int *)&pconfig->stream.tcp.syn_mandatory, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"reorder_pkt_max", (int *)&pconfig->stream.tcp.reorder_pkt_max, 5);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"reorder_on_closing", (int *)&pconfig->stream.tcp.reorder_on_closing, 0);
@@ -1789,6 +1790,7 @@ int sapp_parse_config(void)
 
 	/*******************************  STREAM.UDP ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"max", (int *)&pconfig->stream.udp.max, 5000);
+	if(pconfig->stream.udp.timeout == 0)pconfig->stream.udp.timeout=MAX_DEFALUT_TIMEOUT_S;
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"max_opening", (int *)&pconfig->stream.udp.max_opening, pconfig->stream.udp.max*3);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"max_pair", (int *)&pconfig->stream.udp.max_pair, pconfig->stream.udp.max);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"timeout", (int *)&pconfig->stream.udp.timeout, 60);

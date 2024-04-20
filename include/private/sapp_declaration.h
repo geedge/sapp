@@ -21,6 +21,7 @@ extern sapp_global_t *sapp_global_val;
 extern volatile time_t g_current_time;
 extern volatile long long g_current_time_ms;
 
+#define MAX_DEFALUT_TIMEOUT_S 86400
 
 /* ÒòÇ¶Ì×²ã´ÎÌ«¶à, Ê¹ÓÃ¼ò³ÆÃèÊö */
 #define ABBR_SAPP_LOG_HANDLE 	sapp_global_val->individual_fixed.log_handle

@@ -62,7 +62,7 @@ int sapp_packet_io_v = 20161101;
 int sapp_packet_io_v = 20170407;
 #endif
 
-#define MAX_DEFALUT_TIMEOUT_S 86400
+
 
 #define STREAM_ONCE_DEL_NUM 1000
 void packet_io_status_stream_hash_update(int thread_seq, unsigned long hash_list_num);
