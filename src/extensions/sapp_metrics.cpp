@@ -460,9 +460,9 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 								NULL, 0);
 	fs3_rt->metrics_ids[1][SAPP_STAT_ETH_INBOUND] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Bit_Inbound", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_ETH_INBOUND] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Pkt_Outbound", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_ETH_OUTBOUND] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Pkt_Outbound", 
 								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_ETHERNET] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Bit_Outbound", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_ETH_OUTBOUND] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Bit_Outbound", 
 								NULL, 0);	
 
 
@@ -542,7 +542,7 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 								NULL, 0);	
 	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_C2S", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_S2C", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_S2C] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_S2C", 
 								NULL, 0);									
 
 	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_Double_ALL", 
