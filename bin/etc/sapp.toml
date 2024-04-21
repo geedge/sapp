@@ -115,14 +115,14 @@
 
 [DUPLICATE_PKT]
 [dup_pkt.traffic.original]
-    kickout_udp_stream_enabled=0
-    original_ipv4_tcp_enabled=0
-    original_ipv4_udp_enabled=0
+    kickout_udp_stream_enabled=1
+    original_ipv4_tcp_enabled=1
+    original_ipv4_udp_enabled=1
 ### note, can't distinguish between duplicate traffic and application retransmit traffic for IPv6 packets,
 ### so not support IPv6 original duplicate traffic check.
 
 [dup_pkt.traffic.inject]
-    inject_all_enabled=0
+    inject_all_enabled=1
 
 [dup_pkt.parameters]
     bloom_capacity=1000000
@@ -130,7 +130,7 @@
     bloom_timeout=60
     bloom_slice_num=3
     # 0:disable bloom filter, 1:dabloom, 2:apbloom
-    bloom_library=1
+    #bloom_library=1
 
 
 [STREAM]
@@ -138,9 +138,9 @@
     stream_id_base_time="2021-01-01 00:00:00"
     [stream.tcp]
     max=10000
-    timeout=180
+    timeout=120
     opening_timeout=60
-    closing_timeout=30
+    closing_timeout=3
     syn_mandatory=1
     reorder_pkt_max=32
     analyse_option_enabled=1
