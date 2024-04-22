@@ -150,6 +150,10 @@ int MESA_retain_pkt_update(const raw_pkt_t *p_raw_pkt, int pkt_ret)
 	return update_ret;
 }
 
+
+extern int marsio_get_route_dir_from_mbuff(void *pkt_reference);
+extern int marsio_get_link_id_from_mbuff(void *pkt_reference);
+
 int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 {
 	int ret = 0;
@@ -256,6 +260,20 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		ret = sizeof(int);
 		break;
 
+		case RAW_PKT_GET_ROUTE_DIR:
+		{
+            int *out_value = (int *)void_value;
+            *out_value = marsio_get_route_dir_from_mbuff((void *)rawpkt->io_lib_pkt_reference);
+            ret = *out_value;
+        }
+		break;
+		case RAW_PKT_GET_LINK_ID:
+		{
+            int *out_value = (int *)void_value;
+            *out_value = marsio_get_link_id_from_mbuff((void *)rawpkt->io_lib_pkt_reference);
+            ret = *out_value;
+        }
+		break;
 
 		default:
 			sapp_runtime_log(RLOG_LV_FATAL, "get_opt_from_rawpkt(): not support option type: %d", type);

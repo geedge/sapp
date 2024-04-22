@@ -30,6 +30,8 @@ enum{
 	RAW_PKT_GET_ROUTE_CTX, /* get current stream route_dir route_ctx, max value size  char[64] */
 	RAW_PKT_GET_SID_LIST, /* get current stream route_dir route_ctx, value defined in stream_control.h, struct segment_id_list */
 	RAW_PKT_GET_IS_CTRL_PKT,
+	RAW_PKT_GET_LINK_ID,
+	RAW_PKT_GET_ROUTE_DIR,
 };
 
 
