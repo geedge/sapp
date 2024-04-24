@@ -304,6 +304,10 @@ struct tcpdetail_private
 	void   *pAllpktpme;   //无状态的tcp管理上下文
 	struct tcp_flow_stat *flow_stat; /* 2016-07-14 lijia add, 用于记录TCP纯data包的计数, 实际内存分配和释放由project模块完成, 可能为NULL,  */
 	struct tcp_flow_stat *deduce_flow_stat; /* 2018-10-30 lijia add, 用于记录靠序号推断出理论上传输的数据, 包含丢包的长度; 以及单向流情况下, 对端应该收到的数据  */
+	unsigned short rtt_csc;
+	unsigned short rtt_scs;
+	long long last_c2s_pkt_rcv_time;
+	long long last_s2c_pkt_rcv_time;
 };
 
 struct udpdetail_private

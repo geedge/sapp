@@ -65,6 +65,8 @@ enum MESA_stream_opt{
 	MSO_STREAM_S2C_ROUTE_CTX,	
 	MSO_IP_TTL_C2S, /* opt_val type must be unsigned char, IPv4 is TTL, IPv6 is Hop Limit */
 	MSO_IP_TTL_S2C, /* opt_val type must be unsigned char, IPv4 is TTL, IPv6 is Hop Limit */
+	MSO_TCP_RTT_CSC, /* opt_val type must be unsigned short, the full RTT is client->tsg->server->tsg->client, this is |tsg->server->tsg| */
+	MSO_TCP_RTT_SCS, /* opt_val type must be unsigned short, the full RTT is server->tsg->client->tsg->server, this is |tsg->client->tsg| */
 	__MSO_MAX,
 };
 

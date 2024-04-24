@@ -510,13 +510,14 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
 		return 0;
 	}
 
-	if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp
-	|| sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject)
+	const sapp_dup_pkt_t *dup_pkt_para = &sapp_global_val->config.packet_io.dup_pkt_para;
+	if(dup_pkt_para->dup_pkt_distinguish_ipv4_udp
+	|| dup_pkt_para->dup_pkt_distinguish_all_inject)
 	{
 		// 对于原始输入包, 只判断前N个包, 如果没发现重复流量, 就认为以后的都不是重复包!
 		// todo: 此处是否要通过配置文件指定？
 		if((0 == pstream_pr->has_duplicate_pkt) 
-		  && (pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum >= SAPP_DUP_FIRST_PKT_NUM)){ 
+		  && (pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum >= dup_pkt_para->first_packets)){ 
 			dup_check_enabled = 0;
 			need_add_bloom_filter = 0;
 		}else{	

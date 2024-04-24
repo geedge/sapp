@@ -1154,7 +1154,11 @@ int cycle_pkt_dump_init(int argc, char *argv[])
 void cycle_pkt_dump_destroy(void)
 {
 	unsigned int i;
-	
+
+	if(0 == sapp_global_val->config.tools.pkt_dump.enabled){
+		return;
+	}
+
 	if(G_PKT_DUMP_FILTER_STR[0] != '\0'){
 		for(i = 0; i < (unsigned int )g_packet_io_thread_num + sapp_global_val->config.cpu.send_only_threads_max_num; i++){
 			pcap_freecode(&G_PKT_DUMP_BPF_FILTER[i]);

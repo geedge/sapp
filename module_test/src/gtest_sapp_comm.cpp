@@ -613,7 +613,7 @@ void set_default_config(void)
 	update_config_file("etc/sapp.toml", "worker_threads", "1");
 	update_config_file("etc/sapp.toml", "max", "1000");
 	update_config_file("etc/sapp.toml", "reorder_pkt_max", "5");
-	update_config_file("etc/sapp.toml", "timeout", "0");
+	update_config_file("etc/sapp.toml", "timeout", "999");
 	update_config_file("etc/sapp.toml", "interval", "1");
 	update_config_file("etc/sapp.toml", "dumpfile_sleep_time_before_exit", "0");
 	update_config_file("etc/sapp.toml", "overlay_mode", "none");
@@ -644,6 +644,8 @@ void set_default_config(void)
 
 	/* 设置最小间隔, sapp退出时, 调用FS_stop()可以节省时间 */
 	update_config_file("./etc/sapp.toml", "interval", "1");
+
+	update_config_file("etc/sapp.toml", "monitor_thread_enabled", "0");
 
 	set_default_plugin_inf();
 	

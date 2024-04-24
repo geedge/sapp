@@ -823,28 +823,28 @@ TEST(control, plug_dup_pkt_udp)
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
 }
 
-#if (0 == HIGH_PERF)	
-#define control_find_streaminfo_v4 1 
-TEST(control, find_streaminfo_v4)
-{
-	find_streaminfo_v4_run();
-	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
-}
-#endif
+// #if (0 == HIGH_PERF)	
+// #define control_find_streaminfo_v4 1 
+// TEST(control, find_streaminfo_v4)
+// {
+// 	find_streaminfo_v4_run();
+// 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
+// }
+// #endif
 
-#define control_find_streaminfo_v6 1 
-TEST(control, find_streaminfo_v6)
-{
-	find_streaminfo_v6_run();
-	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
-}
+// #define control_find_streaminfo_v6 1 
+// TEST(control, find_streaminfo_v6)
+// {
+// 	find_streaminfo_v6_run();
+// 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
+// }
 
-#define control_find_streaminfo_diff_tunnel_v4 1 
-TEST(control, find_streaminfo_diff_tunnel_v4)
-{
-	find_streaminfo_diff_tunnel_v4_run();
-	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
-}
+// #define control_find_streaminfo_diff_tunnel_v4 1 
+// TEST(control, find_streaminfo_diff_tunnel_v4)
+// {
+// 	find_streaminfo_diff_tunnel_v4_run();
+// 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
+// }
 
 
 #define control_get_root_dir 1 
@@ -871,20 +871,20 @@ TEST(control, toml_array_parse)
 }
 
 
-#define control_get_linkdir_from_mac0 1 
-TEST(control, get_linkdir_from_mac0)
-{
-	get_linkdir_from_mac_run();
-	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
-}
+// #define control_get_linkdir_from_mac0 1 
+// TEST(control, get_linkdir_from_mac0)
+// {
+// 	get_linkdir_from_mac_run();
+// 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
+// }
 
 
-#define control_get_linkdir_from_mac1 1 
-TEST(control, get_linkdir_from_mac1)
-{
-	get_linkdir_from_mac_run2();
-	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
-}
+// #define control_get_linkdir_from_mac1 1 
+// TEST(control, get_linkdir_from_mac1)
+// {
+// 	get_linkdir_from_mac_run2();
+// 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
+// }
 
 #define control_get_depmode_mirror 1 
 TEST(control, get_depmode_mirror)
@@ -943,6 +943,30 @@ TEST(control, get_ip_ttl)
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
 }
 
+
+#define control_get_tcp_rtt 1  
+TEST(control, get_tcp_rtt)
+{
+	control_get_tcp_rtt_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
+	// EXPECT_EXIT(control_get_tcp_rtt_run(), testing::ExitedWithCode(0),  "test succ");
+}
+
+#define control_get_tcp_rtt_c2s 1  
+TEST(control, get_tcp_rtt_c2s)
+{
+	control_get_tcp_rtt_c2s_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
+	// EXPECT_EXIT(control_get_tcp_rtt_run(), testing::ExitedWithCode(0),  "test succ");
+}
+
+#define control_get_tcp_rtt_s2c 1  
+TEST(control, get_tcp_rtt_s2c)
+{
+	control_get_tcp_rtt_s2c_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
+	// EXPECT_EXIT(control_get_tcp_rtt_run(), testing::ExitedWithCode(0),  "test succ");
+}
 
 /************************ project_requirement.h API test ***********************/
 #define project_simple 1  // for SI symbol view

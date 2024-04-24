@@ -4,8 +4,6 @@
 #include "mesa_net.h"
 #include "stream_internal.h" 
 
-#define SAPP_DUP_FIRST_PKT_NUM		(3) /* 通过前N个包识别是否有重复流量 */
-
 /* 网络序,  network order */
 
 /* ipv4和ipv6分别定义, 因为ipv6地址巨大, 比例也相对较少, 

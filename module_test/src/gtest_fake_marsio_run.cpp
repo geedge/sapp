@@ -39,7 +39,7 @@ static void fake_marsio_set_default_env(int mac_flapping_enable)
 	snprintf(vlan_flip_string, sizeof(vlan_flip_string),"%d\t%d\t%d\n", VLAN_UPLINK_ID, VLAN_DOWNLINK_ID, mac_flapping_enable);
 	set_default_vlan_flipping_conf(vlan_flip_string);
 
-	update_config_file("etc/sapp.toml", "marsio_library_path", "./lib/libgtest_fake_marsio.so");
+	update_config_file("etc/sapp.toml", "marsio_library_path", "\\x22.\\x2flib\\x2flibgtest_fake_marsio.so\\x22");
 
 	return;
 }

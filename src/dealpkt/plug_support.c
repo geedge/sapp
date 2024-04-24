@@ -1341,9 +1341,11 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 	int *res_val = (int *)opt_val;
 	int ret = 0;
 
-	if((0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject)
-		  && (0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp)
-		  && (0 == sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp)){
+	const sapp_dup_pkt_t *dup_pkt_para = &sapp_global_val->config.packet_io.dup_pkt_para;
+
+	if((0 == dup_pkt_para->dup_pkt_distinguish_all_inject)
+		  && (0 == dup_pkt_para->dup_pkt_distinguish_ipv4_tcp)
+		  && (0 == dup_pkt_para->dup_pkt_distinguish_ipv4_udp)){
 		sapp_runtime_log(RLOG_LV_INFO, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT error, config DUPLICATE_PKT is not enable", 
 						 printaddr(&pstream->addr, pstream->threadnum)); 
 		*res_val = -2;
@@ -1357,7 +1359,7 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 
 	/* �������ظ�����⹦��?,����û�������ظ���   */
 	if(STREAM_TYPE_TCP == pstream->type){
-		if(pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){ /* ��̫��, �������ж���û���ظ��� */
+		if(pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum < dup_pkt_para->first_packets){ /* ��̫��, �������ж���û���ظ��� */
 			*res_val = -2;
 			sapp_runtime_log(RLOG_LV_DEBUG, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT, duplicate pkt state is pending, because has only recv %d pkt", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum); 			
@@ -1365,7 +1367,7 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 			*res_val = 0;
 		}
 	}else if(STREAM_TYPE_UDP == pstream->type){
-		if(pstream->pudpdetail->clientpktnum  + pstream->pudpdetail->serverpktnum < SAPP_DUP_FIRST_PKT_NUM){ /* ��̫��, �������ж���û���ظ��� */
+		if(pstream->pudpdetail->clientpktnum  + pstream->pudpdetail->serverpktnum < dup_pkt_para->first_packets){ /* ��̫��, �������ж���û���ظ��� */
 			sapp_runtime_log(RLOG_LV_DEBUG, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT, duplicate pkt state is pending, because has only recv %d pkt", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum); 		
 			*res_val = -2;
@@ -1974,6 +1976,39 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				*opt_val_len = sizeof(char);
 			}
 		break;
+
+		case MSO_TCP_RTT_CSC:
+		{
+			if(STREAM_TYPE_TCP != pstream->type){
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_RTT_CSC error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
+				ret = -1;
+				break;
+			}
+			if(0xFFFF == pdetail_pr->rtt_csc){
+				ret = -1;
+				break;
+			}
+			*((unsigned short *)opt_val) = pdetail_pr->rtt_csc;
+			*opt_val_len = sizeof(short);
+		}
+		break;
+
+		case MSO_TCP_RTT_SCS:
+		{
+			if(STREAM_TYPE_TCP != pstream->type){
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_RTT_CSC error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
+				ret = -1;
+				break;
+			}
+			if(0xFFFF == pdetail_pr->rtt_scs){
+				ret = -1;
+				break;
+			}
+			*((unsigned short *)opt_val) = pdetail_pr->rtt_scs;
+			*opt_val_len = sizeof(short);
+		}
+		break;
+
         default:
 			sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() error:unsupport MESA_stream_opt type:%d!\n",printaddr(&pstream->addr, pstream->threadnum), (int)opt);
 			ret = -1;

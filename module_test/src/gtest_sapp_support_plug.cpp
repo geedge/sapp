@@ -2498,6 +2498,73 @@ extern "C" char get_ip_ttl_entry(struct streaminfo *pstream,void **pme, int thre
 	return APP_STATE_GIVEME;	
 }
 
+extern "C" char get_tcp_rtt_entry(struct streaminfo *pstream, void **pme, int thread_seq, void *a_packet)
+{
+	static unsigned short rtt_csc = 0, rtt_scs = 0;
+	int ret;
+	int opt_len = sizeof(short);
+
+	if (DIR_DOUBLE == pstream->dir)
+	{
+		ret = MESA_get_stream_opt(pstream, MSO_TCP_RTT_CSC, &rtt_csc, &opt_len);
+		if (ret < 0)
+		{
+			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_entry error: get MSO_TCP_RTT_CSC test fail!\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			return APP_STATE_DROPME;
+		}
+
+		ret = MESA_get_stream_opt(pstream, MSO_TCP_RTT_SCS, &rtt_scs, &opt_len);
+		if (ret < 0)
+		{
+			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_entry error: get MSO_TCP_RTT_SCS test fail!\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			return APP_STATE_DROPME;
+		}
+
+		/* in pcap, actual latency is 65ms, scs is 143ms,  an error of 3 microseconds is allowed */
+		if (rtt_csc >= 62 && rtt_csc <= 68 && rtt_scs >= 141 && rtt_scs <= 146)
+		{
+			fprintf(stderr, "\033[32mget_tcp_rtt_entry test succ \033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
+			return APP_STATE_DROPME;
+		}else{
+			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_entry error: get rtt_csc:%d, but expect:%d, get rtt_scs:%d, but expect:%d\033[0m\n", rtt_csc, 65, rtt_scs, 143);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			return APP_STATE_DROPME;
+		}
+	}
+	return APP_STATE_GIVEME;
+}
+
+extern "C" char get_tcp_rtt_err_entry(struct streaminfo *pstream, void **pme, int thread_seq, void *a_packet)
+{
+	unsigned short rtt_csc = 0xFFFF, rtt_scs = 0xFFFF;
+	int ret;
+	int opt_len = sizeof(short);
+
+	if(OP_STATE_CLOSE == pstream->opstate){
+		ret = MESA_get_stream_opt(pstream, MSO_TCP_RTT_CSC, &rtt_csc, &opt_len);
+		if(ret >= 0 || rtt_csc != 0xFFFF){
+			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_err_entry error: get rtt_csc, but expect not!\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			return APP_STATE_DROPME;
+		}
+		ret = MESA_get_stream_opt(pstream, MSO_TCP_RTT_SCS, &rtt_scs, &opt_len);
+		if(ret >= 0 || rtt_scs != 0xFFFF){
+			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_err_entry error: get rtt_scs, but expect not!\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			return APP_STATE_DROPME;
+		}		
+
+		fprintf(stderr, "\033[32mget_tcp_rtt_error_entry test succ \033[0m\n");
+		gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
+		return APP_STATE_DROPME;
+	}
+
+	return APP_STATE_GIVEME;
+}
+
 #endif
 
 

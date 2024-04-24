@@ -706,10 +706,16 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		if(createdir==DIR_S2C){
 			pdetail->clientpktnum++;
 			pdetail->clientbytes+= datalen; /* 2014-12-19 lijia add, for SYN pkt append data */
+			pdetail_pr->last_s2c_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
+			pdetail_pr->S2C_ack_seq = ntohl(this_tcphdr->th_ack);
 		}else if(createdir==DIR_C2S){
 			pdetail->serverpktnum++;
 			pdetail->serverbytes+= datalen;/* 2014-12-19 lijia add, for SYN pkt append data */
+			pdetail_pr->last_c2s_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
+			pdetail_pr->C2S_ack_seq = ntohl(this_tcphdr->th_ack);
 		}	
+		pdetail_pr->rtt_csc = 0xFFFF;
+		pdetail_pr->rtt_scs = 0xFFFF;
 	}
 	else
 	{
@@ -1670,6 +1676,35 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	return ret;
 }
 
+static void inline calculate_tcp_rtt(const struct streaminfo *pstream, struct tcpdetail_private *pdetail_pr, const struct mesa_tcp_hdr *this_tcphdr)
+{
+	if(pdetail_pr->tcpdetail_public.clientpktnum < 1 || pdetail_pr->tcpdetail_public.serverpktnum < 1)
+	{
+		return;
+	}
+	if(pdetail_pr->rtt_csc != 0xFFFF && pdetail_pr->rtt_scs != 0xFFFF)
+	{
+		return;
+	}	
+	unsigned int cur_tcp_ack = ntohl(this_tcphdr->th_ack);
+
+	if(pstream->curdir == DIR_C2S)
+	{
+		unsigned int cur_tcp_seq = ntohl(this_tcphdr->th_seq);
+		if(pdetail_pr->iclientseq == cur_tcp_ack && pdetail_pr->S2C_ack_seq == cur_tcp_seq)
+		{
+			pdetail_pr->rtt_scs = ABBR_CURRENT_TIME_MS - pdetail_pr->last_s2c_pkt_rcv_time;
+		}
+	}
+	else
+	{
+		if(pdetail_pr->iserverseq == cur_tcp_ack)
+		{
+			pdetail_pr->rtt_csc = ABBR_CURRENT_TIME_MS - pdetail_pr->last_c2s_pkt_rcv_time;
+		}
+	}
+	return;
+}
 
 //static int tcp_deal_syn_stream(struct streamindex *pindex,struct mesa_tcp_hdr *this_tcphdr,int datalen)
 static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_pkt, 
@@ -1684,11 +1719,15 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 	int thisseq=ntohl (this_tcphdr->th_seq);
 	int thisack=ntohl (this_tcphdr->th_ack);
 
+	calculate_tcp_rtt(pstream, pdetail_pr, this_tcphdr);
+
     if (pstream->dir == DIR_C2S)
     {
         curseq = pdetail_pr->iserverseq;
         if (curdir == DIR_S2C)
         {
+			pdetail_pr->S2C_ack_seq = thisack;
+			pdetail_pr->last_s2c_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
             if ((this_tcphdr->th_flags & TH_RST) && (datalen == 0))
             {
                 if (thisack == curseq)
@@ -1719,6 +1758,8 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
         }
         else //同侧来包
         {
+			pdetail_pr->C2S_ack_seq = thisack;
+			pdetail_pr->last_c2s_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
             //正序报文
             if (thisseq == curseq)
             {
@@ -1752,6 +1793,7 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 
         if (curdir == DIR_C2S)
         {
+			pdetail_pr->last_c2s_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
             if ((this_tcphdr->th_flags & TH_RST) && (datalen == 0))
             {
                 pstream->dir = DIR_DOUBLE; /* 更新dir */
@@ -1771,6 +1813,7 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
         }
         else //同侧来包
         {
+			pdetail_pr->last_s2c_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
             //正序rst
             if ((thisseq == curseq) && (this_tcphdr->th_flags & TH_RST) && (datalen == 0))
 
@@ -2782,14 +2825,15 @@ static int deal_tcp_stream_dup_pkt_check(int tid, struct streaminfo_private *pst
 	int is_dup_pkt = 0;
 	int need_add_bloom_filter = 0;
 	int dup_check_enabled = 0;
+	const sapp_dup_pkt_t *dup_pkt_para = &sapp_global_val->config.packet_io.dup_pkt_para;
 
 	if ((ADDR_TYPE_IPV4 == pstream_pr->stream_public.addr.addrtype) 
-	&& (sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp || sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject))
+	&& (dup_pkt_para->dup_pkt_distinguish_ipv4_tcp || dup_pkt_para->dup_pkt_distinguish_all_inject))
 	{
 		// 对于原始输入包, 只判断前N个包, 如果没发现重复流量, 就认为以后的都不是重复包!
 		// todo: 此处是否要通过配置文件指定？
 		if((0 == pstream_pr->has_duplicate_pkt) 
-		  && (ptcpdetail_pr->tcpdetail_public.clientpktnum+ptcpdetail_pr->tcpdetail_public.serverpktnum >= SAPP_DUP_FIRST_PKT_NUM)){ 
+		  && (ptcpdetail_pr->tcpdetail_public.clientpktnum+ptcpdetail_pr->tcpdetail_public.serverpktnum >= dup_pkt_para->first_packets)){ 
 			dup_check_enabled = 0;
 			need_add_bloom_filter = 0;
 		}else{	
@@ -2800,7 +2844,7 @@ static int deal_tcp_stream_dup_pkt_check(int tid, struct streaminfo_private *pst
 
 	/* 24.04: 对于IPv6来说, 因为不支持原始流量重复检测, 所以注入包识别也不支持快速路径. */
 	if ((ADDR_TYPE_IPV6 == pstream_pr->stream_public.addr.addrtype) 
-	  && (sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0))
+	  && (dup_pkt_para->dup_pkt_distinguish_all_inject != 0))
 	{
 		dup_check_enabled = 1;
 	}
@@ -2811,7 +2855,6 @@ static int deal_tcp_stream_dup_pkt_check(int tid, struct streaminfo_private *pst
 
 	return is_dup_pkt;
 }
-
 
 /* LiJia comment: pstream指向栈里的内存 */
 //int deal_tcp_stream(struct streamindex *pstream,struct mesa_tcp_hdr *this_tcphdr,int tcplen,const void *rawippkt,int iplen)
@@ -3010,7 +3053,6 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	{
 		((raw_pkt_t *)raw_pkt)->stream_trace_id=pstream_pr->stream_trace_id;
 	}
-
 
 	if(pstream->curdir==DIR_S2C)
 	{

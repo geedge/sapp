@@ -863,7 +863,7 @@ void find_streaminfo_v4_run(void)
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "reorder_pkt_max", "100");
 	update_config_file("etc/sapp.toml", "timeout", "0");
-	update_config_file("etc/sapp.toml", "monitor_thread_enabled", "3");
+	// update_config_file("etc/sapp.toml", "monitor_thread_enabled", "1");
 
 	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "gtest_sapp_slave_init", NULL, "TCP_ALL", "void_entry");
 	append_plugin_inf("UDP", "void_entry");
@@ -1107,4 +1107,37 @@ void control_get_ip_ttl_run(void)
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "434d6a566709f0f78c44c7f3cb7b934b"),0);
 	call_libsapp_devel_for_dumpfile_topspeed();
+}
+
+void control_get_tcp_rtt_run(void)
+{
+	set_default_config();
+	update_plugin_inf("TCP", "get_tcp_rtt_entry");
+	
+	set_pcap_dumpfile("for_gtest_only/tcp/tcp_rtt.pcap");
+	ASSERT_EQ(file_md5_checksum("dumpfile", "1e06f7ed52405f9014bea2b117ecadff"),0);
+
+	call_libsapp_devel_for_dumpfile_timestamp();
+}
+
+void control_get_tcp_rtt_c2s_run(void)
+{
+	set_default_config();
+	update_plugin_inf("TCP", "get_tcp_rtt_err_entry");
+	
+	set_pcap_dumpfile("tcp/tcp_isn_c2s_single.pcap");
+	ASSERT_EQ(file_md5_checksum("dumpfile", "a5d0d96ee6f44f729d79aeac5cc2fee0"),0);
+
+	call_libsapp_devel_for_dumpfile_timestamp();
+}
+
+void control_get_tcp_rtt_s2c_run(void)
+{
+	set_default_config();
+	update_plugin_inf("TCP", "get_tcp_rtt_err_entry");
+	
+	set_pcap_dumpfile("for_gtest_only/tcp/tcp_rtt_s2c.pcap");
+	ASSERT_EQ(file_md5_checksum("dumpfile", "006277b38aa1f9a0d272b643b8a3b686"),0);
+
+	call_libsapp_devel_for_dumpfile_timestamp();
 }

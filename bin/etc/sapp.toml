@@ -66,6 +66,7 @@
     #dlclose_all_plug_enabled = 1
     dumpfile_sleep_time_before_exit=0
     watchdog_enabled=1
+    monitor_thread_enabled=1
 ### note, deployment.mode options: [mirror, inline, transparent]
     [packet_io.deployment]
     mode="inline"
@@ -131,7 +132,7 @@
     bloom_slice_num=3
     # 0:disable bloom filter, 1:dabloom, 2:apbloom
     #bloom_library=1
-
+    first_packets=3
 
 [STREAM]
 ### note, stream_id_base_time format is "%Y-%m-%d %H:%M:%S" 
@@ -147,7 +148,7 @@
     tuple4_reuse_time_interval=30
 
     #nouse_set_special_timeout=1
-    #reorder_on_closing=0
+    reorder_on_closing=0
     #max_opening_per_sec=5000
     #max_timeouts_per_sec=5000
 
