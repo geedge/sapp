@@ -1327,10 +1327,11 @@ unsigned int marsio_get_vlan_id_from_mbuff(void *pkt_reference)
 
 int marsio_get_route_dir_from_mbuff(void *pkt_reference)
 {
-	uint8_t dir = 0;
+	uint32_t dir = 0;
 	
 	if(ptr_marsio_buff_get_metadata && pkt_reference){
-		ptr_marsio_buff_get_metadata((marsio_buff_t *)pkt_reference, MR_BUFF_DIR, &dir, sizeof(uint8_t));
+		int ret= ptr_marsio_buff_get_metadata((marsio_buff_t *)pkt_reference, MR_BUFF_DIR, &dir, sizeof(dir));
+		if(ret < 0)return -1;
 	}
 	
 	return (int)dir;
@@ -1341,9 +1342,9 @@ int marsio_get_link_id_from_mbuff(void *pkt_reference)
 	uint16_t link_id = 0;
 	
 	if(ptr_marsio_buff_get_metadata && pkt_reference){
-		ptr_marsio_buff_get_metadata((marsio_buff_t *)pkt_reference, MR_BUFF_LINK_ID, &link_id, sizeof(uint16_t));
+		int ret = ptr_marsio_buff_get_metadata((marsio_buff_t *)pkt_reference, MR_BUFF_LINK_ID, &link_id, sizeof(uint16_t));
+		if(ret < 0)return -1;
 	}
-	
 	return (int)link_id;
 }
 
