@@ -515,6 +515,7 @@ void inline_dup_inject_ipv4_tcp_run(void)
 	update_config_file_by_lastline("etc/sapp.toml", "packet_io.polling","enabled", "1");
 	update_config_file("etc/sapp.toml", "timeout", "3"); /* inline模式必须靠polling结束超时的流 */
 	update_config_file("etc/sapp.toml", "inject_all_enabled", "1");
+	update_config_file("etc/sapp.toml", "first_packets", "6");
 	update_config_file("etc/gdev.conf", "sendto_gdev_ip", "10.3.36.1");
 	update_plugin_inf("TCP_ALL", "inline_dup_inject_tcpall_entry");  
 
@@ -538,6 +539,7 @@ void inline_dup_inject_ipv6_tcp_run(void)
 	update_config_file_by_lastline("etc/sapp.toml", "packet_io.polling","enabled", "1");
 	update_config_file("etc/sapp.toml", "timeout", "3"); /* inline模式必须靠polling结束超时的流 */
 	update_config_file("etc/sapp.toml", "inject_all_enabled", "1");
+	update_config_file("etc/sapp.toml", "first_packets", "16");
 	update_config_file("etc/gdev.conf", "sendto_gdev_ip", "10.3.36.1");
 
 	update_plugin_inf("TCP_ALL", "inline_dup_inject_tcpall_entry");  

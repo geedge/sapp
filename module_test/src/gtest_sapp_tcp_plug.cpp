@@ -697,7 +697,7 @@ extern "C" char tcp_dumpfile_list_entry(struct streaminfo *pstream,void **pme, i
 }
 
 
-extern "C" char tcpall_dup_pkt_check(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
+extern "C" char tcpall_dup_pkt_positive_check(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {	
 	if(OP_STATE_CLOSE == pstream->pktstate){
 		if(pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum == 7){
@@ -714,6 +714,22 @@ extern "C" char tcpall_dup_pkt_check(struct streaminfo *pstream,void **pme, int 
 	return APP_STATE_GIVEME;
 }
 
+extern "C" char tcpall_dup_pkt_negative_check(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
+{	
+	if(OP_STATE_CLOSE == pstream->pktstate){
+		if(pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum == 9){
+			printf("\033[32mtcp.dup_pkt test succ\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
+		}else{ 
+			printf("\033[1;31;40mtcp_dup_pkt_check error, expect 9 pkt, but actual is:%u\033[0m\n",
+					pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			return APP_STATE_DROPME;
+		}
+	}
+
+	return APP_STATE_GIVEME;
+}
 
 extern "C" char tcp_dropstream_and_unorder_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {

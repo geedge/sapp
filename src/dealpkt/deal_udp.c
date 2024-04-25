@@ -497,7 +497,6 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
                                            const struct mesa_ip4_hdr * this_iphdr, struct mesa_udp_hdr *udph)
 {
 	int is_dup_pkt = 0;
-	int need_add_bloom_filter = 0;
 	int dup_check_enabled = 0;
 
 	/* vxlan层的保活信息不用识别重复包, 因为实测某些inline device或交换板发出的保活包全是一样的, udp checksum是0, ipid也不变 */	
@@ -515,19 +514,16 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
 	|| dup_pkt_para->dup_pkt_distinguish_all_inject)
 	{
 		// 对于原始输入包, 只判断前N个包, 如果没发现重复流量, 就认为以后的都不是重复包!
-		// todo: 此处是否要通过配置文件指定？
 		if((0 == pstream_pr->has_duplicate_pkt) 
 		  && (pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum >= dup_pkt_para->first_packets)){ 
 			dup_check_enabled = 0;
-			need_add_bloom_filter = 0;
 		}else{	
 			dup_check_enabled = 1;
-			need_add_bloom_filter = 1;
 		}
 	}
 	
 	if(dup_check_enabled != 0){
-	    is_dup_pkt = sapp_dup_pkt_identify(tid, pstream_pr, this_iphdr, udph, need_add_bloom_filter);
+	    is_dup_pkt = sapp_dup_pkt_identify(tid, pstream_pr, this_iphdr, udph, dup_pkt_para->dup_pkt_distinguish_ipv4_udp!=0?1:0);
 	}
 
 	return is_dup_pkt;
