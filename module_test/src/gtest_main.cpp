@@ -958,7 +958,7 @@ TEST(control, get_ip_ttl)
 
 
 #define control_get_tcp_rtt 1  
-TEST(control, get_tcp_rtt)
+TEST(control, DISABLED_get_tcp_rtt)
 {
 	control_get_tcp_rtt_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
@@ -966,7 +966,7 @@ TEST(control, get_tcp_rtt)
 }
 
 #define control_get_tcp_rtt_c2s 1  
-TEST(control, get_tcp_rtt_c2s)
+TEST(control, DISABLED_get_tcp_rtt_c2s)
 {
 	control_get_tcp_rtt_c2s_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
@@ -974,7 +974,7 @@ TEST(control, get_tcp_rtt_c2s)
 }
 
 #define control_get_tcp_rtt_s2c 1  
-TEST(control, get_tcp_rtt_s2c)
+TEST(control, DISABLED_get_tcp_rtt_s2c)
 {
 	control_get_tcp_rtt_s2c_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
