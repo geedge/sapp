@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 #define KILL_TCP_PHONY_POINTER			((void *)0x1A2B3C4D5E6F)
-#define INDEPENDENT_SEND_QUEUE_MAX_NUM	(128) /* 插件自己创建的线程, 支持的最大发送队列数量, 此值主要受限于marsio模式, 其他比如libpcap其实无影响, 为了统一, 不能高于64!! */
+#define INDEPENDENT_SEND_QUEUE_MAX_NUM	(256) /* 插件自己创建的线程, 支持的最大发送队列数量, 此值主要受限于marsio模式, 其他比如libpcap其实无影响, 为了统一, 不能高于64!! */
 
 typedef struct{
 	int threadnum; 
