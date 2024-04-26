@@ -22,6 +22,15 @@ extern void * (*ptr_marsio_buff_ctrlzone)(marsio_buff_t *m, uint8_t id);
 #endif
 
 
+static struct segment_id_list *segment_id_list_dup(sapp_mem_type_t type, int tid, const struct segment_id_list *slist)
+{
+	if(slist == NULL || slist->sz_sidlist == 0) return NULL;
+	struct segment_id_list *dlist = (struct segment_id_list *)sapp_mem_calloc(type, tid, sizeof(struct segment_id_list));
+	memcpy(dlist->sid_list, slist->sid_list, sizeof(short) * slist->sz_sidlist);
+	dlist->sz_sidlist = slist->sz_sidlist;
+	return dlist;
+}
+
 struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const void *rawpkt)
 {
 	if(pstream == NULL || rawpkt == NULL)return NULL;
@@ -42,15 +51,11 @@ struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const vo
 	d_pkt->replica.prepend_list=NULL;
 	if(p_rawpkt->append_list!= NULL && p_rawpkt->append_list->sz_sidlist > 0)
 	{
-		d_pkt->replica.append_list = (struct segment_id_list *)sapp_mem_calloc(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum,  sizeof(unsigned short)*p_rawpkt->append_list->sz_sidlist);
-		memcpy(d_pkt->replica.append_list->sid_list, p_rawpkt->append_list->sid_list, sizeof(unsigned short)*p_rawpkt->append_list->sz_sidlist);
-		d_pkt->replica.append_list->sz_sidlist = p_rawpkt->append_list->sz_sidlist;
+		d_pkt->replica.append_list = segment_id_list_dup(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum, p_rawpkt->append_list);
 	}
 	if(p_rawpkt->prepend_list!= NULL && p_rawpkt->prepend_list->sz_sidlist > 0)
 	{
-		d_pkt->replica.prepend_list = (struct segment_id_list *)sapp_mem_calloc(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum,  sizeof(unsigned short)*p_rawpkt->prepend_list->sz_sidlist);
-		memcpy(d_pkt->replica.prepend_list->sid_list, p_rawpkt->prepend_list->sid_list, sizeof(unsigned short)*p_rawpkt->prepend_list->sz_sidlist);
-		d_pkt->replica.prepend_list->sz_sidlist = p_rawpkt->prepend_list->sz_sidlist;
+		d_pkt->replica.prepend_list = segment_id_list_dup(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum, p_rawpkt->prepend_list);
 	}
 	p_rawpkt->d_pkt = d_pkt;
 	d_pkt->tid = pstream->threadnum;
@@ -92,6 +97,40 @@ int MESA_detain_pkt_forward(struct detain_pkt *pkt)
 		pkt->mark = FORWARD_RAWPKT;
 	}
 	return 0;
+}
+
+/* overwrite prepend and append list of current detain pakcet with the data from stream context raw packet  */
+int MESA_detain_pkt_forward_based_on_stream(const struct streaminfo *pstream, struct detain_pkt *dpkt)
+{
+	if (pstream == NULL || dpkt == NULL) return -1;
+
+	const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
+	const raw_pkt_t *stream_ctx_rawpkt = pstream_pr->raw_pkt;
+
+	if (dpkt->replica.append_list != NULL)
+	{
+		memset(dpkt->replica.append_list, 0, sizeof(struct segment_id_list));
+		memcpy(dpkt->replica.append_list->sid_list, stream_ctx_rawpkt->append_list->sid_list, sizeof(unsigned short) * stream_ctx_rawpkt->append_list->sz_sidlist);
+		dpkt->replica.append_list->sz_sidlist = stream_ctx_rawpkt->append_list->sz_sidlist;
+	}
+	else
+	{
+		dpkt->replica.append_list = segment_id_list_dup(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum, stream_ctx_rawpkt->append_list);
+	}
+
+	if (dpkt->replica.prepend_list != NULL)
+	{
+		memset(dpkt->replica.prepend_list, 0, sizeof(struct segment_id_list));
+		memcpy(dpkt->replica.prepend_list->sid_list, stream_ctx_rawpkt->prepend_list->sid_list, sizeof(unsigned short) * stream_ctx_rawpkt->prepend_list->sz_sidlist);
+		dpkt->replica.prepend_list->sz_sidlist = stream_ctx_rawpkt->prepend_list->sz_sidlist;
+	}
+	else
+	{
+		dpkt->replica.prepend_list = segment_id_list_dup(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum, stream_ctx_rawpkt->prepend_list);
+	}
+	dpkt->replica.stream_trace_id = ((struct streaminfo_private *)pstream)->stream_trace_id;
+
+	return MESA_detain_pkt_forward(dpkt);
 }
 
 void MESA_detain_pkt_free(struct detain_pkt *pkt)

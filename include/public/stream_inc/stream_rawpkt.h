@@ -120,6 +120,8 @@ const void *get_rawpkt_by_stream_dir(const struct streaminfo *pstream, int strea
 struct detain_pkt;
 struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const void *rawpkt);
 int MESA_detain_pkt_forward(struct detain_pkt *pkt);
+/* The underlayer private data in stream will overwrite in detain packet */
+int MESA_detain_pkt_forward_based_on_stream(const struct streaminfo *pstream, struct detain_pkt *dpkt);
 void MESA_detain_pkt_free(struct detain_pkt *pkt);
 
 #ifdef __cplusplus
