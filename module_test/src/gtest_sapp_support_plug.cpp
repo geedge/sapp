@@ -154,13 +154,8 @@ extern "C" char ctrl_takeover_exclusive_entry(struct streaminfo *pstream,void **
 extern "C" char ctrl_tcp_timeout_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	int ret;
-	static int rcv_pkt = 0;	
 	unsigned char mclose_type;
 	int opt_len = sizeof(mclose_type);
-
-	if(OP_STATE_PENDING == pstream->opstate){
-		gtest_sapp_sleep(5, "tcp time out"); /* 收到第一个包后, 强制sleep, 使当前流后续的包超时, 导致当前流被结束 */
-	}
 
 	if(OP_STATE_CLOSE == pstream->opstate){
 		ret = MESA_get_stream_opt(pstream, MSO_STREAM_CLOSE_REASON, (void *)&mclose_type, &opt_len);
@@ -176,15 +171,13 @@ extern "C" char ctrl_tcp_timeout_entry(struct streaminfo *pstream,void **pme, in
 			  
 		}
 		
-		if(1 == rcv_pkt){
+		if(6 == pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum){
 			printf("\033[32m ctrl_tcp_timeout_entry() test succ!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_SUCC);
 		}else{
 			printf("\033[1;31;40mset timeout, but stream is hasn't close!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_ERR);
 		}
-	}else{
-		rcv_pkt++;
 	}
 
 	return APP_STATE_GIVEME;
@@ -2504,13 +2497,14 @@ extern "C" char get_tcp_rtt_entry(struct streaminfo *pstream, void **pme, int th
 	int ret;
 	int opt_len = sizeof(short);
 
-	if (DIR_DOUBLE == pstream->dir)
+	if (pstream->opstate == OP_STATE_CLOSE)
 	{
 		ret = MESA_get_stream_opt(pstream, MSO_TCP_RTT_CSC, &rtt_csc, &opt_len);
 		if (ret < 0)
 		{
 			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_entry error: get MSO_TCP_RTT_CSC test fail!\033[0m\n");
 			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
 			return APP_STATE_DROPME;
 		}
 
@@ -2519,6 +2513,7 @@ extern "C" char get_tcp_rtt_entry(struct streaminfo *pstream, void **pme, int th
 		{
 			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_entry error: get MSO_TCP_RTT_SCS test fail!\033[0m\n");
 			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
 			return APP_STATE_DROPME;
 		}
 
@@ -2527,10 +2522,12 @@ extern "C" char get_tcp_rtt_entry(struct streaminfo *pstream, void **pme, int th
 		{
 			fprintf(stderr, "\033[32mget_tcp_rtt_entry test succ \033[0m\n");
 			gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
+			exit(0);
 			return APP_STATE_DROPME;
 		}else{
 			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_entry error: get rtt_csc:%d, but expect:%d, get rtt_scs:%d, but expect:%d\033[0m\n", rtt_csc, 65, rtt_scs, 143);
 			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
 			return APP_STATE_DROPME;
 		}
 	}

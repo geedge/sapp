@@ -40,17 +40,21 @@ void udp_link_c2s_1pkt_run(void)
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "meaningful_statistics_minimum_pkt", "3");
 	update_config_file("etc/sapp.toml", "meaningful_statistics_minimum_byte", "5");
+
+	update_config_file("etc/sapp.toml", "original_ipv4_udp_enabled", "0");
+	update_config_file("etc/sapp.toml", "original_ipv4_tcp_enabled", "0");
+	update_config_file("etc/sapp.toml", "inject_all_enabled", "0");
+	update_config_file("etc/sapp.toml", "kickout_udp_stream_enabled", "0");
 	
-	update_plugin_inf("UDP", "udp_link_c2s_1pkt_entry");
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");
+	append_plugin_inf("UDP", "udp_link_c2s_1pkt_entry");
 	append_plugin_inf("TCP", "udp_link_check_result_tcp_entry");
 
 	set_pcap_dumpfile("for_gtest_only/udp/udp_C2S_1.pcap");
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "7872fd733ba5610ad23e4d2dee133793"),0);
 
-	printf("test for udp timeout and close, set --dumpfile-speed=timestamp please wait for a monment......\n");
-
-	call_libsapp_devel_for_dumpfile_timestamp();
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 
@@ -63,8 +67,14 @@ void udp_link_c2s_10pkt_run(void)
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "meaningful_statistics_minimum_pkt", "3");
 	update_config_file("etc/sapp.toml", "meaningful_statistics_minimum_byte", "5");
-	
-	update_plugin_inf("UDP", "udp_link_c2s_10pkt_entry");
+
+	update_config_file("etc/sapp.toml", "original_ipv4_udp_enabled", "0");
+	update_config_file("etc/sapp.toml", "original_ipv4_tcp_enabled", "0");
+	update_config_file("etc/sapp.toml", "inject_all_enabled", "0");
+	update_config_file("etc/sapp.toml", "kickout_udp_stream_enabled", "0");
+
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");
+	append_plugin_inf("UDP", "udp_link_c2s_10pkt_entry");
 	append_plugin_inf("TCP", "udp_link_check_result_tcp_entry");
 
 	set_pcap_dumpfile("for_gtest_only/udp/udp_C2S_10.pcap");
@@ -77,9 +87,7 @@ void udp_link_c2s_10pkt_run(void)
 	*/
 	ASSERT_EQ(file_md5_checksum("dumpfile", "ff140c986f5d412d6cd234f1b44024fa"),0);
 
-	printf("test for udp timeout and close, set --dumpfile-speed=timestamp please wait for a monment......\n");
-	
-	call_libsapp_devel_for_dumpfile_timestamp();
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 
@@ -92,17 +100,21 @@ void udp_link_s2c_1pkt_run(void)
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "meaningful_statistics_minimum_pkt", "3");
 	update_config_file("etc/sapp.toml", "meaningful_statistics_minimum_byte", "5");
-	
-	update_plugin_inf("UDP", "udp_link_s2c_1pkt_entry");
+
+	update_config_file("etc/sapp.toml", "original_ipv4_udp_enabled", "0");
+	update_config_file("etc/sapp.toml", "original_ipv4_tcp_enabled", "0");
+	update_config_file("etc/sapp.toml", "inject_all_enabled", "0");
+	update_config_file("etc/sapp.toml", "kickout_udp_stream_enabled", "0");
+
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");
+	append_plugin_inf("UDP", "udp_link_s2c_1pkt_entry");
 	append_plugin_inf("TCP", "udp_link_check_result_tcp_entry");
 
 	set_pcap_dumpfile("for_gtest_only/udp/udp_S2C_1.pcap");
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "8944e363d3398b0cde08990d33052f8e"),0);
 
-	printf("test for udp timeout and close, set --dumpfile-speed=timestamp please wait for a monment......\n");
-	
-	call_libsapp_devel_for_dumpfile_timestamp();
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 void udp_link_s2c_10pkt_run(void)
@@ -114,18 +126,21 @@ void udp_link_s2c_10pkt_run(void)
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "meaningful_statistics_minimum_pkt", "3");
 	update_config_file("etc/sapp.toml", "meaningful_statistics_minimum_byte", "5");
-	
-	update_plugin_inf("UDP", "udp_link_s2c_10pkt_entry");
+
+	update_config_file("etc/sapp.toml", "original_ipv4_udp_enabled", "0");
+	update_config_file("etc/sapp.toml", "original_ipv4_tcp_enabled", "0");
+	update_config_file("etc/sapp.toml", "inject_all_enabled", "0");
+	update_config_file("etc/sapp.toml", "kickout_udp_stream_enabled", "0");
+
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");	
+	append_plugin_inf("UDP", "udp_link_s2c_10pkt_entry");
 	append_plugin_inf("TCP", "udp_link_check_result_tcp_entry");
 
 	set_pcap_dumpfile("for_gtest_only/udp/udp_S2C_10.pcap");
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "e487e9dc01b973bc90115dd4b4f7c54f"),0);
 
-	printf("test for udp timeout and close, set --dumpfile-speed=timestamp please wait for a monment......\n");
-	
-	call_libsapp_devel_for_dumpfile_timestamp();
-
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 void udp_dup_pkt_positive_run(void)
@@ -443,17 +458,21 @@ void udp_tuple4_reuse_test(void)
 
 	update_config_file_by_lastline("etc/sapp.toml", "packet_io.polling","enabled", "0");
 	update_config_file("etc/sapp.toml", "timeout", "10");
-	
-	update_plugin_inf("UDP", "udp_timeout_reset_entry");
+
+	update_config_file("etc/sapp.toml", "original_ipv4_udp_enabled", "0");
+	update_config_file("etc/sapp.toml", "original_ipv4_tcp_enabled", "0");
+	update_config_file("etc/sapp.toml", "inject_all_enabled", "0");
+	update_config_file("etc/sapp.toml", "kickout_udp_stream_enabled", "0");
+
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");		
+	append_plugin_inf("UDP", "udp_timeout_reset_entry");
 
 	/* 这个pcap�?0秒后会超�? 被sapp分成两个流处�?*/
 	set_pcap_dumpfile("for_gtest_only/udp/udp_timeout_reuse.pcap");
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "b7c83190ac89dd081a6235aafe9ed096"),0);
 
-	printf("test for udp timeout and reset, set --dumpfile-speed=timestamp please wait for a monment......\n");
-
-	call_libsapp_devel_for_dumpfile_timestamp();	
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 void udp_givestate_entry_offload_run(void)

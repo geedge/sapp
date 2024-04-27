@@ -68,34 +68,25 @@ void control_takeover_run(void)
 
 void control_timeout_run(void)
 {
-	const char *sapp_argv[4];
-
-	sapp_argv[0] = (char *)"./sapp ";
-	sapp_argv[1] = (char *)"--dumpfile";
-	sapp_argv[2] = (char *)"--dumpfile-speed=timestamp";
-	sapp_argv[3] = NULL;
-	
-
 	set_default_config();
 #if SAPP_V3
 	update_config_file("conf/main.conf", "CreatLinkMode", "1");
 	update_config_file("conf/main.conf", "LinkTimeout", "0");  
 	update_config_file("conf/main.conf", "UdpResetTime", "0");
 #elif SAPP_V4
-	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
+	update_config_file("etc/sapp.toml", "syn_mandatory", "1");
 	update_config_file("etc/sapp.toml", "timeout", "5");	
 #else
 	abort();
 #endif
-	update_plugin_inf("TCP", "ctrl_tcp_timeout_entry");
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");
+	append_plugin_inf("TCP", "ctrl_tcp_timeout_entry");
 	
 	set_pcap_dumpfile("tcp/tcp_timeout_reset.pcap");
 
-	ASSERT_EQ(file_md5_checksum("dumpfile", "9e8c65901915a0535d210e3766030b9e"),0);
+	ASSERT_EQ(file_md5_checksum("dumpfile", "064293d96e1299cfc29d419399e8137e"),0);
 
-	printf("test for timer, set --dumpfile-speed=timestamp please wait for a monment......\n");
-	
-	call_libsapp_devel_with_args(3, sapp_argv);
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 
@@ -408,14 +399,6 @@ void global_stream_id_run(void)
 
 void global_stream_id_tuple4_reuse_run(void)
 {
-	const char *reuse_argv[4];
-
-	reuse_argv[0] = (char *)"./sapp";
-	reuse_argv[1] = (char *)"--dumpfile";
-	reuse_argv[2] = (char *)"--dumpfile-speed=timestamp";
-	reuse_argv[3] = NULL;
-	
-
 	set_default_config();
 	set_project_list_conf_default();
 
@@ -426,15 +409,14 @@ void global_stream_id_tuple4_reuse_run(void)
 	update_config_file("etc/sapp.toml", "tuple4_reuse_time_interval", "10");
 	update_config_file("etc/sapp.toml", "stream_id_base_time", "\"2018-08-08 08:08:08\"");
 
-	update_plugin_inf("TCP_ALL", "global_stream_id_tuple4_reuse_tcpall_entry");
+	/* stop background timer thread, and set current time based on the pcap header timestamp */
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");
+	append_plugin_inf("TCP_ALL", "global_stream_id_tuple4_reuse_tcpall_entry");
 
 	set_pcap_dumpfile("tcp/tcp_tuple4_reuse.pcap");
-
 	ASSERT_EQ(file_md5_checksum("dumpfile", "4a7f3337a2039de8a91b7186e9a71c62"),0);
 
-	printf("test for tuple4 reuse, set --dumpfile-speed=timestamp please wait for a monment......\n");
-	
-	call_libsapp_devel_with_args(3, reuse_argv);
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 /*
@@ -442,14 +424,13 @@ void global_stream_id_tuple4_reuse_run(void)
 */
 void stream_creattime_tuple4_reuse_run(void)
 {
-	const char *reuse_argv[4];
+	// const char *reuse_argv[4];
 
-	reuse_argv[0] = (char *)"./sapp";
-	reuse_argv[1] = (char *)"--dumpfile";
-	reuse_argv[2] = (char *)"--dumpfile-speed=timestamp";
-	reuse_argv[3] = NULL;
+	// reuse_argv[0] = (char *)"./sapp";
+	// reuse_argv[1] = (char *)"--dumpfile";
+	// reuse_argv[2] = (char *)"--dumpfile-speed=timestamp";
+	// reuse_argv[3] = NULL;
 	
-
 	set_default_config();
 	set_project_list_conf_default();
 
@@ -459,16 +440,17 @@ void stream_creattime_tuple4_reuse_run(void)
 	update_config_file("etc/sapp.toml", "timeout", "0");
 	update_config_file("etc/sapp.toml", "tuple4_reuse_time_interval", "10");
 	update_config_file("etc/sapp.toml", "stream_id_base_time", "\"2018-08-08 08:08:08\"");
-
-	update_plugin_inf("TCP_ALL", "stream_creatime_tuple4_reuse_tcpall_entry");
+	/* stop background timer thread, and set current time based on the pcap header timestamp */
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");
+	append_plugin_inf("TCP_ALL", "stream_creatime_tuple4_reuse_tcpall_entry");
 
 	set_pcap_dumpfile("tcp/tcp_tuple4_reuse.pcap");
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "4a7f3337a2039de8a91b7186e9a71c62"),0);
 
-	printf("test for tuple4 reuse, set --dumpfile-speed=timestamp please wait for a monment......\n");
-	
-	call_libsapp_devel_with_args(3, reuse_argv);
+	// printf("test for tuple4 reuse, set --dumpfile-speed=timestamp please wait for a monment......\n");
+	// call_libsapp_devel_with_args(3, reuse_argv);
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 
@@ -1112,12 +1094,14 @@ void control_get_ip_ttl_run(void)
 void control_get_tcp_rtt_run(void)
 {
 	set_default_config();
-	update_plugin_inf("TCP", "get_tcp_rtt_entry");
+
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");
+	append_plugin_inf("TCP", "get_tcp_rtt_entry");
 	
 	set_pcap_dumpfile("for_gtest_only/tcp/tcp_rtt.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "1e06f7ed52405f9014bea2b117ecadff"),0);
 
-	call_libsapp_devel_for_dumpfile_timestamp();
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 void control_get_tcp_rtt_c2s_run(void)
@@ -1128,7 +1112,7 @@ void control_get_tcp_rtt_c2s_run(void)
 	set_pcap_dumpfile("tcp/tcp_isn_c2s_single.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "a5d0d96ee6f44f729d79aeac5cc2fee0"),0);
 
-	call_libsapp_devel_for_dumpfile_timestamp();
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 void control_get_tcp_rtt_s2c_run(void)
@@ -1139,5 +1123,5 @@ void control_get_tcp_rtt_s2c_run(void)
 	set_pcap_dumpfile("for_gtest_only/tcp/tcp_rtt_s2c.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "006277b38aa1f9a0d272b643b8a3b686"),0);
 
-	call_libsapp_devel_for_dumpfile_timestamp();
+	call_libsapp_devel_for_dumpfile_topspeed();
 }

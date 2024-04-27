@@ -30,7 +30,8 @@ void mpls_asymmetric_1vs2_run(void)
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "3894f69adfab6c2fe690982866aa8d9c"),0);
 	
-	gtest_start_sapp_progress(sapp_start_args);
+	call_libsapp_devel_for_dumpfile_topspeed();
+	// gtest_start_sapp_progress(sapp_start_args);
 }
 
 

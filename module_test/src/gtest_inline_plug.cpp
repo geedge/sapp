@@ -34,6 +34,7 @@ extern "C" char tcpall_pkt_stat(struct streaminfo *pstream,void **pme, int threa
 extern "C" char tcp_pkt_stat(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet);
 
 extern gtest_plug_stat_t gtest_tcp_stat;
+extern gtest_plug_stat_t gtest_tcpall_stat;
 
 static void build_rst_tcp_paras(struct rst_tcp_para *inject_paras, unsigned char send_dir)
 {
@@ -320,10 +321,10 @@ extern "C" char inline_stream_addr_ntop_entry(struct streaminfo *stream,void **p
 extern "C" char inline_tcpall_simple(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	if(pstream->pktstate == OP_STATE_CLOSE){
-		if((1 == gtest_tcp_stat.C2S_all_pkt)
-		 &&(0 == gtest_tcp_stat.C2S_all_byte)
-		 &&(1 == gtest_tcp_stat.S2C_all_pkt)
-		 &&(0 == gtest_tcp_stat.S2C_all_byte)){
+		if((1 == gtest_tcpall_stat.C2S_all_pkt)
+		 &&(0 == gtest_tcpall_stat.C2S_all_byte)
+		 &&(1 == gtest_tcpall_stat.S2C_all_pkt)
+		 &&(0 == gtest_tcpall_stat.S2C_all_byte)){
 		 	SAPP_PLUG_LOG(RLOG_LV_INFO,"inline_tcpall_simple", "\033[32m inline_tcpall_simple() test succ!\033[0m\n");
 			fprintf(stderr,"\033[32m inline_tcpall_simple() test succ!\033[0m\n");
 			gtest_set_libsapp_devel_result(GTEST_INLINE_TO_SAPP_SUCC);

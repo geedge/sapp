@@ -59,7 +59,7 @@ void tcp_oos_run(void)
 }
 
 
-/* TCP因乱�?? 且最大乱序数不合适导致丢包测�??*/
+/* TCP因乱�??? 且最大乱序数不合适导致丢包测�???*/
 void tcp_oos_lost_pkt_run(void)
 {
 	set_default_config();
@@ -99,11 +99,9 @@ void tcp_timeout_reset_run(void)
 	append_plugin_inf("IP", "ip_entry_check_tcp_timeout");
 
 	set_pcap_dumpfile("tcp/tcp_timeout_reset.pcap");
-	ASSERT_EQ(file_md5_checksum("dumpfile", "9e8c65901915a0535d210e3766030b9e"),0);
+	ASSERT_EQ(file_md5_checksum("dumpfile", "064293d96e1299cfc29d419399e8137e"),0);
 
-	printf("test for timeout_reset, set --dumpfile-speed=timestamp please wait for a monment......\n");
-		
-	call_libsapp_devel_for_dumpfile_timestamp();
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 
@@ -221,7 +219,7 @@ void tcp_lost_pkt_run(void)
 		33333333333333333333333333333333333333333333333
 		44444444444444444444444444444444444444444444444
 		55555555555555555555555555555555555555555555555
-	故意将第3个数据包删除, 测试丢包检测功�??
+	故意将第3个数据包删除, 测试丢包检测功�???
 */
 void tcp_lost_pkt_manual_run(void)
 {
@@ -251,8 +249,8 @@ void tcp_raw_entry_run(void)
 }
 
 /*
-	读取一批pcap文件, 这些小pcap文件实际是通过editcap切割一个原始pcap文件而得�??
-	目的是测�??f --dumpfile-list参数功能.
+	读取一批pcap文件, 这些小pcap文件实际是通过editcap切割一个原始pcap文件而得�???
+	目的是测�???f --dumpfile-list参数功能.
 */
 void tcp_dumpfile_list_run(void)
 {
@@ -290,9 +288,9 @@ void tcp_dup_pkt_positive_run(void)
 	update_config_file("etc/sapp.toml", "bloom_capacity", "1000000");
 	update_config_file("etc/sapp.toml", "bloom_error_rate", "0.00001");
 	update_config_file("etc/sapp.toml", "bloom_timeout", "10");
-	/* tcp层的重复数据包不能在tcp入口测试,因为序号一样肯定被认为是重传而不调用插件,要挂载到TCP_ALL�?? 	    */
+	/* tcp层的重复数据包不能在tcp入口测试,因为序号一样肯定被认为是重传而不调用插件,要挂载到TCP_ALL�??? 	    */
 	update_plugin_inf("TCP_ALL", "tcpall_dup_pkt_positive_check");
-	/* 此pcap包一共有9个包,前两个和后两个是人为制造的重复包, tcpall插件应该只收到7个包才是对的 */	
+	/* 此pcap包一共有9个包,前两个和后两个是人为制造的重复�?, tcpall插件应该只收�?7个包才是对的 */	
 	set_pcap_dumpfile("for_gtest_only/duplicate_packet/tcp_no_syn_dup.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "a56bfea74cd5168e9e3cbf1e2c5c17fb"),0);
 	
@@ -308,9 +306,9 @@ void tcp_dup_pkt_negative_run(void)
 	update_config_file("etc/sapp.toml", "bloom_capacity", "1000000");
 	update_config_file("etc/sapp.toml", "bloom_error_rate", "0.00001");
 	update_config_file("etc/sapp.toml", "bloom_timeout", "10");
-	/* tcp层的重复数据包不能在tcp入口测试,因为序号一样肯定被认为是重传而不调用插件,要挂载到TCP_ALL�?? 	    */
+	/* tcp层的重复数据包不能在tcp入口测试,因为序号一样肯定被认为是重传而不调用插件,要挂载到TCP_ALL�??? 	    */
 	update_plugin_inf("TCP_ALL", "tcpall_dup_pkt_negative_check");
-	/* 此pcap包一共有9个包,前两个和后两个是人为制造的重复包, 关闭重复包检查, tcpall插件应该全收到9个包才是对的 */	
+	/* 此pcap包一共有9个包,前两个和后两个是人为制造的重复�?, 关闭重复包检�?, tcpall插件应该全收�?9个包才是对的 */	
 	set_pcap_dumpfile("for_gtest_only/duplicate_packet/tcp_no_syn_dup.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "a56bfea74cd5168e9e3cbf1e2c5c17fb"),0);
 	
@@ -318,7 +316,7 @@ void tcp_dup_pkt_negative_run(void)
 }
 
 /*
-	一个流有乱序包, 但是插件曾经调用过MSO_DROP_STREAM, 理论上什么情况都不应该再调用插件�??
+	一个流有乱序包, 但是插件曾经调用过MSO_DROP_STREAM, 理论上什么情况都不应该再调用插件�???
 */
 void tcp_dropstream_and_unorder_run(void)
 {
@@ -334,7 +332,7 @@ void tcp_dropstream_and_unorder_run(void)
 }
 
 /*
-	期待�??gtest_sapp_hybrid_stream.log 日志内容:
+	期待�???gtest_sapp_hybrid_stream.log 日志内容:
 	
 stream:192.168.36.103.57222>120.241.25.57.36688,c2s_pkt:5,c2s_byte:548,s2c_pkt:4,s2c_byte:20
 stream:192.168.36.103.57235>120.241.25.15.36688,c2s_pkt:7,c2s_byte:424,s2c_pkt:5,s2c_byte:40
@@ -480,7 +478,7 @@ void hybrid_pure_tcp_run(void)
 
 	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "gtest_sapp_slave_init", "hybrid_tcp_destroy", "TCP", "hybrid_stream_log_entry");
 
-	/* hybrid混合包测试用例不开启重复流量检�??*/
+	/* hybrid混合包测试用例不开启重复流量检�???*/
 	update_config_file("etc/sapp.toml", "inject_all_enabled", "0");
 	update_config_file("etc/sapp.toml", "original_ipv4_tcp_enabled", "0");
 	update_config_file("etc/sapp.toml", "original_ipv4_udp_enabled", "0");
@@ -501,7 +499,7 @@ void hybrid_pure_tcp_run(void)
 
 
 /*
-	单次读取一批pcap包测�?? 期待�??gtest_sapp_hybrid_stream.log:
+	单次读取一批pcap包测�??? 期待�???gtest_sapp_hybrid_stream.log:
 
 stream:2001::192:168:40:134.37948>2001::192:168:40:133.22,c2s_pkt:60,c2s_byte:3937,s2c_pkt:41,s2c_byte:4813
 stream:2a00:5e80:101:212d:504:7b1:2572:db22.37034>2606:f200:0:7:bad:f00d:d00d:1.80,c2s_pkt:5,c2s_byte:82,s2c_pkt:4,s2c_byte:381
@@ -534,7 +532,7 @@ void hybrid_dataset_run(void)
 	update_config_file("etc/sapp.toml", "reorder_pkt_max", "100");
 	update_config_file("etc/sapp.toml", "timeout", "0");
 
-	/* hybrid混合包测试用例不开启重复流量检�??*/
+	/* hybrid混合包测试用例不开启重复流量检�???*/
 	update_config_file("etc/sapp.toml", "inject_all_enabled", "0");
 	update_config_file("etc/sapp.toml", "original_ipv4_tcp_enabled", "0");
 	update_config_file("etc/sapp.toml", "original_ipv4_udp_enabled", "0");
@@ -553,7 +551,7 @@ void hybrid_dataset_run(void)
 
 
 /*
-	带fin包正常结束的tcp四元组重用测�?? 没有TCP_ALL插件.
+	带fin包正常结束的tcp四元组重用测�??? 没有TCP_ALL插件.
 */
 void tcp_tuple4_reuse_with_fin_run(void)
 {
@@ -570,18 +568,17 @@ void tcp_tuple4_reuse_with_fin_run(void)
 #else
 	abort();
 #endif
-	update_plugin_inf("TCP", "tcp_tuple4_reuse_with_fin_entry");
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");	
+	append_plugin_inf("TCP", "tcp_tuple4_reuse_with_fin_entry");
 
 	set_pcap_dumpfile("tcp/tcp_tuple4_reuse.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "4a7f3337a2039de8a91b7186e9a71c62"),0);
 
-	printf("test for timeout_reset, set --dumpfile-speed=timestamp please wait for a monment......\n");
-		
-	call_libsapp_devel_for_dumpfile_timestamp();
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 /*
-	带fin包正常结束的tcp四元组重用测�?? 还加载了TCP_ALL插件, 此时第一个流结束不会真正free, 而是转到nouse链表.
+	带fin包正常结束的tcp四元组重用测�??? 还加载了TCP_ALL插件, 此时第一个流结束不会真正free, 而是转到nouse链表.
 */
 void tcpall_tuple4_reuse_with_fin_run(void)
 {	
@@ -599,21 +596,20 @@ void tcpall_tuple4_reuse_with_fin_run(void)
 	abort();
 #endif
 
-	update_plugin_inf("TCP", "tcp_tuple4_reuse_with_fin_entry");
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");	
+	append_plugin_inf("TCP", "tcp_tuple4_reuse_with_fin_entry");
 	append_plugin_inf("TCP_ALL", "void_entry");
 
 	set_pcap_dumpfile("tcp/tcp_tuple4_reuse.pcap");
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "4a7f3337a2039de8a91b7186e9a71c62"),0);
 
-	printf("test for timeout_reset, set --dumpfile-speed=timestamp please wait for a monment......\n");
-		
-	call_libsapp_devel_for_dumpfile_timestamp();
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 
 /*
-	没有正常结束的tcp四元组重用测�??
+	没有正常结束的tcp四元组重用测�???
 */
 void tcp_tuple4_reuse_no_close_run(void)
 {
@@ -631,14 +627,14 @@ void tcp_tuple4_reuse_no_close_run(void)
 	abort();
 #endif
 	update_config_file_by_lastline("etc/sapp.toml", "packet_io.polling","enabled", "1");
-	update_plugin_inf("TCP", "tcp_tuple4_reuse_no_close_entry");
+
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");		
+	append_plugin_inf("TCP", "tcp_tuple4_reuse_no_close_entry");
 
 	set_pcap_dumpfile("tcp/tcp_tuple4_reuse_5.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "4094ca41ca245c72987638e3c9fad8eb"),0);
 
-	printf("test for timeout_reset, set --dumpfile-speed=timestamp please wait for a monment......\n");
-		
-	call_libsapp_devel_for_dumpfile_timestamp();
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 
@@ -652,7 +648,7 @@ void tcp_well_known_port_run_v4(void)
 	update_plugin_inf("TCP", "tcp_well_known_port_v4_entry");
 	system("echo [TCP] > ./etc/well_known_port.conf");
 	system("echo 8088  >> ./etc/well_known_port.conf");
-	/* UDP的配置在这里其实没啥�?? 就是顺带测试一下解析配置文件的功能 */
+	/* UDP的配置在这里其实没啥�??? 就是顺带测试一下解析配置文件的功能 */
 	system("echo [UDP] >> ./etc/well_known_port.conf");
 	system("echo 12345 >> ./etc/well_known_port.conf");
 	system("echo 54321 >> ./etc/well_known_port.conf");
@@ -666,7 +662,7 @@ void tcp_well_known_port_run_v4(void)
 
 /*
 	测试小端口是客户端的四元组创建流方向,
-	此包是带SYN标志�?? 理论上不应该受etc/well_known_port.conf影响, 故意将源端口33720设成服务�??
+	此包是带SYN标志�??? 理论上不应该受etc/well_known_port.conf影响, 故意将源端口33720设成服务�???
 */
 void tcp_not_use_well_known_port_run_v4(void)
 {
@@ -675,7 +671,7 @@ void tcp_not_use_well_known_port_run_v4(void)
 	update_plugin_inf("TCP", "tcp_should_not_use_well_known_port_v4_entry");
 	system("echo [TCP] > ./etc/well_known_port.conf");
 	system("echo 33720 >> ./etc/well_known_port.conf");
-	/* UDP的配置在这里其实没啥�?? 就是顺带测试一下解析配置文件的功能 */
+	/* UDP的配置在这里其实没啥�??? 就是顺带测试一下解析配置文件的功能 */
 	system("echo [UDP] >> ./etc/well_known_port.conf");
 	system("echo 12345 >> ./etc/well_known_port.conf");
 	system("echo 54321 >> ./etc/well_known_port.conf");
@@ -698,7 +694,7 @@ void tcp_well_known_port_run_v6(void)
 	update_plugin_inf("TCP", "tcp_well_known_port_v6_entry");
 	system("echo [TCP] > ./etc/well_known_port.conf");
 	system("echo 55555 >> ./etc/well_known_port.conf");
-	/* UDP的配置在这里其实没啥�?? 就是顺带测试一下解析配置文件的功能 */
+	/* UDP的配置在这里其实没啥�??? 就是顺带测试一下解析配置文件的功能 */
 	system("echo [UDP] >> ./etc/well_known_port.conf");
 	system("echo 12345 >> ./etc/well_known_port.conf");
 	system("echo 54321 >> ./etc/well_known_port.conf");
@@ -711,7 +707,7 @@ void tcp_well_known_port_run_v6(void)
 }
 
 /*
-	tcp重传包处�??
+	tcp重传包处�???
 */
 void tcp_retransmit_run(void)
 {
@@ -752,9 +748,9 @@ void tcp_overlap_run(void)
 
 /*
 	在没有TCP插件且第一个包就是乱序的情况下, 
-	sapp在函数tcp_deal_unorder()�?? 会调用update_stream_list_raw_pkt_pointer(), 
+	sapp在函数tcp_deal_unorder()�??? 会调用update_stream_list_raw_pkt_pointer(), 
 	但是忘记恢复rawpkt指针就返回了, 导致后续再访问rawpkt其实是被free的乱序包中的rawpkt,
-	如果有插件获取原始包选项, �??021-08-23之前是错误的! 
+	如果有插件获取原始包选项, �???021-08-23之前是错误的! 
 */
 void tcp_first_unorder_rawpkt_run(void)
 {
@@ -769,7 +765,7 @@ void tcp_first_unorder_rawpkt_run(void)
 }
 
 /*
-	gtp有序�?? 无扩展头�??
+	gtp有序�??? 无扩展头�???
 */
 void gtp_with_seq_no_ext_tcp_run(void)
 {
@@ -784,7 +780,7 @@ void gtp_with_seq_no_ext_tcp_run(void)
 }
 
 /*
-	gtp无序�?? 但是有扩展头�??
+	gtp无序�??? 但是有扩展头�???
 */
 void gtp_without_seq_and_ext_tcp_run(void)
 {
@@ -800,7 +796,7 @@ void gtp_without_seq_and_ext_tcp_run(void)
 
 
 /*
-	gtp有序号且有扩展头�??
+	gtp有序号且有扩展头�???
 */
 #if (0 == HIGH_PERF)	
 void gtp_with_seq_and_ext_tcp_run(void)

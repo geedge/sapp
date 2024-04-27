@@ -29,7 +29,7 @@ void vlan_2layer_run(void)
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "d31d70928b2a647b7820e27a99b247cb"),0);
 	
-	gtest_start_sapp_progress(sapp_start_args);
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 
@@ -52,7 +52,7 @@ void vlan_asymmetric_merge_run(void)
 
 	ASSERT_EQ(file_md5_checksum("dumpfile", "502c003b622d9e7a15d242375634837c"),0);
 	
-	gtest_start_sapp_progress(sapp_start_args);
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 

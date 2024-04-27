@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <sys/select.h>
 #include <time.h>
 #include <arpa/inet.h>
 #include "stream.h"
@@ -105,4 +106,44 @@ extern "C" char ipv4_frag_assemble_checksum(const struct streaminfo *pstream,
 	return APP_STATE_GIVEME;
 }
 
+#include "../../include/private/sapp_private_api.h"
+extern volatile long long g_current_time_ms;
+extern volatile time_t g_current_time;
+/* If the Real World time is used, the time difference may be inaccurate due to overload CPU resources, operating system scheduling or other issues. */
+extern "C" char iplayer_readjust_time_entry(const struct streaminfo *pstream, unsigned char nouse1, int nouse2, const struct ip *nouse3)
+{
+	int ret;
+	struct timeval cur_pkt_stamp = {};
+	static struct timeval first_pkt_stamp = {0,0};
+	ret = get_rawpkt_opt_from_streaminfo(pstream, RAW_PKT_GET_TIMESTAMP, &cur_pkt_stamp);
+	if (ret < 0)
+	{
+		fprintf(stderr, "\033[1;31;40mipv4_adjust_time_entry get pcap timestamp error!\033[0m\n");
+		return APP_STATE_DROPME;
+	}
 
+	unsigned long long tot_pkt = 0;
+	int optlen = sizeof(long long);
+	ret = sapp_get_platform_opt(SPO_TOTAL_RCV_PKT, &tot_pkt, &optlen);
+	if (ret < 0)
+	{
+		fprintf(stderr, "\033[1;31;40msapp_get_platform_opt() error!\033[0m\n");
+		return APP_STATE_DROPME;
+	}
+
+	if (tot_pkt <= 1)
+	{
+		/* stop background timer thread, and set current time based on the pcap header timestamp */
+		pthread_cancel(sapp_global_val->individual_fixed.thread_timer_loop_id);
+		usleep(1000 * 100);
+		first_pkt_stamp.tv_sec = cur_pkt_stamp.tv_sec;
+		first_pkt_stamp.tv_usec = cur_pkt_stamp.tv_usec;
+		g_current_time_ms = 0; // set time to PanGu 
+		g_current_time = 0;    // set time to PanGu 
+		return APP_STATE_GIVEME;
+	}
+
+	g_current_time_ms = ((long)cur_pkt_stamp.tv_sec * 1000 + cur_pkt_stamp.tv_usec / 1000) - ((long)first_pkt_stamp.tv_sec * 1000 + first_pkt_stamp.tv_usec / 1000);
+	g_current_time = g_current_time_ms / 1000;
+	return APP_STATE_GIVEME;
+}

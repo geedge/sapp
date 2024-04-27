@@ -34,6 +34,7 @@
 #include "sapp_global_val.h"
 
 gtest_plug_stat_t gtest_tcp_stat;
+gtest_plug_stat_t gtest_tcpall_stat;
 
 extern "C" char tcp_pkt_stat(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
@@ -41,13 +42,10 @@ extern "C" char tcp_pkt_stat(struct streaminfo *pstream,void **pme, int thread_s
 
 	if(OP_STATE_PENDING == pstream->opstate){
 		/* pending状态重置计数 */
-		memset(&gtest_tcp_stat, 0, sizeof(gtest_tcp_stat));	
+		memset(&gtest_tcp_stat, 0, sizeof(gtest_tcp_stat));
 	}
 		
 	if(pstream->opstate != OP_STATE_CLOSE){
-		printf("tcp_pkt_stat, curdir:%u, data_len:%u, c2s_pkt:%u, c2s_bytes:%llu, s2c_pkt:%u, s2c_bytes:%llu\n", 
-			pstream->curdir, pdetail->datalen, 
-			gtest_tcp_stat.C2S_data_pkt, gtest_tcp_stat.C2S_data_byte, gtest_tcp_stat.S2C_data_pkt, gtest_tcp_stat.S2C_data_byte);
 		if(DIR_C2S == pstream->curdir){
 			gtest_tcp_stat.C2S_data_pkt++;
 			gtest_tcp_stat.C2S_data_byte += pdetail->datalen;
@@ -61,6 +59,9 @@ extern "C" char tcp_pkt_stat(struct streaminfo *pstream,void **pme, int thread_s
 				gtest_tcp_stat.S2C_lost_byte += pdetail->lostlen;
 			}				
 		}
+		printf("tcp_pkt_stat, curdir:%u, data_len:%u, c2s_pkt:%u, c2s_bytes:%llu, s2c_pkt:%u, s2c_bytes:%llu\n", 
+			pstream->curdir, pdetail->datalen, 
+			gtest_tcp_stat.C2S_data_pkt, gtest_tcp_stat.C2S_data_byte, gtest_tcp_stat.S2C_data_pkt, gtest_tcp_stat.S2C_data_byte);		
 	}
 
 	return APP_STATE_GIVEME;
@@ -72,34 +73,36 @@ extern "C" char tcpall_pkt_stat(struct streaminfo *pstream,void **pme, int threa
 
 	if(OP_STATE_PENDING == pstream->pktstate){
 		/* pending状态重置计数 */
-		memset(&gtest_tcp_stat, 0, sizeof(gtest_tcp_stat));	
+		memset(&gtest_tcpall_stat, 0, sizeof(gtest_tcpall_stat));	
 	}
 	
 	if(pstream->pktstate != OP_STATE_CLOSE){
-		printf("tcpall_pkt_stat, curdir:%u, data_len:%u,c2s_pkt:%u, c2s_bytes:%llu, s2c_pkt:%u, s2c_bytes:%llu\n", pstream->curdir, pdetail->datalen
-			, gtest_tcp_stat.C2S_all_pkt, gtest_tcp_stat.C2S_all_byte, gtest_tcp_stat.S2C_all_pkt, gtest_tcp_stat.S2C_all_byte);
 		if(DIR_C2S == pstream->curdir){
-			gtest_tcp_stat.C2S_all_pkt++;
-			gtest_tcp_stat.C2S_all_byte += pdetail->datalen;
+			gtest_tcpall_stat.C2S_all_pkt++;
+			gtest_tcpall_stat.C2S_all_byte += pdetail->datalen;
 		}else{
-			gtest_tcp_stat.S2C_all_pkt++;
-			gtest_tcp_stat.S2C_all_byte += pdetail->datalen;
+			gtest_tcpall_stat.S2C_all_pkt++;
+			gtest_tcpall_stat.S2C_all_byte += pdetail->datalen;
 		}
+		printf("tcpall_pkt_stat, curdir:%u, data_len:%u,c2s_all_pkt:%u, c2s_all_bytes:%llu, s2c_all_pkt:%u, s2c_all_bytes:%llu\n", pstream->curdir, pdetail->datalen
+			, gtest_tcpall_stat.C2S_all_pkt, gtest_tcpall_stat.C2S_all_byte, gtest_tcpall_stat.S2C_all_pkt, gtest_tcpall_stat.S2C_all_byte);		
 	}
 
 	return APP_STATE_GIVEME;
 }
 
 
-
+extern "C" char iplayer_readjust_time_entry(const struct streaminfo *pstream, unsigned char nouse1, int nouse2, const struct ip *nouse3);
 extern "C" char ip_entry_check_tcp_timeout(const struct streaminfo *pstream,
                   unsigned char routedir,int thread_seq, const struct ip *ipv4_hdr)
 {
 	static int ip_pkt_number = 0;
 
-	/* tcp_timeout_reset.pcap一共5个包, 
-	   第4个包超时重置, 因为是按SYN建连接, 以后的包不会建新流, tcp插件都不会被调用, 
-	   tcpall插件会被前3个包调用, 第4个包不建流,也不会计数,
+	iplayer_readjust_time_entry(pstream, routedir, thread_seq, ipv4_hdr);
+
+	/* tcp_timeout_reset.pcap一共7个包, 
+	   第7个包超时重置, 因为是按SYN建连接, 以后的包不会建新流, tcp插件都不会被调用, 
+	   tcpall插件会被前6个包调用, 第7个包不建流,也不会计数,
 	   当前包是第5个,ipentry先调用,tcpall还未计数.
 	 */
 	if(ipv4_hdr->ip_p == IPPROTO_TCP)
@@ -108,17 +111,17 @@ extern "C" char ip_entry_check_tcp_timeout(const struct streaminfo *pstream,
 		printf("ip_entry_check_tcp_timeout, ipid:%x\n", ipv4_hdr->ip_id);
 
 	}
-	if(5 == ip_pkt_number){
-		if((gtest_tcp_stat.C2S_data_pkt == 0) 
-		&& (gtest_tcp_stat.S2C_data_pkt == 0)
-		&& (gtest_tcp_stat.C2S_all_pkt == 2)
-		&& (gtest_tcp_stat.S2C_all_pkt == 1)
+	if(7 == ip_pkt_number){
+		if((gtest_tcp_stat.C2S_data_pkt == 1) 
+		&& (gtest_tcp_stat.S2C_data_pkt == 1)
+		&& (gtest_tcpall_stat.C2S_all_pkt == 3)
+		&& (gtest_tcpall_stat.S2C_all_pkt == 3)
 		){
 			printf("\033[32mtcp.timeout_reset() test succ!\033[0m\n");
 			gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
 		}else{
 			printf("\033[1;31;40mtcp_timeout_reset: check data error, ip_number:%d, tcp_c2s:%u, tcp_s2c:%u, tcpall_c2s:%u, tcpall_s2c:%u!\033[0m\n",
-				ip_pkt_number, gtest_tcp_stat.C2S_data_pkt, gtest_tcp_stat.S2C_data_pkt, gtest_tcp_stat.C2S_all_pkt, gtest_tcp_stat.S2C_all_pkt);
+				ip_pkt_number, gtest_tcp_stat.C2S_data_pkt, gtest_tcp_stat.S2C_data_pkt, gtest_tcpall_stat.C2S_all_pkt, gtest_tcpall_stat.S2C_all_pkt);
 			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
 		}
 	}
@@ -177,10 +180,10 @@ extern "C" char tcp_simple(struct streaminfo *pstream,void **pme, int thread_seq
 extern "C" char tcpall_simple(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	if(pstream->pktstate == OP_STATE_CLOSE){
-		if((31 == gtest_tcp_stat.C2S_all_pkt)
-		 &&(2329 == gtest_tcp_stat.C2S_all_byte)
-		 &&(37 == gtest_tcp_stat.S2C_all_pkt)
-		 &&(11345 == gtest_tcp_stat.S2C_all_byte)){
+		if((31 == gtest_tcpall_stat.C2S_all_pkt)
+		 &&(2329 == gtest_tcpall_stat.C2S_all_byte)
+		 &&(37 == gtest_tcpall_stat.S2C_all_pkt)
+		 &&(11345 == gtest_tcpall_stat.S2C_all_byte)){
 		 	SAPP_PLUG_LOG(RLOG_LV_INFO, "tcpall.simple", "\033[32m tcpall_simple() test succ!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_SUCC);
 		}else{
