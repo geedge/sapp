@@ -107,6 +107,15 @@ int (*ptr_marsio_poll_wait)(struct mr_instance * instance, struct mr_vdev * vdev
 
 int (*ptr_marsio_buff_is_ctrlbuf)(marsio_buff_t * m);
 
+int (*ptr_marsio_dp_trace_measurements_can_emit)(struct mr_instance * instance, const marsio_buff_t * mbuf,
+                                          uint8_t measurement_type);
+
+int (*ptr_marsio_dp_trace_measurement_emit_str)(struct mr_instance * instance, marsio_buff_t * mbuf, uint8_t measurement_type,
+                                         const char * module, const char * str);
+
+void (*ptr_marsio_dp_trace_filter_exec)(struct mr_instance * instance, marsio_buff_t * mbuf);
+
+
 static struct bpf_program MARSIO_BPF_FILTER[MAX_THREAD_NUM];
 static int g_marsio_have_bpf;
 
@@ -114,8 +123,24 @@ struct __marsio_bpf_counter_t
 {
 	long  count;
 } __attribute__((aligned(64))); /*   for multi-thread, must 64byte alignment */
+
 struct __marsio_bpf_counter_t g_marsio_bpf_counter[MAX_THREAD_NUM]; 
 
+void marsio4_emit_datapath_telemetry(const raw_pkt_t *raw_pkt,  const char * module, const char *str)
+{
+	if(sapp_marsio4_instance == NULL || ptr_marsio_dp_trace_measurements_can_emit== NULL || ptr_marsio_dp_trace_measurement_emit_str == NULL)return;
+	if(raw_pkt != NULL && raw_pkt->io_lib_pkt_reference != NULL && str != NULL && module != NULL)
+	{
+		if(ptr_marsio_dp_trace_measurements_can_emit(sapp_marsio4_instance, raw_pkt->io_lib_pkt_reference, DP_TRACE_MEASUREMENT_TYPE_TRACE))
+		{
+			ptr_marsio_dp_trace_measurement_emit_str(sapp_marsio4_instance, (marsio_buff_t *)raw_pkt->io_lib_pkt_reference, DP_TRACE_MEASUREMENT_TYPE_TRACE, module, str);
+		}	
+		if(ptr_marsio_dp_trace_measurements_can_emit(sapp_marsio4_instance, raw_pkt->io_lib_pkt_reference, DP_TRACE_MEASUREMENT_TYPE_TELEMETRY))
+		{
+			ptr_marsio_dp_trace_measurement_emit_str(sapp_marsio4_instance, (marsio_buff_t *)raw_pkt->io_lib_pkt_reference, DP_TRACE_MEASUREMENT_TYPE_TELEMETRY, module, str);
+		}		
+	}
+}
 /************************  funcitons for dynamic link *************************/
 
 int marsio_dl_io_set_cap_level(int cap_level)
@@ -372,7 +397,21 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 
 	marsio_pkt_dump(thread_seq, send_mbuf[0], PKT_CLASSIFY_INJECT);
 
-	ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, send_option);
+	if(ptr_marsio_dp_trace_filter_exec)
+	{
+		ptr_marsio_dp_trace_filter_exec(sapp_marsio4_instance, send_mbuf[0]);
+	}
+
+	if(raw_pkt->is_ctrl_pkt==1)
+	{
+    	marsio4_emit_datapath_telemetry(raw_pkt, "sapp", "inject=ctrl_pkt");
+	}
+	else
+	{
+    	marsio4_emit_datapath_telemetry(raw_pkt, "sapp", "inject=rawpkt");
+	}
+
+    ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, send_option);
 	if(ret < 0){
 		return -1;
 	}
@@ -799,6 +838,8 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	return ret;
 }
 
+
+
 static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 {
 	int i,j,k, pkt_num = 0;
@@ -849,12 +890,14 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
                         int ret = marsio4_pkt_forward(tid, g_mr4_sendpath_up_set[i], rx_buff[j]);
                         if (ret < 0)
                         {
+							marsio4_emit_datapath_telemetry(raw_pkt, "sapp", "egress_action=forward_error");
                             ptr_marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);
                         }
                     }
                     else if (hand_res == DROP)
                     {
                         /* 串联模式下只能单包free, 有可能batch收的N各包里, 某个包需要回注, 某个包不需要 */
+						marsio4_emit_datapath_telemetry(raw_pkt, "sapp", "egress_action=drop");
                         ptr_marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);
                     }
                     else
@@ -1209,6 +1252,19 @@ static int marsio_dl_get_function_entry(void)
 	if(NULL == ptr_marsio_buff_malloc_smartoffload){
 		printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_malloc_smartoffload", ABBR_MARSIO_LIBRARY_FILE);
 		sleep(1);
+	}
+	ptr_marsio_dp_trace_measurements_can_emit = (int (*)(struct mr_instance * instance, const marsio_buff_t * mbuf, uint8_t measurement_type))dlsym(marsio_so_handle, "marsio_dp_trace_measurements_can_emit");
+	if(NULL == ptr_marsio_dp_trace_measurements_can_emit){
+		printf("\033[33m[Warning]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_dp_trace_measurements_can_emit", ABBR_MARSIO_LIBRARY_FILE);
+	}
+	ptr_marsio_dp_trace_measurement_emit_str = (int (*)(struct mr_instance * instance, marsio_buff_t * mbuf, uint8_t measurement_type, const char * module, const char * str))dlsym(marsio_so_handle, "marsio_dp_trace_measurement_emit_str");
+	if(NULL == ptr_marsio_dp_trace_measurement_emit_str){
+		printf("\033[33m[Warning]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_dp_trace_measurement_emit_str", ABBR_MARSIO_LIBRARY_FILE);
+	}
+
+	ptr_marsio_dp_trace_filter_exec = (void (*)(struct mr_instance * instance, marsio_buff_t * mbuf))dlsym(marsio_so_handle, "marsio_dp_trace_filter_exec");
+	if(NULL == ptr_marsio_dp_trace_filter_exec){
+		printf("\033[33m[Warning]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_dp_trace_filter_exec", ABBR_MARSIO_LIBRARY_FILE);
 	}
 
 	/* for vlan flipping */

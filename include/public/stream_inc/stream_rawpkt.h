@@ -124,6 +124,10 @@ int MESA_detain_pkt_forward(struct detain_pkt *pkt);
 int MESA_detain_pkt_forward_based_on_stream(const struct streaminfo *pstream, struct detain_pkt *dpkt);
 void MESA_detain_pkt_free(struct detain_pkt *pkt);
 
+
+void sapp_emit_datapath_telemetry(const void *raw_pkt,  const char * module, const char *str);
+
+
 #ifdef __cplusplus
 }
 #endif

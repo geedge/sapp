@@ -193,6 +193,9 @@ int MESA_retain_pkt_update(const raw_pkt_t *p_raw_pkt, int pkt_ret)
 extern int marsio_get_route_dir_from_mbuff(void *pkt_reference);
 extern int marsio_get_link_id_from_mbuff(void *pkt_reference);
 
+
+
+
 int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 {
 	int ret = 0;
@@ -916,6 +919,13 @@ static inline unsigned long long __get_stream_opt_traffic(int cltype, int iotype
 	return tval;
 }
 
+extern void marsio4_emit_datapath_telemetry(const raw_pkt_t *raw_pkt,  const char * module, const char *str);
+
+inline void sapp_emit_datapath_telemetry(const void *raw_pkt,  const char * module, const char *str)
+{
+	return marsio4_emit_datapath_telemetry((const raw_pkt_t *)raw_pkt, module, str);
+}
+
 
 int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt opt, void *opt_val, int opt_val_len)
 {
@@ -1112,6 +1122,9 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 					memset(pstream_pr->sid_append_list, 0, sizeof(struct segment_id_list));
 				}
 			}
+            char tmp_buff[256];
+            snprintf(tmp_buff, sizeof(tmp_buff), "update sid_append_list_sz=%u", set_sid_list->sz_sidlist);
+            marsio4_emit_datapath_telemetry(pstream_pr->raw_pkt, "sapp", tmp_buff);			
 			ret = 0;
 		}
 		break;	
@@ -1145,7 +1158,10 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 					memset(pstream_pr->sid_prepend_list, 0, sizeof(struct segment_id_list));
 				}
 			}
-			ret = 0;
+            char tmp_buff[256];
+            snprintf(tmp_buff, sizeof(tmp_buff), "update sid_prepend_list_sz=%u", set_sid_list->sz_sidlist);
+            marsio4_emit_datapath_telemetry(pstream_pr->raw_pkt, "sapp", tmp_buff);
+            ret = 0;
 		}
 		break;
 		case MSO_STREAM_SET_DATAMETA_TRACE_ID:
@@ -1157,7 +1173,10 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			pstream_pr->stream_trace_id=*((unsigned long long *)opt_val);
-			ret=0;
+            char tmp_buff[256];
+            snprintf(tmp_buff, sizeof(tmp_buff), "update trace_id=%llu", pstream_pr->stream_trace_id);
+            marsio4_emit_datapath_telemetry(pstream_pr->raw_pkt, "sapp", tmp_buff);
+            ret=0;
 		}
 		break;
 		default:
