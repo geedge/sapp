@@ -222,6 +222,9 @@ int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned 
             source = ntohs(pstream->addr.ipv4->source);
         }
 
+        // exclude well knonwn ports, DNS 53, QUIC 443, 
+        if(source == 53 || dest == 53 || source == 443 || dest == 443)return 0;
+
         if ((source == gtp_u) || (dest == gtp_u) || ((source == gtp_v0) || (dest == gtp_v0))) {
             struct gtp_hdr *gtp = (struct gtp_hdr *) payload;
             unsigned short gtp_version = (gtp->flags & 0xE0) >> 5;
