@@ -1206,7 +1206,7 @@ static void tcp_change_stream_todata(struct streamindex *pindex,struct mesa_tcp_
 	pdetail_pr->link_state=STREAM_LINK_DATA;
 	pdetail_pr->tcpstateflag=TCP_ESTABLISHED;
 
-	pstream->opstate=OP_STATE_PENDING;
+	// pstream->opstate=OP_STATE_PENDING; //for TFO , can't set to PENDING state
 	
 	if(pstream->dir & DIR_C2S)
 	{
@@ -2852,6 +2852,49 @@ static int deal_tcp_stream_dup_pkt_check(int tid, struct streaminfo_private *pst
 	return is_dup_pkt;
 }
 
+static int deal_tcp_tfo(struct streaminfo *pstream, const void *this_iphdr, struct mesa_tcp_hdr *this_tcphdr, int tcplen,const raw_pkt_t *raw_pkt)
+{
+	struct half_tcpstream *snd=NULL,*rcv=NULL;
+	int ret=PASS;
+	struct tcpdetail_private*pdetail_pr=(struct tcpdetail_private*)pstream->pdetail;
+	struct tcpdetail *pdetail=(struct tcpdetail *)&pdetail_pr->tcpdetail_public;
+	unsigned int this_tfo_first_seq = ntohl (this_tcphdr->th_seq) + 1; //for TFO: first_payload.seq == SYN.seq, plus 1 otherwise will be treat as overlap
+	if(pstream->curdir == DIR_C2S)
+	{
+		if(NULL == pdetail_pr->pserver){
+			pdetail_pr->pserver=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM,pstream->threadnum,sizeof(struct half_tcpstream));
+			memset(pdetail_pr->pserver,0,sizeof(struct half_tcpstream));
+			//待完善
+			pdetail_pr->pserver->first_data_seq=pdetail_pr->iserverseq;
+			/* pdetail_pr->iserverseq=0; */  /* 2016-04-27 lijia modify, 用于获取当前流的ISN */
+			
+			/* 2014-10-20 LiJia add, for set one stream unorder number */
+			pdetail_pr->pserver->maxunorder = tcp_default_unorder;
+		}
+		rcv=pdetail_pr->pserver;
+		snd=pdetail_pr->pclient;
+	}
+	else
+	{
+		if(NULL == pdetail_pr->pclient){
+			pdetail_pr->pclient=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM,pstream->threadnum,sizeof(struct half_tcpstream));
+			memset(pdetail_pr->pclient,0,sizeof(struct half_tcpstream));
+			//待完善
+			pdetail_pr->pclient->first_data_seq=pdetail_pr->iclientseq;
+			/* pdetail_pr->iclientseq=0; */ /* 2016-04-27 lijia modify, 用于获取当前流的ISN */
+			
+			/* 2014-10-20 LiJia add, for set one stream unorder number */
+			pdetail_pr->pclient->maxunorder = tcp_default_unorder;
+		}
+		rcv=pdetail_pr->pclient;
+		snd=pdetail_pr->pserver;		
+	}
+
+	tcp_set_new_data(pstream,rcv,snd,(char *)this_tcphdr + this_tcphdr->th_off*4,tcplen,this_tfo_first_seq,this_tcphdr->th_flags & TH_FIN, raw_pkt->is_ctrl_pkt);
+	ret = stream_process_tcp(pstream, this_iphdr, this_tcphdr, raw_pkt, &(pdetail_pr->apme),&(pstream->opstate));	
+	return ret;
+}
+
 /* LiJia comment: pstream指向栈里的内存 */
 //int deal_tcp_stream(struct streamindex *pstream,struct mesa_tcp_hdr *this_tcphdr,int tcplen,const void *rawippkt,int iplen)
 static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, struct mesa_tcp_hdr *this_tcphdr,
@@ -2901,6 +2944,9 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 					ret = PASS;
 				}else{
 					ret=tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);
+					if((PASS == ret) && (tcplen > 0)){ // for TFO
+						ret = deal_tcp_tfo(pstream, this_iphdr, this_tcphdr, tcplen, raw_pkt);
+					}
 				}
 			}
 			return ret; 

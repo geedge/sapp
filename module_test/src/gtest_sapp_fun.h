@@ -240,7 +240,7 @@ void tcpall_tuple4_reuse_with_fin_run(void);
 void tcp_tuple4_reuse_no_close_run(void);
 void tcp_overlap_run(void);
 void tcp_retransmit_run(void);
-
+void tcp_tfo_run(void);
 
 void MESA_rst_tcp_test_v4_run(void);
 void MESA_kill_tcp_test_v4_run(void);

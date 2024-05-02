@@ -858,3 +858,15 @@ void tcp_offload_givestate_and_giveme_entry_run(void)
 	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
+
+void tcp_tfo_run(void)
+{
+	set_default_config();
+	update_plugin_inf("TCP", "tcp_tfo_entry");
+	append_plugin_inf("TCP_ALL", "tcpall_tfo_entry");
+	
+	set_pcap_dumpfile("tcp/tcp_tfo.pcap");
+	ASSERT_EQ(file_md5_checksum("dumpfile", "4a62aa446bbe758c119276f4fba7d1ad"),0);
+	
+	call_libsapp_devel_for_dumpfile_topspeed();
+}

@@ -571,6 +571,12 @@ TEST(tcp, gtp_without_seq_and_ext)
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
 }
 
+#define tcp_tfo 1 
+TEST(tcp, tfo)
+{
+	tcp_tfo_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
+}
 
 /*************************** TCPALL simple Test ********************************/
 #define _tcpall_offload_givestate_entry 1  // for SI symbol view

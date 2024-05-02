@@ -1,5 +1,7 @@
 #ifndef __USE_BSD
 #define __USE_BSD
+#include <cstddef>
+#include <stream_inc/stream_base.h>
 #endif
 #ifndef __FAVOR_BSD
 #define __FAVOR_BSD
@@ -2521,3 +2523,77 @@ extern "C" char tcp_offload_2st_giveme_entry(struct streaminfo *pstream,void **p
 	return APP_STATE_GIVEME;
 }
 
+extern "C" char tcp_tfo_entry(struct streaminfo *pstream, void **pme,
+                              int thread_seq, void *a_packet) {
+  const char fir_pkt_payload[] = {0x16, 0x03, 0x01, 0x02, 0x00, 0x01};
+  if (OP_STATE_CLOSE == pstream->opstate) {
+    if (gtest_tcp_stat.C2S_data_pkt == 3 
+	&& gtest_tcp_stat.C2S_data_byte == 727
+	&& gtest_tcp_stat.S2C_data_pkt == 2
+	&& gtest_tcp_stat.S2C_data_byte == 646) {
+      fprintf(stderr, "\033[32m tcp_tfo_entry() test succ!\033[0m\n");
+      sendto_test_result(GTEST_SAPP_SUCC);
+    } else {
+      fprintf(stderr, "\033[1;31;40m tcp_tfo_entry() test error! \
+	  		c2s_data_pkt is:%u, expect:%d, c2s_data_bytes:%llu, expect:%d,\
+			s2c_data_pkt is:%u, expect:%d, s2c_data_bytes:%llu, expect:%d \033[0m\n",
+			gtest_tcp_stat.C2S_data_pkt, 3,
+			gtest_tcp_stat.C2S_data_byte,727,
+			gtest_tcp_stat.S2C_data_pkt, 2,
+			gtest_tcp_stat.S2C_data_byte, 646);
+      sendto_test_result(GTEST_SAPP_ERR);
+    }
+  }else{
+  if (DIR_C2S == pstream->curdir) {
+    gtest_tcp_stat.C2S_data_pkt++;
+    gtest_tcp_stat.C2S_data_byte += pstream->ptcpdetail->datalen;
+  } else {
+    gtest_tcp_stat.S2C_data_pkt++;
+    gtest_tcp_stat.S2C_data_byte += pstream->ptcpdetail->datalen;
+  }
+  if(DIR_C2S == pstream->curdir 
+    && 1 == gtest_tcp_stat.C2S_data_pkt){
+	if(pstream->ptcpdetail->pdata != NULL
+	&& memcmp(pstream->ptcpdetail->pdata, fir_pkt_payload, sizeof(fir_pkt_payload)) != 0){
+		fprintf(stderr, "\033[1;31;40mtcp_tfo_entry() check first pkt payload error!\033[0m\n");
+		sendto_test_result(GTEST_SAPP_ERR);
+		return APP_STATE_DROPME;
+	}
+  }
+  }
+
+  return APP_STATE_GIVEME;
+}
+
+extern "C" char tcpall_tfo_entry(struct streaminfo *pstream, void **pme,
+                              int thread_seq, void *a_packet) {
+
+  if (OP_STATE_CLOSE == pstream->pktstate) {
+    if (gtest_tcpall_stat.C2S_all_pkt == 6 
+	&& gtest_tcpall_stat.C2S_all_byte == 727
+	&& gtest_tcpall_stat.S2C_all_pkt == 5
+	&& gtest_tcpall_stat.S2C_all_byte == 646) {
+      fprintf(stderr, "\033[32m tcpall_tfo_entry() test succ!\033[0m\n");
+      sendto_test_result(GTEST_SAPP_SUCC);
+    } else {
+      fprintf(stderr, "\033[1;31;40m tcpall_tfo_entry() test error! \
+	  		c2s_data_pkt is:%u, expect:%d, c2s_data_bytes:%llu, expect:%d,\
+			s2c_data_pkt is:%u, expect:%d, s2c_data_bytes:%llu, expect:%d \033[0m\n",
+			gtest_tcpall_stat.C2S_all_pkt, 6,
+			gtest_tcpall_stat.C2S_all_byte,727,
+			gtest_tcpall_stat.S2C_all_pkt, 5,
+			gtest_tcpall_stat.S2C_all_byte, 646);
+      sendto_test_result(GTEST_SAPP_ERR);
+    }
+  }else{
+	if (DIR_C2S == pstream->curdir) {
+		gtest_tcpall_stat.C2S_all_pkt++;
+		gtest_tcpall_stat.C2S_all_byte += pstream->ptcpdetail->datalen;
+	} else {
+		gtest_tcpall_stat.S2C_all_pkt++;
+		gtest_tcpall_stat.S2C_all_byte += pstream->ptcpdetail->datalen;
+	}
+  }
+
+  return APP_STATE_GIVEME;
+}
