@@ -105,28 +105,33 @@ int MESA_detain_pkt_forward_based_on_stream(const struct streaminfo *pstream, st
 	if (pstream == NULL || dpkt == NULL) return -1;
 
 	const struct streaminfo_private *pstream_pr = (const struct streaminfo_private *)pstream;
-	const raw_pkt_t *stream_ctx_rawpkt = pstream_pr->raw_pkt;
 
-	if (dpkt->replica.append_list != NULL)
+	if(pstream_pr->sid_append_list != NULL)
 	{
-		memset(dpkt->replica.append_list, 0, sizeof(struct segment_id_list));
-		memcpy(dpkt->replica.append_list->sid_list, stream_ctx_rawpkt->append_list->sid_list, sizeof(unsigned short) * stream_ctx_rawpkt->append_list->sz_sidlist);
-		dpkt->replica.append_list->sz_sidlist = stream_ctx_rawpkt->append_list->sz_sidlist;
-	}
-	else
-	{
-		dpkt->replica.append_list = segment_id_list_dup(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum, stream_ctx_rawpkt->append_list);
+		if (dpkt->replica.append_list != NULL)
+		{
+			memset(dpkt->replica.append_list, 0, sizeof(struct segment_id_list));
+			memcpy(dpkt->replica.append_list->sid_list, pstream_pr->sid_append_list->sid_list, sizeof(unsigned short) * pstream_pr->sid_append_list->sz_sidlist);
+			dpkt->replica.append_list->sz_sidlist = pstream_pr->sid_append_list->sz_sidlist;
+		}
+		else
+		{
+			dpkt->replica.append_list = segment_id_list_dup(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum, pstream_pr->sid_append_list);
+		}
 	}
 
-	if (dpkt->replica.prepend_list != NULL)
+	if(pstream_pr->sid_prepend_list)
 	{
-		memset(dpkt->replica.prepend_list, 0, sizeof(struct segment_id_list));
-		memcpy(dpkt->replica.prepend_list->sid_list, stream_ctx_rawpkt->prepend_list->sid_list, sizeof(unsigned short) * stream_ctx_rawpkt->prepend_list->sz_sidlist);
-		dpkt->replica.prepend_list->sz_sidlist = stream_ctx_rawpkt->prepend_list->sz_sidlist;
-	}
-	else
-	{
-		dpkt->replica.prepend_list = segment_id_list_dup(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum, stream_ctx_rawpkt->prepend_list);
+		if (dpkt->replica.prepend_list != NULL)
+		{
+			memset(dpkt->replica.prepend_list, 0, sizeof(struct segment_id_list));
+			memcpy(dpkt->replica.prepend_list->sid_list, pstream_pr->sid_prepend_list->sid_list, sizeof(unsigned short) * pstream_pr->sid_prepend_list->sz_sidlist);
+			dpkt->replica.prepend_list->sz_sidlist = pstream_pr->sid_prepend_list->sz_sidlist;
+		}
+		else
+		{
+			dpkt->replica.prepend_list = segment_id_list_dup(SAPP_MEM_DYN_DETAIN_PKT, pstream->threadnum, pstream_pr->sid_prepend_list);
+		}
 	}
 	dpkt->replica.stream_trace_id = ((struct streaminfo_private *)pstream)->stream_trace_id;
 
@@ -1224,7 +1229,7 @@ static void sapp_mac_addr_to_long(const unsigned char *mac_addr, unsigned long l
 	ptr += 5; /* ָ��long long �ĵ�6���ֽ� */
 
 	for(i = 0; i < 6; i++){
-		*ptr-- = *mac_addr++; /* �������ݰ���mac������?, copy��long long����������?(��ȥ���?2���ֽں�) */
+		*ptr-- = *mac_addr++; /* �������ݰ���mac������?, copy��long long����������?(��ȥ���??2���ֽں�) */
 	}
 }
 
@@ -1280,14 +1285,14 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
         for(i = 0; i < 6; i++, ptr += 3){
             sprintf((char *)ptr, "%02x:", mim_addr->inner_src_mac[i]);
         }
-        vxinfo->inner_smac[17] = '\0'; /* ���һλ����? */
+        vxinfo->inner_smac[17] = '\0'; /* ���һλ����?? */
         memcpy(vxinfo->inner_smac_hex, mim_addr->inner_src_mac, 6);
 
         ptr = vxinfo->inner_dmac;
         for(i = 0; i < 6; i++, ptr += 3){
             sprintf((char *)ptr, "%02x:", mim_addr->inner_dst_mac[i]);
         }
-        vxinfo->inner_dmac[17] = '\0'; /* ���һλ����? */
+        vxinfo->inner_dmac[17] = '\0'; /* ���һλ����?? */
         memcpy(vxinfo->inner_dmac_hex, mim_addr->inner_dst_mac, 6);
     }
     else
@@ -1296,14 +1301,14 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
 		for(i = 0; i < 6; i++, ptr += 3){
 			sprintf((char *)ptr, "%02x:", mac_addr->src_addr.h_source[i]);
 		}
-		vxinfo->inner_smac[17] = '\0'; /* ���һλ����? */
+		vxinfo->inner_smac[17] = '\0'; /* ���һλ����?? */
 		memcpy(vxinfo->inner_smac_hex, mac_addr->src_addr.h_source, 6);
 
         ptr = vxinfo->inner_dmac;
         for(i = 0; i < 6; i++, ptr += 3){
             sprintf((char *)ptr, "%02x:", mac_addr->src_addr.h_dest[i]);
         }
-        vxinfo->inner_dmac[17] = '\0'; /* ���һλ����? */
+        vxinfo->inner_dmac[17] = '\0'; /* ���һλ����?? */
         memcpy(vxinfo->inner_dmac_hex, mac_addr->src_addr.h_dest, 6);
     }
 	return 0;
@@ -1412,7 +1417,7 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 		return 0;
 	}
 
-	/* �������ظ�����⹦��?,����û�������ظ���   */
+	/* �������ظ�����⹦��??,����û�������ظ���   */
 	if(STREAM_TYPE_TCP == pstream->type){
 		if(pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum < dup_pkt_para->first_packets){ /* ��̫��, �������ж���û���ظ��� */
 			*res_val = -2;
@@ -2121,7 +2126,7 @@ int get_current_thread_cpu_affinity_id(void)
 	int tot_cpu_set_count = CPU_COUNT(&current_cpu_mask);
 	if((tot_cpu_set_count == tot_cpu_core) || (tot_cpu_set_count > 1)){
 		/* ȫ����������, ��ʵ����û�а�, 
-		   �����������isolcpus, ���㲻���?, CPU_COUNT���ܺ������������?, 
+		   �����������isolcpus, ���㲻���??, CPU_COUNT���ܺ������������??, 
 		   ��������1���϶���û�о�ȷ�󶨵�ĳ������ */
 		return -1;
 	}
