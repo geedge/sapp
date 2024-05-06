@@ -196,7 +196,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 			inject_to_eth_flag = 1;
 		}
 
-		if (0 == inject_to_eth_flag)
+		if (0 == inject_to_eth_flag || raw_pkt->is_ctrl_pkt==1)
 		{
 			ret = ipv4_entry(pstream_pr, next_layer_hdr, thread_num, routedir, raw_pkt, next_layer_offset);
 		}
@@ -223,7 +223,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 			inject_to_eth_flag = 1;
 		}
 
-		if (0 == inject_to_eth_flag)
+		if (0 == inject_to_eth_flag || raw_pkt->is_ctrl_pkt==1)
 		{
 			ret = ipv6_entry(pstream_pr, next_layer_hdr, thread_num, routedir, raw_pkt, next_layer_offset);
 		}
