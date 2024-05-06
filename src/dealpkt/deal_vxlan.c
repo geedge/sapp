@@ -109,6 +109,7 @@ int vxlan_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_hd
 			if(ETH_P_IP == ntohs(addr_pr.inner_hdlc.protocol)){
 				ret = ipv4_entry(pstream_pr,next_layer_data,thread_num,routedir,raw_pkt, next_layer_offset);
 			}else{
+				((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+=raw_pkt->raw_pkt_len;			
 				sapp_runtime_log(RLOG_LV_INFO, "vxlan etnry: unsupport HDLC protocol:0x%x\n", addr_pr.inner_hdlc.protocol);
@@ -124,6 +125,7 @@ int vxlan_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_hd
 			}else if(PPP_PROTOCOL_IPv6 == ntohs(addr_pr.inner_ppp.protocol)){
 				ret = ipv6_entry(pstream_pr,next_layer_data,thread_num,routedir,raw_pkt, next_layer_offset);
 			}else{
+				((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+=raw_pkt->raw_pkt_len;			
 				sapp_runtime_log(RLOG_LV_INFO, "vxlan etnry: unsupport PPP protocol:0x%x\n", addr_pr.inner_ppp.protocol);
@@ -135,6 +137,7 @@ int vxlan_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_hd
 		default:
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+=raw_pkt->raw_pkt_len;			
+			((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
 			sapp_runtime_log(RLOG_LV_INFO, "vxlan etnry: unsupport link type:%d\n", addr_pr.addr_public.C2S_vxlan_addr.link_type);
 			ret = PASS;
 		break;

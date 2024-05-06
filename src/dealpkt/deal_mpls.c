@@ -187,7 +187,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		}
 
 		int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
-		if (left_pkt_len < ntohs(ip4_hdr->ip_len))
+		if (left_pkt_len < ntohs(ip4_hdr->ip_len) && raw_pkt->is_ctrl_pkt==0)
 		{
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += raw_pkt->raw_pkt_len;
@@ -196,7 +196,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 			inject_to_eth_flag = 1;
 		}
 
-		if (0 == inject_to_eth_flag || raw_pkt->is_ctrl_pkt==1)
+		if (0 == inject_to_eth_flag)
 		{
 			ret = ipv4_entry(pstream_pr, next_layer_hdr, thread_num, routedir, raw_pkt, next_layer_offset);
 		}
@@ -214,7 +214,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		}
 
 		int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
-		if (left_pkt_len < sizeof(struct mesa_ip6_hdr) + ntohs(ip6_hdr->ip6_payload_len))
+		if (left_pkt_len < (int)sizeof(struct mesa_ip6_hdr) + ntohs(ip6_hdr->ip6_payload_len) && raw_pkt->is_ctrl_pkt==0)
 		{
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += raw_pkt->raw_pkt_len;
@@ -223,7 +223,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 			inject_to_eth_flag = 1;
 		}
 
-		if (0 == inject_to_eth_flag || raw_pkt->is_ctrl_pkt==1)
+		if (0 == inject_to_eth_flag)
 		{
 			ret = ipv6_entry(pstream_pr, next_layer_hdr, thread_num, routedir, raw_pkt, next_layer_offset);
 		}
@@ -242,7 +242,7 @@ int mpls_uc_entry(struct streaminfo_private *pfstream_pr,const void *this_layer_
 		else
 		{
 			int left_pkt_len = raw_pkt->raw_pkt_len - next_layer_offset;
-			if (left_pkt_len < sizeof(struct mesa_ethernet_hdr) + sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_udp_hdr))
+			if (left_pkt_len < (int)sizeof(struct mesa_ethernet_hdr) + (int)sizeof(struct mesa_ip4_hdr) + (int)sizeof(struct mesa_udp_hdr))
 			{ /* 小于最小合法ethernet+ip+udp数据包长度 */
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN] += raw_pkt->raw_pkt_len;

@@ -153,7 +153,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     if((*next_layer_hdr & 0xF0) == 0x40)
     {
         const struct iphdr  *ip4_hdr = (struct iphdr *)next_layer_hdr;
-        if(left_pkt_len < 20 || ntohs(ip4_hdr->tot_len) > left_pkt_len)
+        if((left_pkt_len < 20 || ntohs(ip4_hdr->tot_len) > left_pkt_len) && raw_pkt->is_ctrl_pkt==0)
         {
             local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	
@@ -173,7 +173,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
     else if((*next_layer_hdr & 0xF0) == 0x60)
     {
     	const struct mesa_ip6_hdr  *ip6_hdr = (struct mesa_ip6_hdr *)next_layer_hdr;
-    	if(left_pkt_len < (int)sizeof(struct mesa_ip6_hdr) || ntohs(ip6_hdr->ip6_payload_len) > left_pkt_len){
+    	if((left_pkt_len < (int)sizeof(struct mesa_ip6_hdr) || ntohs(ip6_hdr->ip6_payload_len) > left_pkt_len) && raw_pkt->is_ctrl_pkt==0){
             local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	
 			((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;

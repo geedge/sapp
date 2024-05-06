@@ -138,7 +138,7 @@ int IEEE_8021_entry(struct streaminfo_private *pfstream_pr,const void *this_laye
 			/* unknown protocol */	
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;
-
+			((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
 			sapp_runtime_log(20, "VLAN unknown protocol: 0x%x, pkt seq:%llu\n", next_layer_type, local_sys_stat->count[SAPP_STAT_RCV_LINE]);
 			
 			if(NET_CONN_SERIAL_GDEV == g_topology_mode){

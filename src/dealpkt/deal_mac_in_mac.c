@@ -130,6 +130,7 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 				/* unknown protocol */
 				local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 				local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;	
+				((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
 				sapp_runtime_log(20, "MAC-IN-MAC unknown protocol: 0x%x\n", eth_type);
 				ret = PASS;
 			break;
