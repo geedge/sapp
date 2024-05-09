@@ -402,18 +402,19 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 		ptr_marsio_dp_trace_filter_exec(sapp_marsio4_instance, send_mbuf[0]);
 	}
 
-	if(raw_pkt->is_ctrl_pkt==1)
-	{
-    	marsio4_emit_datapath_telemetry(raw_pkt, "sapp", "inject=ctrl_pkt");
-	}
-	else
-	{
-    	marsio4_emit_datapath_telemetry(raw_pkt, "sapp", "inject=rawpkt");
-	}
-
     ret = ptr_marsio_send_burst_with_options((struct mr_sendpath *)arg, thread_seq, send_mbuf, 1, send_option);
-	if(ret < 0){
-		return -1;
+	if(ret < 0)
+	{
+        if (raw_pkt->is_ctrl_pkt == 1)
+        {
+            marsio4_emit_datapath_telemetry(raw_pkt, "sapp", "inject_error=ctrl_pkt");
+        }
+        else
+        {
+            marsio4_emit_datapath_telemetry(raw_pkt, "sapp", "inject_error=rawpkt");
+        }
+		ptr_marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
+        return -1;
 	}
 	return datalen;
 }

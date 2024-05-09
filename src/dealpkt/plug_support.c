@@ -1127,9 +1127,6 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 					memset(pstream_pr->sid_append_list, 0, sizeof(struct segment_id_list));
 				}
 			}
-            char tmp_buff[256];
-            snprintf(tmp_buff, sizeof(tmp_buff), "update sid_append_list_sz=%u", set_sid_list->sz_sidlist);
-            marsio4_emit_datapath_telemetry(pstream_pr->raw_pkt, "sapp", tmp_buff);			
 			ret = 0;
 		}
 		break;	
@@ -1163,9 +1160,6 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 					memset(pstream_pr->sid_prepend_list, 0, sizeof(struct segment_id_list));
 				}
 			}
-            char tmp_buff[256];
-            snprintf(tmp_buff, sizeof(tmp_buff), "update sid_prepend_list_sz=%u", set_sid_list->sz_sidlist);
-            marsio4_emit_datapath_telemetry(pstream_pr->raw_pkt, "sapp", tmp_buff);
             ret = 0;
 		}
 		break;
@@ -1178,9 +1172,6 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			pstream_pr->stream_trace_id=*((unsigned long long *)opt_val);
-            char tmp_buff[256];
-            snprintf(tmp_buff, sizeof(tmp_buff), "update trace_id=%llu", pstream_pr->stream_trace_id);
-            marsio4_emit_datapath_telemetry(pstream_pr->raw_pkt, "sapp", tmp_buff);
             ret=0;
 		}
 		break;
