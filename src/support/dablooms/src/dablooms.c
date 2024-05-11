@@ -12,36 +12,39 @@
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
+#include <assert.h>
 #include "murmur.h"
 #include "dablooms.h"
+#include "mem_util.h"
 
-#define DABLOOMS_VERSION "0.9.1"
+#define DABLOOMS_VERSION "1.0.1"
 
 #define ERROR_TIGHTENING_RATIO 0.5
 #define SALT_CONSTANT 0x97c29b3a
 
 
-#define ALLOC(type, number) ((type *)calloc(sizeof(type), number))
-#define	FREE(p)	{free(p);p=NULL;}
+#define ALLOC(type, number, mstat) ((type *)dabm_calloc(number, sizeof(type), mstat))
+#define	FREE(p, mstat)	dabm_free(p, mstat)
+#define REALLOC(p, size, mstat) dabm_realloc(p, size, mstat)
 
 const char *dablooms_version(void)
 {
     return DABLOOMS_VERSION;
 }
 
-void free_bitmap(bitmap_t *bitmap)
+static void free_bitmap(bitmap_t *bitmap, struct dabm_mem_stat *mstat)
 {
 #if 0
     if ((munmap(bitmap->array, bitmap->bytes)) < 0) {
         perror("Error, unmapping memory");
     }
 #else
-    FREE(bitmap->array);
+    FREE(bitmap->array, mstat);
 #endif
-    FREE(bitmap);
+    FREE(bitmap, mstat);
 }
 
-bitmap_t *bitmap_resize(bitmap_t *bitmap, size_t old_size, size_t new_size)
+static bitmap_t *bitmap_resize(bitmap_t *bitmap, size_t old_size, size_t new_size, struct dabm_mem_stat *mstat)
 {   
 
 #if 0
@@ -74,18 +77,20 @@ bitmap_t *bitmap_resize(bitmap_t *bitmap, size_t old_size, size_t new_size)
 #else
     if (bitmap->array != NULL)
     {
-        bitmap->array = (char *)realloc(bitmap->array, new_size);
-        if (bitmap->array == NULL)
-        {
-            perror("Error resizing memory");
-            free_bitmap(bitmap);
-            return NULL;
-        }
+        bitmap->array = (char *)REALLOC(bitmap->array, new_size, mstat);
+        assert(bitmap->array);
+        // if (bitmap->array == NULL)
+        // {
+        //     perror("Error resizing memory");
+        //     free_bitmap(bitmap, mstat);
+        //     return NULL;
+        // }
         memset(bitmap->array + old_size, 0, new_size - old_size);
-    }
+        //printf("bitmap_resize(), %p, new:%d, old:%d\n", bitmap,(int)new_size, (int)old_size);
+    }   
     else 
     {
-        bitmap->array = ALLOC(char, new_size);
+        bitmap->array = ALLOC(char, new_size, mstat);
     }
 #endif
     bitmap->bytes = new_size;
@@ -94,22 +99,22 @@ bitmap_t *bitmap_resize(bitmap_t *bitmap, size_t old_size, size_t new_size)
 
 /* Create a new bitmap, not full featured, simple to give
  * us a means of interacting with the 4 bit counters */
-bitmap_t *new_bitmap(size_t bytes)
+static bitmap_t *new_bitmap(size_t bytes, struct dabm_mem_stat *mstat)
 {
     bitmap_t *bitmap;
     
 
-    bitmap = ALLOC(bitmap_t, 1); 
+    bitmap = ALLOC(bitmap_t, 1, mstat); 
     bitmap->bytes = bytes;
     
-    if ((bitmap = bitmap_resize(bitmap, 0, bytes)) == NULL) {
+    if ((bitmap = bitmap_resize(bitmap, 0, bytes, mstat)) == NULL) {
         return NULL;
     }
     
     return bitmap;
 }
 
-int bitmap_increment(bitmap_t *bitmap, unsigned int index, long offset)
+static inline int bitmap_increment(bitmap_t *bitmap, unsigned int index, long offset)
 {
     long access = index / 2 + offset;
     uint8_t temp;
@@ -158,7 +163,7 @@ int bitmap_decrement(bitmap_t *bitmap, unsigned int index, long offset)
 }
 
 /* decrements the four bit counter */
-int bitmap_check(bitmap_t *bitmap, unsigned int index, long offset)
+static inline int bitmap_check(const bitmap_t *bitmap, unsigned int index, long offset)
 {
     long access = index / 2 + offset;
     if (index % 2 != 0 ) {
@@ -168,19 +173,19 @@ int bitmap_check(bitmap_t *bitmap, unsigned int index, long offset)
     }
 }
 
-int bitmap_flush(bitmap_t *bitmap)
-{
-#if 0
-    if ((msync(bitmap->array, bitmap->bytes, MS_SYNC) < 0)) {
-        perror("Error, flushing bitmap to disk");
-        return -1;
-    } else {
-        return 0;
-    }
-#else
-    return 0;
-#endif
-}
+// int bitmap_flush(bitmap_t *bitmap)
+// {
+// #if 0
+//     if ((msync(bitmap->array, bitmap->bytes, MS_SYNC) < 0)) {
+//         perror("Error, flushing bitmap to disk");
+//         return -1;
+//     } else {
+//         return 0;
+//     }
+// #else
+//     return 0;
+// #endif
+// }
 
 /*
  * Perform the actual hashing for `key`
@@ -191,36 +196,34 @@ int bitmap_flush(bitmap_t *bitmap)
  * See paper by Kirsch, Mitzenmacher [2006]
  * http://www.eecs.harvard.edu/~michaelm/postscripts/rsa2008.pdf
  */
-void hash_func(counting_bloom_t *bloom, const char *key, size_t key_len, uint32_t *hashes)
+static inline void hash_func(uint32_t *hashes, const uint32_t checksum[4], size_t nfuncs, uint32_t counts_per_func)
 {
-    uint32_t checksum[4];
-    
-    MurmurHash3_x64_128(key, key_len, SALT_CONSTANT, checksum);
+    // uint32_t checksum[4];
+    // MurmurHash3_x64_128(key, key_len, SALT_CONSTANT, checksum);
     uint32_t h1 = checksum[0];
     uint32_t h2 = checksum[1];
-    
-    for (size_t i = 0; i < bloom->nfuncs; i++) {
-        hashes[i] = (h1 + i * h2) % bloom->counts_per_func;
+    for (size_t i = 0; i < nfuncs; i++) {
+        hashes[i] = (h1 + i * h2) % counts_per_func;
     }
 }
 
-int free_counting_bloom(counting_bloom_t *bloom)
-{
-    if (bloom != NULL) {
-        FREE(bloom->hashes);
-        bloom->hashes = NULL;
-        free_bitmap(bloom->bitmap);
-        FREE(bloom);
-        bloom = NULL;
-    }
-    return 0;
-}
+// int free_counting_bloom(counting_bloom_t *bloom)
+// {
+//     if (bloom != NULL) {
+//         FREE(bloom->hashes);
+//         bloom->hashes = NULL;
+//         free_bitmap(bloom->bitmap);
+//         FREE(bloom);
+//         bloom = NULL;
+//     }
+//     return 0;
+// }
 
-counting_bloom_t *counting_bloom_init(unsigned int capacity, double error_rate, long offset)
+counting_bloom_t *counting_bloom_init(unsigned int capacity, double error_rate, long offset, struct dabm_mem_stat *mstat)
 {
     counting_bloom_t *bloom;
     
-    bloom = ALLOC(counting_bloom_t, 1);
+    bloom = ALLOC(counting_bloom_t, 1, mstat);
     bloom->bitmap = NULL;
     bloom->capacity = capacity;
     bloom->error_rate = error_rate;
@@ -230,30 +233,32 @@ counting_bloom_t *counting_bloom_init(unsigned int capacity, double error_rate, 
     bloom->size = bloom->nfuncs * bloom->counts_per_func;
     /* rounding-up integer divide by 2 of bloom->size */
     bloom->num_bytes = ((bloom->size + 1) / 2) + sizeof(counting_bloom_header_t);
-    bloom->hashes = ALLOC(uint32_t, bloom->nfuncs);
+    bloom->hashes = ALLOC(uint32_t, bloom->nfuncs, mstat);
     
     return bloom;
 }
 
-counting_bloom_t *new_counting_bloom(unsigned int capacity, double error_rate)
+static counting_bloom_t *new_counting_bloom(unsigned int capacity, double error_rate, struct dabm_mem_stat *mstat)
 {
     counting_bloom_t *cur_bloom;
     
-    cur_bloom = counting_bloom_init(capacity, error_rate, 0);
-    cur_bloom->bitmap = new_bitmap(cur_bloom->num_bytes);
+    cur_bloom = counting_bloom_init(capacity, error_rate, 0, mstat);
+    cur_bloom->bitmap = new_bitmap(cur_bloom->num_bytes, mstat);
     cur_bloom->header = (counting_bloom_header_t *)(cur_bloom->bitmap->array);
     return cur_bloom;
 }
 
-int counting_bloom_add(counting_bloom_t *bloom, const char *s, size_t len)
+static int counting_bloom_add(counting_bloom_t *bloom, const uint32_t checksum[4])
 {
     unsigned int index, i, offset;
     unsigned int *hashes = bloom->hashes;
+    size_t nfuncs = bloom->nfuncs;
+    uint32_t counts_per_func = bloom->counts_per_func;
+
+    hash_func(hashes, checksum, nfuncs, counts_per_func);
     
-    hash_func(bloom, s, len, hashes);
-    
-    for (i = 0; i < bloom->nfuncs; i++) {
-        offset = i * bloom->counts_per_func;
+    for (i = 0; i < nfuncs; i++) {
+        offset = i * counts_per_func;
         index = hashes[i] + offset;
         bitmap_increment(bloom->bitmap, index, bloom->offset);
     }
@@ -262,32 +267,34 @@ int counting_bloom_add(counting_bloom_t *bloom, const char *s, size_t len)
     return 0;
 }
 
-int counting_bloom_remove(counting_bloom_t *bloom, const char *s, size_t len)
-{
-    unsigned int index, i, offset;
-    unsigned int *hashes = bloom->hashes;
+// int counting_bloom_remove(counting_bloom_t *bloom, const char *s, size_t len)
+// {
+//     unsigned int index, i, offset;
+//     unsigned int *hashes = bloom->hashes;
     
-    hash_func(bloom, s, len, hashes);
+//     hash_func(bloom, s, len, hashes);
     
-    for (i = 0; i < bloom->nfuncs; i++) {
-        offset = i * bloom->counts_per_func;
-        index = hashes[i] + offset;
-        bitmap_decrement(bloom->bitmap, index, bloom->offset);
-    }
-    bloom->header->count--;
+//     for (i = 0; i < bloom->nfuncs; i++) {
+//         offset = i * bloom->counts_per_func;
+//         index = hashes[i] + offset;
+//         bitmap_decrement(bloom->bitmap, index, bloom->offset);
+//     }
+//     bloom->header->count--;
     
-    return 0;
-}
+//     return 0;
+// }
 
-int counting_bloom_check(counting_bloom_t *bloom, const char *s, size_t len)
+static int counting_bloom_check(const counting_bloom_t *bloom, const uint32_t checksum[4])
 {
     unsigned int index, i, offset;
     unsigned int *hashes = bloom->hashes;
+    size_t nfuncs = bloom->nfuncs;
+    uint32_t counts_per_func = bloom->counts_per_func;
+
+    hash_func(hashes, checksum, nfuncs, counts_per_func);
     
-    hash_func(bloom, s, len, hashes);
-    
-    for (i = 0; i < bloom->nfuncs; i++) {
-        offset = i * bloom->counts_per_func;
+    for (i = 0; i < nfuncs; i++) {
+        offset = i * counts_per_func;
         index = hashes[i] + offset;
         if (!(bitmap_check(bloom->bitmap, index, bloom->offset))) {
             return 0;
@@ -296,39 +303,40 @@ int counting_bloom_check(counting_bloom_t *bloom, const char *s, size_t len)
     return 1;
 }
 
-int free_scaling_bloom(scaling_bloom_t *bloom)
+static int free_scaling_bloom(scaling_bloom_t *bloom, struct dabm_mem_stat *mstat)
 {
     int i;
     for (i = bloom->num_blooms - 1; i >= 0; i--) {
-        FREE(bloom->blooms[i]->hashes);
+        FREE(bloom->blooms[i]->hashes, mstat);
         bloom->blooms[i]->hashes = NULL;
-        FREE(bloom->blooms[i]);
+        FREE(bloom->blooms[i], mstat);
         bloom->blooms[i] = NULL;
     }
-    FREE(bloom->blooms);
-    free_bitmap(bloom->bitmap);
-    FREE(bloom);
+    FREE(bloom->blooms, mstat);
+    free_bitmap(bloom->bitmap, mstat);
+    FREE(bloom, mstat);
     return 0;
 }
 
 /* creates a new counting bloom filter from a given scaling bloom filter, with count and id */
-counting_bloom_t *new_counting_bloom_from_scale(scaling_bloom_t *bloom)
+counting_bloom_t *new_counting_bloom_from_scale(scaling_bloom_t *bloom, struct dabm_mem_stat *mstat)
 {
     long offset;
     double error_rate;
     counting_bloom_t *cur_bloom;
     
     error_rate = bloom->error_rate * (pow(ERROR_TIGHTENING_RATIO, bloom->num_blooms + 1));
+    bloom->blooms = (counting_bloom_t **)REALLOC(bloom->blooms, (bloom->num_blooms + 1) * sizeof(counting_bloom_t *), mstat);
+    assert(bloom->blooms);
+    // if (unlikely(bloom->blooms == NULL)) {
+    //     fprintf(stderr, "Error, could not realloc a new bloom filter\n");
+    //     return NULL;
+    // }
     
-    if ((bloom->blooms = (counting_bloom_t **)realloc(bloom->blooms, (bloom->num_blooms + 1) * sizeof(counting_bloom_t *))) == NULL) {
-        fprintf(stderr, "Error, could not realloc a new bloom filter\n");
-        return NULL;
-    }
-    
-    cur_bloom = counting_bloom_init(bloom->capacity, error_rate, bloom->num_bytes);
+    cur_bloom = counting_bloom_init(bloom->capacity, error_rate, bloom->num_bytes ,mstat);
     bloom->blooms[bloom->num_blooms] = cur_bloom;
     
-    bloom->bitmap = bitmap_resize(bloom->bitmap, bloom->num_bytes, bloom->num_bytes + cur_bloom->num_bytes);
+    bloom->bitmap = bitmap_resize(bloom->bitmap, bloom->num_bytes, bloom->num_bytes + cur_bloom->num_bytes, mstat);
     
     /* reset header pointer, as mmap may have moved */
     bloom->header = (scaling_bloom_header_t *) bloom->bitmap->array;
@@ -351,17 +359,18 @@ uint64_t scaling_bloom_clear_seqnums(scaling_bloom_t *bloom)
 {
     uint64_t seqnum;
     
-    if (bloom->header->disk_seqnum != 0) {
-        // disk_seqnum cleared on disk before any other changes
-        bloom->header->disk_seqnum = 0;
-        bitmap_flush(bloom->bitmap);
-    }
+    // if (bloom->header->disk_seqnum != 0) {
+    //     // disk_seqnum cleared on disk before any other changes
+    //     bloom->header->disk_seqnum = 0;
+    //     // bitmap_flush(bloom->bitmap);
+    // }
+    bloom->header->disk_seqnum = 0;
     seqnum = bloom->header->mem_seqnum;
     bloom->header->mem_seqnum = 0;
     return seqnum;
 }
 
-int scaling_bloom_add(scaling_bloom_t *bloom, const char *s, size_t len, uint64_t id)
+static int scaling_bloom_add(scaling_bloom_t *bloom, const uint32_t checksum[4], uint64_t id, struct dabm_mem_stat *mstat)
 {
     int i;
     uint64_t seqnum;
@@ -377,84 +386,84 @@ int scaling_bloom_add(scaling_bloom_t *bloom, const char *s, size_t len, uint64_
     seqnum = scaling_bloom_clear_seqnums(bloom);
     
     if ((id > bloom->header->max_id) && (cur_bloom->header->count >= cur_bloom->capacity - 1)) {
-        cur_bloom = new_counting_bloom_from_scale(bloom);
+        cur_bloom = new_counting_bloom_from_scale(bloom, mstat);
         cur_bloom->header->count = 0;
         cur_bloom->header->id = bloom->header->max_id + 1;
     }
     if (bloom->header->max_id < id) {
         bloom->header->max_id = id;
     }
-    counting_bloom_add(cur_bloom, s, len);
+    counting_bloom_add(cur_bloom, checksum);
     
     bloom->header->mem_seqnum = seqnum + 1;
     
     return 1;
 }
 
-int scaling_bloom_remove(scaling_bloom_t *bloom, const char *s, size_t len, uint64_t id)
-{
-    counting_bloom_t *cur_bloom;
-    int i;
-    uint64_t seqnum;
+// int scaling_bloom_remove(scaling_bloom_t *bloom, const char *s, size_t len, uint64_t id)
+// {
+//     counting_bloom_t *cur_bloom;
+//     int i;
+//     uint64_t seqnum;
     
-    for (i = bloom->num_blooms - 1; i >= 0; i--) {
-        cur_bloom = bloom->blooms[i];
-        if (id >= cur_bloom->header->id) {
-            seqnum = scaling_bloom_clear_seqnums(bloom);
+//     for (i = bloom->num_blooms - 1; i >= 0; i--) {
+//         cur_bloom = bloom->blooms[i];
+//         if (id >= cur_bloom->header->id) {
+//             seqnum = scaling_bloom_clear_seqnums(bloom);
             
-            counting_bloom_remove(cur_bloom, s, len);
+//             counting_bloom_remove(cur_bloom, s, len);
             
-            bloom->header->mem_seqnum = seqnum + 1;
-            return 1;
-        }
-    }
-    return 0;
-}
+//             bloom->header->mem_seqnum = seqnum + 1;
+//             return 1;
+//         }
+//     }
+//     return 0;
+// }
 
-int scaling_bloom_check(scaling_bloom_t *bloom, const char *s, size_t len)
+static int scaling_bloom_check(scaling_bloom_t *bloom, const uint32_t checksum[4])
 {
     int i;
     counting_bloom_t *cur_bloom;
     for (i = bloom->num_blooms - 1; i >= 0; i--) {
         cur_bloom = bloom->blooms[i];
-        if (counting_bloom_check(cur_bloom, s, len)) {
+        if (counting_bloom_check(cur_bloom, checksum)) {
             return 1;
         }
     }
     return 0;
 }
 
-int scaling_bloom_flush(scaling_bloom_t *bloom)
-{
-    if (bitmap_flush(bloom->bitmap) != 0) {
-        return -1;
-    }
-    // all changes written to disk before disk_seqnum set
-    if (bloom->header->disk_seqnum == 0) {
-        bloom->header->disk_seqnum = bloom->header->mem_seqnum;
-        return bitmap_flush(bloom->bitmap);
-    }
-    return 0;
-}
+// int scaling_bloom_flush(scaling_bloom_t *bloom)
+// {
+//     if (bitmap_flush(bloom->bitmap) != 0) {
+//         return -1;
+//     }
+//     // all changes written to disk before disk_seqnum set
+//     if (bloom->header->disk_seqnum == 0) {
+//         bloom->header->disk_seqnum = bloom->header->mem_seqnum;
+//         return bitmap_flush(bloom->bitmap);
+//     }
+//     return 0;
+// }
 
-uint64_t scaling_bloom_mem_seqnum(scaling_bloom_t *bloom)
-{
-    return bloom->header->mem_seqnum;
-}
+// uint64_t scaling_bloom_mem_seqnum(scaling_bloom_t *bloom)
+// {
+//     return bloom->header->mem_seqnum;
+// }
 
-uint64_t scaling_bloom_disk_seqnum(scaling_bloom_t *bloom)
-{
-    return bloom->header->disk_seqnum;
-}
+// uint64_t scaling_bloom_disk_seqnum(scaling_bloom_t *bloom)
+// {
+//     return bloom->header->disk_seqnum;
+// }
 
-scaling_bloom_t *scaling_bloom_init(unsigned int capacity, double error_rate)
+scaling_bloom_t *scaling_bloom_init(unsigned int capacity, double error_rate,struct dabm_mem_stat *mstat)
 {
     scaling_bloom_t *bloom;
     
-    bloom = ALLOC(scaling_bloom_t, 1);
-    if ((bloom->bitmap = new_bitmap(sizeof(scaling_bloom_header_t))) == NULL) {
+    bloom = ALLOC(scaling_bloom_t, 1, mstat);
+    if ((bloom->bitmap = new_bitmap(sizeof(scaling_bloom_header_t), mstat)) == NULL) {
         fprintf(stderr, "Error, Could not create bitmap with file\n");
-        free_scaling_bloom(bloom);
+        free_scaling_bloom(bloom, mstat);
         return NULL;
     }
     
@@ -468,19 +477,20 @@ scaling_bloom_t *scaling_bloom_init(unsigned int capacity, double error_rate)
     return bloom;
 }
 
-scaling_bloom_t *new_scaling_bloom(unsigned int capacity, double error_rate)
+static scaling_bloom_t *new_scaling_bloom(unsigned int capacity, double error_rate, struct dabm_mem_stat *mstat)
 {
 
     scaling_bloom_t *bloom;
     counting_bloom_t *cur_bloom;
     
-    bloom = scaling_bloom_init(capacity, error_rate);
-    
-    if (!(cur_bloom = new_counting_bloom_from_scale(bloom))) {
-        fprintf(stderr, "Error, Could not create counting bloom\n");
-        free_scaling_bloom(bloom);
-        return NULL;
-    }
+    bloom = scaling_bloom_init(capacity, error_rate, mstat);
+    cur_bloom = new_counting_bloom_from_scale(bloom, mstat);
+    // if (!()) {
+    //     fprintf(stderr, "Error, Could not create counting bloom\n");
+    //     free_scaling_bloom(bloom, mstat);
+    //     return NULL;
+    // }
+    assert(cur_bloom);
     cur_bloom->header->count = 0;
     cur_bloom->header->id = 0;
     
@@ -492,15 +502,17 @@ scaling_bloom_t *new_scaling_bloom(unsigned int capacity, double error_rate)
 struct expiry_dablooms_handle{
     scaling_bloom_t *cur_bloom;
     scaling_bloom_t *next_bloom;
-    time_t cur_bloom_start;
-    time_t next_bloom_start;
-    time_t last_bloom_check;
+    long cur_bloom_start_ms;
+    long next_bloom_start_ms;
+    long last_bloom_check_ms;
     uint64_t cur_bloom_inc_id;
     uint64_t next_bloom_inc_id;
     unsigned int capacity;
-    int expiry_time;
-    time_t cur_time;
+    long expiry_time_ms;
+    long cur_time_ms;
+    long transition_time_ms;
     double error_rate;
+    struct dabm_mem_stat mstat;
 };
 
 char* expiry_dablooms_errno_trans(enum expiry_dablooms_errno _errno){
@@ -517,28 +529,29 @@ char* expiry_dablooms_errno_trans(enum expiry_dablooms_errno _errno){
 void expiry_dablooms_destroy(struct expiry_dablooms_handle *handle){
     if(handle != NULL){
         if(handle->cur_bloom != NULL){
-            free_scaling_bloom(handle->cur_bloom);
+            free_scaling_bloom(handle->cur_bloom, &handle->mstat);
         }
         if(handle->next_bloom != NULL){
-            free_scaling_bloom(handle->next_bloom);
+            free_scaling_bloom(handle->next_bloom, &handle->mstat);
         }
-        FREE(handle);
+        free(handle);
     }   
 }
 
-struct expiry_dablooms_handle* expiry_dablooms_init(unsigned int capacity, double error_rate, time_t cur_time, int expiry_time){
-    struct expiry_dablooms_handle *handle = ALLOC(struct expiry_dablooms_handle, 1);
-    scaling_bloom_t *cur_bloom = new_scaling_bloom(capacity, error_rate);
+struct expiry_dablooms_handle* expiry_dablooms_init(unsigned int capacity, double error_rate, long cur_time_ms, long expiry_time_ms, long transition_time_ms){
+    struct expiry_dablooms_handle *handle = (struct expiry_dablooms_handle *)calloc(1, sizeof(struct expiry_dablooms_handle));
+    scaling_bloom_t *cur_bloom = new_scaling_bloom(capacity, error_rate, &handle->mstat);
     if(cur_bloom == NULL){
         goto error_out;
     }
     handle->cur_bloom = cur_bloom; 
     handle->cur_bloom_inc_id = 0;
-    handle->cur_bloom_start=cur_time;
+    handle->cur_bloom_start_ms=cur_time_ms;
     handle->capacity = capacity;
     handle->error_rate = error_rate;
-    handle->expiry_time = expiry_time;
-    handle->cur_time = cur_time;
+    handle->expiry_time_ms = expiry_time_ms;
+    handle->cur_time_ms = cur_time_ms;
+    handle->transition_time_ms = transition_time_ms; 
     return handle;
     
 error_out:
@@ -546,91 +559,123 @@ error_out:
     return NULL;
 }
 
-int expiry_dablooms_element_count_get(struct expiry_dablooms_handle *handle, uint64_t *count){
-    if(handle == NULL || handle->cur_bloom == NULL){
-        return EXPIRY_DABLOOMS_ERRNO_BLOOM_NULL;
-    }
-    *count = handle->cur_bloom_inc_id;
-    return 0;
-}
+// int expiry_dablooms_element_count_get(struct expiry_dablooms_handle *handle, uint64_t *count){
+//     if(handle == NULL || handle->cur_bloom == NULL){
+//         return EXPIRY_DABLOOMS_ERRNO_BLOOM_NULL;
+//     }
+//     *count = handle->cur_bloom_inc_id;
+//     return 0;
+// }
 
-static int bloom_expired_check(struct expiry_dablooms_handle *handle, time_t cur_time){
-    if(handle == NULL || handle->cur_bloom == NULL){
-        return EXPIRY_DABLOOMS_ERRNO_BLOOM_NULL;
-    }
-    if(cur_time <= handle->last_bloom_check){
+static inline int bloom_in_transition_period(const struct expiry_dablooms_handle *handle, long cur_time_ms)
+{
+    if((cur_time_ms - handle->cur_bloom_start_ms) + handle->transition_time_ms < handle->expiry_time_ms){
         return 0;
     }
-    time_t delta_time = cur_time - handle->cur_bloom_start;
-    handle->cur_time=cur_time;
-    if(delta_time >= handle->expiry_time){
-        free_scaling_bloom(handle->cur_bloom);
+    return 1;
+}
+
+static int bloom_expired_check(struct expiry_dablooms_handle *handle, long cur_time_ms, struct dabm_mem_stat *mstat){
+    // if(unlikely(handle == NULL || handle->cur_bloom == NULL)){
+    //     return EXPIRY_DABLOOMS_ERRNO_BLOOM_NULL;
+    // }
+    if(likely(cur_time_ms <= handle->last_bloom_check_ms + 1000)){
+        return 0;
+    }
+    long delta_time_ms = cur_time_ms - handle->cur_bloom_start_ms;
+    handle->cur_time_ms=cur_time_ms;
+    if(unlikely(delta_time_ms >= handle->expiry_time_ms)){
+        free_scaling_bloom(handle->cur_bloom, mstat);
         if(handle->next_bloom != NULL){
             handle->cur_bloom = handle->next_bloom;
-            handle->cur_bloom_start = handle->next_bloom_start;
+            handle->cur_bloom_start_ms = handle->next_bloom_start_ms;
             handle->cur_bloom_inc_id = handle->next_bloom_inc_id;
             handle->next_bloom = NULL;
-            handle->last_bloom_check=0;
+            handle->last_bloom_check_ms=0;
         }
         else{
-            scaling_bloom_t *cur_bloom = new_scaling_bloom(handle->capacity, handle->error_rate);
-            if(cur_bloom == NULL){
+            scaling_bloom_t *cur_bloom = new_scaling_bloom(handle->capacity, handle->error_rate, mstat);
+            if(unlikely(cur_bloom == NULL)){
                 return EXPIRY_DABLOOMS_ERRNO_NEW_BLOOM_FAIL;
             }
             handle->cur_bloom = cur_bloom;
             handle->cur_bloom_inc_id = 0;
-            handle->cur_bloom_start=cur_time;
-             handle->last_bloom_check=0;
+            handle->cur_bloom_start_ms=cur_time_ms;
+             handle->last_bloom_check_ms=0;
         }
     }
     else 
     {
-        handle->last_bloom_check=cur_time;
+        handle->last_bloom_check_ms=cur_time_ms;
     }
     return 0;
 }
 
-int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, size_t len,  time_t cur_time){
-    if(key==NULL || len ==0 || handle == NULL)
-    {
-        return -1;
-    }
-    int ret = bloom_expired_check(handle, cur_time);
-    if(ret < 0)
+int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, size_t len,  long cur_time_ms){
+    assert(!(key==NULL || len ==0 || handle == NULL));
+    int ret = bloom_expired_check(handle, cur_time_ms, &handle->mstat);
+    if(unlikely(ret < 0))
     {
         return ret;
     }
+    __builtin_prefetch(key, 0, 0);
+    uint32_t checksum[4];
+    MurmurHash3_x64_128(key, len, SALT_CONSTANT, checksum);
 
-    scaling_bloom_add(handle->cur_bloom, key, len, handle->cur_bloom_inc_id);
-    handle->cur_bloom_inc_id++;
-    time_t delta_time = cur_time - handle->cur_bloom_start;
-    handle->cur_time=cur_time;
-    if(delta_time >= handle->expiry_time){
-        if(handle->next_bloom == NULL){
-            scaling_bloom_t *next_bloom = new_scaling_bloom(handle->capacity, handle->error_rate);
+    long delta_time_ms = cur_time_ms - handle->cur_bloom_start_ms;
+    handle->cur_time_ms=cur_time_ms;
+
+    int is_transition = bloom_in_transition_period(handle, cur_time_ms);
+    if(unlikely(is_transition != 0)){ 
+        if(unlikely(handle->next_bloom == NULL)){
+            scaling_bloom_t *next_bloom = new_scaling_bloom(handle->capacity, handle->error_rate, &handle->mstat);
             if(next_bloom == NULL){
                 return EXPIRY_DABLOOMS_ERRNO_NEW_BLOOM_FAIL;
             }
             handle->next_bloom = next_bloom;
             handle->next_bloom_inc_id = 0;
-            handle->next_bloom_start=cur_time;
+            handle->next_bloom_start_ms=cur_time_ms;
         }
-        scaling_bloom_add(handle->next_bloom, key, len, handle->next_bloom_inc_id);
+        scaling_bloom_add(handle->next_bloom, checksum, handle->next_bloom_inc_id, &handle->mstat);
         handle->next_bloom_inc_id++;
+    }else{
+        scaling_bloom_add(handle->cur_bloom, checksum, handle->cur_bloom_inc_id, &handle->mstat);
+        handle->cur_bloom_inc_id++;
     }
+
     return 0;
 }
 
-int expiry_dablooms_search(struct expiry_dablooms_handle *handle, const char *key, size_t len,  time_t cur_time){
-    if(key==NULL || len ==0 || handle == NULL)
-    {
-        return -1;
-    }
-    int ret = bloom_expired_check(handle, cur_time);
-    if(ret < 0)
+int expiry_dablooms_search(struct expiry_dablooms_handle *handle, const char *key, size_t len,  long cur_time_ms){
+    assert(!(key==NULL || len ==0 || handle == NULL));
+    int ret = bloom_expired_check(handle, cur_time_ms, &handle->mstat);
+    if(unlikely(ret < 0))
     {
         return ret;
     }
-    int bloom_hit = scaling_bloom_check(handle->cur_bloom, key, len);
-    return bloom_hit;
+
+    __builtin_prefetch(key, 0, 0);
+    uint32_t checksum[4];
+    MurmurHash3_x64_128(key, len, SALT_CONSTANT, checksum);
+
+    int bloom_hit_cur = 0;
+    int bloom_hit_next = 0;
+    int is_transition = bloom_in_transition_period(handle, cur_time_ms);
+
+    if(unlikely(is_transition != 0) && (handle->next_bloom != NULL)){
+        bloom_hit_next = scaling_bloom_check(handle->next_bloom, checksum);
+    }
+
+    if(likely(0 == bloom_hit_next)){
+        bloom_hit_cur = scaling_bloom_check(handle->cur_bloom, checksum);
+    }
+
+    return bloom_hit_cur || bloom_hit_next;
+}
+
+int expiry_dablooms_get_mem_stat(struct expiry_dablooms_handle *handle, long long *blocks, long long *bytes)
+{
+    *blocks = handle->mstat.blocks;
+    *bytes = handle->mstat.bytes;
+    return 0;
 }

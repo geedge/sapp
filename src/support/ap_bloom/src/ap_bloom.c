@@ -158,12 +158,14 @@ struct ap_state
     int consecutive_matches;
     int visited_slices;
     int hash_num;
+    int counter;
     UT_array slice_time_events;
 };
 void ap_state_init(struct ap_state *state, int hash_num)
 {
     state->consecutive_matches=0;
     state->visited_slices=0;
+    state->counter=0;
     state->hash_num=hash_num;
     utarray_init(&state->slice_time_events, &slice_event_icd);
     utarray_reserve(&state->slice_time_events, hash_num*2);
@@ -172,6 +174,7 @@ void ap_state_clear(struct ap_state *state)
 {
     state->consecutive_matches=0;
     state->visited_slices=0;
+    state->counter=0;
     utarray_clear(&state->slice_time_events);
 }
 void ap_state_done(struct ap_state *state)
@@ -188,6 +191,7 @@ int ap_state_is_match(struct ap_state *state)
         {
             return 1;
         }
+        if(state->counter >= state->hash_num)return 1;
         utarray_sort(&state->slice_time_events, slice_event_cmp);
         while((ev=(struct ap_slice_event*)utarray_next(&state->slice_time_events, ev)))
         {
@@ -221,6 +225,10 @@ static void ap_slice_chain_check_hash(const struct ap_slice *head, struct double
             ev.hash_index = slice->hash_index;
             utarray_push_back(&state->slice_time_events, &ev);
             found=1;
+            if(timercmp(&slice->last_insert, &slice->first_insert, >))
+            {
+                    state->counter++;
+            }
         }
         state->visited_slices++;
     }

@@ -1319,6 +1319,22 @@ static int config_sanity_check(void)
 		return -1;
 	}
 
+	if (pconfig->packet_io.dup_pkt_para.kickout_udp_stream_enabled 
+	  || pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp 
+	  || pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp 
+	  || pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject)
+	{
+		if (pconfig->packet_io.dup_pkt_para.bloom_partition_num <= 0)
+		{
+			sapp_log(RLOG_LV_FATAL, ~0, ~0, "bloom_partition_num is:%d, must be greater than 0 !", pconfig->packet_io.dup_pkt_para.bloom_partition_num);
+			return -1;
+		}
+
+		if(pconfig->packet_io.dup_pkt_para.transition_time_ms > pconfig->packet_io.dup_pkt_para.bloom_timeout_ms/2){
+			sapp_log(RLOG_LV_INFO, ~0, ~0, "bloom_transition_time is greater than bloom_timeout/2\n");
+		}
+	}
+
 	/*******************************  CPU  ********************************/
 	cur_cpu_num = get_nprocs();
 	if(cur_cpu_num < pconfig->cpu.worker_threads){	
@@ -1735,13 +1751,18 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.inject", (char *)"inject_all_enabled", &pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject, 0);
 	
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"bloom_capacity", &pconfig->packet_io.dup_pkt_para.bloom_capacity, 1000000);
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"bloom_timeout", &pconfig->packet_io.dup_pkt_para.bloom_timeout, 60);
+	int tmp_dm_timeout;
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"bloom_timeout", &tmp_dm_timeout, 60 * 1000);
+	pconfig->packet_io.dup_pkt_para.bloom_timeout_ms = (long)tmp_dm_timeout * 1000;
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"bloom_transition_time", &tmp_dm_timeout, 3);
+	pconfig->packet_io.dup_pkt_para.transition_time_ms = (long)tmp_dm_timeout * 1000;
+
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"bloom_slice_num", &pconfig->packet_io.dup_pkt_para.bloom_slice_num, 3);
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"bloom_error_rate", str_tmp, sizeof(str_tmp), "0.000001");
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"bloom_library", (int *)&pconfig->packet_io.dup_pkt_para.bloom_library, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"first_packets", (int *)&pconfig->packet_io.dup_pkt_para.first_packets, 3);
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"bloom_partition_num", (int *)&pconfig->packet_io.dup_pkt_para.bloom_partition_num, 1);
 	pconfig->packet_io.dup_pkt_para.bloom_error_rate = strtod(str_tmp, NULL);
-
 	/*******************************  packet_io.under_ddos ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"stream_bypass_enabled", &pconfig->packet_io.under_ddos_config.enabled, 0); //向前兼容, 默认不开启
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"get_cpu_usage_interval", &pconfig->packet_io.under_ddos_config.get_cpu_usage_interval, 500);

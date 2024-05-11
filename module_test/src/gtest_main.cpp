@@ -2211,6 +2211,17 @@ TEST(performance, simple)
 
 #endif
 
+#include "sapp_global_val.h"
+
+TEST(dabloom, simple)
+{
+	ASSERT_EQ(0, sapp_bloom_filter_test_run(BLOOM_LIBRARY_DABLOOM));
+}
+
+TEST(apbloom, simple)
+{
+	ASSERT_EQ(0, sapp_bloom_filter_test_run(BLOOM_LIBRARY_APBLOOM));
+}
 
 static const char *gtest_cla_short_options = "hvLsf:l:";
 

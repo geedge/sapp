@@ -303,6 +303,8 @@ int MESA_platform_init(int argc, char *argv[])
 
 	sapp_set_current_state(SAPP_STATE_PKT_IO_INITED);
 
+	sapp_mem_init();
+
 	sapp_runtime_log(RLOG_LV_DEBUG, "sapp platform init success");
 
 	return 0;	

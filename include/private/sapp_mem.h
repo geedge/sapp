@@ -46,14 +46,14 @@ typedef enum{
 	SAPP_MEM_DYN_PADDR, 		/* 每层地址所占的内存, 就不分具体协议了, 太麻烦了!! */
 	SAPP_MEM_DYN_DETAIN_PKT,	
 	SAPP_MEM_DYN_SID_LIST,	
-
+	SAPP_MEM_DYN_BLOOM_FILTER, 
 	__SAPP_MEM_TYPE_MAX,
 }sapp_mem_type_t;
 
-void *sapp_mem_malloc(sapp_mem_type_t type, int thread_seq, int size);
-void *sapp_mem_calloc(sapp_mem_type_t type, int thread_seq, int size);
+void *sapp_mem_malloc(sapp_mem_type_t type, int thread_seq, unsigned int size);
+void *sapp_mem_calloc(sapp_mem_type_t type, int thread_seq, unsigned int size);
 void sapp_mem_free(sapp_mem_type_t type, int thread_seq, void *data);
-void *sapp_mem_realloc(sapp_mem_type_t type, int thread_seq, void *old_ptr, int size);
+void *sapp_mem_realloc(sapp_mem_type_t type, int thread_seq, void *old_ptr, unsigned int size);
 void sapp_mem_stat_output(void);
 
 #ifndef SAPP_FREE
@@ -68,6 +68,8 @@ void sapp_mem_stat_output(void);
 #ifndef SAPP_GLOBAL_FREE
 #define SAPP_GLOBAL_FREE(mem) do{if(mem){sapp_mem_free(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, (void *)mem); mem = NULL;}}while(0)
 #endif
+
+int bloomfilter_get_mem_stat(int tseq, long long *mem_blocks, long long *mem_bytes);
 
 #ifdef __cplusplus
 }

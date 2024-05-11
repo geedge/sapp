@@ -18,7 +18,7 @@ enum pkt_dump_mode{
 
 
 /*
-	vxlan��vlan_flipping�ǿ��Թ����?,
+	vxlan��vlan_flipping�ǿ��Թ����?,
 	vxlan������������,
 	vlan_flipping���ڱ����Լ�����,
 */
@@ -42,7 +42,7 @@ typedef struct{
 
 typedef struct{
 	int worker_threads;
-	int send_only_threads_max_num; /* �������߳��������?, �ǲ����̬������?, sapp�����޷�Ԥ֪, ֻ��������ֵ */
+	int send_only_threads_max_num; /* �������߳��������?, �ǲ����̬������?, sapp�����޷�Ԥ֪, ֻ��������ֵ */
 	int bind_mask_array_num;
 	long bind_mask_array[SAPP_MAX_THREADS];
 	long bind_mask; /* bind_mask_array�е�ÿ��������Ϊbit_indexת�ɵ�����ֵ */
@@ -117,7 +117,7 @@ typedef struct{
 	int timeout;
 	int meaningful_statistics_minimum_pkt;
 	int meaningful_statistics_minimum_byte;	
-	unsigned short *well_known_ports_array; /* �����½�����ȷ��server��, ����4001->8000, ʵ������OICQ��C2S�������ݰ�,֮ǰ�İ汾�ᱻ��ʶ��ΪS2C�����? */
+	unsigned short *well_known_ports_array; /* �����½�����ȷ��server��, ����4001->8000, ʵ������OICQ��C2S�������ݰ�,֮ǰ�İ汾�ᱻ��ʶ��ΪS2C�����? */
 	int well_known_ports_array_num;	
 	int max_timeouts_per_sec;
 	int max_opening_per_sec;
@@ -161,9 +161,9 @@ typedef struct{
 	int process_latency_refresh_interval_s;
 	int process_latency_threshold_in_us; /* �����ļ��ﵥλ��microsecond, ��Ҫ����1000 */
 	/* ��ȷģʽ������, fs2����ͳ��Ҳ�ǳ���CPU, ÿ������Ҫ����FS_operate(),
-	   ���ͣ�þ�ȷģ�?, ����fs2���Ǳ������һ��ʱ�������?, ��Сֵ����һ��ʱ���ƽ���?, ������FS_operate()����,
+	   ���ͣ�þ�ȷģ�?, ����fs2���Ǳ������һ��ʱ�������?, ��Сֵ����һ��ʱ���ƽ���?, ������FS_operate()����,
 	   ��ȷ�Ƚ�����һЩ, ���������˵���FS_operate()�Ĵ���.
-		����pkt_latency_accurate_enable��ƽ��ֵ�����ǶԵ�, ����׼��Ͳ�׼��?.
+		����pkt_latency_accurate_enable��ƽ��ֵ�����ǶԵ�, ����׼��Ͳ�׼��?.
 	   */
 	int process_latency_clock_id; 
 	
@@ -191,7 +191,7 @@ enum __sapp_config_packet_io_deployment_mode{
 	SAPP_CFG_PKT_IO_DEPOLY_MODE_TRANSPARENT,
 };
 
-#define MAX_VLAN_FLIPPING_MAP_NUM	(4096) /* vlan_id���Χ��?0~4095, ���鳤����4096 */
+#define MAX_VLAN_FLIPPING_MAP_NUM	(4096) /* vlan_id���Χ��?0~4095, ���鳤����4096 */
 
 typedef struct{
 	unsigned short couple_vlan_id; /* vlan flipping�ǳɶԴ���, �����±��ʾһ��vlanid, Ԫ�ص�ֵ����һ��vlanid, host order */
@@ -221,9 +221,11 @@ typedef struct{
 	int dup_pkt_distinguish_ipv4_tcp;
 	int dup_pkt_distinguish_ipv4_udp;
  	int bloom_capacity;
-	int bloom_timeout;
 	int bloom_slice_num;
+	long bloom_timeout_ms;
 	enum bloom_library bloom_library;
+	int bloom_partition_num;
+	long transition_time_ms;
 	double bloom_error_rate;
 	int first_packets;
 }sapp_dup_pkt_t;
@@ -242,17 +244,17 @@ typedef struct{
 	sapp_config_packet_io_tunnel_t packet_io_tunnel;
 	const char *input_bpf_filter;
 	char deployment_mode_str[NAME_MAX]; /* [mirror, inline, transparent, dumpfile] */
-	enum sapp_deploment_mode_t deployment_mode_bin; /* ��������ڴ���?, ת����ֵ��ʽ, ��1:mirror; 2:transparent; 3:inline��, ���?: enum sapp_deploment_mode_t */
+	enum sapp_deploment_mode_t deployment_mode_bin; /* ��������ڴ���?, ת����ֵ��ʽ, ��1:mirror; 2:transparent; 3:inline��, ���?: enum sapp_deploment_mode_t */
 	sapp_config_packet_io_dev_t internal;
 	sapp_config_packet_io_dev_t external;
 	char pcap_dumpfile_name[NAME_MAX];
 	int polling_priority; /* call sapp_recv_pkt every call polling_entry times, ���ö��ٴ�polling�����һ��recv pkt, 1��ʾ�������ȼ���ͬ */
 	int work_percent;
 	int without_usleep; /* ���ܲ���ģʽ, �������usleep, CPU��100% */
-	int inbound_route_dir; /* ��ʾ�뾳, I2C�����ֵ��?0����1 */
+	int inbound_route_dir; /* ��ʾ�뾳, I2C�����ֵ��?0����1 */
 	char pcap_capture_direction[NAME_MAX]; /* in, out, inout */
 	char inject_pkt_mode_string[NAME_MAX];
-	int inject_pkt_mode; /* ��ע�뷽ʽ������ֵ, ���?: enum send_fake_packet_mode */
+	int inject_pkt_mode; /* ��ע�뷽ʽ������ֵ, ���?: enum send_fake_packet_mode */
 	int inject_pkt_prepend_segment_id;
 	unsigned short inject_mode_inline_device_sport; /* udp socket�󶨵ı���Դ�˿�, host order, ������ */
 	char inject_mode_single_gateway_device[NAME_MAX];
@@ -306,7 +308,7 @@ typedef struct{
 	const char *cfg_file_inline_dev_relative;
 	const char *cfg_file_inline_dev_absolute;
 
-	const char *cfg_file_necessary_plug_relative;  /* ��Ҫ����б�?, �������ʧ��sapp���˳� */
+	const char *cfg_file_necessary_plug_relative;  /* ��Ҫ����б�?, �������ʧ��sapp���˳� */
 	const char *cfg_file_necessary_plug_absolute;
 
 	const char *cfg_file_stream_compare_layer_relative;
@@ -357,7 +359,7 @@ typedef struct{
 
 typedef struct{
 	int ipv6_decapsulation_enabled; /* �Ƿ����ipv6���ݰ� */
-	int ipv6_send_packet_enabled; /* �Ƿ�֧�ַ���ipv6���ݰ�, ��������ϵͳipv6�ں�ģ���Ƿ����? */
+	int ipv6_send_packet_enabled; /* �Ƿ�֧�ַ���ipv6���ݰ�, ��������ϵͳipv6�ں�ģ���Ƿ����? */
 	int tcp_drop_pure_ack_pkt; /* ����û�и��صĴ�ack��, ���Խ�Լһ��������ѯ, ����ҵ���������� */
 	int tcp_syn_option_parse_enabled; /* �Ƿ����tcp syn��ͷ��ѡ�� */
 	int skip_not_ip_layer_over_eth; /* ������ip��, ��֤�ڲ���ģʽ��, ����ͨ��ϵͳ·�ɷ���rst�� */
@@ -422,15 +424,15 @@ typedef struct{
 	pthread_t thread_timer_loop_id;
 	int cpu_bind_core_id_per_thread[SAPP_MAX_THREADS]; /* ���������bind_mask, ��¼ÿ��IO�����̰߳󶨵�cpu core id */
 	void *breakpad;
-	char overlay_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX]; /* ��ʾ��ԭʼ���Ļ����Ϸ�װ������, ��vxlan, ��Щ�㲻Ӧ�õ��ò��?, ��עʱ��Ҫ���⴦�� */
-	char prune_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   /* ��ʾע���ʱ��Ҫ�����Ĳ�?, ���ڴ�������������ļ�?: skip_not_iop_layer, ����vlan, mpls��, ����mirrorģʽ��, ������ע��㲻һ�������绷��? */
+	char overlay_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX]; /* ��ʾ��ԭʼ���Ļ����Ϸ�װ������, ��vxlan, ��Щ�㲻Ӧ�õ��ò��?, ��עʱ��Ҫ���⴦�� */
+	char prune_layer_def[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   /* ��ʾע���ʱ��Ҫ�����Ĳ�?, ���ڴ�������������ļ�?: skip_not_iop_layer, ����vlan, mpls��, ����mirrorģʽ��, ������ע��㲻һ�������绷��? */
 
 	void *under_ddos_handle;
 	pthread_t gdev_keepalive_log_thread_id;
 }sapp_gval_individual_fixed_t;
 
 typedef struct{
-	unsigned long long count[SAPP_STAT_NUM_MAX];  /* ������, �����?, �½�������, ������������ */
+	unsigned long long count[SAPP_STAT_NUM_MAX];  /* ������, �����?, �½�������, ������������ */
 	unsigned long long length[SAPP_STAT_NUM_MAX]; /* ������, �����ݰ����ֽ��� */
 	unsigned long long count_per_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
 	unsigned long long length_per_layer[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];
@@ -457,7 +459,7 @@ struct __sapp_gval_mthread{
 	sapp_fuzzy_latency_stat_t fuzzy_pkt_latency_stat_per_thread;
 	sapp_fuzzy_latency_stat_t fuzzy_pkt_latency_stat_per_entry_per_thread[SAPP_MAX_PLUG_ENTRY_NUM];
 	const raw_pkt_t *raw_pkt; /* ��ΪMESA_fakepacket_send_xxxϵ�к���û��raw_pkt����, Ҳû��stream_info, Ϊ����ǰ����, �����޸Ľӿ�, ����ȫ�ֱ������ڴ洢��ǰ�� */
-	void *dup_pkt_distinguish_handle; /* ����������ڿ���?, inject, ipv4_tcp, ipv4_udp, ��ͬʹ��һ��bloom���? */
+	void *dup_pkt_distinguish_handle; /* ����������ڿ���?, inject, ipv4_tcp, ipv4_udp, ��ͬʹ��һ��bloom���? */
 	volatile int destory_env_done; //0:do nothing; 1:doing; 2:done
 	sapp_mem_used_stat_t mem_used_stat;
 }__attribute__ ((aligned (64))); /* for multi-thread, must 64byte alignment */
@@ -476,16 +478,16 @@ typedef struct{
 	sapp_cmd_args_val_t **cmd_args_array;
 	int cmd_args_num;
 	char **dumpfie_list_array; /* ����--dumpfile-list����ִ�к�, �õ����ļ��б�, �ַ���ָ������ */
-	int slient_mode; /* ��Ĭģʽ, ǰ̨������κ����? */
+	int slient_mode; /* ��Ĭģʽ, ǰ̨������κ����? */
 }sapp_cla_t;
 
 
 typedef struct{
 	sapp_cla_t cla;
 	sapp_config_t config;
-	sapp_gval_individual_fixed_t individual_fixed; /* ��ʼ�����ٸı�ı���? */
-	sapp_gval_individual_volatile_t *individual_volatile; /* �����������ʵʱ���µĶ�������? */
-	sapp_gval_mthread_t *mthread_volatile[SAPP_MAX_THREADS]; /* �����������ʵʱ���µĶ��̱߳���? */
+	sapp_gval_individual_fixed_t individual_fixed; /* ��ʼ�����ٸı�ı���? */
+	sapp_gval_individual_volatile_t *individual_volatile; /* �����������ʵʱ���µĶ�������? */
+	sapp_gval_mthread_t *mthread_volatile[SAPP_MAX_THREADS]; /* �����������ʵʱ���µĶ��̱߳���? */
 }sapp_global_t;
 
 extern embed_layer_t g_stream_compare_layer_set; 

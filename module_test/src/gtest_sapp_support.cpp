@@ -501,32 +501,20 @@ void control_platform_opt_run(void)
 
 void control_stream_create_timestamp_ms_run(void)
 {
-	const char *argv[4];
-
-	argv[0] = (char *)"./sapp ";
-	argv[1] = (char *)"--dumpfile";
-	argv[2] = (char *)"--dumpfile-speed=timestamp";
-	argv[3] = NULL;
-	
 	set_default_config();
 	set_project_list_conf_default();
 	
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "timeout", "0");
 	update_config_file_by_lastline("etc/sapp.toml", "packet_io.polling","enabled", "1");
-	update_plugin_inf("TCP_ALL", "stream_createtime_ms_tcpall_entry");
 
-	/* 
-		构造一个pcap包, 使其间隔非常长, 使用--dumpfile-speed=timestamp参数,保证平台长时间不退出!
-		如果是pcap_online模式捕获lo卡,非常可能没有数据,导致插件不会被调用.
-	*/
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");
+	append_plugin_inf("TCP_ALL", "stream_createtime_ms_tcpall_entry");
+
 	set_pcap_dumpfile("tcp/tcp_simple.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "df138740a6a22ca9c977052f21f7a470"),0);
 
-	printf("test for stream_create_timestamp_ms, set --dumpfile-speed=timestamp please wait for a monment......\n");
-	
-	call_libsapp_devel_with_args(3, argv);
-
+	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
 

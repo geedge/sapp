@@ -49,9 +49,10 @@ static const  mem_stat_name_tuple_t mem_stat_name_tuple[] =
 	{SAPP_MEM_DYN_PADDR , 		"layer_addr"},
 	{SAPP_MEM_DYN_DETAIN_PKT , 		"detain_pkt"},
 	{SAPP_MEM_DYN_SID_LIST , 		"segment_id_list"},
+	{SAPP_MEM_DYN_BLOOM_FILTER , 	"bloom_filter"},
 };
 
-void *sapp_mem_malloc(sapp_mem_type_t type, int thread_seq, int size)
+void *sapp_mem_malloc(sapp_mem_type_t type, int thread_seq, unsigned int size)
 {
 	char *ptr;
 	sapp_private_mem_t *mhdr;
@@ -82,7 +83,7 @@ void *sapp_mem_malloc(sapp_mem_type_t type, int thread_seq, int size)
 }
 
 
-void *sapp_mem_calloc(sapp_mem_type_t type, int thread_seq, int size)
+void *sapp_mem_calloc(sapp_mem_type_t type, int thread_seq, unsigned int size)
 {
 	char *ptr;
 	sapp_private_mem_t *mhdr;
@@ -137,7 +138,7 @@ void sapp_mem_free(sapp_mem_type_t type, int thread_seq, void *data)
 	free((void *)mhdr);
 }
 
-void *sapp_mem_realloc(sapp_mem_type_t type, int thread_seq, void *old_ptr, int size)
+void *sapp_mem_realloc(sapp_mem_type_t type, int thread_seq, void *old_ptr, unsigned int size)
 {
 	void *new_ptr;
 	sapp_private_mem_t *mhdr;
@@ -258,7 +259,7 @@ void sapp_mem_stat_output(void)
 	}
 
 	for(stat_index = __SAPP_FIX_DYN_SEPARATOR + 1 ; stat_index < __SAPP_MEM_TYPE_MAX; stat_index++){
-		if(dyn_realtime_stat.mem_used_block[stat_index] > 0){
+		if(dyn_realtime_stat.mem_used_block[stat_index] != 0){
 			fprintf(fp, "%7s %18s %18lld %18lld %18s\n", 
 					"",
 					mem_stat_name_tuple[stat_index].mem_type_string,  
@@ -285,6 +286,37 @@ void sapp_mem_stat_output(void)
 				byte_convert_human((unsigned long)tot_mem_byte, 1, 1, human_string));
 	fprintf(fp,"===================================================================================\n");
 	fclose(fp);
+}
+
+char bloomfilter_mem_stat_polling_entry(struct streaminfo *nouse1, void **nouse2, int thread_seq, void *nouse3)
+{
+	static time_t last_get_time[SAPP_MAX_THREADS] = {};
+
+	if(ABBR_CURRENT_TIME <= last_get_time[thread_seq])
+	{
+		return POLLING_STATE_IDLE;
+	} 
+
+	long long blocks = 0, bytes = 0;
+	bloomfilter_get_mem_stat(thread_seq, &blocks, &bytes);
+
+	sapp_global_val->mthread_volatile[thread_seq]->mem_used_stat.mem_used_block[SAPP_MEM_DYN_BLOOM_FILTER] = blocks;
+	sapp_global_val->mthread_volatile[thread_seq]->mem_used_stat.mem_used_bytes[SAPP_MEM_DYN_BLOOM_FILTER] = bytes;
+	
+	last_get_time[thread_seq] = ABBR_CURRENT_TIME;
+	return POLLING_STATE_WORK;
+}
+
+int sapp_mem_init(void)
+{
+	if(sapp_global_val->config.packet_io.dup_pkt_para.kickout_udp_stream_enabled
+	  || sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp
+	  || sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp
+	  || sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject)
+	{
+		stream_register_fun(FUN_TYPE_POLLING, (char (*)(void))bloomfilter_mem_stat_polling_entry, 0);
+	}
+	return 0;
 }
 
 #ifdef __cplusplus

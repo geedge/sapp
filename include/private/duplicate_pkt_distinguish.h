@@ -4,10 +4,10 @@
 #include "mesa_net.h"
 #include "stream_internal.h" 
 
-/* 网络序,  network order */
+/* 网络�?,  network order */
 
-/* ipv4和ipv6分别定义, 因为ipv6地址巨大, 比例也相对较少, 
-   统一使用union定义, 都会按最大长度计算, 影响性能. 
+/* ipv4和ipv6分别定义, 因为ipv6地址巨大, 比例也相对较�?, 
+   统一使用union定义, 都会按最大长度计�?, 影响性能. 
 */
 struct sapp_dup_key_ip4_tuple{
 	unsigned int sip;
@@ -29,7 +29,7 @@ struct __sapp_dup_pkt_key_l4{
 
 struct __sapp_dup_pkt_key_v4{
 	struct __sapp_dup_pkt_key_l4 l4;
-	unsigned short ip_id; /* TCP层SYN重传时, 或者应用层重传数据, ipid是不一样的, 其实不能算为重复包, 所以ipid也作为Key */
+	unsigned short ip_id; /* TCP层SYN重传�?, 或者应用层重传数据, ipid是不一样的, 其实不能算为重复�?, 所以ipid也作为Key */
 	struct sapp_dup_key_ip4_tuple ip_addr;
 }__attribute__((packed, aligned(1)));
 

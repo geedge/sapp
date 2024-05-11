@@ -133,6 +133,8 @@
     # 0:disable bloom filter, 1:dabloom, 2:apbloom
     #bloom_library=1
     first_packets=3
+    bloom_partition_num=16
+    bloom_transition_time=3
 
 [STREAM]
 ### note, stream_id_base_time format is "%Y-%m-%d %H:%M:%S" 

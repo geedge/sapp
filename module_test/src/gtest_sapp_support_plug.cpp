@@ -1033,8 +1033,6 @@ extern "C" char stream_createtime_ms_tcpall_entry(struct streaminfo *pstream,voi
 	int opt_len = sizeof(long long);
 
 	if(OP_STATE_PENDING == pstream->pktstate){
-		sleep(1);
-		usleep(123456);
 		ret = MESA_get_stream_opt(pstream, MSO_STREAM_CREATE_TIMESTAMP_MS, &create_time_ms_pending, &opt_len);
 		if(ret < 0){
 			printf("\033[1;31;40mMESA_get_stream_opt()->MSO_STREAM_CREATE_TIMESTAMP_MS error!\033[0m\n");
@@ -1069,20 +1067,13 @@ extern "C" char stream_createtime_ms_tcpall_entry(struct streaminfo *pstream,voi
 			return APP_STATE_DROPME;			
 		}
 
-		if(((pstream->ptcpdetail->createtime != create_time_ms_pending/1000)
-		&& (pstream->ptcpdetail->createtime != create_time_ms_pending/1000 - 1))/* 防止在执行的瞬间跨过了一秒 */
-		|| pstream->ptcpdetail->createtime !=  create_time_s){ 
-			printf("\033[1;31;40mMESA_get_stream_opt()->MSO_STREAM_CREATE_TIMESTAMP_MS is:%llu, but current time is:%llu\033[0m\n", create_time_ms_pending, pstream->ptcpdetail->createtime);
-			sendto_test_result(GTEST_SAPP_ERR);
-			return APP_STATE_DROPME;		
-		}		
 		ret = MESA_get_stream_opt(pstream, MSO_STREAM_LASTUPDATE_TIMESTAMP_MS, &lastm_time_ms2, &opt_len);
 		if(ret < 0){
 			printf("\033[1;31;40mMESA_get_stream_opt()->MSO_STREAM_LASTUPDATE_TIMESTAMP_MS error!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_ERR);
 			return APP_STATE_DROPME;
 		}
-		if(lastm_time_ms2 == lastm_time_ms1){
+		if(lastm_time_ms2 <= lastm_time_ms1){
 			printf("\033[1;31;40mMESA_get_stream_opt()->MSO_STREAM_LASTUPDATE_TIMESTAMP_MS pending:%llu diff with close:%llu\033[0m\n", lastm_time_ms1, lastm_time_ms2);
 			sendto_test_result(GTEST_SAPP_ERR);
 			return APP_STATE_DROPME;			
