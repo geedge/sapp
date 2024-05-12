@@ -93,7 +93,7 @@ enum expiry_dablooms_errno{
 };
 char* expiry_dablooms_errno_trans(enum expiry_dablooms_errno _errno);
 void expiry_dablooms_destroy(struct expiry_dablooms_handle *handle);
-struct expiry_dablooms_handle* expiry_dablooms_init(unsigned int capacity, double error_rate, long cur_time_ms, long expiry_time_ms, long transition_time_ms);
+struct expiry_dablooms_handle* expiry_dablooms_init(int partition_num, unsigned int capacity, double error_rate, long cur_time_ms, long expiry_time_ms, long transition_time_ms);
 int expiry_dablooms_element_count_get(struct expiry_dablooms_handle *handle, uint64_t *count);
 int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, size_t len,  time_t cur_time);
 int expiry_dablooms_search(struct expiry_dablooms_handle *handle, const char *key, size_t len,  time_t cur_time);

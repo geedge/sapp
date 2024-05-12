@@ -30,10 +30,10 @@
 extern "C"
 {
 #endif
-    void bloom_free_partition(void *bloom_filter, const sapp_dup_pkt_t *dup_conf);
-    void *bloom_new_partition(const sapp_dup_pkt_t *dup_conf, struct timeval now, long now_ms);
-    int bloom_check_partition(void *bloom_filter, const char *key, int key_len, const sapp_dup_pkt_t *dup_conf, struct timeval now, long now_ms);
-    void bloom_add_partition(void *bloom_filter, const char *key, int key_len, const sapp_dup_pkt_t *dup_conf, struct timeval now, long now_ms);
+    void bloom_free(void *bloom_filter, const sapp_dup_pkt_t *dup_conf);
+    void *bloom_new(const sapp_dup_pkt_t *dup_conf, struct timeval now, long now_ms);
+    int bloom_check(void *bloom_filter, const char *key, int key_len, const sapp_dup_pkt_t *dup_conf, struct timeval now, long now_ms);
+    void bloom_add(void *bloom_filter, const char *key, int key_len, const sapp_dup_pkt_t *dup_conf, struct timeval now, long now_ms);
 #ifdef __cplusplus
 }
 #endif
@@ -97,7 +97,7 @@ static void bm_add_item(void *bloom_filter, char *tuple4_buf, unsigned int index
     clock_gettime(CLOCK_REALTIME, &start_time);
     g_current_time_tv.tv_sec = g_current_time_sp.tv_sec;
     g_current_time_tv.tv_usec = g_current_time_sp.tv_nsec / 1000;
-    bloom_add_partition(bloom_filter, tuple4_buf, TUPLE4_ADDR_LEN, dup_conf, g_current_time_tv, g_current_time_in_ms);
+    bloom_add(bloom_filter, tuple4_buf, TUPLE4_ADDR_LEN, dup_conf, g_current_time_tv, g_current_time_in_ms);
     clock_gettime(CLOCK_REALTIME, &end_time);
 
     unsigned long long time_diff = bm_time_diff(&start_time, &end_time);
@@ -114,7 +114,7 @@ static int bm_search_item(void *bloom_filter, char *tuple4_buf, unsigned int ind
     clock_gettime(CLOCK_REALTIME, &start_time);
     g_current_time_tv.tv_sec = g_current_time_sp.tv_sec;
     g_current_time_tv.tv_usec = g_current_time_sp.tv_nsec / 1000;
-    int ret = bloom_check_partition(bloom_filter, tuple4_buf, TUPLE4_ADDR_LEN, dup_conf, g_current_time_tv, g_current_time_in_ms);
+    int ret = bloom_check(bloom_filter, tuple4_buf, TUPLE4_ADDR_LEN, dup_conf, g_current_time_tv, g_current_time_in_ms);
     clock_gettime(CLOCK_REALTIME, &end_time);
     long long time_diff = bm_time_diff(&start_time, &end_time);
     if (time_diff > max_search_time)
@@ -125,13 +125,13 @@ static int bm_search_item(void *bloom_filter, char *tuple4_buf, unsigned int ind
     return ret;
 }
 
-static int bm_test(int bloom)
+static int bm_test(int bloom_type)
 {
     sapp_dup_pkt_t dup_conf = {};
     dup_conf.bloom_capacity = BM_CAPACITY;
     dup_conf.bloom_error_rate = BM_ERROR_RATE;
     dup_conf.bloom_timeout_ms = BM_TIMEOUT;
-    dup_conf.bloom_library = (enum bloom_library)bloom;
+    dup_conf.bloom_library = (enum bloom_library)bloom_type;
     dup_conf.kickout_udp_stream_enabled = 1;
     dup_conf.dup_pkt_distinguish_all_inject = 1;
     dup_conf.dup_pkt_distinguish_ipv4_tcp = 1;
@@ -139,7 +139,7 @@ static int bm_test(int bloom)
     dup_conf.bloom_partition_num = BM_PARTITION_NUM;
     dup_conf.transition_time_ms = BM_TRANSITION_TIME;
 
-    void *dabm_handle = bloom_new_partition(&dup_conf, g_current_time_tv, g_current_time_in_ms);
+    void *dabm_handle = bloom_new(&dup_conf, g_current_time_tv, g_current_time_in_ms);
     assert(dabm_handle);
     char tuple4_buf[1024] = {};
     long long search_y_error_num = 0;
@@ -150,12 +150,12 @@ static int bm_test(int bloom)
     tuple4_buf[0] = 'Y';
     bm_update_key(tuple4_buf, 0);
 
-    bloom_add_partition(dabm_handle, tuple4_buf, TUPLE4_ADDR_LEN, &dup_conf, g_current_time_tv, g_current_time_in_ms);
-    int hit = bloom_check_partition(dabm_handle, tuple4_buf, TUPLE4_ADDR_LEN, &dup_conf, g_current_time_tv, g_current_time_in_ms);
+    bloom_add(dabm_handle, tuple4_buf, TUPLE4_ADDR_LEN, &dup_conf, g_current_time_tv, g_current_time_in_ms);
+    int hit = bloom_check(dabm_handle, tuple4_buf, TUPLE4_ADDR_LEN, &dup_conf, g_current_time_tv, g_current_time_in_ms);
     if (hit <= 0)
     {
         fprintf(stderr, "not found tuple4!\n");
-        bloom_free_partition(dabm_handle, &dup_conf);
+        bloom_free(dabm_handle, &dup_conf);
         return -1;
     }
 
@@ -202,7 +202,7 @@ static int bm_test(int bloom)
     printf("search_y_error_num:%lld \nsearch_n_error_num:%lld, errer-rate:%f\n",
            search_y_error_num, search_n_error_num, err_rate);
 
-    bloom_free_partition(dabm_handle, &dup_conf);
+    bloom_free(dabm_handle, &dup_conf);
 
     return search_y_error_num + (err_rate > (double)BM_ERROR_RATE);
 }

@@ -17,7 +17,7 @@
 #include "dablooms.h"
 #include "mem_util.h"
 
-#define DABLOOMS_VERSION "1.0.1"
+#define DABLOOMS_VERSION "1.0.2"
 
 #define ERROR_TIGHTENING_RATIO 0.5
 #define SALT_CONSTANT 0x97c29b3a
@@ -498,8 +498,7 @@ static scaling_bloom_t *new_scaling_bloom(unsigned int capacity, double error_ra
     return bloom;
 }
 
-
-struct expiry_dablooms_handle{
+struct expiry_dablooms_handle_entity{
     scaling_bloom_t *cur_bloom;
     scaling_bloom_t *next_bloom;
     long cur_bloom_start_ms;
@@ -515,6 +514,13 @@ struct expiry_dablooms_handle{
     struct dabm_mem_stat mstat;
 };
 
+/* 24.05, split bloomfilter into multiple partition to avoid blocking caused by memset large memory */
+struct expiry_dablooms_handle{
+    struct expiry_dablooms_handle_entity **bm_handle;
+    int bm_partition_num;
+};
+
+
 char* expiry_dablooms_errno_trans(enum expiry_dablooms_errno _errno){
 	switch(_errno){
 		case EXPIRY_DABLOOMS_ERRNO_BLOOM_NULL:
@@ -526,7 +532,7 @@ char* expiry_dablooms_errno_trans(enum expiry_dablooms_errno _errno){
 	}
 }
 
-void expiry_dablooms_destroy(struct expiry_dablooms_handle *handle){
+static void expiry_dablooms_destroy_entity(struct expiry_dablooms_handle_entity *handle){
     if(handle != NULL){
         if(handle->cur_bloom != NULL){
             free_scaling_bloom(handle->cur_bloom, &handle->mstat);
@@ -538,8 +544,16 @@ void expiry_dablooms_destroy(struct expiry_dablooms_handle *handle){
     }   
 }
 
-struct expiry_dablooms_handle* expiry_dablooms_init(unsigned int capacity, double error_rate, long cur_time_ms, long expiry_time_ms, long transition_time_ms){
-    struct expiry_dablooms_handle *handle = (struct expiry_dablooms_handle *)calloc(1, sizeof(struct expiry_dablooms_handle));
+void expiry_dablooms_destroy(struct expiry_dablooms_handle *handle){
+    for (size_t i = 0; i < handle->bm_partition_num; i++)
+    {
+        expiry_dablooms_destroy_entity(handle->bm_handle[i]);
+    }
+}
+
+
+static struct expiry_dablooms_handle_entity* expiry_dablooms_init_entity(unsigned int capacity, double error_rate, long cur_time_ms, long expiry_time_ms, long transition_time_ms){
+    struct expiry_dablooms_handle_entity *handle = (struct expiry_dablooms_handle_entity *)calloc(1, sizeof(struct expiry_dablooms_handle_entity));
     scaling_bloom_t *cur_bloom = new_scaling_bloom(capacity, error_rate, &handle->mstat);
     if(cur_bloom == NULL){
         goto error_out;
@@ -555,19 +569,52 @@ struct expiry_dablooms_handle* expiry_dablooms_init(unsigned int capacity, doubl
     return handle;
     
 error_out:
+    expiry_dablooms_destroy_entity(handle);
+    return NULL;
+}
+
+struct expiry_dablooms_handle* expiry_dablooms_init(int partition_num, unsigned int capacity, double error_rate, long cur_time_ms, long expiry_time_ms, long transition_time_ms)
+{
+    struct expiry_dablooms_handle *handle = (struct expiry_dablooms_handle *)calloc(1, sizeof(struct expiry_dablooms_handle));
+    handle->bm_partition_num = partition_num;
+    handle->bm_handle = (struct expiry_dablooms_handle_entity **)calloc(partition_num, sizeof(struct expiry_dablooms_handle_entity *));
+
+    long spread_expire_timeout;
+    srand(time(NULL));
+    int polarity = 1;
+    for (size_t i = 0; i < partition_num; i++)
+    {
+        spread_expire_timeout = expiry_time_ms + (random() % 1000) * polarity; // spread out expire time
+        if(spread_expire_timeout <= 0){
+            spread_expire_timeout = expiry_time_ms;
+        }
+        polarity *= -1;
+        handle->bm_handle[i] = expiry_dablooms_init_entity(capacity, error_rate, cur_time_ms, spread_expire_timeout, transition_time_ms);
+        if(handle->bm_handle[i] == NULL){
+            goto error_out;
+        }
+    }
+    return handle;
+
+error_out:
     expiry_dablooms_destroy(handle);
     return NULL;
 }
 
-// int expiry_dablooms_element_count_get(struct expiry_dablooms_handle *handle, uint64_t *count){
-//     if(handle == NULL || handle->cur_bloom == NULL){
-//         return EXPIRY_DABLOOMS_ERRNO_BLOOM_NULL;
-//     }
-//     *count = handle->cur_bloom_inc_id;
-//     return 0;
-// }
+int expiry_dablooms_element_count_get(struct expiry_dablooms_handle *handle, uint64_t *count){
+    uint64_t tot_count = 0;
+    if(handle == NULL || handle->bm_handle == NULL){
+        return EXPIRY_DABLOOMS_ERRNO_BLOOM_NULL;
+    }   
+    for (int i = 0; i < handle->bm_partition_num; i++)
+    {
+        tot_count += handle->bm_handle[i]->cur_bloom_inc_id;
+    }
+    *count = tot_count;
+    return 0;
+}
 
-static inline int bloom_in_transition_period(const struct expiry_dablooms_handle *handle, long cur_time_ms)
+static inline int bloom_in_transition_period(const struct expiry_dablooms_handle_entity *handle, long cur_time_ms)
 {
     if((cur_time_ms - handle->cur_bloom_start_ms) + handle->transition_time_ms < handle->expiry_time_ms){
         return 0;
@@ -575,7 +622,7 @@ static inline int bloom_in_transition_period(const struct expiry_dablooms_handle
     return 1;
 }
 
-static int bloom_expired_check(struct expiry_dablooms_handle *handle, long cur_time_ms, struct dabm_mem_stat *mstat){
+static int bloom_expired_check(struct expiry_dablooms_handle_entity *handle, long cur_time_ms, struct dabm_mem_stat *mstat){
     // if(unlikely(handle == NULL || handle->cur_bloom == NULL)){
     //     return EXPIRY_DABLOOMS_ERRNO_BLOOM_NULL;
     // }
@@ -611,14 +658,13 @@ static int bloom_expired_check(struct expiry_dablooms_handle *handle, long cur_t
     return 0;
 }
 
-int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, size_t len,  long cur_time_ms){
+static int expiry_dablooms_add_entity(struct expiry_dablooms_handle_entity *handle, const char *key, size_t len,  long cur_time_ms){
     assert(!(key==NULL || len ==0 || handle == NULL));
     int ret = bloom_expired_check(handle, cur_time_ms, &handle->mstat);
     if(unlikely(ret < 0))
     {
         return ret;
     }
-    __builtin_prefetch(key, 0, 0);
     uint32_t checksum[4];
     MurmurHash3_x64_128(key, len, SALT_CONSTANT, checksum);
 
@@ -646,7 +692,23 @@ int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, 
     return 0;
 }
 
-int expiry_dablooms_search(struct expiry_dablooms_handle *handle, const char *key, size_t len,  long cur_time_ms){
+/* Keep It Simple Stupid */
+static inline unsigned int bloom_parttion_kiss_hash(const unsigned char *key, size_t key_len)
+{
+	unsigned int hash = 127;
+	for(size_t i = 0; i < key_len; i++){
+		hash += (unsigned int )key[i];
+	}
+	return (hash & 0x7ffffff);
+}
+
+int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, size_t len,  long cur_time_ms){
+    __builtin_prefetch(key, 0, 0);
+    int index = (int)bloom_parttion_kiss_hash((unsigned char *)key, len) % handle->bm_partition_num;
+    return expiry_dablooms_add_entity(handle->bm_handle[index], key, len, cur_time_ms);
+}
+
+static int expiry_dablooms_search_entity(struct expiry_dablooms_handle_entity *handle, const char *key, size_t len,  long cur_time_ms){
     assert(!(key==NULL || len ==0 || handle == NULL));
     int ret = bloom_expired_check(handle, cur_time_ms, &handle->mstat);
     if(unlikely(ret < 0))
@@ -654,7 +716,6 @@ int expiry_dablooms_search(struct expiry_dablooms_handle *handle, const char *ke
         return ret;
     }
 
-    __builtin_prefetch(key, 0, 0);
     uint32_t checksum[4];
     MurmurHash3_x64_128(key, len, SALT_CONSTANT, checksum);
 
@@ -673,9 +734,22 @@ int expiry_dablooms_search(struct expiry_dablooms_handle *handle, const char *ke
     return bloom_hit_cur || bloom_hit_next;
 }
 
+int expiry_dablooms_search(struct expiry_dablooms_handle *handle, const char *key, size_t len,  long cur_time_ms){
+    __builtin_prefetch(key, 0, 0);
+    int index = (int)bloom_parttion_kiss_hash((unsigned char *)key, len) % handle->bm_partition_num;
+    return expiry_dablooms_search_entity(handle->bm_handle[index], key, len, cur_time_ms);
+}
+
 int expiry_dablooms_get_mem_stat(struct expiry_dablooms_handle *handle, long long *blocks, long long *bytes)
 {
-    *blocks = handle->mstat.blocks;
-    *bytes = handle->mstat.bytes;
+    long long tot_blocks = 0;
+    long long tot_bytes = 0;
+    for (int i = 0; i < handle->bm_partition_num; i++)
+    {
+        tot_blocks += handle->bm_handle[i]->mstat.blocks;
+        tot_bytes += handle->bm_handle[i]->mstat.bytes;
+    }
+    *blocks = tot_blocks;
+    *bytes = tot_bytes;
     return 0;
 }
