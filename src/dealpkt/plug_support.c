@@ -1953,6 +1953,53 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
             }
         }
         break;
+        case MSO_STREAM_INBOND_SEGMENT_ID_LIST:
+		{
+            ret = -1;
+            *opt_val_len = 0;
+            void **value = (void **)opt_val;
+            struct rawpkt_metadata *meta = NULL;
+			int dir=MESA_dir_link_to_human(pstream_pr->stream_c2s_route_dir);
+            if (dir==(int)'I')
+            {
+                meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_C2S - 1];
+            }
+            else
+            {
+ 				meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_S2C - 1];
+            }
+
+            if (meta)
+            {
+                *value = (void *)(&meta->raw_sid_list);
+                *opt_val_len = sizeof(struct segment_id_list);
+                ret = *opt_val_len;
+            }
+        }		
+		break;
+        case MSO_STREAM_OUTBOND_SEGMENT_ID_LIST: 
+		{
+            ret = -1;
+            *opt_val_len = 0;
+            void **value = (void **)opt_val;
+            struct rawpkt_metadata *meta = NULL;
+			int dir=MESA_dir_link_to_human(pstream_pr->stream_c2s_route_dir);
+            if (dir==(int)'E')
+            {
+                meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_C2S - 1];
+            }
+            else
+            {
+ 				meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_S2C - 1];
+            }
+            if (meta)
+            {
+                *value = (void *)(&meta->raw_sid_list);
+                *opt_val_len = sizeof(struct segment_id_list);
+                ret = *opt_val_len;
+            }
+        }
+        break;		
 		case MSO_STREAM_C2S_LINK_ID:
 		case MSO_STREAM_S2C_LINK_ID:
 		{

@@ -69,6 +69,8 @@ enum MESA_stream_opt{
 	MSO_TCP_RTT_SCS, /* opt_val type must be unsigned short, the full RTT is server->tsg->client->tsg->server, this is |tsg->client->tsg| */
 	MSO_STREAM_C2S_SEGMENT_ID_LIST,
 	MSO_STREAM_S2C_SEGMENT_ID_LIST,
+	MSO_STREAM_INBOND_SEGMENT_ID_LIST,
+	MSO_STREAM_OUTBOND_SEGMENT_ID_LIST,
 	__MSO_MAX,
 };
 
