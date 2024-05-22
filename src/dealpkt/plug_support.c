@@ -1998,6 +1998,30 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 		}
 		break;		
 
+		case MSO_STREAM_C2S_SEGMENT_ID_LIST:
+				case MSO_STREAM_S2C_SEGMENT_ID_LIST:
+				{
+					ret = -1;
+					*opt_val_len = 0;
+					void **value = (void **)opt_val;
+					struct rawpkt_metadata *meta = NULL;
+					if (opt == MSO_STREAM_C2S_SEGMENT_ID_LIST)
+					{
+						meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_C2S - 1];
+					}			
+					else
+					{
+						meta = pstream_pr->polling_inject_context->meta_stream_dir[DIR_S2C - 1];
+					}
+					if (meta)
+					{
+						*value = (void *)(&meta->raw_sid_list);
+						*opt_val_len = sizeof(struct segment_id_list);
+						ret = *opt_val_len;
+					}	
+				}
+				break;	
+
 		case MSO_IP_TTL_C2S:
 			if(0 == pstream_pr->ip_ttl_c2s){
 				ret = -1;
