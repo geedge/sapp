@@ -1,7 +1,3 @@
-/*
-	���ļ���ƽ̨������Ҫ�Ĺ��ܺͺ���,
-	���ṩ������ҵ�����Ľӿ�, ��MESA_set_stream_opt, printaddr��,
-*/
 #include "sapp_api.h"
 #include "sapp_private_api.h"
 #include "sapp_declaration.h"
@@ -210,7 +206,7 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		return -1;
 	}
 
-	if(RAW_PKT_MAGIC_NUM != rawpkt->magic_num){ /* ������Դ��pappƽ̨, ��֧�ִ��๦�� */
+	if(RAW_PKT_MAGIC_NUM != rawpkt->magic_num){ 
 		return -1;
 	}
 	
@@ -281,7 +277,6 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
 		break;
 
 
-		/* ���ڲ����ȡ��ײ���ʵmac��ַ, ����ʲôģʽ, ��û��mrtunnat, ������һ���ӿ� */
         case RAW_PKT_GET_ORIGINAL_LOWEST_ETH_SMAC: {
             const struct mesa_ethernet_hdr *lowest_ehdr;
             lowest_ehdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
@@ -290,7 +285,6 @@ int get_opt_from_rawpkt(const void *voidpkt, int type, void *void_value)
         }
         break;
 
-        /* ���ڲ����ȡ��ײ���ʵmac��ַ, ����ʲôģʽ, ��û��mrtunnat, ������һ���ӿ� */
         case RAW_PKT_GET_ORIGINAL_LOWEST_ETH_DMAC: {
             const struct mesa_ethernet_hdr *lowest_ehdr;
             lowest_ehdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
@@ -422,7 +416,7 @@ static int get_vxlan_info_from_streaminfo(const struct streaminfo_private *pstre
 			pip4_hdr = (struct mesa_ip4_hdr *)((char *)rawpkt->raw_pkt_data + carry_vxlan_ip_layer->offset_to_raw_pkt_hdr);
 			pudp_hdr = (struct mesa_udp_hdr *)((char *)pip4_hdr + pip4_hdr->ip_hl*4);
 			unsigned short *out_value = (unsigned short *)void_value;
-			*out_value = pudp_hdr->uh_sport; /* ���հ��ĽǶ�����, src port��inline�豸��sport */
+			*out_value = pudp_hdr->uh_sport; 
 		}
 		break;
 
@@ -440,7 +434,6 @@ static int get_vxlan_info_from_streaminfo(const struct streaminfo_private *pstre
 		}
 		break;
 
-		/* ���հ��ĽǶ�����, src host��inline�豸��mac */
 		case RAW_PKT_GET_VXLAN_OUTER_GDEV_MAC:
 		{
 			const struct mesa_ethernet_hdr *p_eth_hdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
@@ -448,7 +441,6 @@ static int get_vxlan_info_from_streaminfo(const struct streaminfo_private *pstre
 		}
 		break;
 
-		/* ���հ��ĽǶ�����, dst host�Ǳ�����mac */
 		case RAW_PKT_GET_VXLAN_OUTER_LOCAL_MAC:
 		{
 			const struct mesa_ethernet_hdr *p_eth_hdr = (struct mesa_ethernet_hdr *)rawpkt->raw_pkt_data;
@@ -546,7 +538,6 @@ int get_rawpkt_opt_from_streaminfo(const struct streaminfo *pstream, int type, v
 		return ret;
 	}
 
-	/* sappv4.2֮��, û��mrtunnat, �޷���ctrlzone��ȡ��Щvxlan��ص��?, Ҫ��streaminfo->pfatherƫ�ƻ�ȡ */
 	switch(type){
 		case RAW_PKT_GET_GDEV_IP:
 		case RAW_PKT_GET_VXLAN_ID:
@@ -1217,10 +1208,10 @@ static void sapp_mac_addr_to_long(const unsigned char *mac_addr, unsigned long l
 	int i;
 	char *ptr = (char *)smac_integer_type;
 
-	ptr += 5; /* ָ��long long �ĵ�6���ֽ� */
+	ptr += 5; 
 
 	for(i = 0; i < 6; i++){
-		*ptr-- = *mac_addr++; /* �������ݰ���mac������?, copy��long long����������?(��ȥ���??2���ֽں�) */
+		*ptr-- = *mac_addr++; 
 	}
 }
 
@@ -1237,9 +1228,9 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
 	const struct layer_addr_mac_in_mac *mim_addr;
 	const struct layer_addr_mac *mac_addr;
 	unsigned char *ptr;
-	unsigned long long smac_integer_type; /* 48bit macת��Ϊ64bit�ĳ��������ִ洢, ���ڲ��� */
+	unsigned long long smac_integer_type; 
 
-	while(mim_stream){//���ڶ��mac��ַ�������ֻ�������MAC��ַȡvxlan_info
+	while(mim_stream){
 		if((ADDR_TYPE_MAC_IN_MAC == mim_stream->addr.addrtype || ADDR_TYPE_MAC == mim_stream->addr.addrtype) &&
 				(mim_stream->pfather == NULL)){
 			break;
@@ -1276,14 +1267,14 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
         for(i = 0; i < 6; i++, ptr += 3){
             sprintf((char *)ptr, "%02x:", mim_addr->inner_src_mac[i]);
         }
-        vxinfo->inner_smac[17] = '\0'; /* ���һλ����?? */
+        vxinfo->inner_smac[17] = '\0'; 
         memcpy(vxinfo->inner_smac_hex, mim_addr->inner_src_mac, 6);
 
         ptr = vxinfo->inner_dmac;
         for(i = 0; i < 6; i++, ptr += 3){
             sprintf((char *)ptr, "%02x:", mim_addr->inner_dst_mac[i]);
         }
-        vxinfo->inner_dmac[17] = '\0'; /* ���һλ����?? */
+        vxinfo->inner_dmac[17] = '\0'; 
         memcpy(vxinfo->inner_dmac_hex, mim_addr->inner_dst_mac, 6);
     }
     else
@@ -1292,14 +1283,14 @@ static int sapp_get_vxlan_info_from_streaminfo(const struct streaminfo *pstream,
 		for(i = 0; i < 6; i++, ptr += 3){
 			sprintf((char *)ptr, "%02x:", mac_addr->src_addr.h_source[i]);
 		}
-		vxinfo->inner_smac[17] = '\0'; /* ���һλ����?? */
+		vxinfo->inner_smac[17] = '\0'; 
 		memcpy(vxinfo->inner_smac_hex, mac_addr->src_addr.h_source, 6);
 
         ptr = vxinfo->inner_dmac;
         for(i = 0; i < 6; i++, ptr += 3){
             sprintf((char *)ptr, "%02x:", mac_addr->src_addr.h_dest[i]);
         }
-        vxinfo->inner_dmac[17] = '\0'; /* ���һλ����?? */
+        vxinfo->inner_dmac[17] = '\0'; 
         memcpy(vxinfo->inner_dmac_hex, mac_addr->src_addr.h_dest, 6);
     }
 	return 0;
@@ -1321,9 +1312,6 @@ static void *MESA_get_stream_plug_pme_from_platform_entry(const StreamFunInfo *p
 	return this_plug_pme;
 }
 
-/*
-	���ݲ����ں���������, ��ȡ�����˽�д洢�ռ�ָ��pme.
-*/
 static int MESA_get_stream_plug_pme(const struct streaminfo *pstream, void *opt_val, const int *opt_val_len)
 {
 	int ret = 0;
@@ -1408,9 +1396,8 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 		return 0;
 	}
 
-	/* �������ظ�����⹦��??,����û�������ظ���   */
 	if(STREAM_TYPE_TCP == pstream->type){
-		if(pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum < dup_pkt_para->first_packets){ /* ��̫��, �������ж���û���ظ��� */
+		if(pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum < dup_pkt_para->first_packets){ 
 			*res_val = -2;
 			sapp_runtime_log(RLOG_LV_DEBUG, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT, duplicate pkt state is pending, because has only recv %d pkt", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum); 			
@@ -1418,7 +1405,7 @@ static int MESA_get_stream_dup_pkt_stat(const struct streaminfo *pstream, void *
 			*res_val = 0;
 		}
 	}else if(STREAM_TYPE_UDP == pstream->type){
-		if(pstream->pudpdetail->clientpktnum  + pstream->pudpdetail->serverpktnum < dup_pkt_para->first_packets){ /* ��̫��, �������ж���û���ظ��� */
+		if(pstream->pudpdetail->clientpktnum  + pstream->pudpdetail->serverpktnum < dup_pkt_para->first_packets){ 
 			sapp_runtime_log(RLOG_LV_DEBUG, "%s, MESA_get_stream_opt() MSO_HAVE_DUP_PKT, duplicate pkt state is pending, because has only recv %d pkt", 
 						printaddr(&pstream->addr, pstream->threadnum), pstream->ptcpdetail->clientpktnum + pstream->ptcpdetail->serverpktnum); 		
 			*res_val = -2;
@@ -1574,7 +1561,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			struct tcp_option **out_val = (struct tcp_option **)opt_val;
 			if((pstream_pr->syn_opt_array != NULL) && (pstream_pr->syn_opt_num > 0)){
 				*out_val = pstream_pr->syn_opt_array;
-				*opt_val_len = pstream_pr->syn_opt_num; /* �˴����ǳ���, ��ʾopt_array�ĸ��� */
+				*opt_val_len = pstream_pr->syn_opt_num; 
 				ret = 0;
 			}else{
 				ret = -1;
@@ -1587,7 +1574,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			struct tcp_option **out_val = (struct tcp_option **)opt_val;
 			if((pstream_pr->synack_opt_array != NULL) && (pstream_pr->synack_opt_num > 0)){
 				*out_val = pstream_pr->synack_opt_array;
-				*opt_val_len = pstream_pr->synack_opt_num;  /* �˴����ǳ���, ��ʾopt_array�ĸ��� */
+				*opt_val_len = pstream_pr->synack_opt_num; 
 				ret = 0;
 			}else{
 				ret = -1;
@@ -2116,9 +2103,6 @@ int get_current_thread_cpu_affinity_id(void)
 	int tot_cpu_core = get_nprocs();
 	int tot_cpu_set_count = CPU_COUNT(&current_cpu_mask);
 	if((tot_cpu_set_count == tot_cpu_core) || (tot_cpu_set_count > 1)){
-		/* ȫ����������, ��ʵ����û�а�, 
-		   �����������isolcpus, ���㲻���??, CPU_COUNT���ܺ������������??, 
-		   ��������1���϶���û�о�ȷ�󶨵�ĳ������ */
 		return -1;
 	}
 	
@@ -2162,7 +2146,6 @@ void *dictator_realloc(int thread_seq, void *ptr, size_t size)
 	return realloc(ptr, size);
 }
 
-/* ��ҵ�������ص�ֵת����ƽ̨������?, ����PROT_STATE_xxxת��ΪAPP_STATE_xxx */
 char biz_retval_to_platform(char biz_ret)
 {
 	char plat_ret = 0;
@@ -2182,7 +2165,6 @@ char biz_retval_to_platform(char biz_ret)
 	return plat_ret;
 }
 
-/* ��ƽ̨��stateֵת����ҵ������ֵ, ����OP_STATE_PENDINGתΪSESSION_STATE_PENDING */
 char plat_state_to_biz(char plat_state)
 {
 	char biz_ret = SESSION_STATE_CLOSE;
