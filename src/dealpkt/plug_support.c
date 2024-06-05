@@ -27,6 +27,12 @@ static struct segment_id_list *segment_id_list_dup(sapp_mem_type_t type, int tid
 	return dlist;
 }
 
+inline void *MESA_detain_rawpkt_get0(struct detain_pkt *pkt)
+{
+	if(pkt==NULL)return NULL;
+	return (void *)pkt->original;	
+}
+
 struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const void *rawpkt)
 {
 	if(pstream == NULL || rawpkt == NULL)return NULL;
