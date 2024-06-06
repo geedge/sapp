@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
@@ -54,10 +55,8 @@ static int APBM_SLICE_NUM = 0;
 #define BM_TEST_MAX_THREAD (1)
 static pthread_t bm_test_thread_id[BM_TEST_MAX_THREAD];
 static pthread_t timer_thread_id;
-static volatile struct timespec g_current_time_sp = {};
 static volatile long long g_current_time_in_ms = 0;
 static struct timeval g_current_time_tv;
-static volatile int timer_thread_run = 1;
 
 static const unsigned int INIT_SIP = 0x12345678;
 static const unsigned int INIT_DIP = 0x87654321;
@@ -82,37 +81,41 @@ static inline void bm_update_key(char *tuple4_buf, unsigned int index)
     *p_dport = INIT_DPORT + index;
 }
 
-static unsigned long long max_add_time = 0;      // us
-static unsigned long long total_add_time = 0;    // us
-static unsigned long long max_search_time = 0;   // us
-static unsigned long long total_search_time = 0; // us
+static unsigned long long max_add_time = 0;      // ns
+static unsigned long long total_add_time = 0;    // ns
+static unsigned long long max_search_time = 0;   // ns
+static unsigned long long total_search_time = 0; // ns
 
 // for test, only support one thread
 static struct timespec start_time, end_time;
+unsigned long long time_diff; //ns
 
-// return ns
-static inline unsigned long long bm_time_diff(const struct timespec *start_time, const struct timespec *end_time)
-{
-    if (start_time->tv_sec == end_time->tv_sec)
-    {
-        return (unsigned long long)(end_time->tv_nsec - start_time->tv_nsec);
-    }
-    return ((unsigned long long)end_time->tv_sec * 1000 * 1000 * 1000 + end_time->tv_nsec) - ((unsigned long long)start_time->tv_sec * 1000 *1000 *1000 + start_time->tv_nsec);
-}
+#define TIME_UPDATE()                                      \
+    clock_gettime(CLOCK_REALTIME, &start_time);            \
+    g_current_time_tv.tv_sec = start_time.tv_sec;          \
+    g_current_time_tv.tv_usec = start_time.tv_nsec / 1000; \
+    g_current_time_in_ms = start_time.tv_sec * 1000 + start_time.tv_nsec / 1000000;
+
+#define TIME_DIFF()  \
+    do {             \
+        clock_gettime(CLOCK_REALTIME, &end_time); \
+        if (likely(end_time.tv_sec == start_time.tv_sec))\
+        {\
+            time_diff = (end_time.tv_nsec - start_time.tv_nsec);\
+        }else{\
+            time_diff = ((unsigned long long)end_time.tv_sec * 1000 * 1000 * 1000 + end_time.tv_nsec) - ((unsigned long long)start_time.tv_sec * 1000 * 1000 * 1000 + start_time.tv_nsec);\
+        }\
+    }while (0)
 
 static void bm_add_item(void *bloom_filter, char *tuple4_buf, unsigned int index, const sapp_dup_pkt_t *dup_conf)
 {
     bm_update_key(tuple4_buf, index);
-    clock_gettime(CLOCK_REALTIME, &start_time);
-    g_current_time_tv.tv_sec = g_current_time_sp.tv_sec;
-    g_current_time_tv.tv_usec = g_current_time_sp.tv_nsec / 1000;
+    TIME_UPDATE();
     bloom_add(bloom_filter, tuple4_buf, TUPLE4_ADDR_LEN, dup_conf, g_current_time_tv, g_current_time_in_ms);
     clock_gettime(CLOCK_REALTIME, &end_time);
-
-    unsigned long long time_diff = bm_time_diff(&start_time, &end_time);
-    if (time_diff > max_add_time)
-    {
-        max_add_time = time_diff;
+    TIME_DIFF();
+    if(time_diff > max_add_time){
+        max_add_time = (unsigned long long)time_diff;
     }
     total_add_time += (unsigned long long)time_diff;
     fieldstat_easy_histogram_record(fs4_instance, 0, fs4_add_metric_id, &FS4_HISGRAM_TAG, 1, time_diff);
@@ -121,16 +124,12 @@ static void bm_add_item(void *bloom_filter, char *tuple4_buf, unsigned int index
 static int bm_search_item(void *bloom_filter, char *tuple4_buf, unsigned int index, const sapp_dup_pkt_t *dup_conf, int fs4_metric_id)
 {
     bm_update_key(tuple4_buf, index);
-    clock_gettime(CLOCK_REALTIME, &start_time);
-    g_current_time_tv.tv_sec = g_current_time_sp.tv_sec;
-    g_current_time_tv.tv_usec = g_current_time_sp.tv_nsec / 1000;
+    TIME_UPDATE();
     int ret = bloom_check(bloom_filter, tuple4_buf, TUPLE4_ADDR_LEN, dup_conf, g_current_time_tv, g_current_time_in_ms);
-    clock_gettime(CLOCK_REALTIME, &end_time);
-    long long time_diff = bm_time_diff(&start_time, &end_time);
-    if (time_diff > max_search_time)
-    {
-        max_search_time = time_diff;
-    }
+    TIME_DIFF();
+    if(time_diff > max_search_time){
+        max_search_time = (unsigned long long)time_diff;
+    }    
     total_search_time += (unsigned long long)time_diff;
     fieldstat_easy_histogram_record(fs4_instance, 0, fs4_metric_id, &FS4_HISGRAM_TAG, 1, time_diff);
     return ret;
@@ -171,6 +170,7 @@ static int bm_test()
     dup_conf.dup_pkt_distinguish_ipv4_udp = 1;
     dup_conf.bloom_partition_num = BM_PARTITION_NUM;
     dup_conf.transition_time_ms = BM_TRANSITION_TIME;
+    dup_conf.bloom_slice_num = APBM_SLICE_NUM;
 
     fs4_instance = fieldstat_easy_new(1, "bm-test", NULL, 0);
     fieldstat_easy_enable_auto_output(fs4_instance, "./bm_gtest_fs4.json", 1);
@@ -181,6 +181,11 @@ static int bm_test()
     fs4_expand_num_metric_id = fieldstat_easy_register_counter(fs4_instance, "bm_expand_num");
     fs4_slice_new_metric_id = fieldstat_easy_register_counter(fs4_instance, "bm_slice_new");
     fs4_slice_free_metric_id = fieldstat_easy_register_counter(fs4_instance, "bm_slice_free");
+
+    clock_gettime(CLOCK_REALTIME, &start_time);
+    g_current_time_tv.tv_sec = start_time.tv_sec;
+    g_current_time_tv.tv_usec = start_time.tv_nsec / 1000;
+    g_current_time_in_ms = start_time.tv_sec * 1000 + start_time.tv_nsec / 1000000;
 
     void *dabm_handle = bloom_new(&dup_conf, g_current_time_tv, g_current_time_in_ms);
     assert(dabm_handle);
@@ -206,7 +211,7 @@ static int bm_test()
            BM_CAPACITY, BM_TIMEOUT, BM_PARTITION_NUM, APBM_SLICE_NUM, ITEM_BATCH_NUM, MAX_ITEM_NUM);
     int ret;
     int add_index = 0, search_index_y = 0, search_index_n = 0;
-    while (add_index < MAX_ITEM_NUM || search_index_y < MAX_ITEM_NUM || search_index_n < MAX_ITEM_NUM)
+    while (add_index < MAX_ITEM_NUM || search_index_y < MAX_ITEM_NUM  || search_index_n < MAX_ITEM_NUM )
     {
         tuple4_buf[0] = 'Y';
         for (int b = 0; b < ITEM_BATCH_NUM && add_index < MAX_ITEM_NUM; b++, add_index++)
@@ -263,28 +268,10 @@ static void *bm_test_thread(void *arg)
     return (void *)"success";
 }
 
-static inline long long get_curtime_in_us(void)
-{
-    struct timespec curts;
-    clock_gettime(CLOCK_MONOTONIC, &curts);
-    return curts.tv_sec * 1000000 + curts.tv_nsec / 1000;
-}
-
 static inline void nssleep(long ns)
 {
     struct timespec req = {0, ns};
     nanosleep(&req, NULL);
-}
-
-static void *timer_thread(void *arg)
-{
-    while (timer_thread_run)
-    {
-        clock_gettime(CLOCK_REALTIME, (struct timespec *)&g_current_time_sp);
-        g_current_time_in_ms = g_current_time_sp.tv_sec * 1000 + g_current_time_sp.tv_nsec / 1000000;
-        nssleep(10);
-    }
-    return NULL;
 }
 
 static void bm_test_usage(void)
@@ -329,7 +316,7 @@ static int convert_user_args(const char *user_args)
             if (strcmp(key, "capacity") == 0)
             {
                 BM_CAPACITY = (unsigned int )strtoull(value, NULL, 10);
-            }         
+            } 
             else if (strcmp(key, "error_rate") == 0)
             {
                 BM_ERROR_RATE = strtod(value, NULL);
@@ -372,8 +359,6 @@ int sapp_bloom_filter_test_run(int bm_liarary, const char *user_define_args)
     BM_LIBRARY = bm_liarary;
     convert_user_args(user_define_args);
 
-    pthread_create(&timer_thread_id, NULL, timer_thread, NULL);
-
     for (int i = 0; i < BM_TEST_MAX_THREAD; i++)
     {
         pthread_create(&bm_test_thread_id[i], NULL, bm_test_thread, NULL);
@@ -389,9 +374,79 @@ int sapp_bloom_filter_test_run(int bm_liarary, const char *user_define_args)
             ret = -1;
         }
     }
-    timer_thread_run = 0;
-    pthread_cancel(timer_thread_id);
-    pthread_join(timer_thread_id, NULL);
 
     return ret;
+}
+
+int sapp_apbloom_merge_test_run(void)
+{
+    int ret = 0;
+    const int max_item_num = 100000;
+    sapp_dup_pkt_t dup_conf = {};
+    dup_conf.bloom_capacity = 1000000;
+    dup_conf.bloom_error_rate = 0.000001;
+    dup_conf.bloom_timeout_ms = 30*1000;
+    dup_conf.bloom_library = (enum bloom_library)BLOOM_LIBRARY_APBLOOM;
+    dup_conf.kickout_udp_stream_enabled = 1;
+    dup_conf.dup_pkt_distinguish_all_inject = 1;
+    dup_conf.dup_pkt_distinguish_ipv4_tcp = 1;
+    dup_conf.dup_pkt_distinguish_ipv4_udp = 1;
+    dup_conf.bloom_slice_num = 1;
+
+    TIME_UPDATE();
+
+    struct AP_bloom *apbma = (struct AP_bloom *)bloom_new(&dup_conf, g_current_time_tv, g_current_time_in_ms);
+    assert(apbma);
+    char tuple4_buf[1024] = {};
+
+    tuple4_buf[0] = 'A';
+    for(int i = 0; i < max_item_num; i++){
+        bm_update_key(tuple4_buf, i);
+        bloom_add(apbma, tuple4_buf, TUPLE4_ADDR_LEN, &dup_conf, g_current_time_tv, g_current_time_in_ms);
+    }
+
+    struct AP_bloom *apbmb = (struct AP_bloom *)bloom_new(&dup_conf, g_current_time_tv, g_current_time_in_ms);
+    assert(apbmb);
+    
+    tuple4_buf[0] = 'B';
+    for(int i = 0; i < max_item_num; i++){
+        TIME_UPDATE(); 
+        bm_update_key(tuple4_buf, i);
+        bloom_add(apbmb, tuple4_buf, TUPLE4_ADDR_LEN, &dup_conf, g_current_time_tv, g_current_time_in_ms);
+    }
+
+    tuple4_buf[0] = 'B';
+    for(int i = 0; i < max_item_num; i++){
+        TIME_UPDATE();   
+        bm_update_key(tuple4_buf, i);
+        ret = bloom_check(apbma, tuple4_buf, TUPLE4_ADDR_LEN, &dup_conf, g_current_time_tv, g_current_time_in_ms);
+        if(ret > 0){
+            fprintf(stderr, "found tuple4 with B apbma before merge!\n");
+            return -1;
+        }  
+    }
+
+    AP_bloom_merge(apbma, apbmb);
+
+    for(int i = 0; i < max_item_num; i++){
+        TIME_UPDATE();   
+
+        tuple4_buf[0] = 'A';
+        bm_update_key(tuple4_buf, i);
+        ret = bloom_check(apbma, tuple4_buf, TUPLE4_ADDR_LEN, &dup_conf, g_current_time_tv, g_current_time_in_ms);
+        if(ret <= 0){
+            fprintf(stderr, "not found tuple4 with A!\n");
+            return -1;
+        }
+        tuple4_buf[0] = 'B';
+        bm_update_key(tuple4_buf, i);
+        ret = bloom_check(apbma, tuple4_buf, TUPLE4_ADDR_LEN, &dup_conf, g_current_time_tv, g_current_time_in_ms);
+        if(ret <= 0){
+            fprintf(stderr, "not found tuple4 with B!\n");
+            return -1;
+        }        
+    }
+    AP_bloom_free(apbma);
+    AP_bloom_free(apbmb);
+    return 0;
 }

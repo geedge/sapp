@@ -570,6 +570,7 @@ void sapp_deal_proxy_kill_tcp_run(void);
 int test_pkt_dump_run(void);
 
 int sapp_bloom_filter_test_run(int bm_lib, const char *args);
+int sapp_apbloom_merge_test_run(void);
 
 void append_entry_list(const char *entryname);
 int check_sapp_version(void);

@@ -2224,6 +2224,11 @@ TEST(apbloom, simple)
 	ASSERT_EQ(0, sapp_bloom_filter_test_run(BLOOM_LIBRARY_APBLOOM, user_define_args));
 }
 
+TEST(apbloom, merge)
+{
+	ASSERT_EQ(0, sapp_apbloom_merge_test_run());
+}
+
 static const char *gtest_cla_short_options = "hvLsf:l:u:";
 
 static const struct option gtest_cla_long_options[] = 
