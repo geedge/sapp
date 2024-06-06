@@ -202,6 +202,14 @@ typedef enum __sapp_sys_stat_type{
 	
 	/*************  memory stat  *******************/
 
+	/*************  bloom filter stat  *******************/
+	SAPP_STAT_BM_HASH_NUM,
+	SAPP_STAT_BM_EXPAND_NUM,
+	SAPP_STAT_BM_SLICE_NUM_NEW,
+	SAPP_STAT_BM_SLICE_NUM_FREE,
+	SAPP_STAT_BM_CUR_SLICE_NUM,
+	SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE,
+	SAPP_STAT_DABM_RESIZE_MAX_RATIO,
 	/************** Maximum Value Definition *******/
 	SAPP_STAT_NUM_MAX,
 }sapp_sys_stat_type_t;

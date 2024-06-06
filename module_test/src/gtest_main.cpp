@@ -21,6 +21,7 @@
 
 void *g_sapp_test_log_handle;
 int g_slient_mode = 0;
+const char *user_define_args;
 
 const char *for_test_sapp_version = "4.2.68_c9193fe";
 
@@ -2215,15 +2216,15 @@ TEST(performance, simple)
 
 TEST(dabloom, simple)
 {
-	ASSERT_EQ(0, sapp_bloom_filter_test_run(BLOOM_LIBRARY_DABLOOM));
+	ASSERT_EQ(0, sapp_bloom_filter_test_run(BLOOM_LIBRARY_DABLOOM, user_define_args));
 }
 
 TEST(apbloom, simple)
 {
-	ASSERT_EQ(0, sapp_bloom_filter_test_run(BLOOM_LIBRARY_APBLOOM));
+	ASSERT_EQ(0, sapp_bloom_filter_test_run(BLOOM_LIBRARY_APBLOOM, user_define_args));
 }
 
-static const char *gtest_cla_short_options = "hvLsf:l:";
+static const char *gtest_cla_short_options = "hvLsf:l:u:";
 
 static const struct option gtest_cla_long_options[] = 
 {
@@ -2233,6 +2234,7 @@ static const struct option gtest_cla_long_options[] =
 	{"gtest_list_tests",	no_argument,      	NULL,      'L'},
 	{"gtest_filter",	required_argument,      	NULL,      'f'},
 	{"slient",	no_argument,      	NULL,      's'},
+	{"user-define",	required_argument,      	NULL,      'u'},
 	{NULL,          	0,      			NULL,      0}
 };
 
@@ -2247,6 +2249,7 @@ static void usage(int argc, char *argv[])
 	printf("\t%s -s \t--slient\n", argv[0]);
 	printf("\t%s -f \t--gtest_filter=tcp.simple\n", argv[0]);
 	printf("\t%s -f \t--gtest_filter=tcp*\n", argv[0]);
+	printf("\t%s -f \t--gtest_filter=apbloom.simple -u \"capacity=2500000,error_rate=0.000001\"\n", argv[0]);
 	exit(0);
 }
 
@@ -2294,6 +2297,10 @@ int main(int argc, char *argv[])
 
 		case 's':
 			g_slient_mode = 1;
+		break;
+
+		case 'u':
+			user_define_args = optarg;
 		break;
 
 		case '?': /* invalid or unknown option */

@@ -288,7 +288,7 @@ void sapp_mem_stat_output(void)
 	fclose(fp);
 }
 
-char bloomfilter_mem_stat_polling_entry(struct streaminfo *nouse1, void **nouse2, int thread_seq, void *nouse3)
+char bloomfilter_stat_polling_entry(struct streaminfo *nouse1, void **nouse2, int thread_seq, void *nouse3)
 {
 	static time_t last_get_time[SAPP_MAX_THREADS] = {};
 
@@ -314,7 +314,7 @@ int sapp_mem_init(void)
 	  || sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp
 	  || sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject)
 	{
-		stream_register_fun(FUN_TYPE_POLLING, (char (*)(void))bloomfilter_mem_stat_polling_entry, 0);
+		stream_register_fun(FUN_TYPE_POLLING, (char (*)(void))bloomfilter_stat_polling_entry, 0);
 	}
 	return 0;
 }

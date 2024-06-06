@@ -24,8 +24,9 @@
 #include <time.h>
 #include <pthread.h>
 #include "dablooms.h"
+#include "ap_bloom.h"
 #include "sapp_global_val.h"
-
+#include "fieldstat/fieldstat_easy.h"
 #ifdef __cplusplus
 extern "C"
 {
@@ -34,18 +35,21 @@ extern "C"
     void *bloom_new(const sapp_dup_pkt_t *dup_conf, struct timeval now, long now_ms);
     int bloom_check(void *bloom_filter, const char *key, int key_len, const sapp_dup_pkt_t *dup_conf, struct timeval now, long now_ms);
     void bloom_add(void *bloom_filter, const char *key, int key_len, const sapp_dup_pkt_t *dup_conf, struct timeval now, long now_ms);
+    int DA_bloomfilter_get_stat(const struct expiry_dablooms_handle *bloom, sapp_sys_stat_type_t type, long long *count);
+    int AP_bloomfilter_get_stat(const struct AP_bloom *bloom, sapp_sys_stat_type_t type, long long *count);
 #ifdef __cplusplus
 }
 #endif
 
-static const unsigned int BM_CAPACITY = 200000;
-static const double BM_ERROR_RATE = 0.000001;
-static const int BM_TIMEOUT = 10 * 1000; // ms
-static const int BM_PARTITION_NUM = 64;
-static const long BM_TRANSITION_TIME = 2 * 1000;
-
-static const int MAX_ITEM_NUM = 10000000;
-static const int ITEM_BATCH_NUM = 1000;
+static int BM_LIBRARY = BLOOM_LIBRARY_DABLOOM;
+static unsigned int BM_CAPACITY = 10000000;
+static double BM_ERROR_RATE = 0.000001;
+static int BM_TIMEOUT = 10 * 1000; // ms
+static int BM_PARTITION_NUM = 1;
+static long BM_TRANSITION_TIME = 2 * 1000;
+static int MAX_ITEM_NUM = 10000000;
+static int ITEM_BATCH_NUM = 1000;
+static int APBM_SLICE_NUM = 0;
 #define TUPLE4_ADDR_LEN (12 + 1) // sizeof(tuple4) add begin char 'Y' or 'N'
 #define BM_TEST_MAX_THREAD (1)
 static pthread_t bm_test_thread_id[BM_TEST_MAX_THREAD];
@@ -59,6 +63,11 @@ static const unsigned int INIT_SIP = 0x12345678;
 static const unsigned int INIT_DIP = 0x87654321;
 static const unsigned short INIT_SPORT = 0x1234;
 static const unsigned short INIT_DPORT = 0x4321;
+
+static struct fieldstat_easy *fs4_instance;
+static struct fieldstat_tag FS4_HISGRAM_TAG = {"bm_test", TAG_INTEGER , 0};
+static int fs4_add_metric_id, fs4_check_true_metric_id, fs4_check_false_metric_id;
+static int fs4_expand_num_metric_id, fs4_slice_new_metric_id, fs4_slice_free_metric_id;
 
 static inline void bm_update_key(char *tuple4_buf, unsigned int index)
 {
@@ -81,14 +90,14 @@ static unsigned long long total_search_time = 0; // us
 // for test, only support one thread
 static struct timespec start_time, end_time;
 
-// return us
+// return ns
 static inline unsigned long long bm_time_diff(const struct timespec *start_time, const struct timespec *end_time)
 {
     if (start_time->tv_sec == end_time->tv_sec)
     {
-        return (unsigned long long)(end_time->tv_nsec - start_time->tv_nsec) / 1000;
+        return (unsigned long long)(end_time->tv_nsec - start_time->tv_nsec);
     }
-    return ((unsigned long long)end_time->tv_sec * 1000000 + end_time->tv_nsec / 1000) - ((unsigned long long)start_time->tv_sec * 1000000 + start_time->tv_nsec / 1000);
+    return ((unsigned long long)end_time->tv_sec * 1000 * 1000 * 1000 + end_time->tv_nsec) - ((unsigned long long)start_time->tv_sec * 1000 *1000 *1000 + start_time->tv_nsec);
 }
 
 static void bm_add_item(void *bloom_filter, char *tuple4_buf, unsigned int index, const sapp_dup_pkt_t *dup_conf)
@@ -106,9 +115,10 @@ static void bm_add_item(void *bloom_filter, char *tuple4_buf, unsigned int index
         max_add_time = time_diff;
     }
     total_add_time += (unsigned long long)time_diff;
+    fieldstat_easy_histogram_record(fs4_instance, 0, fs4_add_metric_id, &FS4_HISGRAM_TAG, 1, time_diff);
 }
 
-static int bm_search_item(void *bloom_filter, char *tuple4_buf, unsigned int index, const sapp_dup_pkt_t *dup_conf)
+static int bm_search_item(void *bloom_filter, char *tuple4_buf, unsigned int index, const sapp_dup_pkt_t *dup_conf, int fs4_metric_id)
 {
     bm_update_key(tuple4_buf, index);
     clock_gettime(CLOCK_REALTIME, &start_time);
@@ -122,22 +132,55 @@ static int bm_search_item(void *bloom_filter, char *tuple4_buf, unsigned int ind
         max_search_time = time_diff;
     }
     total_search_time += (unsigned long long)time_diff;
+    fieldstat_easy_histogram_record(fs4_instance, 0, fs4_metric_id, &FS4_HISGRAM_TAG, 1, time_diff);
     return ret;
 }
 
-static int bm_test(int bloom_type)
+static void fieldstat_update(void *bm_handle)
+{
+    static long long history_expand_num = 0, history_slice_new_num = 0, history_slice_free_num = 0;
+    long long expand_num = 0, slice_new_num = 0, slice_free_num = 0;
+    if(BM_LIBRARY == BLOOM_LIBRARY_DABLOOM){
+        DA_bloomfilter_get_stat((const expiry_dablooms_handle *)bm_handle, SAPP_STAT_BM_EXPAND_NUM, &expand_num);
+        DA_bloomfilter_get_stat((const expiry_dablooms_handle *)bm_handle, SAPP_STAT_BM_SLICE_NUM_NEW, &slice_new_num);
+        DA_bloomfilter_get_stat((const expiry_dablooms_handle *)bm_handle, SAPP_STAT_BM_SLICE_NUM_FREE, &slice_free_num);
+        
+    }else{
+        AP_bloomfilter_get_stat((const AP_bloom*)bm_handle, SAPP_STAT_BM_EXPAND_NUM, &expand_num);
+        AP_bloomfilter_get_stat((const AP_bloom *)bm_handle, SAPP_STAT_BM_SLICE_NUM_NEW, &slice_new_num);
+        AP_bloomfilter_get_stat((const AP_bloom *)bm_handle, SAPP_STAT_BM_SLICE_NUM_FREE, &slice_free_num);   
+    }
+    fieldstat_easy_counter_incrby(fs4_instance, 0, fs4_expand_num_metric_id, &FS4_HISGRAM_TAG, 1, expand_num-history_expand_num); 
+    fieldstat_easy_counter_incrby(fs4_instance, 0, fs4_slice_new_metric_id,  &FS4_HISGRAM_TAG, 1, slice_new_num-history_slice_new_num);
+    fieldstat_easy_counter_incrby(fs4_instance, 0, fs4_slice_free_metric_id, &FS4_HISGRAM_TAG, 1, slice_free_num-history_slice_free_num);
+    history_expand_num = expand_num;
+    history_slice_new_num = slice_new_num;
+    history_slice_free_num = slice_free_num;
+}
+
+static int bm_test()
 {
     sapp_dup_pkt_t dup_conf = {};
     dup_conf.bloom_capacity = BM_CAPACITY;
     dup_conf.bloom_error_rate = BM_ERROR_RATE;
     dup_conf.bloom_timeout_ms = BM_TIMEOUT;
-    dup_conf.bloom_library = (enum bloom_library)bloom_type;
+    dup_conf.bloom_library = (enum bloom_library)BM_LIBRARY;
     dup_conf.kickout_udp_stream_enabled = 1;
     dup_conf.dup_pkt_distinguish_all_inject = 1;
     dup_conf.dup_pkt_distinguish_ipv4_tcp = 1;
     dup_conf.dup_pkt_distinguish_ipv4_udp = 1;
     dup_conf.bloom_partition_num = BM_PARTITION_NUM;
     dup_conf.transition_time_ms = BM_TRANSITION_TIME;
+
+    fs4_instance = fieldstat_easy_new(1, "bm-test", NULL, 0);
+    fieldstat_easy_enable_auto_output(fs4_instance, "./bm_gtest_fs4.json", 1);
+    // fieldstat_easy_enable_delta_in_active_output(fs4_instance);
+    fs4_add_metric_id = fieldstat_easy_register_histogram(fs4_instance, "add", 1, 99999999, 5);
+    fs4_check_true_metric_id = fieldstat_easy_register_histogram(fs4_instance, "chk_true", 1, 99999999, 5);
+    fs4_check_false_metric_id = fieldstat_easy_register_histogram(fs4_instance, "chk_false", 1, 99999999, 5);
+    fs4_expand_num_metric_id = fieldstat_easy_register_counter(fs4_instance, "bm_expand_num");
+    fs4_slice_new_metric_id = fieldstat_easy_register_counter(fs4_instance, "bm_slice_new");
+    fs4_slice_free_metric_id = fieldstat_easy_register_counter(fs4_instance, "bm_slice_free");
 
     void *dabm_handle = bloom_new(&dup_conf, g_current_time_tv, g_current_time_in_ms);
     assert(dabm_handle);
@@ -159,8 +202,8 @@ static int bm_test(int bloom_type)
         return -1;
     }
 
-    printf("starting test, capacity:%u, timeout:%dms, partition:%d, batch_num:%d, max-items:%d\n",
-           BM_CAPACITY, BM_TIMEOUT, BM_PARTITION_NUM, ITEM_BATCH_NUM, MAX_ITEM_NUM);
+    printf("starting test, capacity:%u, timeout:%dms, partition:%d, slice_num:%d, batch_num:%d, max-items:%d\n",
+           BM_CAPACITY, BM_TIMEOUT, BM_PARTITION_NUM, APBM_SLICE_NUM, ITEM_BATCH_NUM, MAX_ITEM_NUM);
     int ret;
     int add_index = 0, search_index_y = 0, search_index_n = 0;
     while (add_index < MAX_ITEM_NUM || search_index_y < MAX_ITEM_NUM || search_index_n < MAX_ITEM_NUM)
@@ -174,7 +217,7 @@ static int bm_test(int bloom_type)
         tuple4_buf[0] = 'Y';
         for (int b = 0; b < ITEM_BATCH_NUM && search_index_y < MAX_ITEM_NUM; b++, search_index_y++)
         {
-            ret = bm_search_item(dabm_handle, tuple4_buf, search_index_y, &dup_conf);
+            ret = bm_search_item(dabm_handle, tuple4_buf, search_index_y, &dup_conf, fs4_check_true_metric_id);
             if (ret <= 0) // expect exist
             {
                 search_y_error_num++;
@@ -184,18 +227,20 @@ static int bm_test(int bloom_type)
         tuple4_buf[0] = 'N';
         for (int b = 0; b < ITEM_BATCH_NUM && search_index_n < MAX_ITEM_NUM; b++, search_index_n++)
         {
-            ret = bm_search_item(dabm_handle, tuple4_buf, search_index_n, &dup_conf);
+            ret = bm_search_item(dabm_handle, tuple4_buf, search_index_n, &dup_conf, fs4_check_false_metric_id);
             if (ret > 0) // expect not exist
             {
                 search_n_error_num++;
             }
         }
+
+        fieldstat_update(dabm_handle);
     }
 
-    printf("add %lld items success, avg-time:%.3fus, max:%lluus\n",
+    printf("add %lld items success, avg-time:%.3fns, max:%lluns\n",
            (long long)MAX_ITEM_NUM, (double)total_add_time / (double)MAX_ITEM_NUM, max_add_time);
 
-    printf("search %lld items , avg-time:%.3fus, max:%lluus\n",
+    printf("search %lld items , avg-time:%.3fns, max:%lluns\n",
            (long long)MAX_ITEM_NUM, (double)total_search_time / (double)MAX_ITEM_NUM, max_search_time);
 
     double err_rate = (double)search_n_error_num / (double)MAX_ITEM_NUM;
@@ -203,14 +248,15 @@ static int bm_test(int bloom_type)
            search_y_error_num, search_n_error_num, err_rate);
 
     bloom_free(dabm_handle, &dup_conf);
+    sleep(2); //wait fs4 output
+    fieldstat_easy_free(fs4_instance);
 
     return search_y_error_num + (err_rate > (double)BM_ERROR_RATE);
 }
 
 static void *bm_test_thread(void *arg)
 {
-    int bloom = (int)(long)arg;
-    if (bm_test(bloom) != 0)
+    if (bm_test() != 0)
     {
         return (void *)"error";
     }
@@ -241,21 +287,103 @@ static void *timer_thread(void *arg)
     return NULL;
 }
 
-int sapp_bloom_filter_test_run(int bloom)
+static void bm_test_usage(void)
+{
+    printf("BM test usage:\n");
+    printf("\tlibrary=[dabloom,apbloom]\n");
+    printf("\tcapacity=2500000\n");
+    printf("\terror_rate=0.000001\n");
+    printf("\ttimeout=10000\n");
+    printf("\tmax_item_num=10000000\n");
+    printf("\titem_batch_num=1000\n");
+    printf("\tpartition=1\n");
+    printf("\tslice_num=1\n");
+    printf("\texample: ./gtest_sapp -f=apbloom.simple -u=\"capacity=100000,error_rate=0.000001,partition=1,timeout=10000,slice_num=3,max_item_num=100000,item_batch_num=1000\"\n");
+    printf("\n");
+}
+
+static int convert_user_args(const char *user_args)
+{
+    if (user_args == NULL)
+    {
+        return 0;
+    }
+    if(strstr(user_args, "-h") ){
+        bm_test_usage();
+        exit(0);
+    }
+    if(strstr(user_args, "--help") ){
+        bm_test_usage();
+        exit(0);
+    }
+    
+    char *tmp_args = strdup(user_args);
+    char *saveptr = NULL;
+    char *token = strtok_r(tmp_args, ",", &saveptr);
+    while (token)
+    {
+        char *key = strtok(token, "=");
+        char *value = strtok(NULL, "=");
+        if (key && value)
+        {
+            if (strcmp(key, "capacity") == 0)
+            {
+                BM_CAPACITY = (unsigned int )strtoull(value, NULL, 10);
+            }         
+            else if (strcmp(key, "error_rate") == 0)
+            {
+                BM_ERROR_RATE = strtod(value, NULL);
+            }
+            else if (strcmp(key, "partition") == 0)
+            {
+                BM_PARTITION_NUM = atoi(value);
+            }
+            else if (strcmp(key, "timeout") == 0)
+            {
+                BM_TIMEOUT = atoi(value);
+            }
+            else if (strcmp(key, "max_item_num") == 0)
+            {
+                MAX_ITEM_NUM = (unsigned int )strtoull(value, NULL, 10);
+            }
+            else if (strcmp(key, "item_batch_num") == 0)
+            {
+                ITEM_BATCH_NUM = atoi(value);
+            }
+            else if (strcmp(key, "slice_num") == 0)
+            {
+                APBM_SLICE_NUM = atoi(value);
+            }
+            else{
+                fprintf(stderr, "unknown args: %s=%s\n", key, value);
+            }
+        }
+        token = strtok_r(NULL, ",", &saveptr);
+    }
+    free(tmp_args);
+
+    return 0;
+}
+
+int sapp_bloom_filter_test_run(int bm_liarary, const char *user_define_args)
 {
     int ret = 0;
+
+    BM_LIBRARY = bm_liarary;
+    convert_user_args(user_define_args);
+
     pthread_create(&timer_thread_id, NULL, timer_thread, NULL);
 
     for (int i = 0; i < BM_TEST_MAX_THREAD; i++)
     {
-        pthread_create(&bm_test_thread_id[i], NULL, bm_test_thread, (void *)(long)bloom);
+        pthread_create(&bm_test_thread_id[i], NULL, bm_test_thread, NULL);
     }
 
     void *thread_result;
     for (int i = 0; i < BM_TEST_MAX_THREAD; i++)
     {
         pthread_join(bm_test_thread_id[i], &thread_result);
-        if (thread_result != "success")
+        if (strcmp((char *)thread_result, "success") != 0)
         {
             printf("thread %d test failed\n", i);
             ret = -1;

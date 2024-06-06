@@ -13,12 +13,27 @@ include_directories(${PROJECT_SOURCE_DIR}/src/support/ap_bloom/src)
 add_definitions(-DSAPP_V4=1)
 add_definitions(-fPIC)
 
+if(MEM_POOL STREQUAL "TCMALLOC_MINI")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc_minimal -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+	add_definitions(-DUSE_TCMALLOC=1)	
+elseif(MEM_POOL STREQUAL "TCMALLOC")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+	add_definitions(-DUSE_TCMALLOC=1)	
+elseif(MEM_POOL STREQUAL "JEMALLOC")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+	add_definitions(-DUSE_JEMALLOC=1)	
+elseif(MEM_POOL STREQUAL "JEMALLOC_STATIC")
+	add_definitions(-DUSE_JEMALLOC=1)	
+elseif(MEM_POOL STREQUAL "MIMALLOC")
+	add_definitions(-DUSE_MIMALLOC=1)		
+endif()
+
 add_executable(gtest_sapp_v4 gtest_main.cpp gtest_sapp_ipv4.cpp gtest_sapp_ipv6.cpp gtest_sapp_tcp.cpp gtest_sapp_udp.cpp gtest_sapp_comm.cpp gtest_sapp_support.cpp gtest_sapp_plug_ctrl.cpp gtest_sapp_tunnel.cpp 
                gtest_transparent_run.cpp  gtest_sapp_jump_layer.cpp gtest_inline_run.cpp  gtest_sapp_asymmetric.cpp gtest_sapp_inject.cpp gtest_sapp_app_state.cpp
                gtest_mpls.cpp gtest_vlan.cpp gtest_fake_marsio_run.cpp gtest_sapp_proxy.cpp gtest_sapp_pkt_dump.cpp
 		../test_case/auto_gen_test_functions.cpp ../test_case/test_function_common.cpp gtest_sapp_bloom.cpp)
 
-target_link_libraries(gtest_sapp_v4 gtest-static ${SAPP_DEPEND_DYN_LIB} sapp_benchmark sapp_devel libdabloom)
+target_link_libraries(gtest_sapp_v4 gtest-static ${SAPP_DEPEND_DYN_LIB} sapp_benchmark sapp_devel libdabloom fieldstat4)
 
 add_executable(transparent_test_sapp_v4 gtest_transparent_env.cpp gtest_sapp_comm.cpp)
 target_link_libraries(transparent_test_sapp_v4 pthread pcap m dl MESA_jump_layer MESA_handle_logger)

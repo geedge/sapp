@@ -25,6 +25,39 @@
 #define MODE_READ 0
 #define MODE_WRITE 1
 
+struct AP_bloom_stat{
+    size_t slice_new_num_acc;
+    size_t slice_free_num_acc;
+    size_t expand_num_acc;
+    size_t expand_max_multiple_rt;
+    size_t slice_num_rt;
+};
+struct AP_configuration
+{
+    double error;
+    long long capacity;
+    long long time_window_ms;
+    long long time_slice_num;
+    struct timeval last_cfg;
+};
+struct AP_bloom
+{
+    //high level variables determined by caller
+    struct AP_configuration cfg;
+
+    //low level variables caculated by the call configure
+    int hash_num;    //k
+    int chain_num;  //hash_num+time_slice_num
+    int default_slice_size; // in bytes
+    
+    //runtime variables
+    int cursor;
+    struct timeval last_slide;
+    struct ap_slice **heads; //hash_num+timeframe_num
+
+    struct AP_bloom_stat stat;
+};
+
 //return 1 if the bit is already set, 0 if it was not set
 inline static int test_bit_set_bit(unsigned char *buf, uint64_t x, int mode) {
     uint64_t byte = x >> 3;
@@ -51,22 +84,29 @@ struct ap_slice
     unsigned char * data;
     struct ap_slice * next;
 };
-static struct ap_slice *ap_slice_new(int slice_size, int hash_index)
+static struct ap_slice *ap_slice_new(struct AP_bloom *bloom, int slice_size, int hash_index)
 {
     struct ap_slice *slice = ALLOC(struct ap_slice, 1);
     slice->slice_size = slice_size;
     assert(slice_size % sizeof(unsigned long long) == 0);
     //ap_slice_chain_deserialize may alloc slice_size=0
-    if(slice_size > 0) slice->data = ALLOC(unsigned char, slice_size);
+    if(slice_size > 0){ 
+        slice->data = ALLOC(unsigned char, slice_size);
+    }
     slice->hash_index = hash_index;
     slice->popcount = 0;
+
+    bloom->stat.slice_new_num_acc++;
+    bloom->stat.slice_num_rt++;
     return slice;
 }
-static void ap_slice_free(struct ap_slice *slice)
+static void ap_slice_free(struct AP_bloom *bloom, struct ap_slice *slice)
 {
     free(slice->data);
     slice->data = NULL;
     free(slice);
+    bloom->stat.slice_free_num_acc++;
+    bloom->stat.slice_num_rt--;
 }
 void ap_slice_chain_info(const struct ap_slice *head, double *fill_ratio, int *slice_num)
 {
@@ -105,9 +145,9 @@ static int ap_slice_cmp(const struct ap_slice *a, const struct ap_slice *b)
     //bigger size first
     return b->slice_size - a->slice_size;
 }
-static struct ap_slice * ap_slice_duplicate(const struct ap_slice *slice)
+static struct ap_slice * ap_slice_duplicate(struct AP_bloom *bloom, const struct ap_slice *slice)
 {
-    struct ap_slice *new_slice = ap_slice_new(slice->slice_size, slice->hash_index);
+    struct ap_slice *new_slice = ap_slice_new(bloom, slice->slice_size, slice->hash_index);
     memcpy(new_slice, slice, offsetof(struct ap_slice, data));
     memcpy(new_slice->data, slice->data, slice->slice_size);
     return new_slice;
@@ -242,13 +282,17 @@ static void ap_slice_chain_check_hash(const struct ap_slice *head, const struct 
  *     0 - element was not present and was added
  *     1 - element (or a collision) had already been added previously
  */
-static void ap_slice_chain_add_hash(struct ap_slice **head, const struct double_hash *hash, struct timeval now)
+static void ap_slice_chain_add_hash(struct AP_bloom *bloom, struct ap_slice **head, const struct double_hash *hash, struct timeval now)
 {
     //add new slice if the current slice is full
     if(unlikely( (double) (*head)->popcount / ((*head)->slice_size<<3) > FILL_RATIO_THRESHOLD))
     {
-        struct ap_slice *new_slice = ap_slice_new((*head)->slice_size * SLICE_EXPANSION, (*head)->hash_index);
+        struct ap_slice *new_slice = ap_slice_new(bloom, (*head)->slice_size * SLICE_EXPANSION, (*head)->hash_index);
         LL_PREPEND((*head), new_slice);
+        bloom->stat.expand_num_acc++;
+        if(new_slice->slice_size/bloom->default_slice_size > bloom->stat.expand_max_multiple_rt){
+            bloom->stat.expand_max_multiple_rt = new_slice->slice_size/bloom->default_slice_size;
+        }
     }
     //Add it to the current (head) slice.
     ap_slice_add_hash(*head, hash, now);
@@ -267,22 +311,22 @@ void ap_slice_chain_first_insert_time(const struct ap_slice *head, struct timeva
     }
     return;
 }
-static void ap_slice_chain_free(struct ap_slice *head)
+static void ap_slice_chain_free(struct AP_bloom *bloom, struct ap_slice *head)
 {
     struct ap_slice *slice=NULL, *tmp=NULL;
     LL_FOREACH_SAFE(head, slice, tmp)
     {
         LL_DELETE(head, slice);
-        ap_slice_free(slice);
+        ap_slice_free(bloom, slice);
     }
 }
-static struct ap_slice *ap_slice_chain_duplicate(const struct ap_slice *src)
+static struct ap_slice *ap_slice_chain_duplicate(struct AP_bloom *bloom, const struct ap_slice *src)
 {
     struct ap_slice *new_head=NULL;
     const struct ap_slice *slice=NULL;
     LL_FOREACH(src, slice)
     {
-        struct ap_slice * new_slice=ap_slice_duplicate(slice);
+        struct ap_slice * new_slice=ap_slice_duplicate(bloom, slice);
         LL_APPEND(new_head, new_slice);
     }
     return new_head;
@@ -297,6 +341,16 @@ static size_t ap_slice_chain_mem_size(const struct ap_slice *head)
         sz += slice->slice_size;
     }
     return sz;
+}
+static size_t ap_slice_chain_mem_blocks(const struct ap_slice *head)
+{
+    size_t blocks=0;
+    const struct ap_slice *slice=NULL;
+    LL_FOREACH(head, slice)
+    {
+        blocks += 2;
+    }
+    return blocks;
 }
 struct slice_chain_header
 {
@@ -343,14 +397,14 @@ static size_t ap_slice_chain_serialize(const struct ap_slice *head, int chain_se
     assert(offset<=buffer_sz);
     return offset;
 }
-static struct ap_slice *ap_slice_chain_deserialize(const char *buffer, size_t buffer_sz)
+static struct ap_slice *ap_slice_chain_deserialize(struct AP_bloom *bloom, const char *buffer, size_t buffer_sz)
 {
     struct slice_chain_header *header=(struct slice_chain_header*)buffer;
     size_t offset=sizeof(struct slice_chain_header);
     struct ap_slice *head=NULL;
     for(size_t i=0; i<header->slice_number; i++)
     {
-        struct ap_slice *slice = ap_slice_new(0, 0);
+        struct ap_slice *slice = ap_slice_new(bloom, 0, 0);
         memcpy(slice, buffer+offset, offsetof(struct ap_slice, data));
         offset += offsetof(struct ap_slice, data);
         slice->data = (unsigned char*) malloc(slice->slice_size);
@@ -364,7 +418,7 @@ static struct ap_slice *ap_slice_chain_deserialize(const char *buffer, size_t bu
     }
     return head;
 }
-static void ap_slice_merge(struct ap_slice *dst, const struct ap_slice *src)
+static void ap_slice_merge(struct AP_bloom *bloom, struct ap_slice *dst, const struct ap_slice *src)
 {
     assert(dst->hash_index == src->hash_index);
     assert(dst->slice_size == src->slice_size);
@@ -395,7 +449,7 @@ static void ap_slice_merge(struct ap_slice *dst, const struct ap_slice *src)
     }
     return;
 }
-static void ap_slice_chain_merge(struct ap_slice **dst_head, const struct ap_slice *src_head)
+static void ap_slice_chain_merge(struct AP_bloom *bloom, struct ap_slice **dst_head, const struct ap_slice *src_head)
 {
     const struct ap_slice *src_slice=NULL;
     int merged=0;
@@ -411,43 +465,20 @@ static void ap_slice_chain_merge(struct ap_slice **dst_head, const struct ap_sli
         {
             if(src_slice->slice_size == dst_slice->slice_size)
             {
-                ap_slice_merge(dst_slice, src_slice);
+                ap_slice_merge(bloom, dst_slice, src_slice);
                 merged=1;
                 break;
             }
         }
         if(!merged)
         {
-            struct ap_slice *new_slice = ap_slice_duplicate(src_slice);
+            struct ap_slice *new_slice = ap_slice_duplicate(bloom, src_slice);
             LL_APPEND(*dst_head, new_slice);
         }
     }
     LL_SORT(*dst_head, ap_slice_cmp);
     ap_slice_sanity(*dst_head);
 }
-struct AP_configuration
-{
-    double error;
-    long long capacity;
-    long long time_window_ms;
-    long long time_slice_num;
-    struct timeval last_cfg;
-};
-struct AP_bloom
-{
-    //high level variables determined by caller
-    struct AP_configuration cfg;
-
-    //low level variables caculated by the call configure
-    int hash_num;    //k
-    int chain_num;  //hash_num+time_slice_num
-    int default_slice_size; // in bytes
-    
-    //runtime variables
-    int cursor;
-    struct timeval last_slide;
-    struct ap_slice **heads; //hash_num+timeframe_num
-};
 #define DBL_EPSILON 2.2204460492503131e-16
 bool definitelyLessThan(float a, float b)
 {
@@ -481,8 +512,10 @@ struct AP_bloom *AP_bloom_new(struct timeval now, double error_rate, long long c
     bloom->heads = ALLOC(struct ap_slice*, bloom->chain_num);
     for(int i=0; i<bloom->chain_num; i++)
     {
-        bloom->heads[i] = ap_slice_new(bloom->default_slice_size, i % bloom->chain_num);
+        bloom->heads[i] = ap_slice_new(bloom, bloom->default_slice_size, i % bloom->chain_num);
     }
+    bloom->stat.expand_max_multiple_rt = 1;
+    bloom->stat.slice_num_rt = bloom->chain_num;
 
     return bloom;
 }
@@ -507,8 +540,8 @@ static void slide_time(struct AP_bloom *bloom, struct timeval now)
         for(int i=0; i<n_slide; i++)
         {
             int reset_idx = (bloom->cursor + bloom->hash_num) % chain_num;
-            struct ap_slice *slice = ap_slice_new(bloom->default_slice_size, bloom->heads[reset_idx]->hash_index);
-            ap_slice_chain_free(bloom->heads[reset_idx]);
+            struct ap_slice *slice = ap_slice_new(bloom, bloom->default_slice_size, bloom->heads[reset_idx]->hash_index);
+            ap_slice_chain_free(bloom, bloom->heads[reset_idx]);
             bloom->heads[reset_idx] = slice;
             bloom->cursor = (bloom->cursor + 1) % chain_num;
         }
@@ -517,8 +550,8 @@ static void slide_time(struct AP_bloom *bloom, struct timeval now)
     {
         for(int i=0; i<chain_num; i++)
         {
-            struct ap_slice *new_slice=ap_slice_new(bloom->default_slice_size, bloom->heads[i]->hash_index);
-            ap_slice_chain_free(bloom->heads[i]);
+            struct ap_slice *new_slice=ap_slice_new(bloom, bloom->default_slice_size, bloom->heads[i]->hash_index);
+            ap_slice_chain_free(bloom, bloom->heads[i]);
             bloom->heads[i] = new_slice;
         }
         bloom->cursor = (bloom->cursor + n_slide) % chain_num;
@@ -543,7 +576,7 @@ void AP_bloom_add(struct AP_bloom *bloom, struct timeval now, const char *buffer
     for(int i=0; i<bloom->hash_num; i++)
     {
         int idx=(bloom->cursor+i) % (bloom->chain_num);
-        ap_slice_chain_add_hash(&(bloom->heads[idx]), &hash, now);
+        ap_slice_chain_add_hash(bloom,&(bloom->heads[idx]), &hash, now);
     }
     return;
 }
@@ -560,8 +593,8 @@ int AP_bloom_check(const struct AP_bloom *bloom, struct timeval now, const char 
 
     struct ap_state state;
     ap_state_init(&state, bloom->hash_num);
-    int max_num = bloom->hash_num+chain_num;
-    for(int i = 0; i < max_num; i++)
+    // int max_num = bloom->hash_num+chain_num;
+    for(int i = 0; i < chain_num; i++)
     {
         long long delta_us = timeval_delta_us(bloom->heads[i%chain_num]->last_insert, now);
         if(unlikely((delta_us > bloom->cfg.time_window_ms*1000) && bloom->cfg.time_window_ms))
@@ -583,7 +616,7 @@ void AP_bloom_free(struct AP_bloom *bloom)
 {
     for(int i=0; i<bloom->chain_num; i++)
     {
-        ap_slice_chain_free(bloom->heads[i]);
+        ap_slice_chain_free(bloom, bloom->heads[i]);
         bloom->heads[i]=NULL;
     }
     free(bloom->heads);
@@ -600,6 +633,17 @@ size_t AP_bloom_mem_size(const struct AP_bloom *bloom)
         sz += ap_slice_chain_mem_size(bloom->heads[i]);
     }
     return sz;
+}
+size_t AP_bloom_mem_blocks(const struct AP_bloom *bloom)
+{
+    size_t blocks=0;
+    blocks++;
+    blocks += bloom->chain_num;
+    for(int i=0; i<bloom->chain_num; i++)
+    {
+        blocks += ap_slice_chain_mem_blocks(bloom->heads[i]);
+    }
+    return blocks;
 }
 size_t AP_bloom_serialize_size(const struct AP_bloom *bloom)
 {
@@ -635,7 +679,7 @@ struct AP_bloom * AP_bloom_deserialize(const char *blob, size_t blob_sz)
     bloom->heads=ALLOC(struct ap_slice*, bloom->chain_num);
     for(int i=0; i<bloom->chain_num; i++)
     {
-        bloom->heads[i]=ap_slice_chain_deserialize(blob+offset, blob_sz-offset);
+        bloom->heads[i]=ap_slice_chain_deserialize(bloom, blob+offset, blob_sz-offset);
         offset += ap_slice_chain_serialize_size(bloom->heads[i]);
     }
     assert(offset==blob_sz);
@@ -654,7 +698,7 @@ void AP_bloom_merge(struct AP_bloom *dst, const struct AP_bloom *src)
         {
             for(int i=0; i<dst->chain_num; i++)
             {
-                ap_slice_chain_free(dst->heads[i]);
+                ap_slice_chain_free(dst, dst->heads[i]);
             }
             
             memcpy(dst, src, offsetof(struct AP_bloom, heads));
@@ -662,7 +706,7 @@ void AP_bloom_merge(struct AP_bloom *dst, const struct AP_bloom *src)
             dst->heads = ALLOC(struct ap_slice*, dst->chain_num);
             for(int i=0; i<dst->chain_num; i++)
             {
-                dst->heads[i] = ap_slice_chain_duplicate(src->heads[i]);
+                dst->heads[i] = ap_slice_chain_duplicate(dst, src->heads[i]);
             }
         }
         return;
@@ -683,7 +727,7 @@ void AP_bloom_merge(struct AP_bloom *dst, const struct AP_bloom *src)
         {
             continue;
         }
-        ap_slice_chain_merge(&(dst->heads[i]), src->heads[i]);
+        ap_slice_chain_merge(dst,&(dst->heads[i]), src->heads[i]);
     }
     return;
 }
@@ -769,4 +813,29 @@ void AP_bloom_info(const struct AP_bloom *bloom, struct AP_bloom_info *info)
     info->approximate_item_num = approximate_item_num(bloom);
     info->oldest_item_time = oldest_item;
     return;
+}
+
+size_t AP_bloom_stat_get_hash_num(const struct AP_bloom *bloom)
+{
+    return bloom->hash_num;
+}
+size_t AP_bloom_stat_get_new_num(const struct AP_bloom *bloom)
+{
+    return bloom->stat.slice_new_num_acc;
+}
+size_t AP_bloom_stat_get_free_num(const struct AP_bloom *bloom)
+{
+    return bloom->stat.slice_free_num_acc;
+}
+size_t AP_bloom_stat_get_expand_num(const struct AP_bloom *bloom)
+{
+    return bloom->stat.expand_num_acc;
+}
+size_t AP_bloom_stat_get_cur_slice_num(const struct AP_bloom *bloom)
+{
+    return bloom->stat.slice_num_rt;
+}
+size_t AP_bloom_stat_get_expand_max_multiple(const struct AP_bloom *bloom)
+{
+    return bloom->stat.expand_max_multiple_rt;
 }

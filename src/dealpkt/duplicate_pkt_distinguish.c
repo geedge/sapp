@@ -86,6 +86,110 @@ void bloom_add(void *bloom_filter, const char *key, int key_len, const sapp_dup_
 	return;
 }
 
+int AP_bloomfilter_get_stat(const struct AP_bloom *bloom, sapp_sys_stat_type_t type, long long *count)
+{
+	switch(type){
+		case SAPP_STAT_BM_HASH_NUM:
+			*count = (long long)AP_bloom_stat_get_hash_num(bloom);
+		break;
+		case SAPP_STAT_BM_SLICE_NUM_NEW:
+			*count = (long long)AP_bloom_stat_get_new_num(bloom);
+		break;
+		case SAPP_STAT_BM_SLICE_NUM_FREE:
+			*count = (long long)AP_bloom_stat_get_free_num(bloom);
+		break;
+		case SAPP_STAT_BM_EXPAND_NUM:
+			*count = (long long)AP_bloom_stat_get_expand_num(bloom);
+		break;
+		case SAPP_STAT_BM_CUR_SLICE_NUM:
+			*count = (long long)AP_bloom_stat_get_cur_slice_num(bloom);
+		break;
+		case SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE:
+			*count = (long long)AP_bloom_stat_get_expand_max_multiple(bloom);
+		break;
+
+		default:
+			*count = 0;
+		break;
+	}
+	return 0;
+}
+
+int DA_bloomfilter_get_stat(const struct expiry_dablooms_handle *bloom, sapp_sys_stat_type_t type, long long *count)
+{
+	switch(type){
+		case SAPP_STAT_BM_HASH_NUM:
+			*count = (long long)DA_bloom_stat_get_hash_num(bloom);
+		break;
+		case SAPP_STAT_BM_SLICE_NUM_NEW:
+			*count = (long long)DA_bloom_stat_get_slice_new_num(bloom);
+		break;
+		case SAPP_STAT_BM_SLICE_NUM_FREE:
+			*count = (long long)DA_bloom_stat_get_slice_free_num(bloom);
+		break;		
+		case SAPP_STAT_BM_EXPAND_NUM:
+			*count = (long long)DA_bloom_stat_get_expand_num(bloom);
+		break;
+		case SAPP_STAT_BM_CUR_SLICE_NUM:
+			*count = (long long)DA_bloom_stat_get_cur_slice_num(bloom);
+		break;
+		case SAPP_STAT_DABM_RESIZE_MAX_RATIO:
+			*count = (long long)DA_bloom_stat_get_resize_ratio(bloom);
+		break;
+
+		default:
+			*count = 0;
+		break;
+	}
+	return 0;
+}
+
+int bloomfilter_get_stat_by_type(void *bm_handle, sapp_sys_stat_type_t type, long long *count)
+{
+	
+	switch (sapp_global_val->config.packet_io.dup_pkt_para.bloom_library)
+	{
+	case BLOOM_LIBRARY_APBLOOM:
+		AP_bloomfilter_get_stat((const struct AP_bloom *)bm_handle, type, count);
+		break;
+
+	case BLOOM_LIBRARY_DABLOOM:
+		DA_bloomfilter_get_stat((struct expiry_dablooms_handle *)bm_handle, type, count);
+		break;
+
+	default:
+		break;
+	}
+
+	return 0;
+}
+
+static int bloomfilter_get_stat(void *bm_handle)
+{
+	long long count = 0;
+	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_BM_HASH_NUM, &count);
+	sapp_fs3_metric_set(0, SAPP_STAT_BM_HASH_NUM, count);
+	count = 0;
+	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_BM_EXPAND_NUM, &count);
+	sapp_fs3_metric_set(0, SAPP_STAT_BM_EXPAND_NUM, count);
+	count = 0;
+	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_BM_SLICE_NUM_NEW, &count);
+	sapp_fs3_metric_set(0, SAPP_STAT_BM_SLICE_NUM_NEW, count);
+	count = 0;
+	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_BM_SLICE_NUM_FREE, &count);
+	sapp_fs3_metric_set(0, SAPP_STAT_BM_SLICE_NUM_FREE, count);
+	count = 0;
+	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_BM_CUR_SLICE_NUM, &count);
+	sapp_fs3_metric_set(0, SAPP_STAT_BM_CUR_SLICE_NUM, count);
+	count = 0;
+	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE, &count);
+	sapp_fs3_metric_set(0, SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE, count);
+	count = 0;
+	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_DABM_RESIZE_MAX_RATIO, &count);
+	sapp_fs3_metric_set(0, SAPP_STAT_DABM_RESIZE_MAX_RATIO, count);
+	return 0;
+}
+
 int bloomfilter_get_mem_stat(int tseq, long long *mem_blocks, long long *mem_bytes)
 {
 	void *bm_handle = (struct bloom_partition *)sapp_global_val->mthread_volatile[tseq]->dup_pkt_distinguish_handle;
@@ -99,11 +203,10 @@ int bloomfilter_get_mem_stat(int tseq, long long *mem_blocks, long long *mem_byt
 	switch (sapp_global_val->config.packet_io.dup_pkt_para.bloom_library)
 	{
 	case BLOOM_LIBRARY_APBLOOM:
-		// todo,
-		*mem_blocks = 0;
-		*mem_bytes = 0;
-		return -1;
+		*mem_blocks = (long long)AP_bloom_mem_blocks((const struct AP_bloom *)bm_handle);
+		*mem_bytes = (long long)AP_bloom_mem_size((const struct AP_bloom *)bm_handle);
 		break;
+
 	case BLOOM_LIBRARY_DABLOOM:
 		expiry_dablooms_get_mem_stat((struct expiry_dablooms_handle *)bm_handle, mem_blocks, mem_bytes);
 	break;
@@ -111,6 +214,8 @@ int bloomfilter_get_mem_stat(int tseq, long long *mem_blocks, long long *mem_byt
 	default:
 		break;
 	}
+
+	bloomfilter_get_stat(bm_handle);
 
 	return 0;
 }

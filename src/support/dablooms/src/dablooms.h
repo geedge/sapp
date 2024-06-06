@@ -41,7 +41,11 @@ typedef struct {
     uint32_t _pad;
 } counting_bloom_header_t;
 
-
+struct DA_bloom_stat{
+    size_t expand_num_acc;
+    double expand_size_ratio_rt; //current bitmap size / defalut bitmap size  * 100
+    size_t slice_num_rt;
+};
 typedef struct {
     counting_bloom_header_t *header;
     unsigned int capacity;
@@ -75,6 +79,7 @@ typedef struct {
     double error_rate;
     counting_bloom_t **blooms;
     bitmap_t *bitmap;
+    struct DA_bloom_stat stat;
 } scaling_bloom_t;
 
 // scaling_bloom_t *new_scaling_bloom(unsigned int capacity, double error_rate);
@@ -98,6 +103,12 @@ int expiry_dablooms_element_count_get(struct expiry_dablooms_handle *handle, uin
 int expiry_dablooms_add(struct expiry_dablooms_handle *handle, const char *key, size_t len,  time_t cur_time);
 int expiry_dablooms_search(struct expiry_dablooms_handle *handle, const char *key, size_t len,  time_t cur_time);
 int expiry_dablooms_get_mem_stat(struct expiry_dablooms_handle *handle, long long *blocks, long long *bytes);
+size_t DA_bloom_stat_get_slice_new_num(const struct expiry_dablooms_handle *bloom);
+size_t DA_bloom_stat_get_slice_free_num(const struct expiry_dablooms_handle *bloom);
+size_t DA_bloom_stat_get_hash_num(const struct expiry_dablooms_handle *bloom);
+size_t DA_bloom_stat_get_expand_num(const struct expiry_dablooms_handle *bloom);
+size_t DA_bloom_stat_get_cur_slice_num(const struct expiry_dablooms_handle *bloom);
+size_t DA_bloom_stat_get_resize_ratio(const struct expiry_dablooms_handle *bloom);
 #ifdef __cplusplus 
 }
 #endif 
