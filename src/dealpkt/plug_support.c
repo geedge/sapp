@@ -27,10 +27,13 @@ static struct segment_id_list *segment_id_list_dup(sapp_mem_type_t type, int tid
 	return dlist;
 }
 
-inline void *MESA_detain_rawpkt_get0(struct detain_pkt *pkt)
+const char *MESA_detain_rawpkt_data_get0(struct streaminfo *pstream, struct detain_pkt *pkt, int *data_sz)
 {
-	if(pkt==NULL)return NULL;
-	return (void *)pkt->original;	
+	if(data_sz==NULL)return NULL;
+	if(pkt==NULL || pkt->original == NULL)return NULL;
+	struct streaminfo_private *pstream_pr = (struct streaminfo_private *)pstream;
+	*data_sz = pkt->replica.raw_pkt_len - pstream_pr->offset_to_raw_pkt_hdr;	
+	return (const char *)((const char *)pkt->replica.raw_pkt_data + pstream_pr->offset_to_raw_pkt_hdr);
 }
 
 struct detain_pkt* MESA_rawpkt_detain(const struct streaminfo *pstream, const void *rawpkt)
