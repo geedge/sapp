@@ -16,7 +16,7 @@
 */
 
 #define SLICE_EXPANSION 2
-#define FILL_RATIO_THRESHOLD 0.1
+#define FILL_RATIO_THRESHOLD 0.5
 #define MIN_CAPACITY    1000
 
 
@@ -113,9 +113,10 @@ static struct ap_slice * ap_slice_duplicate(const struct ap_slice *slice)
     return new_slice;
 }
 #define HASH_TO_OFFSET(hash, slice) ((hash.a + slice->hash_index * hash.b) % (slice->slice_size<<3))
-void ap_slice_add_hash(struct ap_slice *slice, struct double_hash hash, struct timeval now)
+void ap_slice_add_hash(struct ap_slice *slice, const struct double_hash *hash, struct timeval now)
 {
-    int index=double_hash_generate(&hash, slice->hash_index, slice->slice_size<<3);
+    int index=double_hash_generate(hash, slice->hash_index, slice->slice_size<<3);
+    __builtin_prefetch(&slice->data[index>>3], 1);
     int added = !test_bit_set_bit(slice->data, index, MODE_WRITE);
 
     slice->last_insert = now;
@@ -126,9 +127,10 @@ void ap_slice_add_hash(struct ap_slice *slice, struct double_hash hash, struct t
     slice->popcount += added;
     return;
 }
-int ap_slice_check_hash(const struct ap_slice *slice, struct double_hash hash)
+int ap_slice_check_hash(const struct ap_slice *slice, const struct double_hash *hash)
 {
-    int index=double_hash_generate(&hash, slice->hash_index, slice->slice_size<<3);
+    int index=double_hash_generate(hash, slice->hash_index, slice->slice_size<<3);
+    __builtin_prefetch(&slice->data[index>>3], 0);
     return test_bit_set_bit(slice->data, index, MODE_READ);
 }
 struct ap_slice_event
@@ -158,26 +160,23 @@ struct ap_state
     int consecutive_matches;
     int visited_slices;
     int hash_num;
-    int counter;
     UT_array slice_time_events;
 };
-void ap_state_init(struct ap_state *state, int hash_num)
+static inline void ap_state_init(struct ap_state *state, int hash_num)
 {
     state->consecutive_matches=0;
     state->visited_slices=0;
-    state->counter=0;
     state->hash_num=hash_num;
     utarray_init(&state->slice_time_events, &slice_event_icd);
     utarray_reserve(&state->slice_time_events, hash_num*2);
 }
-void ap_state_clear(struct ap_state *state)
+static inline void ap_state_clear(struct ap_state *state)
 {
     state->consecutive_matches=0;
     state->visited_slices=0;
-    state->counter=0;
     utarray_clear(&state->slice_time_events);
 }
-void ap_state_done(struct ap_state *state)
+static inline void ap_state_done(struct ap_state *state)
 {
     utarray_done(&state->slice_time_events);
 }
@@ -191,7 +190,6 @@ int ap_state_is_match(struct ap_state *state)
         {
             return 1;
         }
-        if(state->counter >= state->hash_num)return 1;
         utarray_sort(&state->slice_time_events, slice_event_cmp);
         while((ev=(struct ap_slice_event*)utarray_next(&state->slice_time_events, ev)))
         {
@@ -204,7 +202,7 @@ int ap_state_is_match(struct ap_state *state)
     }
     return 0;
 }
-static void ap_slice_chain_check_hash(const struct ap_slice *head, struct double_hash hash, struct ap_state *state)
+static void ap_slice_chain_check_hash(const struct ap_slice *head, const struct double_hash *hash, struct ap_state *state)
 {
     //In a stackable (scalable) Bloom filter, checking for membership now involves inspecting each layer for presence. 
     const struct ap_slice *slice=NULL;
@@ -225,10 +223,6 @@ static void ap_slice_chain_check_hash(const struct ap_slice *head, struct double
             ev.hash_index = slice->hash_index;
             utarray_push_back(&state->slice_time_events, &ev);
             found=1;
-            if(timercmp(&slice->last_insert, &slice->first_insert, >))
-            {
-                    state->counter++;
-            }
         }
         state->visited_slices++;
     }
@@ -248,10 +242,10 @@ static void ap_slice_chain_check_hash(const struct ap_slice *head, struct double
  *     0 - element was not present and was added
  *     1 - element (or a collision) had already been added previously
  */
-static void ap_slice_chain_add_hash(struct ap_slice **head, struct double_hash hash, struct timeval now)
+static void ap_slice_chain_add_hash(struct ap_slice **head, const struct double_hash *hash, struct timeval now)
 {
     //add new slice if the current slice is full
-    if( (double) (*head)->popcount / ((*head)->slice_size<<3) > FILL_RATIO_THRESHOLD)
+    if(unlikely( (double) (*head)->popcount / ((*head)->slice_size<<3) > FILL_RATIO_THRESHOLD))
     {
         struct ap_slice *new_slice = ap_slice_new((*head)->slice_size * SLICE_EXPANSION, (*head)->hash_index);
         LL_PREPEND((*head), new_slice);
@@ -498,13 +492,13 @@ static void slide_time(struct AP_bloom *bloom, struct timeval now)
     int chain_num = bloom->chain_num;
     long long slide_time_frame_us=bloom->cfg.time_slice_num?(bloom->cfg.time_window_ms*1000/bloom->cfg.time_slice_num):INT64_MAX;
     long long slide_us=timeval_delta_us(bloom->last_slide, now);
-    long long elapse_us=timeval_delta_us(bloom->cfg.last_cfg, now);
-    long long epoches=elapse_us/slide_time_frame_us;
     
-    if(slide_us < slide_time_frame_us)
+    if(likely(slide_us < slide_time_frame_us))
     {
         return;
     }
+    long long elapse_us=timeval_delta_us(bloom->cfg.last_cfg, now);
+    long long epoches=elapse_us/slide_time_frame_us;    
     slide_us -= slide_us % slide_time_frame_us;
     int n_slide = slide_us/slide_time_frame_us;
     
@@ -549,14 +543,14 @@ void AP_bloom_add(struct AP_bloom *bloom, struct timeval now, const char *buffer
     for(int i=0; i<bloom->hash_num; i++)
     {
         int idx=(bloom->cursor+i) % (bloom->chain_num);
-        ap_slice_chain_add_hash(&(bloom->heads[idx]), hash, now);
+        ap_slice_chain_add_hash(&(bloom->heads[idx]), &hash, now);
     }
     return;
 }
 
 int AP_bloom_check(const struct AP_bloom *bloom, struct timeval now, const char *buffer, int len)
 {
-    if(timeval_delta_ms(bloom->cfg.last_cfg, now) < 0)
+    if(unlikely(timeval_delta_ms(bloom->cfg.last_cfg, now) < 0))
     {
         return 0;
     }
@@ -566,15 +560,16 @@ int AP_bloom_check(const struct AP_bloom *bloom, struct timeval now, const char 
 
     struct ap_state state;
     ap_state_init(&state, bloom->hash_num);
-    for(int i = 0; i < bloom->hash_num+chain_num; i++)
+    int max_num = bloom->hash_num+chain_num;
+    for(int i = 0; i < max_num; i++)
     {
         long long delta_us = timeval_delta_us(bloom->heads[i%chain_num]->last_insert, now);
-        if(bloom->cfg.time_window_ms && delta_us > bloom->cfg.time_window_ms*1000)
+        if(unlikely((delta_us > bloom->cfg.time_window_ms*1000) && bloom->cfg.time_window_ms))
         {
             ap_state_clear(&state);
             continue;
         }
-        ap_slice_chain_check_hash(bloom->heads[i%chain_num], hash, &state);
+        ap_slice_chain_check_hash(bloom->heads[i%chain_num], &hash, &state);
         if(ap_state_is_match(&state))
         {
             ap_state_done(&state);
@@ -646,7 +641,11 @@ struct AP_bloom * AP_bloom_deserialize(const char *blob, size_t blob_sz)
     assert(offset==blob_sz);
     return bloom;
 }
-
+struct AP_bloom *AP_bloom_replicate(uuid_t uuid, const char *blob, size_t blob_sz)
+{
+    struct AP_bloom *bloom=AP_bloom_deserialize(blob, blob_sz);
+    return bloom;
+}
 void AP_bloom_merge(struct AP_bloom *dst, const struct AP_bloom *src)
 {
     if(memcmp(&dst->cfg, &src->cfg, sizeof(dst->cfg)))

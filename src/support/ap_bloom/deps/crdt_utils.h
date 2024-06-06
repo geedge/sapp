@@ -45,4 +45,8 @@ struct double_hash
     uint64_t b;
 };
 void double_hash_init(struct double_hash *rv, const void *buffer, int len);
-int double_hash_generate(const struct double_hash *rv, int i, int m);
+// int double_hash_generate(const struct double_hash *rv, int i, int m);
+static inline int double_hash_generate(const struct double_hash *rv, int i, int m)
+{
+    return (rv->a + i * rv->b) % m;
+}

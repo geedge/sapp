@@ -9,6 +9,7 @@
 
 #include <stddef.h>
 #include <sys/time.h>
+#include <uuid/uuid.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -68,6 +69,7 @@ void AP_bloom_serialize(const struct AP_bloom *bloom, char **blob, size_t *blob_
 void AP_bloom_merge(struct AP_bloom *dst, const struct AP_bloom *src);
 void AP_bloom_merge_blob(struct AP_bloom *dst, const char *blob, size_t blob_sz);
 //The parameter 'uuid' is included for consistency with other CRDT types and is not used.
+struct AP_bloom *AP_bloom_replicate(uuid_t uuid, const char *blob, size_t blob_sz);
 size_t AP_bloom_serialized_size(const struct AP_bloom *bloom);
 size_t AP_bloom_mem_size(const struct AP_bloom *bloom);
 

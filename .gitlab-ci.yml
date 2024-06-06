@@ -9,7 +9,7 @@ variables:
     libMESA_jump_layer-devel libfieldstat3-devel
     libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger 
     libcjson libbreakpad_mini libMESA_jump_layer libfieldstat3
-    mrzcpd-corei7 hasp-tools
+    mrzcpd-corei7 hasp-tools  libuuid-devel
   SYMBOL_TARGET: sapp
   TEST_NAME: gtest_sapp_v4
   INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
