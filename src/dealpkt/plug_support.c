@@ -30,7 +30,7 @@ static struct segment_id_list *segment_id_list_dup(sapp_mem_type_t type, int tid
 const char *MESA_detain_rawpkt_data_get0(struct streaminfo *pstream, struct detain_pkt *pkt, int *data_sz)
 {
 	if(data_sz==NULL)return NULL;
-	if(pkt==NULL || pkt->original == NULL)return NULL;
+	if(pkt==NULL || pkt->replica.raw_pkt_data == NULL)return NULL;
 	struct streaminfo_private *pstream_pr = (struct streaminfo_private *)pstream;
 	*data_sz = pkt->replica.raw_pkt_len - pstream_pr->offset_to_raw_pkt_hdr;	
 	return (const char *)((const char *)pkt->replica.raw_pkt_data + pstream_pr->offset_to_raw_pkt_hdr);
@@ -89,6 +89,9 @@ int MESA_detain_pkt_forward(struct detain_pkt *pkt)
 		if(pkt->replica.__lib_raw_pkt_len > 0 && pkt->replica.__lib_raw_pkt_data && pkt->replica.io_lib_pkt_reference)
 		{
 			dl_io_fun_list.dl_io_forward_rawpkt(&pkt->replica, pkt->tid);
+			pkt->replica.__lib_raw_pkt_len=0;
+			pkt->replica.__lib_raw_pkt_data=NULL;
+			pkt->replica.io_lib_pkt_reference=NULL;
 		}
 		detain_pkt_mem_free(pkt);
 		pkt = NULL;
@@ -150,6 +153,9 @@ void MESA_detain_pkt_free(struct detain_pkt *pkt)
 		if(pkt->replica.__lib_raw_pkt_len > 0 && pkt->replica.__lib_raw_pkt_data && pkt->replica.io_lib_pkt_reference)
 		{
 			dl_io_fun_list.dl_io_free_rawpkt(&pkt->replica, pkt->tid);
+			pkt->replica.__lib_raw_pkt_len=0;
+			pkt->replica.__lib_raw_pkt_data=NULL;
+			pkt->replica.io_lib_pkt_reference=NULL;
 		}
 		detain_pkt_mem_free(pkt);
 		pkt = NULL;
