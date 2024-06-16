@@ -639,10 +639,10 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 	  || dup_cfg->dup_pkt_distinguish_all_inject)
 	{
 		fs3_rt->metrics_ids[0][SAPP_STAT_BM_HASH_NUM] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "BM_HASH_NUM",  NULL, 0);	
-		fs3_rt->metrics_ids[0][SAPP_STAT_BM_EXPAND_NUM] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "BM_EXPAND_NUM", NULL, 0);	
+		fs3_rt->metrics_ids[0][SAPP_STAT_BM_EXPAND_NUM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "BM_EXPAND", NULL, 0);	
 		fs3_rt->metrics_ids[0][SAPP_STAT_BM_SLICE_NUM_NEW] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "BM_SLICE_NEW", NULL, 0);	
 		fs3_rt->metrics_ids[0][SAPP_STAT_BM_SLICE_NUM_FREE] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "BM_SLICE_FREE", NULL, 0);			
-		fs3_rt->metrics_ids[0][SAPP_STAT_BM_CUR_SLICE_NUM] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "BM_CUR_SLICE_NUM", NULL, 0);	
+		fs3_rt->metrics_ids[0][SAPP_STAT_BM_CUR_SLICE_NUM] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "BM_MAX_SLICE", NULL, 0);	
 		fs3_rt->metrics_ids[0][SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "APBM_EXPAND_MULTIPLE", NULL, 0);
 		fs3_rt->metrics_ids[0][SAPP_STAT_DABM_RESIZE_MAX_RATIO] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "DABM_MAX_RESIZE_RATIO", NULL, 0);
 	}

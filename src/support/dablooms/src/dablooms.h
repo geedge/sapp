@@ -41,11 +41,6 @@ typedef struct {
     uint32_t _pad;
 } counting_bloom_header_t;
 
-struct DA_bloom_stat{
-    size_t expand_num_acc;
-    double expand_size_ratio_rt; //current bitmap size / defalut bitmap size  * 100
-    size_t slice_num_rt;
-};
 typedef struct {
     counting_bloom_header_t *header;
     unsigned int capacity;
@@ -79,7 +74,6 @@ typedef struct {
     double error_rate;
     counting_bloom_t **blooms;
     bitmap_t *bitmap;
-    struct DA_bloom_stat stat;
 } scaling_bloom_t;
 
 // scaling_bloom_t *new_scaling_bloom(unsigned int capacity, double error_rate);

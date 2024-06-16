@@ -27,6 +27,27 @@
 #define	FREE(p, mstat)	dabm_free(p, mstat)
 #define REALLOC(p, size, mstat) dabm_realloc(p, size, mstat)
 
+struct expiry_dablooms_handle_entity{
+    scaling_bloom_t *cur_bloom;
+    scaling_bloom_t *next_bloom;
+    long cur_bloom_start_ms;
+    long next_bloom_start_ms;
+    long last_bloom_check_ms;
+    uint64_t cur_bloom_inc_id;
+    uint64_t next_bloom_inc_id;
+    unsigned int capacity;
+    long expiry_time_ms;
+    long cur_time_ms;
+    long transition_time_ms;
+    double error_rate;
+    struct dabm_mem_stat mstat;
+    size_t bloom_new_num;
+    size_t bloom_free_num;
+    size_t expand_num_acc;
+    size_t slice_num_rt;
+    double expand_size_ratio_rt; //current bitmap size / defalut bitmap size  * 100
+};
+
 const char *dablooms_version(void)
 {
     return DABLOOMS_VERSION;
@@ -319,7 +340,7 @@ static int free_scaling_bloom(scaling_bloom_t *bloom, struct dabm_mem_stat *msta
 }
 
 /* creates a new counting bloom filter from a given scaling bloom filter, with count and id */
-counting_bloom_t *new_counting_bloom_from_scale(scaling_bloom_t *bloom, struct dabm_mem_stat *mstat)
+counting_bloom_t *new_counting_bloom_from_scale(struct expiry_dablooms_handle_entity *handle, scaling_bloom_t *bloom, struct dabm_mem_stat *mstat)
 {
     long offset;
     double error_rate;
@@ -339,8 +360,8 @@ counting_bloom_t *new_counting_bloom_from_scale(scaling_bloom_t *bloom, struct d
     bloom->bitmap = bitmap_resize(bloom->bitmap, bloom->num_bytes, bloom->num_bytes + cur_bloom->num_bytes, mstat);
 
     if(bloom->num_bytes > sizeof(scaling_bloom_header_t)){
-        bloom->stat.expand_num_acc++;
-        bloom->stat.expand_size_ratio_rt *= (double)(bloom->num_bytes + cur_bloom->num_bytes) / bloom->num_bytes;
+        handle->expand_num_acc++;
+        handle->expand_size_ratio_rt *= (double)(bloom->num_bytes + cur_bloom->num_bytes) / bloom->num_bytes;
     }
     
     /* reset header pointer, as mmap may have moved */
@@ -348,7 +369,7 @@ counting_bloom_t *new_counting_bloom_from_scale(scaling_bloom_t *bloom, struct d
     
     /* Set the pointers for these header structs to the right location since mmap may have moved */
     bloom->num_blooms++;
-    bloom->stat.slice_num_rt = bloom->num_blooms;
+    handle->slice_num_rt = bloom->num_blooms;
     for (unsigned int i = 0; i < bloom->num_blooms; i++) {
         offset = bloom->blooms[i]->offset - sizeof(counting_bloom_header_t);
         bloom->blooms[i]->header = (counting_bloom_header_t *) (bloom->bitmap->array + offset);
@@ -376,7 +397,8 @@ uint64_t scaling_bloom_clear_seqnums(scaling_bloom_t *bloom)
     return seqnum;
 }
 
-static int scaling_bloom_add(scaling_bloom_t *bloom, const uint32_t checksum[4], uint64_t id, struct dabm_mem_stat *mstat)
+static int scaling_bloom_add(struct expiry_dablooms_handle_entity *handle, scaling_bloom_t *bloom, 
+                            const uint32_t checksum[4], uint64_t id, struct dabm_mem_stat *mstat)
 {
     int i;
     uint64_t seqnum;
@@ -392,7 +414,7 @@ static int scaling_bloom_add(scaling_bloom_t *bloom, const uint32_t checksum[4],
     seqnum = scaling_bloom_clear_seqnums(bloom);
     
     if ((id > bloom->header->max_id) && (cur_bloom->header->count >= cur_bloom->capacity - 1)) {
-        cur_bloom = new_counting_bloom_from_scale(bloom, mstat);
+        cur_bloom = new_counting_bloom_from_scale(handle, bloom, mstat);
         cur_bloom->header->count = 0;
         cur_bloom->header->id = bloom->header->max_id + 1;
     }
@@ -483,13 +505,13 @@ scaling_bloom_t *scaling_bloom_init(unsigned int capacity, double error_rate,str
     return bloom;
 }
 
-static scaling_bloom_t *new_scaling_bloom(unsigned int capacity, double error_rate, struct dabm_mem_stat *mstat)
+static scaling_bloom_t *new_scaling_bloom(struct expiry_dablooms_handle_entity *handle, unsigned int capacity, double error_rate, struct dabm_mem_stat *mstat)
 {
     scaling_bloom_t *bloom;
     counting_bloom_t *cur_bloom;
     
     bloom = scaling_bloom_init(capacity, error_rate, mstat);
-    cur_bloom = new_counting_bloom_from_scale(bloom, mstat);
+    cur_bloom = new_counting_bloom_from_scale(handle, bloom, mstat);
     // if (!()) {
     //     fprintf(stderr, "Error, Could not create counting bloom\n");
     //     free_scaling_bloom(bloom, mstat);
@@ -500,27 +522,10 @@ static scaling_bloom_t *new_scaling_bloom(unsigned int capacity, double error_ra
     cur_bloom->header->id = 0;
     
     bloom->header->mem_seqnum = 1;
-    bloom->stat.expand_size_ratio_rt = 1.0;
+    handle->expand_size_ratio_rt = 1.0;
     return bloom;
 }
 
-struct expiry_dablooms_handle_entity{
-    scaling_bloom_t *cur_bloom;
-    scaling_bloom_t *next_bloom;
-    long cur_bloom_start_ms;
-    long next_bloom_start_ms;
-    long last_bloom_check_ms;
-    uint64_t cur_bloom_inc_id;
-    uint64_t next_bloom_inc_id;
-    unsigned int capacity;
-    long expiry_time_ms;
-    long cur_time_ms;
-    long transition_time_ms;
-    double error_rate;
-    struct dabm_mem_stat mstat;
-    size_t bloom_new_num;
-    size_t bloom_free_num;
-};
 
 /* 24.05, split bloomfilter into multiple partition to avoid blocking caused by memset large memory */
 struct expiry_dablooms_handle{
@@ -562,7 +567,7 @@ void expiry_dablooms_destroy(struct expiry_dablooms_handle *handle){
 
 static struct expiry_dablooms_handle_entity* expiry_dablooms_init_entity(unsigned int capacity, double error_rate, long cur_time_ms, long expiry_time_ms, long transition_time_ms){
     struct expiry_dablooms_handle_entity *handle = (struct expiry_dablooms_handle_entity *)calloc(1, sizeof(struct expiry_dablooms_handle_entity));
-    scaling_bloom_t *cur_bloom = new_scaling_bloom(capacity, error_rate, &handle->mstat);
+    scaling_bloom_t *cur_bloom = new_scaling_bloom(handle, capacity, error_rate, &handle->mstat);
     if(cur_bloom == NULL){
         goto error_out;
     }
@@ -651,7 +656,7 @@ static int bloom_expired_check(struct expiry_dablooms_handle_entity *handle, lon
             handle->last_bloom_check_ms=0;
         }
         else{
-            scaling_bloom_t *cur_bloom = new_scaling_bloom(handle->capacity, handle->error_rate, mstat);
+            scaling_bloom_t *cur_bloom = new_scaling_bloom(handle, handle->capacity, handle->error_rate, mstat);
             if(unlikely(cur_bloom == NULL)){
                 return EXPIRY_DABLOOMS_ERRNO_NEW_BLOOM_FAIL;
             }
@@ -685,7 +690,7 @@ static int expiry_dablooms_add_entity(struct expiry_dablooms_handle_entity *hand
     int is_transition = bloom_in_transition_period(handle, cur_time_ms);
     if(unlikely(is_transition != 0)){ 
         if(unlikely(handle->next_bloom == NULL)){
-            scaling_bloom_t *next_bloom = new_scaling_bloom(handle->capacity, handle->error_rate, &handle->mstat);
+            scaling_bloom_t *next_bloom = new_scaling_bloom(handle, handle->capacity, handle->error_rate, &handle->mstat);
             if(next_bloom == NULL){
                 return EXPIRY_DABLOOMS_ERRNO_NEW_BLOOM_FAIL;
             }
@@ -694,10 +699,10 @@ static int expiry_dablooms_add_entity(struct expiry_dablooms_handle_entity *hand
             handle->next_bloom_inc_id = 0;
             handle->next_bloom_start_ms=cur_time_ms;
         }
-        scaling_bloom_add(handle->next_bloom, checksum, handle->next_bloom_inc_id, &handle->mstat);
+        scaling_bloom_add(handle,handle->next_bloom, checksum, handle->next_bloom_inc_id, &handle->mstat);
         handle->next_bloom_inc_id++;
     }else{
-        scaling_bloom_add(handle->cur_bloom, checksum, handle->cur_bloom_inc_id, &handle->mstat);
+        scaling_bloom_add(handle,handle->cur_bloom, checksum, handle->cur_bloom_inc_id, &handle->mstat);
         handle->cur_bloom_inc_id++;
     }
 
@@ -799,12 +804,7 @@ size_t DA_bloom_stat_get_expand_num(const struct expiry_dablooms_handle *bloom)
     size_t tot_num = 0;
     for(int i = 0; i < bloom->bm_partition_num; i++){
         const struct expiry_dablooms_handle_entity *bm_entity = bloom->bm_handle[i];
-        if(bm_entity->cur_bloom){
-            tot_num += bm_entity->cur_bloom->stat.expand_num_acc;
-        }
-        if(bm_entity->next_bloom){
-            tot_num += bm_entity->next_bloom->stat.expand_num_acc;
-        }
+        tot_num += bm_entity->expand_num_acc;
     }
     return tot_num;
 }
@@ -813,12 +813,7 @@ size_t DA_bloom_stat_get_cur_slice_num(const struct expiry_dablooms_handle *bloo
     size_t tot_num = 0;
     for(int i = 0; i < bloom->bm_partition_num; i++){
         const struct expiry_dablooms_handle_entity *bm_entity = bloom->bm_handle[i];
-        if(bm_entity->cur_bloom){
-            tot_num += bm_entity->cur_bloom->stat.slice_num_rt;
-        }
-        if(bm_entity->next_bloom){
-            tot_num += bm_entity->next_bloom->stat.slice_num_rt;
-        }
+        tot_num += bm_entity->slice_num_rt;
     }
     return tot_num;
 }
@@ -827,15 +822,8 @@ size_t DA_bloom_stat_get_resize_ratio(const struct expiry_dablooms_handle *bloom
     double max_ratio = 1.000;
     for(int i = 0; i < bloom->bm_partition_num; i++){
         const struct expiry_dablooms_handle_entity *bm_entity = bloom->bm_handle[i];
-        if(bm_entity->cur_bloom){
-            if(bm_entity->cur_bloom->stat.expand_size_ratio_rt > max_ratio){
-                max_ratio = bm_entity->cur_bloom->stat.expand_size_ratio_rt;
-            }
-        }
-        if(bm_entity->next_bloom){
-            if(bm_entity->next_bloom->stat.expand_size_ratio_rt > max_ratio){
-                max_ratio = bm_entity->next_bloom->stat.expand_size_ratio_rt;
-            }
+        if(bm_entity->expand_size_ratio_rt > max_ratio){
+            max_ratio = bm_entity->expand_size_ratio_rt;
         }
     }
     return (size_t)(max_ratio * 100.0);

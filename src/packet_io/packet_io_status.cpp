@@ -237,6 +237,22 @@ static void packet_io_update_metrics_fs3(void)
 
 	sapp_fs3_metric_incrby(0, SAPP_STAT_TCP_TRY_TIMEOUTS,cur_count[SAPP_STAT_TCP_TRY_TIMEOUTS]-history_count[SAPP_STAT_TCP_TRY_TIMEOUTS]);
 	sapp_fs3_metric_incrby(0, SAPP_STAT_UDP_TRY_TIMEOUTS,cur_count[SAPP_STAT_UDP_TRY_TIMEOUTS]-history_count[SAPP_STAT_UDP_TRY_TIMEOUTS]);
+
+	const sapp_dup_pkt_t *dup_cfg = &sapp_global_val->config.packet_io.dup_pkt_para;
+	if (dup_cfg->kickout_udp_stream_enabled 
+	  || dup_cfg->dup_pkt_distinguish_ipv4_tcp 
+	  || dup_cfg->dup_pkt_distinguish_ipv4_udp 
+	  || dup_cfg->dup_pkt_distinguish_all_inject)
+	{
+		sapp_fs3_metric_set(0, SAPP_STAT_BM_HASH_NUM, cur_count[SAPP_STAT_BM_HASH_NUM]);
+		sapp_fs3_metric_incrby(0, SAPP_STAT_BM_EXPAND_NUM, cur_count[SAPP_STAT_BM_EXPAND_NUM]-history_count[SAPP_STAT_BM_EXPAND_NUM]);
+		sapp_fs3_metric_incrby(0, SAPP_STAT_BM_SLICE_NUM_NEW, cur_count[SAPP_STAT_BM_SLICE_NUM_NEW]-history_count[SAPP_STAT_BM_SLICE_NUM_NEW]);
+		sapp_fs3_metric_incrby(0, SAPP_STAT_BM_SLICE_NUM_FREE, cur_count[SAPP_STAT_BM_SLICE_NUM_FREE]-history_count[SAPP_STAT_BM_SLICE_NUM_FREE]);
+		sapp_fs3_metric_set(0, SAPP_STAT_BM_CUR_SLICE_NUM, cur_count[SAPP_STAT_BM_CUR_SLICE_NUM]);
+		sapp_fs3_metric_set(0, SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE, cur_count[SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE]);
+		sapp_fs3_metric_set(0, SAPP_STAT_DABM_RESIZE_MAX_RATIO, cur_count[SAPP_STAT_DABM_RESIZE_MAX_RATIO]);
+	}
+
 	return;
 }
 
@@ -313,6 +329,18 @@ static void sysinfo_output_per_layer_stat(FILE *fp)
 	return;
 }
 
+static void sysinfo_find_the_maximum_value(sapp_sys_stat_type_t stype)
+{
+	sapp_gval_mthread_t **mstat = sapp_global_val->mthread_volatile;
+	unsigned long long max_val = 0;
+	for (int i = 0; i < g_packet_io_thread_num; i++){
+		if (max_val < mstat[i]->sys_stat.count[stype]){
+			max_val = mstat[i]->sys_stat.count[stype];
+		}
+	}
+	cur_count[stype] = max_val;
+}
+
 void sysinfo_output(void)
 {
 	int i, j;
@@ -350,6 +378,11 @@ void sysinfo_output(void)
 			cur_length[j] +=  mstat[i]->sys_stat.length[j];		
 		}
 	}
+
+	sysinfo_find_the_maximum_value(SAPP_STAT_BM_HASH_NUM);
+	sysinfo_find_the_maximum_value(SAPP_STAT_BM_CUR_SLICE_NUM);
+	sysinfo_find_the_maximum_value(SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE);
+	sysinfo_find_the_maximum_value(SAPP_STAT_DABM_RESIZE_MAX_RATIO);
 
 	for(i=0;i<g_packet_io_thread_num;i++){
 		for(j = 0; j < PROJECT_REQ_MAX_PLUG_NUM; j++){

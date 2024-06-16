@@ -12,18 +12,18 @@ extern "C" {
 	识别因路由策略导致的重复流量, 首次收到数据包加入bloom filter,
 	每个流的前N个包扫描bloom filter, 重复的数据包直接转发即可.
 
-	ip层的ttl, hop不能算为key, 因为经过了几跳路由器又回绕了, ttl肯定会变�?, 而上层的数据包确实是重复�?.
+	ip层的ttl, hop不能算为key, 因为经过了几跳路由器又回绕了, ttl肯定会变�??, 而上层的数据包确实是重复�??.
 */
 
 /* 
     2021-05-18 lijia close ipv6 protocol:
 
     重复流量识别bloom filter句柄, 根据流量方向和协议的不同, 功能分为三类,  
-    IPv6因为没有Ipid字段, 无法区别真正的应用层重传和重复流�?, 开启了会导致断网或者CT, 所以不支持!!!
+    IPv6因为没有Ipid字段, 无法区别真正的应用层重传和重复流�??, 开启了会导致断网或者CT, 所以不支持!!!
 
-	对于IPv6的两种情�?:
-       1)如果开启了代理策略, 重传包被识别成了重复包的�?, sapp就直接PASS�?, 实际那个包是真实通信双方发的, 没有经过tfe处理, 可能就断网了.
-       2)如果开启了firewall的drop策略, 第一次drop成功�?, 但应用层会重�?, 重传包被识别成了重复包的�?, sapp就直接PASS�?, 导致CT.
+	对于IPv6的两种情�??:
+       1)如果开启了代理策略, 重传包被识别成了重复包的�??, sapp就直接PASS�??, 实际那个包是真实通信双方发的, 没有经过tfe处理, 可能就断网了.
+       2)如果开启了firewall的drop策略, 第一次drop成功�??, 但应用层会重�??, 重传包被识别成了重复包的�??, sapp就直接PASS�??, 导致CT.
 */
 
 void *bloom_new(const sapp_dup_pkt_t *dup_conf, struct timeval now, long now_ms)
@@ -164,29 +164,30 @@ int bloomfilter_get_stat_by_type(void *bm_handle, sapp_sys_stat_type_t type, lon
 	return 0;
 }
 
-static int bloomfilter_get_stat(void *bm_handle)
+static int bloomfilter_get_stat(int tseq, void *bm_handle)
 {
+	sapp_gval_mthread_t **mstat = sapp_global_val->mthread_volatile;
 	long long count = 0;
 	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_BM_HASH_NUM, &count);
-	sapp_fs3_metric_set(0, SAPP_STAT_BM_HASH_NUM, count);
+	mstat[tseq]->sys_stat.count[SAPP_STAT_BM_HASH_NUM] = count;
 	count = 0;
 	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_BM_EXPAND_NUM, &count);
-	sapp_fs3_metric_set(0, SAPP_STAT_BM_EXPAND_NUM, count);
+	mstat[tseq]->sys_stat.count[SAPP_STAT_BM_EXPAND_NUM] = count;
 	count = 0;
 	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_BM_SLICE_NUM_NEW, &count);
-	sapp_fs3_metric_set(0, SAPP_STAT_BM_SLICE_NUM_NEW, count);
+	mstat[tseq]->sys_stat.count[SAPP_STAT_BM_SLICE_NUM_NEW] = count;
 	count = 0;
 	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_BM_SLICE_NUM_FREE, &count);
-	sapp_fs3_metric_set(0, SAPP_STAT_BM_SLICE_NUM_FREE, count);
+	mstat[tseq]->sys_stat.count[SAPP_STAT_BM_SLICE_NUM_FREE] = count;
 	count = 0;
 	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_BM_CUR_SLICE_NUM, &count);
-	sapp_fs3_metric_set(0, SAPP_STAT_BM_CUR_SLICE_NUM, count);
+	mstat[tseq]->sys_stat.count[SAPP_STAT_BM_CUR_SLICE_NUM] = count;
 	count = 0;
 	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE, &count);
-	sapp_fs3_metric_set(0, SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE, count);
+	mstat[tseq]->sys_stat.count[SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE] = count;
 	count = 0;
 	bloomfilter_get_stat_by_type(bm_handle, SAPP_STAT_DABM_RESIZE_MAX_RATIO, &count);
-	sapp_fs3_metric_set(0, SAPP_STAT_DABM_RESIZE_MAX_RATIO, count);
+	mstat[tseq]->sys_stat.count[SAPP_STAT_DABM_RESIZE_MAX_RATIO] = count;
 	return 0;
 }
 
@@ -215,7 +216,7 @@ int bloomfilter_get_mem_stat(int tseq, long long *mem_blocks, long long *mem_byt
 		break;
 	}
 
-	bloomfilter_get_stat(bm_handle);
+	bloomfilter_get_stat(tseq, bm_handle);
 
 	return 0;
 }
@@ -275,8 +276,8 @@ static inline int sapp_set_dup_pkt_key(enum addr_type_t addr_type, enum stream_t
 	if (stream_type == STREAM_TYPE_UDP)
     {
 		const struct mesa_udp_hdr *uhdr = (const struct mesa_udp_hdr *)l4_hdr;
-        l4->tcp_seq = 0x5A5A5A5A; /* udp没有, 但设�?0可能对某些hash函数不友�?, 此处设个固定�? */
-        l4->tcp_ack = 0xA5A5A5A5; /* udp没有, 但设�?0可能对某些hash函数不友�?, 此处设个固定�? */
+        l4->tcp_seq = 0x5A5A5A5A; /* udp没有, 但设�??0可能对某些hash函数不友�??, 此处设个固定�?? */
+        l4->tcp_ack = 0xA5A5A5A5; /* udp没有, 但设�??0可能对某些hash函数不友�??, 此处设个固定�?? */
         l4->sport = uhdr->uh_sport;
         l4->dport = uhdr->uh_dport;
         l4->checksum = uhdr->uh_sum;
@@ -350,8 +351,8 @@ int sapp_dup_pkt_init(void)
 		return 0;
 	}
 
-	/* 流量入口有三个开�?, 识别句柄只有一�?, 
-	   拆分句柄多耗费内存, 且判断时每个包需要扫描多个句�?, 
+	/* 流量入口有三个开�??, 识别句柄只有一�??, 
+	   拆分句柄多耗费内存, 且判断时每个包需要扫描多个句�??, 
 	   可能好处只是准确率高了一点点而已 */
 	struct timeval now={time(NULL), 0};	
 	for(i = 0; i < sapp_global_val->config.cpu.worker_threads; i++){
