@@ -1,27 +1,27 @@
 
 /*
 *********************************************
-1. 20130803 ÁõÇìÔÆ
-1)   Ô­À´µÄÁ÷±íµÄhashÁ´±íÊÇÎŞĞòµÄ¹ÒÔÚÍ¬Ò»keyÖµÉÏ£»
-      ĞŞ¸ÄÎª°´ÕÕËÄÔª×éµÄ´óĞ¡ÅÅĞòºó·ÅÔÚhash±íµÄÍ¬Ò»¸öÁ´±íÉÏ£»
-2) Í¨¹ıÔÚ   findandsethashindex ²éÕÒÊ±Ô¤ÉèÒª²åÈëµÄÉÏÏÂÁ´±í£¬¼õÉÙ²åÈëÊ±µÄÖØĞÂ²é±í
+1. 20130803 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+1)   Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½hashï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¹ï¿½ï¿½ï¿½Í¬Ò»keyÖµï¿½Ï£ï¿½
+      ï¿½Ş¸ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½Ä´ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½hashï¿½ï¿½ï¿½ï¿½Í¬Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï£ï¿½
+2) Í¨ï¿½ï¿½ï¿½ï¿½   findandsethashindex ï¿½ï¿½ï¿½ï¿½Ê±Ô¤ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù²ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Â²ï¿½ï¿½
 
 
 2 . adjust by lqy 20130917 streamaddlist
-1) ·¢ÉúÁËÌÔÌ­Ö®ºóĞèÒªÖØĞÂ¼ÆËãÒª²åÈëµÄÎ»ÖÃ
-2) Ã¿´ÎÌÔÌ­µÄÁ´½ÓÊıÄ¿Îª×ÜÁ´½ÓÊıÄ¿µÄ2%
+1) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì­Ö®ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+2) Ã¿ï¿½ï¿½ï¿½ï¿½Ì­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½2%
 
 3 . adjust by lqy 20140810 
-1) ·¢ÉúÌÔÌ­Ê±£¬×î´ó²»³¬¹ı100¸ö
+1) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì­Ê±ï¿½ï¿½ï¿½ï¿½ó²»³ï¿½ï¿½ï¿½100ï¿½ï¿½
 
 4. adjust by lqy 20141203 
-1)lruÊ±¼ì²âÁ´±í×îºóÒ»¸öÊÇ·ñ³¬Ê±£¬³¬Ê±¼´¿ÌÌÔÌ­
+1)lruÊ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ç·ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì­
 
 5.adjust by lqy 20141212
-1)ÎªÃ¿¸öÁ÷Ôö¼ÓÈ«¾ÖÎ¨Ò»Ë÷Òıstream_index ¿ÉÒÔÍ¨¹ıº¯Êı»ñµÃ
-2)ÊÇ·ñÖ§³ÖÈ«°ü½Ó¿ÚÓÉ¿ª¹ØÉè¶¨
-3)Ã¿¸öÁ´½Ó¾ù½øĞĞlru
-4) fix hash³åÍ»Ê±ÅÅĞòµÄÁ´±í´íÎó
+1)ÎªÃ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½Î¨Ò»ï¿½ï¿½ï¿½ï¿½stream_index ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+2)ï¿½Ç·ï¿½Ö§ï¿½ï¿½È«ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½É¿ï¿½ï¿½ï¿½ï¿½è¶¨
+3)Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Ó¾ï¿½ï¿½ï¿½ï¿½ï¿½lru
+4) fix hashï¿½ï¿½Í»Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 */
 #include "sapp_api.h"
 #include "sapp_private_api.h"
@@ -38,7 +38,7 @@ extern "C" {
 int sapp_version_v4_20191119;
 
 /* 
-	ÏÂÃæµÄ°æ±¾ºÅÓÃÓÚpacket_io_libĞ£Ñé, ·ÀÖ¹Æ½Ì¨ºÍdl.so²»Æ¥Åäµ¼ÖÂÔËĞĞÒì³£, »òÒÑĞŞ¸´µÄBUGÎ´¸üĞÂ.
+	ï¿½ï¿½ï¿½ï¿½Ä°æ±¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½packet_io_libĞ£ï¿½ï¿½, ï¿½ï¿½Ö¹Æ½Ì¨ï¿½ï¿½dl.soï¿½ï¿½Æ¥ï¿½äµ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ì³£, ï¿½ï¿½ï¿½ï¿½ï¿½Ş¸ï¿½ï¿½ï¿½BUGÎ´ï¿½ï¿½ï¿½ï¿½.
 */
 #if IOMODE_PCAP
 int sapp_packet_io_v = 20210907;
@@ -128,12 +128,12 @@ static int init_stream_detail(struct global_stream *g_stream)
 		g_stream->udpList[i].timeout_ratelimiter = g_stream->udp_timeout_ratelimiter;
     }
 
-	//Ô¤ÏÈ·ÖÅähashÖ¸Õë
+	//Ô¤ï¿½È·ï¿½ï¿½ï¿½hashÖ¸ï¿½ï¿½
 	g_stream->tcp_stream_table = (struct streamindex **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, tcp_stream_table_size * sizeof(char *));
 	memset(g_stream->tcp_stream_table, 0, tcp_stream_table_size * sizeof(char *));
 	g_stream->udp_stream_table = (struct streamindex **)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, udp_stream_table_size * sizeof(char *));
 	memset(g_stream->udp_stream_table, 0, udp_stream_table_size * sizeof(char *));
-	//¼ÇÂ¼hashµÄ×´Ì¬
+	//ï¿½ï¿½Â¼hashï¿½ï¿½×´Ì¬
 	g_stream->tcp_stream_talbe_hash_count = (unsigned short *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, tcp_stream_table_size * sizeof(short));
 	memset(g_stream->tcp_stream_talbe_hash_count, 0, tcp_stream_table_size * sizeof(short));
 	g_stream->udp_stream_talbe_hash_count = (unsigned short *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, udp_stream_table_size * sizeof(short));
@@ -141,7 +141,7 @@ static int init_stream_detail(struct global_stream *g_stream)
 
 	int max_cnt = tcp_stream_table_size + udp_stream_table_size;
 
-	//Ô¤ÏÈ·ÖÅästream_index³Ø
+	//Ô¤ï¿½È·ï¿½ï¿½ï¿½stream_indexï¿½ï¿½
 	STAILQ_INIT(&g_stream->freeList);
 	g_stream->__freeList_real_head = (struct stream_index_list_item *)sapp_mem_malloc(SAPP_MEM_FIX_GLOBAL_STREAM, -1, (max_cnt) * sizeof(struct stream_index_list_item));
 	memset(g_stream->__freeList_real_head, 0, (max_cnt) * sizeof(struct stream_index_list_item));
@@ -168,7 +168,7 @@ int tcp_set_creatlink_model(int model)
 	tcp_creatlink_model=model;
 	return 0;
 }
-//ÉèÖÃÊÇ·ñ¿ªÆôtcpallÄ£Ê½
+//ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½tcpallÄ£Ê½
 int tcp_set_support_tcpall_model(int model)
 {
 	tcp_support_all=model;
@@ -180,7 +180,7 @@ int tcp_set_default_unorder_num(unsigned short max_unorder)
 	return 0;
 }
 
-int tcp_set_max_unorder(int max_unorder) //2014-12-25 lijia add, ¼æÈİ¾ÉÆ½Ì¨, xj_fd
+int tcp_set_max_unorder(int max_unorder) //2014-12-25 lijia add, ï¿½ï¿½ï¿½İ¾ï¿½Æ½Ì¨, xj_fd
 {
 	tcp_default_unorder=max_unorder;
 	return 0;
@@ -230,11 +230,11 @@ static void stream_timeout_shift_lrulist(struct streamindex *pindex, unsigned sh
 
 /*
 	NOTE: 
-	    ĞÂÉèÖÃµÄ³¬Ê±Ê±¼ä±ØĞë±ÈÈ«¾Ö±ê×¼timeoutÖµ´ó!!
-	    ÒòÎªÈ«¾ÖËùÓĞÁ÷±íÖ»ÓĞÒ»¸öLRU_timeÁ´±í,
-         ÉèÖÃĞÂÖµºÜ´ó, ¿ÉÒÔ½«µ±Ç°Á÷´ÓLRUÄ©Î²²éÕÒÊÊµ±Î»ÖÃ,
-         µ«Èç¹ûµ±Ç°Öµ±ÈÈ«¾Ö±ê×¼Ğ¡, ¿ÉÄÜĞèÒª´ÓLRUÁ´±íµÄtail´¦²éÑ¯ºÜ¶à¸öÁ÷²ÅÄÜÕÒµ½ÊÊµ±Î»ÖÃ,
-         µ¼ÖÂµ¥°üÑÓÊ±Ì«³¤.
+	    ï¿½ï¿½ï¿½ï¿½ï¿½ÃµÄ³ï¿½Ê±Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½Ö±ï¿½×¼timeoutÖµï¿½ï¿½!!
+	    ï¿½ï¿½ÎªÈ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½Ò»ï¿½ï¿½LRU_timeï¿½ï¿½ï¿½ï¿½,
+         ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½Ü´ï¿½, ï¿½ï¿½ï¿½Ô½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½LRUÄ©Î²ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½Î»ï¿½ï¿½,
+         ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°Öµï¿½ï¿½È«ï¿½Ö±ï¿½×¼Ğ¡, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½LRUï¿½ï¿½ï¿½ï¿½ï¿½ï¿½tailï¿½ï¿½ï¿½ï¿½Ñ¯ï¿½Ü¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½Êµï¿½Î»ï¿½ï¿½,
+         ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½Ê±Ì«ï¿½ï¿½.
 */
 int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned short timeout)
 {
@@ -242,7 +242,7 @@ int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned s
 	struct streaminfo_private *pstream_pr=(struct streaminfo_private *)pstream;
 	struct streamindex *pindex;
 
-	if(OP_STATE_CLOSE == pstream->opstate && OP_STATE_CLOSE == pstream->pktstate){/* µ±Ç°Á÷ÒÑ½áÊø, ÔÙÉè³¬Ê±Ò²Ã»ÓĞÒâÒåÁË */
+	if(OP_STATE_CLOSE == pstream->opstate && OP_STATE_CLOSE == pstream->pktstate){/* ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ñ½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½è³¬Ê±Ò²Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		return -1;
 	}
 
@@ -251,7 +251,7 @@ int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned s
 	{
 		if (pstream_pr->set_special_timeout == 0)
 		{
-			/* ÔÊĞí²å¼ş¶à´ÎÉèÖÃ³¬Ê±Ê±¼ä, µ±Ç°Á÷µÚÒ»´ÎÉèÖÃ³¬Ê±Ê±¼ä¼ÇÂ¼¼ÆÊı */
+			/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã³ï¿½Ê±Ê±ï¿½ï¿½, ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ã³ï¿½Ê±Ê±ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ */
 			sapp_global_mthread[pstream->threadnum].udp_stream_special_timeout_num++;
 		}
 	}
@@ -259,13 +259,13 @@ int stream_set_single_stream_timeout(const struct streaminfo *pstream,unsigned s
 	{
 		if (pstream_pr->set_special_timeout == 0)
 		{
-			/* ÔÊĞí²å¼ş¶à´ÎÉèÖÃ³¬Ê±Ê±¼ä, µ±Ç°Á÷µÚÒ»´ÎÉèÖÃ³¬Ê±Ê±¼ä¼ÇÂ¼¼ÆÊı */
+			/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã³ï¿½Ê±Ê±ï¿½ï¿½, ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ã³ï¿½Ê±Ê±ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ */
 			sapp_global_mthread[pstream->threadnum].tcp_stream_special_timeout_num++;
 		}
 	}
 	else
 	{
-		goto err; /* ½öÖ§³ÖTCPºÍUDPÁ÷ */
+		goto err; /* ï¿½ï¿½Ö§ï¿½ï¿½TCPï¿½ï¿½UDPï¿½ï¿½ */
 	}
 	if(pstream_pr->plugin_process_context != 0)
 	{
@@ -386,9 +386,9 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
         next_timeout_ms = tcp_opening_timeout * 1000 + g_CurrentTime_ms;
     }
     else if ((pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP) &&
-            (pstream_pr->set_special_timeout == 0 || sapp_global_val->config.stream.tcp.nouse_set_special_timeout == 0))
+            (sapp_global_val->config.stream.tcp.fast_close_nouse == 1))
     {
-		if(pstream->opstate == OP_STATE_CLOSE && pstream->pktstate == OP_STATE_CLOSE)
+		if(pstream_pr->set_special_timeout==0)
 		{
 			next_timeout_ms = tcp_closing_timeout * 1000 + g_CurrentTime_ms;
 		}
@@ -439,7 +439,7 @@ struct streamindex *malloc_and_copy_streamindex(int threadnum, struct streaminde
 	pindex->stream.stream_carry_up_layer_tunnel_type = 0;
 	pindex->stream.stream_low_layer_tunnel_type = 0;
 
-	//pindex->stream.global_stream_id = get_global_stream_id(threadnum);//ÒÆ¶¯µ½streamaddlist,ËÄÔª×éÖØÓÃÊ±²»»á±»µ÷ÓÃ.
+	//pindex->stream.global_stream_id = get_global_stream_id(threadnum);//ï¿½Æ¶ï¿½ï¿½ï¿½streamaddlist,ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½á±»ï¿½ï¿½ï¿½ï¿½.
 	
 	return pindex;
 	
@@ -463,15 +463,15 @@ void free_streamindex(int threadnum,struct streamindex *pindex)
 
 extern int call_streamentry(struct streaminfo *a_stream, const void *this_iphdr, const void *transport_hdr, const void *raw_pkt, StreamFunInfo *pFunInfo);
 //add by lqy 20141203
-//¼ì²âÁ´±íÎ²²¿µÄ×îºóÒ»¸öÁ´½ÓÊÇ·ñ³¬Ê±£¬Èç¹û³¬Ê±ÔòÌÔÌ­Ö®
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ì­Ö®
 
-/* 2015-06-10 lijia add arg "current_drive_index", ±íÊ¾µ±Ç°Á÷½á¹¹Ö¸Õë 
+/* 2015-06-10 lijia add arg "current_drive_index", ï¿½ï¿½Ê¾ï¿½ï¿½Ç°ï¿½ï¿½ï¿½á¹¹Ö¸ï¿½ï¿½ 
 	return value:
 		0: normal;
 		1: del self by time.
 
 	modify by lqy 20150612
-	³¬Ê±É¾³ı´ÓÁ´±íÍ·²¿¿ªÊ¼£¬Ò»´ÎÉ¾³ı		
+	ï¿½ï¿½Ê±É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ò»ï¿½ï¿½É¾ï¿½ï¿½		
 */
 
 enum del_stream_by_time_returen_code
@@ -516,10 +516,10 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
             struct streaminfo *pstream = &(pstream_pr->stream_public);
 
             if (pindex == current_drive_index)
-            { /* µ±Ç°°üËùÔÚµÄÁ÷³¬Ê±, ËµÃ÷Ö®Ç°ºÜ³¤Ê±¼äÃ»ÓĞ°üµ½À´, ´ËÊ±²»ÓÃfree, ¶øÊÇ·µ»Ø1, ÔÙµ÷ÓÃreset */
+            { /* ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½Ê±, Ëµï¿½ï¿½Ö®Ç°ï¿½Ü³ï¿½Ê±ï¿½ï¿½Ã»ï¿½Ğ°ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½free, ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½1, ï¿½Ùµï¿½ï¿½ï¿½reset */
                 if (STREAM_TYPE_TCP == pstream->type)
                 {
-                    /* 2016-12-15 lijia add, ³¬Ê±resetÖ®Ç°, ÏÈÒªÉèÖÃlink_state */
+                    /* 2016-12-15 lijia add, ï¿½ï¿½Ê±resetÖ®Ç°, ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½link_state */
                     ((struct tcpdetail_private *)(pstream->pdetail))->link_state = STREAM_LINK_TIMEOUT;
                 }
                 ret = DEL_STREAM_BY_TIME_RET_DEL_SELF;
@@ -611,9 +611,9 @@ int lrustream(struct streamindex *pindex)
             timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout * 1000 + g_CurrentTime_ms);
         }
         else if (pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP &&
-                 (pstream_pr->set_special_timeout == 0 || sapp_global_val->config.stream.tcp.nouse_set_special_timeout == 0))
+                (sapp_global_val->config.stream.tcp.fast_close_nouse == 1))
         {
-			if(pstream->opstate == OP_STATE_CLOSE && pstream->pktstate == OP_STATE_CLOSE)
+			if(pstream_pr->set_special_timeout==0)
 			{
    	         	timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout * 1000 + g_CurrentTime_ms);
 			}
@@ -634,9 +634,9 @@ int lrustream(struct streamindex *pindex)
 }
 
 /*
-	MPLS²ãµØÖ·²»Ïñipv4,ipv6,tcp,udpÄÇÑù, ÊÕµ½ÈÎÒâÒ»¸ö°ü¿ÉÒÔÍÆ¶ÏÁíÒ»²àµÄµØÖ·,
-	MPLSµØÖ·ÊÇµ¥ÏòµÄ, ÉõÖÁ»¹ÓĞ¿ÉÄÜÊÇ²»¶Ô³Æ´æÔÚµÄ, ¼´Ò»²àÓĞ¶øÁíÒ»²àÃ»ÓĞ.
-	ËùÒÔ, ±È½ÏµØÖ·²»·Ö·½Ïò.
+	MPLSï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ipv4,ipv6,tcp,udpï¿½ï¿½ï¿½ï¿½, ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Äµï¿½Ö·,
+	MPLSï¿½ï¿½Ö·ï¿½Çµï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¿ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½Ô³Æ´ï¿½ï¿½Úµï¿½, ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ğ¶ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ã»ï¿½ï¿½.
+	ï¿½ï¿½ï¿½ï¿½, ï¿½È½Ïµï¿½Ö·ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½.
 */
 static int cmpaddr_mpls(const struct layer_addr_mpls *addr_heap, const struct layer_addr_mpls  *addr_stack)
 {
@@ -644,19 +644,19 @@ static int cmpaddr_mpls(const struct layer_addr_mpls *addr_heap, const struct la
 	int same_dir_diff = 0, reverse_dir_diff = 0;
 	
 	if(0 == addr_stack->c2s_layer_num){
-		return 0; /* ĞÂÀ´µÄ°ümplsÊÇ¿Õ²ã, ²»ÓÃ±È½Ï */
+		return 0; /* ï¿½ï¿½ï¿½ï¿½ï¿½Ä°ï¿½mplsï¿½Ç¿Õ²ï¿½, ï¿½ï¿½ï¿½Ã±È½ï¿½ */
 	}
 
 	if((addr_heap->c2s_layer_num == 0) || (addr_heap->s2c_layer_num == 0)){
-		/* Èç¹û¶ÑÀïµÄµØÖ·Ä³Ò»²àÊÇ0, Ò²ĞíÊÇµ¥ÏòÁ÷, ¼´»¹Ã»ÊÕµ½¹ı¶Ô²àÁ÷Á¿;
-		   Ò²ĞíÊÇÄ³Ò»²àÊÇ¿Õ²ã, ¸ù±¾¾ÍÃ»ÓĞmpls, 
-		   ´ËÊ±Ã»·¨ÅĞ¶ÏÊÇÒ»¸öÁ÷¶Ô²àÊı¾İ°üÊ×´Îµ½´ï, »¹ÊÇ¸ù±¾²»ÊÇÒ»¸öËíµÀµÄÁíÒ»¸öĞÂÁ÷Ê×´Îµ½´ï,
-		   ÏÈ²»±È½ÏµØÖ·ÁË. 
+		/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½Ö·Ä³Ò»ï¿½ï¿½ï¿½ï¿½0, Ò²ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Õµï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½ï¿½ï¿½;
+		   Ò²ï¿½ï¿½ï¿½ï¿½Ä³Ò»ï¿½ï¿½ï¿½Ç¿Õ²ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½mpls, 
+		   ï¿½ï¿½Ê±Ã»ï¿½ï¿½ï¿½Ğ¶ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½ï¿½İ°ï¿½ï¿½×´Îµï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ç¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Îµï¿½ï¿½ï¿½,
+		   ï¿½È²ï¿½ï¿½È½Ïµï¿½Ö·ï¿½ï¿½. 
 		*/
 		return 0;
 	}
 
-	/* ÕıÏò±È½ÏµØÖ· */
+	/* ï¿½ï¿½ï¿½ï¿½È½Ïµï¿½Ö· */
 	if(addr_heap->c2s_layer_num != addr_stack->c2s_layer_num){
 		same_dir_diff = 1;
 	}else{
@@ -668,7 +668,7 @@ static int cmpaddr_mpls(const struct layer_addr_mpls *addr_heap, const struct la
 		}
 	}
 
-	/* ·´Ïò±È½ÏµØÖ· */
+	/* ï¿½ï¿½ï¿½ï¿½È½Ïµï¿½Ö· */
 	if(addr_heap->s2c_layer_num != addr_stack->c2s_layer_num){
 		reverse_dir_diff = 1;
 	}else{
@@ -680,7 +680,7 @@ static int cmpaddr_mpls(const struct layer_addr_mpls *addr_heap, const struct la
 		}
 	}
 
-	if(same_dir_diff && reverse_dir_diff){ /* Á½¸ö·½ÏòµØÖ·¶¼²»Ò»Ñù */
+	if(same_dir_diff && reverse_dir_diff){ /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
 		return -1;
 	}
 
@@ -689,9 +689,9 @@ static int cmpaddr_mpls(const struct layer_addr_mpls *addr_heap, const struct la
 
 static int cmpaddr_gtp(const struct layer_addr_gtp *addr_heap, const struct layer_addr_gtp  *addr_stack)
 {
-	/* stack µÄµØÖ·¹Ì¶¨´æ´¢ÓÚc2s·½Ïò
-		gtpµØÖ·±È½ÏÊ±, ²»·Ö·½Ïò, ÓĞÈÎÒâ·½ÏòµÄteidÄÜÏàÍ¬, ¾ÍÈÏÎªÊÇÒ»¸öËíµÀ£¬
-		Ö®Ç°µÄpcap°üÓĞ·¢ÏÖÍâ²ãµØÖ·ºÍÄ³Ò»²àµÄteid¶¼±ä»¯µÄÇé¿ö.
+	/* stack ï¿½Äµï¿½Ö·ï¿½Ì¶ï¿½ï¿½æ´¢ï¿½ï¿½c2sï¿½ï¿½ï¿½ï¿½
+		gtpï¿½ï¿½Ö·ï¿½È½ï¿½Ê±, ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½â·½ï¿½ï¿½ï¿½teidï¿½ï¿½ï¿½ï¿½Í¬, ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		Ö®Ç°ï¿½ï¿½pcapï¿½ï¿½ï¿½Ğ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ä³Ò»ï¿½ï¿½ï¿½teidï¿½ï¿½ï¿½ä»¯ï¿½ï¿½ï¿½ï¿½ï¿½.
 	*/
 	if(0 != addr_heap->teid_c2s){
 		if(addr_heap->teid_c2s == addr_stack->teid_c2s){
@@ -715,11 +715,11 @@ static int  cmpaddr_positive(void *addr_heap, void *addr_stack, UCHAR addrtype, 
 	switch(addrtype){
 		case ADDR_TYPE_IPV4:
 		{
-			/* 2015-07-14 lijia modify, ĞèÒª±È½Ï¶Ë¿Ú */
+			/* 2015-07-14 lijia modify, ï¿½ï¿½Òªï¿½È½Ï¶Ë¿ï¿½ */
 			struct stream_tuple4_v4 *ip4_addr_heap = (struct stream_tuple4_v4 *)addr_heap;
 			struct stream_tuple4_v4 *ip4_addr_stack = (struct stream_tuple4_v4 *)addr_stack;
 
-			/* 2015-07-15 lijia modify, ×î¿ÉÄÜ²»Ò»ÑùµÄ±äÁ¿·ÅÔÚ×îÇ°Ãæ±È½Ï */
+			/* 2015-07-15 lijia modify, ï¿½ï¿½ï¿½ï¿½Ü²ï¿½Ò»ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½È½ï¿½ */
 			ret = (int)ip4_addr_heap->source - (int)ip4_addr_stack->source;
 			if(ret != 0){
 				return ret;
@@ -743,7 +743,7 @@ static int  cmpaddr_positive(void *addr_heap, void *addr_stack, UCHAR addrtype, 
 		{
 			struct stream_tuple4_v6 *ip6_addr_heap = (struct stream_tuple4_v6 *)addr_heap;
 			struct stream_tuple4_v6 *ip6_addr_stack = (struct stream_tuple4_v6 *)addr_stack;
-			/* 2015-07-15 lijia modify, ×î¿ÉÄÜ²»Ò»ÑùµÄ±äÁ¿·ÅÔÚ×îÇ°Ãæ±È½Ï */
+			/* 2015-07-15 lijia modify, ï¿½ï¿½ï¿½ï¿½Ü²ï¿½Ò»ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½È½ï¿½ */
 			ret = (int)ip6_addr_heap->source - (int)ip6_addr_stack->source;
 			if(ret != 0){
 				return ret;
@@ -804,7 +804,7 @@ static int  cmpaddr_positive(void *addr_heap, void *addr_stack, UCHAR addrtype, 
 		break;
 		
 		default:
-			/* ÆäËûµØÖ·ÀàĞÍ, ÈçVLAN, L2TPµÈ, ÎŞ·½ÏòĞÔÌØÕ÷, ÎŞĞè×ª»», Ö±½Ó±È½Ï¼´¿É */
+			/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½VLAN, L2TPï¿½ï¿½, ï¿½Ş·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½, Ö±ï¿½Ó±È½Ï¼ï¿½ï¿½ï¿½ */
 			ret = memcmp(addr_heap, addr_stack, addrlen);
 	}
 
@@ -817,11 +817,11 @@ static int  cmpaddr_reverse(void *addr_heap, void *addr_stack, UCHAR addrtype, U
 	switch(addrtype){
 		case ADDR_TYPE_IPV4:
 		{
-			/* 2015-07-14 lijia modify, ĞèÒª±È½Ï¶Ë¿Ú */
+			/* 2015-07-14 lijia modify, ï¿½ï¿½Òªï¿½È½Ï¶Ë¿ï¿½ */
 			struct stream_tuple4_v4 *ip4_addr_heap = (struct stream_tuple4_v4 *)addr_heap;
 			struct stream_tuple4_v4 *ip4_addr_stack = (struct stream_tuple4_v4 *)addr_stack;
 
-			/* 2015-07-15 lijia modify, ×î¿ÉÄÜ²»Ò»ÑùµÄ±äÁ¿·ÅÔÚ×îÇ°Ãæ±È½Ï */
+			/* 2015-07-15 lijia modify, ï¿½ï¿½ï¿½ï¿½Ü²ï¿½Ò»ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½È½ï¿½ */
 			ret = (int)ip4_addr_heap->source - (int)ip4_addr_stack->dest;
 			if(ret != 0){
 				return ret;
@@ -845,7 +845,7 @@ static int  cmpaddr_reverse(void *addr_heap, void *addr_stack, UCHAR addrtype, U
 		{
 			struct stream_tuple4_v6 *ip6_addr_heap = (struct stream_tuple4_v6 *)addr_heap;
 			struct stream_tuple4_v6 *ip6_addr_stack = (struct stream_tuple4_v6 *)addr_stack;
-			/* 2015-07-15 lijia modify, ×î¿ÉÄÜ²»Ò»ÑùµÄ±äÁ¿·ÅÔÚ×îÇ°Ãæ±È½Ï */
+			/* 2015-07-15 lijia modify, ï¿½ï¿½ï¿½ï¿½Ü²ï¿½Ò»ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½È½ï¿½ */
 			ret = (int)ip6_addr_heap->source - (int)ip6_addr_stack->dest;
 			if(ret != 0){
 				return ret;
@@ -906,7 +906,7 @@ static int  cmpaddr_reverse(void *addr_heap, void *addr_stack, UCHAR addrtype, U
 		break;		
 		
 		default:
-			/* ÆäËûµØÖ·ÀàĞÍ, ÈçVLAN, L2TPµÈ, ÎŞ·½ÏòĞÔÌØÕ÷, ÎŞĞè×ª»» */
+			/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½VLAN, L2TPï¿½ï¿½, ï¿½Ş·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ */
 			ret = memcmp(addr_heap, addr_stack, addrlen);
 	}
 
@@ -930,7 +930,7 @@ static int cmpaddr_new(struct streaminfo_private *pheap_stream_pr,
 		ret = cmpaddr_positive(heap_addr->paddr,  stack_addr->paddr,
 							heap_addr->addrtype, heap_addr->addrlen);
 	}else{
-		/* 2015-03-04 lijia add, ·´ÏòµØÖ·±È½Ï, ÎŞĞèÏÈCOPY.*/	
+		/* 2015-03-04 lijia add, ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½È½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½COPY.*/	
 		ret = cmpaddr_reverse(heap_addr->paddr,  stack_addr->paddr,
 							heap_addr->addrtype, heap_addr->addrlen);
 	}
@@ -945,8 +945,8 @@ static int cmpaddr_new(struct streaminfo_private *pheap_stream_pr,
 
 
 /*
-	GTPµÄ¶Ë¿Ú¿ÉÄÜÁ½²à¶¼²»Ò»Ñù, ¼´asymmetric addr,
-	´Ë´¦¸üĞÂ¶Ë¿ÚÒÔ×îºóÒ»´Îip»òteid¸Ä±äµÄ°üÎª×¼.
+	GTPï¿½Ä¶Ë¿Ú¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½à¶¼ï¿½ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½asymmetric addr,
+	ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Â¶Ë¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ipï¿½ï¿½teidï¿½Ä±ï¿½Ä°ï¿½Îª×¼.
 */
 static void update_outer_ipv4addr_for_gtp_tunnel(const struct streaminfo_private *top_stream_pr, 
 	struct streaminfo_private *pheap_gtp_stream_pr, struct streaminfo_private *pstack_gtp_stream_pr,
@@ -982,7 +982,7 @@ static void update_outer_ipv4addr_for_gtp_tunnel(const struct streaminfo_private
 		return;
 	}
 
-	/******** for debug log, Òª·ÅÔÚµØÖ·¸üĞÂµÄÇ°Ãæ, ·ñÔòÔ­Ê¼ĞÅÏ¢¾Í±»¸²¸ÇÁË ********/
+	/******** for debug log, Òªï¿½ï¿½ï¿½Úµï¿½Ö·ï¿½ï¿½ï¿½Âµï¿½Ç°ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½Ï¢ï¿½Í±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ********/
 	if(MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, RLOG_LV_DEBUG)){
 		char ip_before_src_str[INET_ADDRSTRLEN], ip_before_dst_str[INET_ADDRSTRLEN];
 		char ip_after_src_str[INET_ADDRSTRLEN], ip_after_dst_str[INET_ADDRSTRLEN];
@@ -997,7 +997,7 @@ static void update_outer_ipv4addr_for_gtp_tunnel(const struct streaminfo_private
 				after_teid_c2s = ntohl(pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s);
 				after_teid_s2c = before_teid_s2c;
 			}else{
-				after_teid_s2c = ntohl(pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s); /* ´Ë´¦²»ÊÇ±ÊÎó!! stackÊÇÁÙÊ±Õ»¿Õ¼ä, teid¹Ì¶¨·ÅÔÚc2s±äÁ¿ÖĞ */
+				after_teid_s2c = ntohl(pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s); /* ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½!! stackï¿½ï¿½ï¿½ï¿½Ê±Õ»ï¿½Õ¼ï¿½, teidï¿½Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½c2sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 				after_teid_c2s = before_teid_c2s;	
 			}
 		
@@ -1024,7 +1024,7 @@ static void update_outer_ipv4addr_for_gtp_tunnel(const struct streaminfo_private
 		heap_tuple4addr->daddr = stack_tuple4addr->saddr;
 		heap_tuple4addr->source = stack_tuple4addr->dest;
 		heap_tuple4addr->dest = stack_tuple4addr->source;	
-		pheap_gtp_stream_pr->stream_public.addr.gtp->teid_s2c = pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s; /* ´Ë´¦²»ÊÇ±ÊÎó!! stackÊÇÁÙÊ±Õ»¿Õ¼ä, teid¹Ì¶¨·ÅÔÚc2s±äÁ¿ÖĞ */
+		pheap_gtp_stream_pr->stream_public.addr.gtp->teid_s2c = pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s; /* ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½!! stackï¿½ï¿½ï¿½ï¿½Ê±Õ»ï¿½Õ¼ï¿½, teidï¿½Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½c2sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	}	
 
 	return;
@@ -1064,7 +1064,7 @@ static void update_outer_ipv6addr_for_gtp_tunnel(const struct streaminfo_private
 		return;
 	}
 
-	/******** for debug log, Òª·ÅÔÚµØÖ·¸üĞÂµÄÇ°Ãæ, ·ñÔòÔ­Ê¼ĞÅÏ¢¾Í±»¸²¸ÇÁË ********/
+	/******** for debug log, Òªï¿½ï¿½ï¿½Úµï¿½Ö·ï¿½ï¿½ï¿½Âµï¿½Ç°ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½Ï¢ï¿½Í±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ********/
 	if( MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, RLOG_LV_DEBUG)){
 		char ip_before_src_str[INET_ADDRSTRLEN], ip_before_dst_str[INET_ADDRSTRLEN];
 		char ip_after_src_str[INET_ADDRSTRLEN], ip_after_dst_str[INET_ADDRSTRLEN];
@@ -1079,7 +1079,7 @@ static void update_outer_ipv6addr_for_gtp_tunnel(const struct streaminfo_private
 				after_teid_c2s = ntohl(pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s);
 				after_teid_s2c = before_teid_s2c;
 			}else{
-				after_teid_s2c = ntohl(pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s); /* ´Ë´¦²»ÊÇ±ÊÎó!! stackÊÇÁÙÊ±Õ»¿Õ¼ä, teid¹Ì¶¨·ÅÔÚc2s±äÁ¿ÖĞ */
+				after_teid_s2c = ntohl(pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s); /* ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½!! stackï¿½ï¿½ï¿½ï¿½Ê±Õ»ï¿½Õ¼ï¿½, teidï¿½Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½c2sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 				after_teid_c2s = before_teid_c2s;	
 			}
 		
@@ -1111,16 +1111,16 @@ static void update_outer_ipv6addr_for_gtp_tunnel(const struct streaminfo_private
 		memcpy(heap_tuple6addr->daddr, stack_tuple6addr->saddr, IPV6_ADDR_LEN);		
 		heap_tuple6addr->source = stack_tuple6addr->dest;
 		heap_tuple6addr->dest = stack_tuple6addr->source;	
-		pheap_gtp_stream_pr->stream_public.addr.gtp->teid_s2c = pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s; /* ´Ë´¦²»ÊÇ±ÊÎó!! stackÊÇÁÙÊ±Õ»¿Õ¼ä, teid¹Ì¶¨·ÅÔÚc2s±äÁ¿ÖĞ */
+		pheap_gtp_stream_pr->stream_public.addr.gtp->teid_s2c = pstack_gtp_stream_pr->stream_public.addr.gtp->teid_c2s; /* ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½!! stackï¿½ï¿½ï¿½ï¿½Ê±Õ»ï¿½Õ¼ï¿½, teidï¿½Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½c2sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	}	
 
 	return;
 }
 
 /*
-	GTPËíµÀµÄÍâ²ãIPËÄÔª×é, Òò»ùÕ¾µÄÇ¨ÒÆ, Íâ²ãIP¿ÉÄÜ±ä»¯.
+	GTPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Ôªï¿½ï¿½, ï¿½ï¿½ï¿½Õ¾ï¿½ï¿½Ç¨ï¿½ï¿½, ï¿½ï¿½ï¿½IPï¿½ï¿½ï¿½Ü±ä»¯.
 
-	pheap_stream_pr, pstack_stream_prÖ¸ÏòGTPÏÂÒ»²ãµÄip/udp²ã.
+	pheap_stream_pr, pstack_stream_prÖ¸ï¿½ï¿½GTPï¿½ï¿½Ò»ï¿½ï¿½ï¿½ip/udpï¿½ï¿½.
 */
 static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_stream_pr, 
 	struct streaminfo_private *pheap_gtp_stream_pr, struct streaminfo_private *pstack_gtp_stream_pr,
@@ -1145,8 +1145,8 @@ static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_
 		}	
 	}	
 	
-	/* Íâ²ãipµØÖ·»á±ä»¯, µ«ËÄ¸öip²»¿ÉÄÜ¶¼²»Ò»Ñù, ÓĞÈÎÒâ·½ÏòµØÖ·ÏàÍ¬, ¼´¿ÉÈÏÎªÊÇÀ´×ÔÍ¬Ò»¸öGTPËíµÀ
-		TODO, ´Ë´¦ĞèÒªÍ¬GTP-CÁª¶¯ ??
+	/* ï¿½ï¿½ï¿½ipï¿½ï¿½Ö·ï¿½ï¿½ä»¯, ï¿½ï¿½ï¿½Ä¸ï¿½ipï¿½ï¿½ï¿½ï¿½ï¿½Ü¶ï¿½ï¿½ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½â·½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Í¬, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ò»ï¿½ï¿½GTPï¿½ï¿½ï¿½ï¿½
+		TODO, ï¿½Ë´ï¿½ï¿½ï¿½ÒªÍ¬GTP-Cï¿½ï¿½ï¿½ï¿½ ??
 	*/
 	if (pheap_stream->addr.addrtype == pstack_stream->addr.addrtype && pheap_stream->addr.addrlen == pstack_stream->addr.addrlen)
 	{
@@ -1214,18 +1214,18 @@ static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_
 						pstack_stream->addr.addrlen);
 	}
 
-	if(0 == this_layer_is_same){ /* ±¾²ãµØÖ·È«²»Ò»Ñù, ÈÏÎª²»ÊÇÀ´×ÔÒ»¸öËíµÀ, Ö±½Ó·µ»Ø´íÎó */
+	if(0 == this_layer_is_same){ /* ï¿½ï¿½ï¿½ï¿½ï¿½Ö·È«ï¿½ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ö±ï¿½Ó·ï¿½ï¿½Ø´ï¿½ï¿½ï¿½ */
 		return -1;
 	}
 
-	/* ¼ÌĞø±È½ÏÏÂÒ»²ãµØÖ· */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½È½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö· */
 	ret=checkstreamorder(top_stream_pr, (struct streaminfo_private *)(pheap_ip_stream_pr->pfather_pr), 
 						 (struct streaminfo_private *)(pstack_ip_stream_pr->pfather_pr),
 						heap_streaminfo_skip_layer_num, stack_streaminfo_skip_layer_num);
 
 	if(0 == ret){
-		/* Ö´ĞĞµ½´Ë, ËùÓĞµØÖ·¶¼ÏàÍ¬, »òÕßÊÇ²»ÓÃÓÚµØÖ·±È½Ï, ËµÃ÷µ±Ç°Á÷pheap_stream_pr,pstack_stream_prÊÇÍ¬ÊôÓÚÒ»¸öÉÏ²ãTCP/UDPÁ÷,
-			³¢ÊÔ¸üĞÂÍâ²ãµÄipv4/udpÁ÷ĞÅÏ¢.
+		/* Ö´ï¿½Ğµï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ğµï¿½Ö·ï¿½ï¿½ï¿½ï¿½Í¬, ï¿½ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½ï¿½Úµï¿½Ö·ï¿½È½ï¿½, Ëµï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½pheap_stream_pr,pstack_stream_prï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ï²ï¿½TCP/UDPï¿½ï¿½,
+			ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ipv4/udpï¿½ï¿½ï¿½ï¿½Ï¢.
 		*/
 
 		if(pheap_stream->addr.addrtype == ADDR_TYPE_IPV4)
@@ -1242,9 +1242,9 @@ static int checkstreamorder_for_gtp_tunnel(const struct streaminfo_private *top_
 
 }
 
-/*±È½ÏÁ½¸öÁ÷½á¹¹Ìå´óĞ¡ */
-//adjust 20140324 ±È½ÏÁ½¸öÁ÷½á¹¹ÊÇ·ñÏàÍ¬£¬±ØĞëpfather ÄÚµÄÍêÈ«ÏàÍ¬,
-//µİ¹é±È½ÏÁ½¸öÁ÷µÄ¸¸Á÷µÄÇé¿ö
+/*ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½Ğ¡ */
+//adjust 20140324 ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½Ç·ï¿½ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pfather ï¿½Úµï¿½ï¿½ï¿½È«ï¿½ï¿½Í¬,
+//ï¿½İ¹ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 /*
 	return value:
 		0 : found, success;
@@ -1289,9 +1289,9 @@ int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct stre
 	pstack_stream = &pstack_stream_pr->stream_public;
 
 
-	/*  GTPµÄTEID»á±ä»¯, ²»ÄÜ¼òµ¥µÄ±È½ÏaddrÄÚÈİ, ËùÒÔ±¾²ãaddr_use_as_hash=0,
-	    ËùÒÔ»áÌø¹ıgtp¶ø±È½ÏÏÂ²ãµÄip/udp, µ«ÊÇÍâ²ãµÄipºÍ¶Ë¿Ú¿ÉÄÜ»áÆ¯ÒÆ, Ò²²»ÄÜ°´³£¹æ·½Ê½±È½ÏipºÍport,
-		ËùÒÔGTP¼ÓÒ»¸öÌØÊâ´¦Àí.
+	/*  GTPï¿½ï¿½TEIDï¿½ï¿½ä»¯, ï¿½ï¿½ï¿½Ü¼òµ¥µÄ±È½ï¿½addrï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½addr_use_as_hash=0,
+	    ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½gtpï¿½ï¿½ï¿½È½ï¿½ï¿½Â²ï¿½ï¿½ip/udp, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ipï¿½Í¶Ë¿Ú¿ï¿½ï¿½Ü»ï¿½Æ¯ï¿½ï¿½, Ò²ï¿½ï¿½ï¿½Ü°ï¿½ï¿½ï¿½ï¿½æ·½Ê½ï¿½È½ï¿½ipï¿½ï¿½port,
+		ï¿½ï¿½ï¿½ï¿½GTPï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½â´¦ï¿½ï¿½.
 	*/
 	switch(pstack_stream->addr.addrtype){
 		case ADDR_TYPE_GPRS_TUNNEL:
@@ -1322,7 +1322,7 @@ int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct stre
 	if(0 != ret){
 		return ret;
 	}else{
-		/* 2015-03-11 lijia add, ĞèÒª½«µ±Ç°ĞÂIP²ãµÄ°üĞÅÏ¢´«µİµ½Á÷ĞÅÏ¢ */
+		/* 2015-03-11 lijia add, ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½IPï¿½ï¿½Ä°ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½İµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ */
 		pheap_stream_pr->stream_public.addr.pktipfragtype = pstack_stream_pr->stream_public.addr.pktipfragtype;
 	}
 	
@@ -1339,14 +1339,14 @@ int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct stre
 }
 
 /*
-	ÓÃÓÚ·Ç¶Ô³ÆĞ­Òé²ãÊıµÄ¶Ô×¼.
+	ï¿½ï¿½ï¿½Ú·Ç¶Ô³ï¿½Ğ­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶ï¿½×¼.
 
-	ÀıÈç:
+	ï¿½ï¿½ï¿½ï¿½:
 		heap stream : tuple4->eth,
 		stack stream: tuple4->mpls->eth,
-		ÕâÖÖÇé¿öÏÂ, ¿ÉÒÔÈÏÎªÄÚ²ãtcpÊÇÍ¬ÊôÓÚÒ»¸öÁ÷.
+		ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Ú²ï¿½tcpï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½.
 
-	¶Ô×¼Ö®ºó:
+	ï¿½ï¿½×¼Ö®ï¿½ï¿½:
 	    heap stream : tuple4->mpls->eth
 */
 static void streaminfo_layer_alignment(const struct streaminfo *top_stream, struct streaminfo_private *heap_stream_pr, struct streaminfo_private *stack_stream_pr)
@@ -1364,14 +1364,14 @@ static void streaminfo_layer_alignment(const struct streaminfo *top_stream, stru
 
 	if(heap_stream_pr->pfather_pr->stream_public.addr.addrtype != stack_stream_pr->pfather_pr->stream_public.addr.addrtype){
 		/*
-			new_heap_tmp´ËÊ±Ö´Ïòmpls²ã
+			new_heap_tmpï¿½ï¿½Ê±Ö´ï¿½ï¿½mplsï¿½ï¿½
 		*/
 		if(STREAM_TYPE_TCP == top_stream->type){
 			mem_used_type = SAPP_MEM_DYN_TCP_STREAM;
 		}else{
 			mem_used_type = SAPP_MEM_DYN_UDP_STREAM;
 		}
-		new_heap_tmp = copy_stream_info_to_heap_single_layer(mem_used_type, stack_stream_pr->pfather_pr, 1); /* Á÷¶Ô×¼Ê±, ¿Ï¶¨ÊÇ¶Ô²àÀ´°ü, ·´Ïòcopy, ÒòÎªÍ¬Ïò¾Í²»´æÔÚ²ãÊı²»Ò»ÖÂÁË, reverse¹Ì¶¨Îª1 */
+		new_heap_tmp = copy_stream_info_to_heap_single_layer(mem_used_type, stack_stream_pr->pfather_pr, 1); /* ï¿½ï¿½ï¿½ï¿½×¼Ê±, ï¿½Ï¶ï¿½ï¿½Ç¶Ô²ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½copy, ï¿½ï¿½ÎªÍ¬ï¿½ï¿½Í²ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½, reverseï¿½Ì¶ï¿½Îª1 */
 
 		new_heap_tmp->pfather_pr = heap_stream_pr->pfather_pr;
 		new_heap_tmp->stream_public.pfather = &heap_stream_pr->pfather_pr->stream_public;
@@ -1386,8 +1386,8 @@ static void streaminfo_layer_alignment(const struct streaminfo *top_stream, stru
 }
 
 /*
-	plinkhead: ÒÑ´´½¨µÄÁ÷ÔÚhtableÖĞÄ³¸öslotµÄµÚÒ»¸ö½Úµã;
-	pinsert  : µ±Ç°À´°üµÄÁÙÊ±Õ»¿Õ¼äÁ÷µØÖ·.
+	plinkhead: ï¿½Ñ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½htableï¿½ï¿½Ä³ï¿½ï¿½slotï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½Úµï¿½;
+	pinsert  : ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Õ»ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½Ö·.
 */
 static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhead, struct streamindex *pinsert)
 {
@@ -1399,12 +1399,12 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 	unsigned long hash_list_num = 0;
 	UCHAR threadnum = psinsert_pr->stream_public.threadnum;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
-	int stack_streaminfo_skip_layer_num = 0, heap_streaminfo_skip_layer_num = 0; /* ²»ĞèÒªµØÖ·±È½Ï²ãµÄÊıÁ¿ */
+	int stack_streaminfo_skip_layer_num = 0, heap_streaminfo_skip_layer_num = 0; /* ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ö·ï¿½È½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 
 	while(phead!=NULL)
 	{  
 		pshead_pr=&(phead->stream);	
-		/* 2015-12-14 lijia add, ÏÈÍ¨¹ıµÚ¶ş¸öHASHÖµÔ¤ÏÈÅĞ¶ÏÊÇ·ñÏàµÈ, Èç¹ûHASH²»Í¬, µØÖ·¿Ï¶¨²»Í¬ */
+		/* 2015-12-14 lijia add, ï¿½ï¿½Í¨ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½HASHÖµÔ¤ï¿½ï¿½ï¿½Ğ¶ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½HASHï¿½ï¿½Í¬, ï¿½ï¿½Ö·ï¿½Ï¶ï¿½ï¿½ï¿½Í¬ */
 		if(pshead_pr->hash_slave != psinsert_pr->hash_slave){
 			phead=phead->phashnext;
 			hash_list_num++;
@@ -1443,9 +1443,9 @@ static struct streamindex * findandsethashindex_lru(struct streamindex *plinkhea
 
 
 /*
-//±¾º¯ÊıÄÚ×öÁËµÄÊÂÇé
-//1) ÅĞ¶¨ÊÇ·ñ´æÔÚÁ÷
-//2) ¸üĞÂÁ÷µÄ·½ÏòĞÅÏ¢ ,dir ,curdir ,routdir
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½
+//1) ï¿½Ğ¶ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//2) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ ,dir ,curdir ,routdir
 */
 struct streamindex *findstreamindex(struct streamindex *pindex, const raw_pkt_t *raw_pkt)
 {
@@ -1493,8 +1493,8 @@ struct streamindex *findstreamindex(struct streamindex *pindex, const raw_pkt_t 
 		elemcount=this_thread_stream->tcp_stream_talbe_hash_count[hash_index];
 	}
 
-	if(0 == elemcount){ /* 2015-12-14 lijia add, HASH±íµ±Ç°SLOT²¢Ã»ÓĞÁ÷, Ö±½Ó·µ»Ø */
-		ptmp->hash_index = hash_index; /* ±£´æ¼ÆËãµÃµ½µÄHASHÖµ */
+	if(0 == elemcount){ /* 2015-12-14 lijia add, HASHï¿½ï¿½ï¿½ï¿½Ç°SLOTï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½, Ö±ï¿½Ó·ï¿½ï¿½ï¿½ */
+		ptmp->hash_index = hash_index; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½HASHÖµ */
 		return NULL;
 	}
 	
@@ -1505,11 +1505,11 @@ struct streamindex *findstreamindex(struct streamindex *pindex, const raw_pkt_t 
 		/*
 			2015-12-14 lijia add
 			NOTE: 
-			Èç¹ûµ±Ç°Á÷Á¬ĞøN´Î¶¼²»ÊÇHASH_SLOTµÄµÚÒ»Î», ÔòÒÆ¶¯µ½µÚÒ»Î», ÒÆ¶¯ºó¼ÆÊıÇåÁã,
-			ÏÂ´Î²éÕÒ¿ÉÄÜ×îÓÅ, 
-			Í¬Ê±·ÀÖ¹´ÕÇÉÒ»¸öSLOTµÄ¼¸¸öÁ÷¶¼Æµ·±ÓĞ°üµÄÇé¿öÏÂ, Ö¸ÕëÆµ·±À´»ØÒÆ¶¯, ÉõÖÁ½µµÍĞÔÄÜ.
+			ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Nï¿½Î¶ï¿½ï¿½ï¿½ï¿½ï¿½HASH_SLOTï¿½Äµï¿½Ò»Î», ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ò»Î», ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,
+			ï¿½Â´Î²ï¿½ï¿½Ò¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, 
+			Í¬Ê±ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½SLOTï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Ğ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ö¸ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
 
-			Ä¿µÄÊÇÄÄ¸öÁ÷µÄÊı¾İ°ü½Ï¶à, Ë­¾Í¾­³£ÔÚSLOTµÚÒ»Î».
+			Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ°ï¿½ï¿½Ï¶ï¿½, Ë­ï¿½Í¾ï¿½ï¿½ï¿½ï¿½ï¿½SLOTï¿½ï¿½Ò»Î».
 		*/
 		if((a_index != phashstream[hash_index]) && (a_index->stream.hash_not_head_times++ > 5)){ 
 			if(a_index->phashnext){
@@ -1580,7 +1580,7 @@ void hash_add_stream(struct streamindex *pindex)
      }
 	 
 	
-	 /* ·ÅÔÚHASH-SlotµÚÒ»¸öÎ»ÖÃ */
+	 /* ï¿½ï¿½ï¿½ï¿½HASH-Slotï¿½ï¿½Ò»ï¿½ï¿½Î»ï¿½ï¿½ */
 	   if(phashstream[hash_index]!=NULL)
 		phashstream[hash_index]->phashprev=pindex;
 	   pindex->phashnext=phashstream[hash_index];
@@ -1588,8 +1588,8 @@ void hash_add_stream(struct streamindex *pindex)
 
 	pelementcount[hash_index]++;
 
-	/* TCP, UDPĞÂ½¨Á÷Ê±¶¼»áµ÷ÓÃ´Ëº¯Êı, ËùÒÔ°Ñddos¼ì²â·Åµ½´Ë´¦,
-		µ«ÊÇÇĞ¼Ç²»Òª·Åµ½streamaddlist()º¯Êı, ÒòÎªÍ¬Ò»¸öÁ÷ÇĞ»»²»Í¬×´Ì¬Ê±, ¿ÉÄÜ»áµ÷ÓÃstreamaddlist()ºÃ¼¸´Î.
+	/* TCP, UDPï¿½Â½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã´Ëºï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ô°ï¿½ddosï¿½ï¿½ï¿½Åµï¿½ï¿½Ë´ï¿½,
+		ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¼Ç²ï¿½Òªï¿½Åµï¿½streamaddlist()ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ÎªÍ¬Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½Í¬×´Ì¬Ê±, ï¿½ï¿½ï¿½Ü»ï¿½ï¿½ï¿½ï¿½streamaddlist()ï¿½Ã¼ï¿½ï¿½ï¿½.
 	*/
 	if(pindex->stream.create_dir_by_well_known_port != 1)
 	{
@@ -1879,7 +1879,7 @@ int addr_dir_relation(void *addr, int addrtype)
 		break;
 
 		default:
-			/* ÆäËûµØÖ·ÀàĞÍÎŞ·½ÏòĞÔÌØÕ÷, Ä¬ÈÏÎª0 */
+			/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ş·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ä¬ï¿½ï¿½Îª0 */
 			 relation = 0;
 		break;
 	}
@@ -1887,7 +1887,7 @@ int addr_dir_relation(void *addr, int addrtype)
 	return relation;
 }
 
-/* ½«addrµØÖ··´Ïò */
+/* ï¿½ï¿½addrï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ */
 void reverse_addr(void *addr, int addrtype)
 {
 	UINT16 tmp_ushort;
@@ -1951,14 +1951,14 @@ void reverse_addr(void *addr, int addrtype)
 		/* TODO 1:PPTP-addr */
 
 		default:
-			/* ÆäËûµØÖ·ÀàĞÍ, ÈçVLAN, L2TPµÈ, ÎŞ·½ÏòĞÔÌØÕ÷, ÎŞĞè×ª»» */
+			/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½VLAN, L2TPï¿½ï¿½, ï¿½Ş·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ */
 			return;
 	}
 
 	return;
 }
 
-/* ·´ÏòµØÖ·copy */
+/* ï¿½ï¿½ï¿½ï¿½ï¿½Ö·copy */
 void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void *daddr, const void *saddr, int addrtype, int addrlen)
 {
 	switch(addrtype){
@@ -1984,42 +1984,42 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
 		}
 		break;
 
-		case ADDR_TYPE_MAC: /* 2015-06-15 lijia add, Ä¾Âí¼ì²âÉè±¸ĞèÇó */
+		case ADDR_TYPE_MAC: /* 2015-06-15 lijia add, Ä¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ */
 		{
 			const struct layer_addr_mac *cur_stack_mac_saddr = (const struct layer_addr_mac *) saddr;
 			struct layer_addr_mac *heap_stream_mac_daddr = (struct layer_addr_mac *) daddr;
 				
-			//if (1 == sapp_global_val->config.protocol_feature.reverse_ethernet_addr_enabled) //2018-12-07 yw add, macµØÖ·ÖĞ°üº¬ĞÅÏ¢Ê±ÎŞĞè·­×ª
+			//if (1 == sapp_global_val->config.protocol_feature.reverse_ethernet_addr_enabled) //2018-12-07 yw add, macï¿½ï¿½Ö·ï¿½Ğ°ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢Ê±ï¿½ï¿½ï¿½è·­×ª
 			if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MAC][stack_stream_pr->layer_index] == 0){
-				/* ²»¿ªÆô·Ç¶Ô³ÆµØÖ·ÌØĞÔÊ±, ethernetºÍip,tcpÒ»Ñù, µßµ¹Ô´ºÍÄ¿µÄµØÖ·¼´¿É,Ë«ÏòµØÖ·¶¼´æ´¢ÓÚsrc_addr */
+				/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶Ô³Æµï¿½Ö·ï¿½ï¿½ï¿½ï¿½Ê±, ethernetï¿½ï¿½ip,tcpÒ»ï¿½ï¿½, ï¿½ßµï¿½Ô´ï¿½ï¿½Ä¿ï¿½Äµï¿½Ö·ï¿½ï¿½ï¿½ï¿½,Ë«ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½src_addr */
 				memcpy(heap_stream_mac_daddr->src_addr.h_source, cur_stack_mac_saddr->src_addr.h_dest, ETH_ALEN);
 				memcpy(heap_stream_mac_daddr->src_addr.h_dest, cur_stack_mac_saddr->src_addr.h_source, ETH_ALEN);
 			}else{
-				/* ¿ªÆô·Ç¶Ô³ÆµØÖ·ÌØĞÔÊ±,Á½¸ö·½Ïò¸÷ÓĞËÄ¸ömacµØÖ·,´ËÊ±ÒªÕûÌåcopy 14¸ö×Ö½Ú, ½«Õ»ÖĞµÄsrc_addr´æÓÚheapµÄdst_addrÖĞ, ¶ÔÓÚstruct ethhdrÖĞµÄµØÖ··½Ïò²»ÄÜ±ä */
+				/* ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶Ô³Æµï¿½Ö·ï¿½ï¿½ï¿½ï¿½Ê±,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½macï¿½ï¿½Ö·,ï¿½ï¿½Ê±Òªï¿½ï¿½ï¿½ï¿½copy 14ï¿½ï¿½ï¿½Ö½ï¿½, ï¿½ï¿½Õ»ï¿½Ğµï¿½src_addrï¿½ï¿½ï¿½ï¿½heapï¿½ï¿½dst_addrï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½struct ethhdrï¿½ĞµÄµï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ü±ï¿½ */
 				memcpy(&heap_stream_mac_daddr->dst_addr, &cur_stack_mac_saddr->src_addr, sizeof(struct ethhdr));
 			}
 		}
 		break;
 
-		case __ADDR_TYPE_IP_PAIR_V4: /* ´¿IPv4²ã, Í¨³£ÊÇ»ùÓÚËíµÀÄ£Ê½ */
+		case __ADDR_TYPE_IP_PAIR_V4: /* ï¿½ï¿½IPv4ï¿½ï¿½, Í¨ï¿½ï¿½ï¿½Ç»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ */
 		{
 			const struct layer_addr_ipv4 *ip4_saddr = (const struct layer_addr_ipv4 *)saddr;
 			struct layer_addr_ipv4 *ip4_daddr = (struct layer_addr_ipv4 *)daddr;
 			ip4_daddr->saddr = ip4_saddr->daddr;
-			ip4_daddr->daddr = ip4_saddr->saddr;	 /* Ö»ÓĞIPµØÖ· */	
-			/* Note: ´¿IP²ãµÄ¶Ë¿ÚÖµÒ»¶¨ÒªÖÃÎª0, ·ñÔò»áÊ¹ÓÃÎ´³õÊ¼»¯µÄÄÚ´æ, ÔÚºóĞøÁ÷»¹Ô­µÄcmpaddr()º¯ÊıÖĞ, ¿ÉÄÜ»áµ¼ÖÂÁ÷±È½ÏµØÖ·²»Ò»Ñù¶øÕÒ²»µ½ */
+			ip4_daddr->daddr = ip4_saddr->saddr;	 /* Ö»ï¿½ï¿½IPï¿½ï¿½Ö· */	
+			/* Note: ï¿½ï¿½IPï¿½ï¿½Ä¶Ë¿ï¿½ÖµÒ»ï¿½ï¿½Òªï¿½ï¿½Îª0, ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Î´ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½, ï¿½Úºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½cmpaddr()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ü»áµ¼ï¿½ï¿½ï¿½ï¿½ï¿½È½Ïµï¿½Ö·ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ */
 			ip4_daddr->source = 0;
 			ip4_daddr->dest = 0;
 		}		
 		break;
 
-		case __ADDR_TYPE_IP_PAIR_V6: /* ´¿IPv6²ã, Í¨³£ÊÇ»ùÓÚËíµÀÄ£Ê½ */
+		case __ADDR_TYPE_IP_PAIR_V6: /* ï¿½ï¿½IPv6ï¿½ï¿½, Í¨ï¿½ï¿½ï¿½Ç»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ */
 		{
 			const struct layer_addr_ipv6 *ip6_saddr = (const struct layer_addr_ipv6 *)saddr;
 			struct layer_addr_ipv6 *ip6_daddr = (struct layer_addr_ipv6 *)daddr;
 			memcpy(ip6_daddr->saddr, ip6_saddr->daddr, IPV6_ADDR_LEN);
 			memcpy(ip6_daddr->daddr, ip6_saddr->saddr, IPV6_ADDR_LEN);
-			/* Note: ´¿IP²ãµÄ¶Ë¿ÚÖµÒ»¶¨ÒªÖÃÎª0, ·ñÔò»áÊ¹ÓÃÎ´³õÊ¼»¯µÄÄÚ´æ, ÔÚºóĞøÁ÷»¹Ô­µÄcmpaddr()º¯ÊıÖĞ, ¿ÉÄÜ»áµ¼ÖÂÁ÷±È½ÏµØÖ·²»Ò»Ñù¶øÕÒ²»µ½ */
+			/* Note: ï¿½ï¿½IPï¿½ï¿½Ä¶Ë¿ï¿½ÖµÒ»ï¿½ï¿½Òªï¿½ï¿½Îª0, ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Î´ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½, ï¿½Úºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½cmpaddr()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ü»áµ¼ï¿½ï¿½ï¿½ï¿½ï¿½È½Ïµï¿½Ö·ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ */
 			ip6_daddr->source = 0;
 			ip6_daddr->dest = 0;
 		}		
@@ -2031,7 +2031,7 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
             struct layer_addr_vlan *dst_vlan = (struct layer_addr_vlan *)daddr;
 
             memset(dst_vlan, 0, sizeof(struct layer_addr_vlan));
-			/* µ±Ç°stackÀïµÄ°üµØÖ·ĞÅÏ¢¹Ì¶¨´æ´¢ÓÚsrc·½Ïò, ·´ÏòcopyÊÇ½«stackµØÖ·¿½±´µ½¶ÑÀïµÄµØÖ· */
+			/* ï¿½ï¿½Ç°stackï¿½ï¿½Ä°ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ï¢ï¿½Ì¶ï¿½ï¿½æ´¢ï¿½ï¿½srcï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½copyï¿½Ç½ï¿½stackï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½Ö· */
             memcpy(dst_vlan->s2c_addr_array, src_vlan->c2s_addr_array, sizeof(src_vlan->c2s_addr_array));
             dst_vlan->s2c_layer_num = src_vlan->c2s_layer_num;
         }
@@ -2052,7 +2052,7 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
             struct layer_addr_mpls *dst_mpls = (struct layer_addr_mpls *)daddr;
 
             memset(dst_mpls, 0, sizeof(struct layer_addr_mpls));
-			/* µ±Ç°stackÀïµÄ°üµØÖ·ĞÅÏ¢¹Ì¶¨´æ´¢ÓÚsrc·½Ïò, ·´ÏòcopyÊÇ½«stackµØÖ·¿½±´µ½¶ÑÀïµÄµØÖ· */
+			/* ï¿½ï¿½Ç°stackï¿½ï¿½Ä°ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ï¢ï¿½Ì¶ï¿½ï¿½æ´¢ï¿½ï¿½srcï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½copyï¿½Ç½ï¿½stackï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½Ö· */
             memcpy(dst_mpls->s2c_addr_array, current_stack_addr->c2s_addr_array, sizeof(current_stack_addr->c2s_addr_array));
             dst_mpls->s2c_layer_num = current_stack_addr->c2s_layer_num;
             if(current_stack_addr->c2s_has_ctrl_word){
@@ -2085,7 +2085,7 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
 		break;
 		
 		default:
-			/* ÆäËûµØÖ·ÀàĞÍ, ÎŞ·½ÏòĞÔÌØÕ÷,Ö±½Ócopy */
+			/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½, ï¿½Ş·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,Ö±ï¿½ï¿½copy */
 			memcpy(daddr, saddr, addrlen);
 			return;
 	}
@@ -2094,9 +2094,9 @@ void addr_reverse_memcpy(const struct streaminfo_private *stack_stream_pr, void 
 }
 
 /* 
-	ÒòÎªÔ¤ÏÈ·ÖÅäÁËÒ»Ğ©streamindex½á¹¹, Ã¿´Î´´½¨Á÷Ê±, ´ÓÔ¤ÏÈ·ÖÅäµÄÄÚ´æÖĞ»ñÈ¡,  
-	µ«malloc_and_copy_streamindex()º¯Êı, Ö»copy streamindex½á¹¹, Ã»ÓĞaddr.paddr, 
-	ĞèÒª½«µØÖ·ĞÅÏ¢Ò²copyµ½¶ÑÀï.
+	ï¿½ï¿½ÎªÔ¤ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½Ò»Ğ©streamindexï¿½á¹¹, Ã¿ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½Ê±, ï¿½ï¿½Ô¤ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ğ»ï¿½È¡,  
+	ï¿½ï¿½malloc_and_copy_streamindex()ï¿½ï¿½ï¿½ï¿½, Ö»copy streamindexï¿½á¹¹, Ã»ï¿½ï¿½addr.paddr, 
+	ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ï¢Ò²copyï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
 */
 int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *pstream_stack, int reverse)
 {
@@ -2185,16 +2185,16 @@ void free_heap_stream_info(int mem_used_type, struct streaminfo *heap_stream, in
 	pfather_pr = heap_stream_pr->pfather_pr;
 	addr = &heap_stream->addr;
 
-	/* ÎªÁË½ÚÊ¡¿Õ¼ä, µØÖ·ÀàĞÍADDR_TYPE_IPV4/6Êµ¼Ê´æ´¢ÔÚÏÂÒ»²ãµÄIP²ã, ÎŞĞèfree */
+	/* Îªï¿½Ë½ï¿½Ê¡ï¿½Õ¼ï¿½, ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ADDR_TYPE_IPV4/6Êµï¿½Ê´æ´¢ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½IPï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½free */
 	if(addr->paddr){
 		sapp_mem_free(SAPP_MEM_DYN_PADDR, heap_stream->threadnum, addr->paddr);
 		addr->paddr = NULL;
 	}
 	
 	if(layer != 0){
-		/* Á÷½á¹¹µÄ×îÄÚ²ã¼´µÚ0²ã, Êµ¼ÊÊÇÍ¨¹ımalloc_and_copy_streamindex()»ñÈ¡µÄÔ¤ÏÈ·ÖÅäµÄÄÚ´æ,
-			ÎŞĞèfree, 
-			pfatherÖ¸ÏòµÄstreaminfo½á¹¹²ÅÊÇÍ¨¹ıcopy_stream_info_to_heap()¶¯Ì¬mallocµÄ.
+		/* ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ã¼´ï¿½ï¿½0ï¿½ï¿½, Êµï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½malloc_and_copy_streamindex()ï¿½ï¿½È¡ï¿½ï¿½Ô¤ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½,
+			ï¿½ï¿½ï¿½ï¿½free, 
+			pfatherÖ¸ï¿½ï¿½ï¿½streaminfoï¿½á¹¹ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½copy_stream_info_to_heap()ï¿½ï¿½Ì¬mallocï¿½ï¿½.
 		*/
 		sapp_mem_free((sapp_mem_type_t)mem_used_type, heap_stream->threadnum, heap_stream);	
 	}
@@ -2241,9 +2241,9 @@ static inline void update_stream_status(UCHAR threadnum, UCHAR stream_type, UCHA
 
 
 /*
-	ÒòÖÚºËtilera¼Ü¹¹ÏÂµÄÄÚ´æ·ÖÅä·ÖÎªlocalºÍsharedÄ£Ê½, 
-	Ô­À´ÔÚÖ÷Ïß³Ì½«ËùÓĞÈ«¾ÖÄÚ´æÒ»´ÎĞÔÉêÇëÍêµÄÄ£Ê½²»¿ÉÓÃ, 
-	¸ÄÎªÃ¿¸ö¹¤×÷Ïß³Ì×Ô¼º³õÊ¼»¯.
+	ï¿½ï¿½ï¿½Úºï¿½tileraï¿½Ü¹ï¿½ï¿½Âµï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½Îªlocalï¿½ï¿½sharedÄ£Ê½, 
+	Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³Ì½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½Ú´ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, 
+	ï¿½ï¿½ÎªÃ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½.
 */
 int thread_self_init(int thread_seq)
 {
@@ -2262,19 +2262,19 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
 		*tunnel_type = STREAM_TUNNLE_NON;
 	}
 	
-	/* ¸¸Á÷µÄÖ¸Õë, ×¢Òâ: sapp_online°æºÍsapp_ip_port_union°æ²»Ò»ÖÂ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½, ×¢ï¿½ï¿½: sapp_onlineï¿½ï¿½ï¿½sapp_ip_port_unionï¿½æ²»Ò»ï¿½ï¿½ */
 	const struct streaminfo *pfather = this_stream->pfather; 
 	
 	switch(this_stream->addr.addrtype){
 		case ADDR_TYPE_MAC:
 			pfather = this_stream->pfather;  //
 			if(pfather != NULL){
-					//mac in mac²»Ëã×öËíµÀ, Ö»ÊÇÒ»ÖÖoverlayµÄ·½Ê½.
+					//mac in macï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ö»ï¿½ï¿½Ò»ï¿½ï¿½overlayï¿½Ä·ï¿½Ê½.
 			}
 			break;
 
 		case ADDR_TYPE_IPV4:
-			pfather = this_stream->pfather;  /* IP-TCP/UDP±»ÈÏÎªÊÇÒ»¸öÕûÌå, ¸üĞÂpfatherÖ¸Õë */
+			pfather = this_stream->pfather;  /* IP-TCP/UDPï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½pfatherÖ¸ï¿½ï¿½ */
 			if(pfather != NULL){
 				 if(__ADDR_TYPE_IP_PAIR_V4 == pfather->addr.addrtype){
 				 	*tunnel_type |= (unsigned short)STREAM_TUNNLE_IP_IN_IP;
@@ -2303,7 +2303,7 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
 		break;		
 		
 		case ADDR_TYPE_IPV6:
-			pfather = this_stream->pfather;  /* IP-TCP/UDP±»ÈÏÎªÊÇÒ»¸öÕûÌå, ¸üĞÂpfatherÖ¸Õë */
+			pfather = this_stream->pfather;  /* IP-TCP/UDPï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½pfatherÖ¸ï¿½ï¿½ */
 			if(pfather != NULL){
 				if(__ADDR_TYPE_IP_PAIR_V4 == pfather->addr.addrtype){
 					*tunnel_type |= (unsigned short)STREAM_TUNNLE_6OVER4;
@@ -2326,22 +2326,22 @@ int get_stream_carry_tunnel_type(const struct streaminfo *this_stream,
 		break;
 
 		case ADDR_TYPE_PPTP:
-			/* pptp_entry()º¯ÊıÖĞÒÑ¾­½«µØÖ·ÖØÖÃÎªADDR_TYPE_PPTP, ¿Ï¶¨¾ÍÊÇPPTPËíµÀ */
+			/* pptp_entry()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ÎªADDR_TYPE_PPTP, ï¿½Ï¶ï¿½ï¿½ï¿½ï¿½ï¿½PPTPï¿½ï¿½ï¿½ï¿½ */
 			*tunnel_type |= (unsigned short)STREAM_TUNNLE_PPTP;
 		break;
 
 		case ADDR_TYPE_L2TP:
-			/* l2tp_entry()º¯ÊıÖĞÒÑ¾­½«µØÖ·ÖØÖÃÎªADDR_TYPE_L2TP, ¿Ï¶¨¾ÍÊÇL2TPËíµÀ */
+			/* l2tp_entry()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ÎªADDR_TYPE_L2TP, ï¿½Ï¶ï¿½ï¿½ï¿½ï¿½ï¿½L2TPï¿½ï¿½ï¿½ï¿½ */
 			*tunnel_type |= (unsigned short)STREAM_TUNNLE_L2TP;
 		break;
 
 		case ADDR_TYPE_GPRS_TUNNEL:
-			/* gtp_entry()º¯ÊıÖĞÒÑ¾­½«µØÖ·ÖØÖÃÎªADDR_TYPE_GTP, ¿Ï¶¨¾ÍÊÇGTPËíµÀ */
+			/* gtp_entry()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ÎªADDR_TYPE_GTP, ï¿½Ï¶ï¿½ï¿½ï¿½ï¿½ï¿½GTPï¿½ï¿½ï¿½ï¿½ */
 			*tunnel_type |= (unsigned short)STREAM_TUNNEL_GPRS_TUNNEL;
 			break;
 	}
 
-	/* 2021-01-11, ´Ë´¦¿ÉÒÔ²»¹ØĞÄvxlanµÈ·â×°²ã, Ö±½ÓÓÃpfather */
+	/* 2021-01-11, ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½ï¿½ï¿½vxlanï¿½È·ï¿½×°ï¿½ï¿½, Ö±ï¿½ï¿½ï¿½ï¿½pfather */
 	return get_stream_carry_tunnel_type(pfather, this_stream, tunnel_type);
 }
 
@@ -2358,15 +2358,15 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 		switch(p_stack->stream_public.addr.addrtype)
 		{
 			case ADDR_TYPE_GPRS_TUNNEL:
-			    /* GTPµØÖ·C2S, S2C·½Ïò¶ÀÁ¢, ÎŞ·¨¿¿µ±Ç°°üµØÖ·Çø·Ödir, Ã¿´ÎÕ»ÀïµÄ±äÁ¿¶¼´æ´¢ÓÚsource·½Ïò, ¼´C2S·½Ïò,  
-			       ´´½¨Á÷Ê±, ÒÑ¾­¸ù¾İ×îÄÚ²ãTCP, UDPµÄÁ÷·½Ïò, ½«GTPµÄµØÖ·´æÓÚsource»òdest, 
-			       ´Ëº¯ÊıÊÇ¸üĞÂµÄ¶Ô¶ËÈ±Ê§µÄµØÖ·, ½ö¿¿×îÄÚ²ãµÄcur_dir±íÊ¾ĞèÒª¸üĞÂÄÄ¸ö·½ÏòµÄµØÖ·, ¹Ì¶¨´Óµ±Ç°°üp_stackµÄsource¿½±´. 
+			    /* GTPï¿½ï¿½Ö·C2S, S2Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ş·ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½dir, Ã¿ï¿½ï¿½Õ»ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½sourceï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½C2Sï¿½ï¿½ï¿½ï¿½,  
+			       ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±, ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½TCP, UDPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½GTPï¿½Äµï¿½Ö·ï¿½ï¿½ï¿½ï¿½sourceï¿½ï¿½dest, 
+			       ï¿½Ëºï¿½ï¿½ï¿½ï¿½Ç¸ï¿½ï¿½ÂµÄ¶Ô¶ï¿½È±Ê§ï¿½Äµï¿½Ö·, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½cur_dirï¿½ï¿½Ê¾ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½Ö·, ï¿½Ì¶ï¿½ï¿½Óµï¿½Ç°ï¿½ï¿½p_stackï¿½ï¿½sourceï¿½ï¿½ï¿½ï¿½. 
 			     */
 				if(cur_dir == DIR_C2S){
-                    pstream_pr->stream_public.addr.gtp->teid_c2s = p_stack->stream_public.addr.gtp->teid_c2s;/* ×¢Òâ: ´Ë´¦²»ÊÇ±ÊÎó, ¾ÍÊÇC2S */
+                    pstream_pr->stream_public.addr.gtp->teid_c2s = p_stack->stream_public.addr.gtp->teid_c2s;/* ×¢ï¿½ï¿½: ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½C2S */
 				}
 				else{
-                    pstream_pr->stream_public.addr.gtp->teid_s2c = p_stack->stream_public.addr.gtp->teid_c2s;/* ×¢Òâ: ´Ë´¦²»ÊÇ±ÊÎó, ¾ÍÊÇC2S */
+                    pstream_pr->stream_public.addr.gtp->teid_s2c = p_stack->stream_public.addr.gtp->teid_c2s;/* ×¢ï¿½ï¿½: ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½C2S */
 				}
 				break;
 				
@@ -2377,7 +2377,7 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 						        p_stack->stream_public.addr.mpls->c2s_addr_array,
 						        sizeof(p_stack->stream_public.addr.mpls->c2s_addr_array));
 	                    pstream_pr->stream_public.addr.mpls->c2s_layer_num = p_stack->stream_public.addr.mpls->c2s_layer_num;
-	                    if(p_stack->stream_public.addr.mpls->c2s_has_ctrl_word){//×¢Òâ, ÕâÀï¹Ì¶¨ÅĞ¶Ïsrc·½Ïò!!
+	                    if(p_stack->stream_public.addr.mpls->c2s_has_ctrl_word){//×¢ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½Ğ¶ï¿½srcï¿½ï¿½ï¿½ï¿½!!
 							pstream_pr->stream_public.addr.mpls->c2s_mpls_ctrl_word = p_stack->stream_public.addr.mpls->c2s_mpls_ctrl_word;
 							pstream_pr->stream_public.addr.mpls->c2s_has_ctrl_word = 1;
 	                    }
@@ -2390,7 +2390,7 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 	                           p_stack->stream_public.addr.mpls->c2s_addr_array,
 	                           sizeof(p_stack->stream_public.addr.mpls->c2s_addr_array));
 	                    pstream_pr->stream_public.addr.mpls->s2c_layer_num = p_stack->stream_public.addr.mpls->c2s_layer_num;
-	                    if(p_stack->stream_public.addr.mpls->c2s_has_ctrl_word){ //×¢Òâ, ÕâÀï¹Ì¶¨ÅĞ¶Ïsrc·½Ïò!!
+	                    if(p_stack->stream_public.addr.mpls->c2s_has_ctrl_word){ //×¢ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½Ğ¶ï¿½srcï¿½ï¿½ï¿½ï¿½!!
 							pstream_pr->stream_public.addr.mpls->s2c_mpls_ctrl_word = p_stack->stream_public.addr.mpls->c2s_mpls_ctrl_word;
 							pstream_pr->stream_public.addr.mpls->s2c_has_ctrl_word = 1;
 	                    }	 
@@ -2413,9 +2413,9 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 					}
 					else{
 	                    memcpy(pstream_pr->stream_public.addr.vlan->s2c_addr_array,
-	                           p_stack->stream_public.addr.vlan->c2s_addr_array,  //×¢Òâ, ÕâÀï¹Ì¶¨ÓÃsrc·½Ïò!!
+	                           p_stack->stream_public.addr.vlan->c2s_addr_array,  //×¢ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½ï¿½srcï¿½ï¿½ï¿½ï¿½!!
 	                           sizeof(p_stack->stream_public.addr.vlan->s2c_addr_array));
-	                    pstream_pr->stream_public.addr.vlan->s2c_layer_num = p_stack->stream_public.addr.vlan->c2s_layer_num;    //×¢Òâ, ÕâÀï¹Ì¶¨ÓÃsrc·½Ïò!!                 
+	                    pstream_pr->stream_public.addr.vlan->s2c_layer_num = p_stack->stream_public.addr.vlan->c2s_layer_num;    //×¢ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½ï¿½srcï¿½ï¿½ï¿½ï¿½!!                 
 					}
 				}else{
 					sapp_runtime_log(RLOG_LV_INFO, "update_opposite_addr_info() error, current addrtype is vlan, but pstream->addrtype is not vlan!");
@@ -2432,11 +2432,11 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 						}
 						else{
 		                    memcpy(&pstream_pr->stream_public.addr.mac->dst_addr,
-		                           &p_stack->stream_public.addr.mac->src_addr,  //×¢Òâ, ÕâÀï¹Ì¶¨ÓÃsrc·½Ïò!!
+		                           &p_stack->stream_public.addr.mac->src_addr,  //×¢ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½ï¿½srcï¿½ï¿½ï¿½ï¿½!!
 		                           sizeof(struct ethhdr));
 						}
 					}else{
-						/* ¼ÌĞøÔÚ¶ÑÉÏstreaminfo½á¹¹ÉÏ²éÕÒ */
+						/* ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½streaminfoï¿½á¹¹ï¿½Ï²ï¿½ï¿½ï¿½ */
 						return update_opposite_addr_info(top_stream_pr, (struct streaminfo_private *) pstream_pr->pfather_pr,
 													(struct streaminfo_private *) p_stack, cur_dir);	
 					}
@@ -2448,17 +2448,17 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 				const struct layer_addr_l2tp *p_stack_addr = p_stack->stream_public.addr.l2tp;
 				struct layer_addr_l2tp *p_stream_addr = pstream_pr->stream_public.addr.l2tp;
 				
-			    /* L2TPµØÖ·C2S, S2C·½Ïò¶ÀÁ¢, ÎŞ·¨¿¿µ±Ç°°üµØÖ·Çø·Ödir, Ã¿´ÎÕ»ÀïµÄ±äÁ¿¶¼´æ´¢ÓÚsource·½Ïò, ¼´C2S·½Ïò,  
-			       ´´½¨Á÷Ê±, ÒÑ¾­¸ù¾İ×îÄÚ²ãTCP, UDPµÄÁ÷·½Ïò, ½«GTPµÄµØÖ·´æÓÚsource»òdest, 
-			       ´Ëº¯ÊıÊÇ¸üĞÂµÄ¶Ô¶ËÈ±Ê§µÄµØÖ·, ½ö¿¿×îÄÚ²ãµÄcur_dir±íÊ¾ĞèÒª¸üĞÂÄÄ¸ö·½ÏòµÄµØÖ·, ¹Ì¶¨´Óµ±Ç°°üp_stackµÄsource¿½±´. 
+			    /* L2TPï¿½ï¿½Ö·C2S, S2Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ş·ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½dir, Ã¿ï¿½ï¿½Õ»ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½sourceï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½C2Sï¿½ï¿½ï¿½ï¿½,  
+			       ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±, ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½TCP, UDPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½GTPï¿½Äµï¿½Ö·ï¿½ï¿½ï¿½ï¿½sourceï¿½ï¿½dest, 
+			       ï¿½Ëºï¿½ï¿½ï¿½ï¿½Ç¸ï¿½ï¿½ÂµÄ¶Ô¶ï¿½È±Ê§ï¿½Äµï¿½Ö·, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½cur_dirï¿½ï¿½Ê¾ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½Ö·, ï¿½Ì¶ï¿½ï¿½Óµï¿½Ç°ï¿½ï¿½p_stackï¿½ï¿½sourceï¿½ï¿½ï¿½ï¿½. 
 			     */
 				if(cur_dir == DIR_C2S){
                     p_stream_addr->l2tpun.l2tp_addr_v2.tunnelid_C2S = p_stack_addr->l2tpun.l2tp_addr_v2.tunnelid_C2S;
                     p_stream_addr->l2tpun.l2tp_addr_v2.sessionid_C2S = p_stack_addr->l2tpun.l2tp_addr_v2.sessionid_C2S;
                     p_stream_addr->l2tpun.l2tp_addr_v2.seq_present_C2S = p_stack_addr->l2tpun.l2tp_addr_v2.seq_present_C2S;
 				}else{
-                    p_stream_addr->l2tpun.l2tp_addr_v2.tunnelid_S2C = p_stack_addr->l2tpun.l2tp_addr_v2.tunnelid_C2S; /* ×¢Òâ: ´Ë´¦²»ÊÇ±ÊÎó, ¾ÍÊÇC2S */
-                    p_stream_addr->l2tpun.l2tp_addr_v2.sessionid_S2C = p_stack_addr->l2tpun.l2tp_addr_v2.sessionid_C2S; /* ×¢Òâ: ´Ë´¦²»ÊÇ±ÊÎó, ¾ÍÊÇC2S */
+                    p_stream_addr->l2tpun.l2tp_addr_v2.tunnelid_S2C = p_stack_addr->l2tpun.l2tp_addr_v2.tunnelid_C2S; /* ×¢ï¿½ï¿½: ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½C2S */
+                    p_stream_addr->l2tpun.l2tp_addr_v2.sessionid_S2C = p_stack_addr->l2tpun.l2tp_addr_v2.sessionid_C2S; /* ×¢ï¿½ï¿½: ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½C2S */
                     p_stream_addr->l2tpun.l2tp_addr_v2.seq_present_S2C = p_stack_addr->l2tpun.l2tp_addr_v2.seq_present_C2S;
 				}
 			}
@@ -2474,7 +2474,7 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 					}
 					else{
 	                    memcpy(&pstream_pr->stream_public.addr.vxlan->S2C_vxlan_addr,
-	                           &p_stack->stream_public.addr.vxlan->C2S_vxlan_addr,  //×¢Òâ, ÕâÀï¹Ì¶¨ÓÃsrc·½Ïò!!
+	                           &p_stack->stream_public.addr.vxlan->C2S_vxlan_addr,  //×¢ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½ï¿½srcï¿½ï¿½ï¿½ï¿½!!
 	                           sizeof(p_stack->stream_public.addr.vxlan->S2C_vxlan_addr));             
 					}
 				}else{
@@ -2485,7 +2485,7 @@ void update_opposite_addr_info(struct streaminfo_private *top_stream_pr, struct 
 			break;
 
 			default:	
-				/* ÆäËûĞ­Òé²ã²»Éæ¼°C2S, S2CÁ½¸ö·½ÏòµØÖ··Ç¶Ô³ÆÎÊÌâ */
+				/* ï¿½ï¿½ï¿½ï¿½Ğ­ï¿½ï¿½ã²»ï¿½æ¼°C2S, S2Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½Ç¶Ô³ï¿½ï¿½ï¿½ï¿½ï¿½ */
 				break;
 		}
 	}
@@ -2505,7 +2505,7 @@ static inline raw_pkt_t *sapp_raw_pkt_dup(int mem_used_type, int thread_index, c
 	new_raw_pkt->__lib_raw_pkt_data = sapp_mem_malloc((sapp_mem_type_t)mem_used_type, thread_index, raw_pkt->__lib_raw_pkt_len);
 	memcpy((void *)(new_raw_pkt->__lib_raw_pkt_data), raw_pkt->__lib_raw_pkt_data, raw_pkt->__lib_raw_pkt_len);
 	
-	/* ¸üĞÂraw_pkt_dataÖ¸Õë */
+	/* ï¿½ï¿½ï¿½ï¿½raw_pkt_dataÖ¸ï¿½ï¿½ */
 	hdr_offset = (char *)raw_pkt->raw_pkt_data - (char *)raw_pkt->__lib_raw_pkt_data;
 	assert(hdr_offset <= 2048);	
 	new_raw_pkt->raw_pkt_data = (char *)new_raw_pkt->__lib_raw_pkt_data + hdr_offset;
@@ -2527,7 +2527,7 @@ int update_polling_inject_context(int mem_used_type,struct streaminfo_private *p
 	}
 
 	thread_index = pstream_pr->stream_public.threadnum;
-	/* ±£´æµ±Ç°Á÷C2S, S2C·½ÏòµÄµÚÒ»¸ö°ü */
+	/* ï¿½ï¿½ï¿½æµ±Ç°ï¿½ï¿½C2S, S2Cï¿½ï¿½ï¿½ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½ï¿½ */
 	if(pstream_pr->stream_public.curdir == DIR_C2S)
 	{
 		if(NULL == pstream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S-1]){
@@ -2559,9 +2559,9 @@ int save_polling_inject_context(int mem_used_type, struct streaminfo_private *ps
 	memset(pstream_pr->polling_inject_context, 0, sizeof(polling_inject_context_t));
 
 	/* TODO:
-	    ´Ë´¦½«Ã¿¸ö·½ÏòµÄµÚÒ»¸ö°ü¶¼´æÏÂÀ´, Èç¹û¶¼ÊÇ¶ÌÁ÷Ì«·ÑÄÚ´æÁË, Ò²ºÄCPU,
-	    Èç¹ûÓöµ½flood¹¥»÷¾Í¸üÑÏÖØÁË!!
-	    ½«·¢°üËùĞèµÄ²ÎÊı¶¼²ØÓÚprivate½á¹¹ÖĞ, ²»ÔÙÒÀÀµÔ­Ê¼°ü */
+	    ï¿½Ë´ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½Ì«ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½, Ò²ï¿½ï¿½CPU,
+	    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½floodï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½!!
+	    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½privateï¿½á¹¹ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ */
     if (pstream_pr->stream_public.curdir == DIR_C2S)
     {
         pstream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S - 1] =
@@ -2622,8 +2622,8 @@ void free_polling_inject_context(int mem_used_type, struct streaminfo_private *p
 
 
 /* 
-    È«¾ÖÁ÷id, stream_indexÀúÊ·ÉÏÒÑ¾­±íÊ¾µ¥»úÄÚÎ¨Ò»id, ´Ë´¦Òª±£Ö¤¼¯ÈºËùÓĞ»úÆ÷²»ÖØ¸´, 
-	¸ßÎ» --- µÍÎ»
+    È«ï¿½ï¿½ï¿½ï¿½id, stream_indexï¿½ï¿½Ê·ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¨Ò»id, ï¿½Ë´ï¿½Òªï¿½ï¿½Ö¤ï¿½ï¿½Èºï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½, 
+	ï¿½ï¿½Î» --- ï¿½ï¿½Î»
 	1 |  12bit device_id | 8bit thread_id | 28bit timestamp in sec | 15bit sequence per thread
 */
 unsigned long long get_global_stream_id(unsigned long long thread_seq)
@@ -2659,20 +2659,20 @@ struct streaminfo_private *copy_stream_info_to_heap_single_layer(int mem_used_ty
 	memcpy(heap_stream_pr, stack_stream_pr, sizeof(struct streaminfo_private));
 	heap_stream = &(heap_stream_pr->stream_public);
 
-	/* µ¥²ãstreaminfo, pfatherÓ¦¸ÃÔÚÍâ²¿µ÷ÓÃÕß´¦Àí, ´Ë´¦ÏÈÉèÎªNULL   */
+	/* ï¿½ï¿½ï¿½ï¿½streaminfo, pfatherÓ¦ï¿½ï¿½ï¿½ï¿½ï¿½â²¿ï¿½ï¿½ï¿½ï¿½ï¿½ß´ï¿½ï¿½ï¿½, ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ÎªNULL   */
 	heap_stream_pr->pfather_pr = NULL;
 	heap_stream_pr->stream_public.pfather = NULL;
 			
 	heap_addr = sapp_mem_malloc(SAPP_MEM_DYN_PADDR, stack_stream->threadnum, stack_stream->addr.addrlen);
 	memset(heap_addr, 0, stack_stream->addr.addrlen);
 
-	/* ÉÏ²ãµØÖ··­×ª, ÇÒ²»ÊÇoverlay²ã,²ÅÄÜ·´ÏòcopyµØÖ·    	   */	
+	/* ï¿½Ï²ï¿½ï¿½Ö·ï¿½ï¿½×ª, ï¿½Ò²ï¿½ï¿½ï¿½overlayï¿½ï¿½,ï¿½ï¿½ï¿½Ü·ï¿½ï¿½ï¿½copyï¿½ï¿½Ö·    	   */	
 	if(reverse){
 		heap_stream_pr->dirreverse=1;
-		heap_stream_pr->stream_dir = 1 ^ heap_stream_pr->layer_dir; /* lijia comment, Óë"src>=dst"Ä¬ÈÏ¹æÔò²»Ò»ÖÂ */
+		heap_stream_pr->stream_dir = 1 ^ heap_stream_pr->layer_dir; /* lijia comment, ï¿½ï¿½"src>=dst"Ä¬ï¿½Ï¹ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
 		heap_stream_pr->stream_c2s_route_dir = 1 ^ heap_stream_pr->stream_c2s_route_dir; 
 		//reverse_addr_new(heap_addr, heap_stream->addr.addrtype);
-		/* µØÖ·COPYÊ±, Èç¹ûĞèÒª·´×ª, Ö±½Ó·´ÏòCOPY, ²»ÒªÏÈmemcpy, ÔÙ½»»»µØÖ·Ô´¡¢Ä¿µÄµÄË³Ğò */
+		/* ï¿½ï¿½Ö·COPYÊ±, ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½×ª, Ö±ï¿½Ó·ï¿½ï¿½ï¿½COPY, ï¿½ï¿½Òªï¿½ï¿½memcpy, ï¿½Ù½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·Ô´ï¿½ï¿½Ä¿ï¿½Äµï¿½Ë³ï¿½ï¿½ */
 		addr_reverse_memcpy(stack_stream_pr, heap_addr, stack_stream->addr.paddr, stack_stream->addr.addrtype, stack_stream->addr.addrlen);
 	}else{
 		heap_stream_pr->stream_dir = heap_stream_pr->layer_dir;
@@ -2689,12 +2689,12 @@ struct streaminfo_private *copy_stream_info_to_heap_single_layer(int mem_used_ty
 
 /* 
    2014-04-08 LiJia add,
-   Ã¿¸ö°üµÄµØÖ·ĞÅÏ¢ÁÙÊ±´æÓÚÕ»¿Õ¼ä, º¯Êı·µ»Øºó´Ë¿éÄÚ´æµØÖ·¾ÍÎŞĞ§ÁË, 
-   ´´½¨ĞÂÁ÷Ê±, Ğècopyµ½mallocµÄ¶Ñ¿Õ¼äÄÚ, ÓÃÓÚÒÔºóµÄµØÖ·±È¶Ô. 
+   Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½Ö·ï¿½ï¿½Ï¢ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Õ»ï¿½Õ¼ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øºï¿½Ë¿ï¿½ï¿½Ú´ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½, 
+   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±, ï¿½ï¿½copyï¿½ï¿½mallocï¿½Ä¶Ñ¿Õ¼ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ôºï¿½Äµï¿½Ö·ï¿½È¶ï¿½. 
 
    2014-04-08 LiJia add new arg stream_c2s_route_dir,
-   ÒòÎªÖ®Ç°µÄreverseµÄ¶¨ÒåÆäÊµÓĞ¾ÖÏŞĞÔ, ±íÊ¾µ±Ç°²ãµØÖ·¸ú'´óµØÖ·ÊÇ¿Í»§¶Ë'¹æÔòÊÇ·ñÒ»ÖÂ, ÊÇ·ñĞèÒª·­×ª,
-   µ«ÊÇmpls, gtpµÈĞ­ÒéµØÖ·ÊÇµ¥ÏòµÄ, reverseµÄ¹æÔò²»ºÃÊ¹.
+   ï¿½ï¿½ÎªÖ®Ç°ï¿½ï¿½reverseï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½Ğ¾ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ê¾ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ö·ï¿½ï¿½'ï¿½ï¿½ï¿½Ö·ï¿½Ç¿Í»ï¿½ï¿½ï¿½'ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Ò»ï¿½ï¿½, ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½×ª,
+   ï¿½ï¿½ï¿½ï¿½mpls, gtpï¿½ï¿½Ğ­ï¿½ï¿½ï¿½Ö·ï¿½Çµï¿½ï¿½ï¿½ï¿½, reverseï¿½Ä¹ï¿½ï¿½ò²»ºï¿½Ê¹.
  */
 struct streaminfo_private *copy_stream_info_to_heap(int mem_used_type,const struct streaminfo_private *stack_stream_pr, int reverse)
 {
@@ -2713,7 +2713,7 @@ struct streaminfo_private *copy_stream_info_to_heap(int mem_used_type,const stru
 	pfather_pr = stack_stream_pr->pfather_pr;
 	if((pfather_pr != NULL)
 	  && (DEPLOYMENT_MODE_INLINE == sapp_global_val->config.packet_io.deployment_mode_bin)
-	  && (g_overlay_layer_set[pfather_pr->stream_public.addr.addrtype][pfather_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay²ãµÄpfatherÉèÎªNULL, ²å¼ş²»¿É¼û */
+	  && (g_overlay_layer_set[pfather_pr->stream_public.addr.addrtype][pfather_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlayï¿½ï¿½ï¿½pfatherï¿½ï¿½ÎªNULL, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¼ï¿½ */
 		heap_stream->pfather = NULL;
 	}else{
 		heap_stream->pfather = (struct streaminfo *)heap_stream_pr->pfather_pr;
@@ -2729,7 +2729,7 @@ int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_
 	}
 
 	if((rawpkt->vlan_flipping_couple[0] && rawpkt->vlan_flipping_couple[1]) != 0){
-		/* vlan flippingÊÇADC×Ô¼ì¼°A´®ÁªÉè±¸ÌØÓĞµÄÒ»ÖÖÄ£Ê½,  ²»ÊôÓÚoverlay²ã */
+		/* vlan flippingï¿½ï¿½ADCï¿½Ô¼ì¼°Aï¿½ï¿½ï¿½ï¿½ï¿½è±¸ï¿½ï¿½ï¿½Ğµï¿½Ò»ï¿½ï¿½Ä£Ê½,  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½overlayï¿½ï¿½ */
 		return 0;
 	} 
 	
@@ -2738,16 +2738,16 @@ int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_
 		return 1;	
 	}
 
-	/* TODO, Ä¿Ç°ÔİÊ±Ö»ÓĞvxlanÒ»ÖÖoverlayÄ£Ê½,ÆäËû²»·ûºÏµÄ¶¼²»Ëãoverlay */
+	/* TODO, Ä¿Ç°ï¿½ï¿½Ê±Ö»ï¿½ï¿½vxlanÒ»ï¿½ï¿½overlayÄ£Ê½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÄ¶ï¿½ï¿½ï¿½ï¿½ï¿½overlay */
 
 	return 0;
 }
 
 
 /* 
-   µ×²ãÇı¶¯ÎŞÊı¾İ°üÊ±, µ÷ÓÃÕâĞ©ÌÔÌ­º¯Êı, Á½¸öÄ¿µÄ:
-   1) ÊµÏÖÎŞ°ü³¬Ê±ÌÔÌ­¹¦ÄÜ, ¸ü¾«È·;
-   2) ÎŞÊı¾İ°üÊ±ÌáÇ°½«Ö®Ç°µÄ¾ÉÁ÷½áÊø, ¶ø²»ÊÇ¿¿ĞÂÊı¾İ°üµ½´ïÊ±ÔÙÌÔÌ­¾ÉÁ÷, ¿ÉÒÔÌáÉıÒ»Ğ©´¦ÀíĞÔÄÜºÍ½µµÍ°ü´¦ÀíÑÓÊ±.
+   ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ°ï¿½Ê±, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ©ï¿½ï¿½Ì­ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½:
+   1) Êµï¿½ï¿½ï¿½Ş°ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ì­ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½È·;
+   2) ï¿½ï¿½ï¿½ï¿½ï¿½İ°ï¿½Ê±ï¿½ï¿½Ç°ï¿½ï¿½Ö®Ç°ï¿½Ä¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ°ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ì­ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»Ğ©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÜºÍ½ï¿½ï¿½Í°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±.
 */
 int polling_stream_timeout(int tid)
 {
@@ -2772,7 +2772,7 @@ int polling_stream_timeout(int tid)
     {
         plist = &(G_MESA_GLOBAL_STREAM[tid]->tcpList[i]);
         if (plist->cnt > 0)
-        { /* polling½×¶Î¿ÉÄÜ»¹Ã»ÓĞÁ÷, »òÕßÃ»ÓĞ´Ë×´Ì¬µÄÁ÷, plist¿ÉÄÜÎªNULL */
+        { /* pollingï¿½×¶Î¿ï¿½ï¿½Ü»ï¿½Ã»ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ğ´ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½, plistï¿½ï¿½ï¿½ï¿½ÎªNULL */
             ret = del_stream_by_time(plist, NULL, tid, STREAM_TYPE_TCP);
             if (ret > 0)
             {
@@ -2787,7 +2787,7 @@ int polling_stream_timeout(int tid)
 
 
 /*
-	ÓÃÓÚ²å¼şÍ¨¹ıËÄÔª×éÕÒµ½µ±Ç°Ïß³ÌµÄstreaminfo½á¹¹, ´Ë½Ó¿Ú½öÊÊÓÃÓÚ²»º¬ËíµÀÇ¶Ì×²ãµÄ´¿IPv4, IPv6µØÖ·!
+	ï¿½ï¿½ï¿½Ú²ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½Ç°ï¿½ß³Ìµï¿½streaminfoï¿½á¹¹, ï¿½Ë½Ó¿Ú½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½×²ï¿½Ä´ï¿½IPv4, IPv6ï¿½ï¿½Ö·!
 */
 int find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *tuplev4, enum stream_type_t streamtype, struct streaminfo *streaminfo_array[], int array_max_num)
 {
@@ -2795,7 +2795,7 @@ int find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *t
 	struct streamindex **phashstream=NULL;
 	struct streamindex *stream_hash_head = NULL;
 	unsigned int hash_index, hash_max;
-	int ret, match_layer_dir; /* ÊäÈëµÄËÄÔª×éÓë´ó¶Ë¿Ú×öÎªÔ´µÄ¹æÔòÒ»ÖÂ */
+	int ret, match_layer_dir; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½Ë¿ï¿½ï¿½ï¿½ÎªÔ´ï¿½Ä¹ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
 	int tot_found_stream_num = 0;
 
 	if((NULL == streaminfo_array) || (array_max_num <= 0)){
@@ -2821,7 +2821,7 @@ int find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *t
 #if USE_LINUX_KERNEL_HASH_ALGO	
 	unsigned int a,b;
 	unsigned short c,d;
-	/* ´Ë´¦²Î¿¼º¯Êı: set_transport_addr() 	  ,´ó¶Ë¿Ú×÷Îª¿Í»§¶Ë */
+	/* ï¿½Ë´ï¿½ï¿½Î¿ï¿½ï¿½ï¿½ï¿½ï¿½: set_transport_addr() 	  ,ï¿½ï¿½Ë¿ï¿½ï¿½ï¿½Îªï¿½Í»ï¿½ï¿½ï¿½ */
 	if(ntohs(tuplev4->source) > ntohs(tuplev4->dest)){
 		a = tuplev4->saddr;
 		b = tuplev4->daddr;
@@ -2898,7 +2898,7 @@ int find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *t
 	struct streamindex **phashstream=NULL;
 	unsigned int hash_index, hash_max;
 	struct streamindex *stream_hash_head = NULL;
-	int ret, match_layer_dir; /* ÊäÈëµÄËÄÔª×éÓë´ó¶Ë¿Ú×öÎªÔ´µÄ¹æÔòÒ»ÖÂ */
+	int ret, match_layer_dir; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½Ë¿ï¿½ï¿½ï¿½ÎªÔ´ï¿½Ä¹ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
 	int tot_found_stream_num = 0;
 	
 	if (STREAM_TYPE_TCP == streamtype)
@@ -2918,7 +2918,7 @@ int find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *t
 #if USE_LINUX_KERNEL_HASH_ALGO
 	unsigned int a,b,c,d;
 	unsigned int no_use_slave_hash;
-	/* ´Ë´¦²Î¿¼º¯Êı: set_transport_addr() 	  ,´ó¶Ë¿Ú×÷Îª¿Í»§¶Ë */
+	/* ï¿½Ë´ï¿½ï¿½Î¿ï¿½ï¿½ï¿½ï¿½ï¿½: set_transport_addr() 	  ,ï¿½ï¿½Ë¿ï¿½ï¿½ï¿½Îªï¿½Í»ï¿½ï¿½ï¿½ */
 	if(ntohs(tuple4_v6->source) > ntohs(tuple4_v6->dest)){
 		memcpy(&a, &tuple4_v6->saddr[12], sizeof(int));
 		memcpy(&b, &tuple4_v6->daddr[12], sizeof(int));
@@ -3011,7 +3011,7 @@ int init_stream_manage(int threadcount)
 		init_stream_detail(G_MESA_GLOBAL_STREAM[i]);
 	}
 
-	//add 20140626 	³õÊ¼»¯procject½Ó¿Ú
+	//add 20140626 	ï¿½ï¿½Ê¼ï¿½ï¿½procjectï¿½Ó¿ï¿½
 	project_requirement_global_init();
 
 	if(stream_bridge_init() < 0){
