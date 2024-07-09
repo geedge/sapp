@@ -113,6 +113,7 @@
     skip_gtp_S_PN_E_field_for_inject=0
     ipv4_reassembly_enabled=1
     ipv6_reassembly_enabled=1
+    skip_gtp_layer=0
 
 [DUPLICATE_PKT]
 [dup_pkt.traffic.original]

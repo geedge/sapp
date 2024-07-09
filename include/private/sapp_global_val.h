@@ -367,6 +367,7 @@ typedef struct{
 	int skip_gtp_S_PN_E_field_for_inject; /* GTP����ע�����ݰ�ʱ������չ�ֶ�:sequence,N-PDU, extension */
 	int ipv4_reassembly_enabled; 
 	int ipv6_reassembly_enabled; 
+	int skip_gtp_layer; 
 }sapp_protocol_feature_t;
 
 

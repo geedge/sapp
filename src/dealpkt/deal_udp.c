@@ -1,7 +1,7 @@
 /*
 20120603 : 
 
-20130530 :Ôö¼ÓÇ¿ÖÆudpÁ÷ÌÔÌ­¹¦ÄÜ£¬
+20130530 :ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½udpï¿½ï¿½ï¿½ï¿½Ì­ï¿½ï¿½ï¿½Ü£ï¿½
 */
 #include "sapp_api.h"
 #include "sapp_pkt_stat.h"
@@ -131,7 +131,7 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 }
 
 #if SAPP_INSECTICIDE
-/* 2017-02-09 ÁÙÊ±Ìí¼Ó´úÂë, ÔÚÏß·¢ÏÖÄªÃûÆäÃîBUG, ÏÈÅÐ¶Ïstream->pfatherÖ¸ÕëÂÒµÄBUG, Ò²²»ÖªµÀÄÄ°ÑpfatherÐ´ÂÒÁË */
+/* 2017-02-09 ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ó´ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ß·ï¿½ï¿½ï¿½Äªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½BUG, ï¿½ï¿½ï¿½Ð¶ï¿½stream->pfatherÖ¸ï¿½ï¿½ï¿½Òµï¿½BUG, Ò²ï¿½ï¿½Öªï¿½ï¿½ï¿½Ä°ï¿½pfatherÐ´ï¿½ï¿½ï¿½ï¿½ */
 void iterate_stream_list(const struct streaminfo *stream)
 {
 	char tmp_buf[8];
@@ -190,15 +190,15 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	iterate_stream_list(pstream_udp);
 #endif
 
-	/* 2016-07-25 lijia add, ¼ÇÂ¼µ±Ç°Á÷×îµ×²ãËíµÀÀàÐÍ, Ã¿¸öÁ÷Ö»ÔÚ´´½¨Ê±×öÒ»´Î¼´¿É */
+	/* 2016-07-25 lijia add, ï¿½ï¿½Â¼ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ã¿ï¿½ï¿½ï¿½ï¿½Ö»ï¿½Ú´ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ò»ï¿½Î¼ï¿½ï¿½ï¿½ */
 	get_stream_carry_tunnel_type(pstream_udp, NULL, &pstream_udp_pr->stream_low_layer_tunnel_type);		
 	
 	if(1 == pstream_udp_pr->layer_dir){
-		pstream_udp_pr->stream_dir  = 1;  /* ÒòÎªUDPÊÇ°´DATA½¨Á¬½Ó, ËùÒÔstream_dir¿Ï¶¨ºÍÄ¬ÈÏ¹æÔòÏàÍ¬ */
+		pstream_udp_pr->stream_dir  = 1;  /* ï¿½ï¿½ÎªUDPï¿½Ç°ï¿½DATAï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½stream_dirï¿½Ï¶ï¿½ï¿½ï¿½Ä¬ï¿½Ï¹ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ */
 		//((struct streaminfo_private *)(pstream_udp->pfather))->stream_dir = ((struct streaminfo_private *)(pstream_udp->pfather))->layer_dir;	
 		//set_stream_addr(pstream_udp, this_udphdr->uh_sport, this_udphdr->uh_dport);
 	}else{
-		pstream_udp_pr->stream_dir  = 1; /* ÒòÎªÊÇUDP°´DATA½¨Á¬½Ó, ËùÒÔstream_dir¿Ï¶¨ºÍÄ¬ÈÏ¹æÔòÏàÍ¬ */
+		pstream_udp_pr->stream_dir  = 1; /* ï¿½ï¿½Îªï¿½ï¿½UDPï¿½ï¿½DATAï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½stream_dirï¿½Ï¶ï¿½ï¿½ï¿½Ä¬ï¿½Ï¹ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ */
 		//((struct streaminfo_private *)(pstream_udp->pfather))->stream_dir =((struct streaminfo_private *)(pstream_udp->pfather))->layer_dir ^ 1; 	
 		//set_stream_addr(pstream_udp, this_udphdr->uh_dport, this_udphdr->uh_sport);
 	}
@@ -227,14 +227,14 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	pdetail->lastmtime=g_CurrentTime;
 
 	if(pstream_udp_pr->under_ddos_bypass){
-		/* bypass×´Ì¬²»µ÷ÓÃÈÎºÎ²å¼þ, ºóÐøµÄproject,   bridge,³õÊ¼»¯half_streamµÈ²Ù×÷¶¼¿ÉÒÔºöÂÔÁË */
+		/* bypass×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎºÎ²ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½project,   bridge,ï¿½ï¿½Ê¼ï¿½ï¿½half_streamï¿½È²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôºï¿½ï¿½ï¿½ï¿½ï¿½ */
 		sapp_global_val->mthread_volatile[threadnum]->sys_stat.count[SAPP_STAT_UDP_BYPASS_STREAM]++;
 		cycle_pkt_dump_by_classify(threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
 		sapp_runtime_log(RLOG_LV_INFO, "UDP stream:%s under ddos bypass!", printaddr(&pstream_udp->addr, threadnum));
 		return pindex_udp;
 	}
 
-	/* 2014-03-26 LiJia add, Ä³Ð©ÏîÄ¿ÌØÊâÓ¦ÓÃ³õÊ¼»¯, Èç±êÇ©¡¢Ô­Ê¼IP·ÖÆ¬ÁÐ±íµÈ */
+	/* 2014-03-26 LiJia add, Ä³Ð©ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã³ï¿½Ê¼ï¿½ï¿½, ï¿½ï¿½ï¿½Ç©ï¿½ï¿½Ô­Ê¼IPï¿½ï¿½Æ¬ï¿½Ð±ï¿½ï¿½ï¿½ */
 	pstream_udp_pr->pproject = project_requirement_create(SAPP_MEM_DYN_UDP_PROJECT, threadnum);
 	pstream_udp_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_UDP_BRIDGE,threadnum);
 
@@ -315,12 +315,12 @@ void udp_free_stream(struct streamindex *pindex)
 		((raw_pkt_t *)pstream_pr->raw_pkt)->prepend_list=NULL;
 	}
 
-	pstream_pr->raw_pkt = NULL; /* 2015-02-04 lijia add, ²»ÄÜÒò´Ëµ÷ÓÃ¶ø´¥·¢MESA_kill_xxx */
+	pstream_pr->raw_pkt = NULL; /* 2015-02-04 lijia add, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½MESA_kill_xxx */
 
 	if(pdetail_pr->apme!=NULL)
 	{
 		pstream->opstate=OP_STATE_CLOSE;
-		//udp stream »Øµ÷
+		//udp stream ï¿½Øµï¿½
 		pstream->pktstate=OP_STATE_CLOSE; // add by lijia 20141202
 		stream_process_udp(pstream,NULL,NULL,NULL,&(pdetail_pr->apme),&(pstream->opstate));  
 		udp_cleardata(pstream);
@@ -352,7 +352,7 @@ void udp_free_stream(struct streamindex *pindex)
 	pstream->pdetail=NULL;
 
 
-	if(pstream_pr->set_special_timeout != 0){ /* Á´½Ó¶ÀÓÐ³¬Ê±Ê±¼ä, ¼õÉÙ¼ÆÊý */
+	if(pstream_pr->set_special_timeout != 0){ /* ï¿½ï¿½ï¿½Ó¶ï¿½ï¿½Ð³ï¿½Ê±Ê±ï¿½ï¿½, ï¿½ï¿½ï¿½Ù¼ï¿½ï¿½ï¿½ */
 		sapp_global_mthread[threadnum].udp_stream_special_timeout_num--;
 	}
 
@@ -378,8 +378,8 @@ void udp_free_stream(struct streamindex *pindex)
 }
 
 //add by lqy 20130530
-// ¸ù¾ÝÉè¶¨µÄÊ±¼äÇ¿ÖÆÌÔÌ­¸´ÓÃµÄËÄÔª×éÐÅÏ¢
-// return 1 ½øÐÐÁËÖØÖÃ£¬0 Î´½øÐÐÖØÖÃ
+// ï¿½ï¿½ï¿½ï¿½ï¿½è¶¨ï¿½ï¿½Ê±ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½Ì­ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½Ï¢
+// return 1 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½0 Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 static int udp_reset_stream(struct streamindex *pindex)
 {
 	struct stream_list *plist;
@@ -396,7 +396,7 @@ static int udp_reset_stream(struct streamindex *pindex)
 	threadnum = pstream->threadnum;
 
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
-	// ÇåÀíÒÔÇ°µÄµ÷ÓÃÐÅÏ¢
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½Äµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 	plist = &(G_MESA_GLOBAL_STREAM[threadnum]->udpList[pstream->stream_state]);
 	streamleavlist(pindex, plist);
 	//		pstream->stream.opstate=OP_STATE_CLOSE;
@@ -437,7 +437,7 @@ static int udp_reset_stream(struct streamindex *pindex)
 	pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_UDP_PROJECT, threadnum);
 	pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, threadnum);
 
-	/* 2015-12-28 lijia add, Á÷ÖØÖÃ, ´ÓÐÂÉêÇëÄÚ´æ */
+	/* 2015-12-28 lijia add, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ */
 	if (G_UDP_FLOW_STAT_PROJECT_ID != -1)
 	{
 		pdetail_pr->flow_stat = (struct udp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_UDP_FLOW_STAT, threadnum, sizeof(struct udp_flow_stat));
@@ -445,7 +445,7 @@ static int udp_reset_stream(struct streamindex *pindex)
 		project_req_add_struct(pstream, G_UDP_FLOW_STAT_PROJECT_ID, pdetail_pr->flow_stat);
 	}
 
-	// ÖØÖÃËùÓÐ×´Ì¬
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬
 	memset(pdetail, 0, sizeof(struct udpdetail));
 	//		pstream->stream.opstate=OP_STATE_PENDING;
 	pstream->opstate = OP_STATE_PENDING;
@@ -488,12 +488,12 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
 	int is_dup_pkt = 0;
 	int dup_check_enabled = 0;
 
-	/* vxlan²ãµÄ±£»îÐÅÏ¢²»ÓÃÊ¶±ðÖØ¸´°ü, ÒòÎªÊµ²âÄ³Ð©inline device»ò½»»»°å·¢³öµÄ±£»î°üÈ«ÊÇÒ»ÑùµÄ, udp checksumÊÇ0, ipidÒ²²»±ä */	
+	/* vxlanï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½, ï¿½ï¿½ÎªÊµï¿½ï¿½Ä³Ð©inline deviceï¿½ò½»»ï¿½ï¿½å·¢ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½, udp checksumï¿½ï¿½0, ipidÒ²ï¿½ï¿½ï¿½ï¿½ */	
 	if(is_overlay_udp_layer){
 		return 0;
 	}
 
-	/* ËíµÀÐ­ÒéµÄÍâ²ãUDP²»Ê¶±ðÖØ¸´Á÷Á¿ */
+	/* ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½UDPï¿½ï¿½Ê¶ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	if(STREAM_TUNNLE_NON != pstream_pr->stream_carry_up_layer_tunnel_type){
 		return 0;
 	}
@@ -502,7 +502,7 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
 	if(dup_pkt_para->dup_pkt_distinguish_ipv4_udp
 	|| dup_pkt_para->dup_pkt_distinguish_all_inject)
 	{
-		// ¶ÔÓÚÔ­Ê¼ÊäÈë°ü, Ö»ÅÐ¶ÏÇ°N¸ö°ü, Èç¹ûÃ»·¢ÏÖÖØ¸´Á÷Á¿, ¾ÍÈÏÎªÒÔºóµÄ¶¼²»ÊÇÖØ¸´°ü!
+		// ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½, Ö»ï¿½Ð¶ï¿½Ç°Nï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Îªï¿½Ôºï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½!
 		if((0 == pstream_pr->has_duplicate_pkt) 
 		  && (pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum >= dup_pkt_para->first_packets)){ 
 			dup_check_enabled = 0;
@@ -533,7 +533,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	struct udpdetail_private *pdetail_pr=NULL;
 	struct streaminfo_private *pstream_pr=&(pindex->stream);
 	struct streaminfo *pstream=&(pstream_pr->stream_public);
-	struct streaminfo_private *stack_stream_pr = &(pindex->stream); /* 2016-11-24 lijia add, Èç¹ûÊÇl2tp, teredoËíµÀ, Ê¹ÓÃÕ»ÀïµÄÖ¸Õë */
+	struct streaminfo_private *stack_stream_pr = &(pindex->stream); /* 2016-11-24 lijia add, ï¿½ï¿½ï¿½ï¿½ï¿½l2tp, teredoï¿½ï¿½ï¿½ï¿½, Ê¹ï¿½ï¿½Õ»ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ */
 	int next_layer_offset;
 	void *tmpme=NULL;	
 	int hlen=0;
@@ -549,12 +549,12 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	udph = (struct mesa_udp_hdr *) ((char*)this_iphdr +hlen );
 	ulen = ntohs (udph->uh_ulen);
 
-	local_sys_stat->count_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index]++; /* udpºÍipËã×÷Ò»²ã */
-	local_sys_stat->length_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index] += ulen; /* udpºÍipËã×÷Ò»²ã */
+	local_sys_stat->count_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index]++; /* udpï¿½ï¿½ipï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
+	local_sys_stat->length_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index] += ulen; /* udpï¿½ï¿½ipï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
 
 	if(raw_pkt->is_ctrl_pkt==0)
 	{
-		/* 2015-12-29 lijia modify, Ä³Ð©UDP°üÃ»ÓÐ¸ºÔØÊý¾Ý, Ã»ÓÐÒâÒå, Ö±½Ó¶ªÆú */
+		/* 2015-12-29 lijia modify, Ä³Ð©UDPï¿½ï¿½Ã»ï¿½Ð¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ö±ï¿½Ó¶ï¿½ï¿½ï¿½ */
 		if(unlikely(iplen - hlen < ulen || ulen <= (int)sizeof (struct mesa_udp_hdr))){
 				return PASS;
 		}
@@ -579,7 +579,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 
 	is_overlay_udp_layer = sapp_is_overlay_layer(pstream_pr, raw_pkt);
 
-	if(0 == is_overlay_udp_layer){ /* ·Çoverlay²ã²ÅÀÛ¼ÓÏà¹Ø²ã¼ÆÊý */
+	if(0 == is_overlay_udp_layer){ /* ï¿½ï¿½overlayï¿½ï¿½ï¿½ï¿½Û¼ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ */
 		local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
 		local_sys_stat->length[SAPP_STAT_RCV_UDP]+=datalen;
 		if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
@@ -601,10 +601,10 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
                          sizeof(struct mesa_udp_hdr),raw_pkt->is_ctrl_pkt))
     {
         pstream_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNEL_GPRS_TUNNEL;
-        return gtp_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
+		if(sapp_global_val->config.protocol_feature.skip_gtp_layer==1)return gtp_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
     }
     //add by lqy 20130530 
-	// udpÓÐ²»¿ªÆôÁ÷»¹Ô­µÄ¹¦ÄÜÐèÇó£¬Ö±½Ó°´µ¥°üµ¥Á÷´¦Àí
+	// udpï¿½Ð²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­ï¿½Ä¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	if(unlikely(0 ==udp_stream_table_size))
 	{
 		struct udpdetail_private detail_pr;
@@ -612,7 +612,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		pdetail = (struct udpdetail *)&detail_pr;
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
 		
-		/* µ¥°ü¼¶, ¼Ù¶¨Ô´¶Ë¿Ú´óµÄÎªClient */
+		/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ù¶ï¿½Ô´ï¿½Ë¿Ú´ï¿½ï¿½ÎªClient */
 		//if(memcmp(&udph->uh_sport, &udph->uh_dport, sizeof(short)) >= 0){
 		if(ntohs(udph->uh_sport) >= ntohs(udph->uh_dport)){
 			pstream->curdir=DIR_C2S;
@@ -676,7 +676,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
                 return PASS;
             }
         }
-        // add by lqy Ö»ÓÐµ±Á´½ÓÎ´ÖØÖÃÊ±½øÐÐlru
+        // add by lqy Ö»ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½lru
         else
         {
             if (lrustream(a_index) == 1)
@@ -685,10 +685,10 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
             }
         }
 
-        /* NOTE: ¸üÐÂpstreamÖ¸Õë, Ö¸Ïò¶ÑÖÐ´æ´¢µÄÄÚ´æ */
+        /* NOTE: ï¿½ï¿½ï¿½ï¿½pstreamÖ¸ï¿½ï¿½, Ö¸ï¿½ï¿½ï¿½ï¿½Ð´æ´¢ï¿½ï¿½ï¿½Ú´ï¿½ */
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);		
-		//pstream->addr.pktipfragtype = pstream->stream_public.addr.pktipfragtype; /* 2015-11-04 lijia add, IP·ÖÆ¬ÀàÐÍ¸üÐÂ */
+		//pstream->addr.pktipfragtype = pstream->stream_public.addr.pktipfragtype; /* 2015-11-04 lijia add, IPï¿½ï¿½Æ¬ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ */
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 
 		pstream->pudpdetail->lastmtime=(long)g_CurrentTime;
@@ -717,7 +717,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			return DROP;
 		}
 
-		// ¶ÔÓÚkill remedy£¬drop streamºÍÖØ¸´Á÷Á¿£¬sappÖ±½Ó´¦Àí£¬²»ÔÙ×·¼ÓÁ÷ÉÏµÄsid,±ÜÃâ×ª·¢µ½service chainÉÏÒýÆðÆäËûSFµÄÆçÒå
+		// ï¿½ï¿½ï¿½ï¿½kill remedyï¿½ï¿½drop streamï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sappÖ±ï¿½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×·ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½sid,ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½service chainï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SFï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (pstream_pr->sid_append_list != NULL)
         {
             ((raw_pkt_t *)raw_pkt)->append_list = pstream_pr->sid_append_list;
@@ -734,11 +734,11 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 
 
 		if(pstream->curdir==DIR_S2C){
-			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* µ±Ç°·½ÏòµÄµÚÒ»¸ö°ü, ³¢ÊÔ¸üÐÂµ×²ãËíµÀµÄµ¥ÏòµØÖ·ÐÅÏ¢(ÈçMPLS, GTP) */
+			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½Âµ×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ï¢(ï¿½ï¿½MPLS, GTP) */
 				try_to_update_addr_info = 1;
 			}
 		}else{
-			if(pdetail_pr->udpdetail_public.serverpktnum == 0){ /* µ±Ç°·½ÏòµÄµÚÒ»¸ö°ü, ³¢ÊÔ¸üÐÂµ×²ãËíµÀµÄµ¥ÏòµØÖ·ÐÅÏ¢(ÈçMPLS, GTP) */
+			if(pdetail_pr->udpdetail_public.serverpktnum == 0){ /* ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½Âµ×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ï¢(ï¿½ï¿½MPLS, GTP) */
 				try_to_update_addr_info = 1;
 			}
 		}
@@ -776,7 +776,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			ret = vxlan_entry(stack_stream_pr, (char *)udph+sizeof(struct mesa_udp_hdr), thread_num, routedir, raw_pkt, next_layer_offset);
 			udp_cleardata(pstream);
 			pstream_pr->packet_process_context=0;	
-			/* overlay UDP²ã²»ÔÙ¼ÌÐøºóÐøµÄËíµÀ¼ì²â */
+			/* overlay UDPï¿½ã²»ï¿½Ù¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 			return ret;
 		}
 		else
@@ -807,7 +807,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		}
 	}
      
-	if(unlikely(DROP == ret)){ /* ²å¼þ·µ»ØDROP²»ÔÙ½øÐÐºóÐø´¦Àí */
+	if(unlikely(DROP == ret)){ /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½DROPï¿½ï¿½ï¿½Ù½ï¿½ï¿½Ðºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		return DROP;
 	}
 	pstream_pr->packet_process_context=1;	
@@ -829,6 +829,10 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		}			
 	}
 	
+	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNEL_GPRS_TUNNEL){
+		ret = gtp_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
+	}	
+
 	pstream_pr->packet_process_context=0;	
 	if(DROP == ret){
 		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
@@ -854,8 +858,8 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	iplen = ntohs (a_packet->ip6_payload_len);
 	ulen = ntohs (udph->uh_ulen);
 
-	local_sys_stat->count_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index]++; /* udpºÍipËã×÷Ò»²ã */
-	local_sys_stat->length_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index] += ulen; /* udpºÍipËã×÷Ò»²ã */
+	local_sys_stat->count_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index]++; /* udpï¿½ï¿½ipï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
+	local_sys_stat->length_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index] += ulen; /* udpï¿½ï¿½ipï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
 	
 	if(unlikely(iplen < ulen || ulen <= (int)sizeof (struct mesa_udp_hdr))){
 		return PASS;
@@ -877,7 +881,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	pstream->addr.addrlen=sizeof(struct layer_addr_udp);
 	pstream_pr->addr_use_as_hash = 0;
 	//ptmp->stream.p_layer_header = udph;
-/* IP, UDP²ãºÏ²¢ºó, ²»ÔÙ¸üÐÂUDP²ãµÄoffset_to_raw_pkt_hdr */
+/* IP, UDPï¿½ï¿½Ï²ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ù¸ï¿½ï¿½ï¿½UDPï¿½ï¿½ï¿½offset_to_raw_pkt_hdr */
 #if 0
 	pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 #endif
@@ -898,14 +902,14 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
                          sizeof(struct mesa_udp_hdr), raw_pkt->is_ctrl_pkt))
     {
         pstream_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNEL_GPRS_TUNNEL;
-        return gtp_entry(pstream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
+		if(sapp_global_val->config.protocol_feature.skip_gtp_layer==1)return gtp_entry(pstream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
     }
     //add by lqy 20130530 
-	// udpÓÐ²»¿ªÆôÁ÷»¹Ô­µÄ¹¦ÄÜÐèÇó£¬Ö±½Ó°´µ¥°üµ¥Á÷´¦Àí
+	// udpï¿½Ð²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­ï¿½Ä¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if(unlikely(0 == udp_stream_table_size))
 	{
 
-		/* µ¥°ü¼¶, ¼Ù¶¨Ô´¶Ë¿Ú´óµÄÎªClient */
+		/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ù¶ï¿½Ô´ï¿½Ë¿Ú´ï¿½ï¿½ÎªClient */
 		if(memcmp(&udph->uh_sport, &udph->uh_dport, sizeof(short)) >= 0){
 			pstream->curdir=DIR_C2S;
 			pstream_pr->layer_dir = 1;
@@ -965,7 +969,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			}
 		}	
 
-		/* NOTE: ¸üÐÂpstreamÖ¸Õë, Ö¸Ïò¶ÑÖÐ´æ´¢µÄÄÚ´æ */
+		/* NOTE: ï¿½ï¿½ï¿½ï¿½pstreamÖ¸ï¿½ï¿½, Ö¸ï¿½ï¿½ï¿½ï¿½Ð´æ´¢ï¿½ï¿½ï¿½Ú´ï¿½ */
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);		
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
@@ -981,15 +985,15 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 
 		/*
 	2021-05-18 lijia close ipv6 original dup pkt check:
-	IPv6ÒòÎªÃ»ÓÐIpid×Ö¶Î, ÎÞ·¨Çø±ðÕæÕýµÄÓ¦ÓÃ²ãÖØ´«ºÍÖØ¸´Á÷Á¿, ¿ªÆôÁË»áµ¼ÖÂ¶ÏÍø»òÕßCT, ËùÒÔ²»Ö§³ÖÔ­Ê¼Á÷Á¿Ê¶±ð!
+	IPv6ï¿½ï¿½ÎªÃ»ï¿½ï¿½Ipidï¿½Ö¶ï¿½, ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã²ï¿½ï¿½Ø´ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ë»áµ¼ï¿½Â¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CT, ï¿½ï¿½ï¿½Ô²ï¿½Ö§ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½!
 
-	¶ÔÓÚIPv6µÄÁ½ÖÖÇé¿ö:
-	   1)Èç¹û¿ªÆôÁË´úÀí²ßÂÔ, ÖØ´«°ü±»Ê¶±ð³ÉÁËÖØ¸´°üµÄ»°, sapp¾ÍÖ±½ÓPASSÁË, Êµ¼ÊÄÇ¸ö°üÊÇÕæÊµÍ¨ÐÅË«·½·¢µÄ, Ã»ÓÐ¾­¹ýtfe´¦Àí, ¿ÉÄÜ¾Í¶ÏÍøÁË.
-	   2)Èç¹û¿ªÆôÁËfirewallµÄdrop²ßÂÔ, µÚÒ»´Îdrop³É¹¦ÁË, µ«Ó¦ÓÃ²ã»áÖØ´«, ÖØ´«°ü±»Ê¶±ð³ÉÁËÖØ¸´°üµÄ»°, sapp¾ÍÖ±½ÓPASSÁË, µ¼ÖÂCT.
+	ï¿½ï¿½ï¿½ï¿½IPv6ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:
+	   1)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ø´ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½Ä»ï¿½, sappï¿½ï¿½Ö±ï¿½ï¿½PASSï¿½ï¿½, Êµï¿½ï¿½ï¿½Ç¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÊµÍ¨ï¿½ï¿½Ë«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ã»ï¿½Ð¾ï¿½ï¿½ï¿½tfeï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ü¾Í¶ï¿½ï¿½ï¿½ï¿½ï¿½.
+	   2)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½firewallï¿½ï¿½dropï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ò»ï¿½ï¿½dropï¿½É¹ï¿½ï¿½ï¿½, ï¿½ï¿½Ó¦ï¿½Ã²ï¿½ï¿½ï¿½Ø´ï¿½, ï¿½Ø´ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½Ä»ï¿½, sappï¿½ï¿½Ö±ï¿½ï¿½PASSï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½CT.
 
-	µ«ÊÇ, ÒªÖ§³Ö×¢ÈëÁ÷Á¿Ê¶±ð!!
+	ï¿½ï¿½ï¿½ï¿½, ÒªÖ§ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½!!
 
-	24.04: ¶ÔÓÚIPv6À´Ëµ, ÒòÎª²»Ö§³ÖÔ­Ê¼Á÷Á¿ÖØ¸´¼ì²â, ËùÒÔ×¢Èë°üÊ¶±ðÒ²²»Ö§³Ö¿ìËÙÂ·¾¶.
+	24.04: ï¿½ï¿½ï¿½ï¿½IPv6ï¿½ï¿½Ëµ, ï¿½ï¿½Îªï¿½ï¿½Ö§ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½Ò²ï¿½ï¿½Ö§ï¿½Ö¿ï¿½ï¿½ï¿½Â·ï¿½ï¿½.
 */
 		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
 		&& (sapp_dup_pkt_identify(thread_num, pstream_pr, a_packet, udph, 0) != 0)){
@@ -1022,11 +1026,11 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		}
 
 		if(pstream->curdir==DIR_S2C){
-			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* µ±Ç°·½ÏòµÄµÚÒ»¸ö°ü, ³¢ÊÔ¸üÐÂµ×²ãËíµÀµÄµ¥ÏòµØÖ·ÐÅÏ¢(ÈçMPLS, GTP) */
+			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½Âµ×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ï¢(ï¿½ï¿½MPLS, GTP) */
 				try_to_update_addr_info = 1;
 			}
 		}else{
-			if(pdetail_pr->udpdetail_public.serverpktnum == 0){ /* µ±Ç°·½ÏòµÄµÚÒ»¸ö°ü, ³¢ÊÔ¸üÐÂµ×²ãËíµÀµÄµ¥ÏòµØÖ·ÐÅÏ¢(ÈçMPLS, GTP) */
+			if(pdetail_pr->udpdetail_public.serverpktnum == 0){ /* ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½Âµ×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ï¢(ï¿½ï¿½MPLS, GTP) */
 				try_to_update_addr_info = 1;
 			}
 		}
@@ -1037,13 +1041,13 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		pstream_pr->packet_process_context=1;
 		udp_change_stream_state(a_index,udph, raw_pkt, offset_to_raw_pkt_hdr);
 		pstream_pr->packet_process_context=0;
-		/* ¸üÐÂpstreamÖ¸Õë */
+		/* ï¿½ï¿½ï¿½ï¿½pstreamÖ¸ï¿½ï¿½ */
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);
 
 		update_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr, raw_pkt);
 
-/* IP, UDP²ãºÏ²¢ºó, ²»ÔÙ¸üÐÂUDP²ãµÄoffset_to_raw_pkt_hdr */
+/* IP, UDPï¿½ï¿½Ï²ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ù¸ï¿½ï¿½ï¿½UDPï¿½ï¿½ï¿½offset_to_raw_pkt_hdr */
 #if 0
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 #endif
@@ -1098,9 +1102,11 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		}		
 	}
 
+	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNEL_GPRS_TUNNEL){
+		ret = gtp_entry(pstream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
+	}
 
-
-	/* TODO 2, »ùÓÚIPv6µÄUDP port 1701 L2TPÐ­Òé */
+	/* TODO 2, ï¿½ï¿½ï¿½ï¿½IPv6ï¿½ï¿½UDP port 1701 L2TPÐ­ï¿½ï¿½ */
 	pstream_pr->packet_process_context=0;	
 	if(DROP == ret){
 		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
@@ -1109,7 +1115,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	return ret;
 }
 
-/* lijia comment: a_packet¿ÉÄÜÊÇÕæÊµÔ­Ê¼°ü, Ò²¿ÉÄÜÊÇmallocµÄIPÖØ×é°ü, ¿¿addr.pkttypeÇø·Ö */
+/* lijia comment: a_packetï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÊµÔ­Ê¼ï¿½ï¿½, Ò²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½mallocï¿½ï¿½IPï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½addr.pkttypeï¿½ï¿½ï¿½ï¿½ */
 int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_packet,int thread_num,
 						unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
@@ -1173,7 +1179,7 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 		break;
 
 		case IPPROTO_ICMP:
-#if 0 /* 2017-05-19 lijia modify, GDEV±£»î×ªµ½g_device_plug²å¼þÖÐÊµÏÖ, Æ½Ì¨ÄÚ²¿²»ÔÙ´¦Àí */		
+#if 0 /* 2017-05-19 lijia modify, GDEVï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½g_device_plugï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½, Æ½Ì¨ï¿½Ú²ï¿½ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½ */		
 			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offest;
 			ret = icmp_entry(pfstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offest);
 #endif			
@@ -1224,7 +1230,7 @@ char udp_teredo_identify_entry(const struct streaminfo *pstream, const void *thi
 		pstream_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNLE_TEREDO;		
 	}
 
-	return APP_STATE_DROPME; /* Ã¿¸öÁ÷Ö»¿´µÚÒ»¸ö°ü, ²»¹ÜÊÇ·ñteredoËíµÀ, ºóÐø¶¼²»ÔÙ´¦ÀíÁË */
+	return APP_STATE_DROPME; /* Ã¿ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½teredoï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½ï¿½ï¿½ */
 }
 
 
