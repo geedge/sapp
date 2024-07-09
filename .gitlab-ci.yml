@@ -1,7 +1,6 @@
 variables:
   GIT_STRATEGY: "clone"
   BUILD_PADDING_PREFIX: /tmp/padding_for_CPACK_RPM_BUILD_SOURCE_DIRS_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX/
-  BUILD_IMAGE_CENTOS7: "git.mesalab.cn:7443/mesa_platform/build-env:centos7-for-sapp"
   BUILD_IMAGE_CENTOS8: "git.mesalab.cn:7443/mesa_platform/build-env:rocky8-for-sapp"
   INSTALL_DEPENDENCY_LIBRARY: 
     libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env 
@@ -61,10 +60,6 @@ stages:
   tags:
     - share
 
-run_cppcheck_for_centos7:
-  extends: .cppcheck_script
-  image: $BUILD_IMAGE_CENTOS7
-
 run_cppcheck_for_centos8:
   extends: .cppcheck_script
   image: $BUILD_IMAGE_CENTOS8
@@ -84,52 +79,6 @@ run_cppcheck_for_centos8:
     PLATFORM_MODE: INLINE
   tags:
     - share
-
-.build_by_travis_for_centos7:
-  extends: .build_before_script
-  stage: build
-  image: $BUILD_IMAGE_CENTOS7
-
-
-develop_build_for_centos7:
-  extends: .build_by_travis_for_centos7
-  variables:
-    BUILD_TYPE: RelWithDebInfo
-  artifacts:
-    name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-debug"
-    paths:
-      - build/*
-  except:
-    - tags
-
-release_build_debug_for_centos7:
-  extends: .build_by_travis_for_centos7
-  variables:
-    BUILD_TYPE: Debug
-    PACKAGE: 1
-    ASAN_OPTION: "ADDRESS"
-  script:
-    - source /opt/rh/devtoolset-7/enable || true
-    - ./ci/travis.sh    
-  artifacts:
-    name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-release"
-    paths:
-      - build/*
-  only:
-    - tags
-
-release_build_for_centos7:
-  extends: .build_by_travis_for_centos7
-  variables:
-    BUILD_TYPE: RelWithDebInfo
-    MEM_POOL: JEMALLOC_STATIC  
-    PACKAGE: 1
-  artifacts:
-    name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-release"
-    paths:
-      - build/*
-  only:
-    - tags   
 
 .build_by_travis_for_centos8:
   stage: build
@@ -271,28 +220,6 @@ basic_test_for_centos8:
 ###############################################################################
 # upload 
 ###############################################################################
-.define_before_upload_centos7:
-  stage: upload
-  image: $BUILD_IMAGE_CENTOS7
-  before_script:
-    - pwd; ls -l ; cd build ; ls -l
-    - cp /root/rpm_upload_tools.py ./
-  variables:
-    PULP3_REPO_NAME: platform-stable-x86_64.el7
-    PULP3_DIST_NAME: platform-stable-x86_64.el7
-  only:
-    - tags
-  tags:
-    - share 
-
-rpm_upload_for_centos7:
-  extends: .define_before_upload_centos7
-  dependencies:
-    - release_build_debug_for_centos7
-    - release_build_for_centos7
-  script:
-    - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *.rpm    
-
 .define_before_upload_centos8:
   stage: upload
   image: $BUILD_IMAGE_CENTOS8
