@@ -1319,6 +1319,8 @@ int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct stre
 	}
 
 	ret = cmpaddr_new(pheap_stream_pr, pstack_stream_pr);
+	
+	
 	if(0 != ret){
 		return ret;
 	}else{

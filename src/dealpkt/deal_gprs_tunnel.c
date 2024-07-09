@@ -204,7 +204,7 @@ int gtp_entry(struct streaminfo_private *pfstream_pr,void *this_layer_data,int t
 }
 
 //仅识别GTP-U协议，用于进行隧道处理
-int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned int udp_payload_len)
+int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned int udp_payload_len, int is_ctrl_pkt)
 {
     if (udp_payload_len >= sizeof(struct gtp_hdr))
     {
@@ -230,6 +230,7 @@ int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned 
             unsigned short gtp_version = (gtp->flags & 0xE0) >> 5;
             if ((gtp_version == 0) || (gtp_version == 1))
             {
+                if(is_ctrl_pkt==1)return 1;
                 unsigned short message_len = ntohs(gtp->len);
                 /* NOTE: gtp->len不包括gtp头部固定长度(8字节), 只包括扩展头部和负载 */
                 if (message_len == (udp_payload_len - sizeof(struct gtp_hdr))) {
@@ -247,22 +248,6 @@ int identify_gtp(const struct streaminfo *pstream,const char *payload, unsigned 
         }
     }
     return 0;
-}
-
-/*
-	内置插件, 
-	用于识别当前UDP流是否是隧道.
-	如果是隧道, 在streaminfo_private->stream_carry_up_layer_tunnel_type中设置标记.
-*/
-char udp_gtp_identify_entry(const struct streaminfo *pstream, const void *this_hdr, const void *raw_pkt, void **pme)
-{
-    struct streaminfo_private *pstream_pr = (struct streaminfo_private *)pstream;
-    if(1 == identify_gtp(pstream, (char *)this_hdr+sizeof(struct mesa_udp_hdr), 
-    					pstream_pr->raw_pkt->raw_pkt_len - ((const char *)this_hdr - (const char*)pstream_pr->raw_pkt->raw_pkt_data) - sizeof(struct mesa_udp_hdr)))
-    {
-        pstream_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNEL_GPRS_TUNNEL;
-    }
-	return APP_STATE_DROPME; /* 每个流只看第一个包, 不管是否GTP隧道, 后续都不再处理了 */
 }
 
 

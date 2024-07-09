@@ -169,7 +169,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	pindex_udp->phashprev = NULL;
 #endif	
 
-
+	pindex_udp->stream.stream_carry_up_layer_tunnel_type=pindex->stream.stream_carry_up_layer_tunnel_type;
 	pindex_udp->stream.dirreverse = 0;
 
 	pstream_udp_pr = &pindex_udp->stream;
@@ -245,18 +245,7 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 		project_req_add_struct(pstream_udp, G_UDP_FLOW_STAT_PROJECT_ID, pdetail_pr->flow_stat);
 	}
 
-    extern int identify_gtp(const struct streaminfo *pstream, const char *payload, unsigned int udp_payload_len);
-    if (1 == identify_gtp(pstream_udp, (char *)this_udphdr + sizeof(struct mesa_udp_hdr),
-                          pstream_udp_pr->raw_pkt->raw_pkt_len -
-                              ((const char *)this_udphdr - (const char *)pstream_udp_pr->raw_pkt->raw_pkt_data) -
-                              sizeof(struct mesa_udp_hdr)))
-    {
-        pstream_udp_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNEL_GPRS_TUNNEL;
-    }
-    else
-    {
-        save_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_udp_pr, raw_pkt);
-    }
+    save_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_udp_pr, raw_pkt);
 
     if(createdir==DIR_C2S){
 		pstream_udp_pr->stream_c2s_route_dir = raw_pkt->route_dir;
@@ -529,6 +518,9 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
 	return is_dup_pkt;
 }
 
+extern int identify_gtp(const struct streaminfo *pstream, const char *payload,
+                                        unsigned int udp_payload_len, int is_ctrl_pkt);
+
 int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_iphdr,
 		int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
@@ -601,17 +593,23 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			local_sys_stat->length[SAPP_STAT_UDP_OUTBOUND] += datalen;
 		}
 	}
-	
-	//add by lqy 20130530 
+
+	set_transport_addr(pstream, 1, udph->uh_sport, udph->uh_dport);
+    if (identify_gtp(pstream, (char *)udph + sizeof(struct mesa_udp_hdr),
+                     pstream_pr->raw_pkt->raw_pkt_len -
+                         ((const char *)udph - (const char *)pstream_pr->raw_pkt->raw_pkt_data) -
+                         sizeof(struct mesa_udp_hdr),raw_pkt->is_ctrl_pkt))
+    {
+        pstream_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNEL_GPRS_TUNNEL;
+        return gtp_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
+    }
+    //add by lqy 20130530 
 	// udp有不开启流还原的功能需求，直接按单包单流处理
 	if(unlikely(0 ==udp_stream_table_size))
 	{
 		struct udpdetail_private detail_pr;
 		memset(&detail_pr, 0, sizeof(struct udpdetail_private));
 		pdetail = (struct udpdetail *)&detail_pr;
-	
-		set_transport_addr(pstream, 1, udph->uh_sport, udph->uh_dport);
-
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
 		
 		/* 单包级, 假定源端口大的为Client */
@@ -656,38 +654,38 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
     }
 	else	
 	{
-		set_transport_addr(pstream, 1, udph->uh_sport, udph->uh_dport);
+		
 
 		a_index =(struct streamindex * ) findstreamindex (pindex, raw_pkt);
-		if (unlikely(!a_index)){
-			//a_index = udp_add_new_stream (ptmp, udph);
-            if(sapp_global_val->config.packet_io.dup_pkt_para.kickout_udp_stream_enabled)
+        if (unlikely(!a_index))
+        {
+            if (sapp_global_val->config.packet_io.dup_pkt_para.kickout_udp_stream_enabled)
             {
                 if (sapp_dup_stream_search(pstream) == 1)
                 {
-					local_sys_stat->count[SAPP_STAT_UDP_DUP_KICK_STREAM]++;
+                    local_sys_stat->count[SAPP_STAT_UDP_DUP_KICK_STREAM]++;
                     return PASS;
                 }
             }
-			if(raw_pkt->is_ctrl_pkt==0)
-			{
-   	        	a_index = udp_add_new_stream(pindex, udph, raw_pkt);
-			}
-			else
-			{
-				return PASS;
-			}
+            if (raw_pkt->is_ctrl_pkt == 0)
+            {
+                a_index = udp_add_new_stream(pindex, udph, raw_pkt);
+            }
+            else // ctrl packet never trigger new stream
+            {
+                return PASS;
+            }
         }
-		//add by lqy 只有当链接未重置时进行lru
-		else 
-		{
-			if(lrustream(a_index)==1)
-			{
-				udp_reset_stream(a_index);
-			}
-		}	
+        // add by lqy 只有当链接未重置时进行lru
+        else
+        {
+            if (lrustream(a_index) == 1)
+            {
+                udp_reset_stream(a_index);
+            }
+        }
 
-		/* NOTE: 更新pstream指针, 指向堆中存储的内存 */
+        /* NOTE: 更新pstream指针, 指向堆中存储的内存 */
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);		
 		//pstream->addr.pktipfragtype = pstream->stream_public.addr.pktipfragtype; /* 2015-11-04 lijia add, IP分片类型更新 */
@@ -831,9 +829,6 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		}			
 	}
 	
-	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNEL_GPRS_TUNNEL){
-		ret = gtp_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
-	}
 	pstream_pr->packet_process_context=0;	
 	if(DROP == ret){
 		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
@@ -896,11 +891,20 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	pstream->threadnum=thread_num;
 	next_layer_offset = offset_to_raw_pkt_hdr + sizeof(struct mesa_udp_hdr);
 
-	//add by lqy 20130530 
+	set_transport_addr(pstream, 1, udph->uh_sport, udph->uh_dport);	
+    if (identify_gtp(pstream, (char *)udph + sizeof(struct mesa_udp_hdr),
+                     pstream_pr->raw_pkt->raw_pkt_len -
+                         ((const char *)udph - (const char *)pstream_pr->raw_pkt->raw_pkt_data) -
+                         sizeof(struct mesa_udp_hdr), raw_pkt->is_ctrl_pkt))
+    {
+        pstream_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNEL_GPRS_TUNNEL;
+        return gtp_entry(pstream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
+    }
+    //add by lqy 20130530 
 	// udp有不开启流还原的功能需求，直接按单包单流处理
-	
-	if(unlikely(0 == udp_stream_table_size))
+    if(unlikely(0 == udp_stream_table_size))
 	{
+
 		/* 单包级, 假定源端口大的为Client */
 		if(memcmp(&udph->uh_sport, &udph->uh_dport, sizeof(short)) >= 0){
 			pstream->curdir=DIR_C2S;
@@ -933,8 +937,6 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	}
 	else	
 	{
-		set_transport_addr(pstream, 1, udph->uh_sport, udph->uh_dport);		
-	
 		a_index =(struct streamindex *)findstreamindex (pindex, raw_pkt);
 		if(unlikely(!a_index))
 		{
@@ -948,7 +950,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
             }
 			if(raw_pkt->is_ctrl_pkt==0)
 			{
-            	a_index = udp_add_new_stream(pindex, udph, raw_pkt);
+                a_index = udp_add_new_stream(pindex, udph, raw_pkt);
 			}
 			else
 			{
@@ -1096,10 +1098,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		}		
 	}
 
-	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNEL_GPRS_TUNNEL){
-		ret = gtp_entry(pstream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
-		//ret = gtp_entry(&pindex->stream, udph, thread_num, routedir, raw_pkt, next_layer_offset);
-	}
+
 
 	/* TODO 2, 基于IPv6的UDP port 1701 L2TP协议 */
 	pstream_pr->packet_process_context=0;	
