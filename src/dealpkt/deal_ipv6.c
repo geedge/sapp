@@ -86,7 +86,7 @@ static uchar * ipv6_frag_key_dup(const uchar *key, uint key_size)
 	raw_frag_key = (struct ipv6_frag_key *)key;
 	tid = raw_frag_key->pfstream_pr->stream_public.threadnum;
 
-	/* ´Ëº¯ÊýÎÞ·¨»ñÈ¡Ïß³ÌºÅ, ËùÒÔÊ¹ÓÃmalloc, Í¬Àíº¯ÊýÖÐÒ²ÒªÊ¹ÓÃfree */
+	/* ï¿½Ëºï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½È¡ï¿½ß³Ìºï¿½, ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½malloc, Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ÒªÊ¹ï¿½ï¿½free */
 	new_frag_key = (struct ipv6_frag_key *)sapp_mem_calloc(SAPP_MEM_DYN_IP_FRAG_PKT, tid, sizeof(struct ipv6_frag_key));
 
 	memcpy(&new_frag_key->ip6_src, &raw_frag_key->ip6_src, sizeof(struct in6_addr));
@@ -149,7 +149,7 @@ static void ipv6_frag_ipq_free_all(void *data)
 {
 	struct frag_ipq *ipq = (struct frag_ipq *)data;
 
-	/* ÒòÖØ×é´íÎóÉ¾³ýÊ±, ÒªÊÍ·Ånew_iphÄÚ´æ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½Ê±, Òªï¿½Í·ï¿½new_iphï¿½Ú´ï¿½ */
 	if(ipq->new_iph){
 		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,ipq->thread_num, ipq->new_iph);
 	}
@@ -185,7 +185,7 @@ static inline int checkipv6pkt(const struct mesa_ip6_hdr * iph, int payload_len,
 			break;
 #endif
 		case  NEXTHDR_FRAGMENT	:	
-			/* NOTE: ÒòÎªIPv6·ÖÆ¬ÖØ×éºó, ÓÖµÝ¹éµ÷ÓÃÁËipv6_entry(), ´ËÊ±²»ÄÜ¼ì²â¸ºÔØ³¤¶È´óÓÚraw_pkt_len, Ö»ÓÐÔ­Ê¼·ÖÆ¬°ü¿ÉÒÔÕâÃ´¼ì²â */
+			/* NOTE: ï¿½ï¿½ÎªIPv6ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ÖµÝ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ipv6_entry(), ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ü¼ï¿½â¸ºï¿½Ø³ï¿½ï¿½È´ï¿½ï¿½ï¿½raw_pkt_len, Ö»ï¿½ï¿½Ô­Ê¼ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ */
 			if(payload_len + (int)sizeof(struct mesa_ip6_hdr) > raw_pkt_len){
 				sapp_runtime_log(20, "ipv6 packet check error: fragement pkt len:%d, raw_pkt len: %d\n", payload_len, raw_pkt_len);
 				return -1;
@@ -218,7 +218,7 @@ int ipv6_packet_check(int threadid, int len, struct simple_ip6_hdr *ip6h)
 	return 1;
 }
 
-/* to do: ¹¥»÷¼ì²â */
+/* to do: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 static int ipv6_attack_detect(struct frag_ipq *ipv6_qp)
 {
 	if(ipv6_qp->attack_flag != 0)
@@ -232,7 +232,7 @@ static int ipv6_attack_detect(struct frag_ipq *ipv6_qp)
 		return IP_FRAG_IGNORE;
 	}
 	
-	// to do: ÆäËû²ßÂÔ
+	// to do: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	
 	return IP_FRAG_OK;
 }
@@ -273,8 +273,8 @@ static unsigned int ipv6_frag_hash_index(void *hash_key)
 
 /* 
 	return value:
-	0: keyÖµÏàÍ¬ 
-	-1:keyÖµ²»Í¬
+	0: keyÖµï¿½ï¿½Í¬ 
+	-1:keyÖµï¿½ï¿½Í¬
 */
 int ipv6_frag_hash_cmp(void *hash_key1, void *hash_key2)
 {
@@ -322,7 +322,7 @@ static struct frag_ipq *ipv6_frag_queue_find(struct streaminfo_private *pstream_
 }
 #endif
 
-/* ÔÚIPv4»·¾³ÏÂ£¬Í³¼Æ³öµÄÄÚ´æÕ¼ÓÃ¾­ÑéÖµ */
+/* ï¿½ï¿½IPv4ï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½Í³ï¿½Æ³ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Õ¼ï¿½Ã¾ï¿½ï¿½ï¿½Öµ */
 static inline int ip6_buff_size(int tot_len) 
 {
 	return  tot_len > 2048 ? (tot_len > 10240 ? 65576 : 10240) : 2048;
@@ -330,7 +330,7 @@ static inline int ip6_buff_size(int tot_len)
 
 
 #if (USE_MESA_STREAM_HASH==0)
-/* ÒÀ¾Ý³¬Ê±²ßÂÔÇåÀíÄÚ´æ */
+/* ï¿½ï¿½ï¿½Ý³ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ */
 static void ipv6_frag_mem_clean_by_time(struct frag_manage *handle)
 {
 	struct frag_ipq *tmp, *next;
@@ -343,7 +343,7 @@ static void ipv6_frag_mem_clean_by_time(struct frag_manage *handle)
 		
 		frag_ipq_kill(handle, tmp);
 
-		/* Ã¿´ÎÖ»ÊÍ·ÅÒ»¶¨ÊýÁ¿µÄÄÚ´æ£¬±ÜÃâ³¤Ê±¼äÔÚ´Ëº¯ÊýÔËÐÐ£¬¼æ¹ËÆäËû´¦ÀíÁ÷³Ì */
+		/* Ã¿ï¿½ï¿½Ö»ï¿½Í·ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´æ£¬ï¿½ï¿½ï¿½â³¤Ê±ï¿½ï¿½ï¿½Ú´Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		if(raw_mem_size-handle->total_mem >= IPV6_FRAG_MEM_FREE_ONCE)
 		{
 			break;
@@ -354,7 +354,7 @@ static void ipv6_frag_mem_clean_by_time(struct frag_manage *handle)
 }
 
 
-/* ÒÀ¾ÝÕ¼ÓÃÄÚ´æÊýÁ¿ÇåÀíÄÚ´æ */
+/* ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ */
 static void ipv6_frag_mem_clean_by_size(struct frag_manage *handle)
 {
 	struct frag_ipq *tmp, *next;
@@ -367,7 +367,7 @@ static void ipv6_frag_mem_clean_by_size(struct frag_manage *handle)
 		
 		frag_ipq_kill(handle, tmp);
 
-		/* Ã¿´ÎÖ»ÊÍ·ÅÒ»¶¨ÊýÁ¿µÄÄÚ´æ£¬±ÜÃâ³¤Ê±¼äÔÚ´Ëº¯ÊýÔËÐÐ£¬¼æ¹ËÆäËû´¦ÀíÁ÷³Ì */
+		/* Ã¿ï¿½ï¿½Ö»ï¿½Í·ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´æ£¬ï¿½ï¿½ï¿½â³¤Ê±ï¿½ï¿½ï¿½Ú´Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		if(raw_mem_size-handle->total_mem >= IPV6_FRAG_MEM_FREE_ONCE)
 		{
 			break;
@@ -378,7 +378,7 @@ static void ipv6_frag_mem_clean_by_size(struct frag_manage *handle)
 }
 
 
-/* ÇåÀíÄÚ´æ£¬°´Ê±¼äºÍÕ¼ÓÃÄÚ´æÊýÁ¿ */
+/* ï¿½ï¿½ï¿½ï¿½ï¿½Ú´æ£¬ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ */
 static inline void ipv6_frag_mem_clean(struct frag_manage *handle)
 {
 	ipv6_frag_mem_clean_by_time(handle);
@@ -413,14 +413,14 @@ static void *frag_reassemble_v6(struct frag_manage *handle, struct frag_ipq *ipq
 #endif
 
 /* 
-	IPv6·ÖÆ¬ÖØ×éÈë¿Ú. 
-	²ÎÊýËµÃ÷:
-		pfstream: µ×²ãÁ÷µÄÖ¸Õë.
-		thread_num: Ïß³ÌID
-		frag_packet: Ô­Ê¼IPv6Êý¾Ý°üÍ·Ö¸Õë
-		ipv6_frag_hdr: IPv6·ÖÆ¬Í·µÄÖ¸Õë
-		last_hdr_offset: ·ÖÆ¬Í·µÄÇ°Ò»¸ö°üÍ·µÄnext_hdr×Ö¶Î£¬Ïà¶ÔIPv6Ô­Ê¼°üÍ·µÄÆ«ÒÆÁ¿£¬
-						 ÖØ×éÍê³ÉÖ®ºó£¬²»°üº¬·ÖÆ¬Í·£¬ÐèÒª°Ñ·ÖÆ¬Í·µÄÇ°Ò»¸ö°üÍ·µÄnext_hdrÖµ¸ÄÎª·ÖÆ¬Í·Ö®ºóµÄnext_hdrÖµ.
+	IPv6ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. 
+	ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½:
+		pfstream: ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½.
+		thread_num: ï¿½ß³ï¿½ID
+		frag_packet: Ô­Ê¼IPv6ï¿½ï¿½ï¿½Ý°ï¿½Í·Ö¸ï¿½ï¿½
+		ipv6_frag_hdr: IPv6ï¿½ï¿½Æ¬Í·ï¿½ï¿½Ö¸ï¿½ï¿½
+		last_hdr_offset: ï¿½ï¿½Æ¬Í·ï¿½ï¿½Ç°Ò»ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½next_hdrï¿½Ö¶Î£ï¿½ï¿½ï¿½ï¿½IPv6Ô­Ê¼ï¿½ï¿½Í·ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+						 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ó£¬²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬Í·ï¿½ï¿½ï¿½ï¿½Òªï¿½Ñ·ï¿½Æ¬Í·ï¿½ï¿½Ç°Ò»ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½next_hdrÖµï¿½ï¿½Îªï¿½ï¿½Æ¬Í·Ö®ï¿½ï¿½ï¿½next_hdrÖµ.
 */
 static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr, 
 				int thread_num, const struct mesa_ip6_hdr *frag_packet, 
@@ -458,7 +458,7 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 		return NULL;
 	}
 
-	/* ¹¥»÷¼ì²â */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	attack_flag = ipv6_attack_detect(ipv6_qp);
 	switch(attack_flag)
 	{
@@ -484,7 +484,7 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 
 	ipv6_qp->frags_num++;
 
-	if(NULL == ipv6_qp->private_info) /* ÊÕµ½µÄµÚÒ»¸ö·ÖÆ¬°ü */
+	if(NULL == ipv6_qp->private_info) /* ï¿½Õµï¿½ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ */
 	{
 		ipv6_qp->private_info = frag_malloc(ip6_frag_handle, sizeof(struct ipv6_frag_private));
 		ipv6_qp->private_len = sizeof(struct ipv6_frag_private);
@@ -496,7 +496,7 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 
 	offset = ntohs(ipv6_frag_hdr->frag_off) & ~0x7;
 	end = offset + (ntohs(frag_packet->ip6_payload_len) -
-			((u_int8_t *)(ipv6_frag_hdr + 1) - (u_int8_t *)(frag_packet + 1)));/* lijia comment, ·ÖÆ¬Í·Ç°ÃæÓÐ¿ÉÄÜ»¹°üº¬ÆäËûÍ·²¿, */
+			((u_int8_t *)(ipv6_frag_hdr + 1) - (u_int8_t *)(frag_packet + 1)));/* lijia comment, ï¿½ï¿½Æ¬Í·Ç°ï¿½ï¿½ï¿½Ð¿ï¿½ï¿½Ü»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½, */
 
 	if(offset >= end)
 	{
@@ -507,7 +507,7 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 		goto err;
 	}
 
-	if(!(ipv6_frag_hdr->frag_off & htons(IP6_MF))) /* ×îºóÒ»¸ö·ÖÆ¬°ü */ 
+	if(!(ipv6_frag_hdr->frag_off & htons(IP6_MF))) /* ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ */ 
 	{
 		if (end < ipv6_qp->tot_len||
 		    ((ipv6_qp->last_in & IP_FRAG_LAST_IN) && end != ipv6_qp->tot_len))
@@ -519,11 +519,11 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 	}
 	else
 	{
-		if(end & 0x7) /* ²»ÊÇ8µÄÕû±¶Êý */
+		if(end & 0x7) /* ï¿½ï¿½ï¿½ï¿½8ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		{
 			goto err;
 		}
-		if(end > ipv6_qp->tot_len) /* ÂÒÐò */
+		if(end > ipv6_qp->tot_len) /* ï¿½ï¿½ï¿½ï¿½ */
 		{
 			if(ipv6_qp->last_in & IP_FRAG_LAST_IN)
 			{
@@ -554,7 +554,7 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 		}	
 		prev = next;
 	}
-#else	/* search backward, Ò»°ãÇé¿öÏÂ, offsetµÄÖµ¶¼ÊÇ´ÓÐ¡µ½´ó£¬Ê±¼ä¸´ÔÓ¶ÈÎªO(1) */
+#else	/* search backward, Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, offsetï¿½ï¿½Öµï¿½ï¿½ï¿½Ç´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä¸´ï¿½Ó¶ï¿½ÎªO(1) */
 	next = NULL;
 	for(prev = ipv6_qp->fragments_tail; prev != NULL; prev = prev->prev)
 	{
@@ -580,13 +580,13 @@ found:
 		goto discard_fq;
 	}
 
-	if(prev && (prev->end == offset)) /* ºÏ²¢ÏàÁÚ·ÖÆ¬ÐÅÏ¢£¬ÎÞÐèÐÂ½¨frags½á¹¹ */
+	if(prev && (prev->end == offset)) /* ï¿½Ï²ï¿½ï¿½ï¿½ï¿½Ú·ï¿½Æ¬ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â½ï¿½fragsï¿½á¹¹ */
 	{
 		prev->end = end;
 		goto copy_data;
 	}
 		
-	if(next && (next->offset == end)) /* ºÏ²¢ÏàÁÚ·ÖÆ¬ÐÅÏ¢£¬ÎÞÐèÐÂ½¨frags½á¹¹ */
+	if(next && (next->offset == end)) /* ï¿½Ï²ï¿½ï¿½ï¿½ï¿½Ú·ï¿½Æ¬ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â½ï¿½fragsï¿½á¹¹ */
 	{
 		next->offset = offset;
 		goto copy_data;
@@ -621,13 +621,13 @@ copy_data:
 	/* The first fragment. */
 	if(0 == offset) 
 	{
-		int this_pkt_unfragmentable_len = (char *)ipv6_frag_hdr - (char *)frag_packet; /* µ±Ç°°üÊµ¼Ê²»¿É·ÖÆ¬°üÍ·³¤¶È */
+		int this_pkt_unfragmentable_len = (char *)ipv6_frag_hdr - (char *)frag_packet; /* ï¿½ï¿½Ç°ï¿½ï¿½Êµï¿½Ê²ï¿½ï¿½É·ï¿½Æ¬ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ */
 		ipv6_qp->last_in |= IP_FRAG_FIRST_IN;
-		if(this_pkt_unfragmentable_len > private_info->unfragmentable_len){ /* Êµ¼ÊÍ·²¿¿Õ¼ä³¬¹ýÔ¤Áô¿Õ¼ä */
-			if (end + this_pkt_unfragmentable_len > ipv6_qp->buf_size){  /* ÊÇ·ñÐèÒªÀ©³ä»º´æ¿Õ¼ä */
+		if(this_pkt_unfragmentable_len > private_info->unfragmentable_len){ /* Êµï¿½ï¿½Í·ï¿½ï¿½ï¿½Õ¼ä³¬ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½Õ¼ï¿½ */
+			if (end + this_pkt_unfragmentable_len > ipv6_qp->buf_size){  /* ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ä»ºï¿½ï¿½Õ¼ï¿½ */
 					new_buf_size = ip6_buff_size(end + this_pkt_unfragmentable_len);
 					new_ip6h = (struct mesa_ip6_hdr *)frag_malloc(ip6_frag_handle, new_buf_size);
-					if(ipv6_qp->meat > 0){ /* meat>0, Ö®Ç°ÒÑ¾­´æ´¢¹ýÊý¾Ý, Í¨³£¿ÉÄÜÊÇ·ÖÆ¬ÂÒÐò, ¼´ÏÈÊÕµ½ºóÐøµÄ·ÖÆ¬°ü */
+					if(ipv6_qp->meat > 0){ /* meat>0, Ö®Ç°ï¿½Ñ¾ï¿½ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½Æ¬ï¿½ï¿½ */
 						memcpy((char *)new_ip6h + this_pkt_unfragmentable_len, (char *)ipv6_qp->new_iph + private_info->unfragmentable_len,  ipv6_qp->buf_size);
 					}
 					frag_free(ip6_frag_handle, ipv6_qp->new_iph, ipv6_qp->buf_size);
@@ -636,7 +636,7 @@ copy_data:
 			}
 		}
 		private_info->unfragmentable_len = this_pkt_unfragmentable_len;
-		private_info->raw_next_hdr = ipv6_frag_hdr->nexthdr; /* ¼ÇÂ¼µÚÒ»¸ö·ÖÆ¬µÄÏÂÒ»²ãÐ­ÒéÀàÐÍ */
+		private_info->raw_next_hdr = ipv6_frag_hdr->nexthdr; /* ï¿½ï¿½Â¼ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		memcpy(ipv6_qp->new_iph, frag_packet, this_pkt_unfragmentable_len);
 	}
 
@@ -663,7 +663,7 @@ copy_data:
 		ipv6_qp->ipfrag_list = NULL;
 #endif
 
-		int ip6_payload_len = htons(ipv6_qp->meat); /* Êµ¼ÊÊý¾Ý³¤¶È, ²»º¬Í·²¿ */
+		int ip6_payload_len = htons(ipv6_qp->meat); /* Êµï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ */
 		char raw_next_hdr = private_info->raw_next_hdr;
 #if USE_MESA_STREAM_HASH
 		new_ip6h = (struct mesa_ip6_hdr *)frag_reassemble_v6(ip6_frag_handle, ipv6_qp, &ip6_frag_key);
@@ -671,7 +671,7 @@ copy_data:
 		new_ip6h = (struct mesa_ip6_hdr *)frag_reassemble(ip6_frag_handle, ipv6_qp);
 #endif
 		new_ip6h->ip6_payload_len = ip6_payload_len;
-		*((char *)new_ip6h + last_hdr_offset) = raw_next_hdr; /* ¸üÐÂÎªµÚÒ»¸ö°üµÄnexthdrÐÅÏ¢ */
+		*((char *)new_ip6h + last_hdr_offset) = raw_next_hdr; /* ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½nexthdrï¿½ï¿½Ï¢ */
 
 		return new_ip6h;
 	}	
@@ -713,7 +713,7 @@ static void set_ipv6_stream(struct streaminfo_private *pfstream_pr, struct strea
 	ip6_addr->source = 0;
 	ip6_addr->dest = 0;
 
-	/* LiJia add, ÈËÎªÓÃÄ³ÖÖËã·¨ËæÒâ¶¨ÒåÒ»¸ö±¾²ãµØÖ·µÄ·½Ïò, ÀýÈçÅÐ¶ÏmemcmpµÄ½á¹û */
+	/* LiJia add, ï¿½ï¿½Îªï¿½ï¿½Ä³ï¿½ï¿½ï¿½ã·¨ï¿½ï¿½ï¿½â¶¨ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½Ä·ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½memcmpï¿½Ä½ï¿½ï¿½ */
 	if(memcmp(ip6_addr->saddr, ip6_addr->daddr, IPV6_ADDR_LEN) >= 0){
 		pstream_pr->layer_dir = 1;
 		pstream->curdir = DIR_C2S;
@@ -723,7 +723,7 @@ static void set_ipv6_stream(struct streaminfo_private *pfstream_pr, struct strea
 	}
 
 	pstream->addr.ipv6 = ip6_addr;
-	/* ÔÚIP²ãÏÈÉèÖÃÎª__ADDR_TYPE_IP_PAIR_V4, Èç¹ûÉÏ²ãÊÇTCP/UDP, »áÖØÐÂÉèÖÃÎªADDR_TYPE_IPV4, Èç¹ûÊÇIpv6_over_ipv4ËíµÀ, Ôò±£Áô´¿IP²ãµØÖ·ÌØÐÔ */
+	/* ï¿½ï¿½IPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª__ADDR_TYPE_IP_PAIR_V4, ï¿½ï¿½ï¿½ï¿½Ï²ï¿½ï¿½ï¿½TCP/UDP, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªADDR_TYPE_IPV4, ï¿½ï¿½ï¿½ï¿½ï¿½Ipv6_over_ipv4ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ */
 	pstream->addr.addrtype = __ADDR_TYPE_IP_PAIR_V6;
 	pstream->addr.addrlen = sizeof(struct layer_addr_ipv6);
 	pstream_pr->addr_use_as_hash = 1;
@@ -734,7 +734,7 @@ static void set_ipv6_stream(struct streaminfo_private *pfstream_pr, struct strea
 	pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 
 	if((pfstream_pr != NULL)
-	  && (g_overlay_layer_set[pfstream_pr->stream_public.addr.addrtype][pfstream_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay²ãµÄpfatherÉèÎªNULL, ²å¼þ²»¿É¼û */
+	  && (g_overlay_layer_set[pfstream_pr->stream_public.addr.addrtype][pfstream_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlayï¿½ï¿½ï¿½pfatherï¿½ï¿½ÎªNULL, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¼ï¿½ */
 		pstream->pfather = NULL;
 	}else{
 		pstream->pfather=&pfstream_pr->stream_public;
@@ -753,12 +753,12 @@ static void set_ipv6_stream(struct streaminfo_private *pfstream_pr, struct strea
 
 
 /* 
-	IPv6Êý¾Ý°ü´¦ÀíÈë¿Ú.
-	²ÎÊýËµÃ÷:
-		pfstream: µ×²ãÁ÷µÄÖ¸Õë.
-		a_packet: Ô­Ê¼IPv6Êý¾Ý°üÍ·Ö¸Õë
-		thread_num: Ïß³ÌID
-		routedir: µ×²ã°üµÄ´«Êä·½Ïò
+	IPv6ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
+	ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½:
+		pfstream: ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½.
+		a_packet: Ô­Ê¼IPv6ï¿½ï¿½ï¿½Ý°ï¿½Í·Ö¸ï¿½ï¿½
+		thread_num: ï¿½ß³ï¿½ID
+		routedir: ï¿½×²ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ä·½ï¿½ï¿½
 */
 int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hdr, int thread_num, 
 		unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
@@ -793,7 +793,7 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 		return PASS;
 	}
 	
-	/* NOTE: ÔÚÏß»·¾³ÏÂ·¢ÏÖÄªÃûÆäÃîµÄIP°ü, ÉõÖÁ»áËÀÑ­»·, Ò»¶¨Òª×öÍ·²¿ºÏ·¨ÐÔ¼ì²é!! */
+	/* NOTE: ï¿½ï¿½ï¿½ß»ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½Äªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½, Ò»ï¿½ï¿½Òªï¿½ï¿½Í·ï¿½ï¿½ï¿½Ï·ï¿½ï¿½Ô¼ï¿½ï¿½!! */
 	if(unlikely(checkipv6pkt(a_packet, (int)payload_len, raw_pkt->raw_pkt_len) < 0)){
 		local_sys_stat->count[SAPP_STAT_DROP_IPV6]++;
 		local_sys_stat->length[SAPP_STAT_DROP_IPV6]+=raw_pkt->raw_pkt_len;
@@ -811,7 +811,7 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 	}
 
 	if((sapp_global_mthread[thread_num].ipv6_pkt_type_flag & PKT_TYPE_IPREBUILD) == 0){
-		/* IP·ÖÆ¬ÖØ×éµÄ°ü»áÖØÈëipv6_entry, ²»ÄÜÔÙ¼ÆÊý */
+		/* IPï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ä°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ipv6_entry, ï¿½ï¿½ï¿½ï¿½ï¿½Ù¼ï¿½ï¿½ï¿½ */
 		local_sys_stat->count[SAPP_STAT_RCV_IPV6]++;
 		local_sys_stat->length[SAPP_STAT_RCV_IPV6]+=payload_len + sizeof(struct mesa_ip6_hdr);
 		if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
@@ -883,18 +883,18 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 						  (struct ipv6_frag_hdr *)next_hdr_ptr, last_hdr-(uchar *)a_packet, raw_pkt); 
 				if(new_ip6h)
 				{
-					//assert(new_ip6h->ip6_nxt_hdr != NEXTHDR_FRAGMENT); /* Ç¿ÖÆÐ£Ñé, ·ÖÆ¬ÖØ×éµÄ°ü²»¿ÉÄÜÔÙÊÇ·ÖÆ¬, ¾ÍËÀÑ­»·ÁË!! */
+					//assert(new_ip6h->ip6_nxt_hdr != NEXTHDR_FRAGMENT); /* Ç¿ï¿½ï¿½Ð£ï¿½ï¿½, ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ä°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Æ¬, ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½ï¿½ï¿½!! */
 					if(new_ip6h->ip6_nxt_hdr == NEXTHDR_FRAGMENT)
 					{
 						need_free=1;
 						goto done;
 					}
-					/* ÖØÐÂÉèÖÃIPµØÖ·ÐÅÏ¢ */
+					/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Ö·ï¿½ï¿½Ï¢ */
 					set_ipv6_stream(pfstream_pr, &(tmp_index), &ip6_addr, new_ip6h, routedir, thread_num, raw_pkt, skip_len+offset_to_raw_pkt_hdr);
-					/* µÝ¹éµ÷ÓÃ×ÔÉíÒ»´Î,Ìø¹ýIPv6µÄÀ©Õ¹Í·²¿,µ÷ÓÃÉÏ²ã´¦ÀíÄ£¿é */
+					/* ï¿½Ý¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½IPv6ï¿½ï¿½ï¿½ï¿½Õ¹Í·ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½Ï²ã´¦ï¿½ï¿½Ä£ï¿½ï¿½ */
 					sapp_global_mthread[thread_num].ipv6_pkt_type_flag = PKT_TYPE_IPREBUILD;
 					action = ipv6_entry(pfstream_pr, (const void *)new_ip6h, thread_num, routedir, raw_pkt,
-									skip_len+offset_to_raw_pkt_hdr); /* ·ÖÆ¬ÖØ×éµÄ°üµÝ¹éµ÷ÓÃ×ÔÉí, ²»Ðè¼ÓÉÏsizeof(struct mesa_ip6_hdr)Í· */
+									skip_len+offset_to_raw_pkt_hdr); /* ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ä°ï¿½ï¿½Ý¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sizeof(struct mesa_ip6_hdr)Í· */
 					need_free = 1;
 					sapp_global_mthread[thread_num].ipv6_pkt_type_flag = PKT_TYPE_NORMAL;
 					IPV6_PRINT("ipv6_frag_reassemble_num: %u\n", ipv6_frag_reassemble_num++);
@@ -909,7 +909,7 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 			case NEXTHDR_AUTH:
 			case NEXTHDR_DEST:
 				//skip_len = *(next_hdr_ptr + 1) + 1;
-				skip_len = (*(next_hdr_ptr + 1))*8 + 8; /* Ñ¡Ïî³¤¶ÈÒÔ8×Ö½ÚÎªµ¥Î» */			
+				skip_len = (*(next_hdr_ptr + 1))*8 + 8; /* Ñ¡ï¿½î³¤ï¿½ï¿½ï¿½ï¿½8ï¿½Ö½ï¿½Îªï¿½ï¿½Î» */			
 			break;
 
 			case NEXTHDR_NONE:			
@@ -944,7 +944,11 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 							  routedir, raw_pkt, sizeof(struct mesa_ip6_hdr)+skip_len+offset_to_raw_pkt_hdr);
 				goto done;			  
 			break;
-			
+		case NEXTHDR_GRE:
+				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr =  sizeof(struct mesa_ip6_hdr)+skip_len+offset_to_raw_pkt_hdr;
+				ret = gre_entry(pfstream_pr,next_hdr_ptr,thread_num,routedir, raw_pkt, ((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr);
+				goto done;	
+	        break;			
 			case NEXTHDR_OSPF_IGP:			
 			case NEXTHDR_ESP:
 				plocal_stream_pr->plugin_process_context=1;
@@ -1054,8 +1058,8 @@ MESA_htable_handle ipv6_frag_htable_create(void)
 	hargs.key2index = ipv6_frag_hash_index;
 	hargs.data_free = ipv6_frag_ipq_free_all;
 	hargs.data_expire_with_condition = NULL;
-	hargs.complex_key_dup = ipv6_frag_key_dup; /* ÓÃÓÚ¸´ÔÓ½á¹¹µÄkey¸´ÖÆ, ÈçcopyÒ»¸öµØÖ·Á´±í */
-	hargs.complex_key_free = ipv6_frag_key_free; /* É¾³ýÊ±ÊÍ·ÅkeyµÄÄÚ´æ×ÊÔ´ */
+	hargs.complex_key_dup = ipv6_frag_key_dup; /* ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½Ó½á¹¹ï¿½ï¿½keyï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½copyÒ»ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ */
+	hargs.complex_key_free = ipv6_frag_key_free; /* É¾ï¿½ï¿½Ê±ï¿½Í·ï¿½keyï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ô´ */
 
 	return MESA_htable_create(&hargs, sizeof(MESA_htable_create_args_t));
 }
