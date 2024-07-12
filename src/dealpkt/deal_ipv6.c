@@ -946,7 +946,7 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 			break;
 		case NEXTHDR_GRE:
 				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr =  sizeof(struct mesa_ip6_hdr)+skip_len+offset_to_raw_pkt_hdr;
-				ret = gre_entry(pfstream_pr,next_hdr_ptr,thread_num,routedir, raw_pkt, ((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr);
+				ret = gre_entry(plocal_stream_pr,next_hdr_ptr,thread_num,routedir, raw_pkt, ((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr);
 				goto done;	
 	        break;			
 			case NEXTHDR_OSPF_IGP:			
