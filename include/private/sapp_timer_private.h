@@ -18,25 +18,18 @@ enum st_ef_scope_t{
 #ifdef LIBEVENT_ENABLED
 #include "support/event2/event.h"
 #endif
-/*
-	NOTE:
-		1.ÿ���߳�ֻ��һ��ev_base, ����ǰ������߳�����, ����thread_cnt��, ���ԺͶ����߳�һ����.
-		2.add, newֻ����event�����̵߳���, ����ֻ�ڵ�ǰ�߳���Ч.
-*/
+
+
 typedef struct{
 	volatile MESA_ATOMIC_T running;
 	enum st_ef_scope_t effective_mode;
-#ifdef LIBEVENT_ENABLED	
 	struct event_base *libev_base;
-#endif	
+	//struct event *libev_event[SAPP_MAX_THREADS+1];
 	pthread_t effective_thread_pid;
 	int effective_thread_index;
 	int event_cnt;
-
-	//int thread_cnt; /* sappƽ̨ʵ�ʲ����߳���, �����stand_alone�߳�, ��̶��洢�����һ��index, ��SAPP_TIMER_MAX_THREADS */	
 }sapp_timer_handle_inner_t;
 
-/* event��Ҫʹ��set_opt���ø��ֲ���, �ýṹ�彫��׼struct event��װ, �洢��ز��� */
 typedef struct{
 	sapp_timer_handle_inner_t *timer_handle;
 #ifdef LIBEVENT_ENABLED	

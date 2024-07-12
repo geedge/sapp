@@ -5,17 +5,13 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <netinet/ip.h>
 
 typedef void * grule_hdl_t;
 //typedef void * rule_item_t;
 
 
-/*
-*  ע��:
-*  ���е�ַ��ṹʹ��������(�����ģʽ)��������ʹ��������
-*/
+
 
 #if __BYTE_ORDER != __LITTLE_ENDIAN
 #error "machine is not little-endian"

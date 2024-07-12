@@ -1,8 +1,3 @@
-/*
-20120603 : 
-
-20130530 :����ǿ��udp����̭���ܣ�
-*/
 #include "sapp_api.h"
 #include "sapp_pkt_stat.h"
 #include "sapp_private_api.h"
@@ -131,7 +126,6 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 }
 
 #if SAPP_INSECTICIDE
-/* 2017-02-09 ��ʱ���Ӵ���, ���߷���Ī������BUG, ���ж�stream->pfatherָ���ҵ�BUG, Ҳ��֪���İ�pfatherд���� */
 void iterate_stream_list(const struct streaminfo *stream)
 {
 	char tmp_buf[8];
@@ -190,15 +184,14 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	iterate_stream_list(pstream_udp);
 #endif
 
-	/* 2016-07-25 lijia add, ��¼��ǰ����ײ���������, ÿ����ֻ�ڴ���ʱ��һ�μ��� */
 	get_stream_carry_tunnel_type(pstream_udp, NULL, &pstream_udp_pr->stream_low_layer_tunnel_type);		
 	
 	if(1 == pstream_udp_pr->layer_dir){
-		pstream_udp_pr->stream_dir  = 1;  /* ��ΪUDP�ǰ�DATA������, ����stream_dir�϶���Ĭ�Ϲ�����ͬ */
+		pstream_udp_pr->stream_dir  = 1;
 		//((struct streaminfo_private *)(pstream_udp->pfather))->stream_dir = ((struct streaminfo_private *)(pstream_udp->pfather))->layer_dir;	
 		//set_stream_addr(pstream_udp, this_udphdr->uh_sport, this_udphdr->uh_dport);
 	}else{
-		pstream_udp_pr->stream_dir  = 1; /* ��Ϊ��UDP��DATA������, ����stream_dir�϶���Ĭ�Ϲ�����ͬ */
+		pstream_udp_pr->stream_dir  = 1;
 		//((struct streaminfo_private *)(pstream_udp->pfather))->stream_dir =((struct streaminfo_private *)(pstream_udp->pfather))->layer_dir ^ 1; 	
 		//set_stream_addr(pstream_udp, this_udphdr->uh_dport, this_udphdr->uh_sport);
 	}
@@ -227,18 +220,15 @@ static struct streamindex *udp_add_new_stream(struct streamindex *pindex,
 	pdetail->lastmtime=g_CurrentTime;
 
 	if(pstream_udp_pr->under_ddos_bypass){
-		/* bypass״̬�������κβ��, ������project,   bridge,��ʼ��half_stream�Ȳ��������Ժ����� */
 		sapp_global_val->mthread_volatile[threadnum]->sys_stat.count[SAPP_STAT_UDP_BYPASS_STREAM]++;
 		cycle_pkt_dump_by_classify(threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
 		sapp_runtime_log(RLOG_LV_INFO, "UDP stream:%s under ddos bypass!", printaddr(&pstream_udp->addr, threadnum));
 		return pindex_udp;
 	}
 
-	/* 2014-03-26 LiJia add, ĳЩ��Ŀ����Ӧ�ó�ʼ��, ���ǩ��ԭʼIP��Ƭ�б��� */
 	pstream_udp_pr->pproject = project_requirement_create(SAPP_MEM_DYN_UDP_PROJECT, threadnum);
 	pstream_udp_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_UDP_BRIDGE,threadnum);
 
-	/* 2016-07-14 lijia add */
 	if(G_UDP_FLOW_STAT_PROJECT_ID != -1){
 		pdetail_pr->flow_stat = (struct udp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_UDP_FLOW_STAT,pstream_udp->threadnum, sizeof(struct udp_flow_stat));
 		memset(pdetail_pr->flow_stat, 0, sizeof(struct udp_flow_stat));	
@@ -315,12 +305,11 @@ void udp_free_stream(struct streamindex *pindex)
 		((raw_pkt_t *)pstream_pr->raw_pkt)->prepend_list=NULL;
 	}
 
-	pstream_pr->raw_pkt = NULL; /* 2015-02-04 lijia add, ������˵��ö�����MESA_kill_xxx */
+	pstream_pr->raw_pkt = NULL;
 
 	if(pdetail_pr->apme!=NULL)
 	{
 		pstream->opstate=OP_STATE_CLOSE;
-		//udp stream �ص�
 		pstream->pktstate=OP_STATE_CLOSE; // add by lijia 20141202
 		stream_process_udp(pstream,NULL,NULL,NULL,&(pdetail_pr->apme),&(pstream->opstate));  
 		udp_cleardata(pstream);
@@ -352,7 +341,7 @@ void udp_free_stream(struct streamindex *pindex)
 	pstream->pdetail=NULL;
 
 
-	if(pstream_pr->set_special_timeout != 0){ /* ���Ӷ��г�ʱʱ��, ���ټ��� */
+	if(pstream_pr->set_special_timeout != 0){
 		sapp_global_mthread[threadnum].udp_stream_special_timeout_num--;
 	}
 
@@ -378,8 +367,6 @@ void udp_free_stream(struct streamindex *pindex)
 }
 
 //add by lqy 20130530
-// �����趨��ʱ��ǿ����̭���õ���Ԫ����Ϣ
-// return 1 ���������ã�0 δ��������
 static int udp_reset_stream(struct streamindex *pindex)
 {
 	struct stream_list *plist;
@@ -396,7 +383,6 @@ static int udp_reset_stream(struct streamindex *pindex)
 	threadnum = pstream->threadnum;
 
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
-	// ������ǰ�ĵ�����Ϣ
 	plist = &(G_MESA_GLOBAL_STREAM[threadnum]->udpList[pstream->stream_state]);
 	streamleavlist(pindex, plist);
 	//		pstream->stream.opstate=OP_STATE_CLOSE;
@@ -437,7 +423,6 @@ static int udp_reset_stream(struct streamindex *pindex)
 	pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_UDP_PROJECT, threadnum);
 	pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_UDP_BRIDGE, threadnum);
 
-	/* 2015-12-28 lijia add, ������, ���������ڴ� */
 	if (G_UDP_FLOW_STAT_PROJECT_ID != -1)
 	{
 		pdetail_pr->flow_stat = (struct udp_flow_stat *)sapp_mem_malloc(SAPP_MEM_DYN_UDP_FLOW_STAT, threadnum, sizeof(struct udp_flow_stat));
@@ -445,7 +430,6 @@ static int udp_reset_stream(struct streamindex *pindex)
 		project_req_add_struct(pstream, G_UDP_FLOW_STAT_PROJECT_ID, pdetail_pr->flow_stat);
 	}
 
-	// ��������״̬
 	memset(pdetail, 0, sizeof(struct udpdetail));
 	//		pstream->stream.opstate=OP_STATE_PENDING;
 	pstream->opstate = OP_STATE_PENDING;
@@ -488,12 +472,10 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
 	int is_dup_pkt = 0;
 	int dup_check_enabled = 0;
 
-	/* vxlan��ı�����Ϣ����ʶ���ظ���, ��Ϊʵ��ĳЩinline device�򽻻��巢���ı����ȫ��һ����, udp checksum��0, ipidҲ���� */	
 	if(is_overlay_udp_layer){
 		return 0;
 	}
 
-	/* ����Э������UDP��ʶ���ظ����� */
 	if(STREAM_TUNNLE_NON != pstream_pr->stream_carry_up_layer_tunnel_type){
 		return 0;
 	}
@@ -502,7 +484,6 @@ static int dealipv4udppkt_dup_check(int tid, struct streaminfo_private *pstream_
 	if(dup_pkt_para->dup_pkt_distinguish_ipv4_udp
 	|| dup_pkt_para->dup_pkt_distinguish_all_inject)
 	{
-		// ����ԭʼ�����, ֻ�ж�ǰN����, ���û�����ظ�����, ����Ϊ�Ժ�Ķ������ظ���!
 		if((0 == pstream_pr->has_duplicate_pkt) 
 		  && (pdetail_pr->udpdetail_public.clientpktnum+pdetail_pr->udpdetail_public.serverpktnum >= dup_pkt_para->first_packets)){ 
 			dup_check_enabled = 0;
@@ -533,7 +514,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	struct udpdetail_private *pdetail_pr=NULL;
 	struct streaminfo_private *pstream_pr=&(pindex->stream);
 	struct streaminfo *pstream=&(pstream_pr->stream_public);
-	struct streaminfo_private *stack_stream_pr = &(pindex->stream); /* 2016-11-24 lijia add, �����l2tp, teredo����, ʹ��ջ���ָ�� */
+	struct streaminfo_private *stack_stream_pr = &(pindex->stream);
 	int next_layer_offset;
 	void *tmpme=NULL;	
 	int hlen=0;
@@ -549,12 +530,11 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	udph = (struct mesa_udp_hdr *) ((char*)this_iphdr +hlen );
 	ulen = ntohs (udph->uh_ulen);
 
-	local_sys_stat->count_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index]++; /* udp��ip����һ�� */
-	local_sys_stat->length_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index] += ulen; /* udp��ip����һ�� */
+	local_sys_stat->count_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index]++;
+	local_sys_stat->length_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index] += ulen;
 
 	if(raw_pkt->is_ctrl_pkt==0)
 	{
-		/* 2015-12-29 lijia modify, ĳЩUDP��û�и�������, û������, ֱ�Ӷ��� */
 		if(unlikely(iplen - hlen < ulen || ulen <= (int)sizeof (struct mesa_udp_hdr))){
 				return PASS;
 		}
@@ -570,7 +550,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 	}
 	
 	pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
-	pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
+	pstream_pr->raw_pkt = raw_pkt;
 	//set_stream_addr(pfstream, udph->uh_sport, udph->uh_dport, &ptmp->stream.addr);
 	//pstream->pfather=&pfstream->stream_public;
 	pstream->type=STREAM_TYPE_UDP;
@@ -579,7 +559,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 
 	is_overlay_udp_layer = sapp_is_overlay_layer(pstream_pr, raw_pkt);
 
-	if(0 == is_overlay_udp_layer){ /* ��overlay����ۼ���ز���� */
+	if(0 == is_overlay_udp_layer){
 		local_sys_stat->count[SAPP_STAT_RCV_UDP]++;
 		local_sys_stat->length[SAPP_STAT_RCV_UDP]+=datalen;
 		if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
@@ -604,7 +584,6 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		if(sapp_global_val->config.protocol_feature.skip_gtp_layer==1)return gtp_entry(stack_stream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
     }
     //add by lqy 20130530 
-	// udp�в���������ԭ�Ĺ�������ֱ�Ӱ�������������
 	if(unlikely(0 ==udp_stream_table_size))
 	{
 		struct udpdetail_private detail_pr;
@@ -612,7 +591,6 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		pdetail = (struct udpdetail *)&detail_pr;
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
 		
-		/* ������, �ٶ�Դ�˿ڴ��ΪClient */
 		//if(memcmp(&udph->uh_sport, &udph->uh_dport, sizeof(short)) >= 0){
 		if(ntohs(udph->uh_sport) >= ntohs(udph->uh_dport)){
 			pstream->curdir=DIR_C2S;
@@ -676,7 +654,6 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
                 return PASS;
             }
         }
-        // add by lqy ֻ�е�����δ����ʱ����lru
         else
         {
             if (lrustream(a_index) == 1)
@@ -685,10 +662,9 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
             }
         }
 
-        /* NOTE: ����pstreamָ��, ָ����д洢���ڴ� */
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);		
-		//pstream->addr.pktipfragtype = pstream->stream_public.addr.pktipfragtype; /* 2015-11-04 lijia add, IP��Ƭ���͸��� */
+		//pstream->addr.pktipfragtype = pstream->stream_public.addr.pktipfragtype;
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 
 		pstream->pudpdetail->lastmtime=(long)g_CurrentTime;
@@ -708,16 +684,14 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 				return PASS;
 		}
 
-        /* 2014-11-15 lijia add, for udp serial kill udp */
 		if(unlikely(a_index->stream.stream_killed_flag != 0 && raw_pkt->is_ctrl_pkt==0)){
 			return DROP;
 		}
 
-		if(unlikely(pdetail_pr->drop_stream_flag != 0) && raw_pkt->is_ctrl_pkt==0 ){ /* 2020-06-02 lijia add */
+		if(unlikely(pdetail_pr->drop_stream_flag != 0) && raw_pkt->is_ctrl_pkt==0 ){
 			return DROP;
 		}
 
-		// ����kill remedy��drop stream���ظ�������sappֱ�Ӵ���������׷�����ϵ�sid,����ת����service chain����������SF������
         if (pstream_pr->sid_append_list != NULL)
         {
             ((raw_pkt_t *)raw_pkt)->append_list = pstream_pr->sid_append_list;
@@ -734,11 +708,11 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 
 
 		if(pstream->curdir==DIR_S2C){
-			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* ��ǰ����ĵ�һ����, ���Ը��µײ������ĵ����ַ��Ϣ(��MPLS, GTP) */
+			if(pdetail_pr->udpdetail_public.clientpktnum == 0){
 				try_to_update_addr_info = 1;
 			}
 		}else{
-			if(pdetail_pr->udpdetail_public.serverpktnum == 0){ /* ��ǰ����ĵ�һ����, ���Ը��µײ������ĵ����ַ��Ϣ(��MPLS, GTP) */
+			if(pdetail_pr->udpdetail_public.serverpktnum == 0){
 				try_to_update_addr_info = 1;
 			}
 		}
@@ -752,9 +726,8 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		udp_change_stream_state(a_index,udph, raw_pkt, offset_to_raw_pkt_hdr);
 		pstream_pr->packet_process_context=0;	
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)this_iphdr;
-		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
+		pstream_pr->raw_pkt = raw_pkt;
 
-		/* update ip ttl */
 		if(unlikely(0 == pstream_pr->ip_ttl_c2s) && (DIR_C2S == pstream->curdir)) {
 			pstream_pr->ip_ttl_c2s = this_iphdr->ip_ttl;
 		}
@@ -776,12 +749,10 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			ret = vxlan_entry(stack_stream_pr, (char *)udph+sizeof(struct mesa_udp_hdr), thread_num, routedir, raw_pkt, next_layer_offset);
 			udp_cleardata(pstream);
 			pstream_pr->packet_process_context=0;	
-			/* overlay UDP�㲻�ټ���������������� */
 			return ret;
 		}
 		else
 		{	
-			/* 2022-04-13 liuxueli add, for udp offload stream  */
 			if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
 				&& pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON 
 				&& DROP!=ret 
@@ -807,7 +778,7 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 		}
 	}
      
-	if(unlikely(DROP == ret)){ /* �������DROP���ٽ��к������� */
+	if(unlikely(DROP == ret)){
 		return DROP;
 	}
 	pstream_pr->packet_process_context=1;	
@@ -858,8 +829,8 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	iplen = ntohs (a_packet->ip6_payload_len);
 	ulen = ntohs (udph->uh_ulen);
 
-	local_sys_stat->count_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index]++; /* udp��ip����һ�� */
-	local_sys_stat->length_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index] += ulen; /* udp��ip����һ�� */
+	local_sys_stat->count_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index]++;
+	local_sys_stat->length_per_layer[ADDR_TYPE_UDP][pstream_pr->layer_index] += ulen;
 	
 	if(unlikely(iplen < ulen || ulen <= (int)sizeof (struct mesa_udp_hdr))){
 		return PASS;
@@ -881,13 +852,12 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	pstream->addr.addrlen=sizeof(struct layer_addr_udp);
 	pstream_pr->addr_use_as_hash = 0;
 	//ptmp->stream.p_layer_header = udph;
-/* IP, UDP��ϲ���, ���ٸ���UDP���offset_to_raw_pkt_hdr */
 #if 0
 	pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 #endif
 	pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)a_packet;
 	
-	pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
+	pstream_pr->raw_pkt = raw_pkt;
 	
 	//pstream->pfather=pfstream;
 	pstream->type=STREAM_TYPE_UDP;
@@ -905,11 +875,9 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		if(sapp_global_val->config.protocol_feature.skip_gtp_layer==1)return gtp_entry(pstream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
     }
     //add by lqy 20130530 
-	// udp�в���������ԭ�Ĺ�������ֱ�Ӱ�������������
     if(unlikely(0 == udp_stream_table_size))
 	{
 
-		/* ������, �ٶ�Դ�˿ڴ��ΪClient */
 		if(memcmp(&udph->uh_sport, &udph->uh_dport, sizeof(short)) >= 0){
 			pstream->curdir=DIR_C2S;
 			pstream_pr->layer_dir = 1;
@@ -969,7 +937,6 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			}
 		}	
 
-		/* NOTE: ����pstreamָ��, ָ����д洢���ڴ� */
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);		
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
@@ -983,18 +950,6 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			return PASS;
 		}
 
-		/*
-	2021-05-18 lijia close ipv6 original dup pkt check:
-	IPv6��Ϊû��Ipid�ֶ�, �޷�����������Ӧ�ò��ش����ظ�����, �����˻ᵼ�¶�������CT, ���Բ�֧��ԭʼ����ʶ��!
-
-	����IPv6���������:
-	   1)��������˴�������, �ش�����ʶ������ظ����Ļ�, sapp��ֱ��PASS��, ʵ���Ǹ�������ʵͨ��˫������, û�о���tfe����, ���ܾͶ�����.
-	   2)���������firewall��drop����, ��һ��drop�ɹ���, ��Ӧ�ò���ش�, �ش�����ʶ������ظ����Ļ�, sapp��ֱ��PASS��, ����CT.
-
-	����, Ҫ֧��ע������ʶ��!!
-
-	24.04: ����IPv6��˵, ��Ϊ��֧��ԭʼ�����ظ����, ����ע���ʶ��Ҳ��֧�ֿ���·��.
-*/
 		if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
 		&& (sapp_dup_pkt_identify(thread_num, pstream_pr, a_packet, udph, 0) != 0)){
 					local_sys_stat->count[SAPP_STAT_RCV_DUP_UDP]++;
@@ -1016,21 +971,20 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
             ((raw_pkt_t *)raw_pkt)->stream_trace_id = pstream_pr->stream_trace_id;
         }
 
-        /* 2014-11-15 lijia add, for udp serial kill udp */
 		if(unlikely(a_index->stream.stream_killed_flag != 0) && raw_pkt->is_ctrl_pkt==0){
 			return DROP;
 		}
 
-		if(unlikely(pdetail_pr->drop_stream_flag != 0) && raw_pkt->is_ctrl_pkt==0){ /* 2020-06-02 lijia add */
+		if(unlikely(pdetail_pr->drop_stream_flag != 0) && raw_pkt->is_ctrl_pkt==0){
 			return DROP;
 		}
 
 		if(pstream->curdir==DIR_S2C){
-			if(pdetail_pr->udpdetail_public.clientpktnum == 0){ /* ��ǰ����ĵ�һ����, ���Ը��µײ������ĵ����ַ��Ϣ(��MPLS, GTP) */
+			if(pdetail_pr->udpdetail_public.clientpktnum == 0){
 				try_to_update_addr_info = 1;
 			}
 		}else{
-			if(pdetail_pr->udpdetail_public.serverpktnum == 0){ /* ��ǰ����ĵ�һ����, ���Ը��µײ������ĵ����ַ��Ϣ(��MPLS, GTP) */
+			if(pdetail_pr->udpdetail_public.serverpktnum == 0){
 				try_to_update_addr_info = 1;
 			}
 		}
@@ -1041,18 +995,15 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		pstream_pr->packet_process_context=1;
 		udp_change_stream_state(a_index,udph, raw_pkt, offset_to_raw_pkt_hdr);
 		pstream_pr->packet_process_context=0;
-		/* ����pstreamָ�� */
 		pstream_pr=&(a_index->stream);
 		pstream=&(pstream_pr->stream_public);
 
 		update_polling_inject_context(SAPP_MEM_DYN_UDP_POLLING_RAW_PKT, pstream_pr, raw_pkt);
 
-/* IP, UDP��ϲ���, ���ٸ���UDP���offset_to_raw_pkt_hdr */
 #if 0
 		pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 #endif
 
-		/* 2022-04-13 liuxueli add, for udp offload stream  */
 		if(pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
 			&& pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON 
 			&& DROP!=ret
@@ -1066,7 +1017,6 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 			return PASS;
 		}
 
-		/* update ip ttl */
 		if(unlikely(0 == pstream_pr->ip_ttl_c2s) && (DIR_C2S == pstream->curdir)) {
 			pstream_pr->ip_ttl_c2s = a_packet->ip6_hop;
 		}
@@ -1075,25 +1025,12 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		}
 
 		pstream_pr->offset_to_ip_hdr = (char *)udph - (char *)a_packet;
-		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
+		pstream_pr->raw_pkt = raw_pkt;
 		pdetail_pr=(struct udpdetail_private *)(pstream->pdetail);
 		ret=stream_process_udp(pstream,(const void *)a_packet, (const void *)udph, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate)); 
 		udp_cleardata(pstream);
 	}
 
-/*
-	if(pdetail_pr!=NULL
-		&&pdetail_pr->offload_stream_flag==SMART_OFFLOAD_FLAG_UDP 
-		&& pstream_pr->stream_carry_up_layer_tunnel_type==STREAM_TUNNLE_NON 
-		&& DROP!=ret
-		&& (g_CurrentTime > pdetail_pr->offload_stream_timestamp_s))
-	{
-		local_sys_stat->count[SAPP_STAT_UDP_OFFLOAD_STREAM]++;
-		MESA_send_smart_offload(pstream, (const void *)raw_pkt, pstream->threadnum);
-		pdetail_pr->offload_stream_timestamp_s = g_CurrentTime;
-		return PASS;
-	}
-*/
 	pstream_pr->packet_process_context=1;
 	if(pstream_pr->stream_carry_up_layer_tunnel_type & STREAM_TUNNLE_L2TP){
 		ret = l2tpv2_entry(pstream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);	
@@ -1106,7 +1043,6 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 		ret = gtp_entry(pstream_pr, udph, thread_num, routedir, raw_pkt, next_layer_offset);
 	}
 
-	/* TODO 2, ����IPv6��UDP port 1701 L2TPЭ�� */
 	pstream_pr->packet_process_context=0;	
 	if(DROP == ret){
 		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
@@ -1115,7 +1051,6 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	return ret;
 }
 
-/* lijia comment: a_packet��������ʵԭʼ��, Ҳ������malloc��IP�����, ��addr.pkttype���� */
 int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_packet,int thread_num,
 						unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
@@ -1179,7 +1114,7 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 		break;
 
 		case IPPROTO_ICMP:
-#if 0 /* 2017-05-19 lijia modify, GDEV����ת��g_device_plug�����ʵ��, ƽ̨�ڲ����ٴ��� */		
+#if 0		
 			((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr = next_layer_offest;
 			ret = icmp_entry(pfstream_pr,next_layer_hdr,thread_num,routedir,raw_pkt, next_layer_offest);
 #endif			
@@ -1206,7 +1141,6 @@ int process_ipv4_pkt (struct streamindex *pfindex,const struct mesa_ip4_hdr * a_
 		break;
 
 		default:	
-			/* unknown protocol */	
 			local_sys_stat->count[SAPP_STAT_RCV_UNKNOWN]++;
 			local_sys_stat->length[SAPP_STAT_RCV_UNKNOWN]+= raw_pkt->raw_pkt_len;		
 			((raw_pkt_t *)raw_pkt)->diagnose_error_to_dump = 1;
@@ -1230,7 +1164,7 @@ char udp_teredo_identify_entry(const struct streaminfo *pstream, const void *thi
 		pstream_pr->stream_carry_up_layer_tunnel_type |= STREAM_TUNNLE_TEREDO;		
 	}
 
-	return APP_STATE_DROPME; /* ÿ����ֻ����һ����, �����Ƿ�teredo����, ���������ٴ����� */
+	return APP_STATE_DROPME;
 }
 
 

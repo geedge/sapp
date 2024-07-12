@@ -5,32 +5,32 @@
 extern "C" {
 #endif
 
-#define MEM_STAT_GLOBAL_THREAD_ID  -1  /* 全局变量内存的thread_id, 其实没有用, 保持接口一致, 用于非IO线程 */
+#define MEM_STAT_GLOBAL_THREAD_ID  -1  /* ȫ�ֱ����ڴ��thread_id, ��ʵû����, ���ֽӿ�һ��, ���ڷ�IO�߳� */
 
 typedef enum{
 	__SAPP_MEM_TYPE_INIT = 0,
 
-	SAPP_MEM_STACK_LOCAL, /* 函数栈里临时申请的内存, 函数返回就会被释放 */
+	SAPP_MEM_STACK_LOCAL, /* ����ջ����ʱ������ڴ�, �������ؾͻᱻ�ͷ� */
 	
 	SAPP_MEM_FIX_GLOBAL_VAL, 
 	SAPP_MEM_FIX_GLOBAL_STREAM, 
-	SAPP_MEM_FIX_PLUG_CTRL, 	/* 插件管理初始化必需的相关数据结构, 跟每个流动态挂载的插件无关 */
+	SAPP_MEM_FIX_PLUG_CTRL, 	/* ���������ʼ�������������ݽṹ, ��ÿ������̬���صĲ���޹� */
 	
 /*******************************************	
-	以上是全局变量, 或初始化后不变的内存
+	������ȫ�ֱ���, ���ʼ���󲻱���ڴ�
 *******************************************/
 	__SAPP_FIX_DYN_SEPARATOR,
 /*******************************************	
-	以下是多线程动态内存
+	�����Ƕ��̶߳�̬�ڴ�
 *******************************************/
 
-	SAPP_MEM_DYN_MEM_HDR, 		/* 为了增加这个统计, 增加的内存头部消耗 */
-	SAPP_MEM_DYN_IP_FRAG_PKT, /* 不太容易区别ipv4和ipv6, 此处统一计数 */
+	SAPP_MEM_DYN_MEM_HDR, 		/* Ϊ���������ͳ��, ���ӵ��ڴ�ͷ������ */
+	SAPP_MEM_DYN_IP_FRAG_PKT, /* ��̫��������ipv4��ipv6, �˴�ͳһ���� */
 	SAPP_MEM_DYN_TCP_STREAM,
 	SAPP_MEM_DYN_UDP_STREAM,
-	SAPP_MEM_DYN_TCP_HALF_STREAM, /* c2s, s2c半流结构 */
+	SAPP_MEM_DYN_TCP_HALF_STREAM, /* c2s, s2c�����ṹ */
 	SAPP_MEM_DYN_UDP_HALF_STREAM,
-	SAPP_MEM_DYN_PLUG_CTRL, 	/* 每个流插件管理必需的相关数据结构, 但不包括业务插件使用的内存 */
+	SAPP_MEM_DYN_PLUG_CTRL, 	/* ÿ����������������������ݽṹ, ��������ҵ����ʹ�õ��ڴ� */
 	SAPP_MEM_DYN_TCP_UNORDER,
 	SAPP_MEM_DYN_TCP_SYN_OPT,	
 	SAPP_MEM_DYN_TCP_POLLING_RAW_PKT,
@@ -39,11 +39,11 @@ typedef enum{
 	SAPP_MEM_DYN_UDP_DETAIL,	
 	SAPP_MEM_DYN_TCP_FLOW_STAT,
 	SAPP_MEM_DYN_UDP_FLOW_STAT,
-	SAPP_MEM_DYN_TCP_PROJECT, /* 仅包括project必需的管理结构, 但不包括插件在project_add时申请的内存 */
+	SAPP_MEM_DYN_TCP_PROJECT, /* ������project����Ĺ����ṹ, �������������project_addʱ������ڴ� */
 	SAPP_MEM_DYN_UDP_PROJECT,
 	SAPP_MEM_DYN_TCP_BRIDGE,
 	SAPP_MEM_DYN_UDP_BRIDGE,	
-	SAPP_MEM_DYN_PADDR, 		/* 每层地址所占的内存, 就不分具体协议了, 太麻烦了!! */
+	SAPP_MEM_DYN_PADDR, 		/* ÿ���ַ��ռ���ڴ�, �Ͳ��־���Э����, ̫�鷳��!! */
 	SAPP_MEM_DYN_DETAIN_PKT,	
 	SAPP_MEM_DYN_SID_LIST,	
 	SAPP_MEM_DYN_BLOOM_FILTER, 

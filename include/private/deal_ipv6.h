@@ -10,21 +10,21 @@
 
 #define IPV6_MAXPLEN					(65535)
 
-#define IPV6_FRAG_RESERVED_HDR_LEN		(40) /* Ô¤ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½IPv6ï¿½ï¿½Æ¬Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+#define IPV6_FRAG_RESERVED_HDR_LEN		(40) /* Ô¤ÁôµÚÒ»¸öIPv6·ÖÆ¬Í·²¿³¤¶È */
 
-//#define IPV6_FRAG_TIMEOUT				(60)			/* ï¿½ï¿½ï¿½é³¬Ê±Ê±ï¿½ï¿½ */
+//#define IPV6_FRAG_TIMEOUT				(60)			/* ÖØ×é³¬Ê±Ê±¼ä */
 /* 
 	2015-12-02 lijia modify, 
-	ï¿½ï¿½È»RFCï¿½æ¶¨, 60ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð·ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½ÇºÏ·ï¿½ï¿½ï¿½,
-	ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½, IPv6ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½10ï¿½ï¿½ï¿½Ú»ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Îªï¿½Ç¹ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ò¶ª°ï¿½, Ö±ï¿½ï¿½free.
+	ËäÈ»RFC¹æ¶¨, 60ÃëÄÚËùÓÐ·ÖÆ¬ÖØ×éÍê³É¾ÍÊÇºÏ·¨µÄ,
+	Õë¶ÔÊµ¼ÊÇé¿ö, IPv6·ÖÆ¬Èç¹ûÔÚ10ÃëÄÚ»¹Î´ÖØ×éÍê³É, ÔòÈÏÎªÊÇ¹¥»÷ÐÐÎª»ò¶ª°ü, Ö±½Ófree.
 */
-#define IPV6_FRAG_TIMEOUT				(10)			/* ï¿½ï¿½ï¿½é³¬Ê±Ê±ï¿½ï¿½ */
+#define IPV6_FRAG_TIMEOUT				(10)			/* ÖØ×é³¬Ê±Ê±¼ä */
 
 
-#define IPV6_FRAG_MEM_FREE_ONCE		(512*1024)		/* Ã¿ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ */
-#define IPV6_FRAG_MEM_HIGH_THRESH		(16*1024*1024)	/* ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ */
+#define IPV6_FRAG_MEM_FREE_ONCE		(512*1024)		/* Ã¿´ÎÊÍ·ÅÄÚ´æÊýÁ¿ */
+#define IPV6_FRAG_MEM_HIGH_THRESH		(16*1024*1024)	/* ÄÚ´æÉÏÏÞ */
 
-#define IPV6_FRAG_NUM_PER_IPQ			(100)			/* Í¬Ò»IPQï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ */
+#define IPV6_FRAG_NUM_PER_IPQ			(100)			/* Í¬Ò»IPQ×î´ó·ÖÆ¬°üÊý */
 
 #if IPV6_DEBUG
 #define IPV6_PRINT(fmt, args...) printf(fmt, ##args)
@@ -86,8 +86,8 @@ struct ipv6_hop_hdr{
  *	fragmentation header
  */
 
-#define IPv6_FRAG_ISF			(1) /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ */
-#define IPv6_FRAG_NEW			(2) /* ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½Ð·ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Éµï¿½ï¿½Â°ï¿½ */
+#define IPv6_FRAG_ISF			(1) /* ±¾°üÊÇÒ»¸ö·ÖÆ¬°ü */
+#define IPv6_FRAG_NEW			(2) /* ÒÑÊÕµ½ËùÓÐ·ÖÆ¬°ü£¬ÖØ×é³ÉµÄÐÂ°ü */
 
 #define	IP6_MF					(0x0001)
 
@@ -99,16 +99,16 @@ struct ipv6_frag_hdr{
 };
 
 struct ipv6_frag_key{
-	unsigned int identification;	/* ï¿½ï¿½ï¿½Ð¿ï¿½ï¿½Ü²ï¿½Í¬ï¿½ï¿½Öµï¿½ï¿½ï¿½Ú½á¹¹ï¿½ï¿½Ç°ï¿½æ£¬ï¿½È½ï¿½Ê±ï¿½ï¿½ï¿½Ò»Ð© */
-	int __pad__; /* ï¿½ï¿½ï¿½ï¿½á¹¹8ï¿½Ö½Ú¶ï¿½ï¿½ï¿½ */
+	unsigned int identification;	/* ×îÓÐ¿ÉÄÜ²»Í¬µÄÖµ·ÅÔÚ½á¹¹ÌåÇ°Ãæ£¬±È½ÏÊ±»á¿ìÒ»Ð© */
+	int __pad__; /* ÕûÌå½á¹¹8×Ö½Ú¶ÔÆë */
 	struct in6_addr ip6_src;	/* source address */
 	struct in6_addr ip6_dst; 	/* dest address */
 	struct streaminfo_private *pfstream_pr;
 };
 
 struct ipv6_frag_private{
-	unsigned char raw_next_hdr; /* Ô­Ê¼IPï¿½ï¿½ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½É·ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
-	int unfragmentable_len; 	/* Ô­Ê¼IPï¿½ï¿½ï¿½Ä²ï¿½ï¿½É·ï¿½Æ¬ï¿½ï¿½ï¿½Ö³ï¿½ï¿½ï¿½ */
+	unsigned char raw_next_hdr; /* Ô­Ê¼IP°üµÄµÚÒ»¸ö¿É·ÖÆ¬²¿·ÖÍ·²¿ÀàÐÍ */
+	int unfragmentable_len; 	/* Ô­Ê¼IP°üµÄ²»¿É·ÖÆ¬²¿·Ö³¤¶È */
 };
 
 

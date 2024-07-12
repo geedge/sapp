@@ -4,34 +4,30 @@
 extern "C" {
 #endif
 
-#include "sapp_api.h"
-#include "sapp_private_api.h"
+#include <stddef.h>
+#include <sys/sysinfo.h>
+#include "MESA_prof_load.h"
+
 #include "support/tomlc99_wrap.h"
-#include "field_stat2.h"
 #include "sapp_declaration.h"
+#include "sapp_cla.h"
 
 extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];  
 
-/*
-	˵��:
-		_sapp_toml_sample_file_image����, _sapp_toml_sample_file_image_len�����ǿ�����xxd -i �Զ����ɵ�, 
-		�����ڶ�̬�������ļ�sapp.toml.hex.array.c��,
-		���ļ��������git�ֿ�.
-*/
 extern const unsigned char _sapp_toml_sample_file_image[];
 extern const int _sapp_toml_sample_file_image_len;
 
 #define SAPP_CFG_OBSOLETE_FLAG  99999999
 typedef struct __sapp_config_check{
 	int global_id;
-	int depend_id; /* 1:����Ĳ���, ��������������, Ҳ����ȱʧ;  0:��ѡ��, ����û��, ��Ӱ��sapp���幦��; >=1000:����δ����, ȡ�����������ò����Ƿ���, ����transparentģʽ��������packet_io.external.interface */
-	int err_log_level; /* 10,20,30, ������־�ȼ� */
+	int depend_id;
+	int err_log_level;
 	const char *section;
 	const char *cfg_key;
-	const char *depend_cfg_value; /* ����depend_id>1000ʱ��Ч, ��ʾ����������ֵ����Ԥ�ȶ���ʱ, �ż�鵱ǰ�����Ƿ�Ϸ�, ����mirroģʽ�¸�������Ҫ��� packet_io.external.interface */
+	const char *depend_cfg_value;
 	int (*cfg_value_check_fun)(const struct __sapp_config_check *sapp_cfg_check_attr, int this_cfg_id, int depend_cfg_id, const char *cfg_value, const void *range_array, int array_num);
-	char *cfg_value; /* NULL is not found */
-	const void *expect_range_array; /* ���ڼ�����ֵ�Ŀ�ѡ��Χ����, �������͵Ĳ�ͬ������int *, ������char **���� */
+	char *cfg_value;
+	const void *expect_range_array;
 	int expect_array_num;
 }sapp_config_check_t;
 
@@ -46,7 +42,7 @@ static const char *sapp_cfg_get_value_from_attr_by_id(const sapp_config_check_t 
 static const char *sapp_cfg_get_value_from_attr_by_section_key(const sapp_config_check_t *sapp_cfg_check_attr, const char *section, const char *key);
 static int cfg_value_check_inject_mode(const sapp_config_check_t *sapp_cfg_check_attr,int this_cfg_id,int depend_cfg_id, const char *raw_cfg_value, const void *expect_range_array, int array_num);
 
-static int g_interger_range_array[65536]; /* һ��int�͵�����, ��ֵ�±����ֵһ��, �� g_interger_range_array[0]=0, g_interger_range_array[1]=1, �����ж���ֵ������Χ�Ϸ��� */
+static int g_interger_range_array[65536];
 
 
 static int cfg_value_check_integer_range(const sapp_config_check_t *sapp_cfg_check_attr,int this_cfg_id,int depend_cfg_id, const char *raw_cfg_value, const void *expect_range_array, int array_num)
@@ -113,8 +109,6 @@ static int cfg_value_check_worker_threads(const sapp_config_check_t *sapp_cfg_ch
 
 	int cur_sys_cpu_num = get_nprocs();
 	if(cfg_value_int <= 0 || cur_sys_cpu_num < cfg_value_int){
-		//printf("\033[33m[Warning]sapp.toml->CPU.worker_threads=%d more than current available processors:%d\033[0m\n", sapp_global_val->config.cpu.worker_threads, cur_sys_cpu_num);		
-		//sapp_runtime_log(RLOG_LV_INFO, "[Warning]sapp.toml->CPU.worker_threads=%d more than current available processors:%d", sapp_global_val->config.cpu.worker_threads, cur_sys_cpu_num); 	
 		return -1;
 	}
 
@@ -127,11 +121,9 @@ static int cfg_value_check_bind_mask(const sapp_config_check_t *sapp_cfg_check_a
 	long bind_mask_array[SAPP_MAX_THREADS];
 	int ret;
 
-	/* ��ʱû��ֱ�ӽ���raw_cfg_value�ĺ���, �˴��ٶ�ȡһ�������ļ� */
 	ret = tomlc99_wrap_load_long_array(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"CPU", (char *)"bind_mask", bind_mask_array, &bind_mask_array_num);
 	if(ret < 0){
 		unsigned int load_profile_array[SAPP_MAX_THREADS];
-		/* ����Χ������, ��1-10,10-20�Ȳ���ʹ��MESA_load_profile_uint_range����, ��ʱҪ���ַ���ģʽ!!! */
 		ret = MESA_load_profile_uint_range(
 			ABBR_CFG_FILE_MAIN_ENTRY, (char *)"CPU", (char *)"bind_mask",
 			SAPP_MAX_THREADS, (unsigned int *)load_profile_array);
@@ -143,7 +135,7 @@ static int cfg_value_check_bind_mask(const sapp_config_check_t *sapp_cfg_check_a
 	}
 
 	if(0 == bind_mask_array_num){
-		return 0; /* ����������, ������CPU,������� */
+		return 0;
 	}
 
 	const char *raw_cfg_worker_threads_value = sapp_cfg_get_value_from_attr_by_id(sapp_cfg_check_attr, depend_cfg_id);
@@ -173,7 +165,7 @@ static int cfg_value_check_stream_id_base_time(const sapp_config_check_t *sapp_c
 	struct tm local_tm;
 	
 	if(NULL == raw_cfg_value || strlen(raw_cfg_value) == 0){
-		return 0; /* ����ΪNULL,������� */
+		return 0;
 	}
 	
 	if(strptime(raw_cfg_value, "%Y-%m-%d %H:%M:%S", &local_tm) == NULL){
@@ -207,7 +199,7 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 	{2002,0,RLOG_LV_DEBUG, "CPU",		"send_only_threads_max",	NULL,NULL, NULL, NULL, 0},
 	{2003,2001,RLOG_LV_FATAL,"CPU",	"bind_mask",	"",cfg_value_check_bind_mask, NULL, NULL, 0},
 
-	{3001,0, RLOG_LV_INFO,"MEM",		"dictator_enable",	NULL,cfg_value_check_integer_range, NULL, g_interger_range_array, 2}, /* ֻ����0��1, ���Ծ���ǰ2��Ԫ�� */
+	{3001,0, RLOG_LV_INFO,"MEM",		"dictator_enable",	NULL,cfg_value_check_integer_range, NULL, g_interger_range_array, 2},
 
 	{4000,0,RLOG_LV_DEBUG,"PACKET_IO", NULL,	NULL, NULL,NULL, NULL, 0},
 	
@@ -351,9 +343,6 @@ static const sapp_config_check_t g_sapp_cfg_check_attr[] =
 
 	{9201,0,RLOG_LV_INFO, "LIBRARY_LINK",	"marsio_library_path",	NULL,NULL, NULL, NULL, 0},
 
-	/******************************************************************************************************************/
-	/*********** ��������ʷ���������ֹ�������, Ҳ�������,Ҳ���㲻֧��,����澯��Ϣ��ʾ���������� *********************/
-	/******************************************************************************************************************/
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"overlay_tunnel_definition","stream_compare_layer_cfg_file",NULL, NULL, NULL,NULL, 0},
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"overlay_tunnel_definition","vlan_flipping_cfg_file",NULL, NULL, NULL,NULL, 0},
 	{SAPP_CFG_OBSOLETE_FLAG,0,RLOG_LV_INFO,"overlay_tunnel_definition","asymmetric_presence_layer_cfg_file",NULL, NULL, NULL,NULL, 0},
@@ -437,7 +426,6 @@ static int cfg_value_check_inject_mode(const sapp_config_check_t *sapp_cfg_check
 	depend_cfg_index = cfg_get_index_by_depend_id(depend_cfg_id);
 	depend_cfg_value = sapp_cfg_check_attr[depend_cfg_index].cfg_value;
 
-	/* raw_cfg_value������NULL, ��ʱӦ�����ж�depend_cfg_value, �������������, ��̫�����ǿ� */
 
 	if(strncasecmp(depend_cfg_value, "vxlan_by_inline_device", strlen("vxlan_by_inline_device")) == 0){
 		expect_cfg_index = cfg_get_index_by_key_name("inject_mode_inline_device_sport");
@@ -526,7 +514,6 @@ static inline int is_file_exist(const char *filename)
 
 static void update_overlay_vxlan_layer_set(void);
 
-/* ������ͬ���͵�����, �����в�������, ����sapp.toml�е����� */
 void sapp_cla_override_cfg_file(void)
 {
 	char *cmd_args;
@@ -537,7 +524,7 @@ void sapp_cla_override_cfg_file(void)
 	}
 	
 	if (sapp_get_cla_raw("dumpfile", &cmd_args) >= 0)
-	{ /* dumpfileģʽ�Զ�����interface���� */
+	{
 		strncpy(pconfig->packet_io.deployment_mode_str, "dumpfile", NAME_MAX);
 		pconfig->packet_io.deployment_mode_bin = DEPLOYMENT_MODE_MIRROR;
 		sapp_global_val->individual_fixed.deployment_mode_private = NET_CONN_PARALLEL;
@@ -612,9 +599,6 @@ static int pkt_dump_thread_id_convert(void)
 	return 0;
 }
 
-/*
-	C_router_vlan_id  I_router_vlan_id mac_flipping_enable
-*/
 static int parse_vlan_flipping_map_config(void)
 {
 	FILE *fp;
@@ -627,7 +611,6 @@ static int parse_vlan_flipping_map_config(void)
 	fp = fopen(ABBR_VLAN_FLIPPING_CONF_FILE, "r");
 	if(NULL == fp){
 		sapp_log(RLOG_LV_INFO, ~0, ~0, "[warning]can't open vlan_flipping_cfg_file:%s", ABBR_VLAN_FLIPPING_CONF_FILE);
-		/* ��ǰ����, ����ļ�������, ������� */
 		return 0;
 	}
 
@@ -718,10 +701,6 @@ static int embed_layer_t_pton(char *config_val, embed_layer_t *result)
 	return 0;
 }
 
-/*
-	return value pattern: 
-	    addr_type_name[layer_index]
-*/
 static const char *embed_layer_t_ntop(const embed_layer_t *layer_st, char *result, int res_max_len)
 {
 	char addrtype_name_str[NAME_MAX] = {};
@@ -779,11 +758,6 @@ static int update_asymmetric_presence_layer(enum addr_type_t addrtype, embed_lay
 	return 0;
 }
 
-/* 
-    #pattern: asymmetric_layer_name[layer index]
-    ethernet[1]
-    mpls[*]
-*/
 static int parse_asymmetric_addr_layer_config(void)
 {
 	int i, j, ret;
@@ -796,7 +770,6 @@ static int parse_asymmetric_addr_layer_config(void)
 	fp = fopen(ABBR_ASYM_LAYER_ADDR_CONF_FILE, "r");
 	if(NULL == fp){
  		sapp_log(RLOG_LV_INFO, ~0, ~0, "[Warning]can't open asymmetric_addr_layer_cfg_file:%s", ABBR_ASYM_LAYER_ADDR_CONF_FILE);
-		/* ��ǰ����, ����ļ�������, ������� */
 		return 0; 
 	}
 
@@ -850,11 +823,6 @@ static int set_default_stream_compare_layer(embed_layer_t *stream_compare_layer_
 	return 0;
 }
 
-/* 
-    #pattern: stream_compare_layer_name[layer index]
-	vlan[1]
-    mpls[*]
-*/
 static int parse_stream_compare_layer_config(void)
 {
 	int i, j, ret;
@@ -869,7 +837,6 @@ static int parse_stream_compare_layer_config(void)
 	fp = fopen(ABBR_STREAM_CMP_LAYER_CONF_FILE, "r");
 	if(NULL == fp){
 		sapp_log(RLOG_LV_INFO, ~0, ~0, "[Warning]can't open stream compare layer cfg_file:%s", ABBR_STREAM_CMP_LAYER_CONF_FILE);
-		/* ��ǰ����, ����ļ�������, ������� */
 		return 0; 
 	}
 
@@ -913,7 +880,7 @@ static void update_overlay_vxlan_layer_set(void)
 	g_overlay_layer_set[ADDR_TYPE_MAC][0] = 1;	
 	g_overlay_layer_set[ADDR_TYPE_IPV4][1] = 1;	
 	g_overlay_layer_set[__ADDR_TYPE_IP_PAIR_V4][1] = 1;	
-	g_overlay_layer_set[ADDR_TYPE_UDP][1] = 1;	/* IP��udp�ϲ���Ϊһ��, ���Դ˴�������1 */
+	g_overlay_layer_set[ADDR_TYPE_UDP][1] = 1;
 	g_overlay_layer_set[ADDR_TYPE_VXLAN][2] = 1;	
 }
 
@@ -930,18 +897,11 @@ static void update_well_known_port_array(int last_section_proto, unsigned short 
 	}
 }
 
-/* 
-    #pattern: 
-    [TCP]
-		some ports here
-    [UDP]
-		some ports here
-*/
 static int parse_well_known_port_config(void)
 {
 	FILE *fp;
 	char line_buf[256];
-	int last_section_proto = -1; /* �����ʶ: TCP or UDP */
+	int last_section_proto = -1;
 	unsigned short *port_array = NULL;
 	int port_array_num = 0;
 	int tmpnum;
@@ -949,7 +909,7 @@ static int parse_well_known_port_config(void)
 
 	fp = fopen(ABBR_WELL_KNOWN_PORT_CONF_FILE, "r");
 	if(NULL == fp){
-		return 0; /* û�д��ļ�, ������� */
+		return 0;
 	}
 
 	while(fgets(line_buf, sizeof(line_buf), fp)){
@@ -959,9 +919,8 @@ static int parse_well_known_port_config(void)
 		sapp_memmove_for_blank_table(line_buf, sizeof(line_buf));
 		del_last_rn(line_buf, sizeof(line_buf));
 
-		if('[' == line_buf[0]){ /* [] һ���������ʼ */
+		if('[' == line_buf[0]){
 			if(port_array != NULL){
-				/* ��һ������ս��� */
 				update_well_known_port_array(last_section_proto, port_array, port_array_num);
 				port_array = NULL; 
 				port_array_num = 0;
@@ -1012,9 +971,6 @@ static int parse_well_known_port_config(void)
 	return 0;
 }
 
-/*
-	example: ether[4]:0
-*/
 static int parse_extract_linkdir_from_mac_cfg(void)
 {
 	sapp_config_t *pconfig;
@@ -1053,7 +1009,6 @@ static int parse_extract_linkdir_from_mac_cfg(void)
 	return 0;
 }
 
-/* ���ø�ʽת��, ���ַ�������תΪint����,���ڳ����� */
 static int config_expression_convert(void)
 {
 	sapp_config_t *pconfig;
@@ -1072,15 +1027,7 @@ static int config_expression_convert(void)
 		sapp_global_val->individual_fixed.create_stream_mode = TCP_CTEAT_LINK_BYSYN | TCP_CTEAT_LINK_BYDATA;
 	}
 
-	/******************************  PACKET_IO  *******************************/
 
-	/*
-		net_connection_mode:
-			0: don't send packet, only capture;
-			1: parallel mode with single card;
-			2: serial mode with two card;
-			3: logic serial mode with G device.
-	*/	
 	tmp_str = pconfig->packet_io.deployment_mode_str;
 	if(strncasecmp(tmp_str, "mirror", strlen("mirror")) == 0){
 		pconfig->packet_io.deployment_mode_bin = DEPLOYMENT_MODE_MIRROR;
@@ -1141,7 +1088,6 @@ static int config_expression_convert(void)
 		return- 1;
 	}	
 
-	//todo, parse prune inject cfg file
 
 	
 	tmp_str = pconfig->packet_io.internal.interface.type_str;
@@ -1211,7 +1157,6 @@ static int config_expression_convert(void)
 		return -1;		
 	}
 
-	/******************************  STREAM  *******************************/
 	struct tm ttm = {};
 	if(sapp_global_val->config.stream.stream_id_base_time_str[0] == '\0'){
 		sapp_log(20, ~0, ~0, "[Warning]sapp.toml->STREAM.stream_id_base_time is not set, use '1970-01-01 00:00:00' as default!");
@@ -1232,7 +1177,6 @@ static int config_expression_convert(void)
 		sapp_global_val->config.stream.stream_id_base_time_t = mktime(&ttm);
 	}
 
-	/******************************  TOOLS   *******************************/
 	if(pconfig->tools.pkt_dump.enabled != 0){
 		if(strncasecmp(pconfig->tools.pkt_dump.mode_str, "storage" ,strlen("storage")) == 0){
 			pconfig->tools.pkt_dump.mode_bin = PKT_DUMP_LOCAL_FILE;
@@ -1251,10 +1195,6 @@ static int config_expression_convert(void)
 	return 0;
 }
 
-/*
-	1: yes, go on!
-	0: no,  exit.
-*/
 static int get_user_intention(void)
 {
 	char input_buf[MAX_INPUT];
@@ -1280,30 +1220,15 @@ static inline void old_config_file_detect(const char *old_filename, const char *
 		sapp_log(RLOG_LV_FATAL, ~0, ~0, "This is sapp v4.0, detect obsolete config file:\"%s\"! please use \"%s\" instead!", old_filename, new_filename);
 		if(is_file_exist(new_filename)){
 			sapp_log(RLOG_LV_FATAL, ~0, ~0, "You already have new config file:\"%s\", you must rename or delete obsolete file:\"%s\"!", new_filename, old_filename); 
-			//sapp_log(30, ~0, ~0, "Are you sure you are using new config file? 'y' or 'n':");
-			//if(0 == get_user_intention()){
 				exit(1);
-			//}			
 		}else{
-			//sapp_log(30, ~0, ~0, "Do you want to continue running, the sapp behavior is unpredictable! 'y' or 'n' : "); 
-			//if(0 == get_user_intention()){
 				sapp_log(30, ~0, ~0, "You should run ./sapp --sample-config to generate sapp.toml!");
 				exit(1);
-			//}
 		}
 	}
 }
 
 
-/*
-	�����ļ��Ϸ��ԡ�����Լ��.
-
-	TODO: ������������ g_sapp_cfg_check_attr[] ���ϲ�, ĳЩ������⹦�����ظ���!!!
-	
-	return value:
-		 0: succ;
-		-1: error, must exit!
-*/
 static int config_sanity_check(void)
 {
 	int cur_cpu_num;
@@ -1313,7 +1238,7 @@ static int config_sanity_check(void)
 	struct streaminfo_private phony_stream_pr;
 
 	phony_stream_pr.layer_index = 0xF;
-	assert(SAPP_SUPPORT_LAYER_NUM_MAX == phony_stream_pr.layer_index); /* �����ж��������޸���layer_index��SAPP_SUPPORT_LAYER_NUM_MAX, ����������һ�µ���� */
+	assert(SAPP_SUPPORT_LAYER_NUM_MAX == phony_stream_pr.layer_index);
 	if(SAPP_SUPPORT_LAYER_NUM_MAX != phony_stream_pr.layer_index){
 		sapp_log(RLOG_LV_FATAL, ~0, ~0, "SAPP_SUPPORT_LAYER_NUM_MAX is:%d, but streaminfo_private->layer_index max is:%d", SAPP_SUPPORT_LAYER_NUM_MAX, phony_stream_pr.layer_index); 
 		return -1;
@@ -1335,7 +1260,6 @@ static int config_sanity_check(void)
 		}
 	}
 
-	/*******************************  CPU  ********************************/
 	cur_cpu_num = get_nprocs();
 	if(cur_cpu_num < pconfig->cpu.worker_threads){	
 		sapp_log(20, 0, ~0, "[Warning]sapp.toml->CPU.worker_threads=%d more than current available processors:%d", sapp_global_val->config.cpu.worker_threads, cur_cpu_num); 	
@@ -1371,7 +1295,6 @@ static int config_sanity_check(void)
 		}
 	}
 
-	/*******************************  STREAM  ******************************/
 	if(pconfig->stream.tcp.inject.auto_remedy != 0){
 		if(pconfig->stream.tcp.inject.rst_num <= 0 || pconfig->stream.tcp.inject.rst_num >= 10){
 			sapp_log(RLOG_LV_FATAL, ~0, ~0, "sapp.toml->stream.tcp.inject.rst.number=%d, is Illegal!", pconfig->stream.tcp.inject.rst_num);
@@ -1379,7 +1302,6 @@ static int config_sanity_check(void)
 		}
 	}
 
-	/*******************************  Packet IO  ******************************/
 	
 	tmp_str = pconfig->packet_io.deployment_mode_str;
 	if((strncasecmp(tmp_str, "mirror", strlen("mirror")) != 0)
@@ -1431,7 +1353,6 @@ static int config_sanity_check(void)
 		}		
 	}
 
-	/*******************************  PKT_DUMP  ******************************/
 	if(pconfig->tools.pkt_dump.enabled != 0){
 		if(pconfig->tools.pkt_dump.dump_thread_id_array_num > pconfig->cpu.worker_threads){
 			sapp_log(RLOG_LV_FATAL, ~0, ~0, "TOOLS.PKT_DUMP.dump_thread_id_array items more than CPU.worker_threads!");
@@ -1460,9 +1381,6 @@ static int config_sanity_check(void)
 
 
 
-/*
-	֧�ֶ�д����ģʽ, ���¸��������ļ�·��, ���������ļ�·��.
-*/
 int sapp_get_secondary_file_path(void)
 {
 	char str_tmp[ARG_MAX];
@@ -1498,7 +1416,6 @@ int sapp_get_secondary_file_path(void)
 		pconfig->data_file_path.data_sapp_fs2_process_latency_relative = sapp_strdup(pconfig->profiling.process_latency_local_file);
 	}
 
-	/*************************** SECONDARY_CONFIG_LINK *************************/
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_CONFIG_LINK", (char *)"cfg_file_sapp_log", str_tmp, ARG_MAX, "etc/sapp_log.conf");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->cfg_file_path.cfg_sapp_log_relative){
@@ -1588,7 +1505,6 @@ int sapp_get_secondary_file_path(void)
 		pconfig->cfg_file_path.cfg_file_well_known_port_relative = sapp_strdup(str_tmp);
 	}	
 
-	/*************************** SECONDARY_DATA_LINK *************************/
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SECONDARY_DATA_LINK", (char *)"data_file_sysinfo_log", str_tmp, ARG_MAX, "sysinfo.log");
 	if(str_tmp[0] != '\0'){
 		if(pconfig->data_file_path.data_sapp_sysinfo_log_relative){
@@ -1634,7 +1550,6 @@ int sapp_get_secondary_file_path(void)
 }
 
 
-/* ��ȡ�����ļ�sapp.toml, ������ֻLoad, ���������ʹ����� */
 int sapp_parse_config(void)
 {
 	int ret;
@@ -1653,15 +1568,12 @@ int sapp_parse_config(void)
 	pconfig = &sapp_global_val->config;
 
 
-	/*******************************  SYSTEM *********************************/
 	ret = tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"SYSTEM", (char *)"instance_name", pconfig->system.instance_name, NAME_MAX, "sapp_v4.2");
 	if(TOMLC99_RET_PATTERN_ERROR == ret){
-		/* �״ν����ж������PATTERN_ERROR, ˵��toml��ʽ������, ���ټ������� */
 		sapp_log(30, ~0, ~0, "parse config file %s error!", ABBR_CFG_FILE_MAIN_ENTRY);
 		exit(1);
 	}
 
-	/*******************************  PROFILING.LOG ***************************/
 	MESA_handle_runtime_log_creation(ABBR_SAPP_LOG_CONF_FILE);
 
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.log", (char *)"sapp_log_category", pconfig->profiling.log.sapp_log_category, NAME_MAX, "sapp_runtime_log");
@@ -1671,7 +1583,6 @@ int sapp_parse_config(void)
 	sapp_global_val->individual_fixed.plugin_log_handle = MESA_create_runtime_log_handle(sapp_global_val->config.profiling.log.sapp_plugin_log_category, RLOG_LV_INFO);
 
 
-	/*******************************  CPU *********************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"CPU", (char *)"worker_threads", (int *)&pconfig->cpu.worker_threads, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"CPU", (char *)"send_only_threads_max", (int *)&pconfig->cpu.send_only_threads_max_num, 0);
 
@@ -1679,7 +1590,6 @@ int sapp_parse_config(void)
 
 	tomlc99_wrap_load_long_array(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"CPU", (char *)"bind_mask", pconfig->cpu.bind_mask_array, &pconfig->cpu.bind_mask_array_num);
 
-	/* ����Χ������, ��1-10,10-20�Ȳ���ʹ��MESA_load_profile_uint_range����, ��ʱҪ���ַ���ģʽ!!! */
 	int tmp_bind_mask[SAPP_MAX_THREADS] = {};
 	ret = MESA_load_profile_uint_range(
 		ABBR_CFG_FILE_MAIN_ENTRY, (char *)"CPU", (char *)"bind_mask",
@@ -1695,16 +1605,12 @@ int sapp_parse_config(void)
 
 
 	
-	/*******************************  PACKET_IO ******************************/
 
-	/*******************************  packet_io.overlay_tunnel_definition ******************************/
 	
-	//tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"overlay_tunnel_definition", (char *)"l2_l3_tunnel_support", &pconfig->packet_io.packet_io_tunnel.l2_l3_tunnel_support, 1);
 	pconfig->packet_io.packet_io_tunnel.l2_l3_tunnel_support=1;
 
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"overlay_tunnel_definition", (char *)"overlay_mode", pconfig->packet_io.packet_io_tunnel.overlay_mode_string, NAME_MAX, "none");
 
-	/*******************************  packet_io.feature ******************************/
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"BSD_packet_filter", str_tmp, NAME_MAX, "");
 	if(str_tmp[0] != '\0'){
 		pconfig->packet_io.input_bpf_filter = sapp_strdup(str_tmp);
@@ -1744,15 +1650,13 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.polling", (char *)"work_percent", &pconfig->packet_io.work_percent, 90);
 	
 
-	/**  duplicate packet config **/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.original", (char *)"kickout_udp_stream_enabled", &pconfig->packet_io.dup_pkt_para.kickout_udp_stream_enabled, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.original", (char *)"original_ipv4_tcp_enabled", &pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.original", (char *)"original_ipv4_udp_enabled", &pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.traffic.inject", (char *)"inject_all_enabled", &pconfig->packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject, 0);
 	
 
-	/*******************************  packet_io.under_ddos ******************************/
-	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"stream_bypass_enabled", &pconfig->packet_io.under_ddos_config.enabled, 0); //��ǰ����, Ĭ�ϲ�����
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"stream_bypass_enabled", &pconfig->packet_io.under_ddos_config.enabled, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"get_cpu_usage_interval", &pconfig->packet_io.under_ddos_config.get_cpu_usage_interval, 500);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"smooth_avg_window", &pconfig->packet_io.under_ddos_config.smooth_avg_window, 2);
 
@@ -1767,10 +1671,8 @@ int sapp_parse_config(void)
 	
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.under_ddos", (char *)"recovery_observe_time", &pconfig->packet_io.under_ddos_config.recovery_observe_time, 60);
 
-	/*******************************  STREAM ******************************/
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"STREAM", (char *)"stream_id_base_time", pconfig->stream.stream_id_base_time_str, 32, "");
 
-	/*******************************  STREAM.TCP ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"max", (int *)&pconfig->stream.tcp.max, 50000);
 
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp", (char *)"timeout", (int *)&pconfig->stream.tcp.timeout, 180);
@@ -1799,7 +1701,6 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.tcp.inject.rst", (char *)"remedy_kill_tcp_by_inline_device", &pconfig->stream.tcp.inject.remedy_kill_tcp_by_inline_device, 0);
 
 
-	/*******************************  STREAM.UDP ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"max", (int *)&pconfig->stream.udp.max, 5000);
 	if(pconfig->stream.udp.timeout == 0)pconfig->stream.udp.timeout=MAX_DEFALUT_TIMEOUT_S;
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"max_opening", (int *)&pconfig->stream.udp.max_opening, pconfig->stream.udp.max*3);
@@ -1811,7 +1712,6 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"max_timeouts_per_sec", (int *)&pconfig->stream.udp.max_timeouts_per_sec, 0);	
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"stream.udp", (char *)"max_opening_per_sec", (int *)&pconfig->stream.udp.max_opening_per_sec, 0);	
 
-	/*******************************  Bloom parameter ******************************/
 	int tmp_dm_timeout;
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"bloom_transition_time", &tmp_dm_timeout, 3);
 	pconfig->packet_io.dup_pkt_para.transition_time_ms = (long)tmp_dm_timeout * 1000;
@@ -1823,13 +1723,11 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"bloom_partition_num", (int *)&pconfig->packet_io.dup_pkt_para.bloom_partition_num, 16);
 	pconfig->packet_io.dup_pkt_para.bloom_error_rate = strtod(str_tmp, NULL);
 
-	//default capacity = (tcp_stream_num + udp_stream_num)*first_dup_check_packet_num*2
 	int default_bloom_capacity = ((pconfig->stream.tcp.max*6+pconfig->stream.udp.max+pconfig->stream.udp.max_pair+pconfig->stream.udp.max_opening)*pconfig->packet_io.dup_pkt_para.first_packets)*2;
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"bloom_capacity", &pconfig->packet_io.dup_pkt_para.bloom_capacity, default_bloom_capacity);
 	int default_bloom_timeout=pconfig->stream.udp.timeout;
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"dup_pkt.parameters", (char *)"bloom_timeout", &tmp_dm_timeout, default_bloom_timeout);
 	pconfig->packet_io.dup_pkt_para.bloom_timeout_ms = (long)tmp_dm_timeout * 1000;
-	/*******************************  PROFILING.metric.fs2 **********************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs2", (char *)"enabled", (int *)&pconfig->profiling.fs2.enabled, 0);
 	if(pconfig->profiling.fs2.enabled)
 	{
@@ -1840,7 +1738,6 @@ int sapp_parse_config(void)
 
 	}
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"enabled", (int *)&pconfig->profiling.fs3.enabled, 0);
-	/*******************************  PROFILING.metric.fs3 **********************/
 	if(pconfig->profiling.fs3.enabled)
 	{
 		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"prometheus_port", (int *)&pconfig->profiling.fs3.prometheus_service_port, 0);
@@ -1849,7 +1746,6 @@ int sapp_parse_config(void)
 		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"app_name", pconfig->profiling.fs3.app_name, NAME_MAX, "sapp4");
 	}
 
-	/*******************************  PROFILING.process_latency ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"histogram_enabled", (int *)&pconfig->profiling.histogram_enabled, 0);
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"log_category", pconfig->profiling.process_latency_log_category, NAME_MAX, "sapp_process_latency_log");
 
@@ -1873,13 +1769,11 @@ int sapp_parse_config(void)
 		pconfig->profiling.process_latency_clock_id=6;
 	}
 
-	/*******************************  PROFILING.sanity_check ******************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.sanity_check", (char *)"raw_pkt_broken_enabled", (int *)&pconfig->profiling.sanity_check_raw_pkt_broken_enabled, 0);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.sanity_check", (char *)"symbol_conflict_enabled", (int *)&pconfig->profiling.sanity_check_symbol_conflict_enabled, 0);
 
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.memory", (char *)"memory_used_stat_interval_s", (int *)&pconfig->profiling.memory_used_stat_interval_s, 10);
 
-	/************************  PROTOCOL_FEATURE **********************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"ipv6_decapsulation_enabled", (int *)&pconfig->protocol_feature.ipv6_decapsulation_enabled, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"ipv6_send_packet_enabled", (int *)&pconfig->protocol_feature.ipv6_send_packet_enabled, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"tcp_drop_pure_ack_pkt", (int *)&pconfig->protocol_feature.tcp_drop_pure_ack_pkt, 0);
@@ -1893,7 +1787,6 @@ int sapp_parse_config(void)
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"ipv4_reassembly_enabled", (int *)&pconfig->protocol_feature.ipv4_reassembly_enabled, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"PROTOCOL_FEATURE", (char *)"ipv6_reassembly_enabled", (int *)&pconfig->protocol_feature.ipv6_reassembly_enabled, 1);
 
-	/*******************************  TOOLS **********************************/
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"tools.signal_handler", (char *)"signal", (int *)&pconfig->tools.signal_handler.signal, 0);
 
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"tools.pkt_dump", (char *)"enabled", (int *)&pconfig->tools.pkt_dump.enabled, 0);
@@ -1933,11 +1826,6 @@ int sapp_parse_config(void)
 	return 0;
 }
 
-/*
-	0: ����ʶ�����ļ��е�key-value;
-	1: ʶ�𲢴洢�����ļ��е�key-value;
-	2: ����ĳЩ�Ѿ��������Ĳ���.
-*/
 static int sapp_config_check_update_option(sapp_config_check_t *local_cfg_check_attr, const char *section, const char *key, const char *value)
 {
 	int i;
@@ -1945,7 +1833,7 @@ static int sapp_config_check_update_option(sapp_config_check_t *local_cfg_check_
 	int found_cfg = 0;
 	
 	for(i = 0; local_cfg_check_attr[i].global_id != -1; i++){
-		if(NULL == local_cfg_check_attr[i].cfg_key){ /* [PACKET_IO], []DUPLICATE_PKT] ������ֻ�и�section, ����û��key */
+		if(NULL == local_cfg_check_attr[i].cfg_key){
 			continue;
 		}
 		section_max_len = SAPP_MAX(strlen(local_cfg_check_attr[i].section), strlen(section));
@@ -1957,7 +1845,7 @@ static int sapp_config_check_update_option(sapp_config_check_t *local_cfg_check_
 				return 2;
 			}else{
 				if(NULL == value){
-					local_cfg_check_attr[i].cfg_value = sapp_strdup(""); /* û�����������ֵ, ����bpf��������Ϊ��, ����key�Ǵ��ڵ�, Ҳ�������ҵ��� */
+					local_cfg_check_attr[i].cfg_value = sapp_strdup("");
 				}else{
 					local_cfg_check_attr[i].cfg_value = sapp_strdup(value);
 				}
@@ -1975,9 +1863,6 @@ extern int sapp_del_last_char(char *data, int max_len, char del_char);
 extern char *sapp_memmove_for_blank_table(char *data, int max_len);
 
 
-/*
-	�Ƿ���Ҫ��鵱ǰ���õĺϷ���.
-*/
 static int cfg_value_need_be_check(const sapp_config_check_t *local_cfg_check_array, const sapp_config_check_t *this_cfg_check_attr)
 {
 	int depend_cfg_index;
@@ -1985,7 +1870,7 @@ static int cfg_value_need_be_check(const sapp_config_check_t *local_cfg_check_ar
 	if(1 == this_cfg_check_attr->depend_id){
 		return 1;
 	}
-	if(0 == this_cfg_check_attr->depend_id){ /* ��ѡ������Ҳ��� */
+	if(0 == this_cfg_check_attr->depend_id){
 		return 1;
 	}	
 
@@ -2002,13 +1887,6 @@ static int cfg_value_need_be_check(const sapp_config_check_t *local_cfg_check_ar
 	return 0;
 }
 
-/*
-	��ȫ����һ�鵱ǰ��sapp.toml, ����Ƿ��в���ʶ������, �����˵��:
-	    1)sapp��sapp.toml�İ汾��;
-	    2)ĳЩ��ʷ�ϵĲ����Ѿ�������, ����sapp.toml������;	
-
-	�˴�����prof_load����������fgets���ж�ȡ, ��Ϊ���Ȳ�֪��Ҫ��ȡʲô, Ҫ�����е��ж�����һ��.
-*/
 static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr)
 {
 	int ret, fun_ret = 0;
@@ -2017,7 +1895,7 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 	char section_string[128] = {};
 	char *cfg_key;
 	char *cfg_value;
-	const char *kname_delim = "="; /* ������ֵֻ����=�ָ�, ������key��ֵ��Ŀո�\tɾ��, ����bpf filter */ 
+	const char *kname_delim = "="; 
 	const char *section_delim = "[] \t";
 	char *key_save_ptr, *section_save_ptr;
 	FILE *fp;
@@ -2035,12 +1913,12 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 		if('#' == raw_config_line[0]){
 			continue;
 		}
-		if('\0' == raw_config_line[0]){ /* ������ */
+		if('\0' == raw_config_line[0]){
 			continue;
 		}		
 
 		memcpy(config_line, raw_config_line, sizeof(raw_config_line));
-		if('[' == raw_config_line[0]){ /* ��[��ͷ��ʾ��section���俪ʼ */
+		if('[' == raw_config_line[0]){
 			char *pure_sesion_str = strtok_r(config_line, section_delim, &section_save_ptr);
 			strncpy(section_string, pure_sesion_str, sizeof(section_string));
 			while(strtok_r(NULL, section_delim, &section_save_ptr));
@@ -2063,7 +1941,7 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 
 		sapp_memmove_for_blank_table(cfg_value, strlen(cfg_value));
 
-		const char *kkvalue_delim = "\"'";  /* ������ֵ���ܱ�˫���ű�����, ��ʱֻ��ȥ�����ŵ��ǲ������ÿո�\t�ָ���, ����bpf_filter */
+		const char *kkvalue_delim = "\"'";
 		char *pure_cfg_value_save_ptr;
 		char *pure_cfg_value = strtok_r(cfg_value, kkvalue_delim, &pure_cfg_value_save_ptr);
 		ret = sapp_config_check_update_option(local_cfg_check_attr, section_string, cfg_key, pure_cfg_value);
@@ -2080,10 +1958,6 @@ static int sapp_config_check_unsupport(sapp_config_check_t *local_cfg_check_attr
 	return fun_ret;
 }
 
-/*
-	��������֪�Ĳ�����sapp.toml���ȡһ��, ����Ƿ��в����ڵ�����, �����:
-	    1)sapp��sapp.toml�İ汾��;
-*/
 static int sapp_config_check_missing(sapp_config_check_t *local_cfg_check_attr)
 {
 	int ret1, ret2, ret3, i;
@@ -2092,10 +1966,10 @@ static int sapp_config_check_missing(sapp_config_check_t *local_cfg_check_attr)
 	int fun_ret = 0;
 	
 	for(i = 0; local_cfg_check_attr[i].global_id != -1; i++){
-		if(NULL == local_cfg_check_attr[i].cfg_key){ /* [PACKET_IO], []DUPLICATE_PKT] ������ֻ�и�section, ����Ϊ�����ʶ, ����û��key */
+		if(NULL == local_cfg_check_attr[i].cfg_key){
 			continue;
 		}	
-		if(SAPP_CFG_OBSOLETE_FLAG == local_cfg_check_attr[i].global_id){ /* �Ѿ�����������, �����ڼ��missing */
+		if(SAPP_CFG_OBSOLETE_FLAG == local_cfg_check_attr[i].global_id){
 			continue;
 		}			
 		if(cfg_value_need_be_check(local_cfg_check_attr, &local_cfg_check_attr[i]) == 0){
@@ -2103,24 +1977,20 @@ static int sapp_config_check_missing(sapp_config_check_t *local_cfg_check_attr)
 		}
 		ret1 = MESA_load_profile_string_nodef(ABBR_CFG_FILE_MAIN_ENTRY, local_cfg_check_attr[i].section, local_cfg_check_attr[i].cfg_key, cfg_value, sizeof(cfg_value));
 		if(ret1 < 0){
-			/* ��profile�ӿڶ�ȡ�����п�����toml��ʽ������, ����toml���鳢�Խ���һ�� */
 			array_num = 1024;
 			ret2 = tomlc99_wrap_load_int_array(ABBR_CFG_FILE_MAIN_ENTRY, local_cfg_check_attr[i].section, (char *)local_cfg_check_attr[i].cfg_key, cfg_array, &array_num);
 			if(ret2 < 0){
-				/* ʹ��toml����Ҳû�ж�ȡ������, ����Ƿ��������������� */
 				if((local_cfg_check_attr[i].depend_id != 0) && (local_cfg_check_attr[i].cfg_value_check_fun != NULL)){
 					ret3 = local_cfg_check_attr[i].cfg_value_check_fun(local_cfg_check_attr, local_cfg_check_attr[i].global_id, local_cfg_check_attr[i].depend_id, 
 																 local_cfg_check_attr[i].cfg_value, local_cfg_check_attr[i].expect_range_array, local_cfg_check_attr[i].expect_array_num);
 					if(ret3 != 0){
 						fun_ret = SAPP_MAX(local_cfg_check_attr[i].err_log_level, fun_ret); 
 						sapp_printf_colorful(fun_ret, "missing sapp.toml config: [%s] -> %s\n", local_cfg_check_attr[i].section, local_cfg_check_attr[i].cfg_key);
-						/* ע��: �˴���Ҫbreak, ������е������ļ����� */
 					}
 				}else{
 					fun_ret = SAPP_MAX(local_cfg_check_attr[i].err_log_level, fun_ret);
 					sapp_printf_colorful(fun_ret, "missing sapp.toml config: [%s] -> %s\n", local_cfg_check_attr[i].section, local_cfg_check_attr[i].cfg_key);
 					
-					/* ע��: �˴���Ҫbreak, ������е������ļ����� */
 				}
 			}
 		}
@@ -2134,7 +2004,6 @@ static int sapp_config_check_missing_and_unsupport(sapp_config_check_t *local_cf
 {
 	int ret;
 
-	/* ע��:   check_unsupport����ǰ��, ��Ϊ���и���������, ���ǰ��������õ�ֵ��ȡ��ȫ�ֱ���: g_sapp_cfg_check_attr ��*/
 	ret = sapp_config_check_unsupport(local_cfg_check_attr);
 	if(ret != 0){
 		sapp_printf_colorful(ret, "maybe a typo, maybe some config is obsolete, or sapp is older than sapp.toml version!\n");
@@ -2150,9 +2019,6 @@ static int sapp_config_check_missing_and_unsupport(sapp_config_check_t *local_cf
 	return ret;
 }
 
-/*
-	���ÿ�����������ĺϷ���, ֻ�ǵ�����������ֵ�ϲ��Ϸ�, ���������Լ��.
-*/
 static int sapp_config_check_single_validity(sapp_config_check_t *local_cfg_check_attr)
 {
 	int i, ret, fun_ret = 0;
@@ -2178,32 +2044,16 @@ static int sapp_config_check_single_validity(sapp_config_check_t *local_cfg_chec
 	return fun_ret;
 }
 
-/*
-	����Ӳ���֮��Ĺ����Լ��, 
-	    ��������Ϊtransparentģʽ, ���뿪��packet_io.external.interface;
-	    ���翪����prometheus_enabled, ������prometheus_port��prometheus_url_path;
-*/
 static int sapp_config_check_sanity(sapp_config_check_t *local_cfg_check_attr)
 {
-	/*
-		TODO:
-		
-	*/
 	return 0;
 }
 
 
-/*
-	check_level:
-		t1: ֻ���֧�ֵĲ����ڲ���, �Ƿ��в�֧�ֵ��²���;
-		t2: ���ÿ��������ֵ�Ƿ�Ϸ�, ����packet_io.mode ����mirror, inline, tansparent��;
-		t3: ������鵥������, �����ܵļ�����в������������������, ����transparentģʽû������external����;
-*/
 int sapp_config_check(void)
 {
 	int i, ret1, ret2, final_ret = 0;
 
-	/* ȫ�ֱ������й̶����������, Ҳ�ж�̬�������ļ���ȡ������, ���Դ˴�copyһ����ʱ���� */
 	sapp_config_check_t *local_cfg_check_attr = (sapp_config_check_t *)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(g_sapp_cfg_check_attr)); 
 	memcpy(local_cfg_check_attr, g_sapp_cfg_check_attr, sizeof(g_sapp_cfg_check_attr));
 
@@ -2228,7 +2078,6 @@ int sapp_config_check(void)
 done:
 
 	if(final_ret != 0){
-		//printf("\033[1;31;40msapp config check fail!\033[0m\n");
 		sapp_printf_colorful(final_ret, "You should use './sapp -e filename' to generate the latest sample configuration file.\n");
 	}else{
 		printf("\033[32msapp config check success!\033[0m\n");
@@ -2254,11 +2103,9 @@ void sapp_log_handle_destroy(void)
 }
 
 
-/* init breakpad_mini */
 void sapp_init_breakpad_mini(void)
 {
 #ifdef GIT_VERSION
-	//__attribute__((__used__)) const char *sapp_git_ver = GIT_VERSION;
 	const char *sapp_git_ver = GIT_VERSION;
 #else
 	 const char * sapp_git_ver = "sapp_version_unkonw";

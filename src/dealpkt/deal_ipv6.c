@@ -1,14 +1,4 @@
-/*
- *  Description:
- *      IPv6 implement.
- *
- *  Author:    Li Jia<lijia@software.ict.ac.cn>
- *  Date:      2012-05-25
- *  Version:   0.1
- */
  
-#include "sapp_api.h"
-#include "sapp_private_api.h"
 #include "sapp_declaration.h"
 #include "stream_internal.h"
 
@@ -86,7 +76,6 @@ static uchar * ipv6_frag_key_dup(const uchar *key, uint key_size)
 	raw_frag_key = (struct ipv6_frag_key *)key;
 	tid = raw_frag_key->pfstream_pr->stream_public.threadnum;
 
-	/* �˺����޷���ȡ�̺߳�, ����ʹ��malloc, ͬ��������ҲҪʹ��free */
 	new_frag_key = (struct ipv6_frag_key *)sapp_mem_calloc(SAPP_MEM_DYN_IP_FRAG_PKT, tid, sizeof(struct ipv6_frag_key));
 
 	memcpy(&new_frag_key->ip6_src, &raw_frag_key->ip6_src, sizeof(struct in6_addr));
@@ -121,7 +110,6 @@ void ipv6_frag_ipq_free_no_iph(void *data)
 	struct ip_frags *frag, *next;
 	int thread_num = ipq->thread_num;
 
-	/* Release all fragment data. */
 	frag = ipq->fragments;
 	while(frag != NULL) 
 	{
@@ -149,7 +137,6 @@ static void ipv6_frag_ipq_free_all(void *data)
 {
 	struct frag_ipq *ipq = (struct frag_ipq *)data;
 
-	/* ���������ɾ��ʱ, Ҫ�ͷ�new_iph�ڴ� */
 	if(ipq->new_iph){
 		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,ipq->thread_num, ipq->new_iph);
 	}
@@ -185,7 +172,6 @@ static inline int checkipv6pkt(const struct mesa_ip6_hdr * iph, int payload_len,
 			break;
 #endif
 		case  NEXTHDR_FRAGMENT	:	
-			/* NOTE: ��ΪIPv6��Ƭ�����, �ֵݹ������ipv6_entry(), ��ʱ���ܼ�⸺�س��ȴ���raw_pkt_len, ֻ��ԭʼ��Ƭ��������ô��� */
 			if(payload_len + (int)sizeof(struct mesa_ip6_hdr) > raw_pkt_len){
 				sapp_runtime_log(20, "ipv6 packet check error: fragement pkt len:%d, raw_pkt len: %d\n", payload_len, raw_pkt_len);
 				return -1;
@@ -204,7 +190,6 @@ static inline int checkipv6pkt(const struct mesa_ip6_hdr * iph, int payload_len,
 	return 0;
 }
 
-/* 2012-05-25 LiJia add */
 int ipv6_packet_check(int threadid, int len, struct simple_ip6_hdr *ip6h)
 {	
 	if (len < (int)sizeof (struct ip6_hdr) 
@@ -218,7 +203,6 @@ int ipv6_packet_check(int threadid, int len, struct simple_ip6_hdr *ip6h)
 	return 1;
 }
 
-/* to do: ������� */
 static int ipv6_attack_detect(struct frag_ipq *ipv6_qp)
 {
 	if(ipv6_qp->attack_flag != 0)
@@ -231,8 +215,6 @@ static int ipv6_attack_detect(struct frag_ipq *ipv6_qp)
 		ipv6_qp->attack_flag |= IP_FRAG_IGNORE;
 		return IP_FRAG_IGNORE;
 	}
-	
-	// to do: ��������
 	
 	return IP_FRAG_OK;
 }
@@ -271,11 +253,6 @@ static unsigned int ipv6_frag_hash_index(void *hash_key)
 }
 #endif
 
-/* 
-	return value:
-	0: keyֵ��ͬ 
-	-1:keyֵ��ͬ
-*/
 int ipv6_frag_hash_cmp(void *hash_key1, void *hash_key2)
 {
 	return memcmp(hash_key1, hash_key2, sizeof(struct ipv6_frag_key));
@@ -299,7 +276,7 @@ static struct frag_ipq *ipv6_frag_queue_find(struct streaminfo_private *pstream_
 						frag_ipq);
 						
 		if(ret < 0){
-			ipv6_frag_ipq_free_all(frag_ipq); /* 2015-12-01 lijia add, for memory leak */
+			ipv6_frag_ipq_free_all(frag_ipq);
 			return NULL;
 		}
 	}
@@ -322,7 +299,6 @@ static struct frag_ipq *ipv6_frag_queue_find(struct streaminfo_private *pstream_
 }
 #endif
 
-/* ��IPv4�����£�ͳ�Ƴ����ڴ�ռ�þ���ֵ */
 static inline int ip6_buff_size(int tot_len) 
 {
 	return  tot_len > 2048 ? (tot_len > 10240 ? 65576 : 10240) : 2048;
@@ -330,20 +306,18 @@ static inline int ip6_buff_size(int tot_len)
 
 
 #if (USE_MESA_STREAM_HASH==0)
-/* ���ݳ�ʱ���������ڴ� */
 static void ipv6_frag_mem_clean_by_time(struct frag_manage *handle)
 {
 	struct frag_ipq *tmp, *next;
 	int raw_mem_size = handle->total_mem;
 	tmp = handle->lru_head;
 
-	while(tmp && (tmp->create_time + (time_t)IPV6_FRAG_TIMEOUT < g_CurrentTime)) /* timeout */
+	while(tmp && (tmp->create_time + (time_t)IPV6_FRAG_TIMEOUT < g_CurrentTime))
 	{
 		next = tmp->lru_next;
 		
 		frag_ipq_kill(handle, tmp);
 
-		/* ÿ��ֻ�ͷ�һ���������ڴ棬���ⳤʱ���ڴ˺������У���������������� */
 		if(raw_mem_size-handle->total_mem >= IPV6_FRAG_MEM_FREE_ONCE)
 		{
 			break;
@@ -354,7 +328,6 @@ static void ipv6_frag_mem_clean_by_time(struct frag_manage *handle)
 }
 
 
-/* ����ռ���ڴ����������ڴ� */
 static void ipv6_frag_mem_clean_by_size(struct frag_manage *handle)
 {
 	struct frag_ipq *tmp, *next;
@@ -367,7 +340,6 @@ static void ipv6_frag_mem_clean_by_size(struct frag_manage *handle)
 		
 		frag_ipq_kill(handle, tmp);
 
-		/* ÿ��ֻ�ͷ�һ���������ڴ棬���ⳤʱ���ڴ˺������У���������������� */
 		if(raw_mem_size-handle->total_mem >= IPV6_FRAG_MEM_FREE_ONCE)
 		{
 			break;
@@ -378,7 +350,6 @@ static void ipv6_frag_mem_clean_by_size(struct frag_manage *handle)
 }
 
 
-/* �����ڴ棬��ʱ���ռ���ڴ����� */
 static inline void ipv6_frag_mem_clean(struct frag_manage *handle)
 {
 	ipv6_frag_mem_clean_by_time(handle);
@@ -412,16 +383,6 @@ static void *frag_reassemble_v6(struct frag_manage *handle, struct frag_ipq *ipq
 }
 #endif
 
-/* 
-	IPv6��Ƭ�������. 
-	����˵��:
-		pfstream: �ײ�����ָ��.
-		thread_num: �߳�ID
-		frag_packet: ԭʼIPv6���ݰ�ͷָ��
-		ipv6_frag_hdr: IPv6��Ƭͷ��ָ��
-		last_hdr_offset: ��Ƭͷ��ǰһ����ͷ��next_hdr�ֶΣ����IPv6ԭʼ��ͷ��ƫ������
-						 �������֮�󣬲�������Ƭͷ����Ҫ�ѷ�Ƭͷ��ǰһ����ͷ��next_hdrֵ��Ϊ��Ƭͷ֮���next_hdrֵ.
-*/
 static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr, 
 				int thread_num, const struct mesa_ip6_hdr *frag_packet, 
 				struct ipv6_frag_hdr *ipv6_frag_hdr, int last_hdr_offset, const raw_pkt_t *raw_pkt)
@@ -458,7 +419,6 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 		return NULL;
 	}
 
-	/* ������� */
 	attack_flag = ipv6_attack_detect(ipv6_qp);
 	switch(attack_flag)
 	{
@@ -474,7 +434,7 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 			goto discard_fq;
 		break;
 
-		default: /* go on */ 
+		default: 
 			break;
 	}
 
@@ -484,7 +444,7 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 
 	ipv6_qp->frags_num++;
 
-	if(NULL == ipv6_qp->private_info) /* �յ��ĵ�һ����Ƭ�� */
+	if(NULL == ipv6_qp->private_info)
 	{
 		ipv6_qp->private_info = frag_malloc(ip6_frag_handle, sizeof(struct ipv6_frag_private));
 		ipv6_qp->private_len = sizeof(struct ipv6_frag_private);
@@ -496,7 +456,7 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 
 	offset = ntohs(ipv6_frag_hdr->frag_off) & ~0x7;
 	end = offset + (ntohs(frag_packet->ip6_payload_len) -
-			((u_int8_t *)(ipv6_frag_hdr + 1) - (u_int8_t *)(frag_packet + 1)));/* lijia comment, ��Ƭͷǰ���п��ܻ���������ͷ��, */
+			((u_int8_t *)(ipv6_frag_hdr + 1) - (u_int8_t *)(frag_packet + 1)));
 
 	if(offset >= end)
 	{
@@ -507,7 +467,7 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 		goto err;
 	}
 
-	if(!(ipv6_frag_hdr->frag_off & htons(IP6_MF))) /* ���һ����Ƭ�� */ 
+	if(!(ipv6_frag_hdr->frag_off & htons(IP6_MF))) 
 	{
 		if (end < ipv6_qp->tot_len||
 		    ((ipv6_qp->last_in & IP_FRAG_LAST_IN) && end != ipv6_qp->tot_len))
@@ -519,11 +479,11 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 	}
 	else
 	{
-		if(end & 0x7) /* ����8�������� */
+		if(end & 0x7)
 		{
 			goto err;
 		}
-		if(end > ipv6_qp->tot_len) /* ���� */
+		if(end > ipv6_qp->tot_len)
 		{
 			if(ipv6_qp->last_in & IP_FRAG_LAST_IN)
 			{
@@ -533,10 +493,6 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 		}
 	}
 
-	/* Find out which fragments are in front and at the back of us
-	 * in the chain of fragments so far.  We must know where to put
-	 * this fragment.
-	 */
 	prev = ipv6_qp->fragments_tail;
 	if(!prev || prev->offset < offset) 
 	{
@@ -544,23 +500,23 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 		goto found;
 	}
 
-#if 0 	/* search forward */
+#if 0
 	prev = NULL;
 	for(next = ipv6_qp->fragments; next != NULL; next = next->next) 
 	{
 		if(next->offset >= offset)
 		{
-			break;	/* bingo! */
+			break;
 		}	
 		prev = next;
 	}
-#else	/* search backward, һ�������, offset��ֵ���Ǵ�С����ʱ�临�Ӷ�ΪO(1) */
+#else
 	next = NULL;
 	for(prev = ipv6_qp->fragments_tail; prev != NULL; prev = prev->prev)
 	{
 		if(prev->offset < offset)
 		{
-			break;	/* bingo! */
+			break;
 		}	
 		next = prev;
 	}
@@ -568,25 +524,23 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 
 
 found:
-	/* Check for overlap with preceding fragment. */
 	if(prev && (prev->end > offset))
 	{
 		goto discard_fq;
 	}
 	
-	/* Look for overlap with succeeding segment. */
 	if(next && (next->offset < end))
 	{
 		goto discard_fq;
 	}
 
-	if(prev && (prev->end == offset)) /* �ϲ����ڷ�Ƭ��Ϣ�������½�frags�ṹ */
+	if(prev && (prev->end == offset))
 	{
 		prev->end = end;
 		goto copy_data;
 	}
 		
-	if(next && (next->offset == end)) /* �ϲ����ڷ�Ƭ��Ϣ�������½�frags�ṹ */
+	if(next && (next->offset == end))
 	{
 		next->offset = offset;
 		goto copy_data;
@@ -594,7 +548,6 @@ found:
 
 	tmp_fg = frags_create(ip6_frag_handle, offset, end);
 	
-	/* Insert this fragment in the chain of fragments. */
 	tmp_fg->next = next;
 	tmp_fg->prev = prev;
 	if(next)
@@ -618,16 +571,15 @@ copy_data:
 
 	ipv6_qp->meat += (end - offset);
 
-	/* The first fragment. */
 	if(0 == offset) 
 	{
-		int this_pkt_unfragmentable_len = (char *)ipv6_frag_hdr - (char *)frag_packet; /* ��ǰ��ʵ�ʲ��ɷ�Ƭ��ͷ���� */
+		int this_pkt_unfragmentable_len = (char *)ipv6_frag_hdr - (char *)frag_packet;
 		ipv6_qp->last_in |= IP_FRAG_FIRST_IN;
-		if(this_pkt_unfragmentable_len > private_info->unfragmentable_len){ /* ʵ��ͷ���ռ䳬��Ԥ���ռ� */
-			if (end + this_pkt_unfragmentable_len > ipv6_qp->buf_size){  /* �Ƿ���Ҫ���仺��ռ� */
+		if(this_pkt_unfragmentable_len > private_info->unfragmentable_len){
+			if (end + this_pkt_unfragmentable_len > ipv6_qp->buf_size){
 					new_buf_size = ip6_buff_size(end + this_pkt_unfragmentable_len);
 					new_ip6h = (struct mesa_ip6_hdr *)frag_malloc(ip6_frag_handle, new_buf_size);
-					if(ipv6_qp->meat > 0){ /* meat>0, ֮ǰ�Ѿ��洢������, ͨ�������Ƿ�Ƭ����, �����յ������ķ�Ƭ�� */
+					if(ipv6_qp->meat > 0){
 						memcpy((char *)new_ip6h + this_pkt_unfragmentable_len, (char *)ipv6_qp->new_iph + private_info->unfragmentable_len,  ipv6_qp->buf_size);
 					}
 					frag_free(ip6_frag_handle, ipv6_qp->new_iph, ipv6_qp->buf_size);
@@ -636,11 +588,10 @@ copy_data:
 			}
 		}
 		private_info->unfragmentable_len = this_pkt_unfragmentable_len;
-		private_info->raw_next_hdr = ipv6_frag_hdr->nexthdr; /* ��¼��һ����Ƭ����һ��Э������ */
+		private_info->raw_next_hdr = ipv6_frag_hdr->nexthdr;
 		memcpy(ipv6_qp->new_iph, frag_packet, this_pkt_unfragmentable_len);
 	}
 
-  	/*If ipq buff is not enough to store current fragment piece, get a bigger one*/
 	if(end + private_info->unfragmentable_len > ipv6_qp->buf_size) 
 	{
 		new_buf_size = ip6_buff_size(end + private_info->unfragmentable_len);
@@ -663,7 +614,7 @@ copy_data:
 		ipv6_qp->ipfrag_list = NULL;
 #endif
 
-		int ip6_payload_len = htons(ipv6_qp->meat); /* ʵ�����ݳ���, ����ͷ�� */
+		int ip6_payload_len = htons(ipv6_qp->meat);
 		char raw_next_hdr = private_info->raw_next_hdr;
 #if USE_MESA_STREAM_HASH
 		new_ip6h = (struct mesa_ip6_hdr *)frag_reassemble_v6(ip6_frag_handle, ipv6_qp, &ip6_frag_key);
@@ -671,7 +622,7 @@ copy_data:
 		new_ip6h = (struct mesa_ip6_hdr *)frag_reassemble(ip6_frag_handle, ipv6_qp);
 #endif
 		new_ip6h->ip6_payload_len = ip6_payload_len;
-		*((char *)new_ip6h + last_hdr_offset) = raw_next_hdr; /* ����Ϊ��һ������nexthdr��Ϣ */
+		*((char *)new_ip6h + last_hdr_offset) = raw_next_hdr;
 
 		return new_ip6h;
 	}	
@@ -713,7 +664,6 @@ static void set_ipv6_stream(struct streaminfo_private *pfstream_pr, struct strea
 	ip6_addr->source = 0;
 	ip6_addr->dest = 0;
 
-	/* LiJia add, ��Ϊ��ĳ���㷨���ⶨ��һ�������ַ�ķ���, �����ж�memcmp�Ľ�� */
 	if(memcmp(ip6_addr->saddr, ip6_addr->daddr, IPV6_ADDR_LEN) >= 0){
 		pstream_pr->layer_dir = 1;
 		pstream->curdir = DIR_C2S;
@@ -723,7 +673,6 @@ static void set_ipv6_stream(struct streaminfo_private *pfstream_pr, struct strea
 	}
 
 	pstream->addr.ipv6 = ip6_addr;
-	/* ��IP��������Ϊ__ADDR_TYPE_IP_PAIR_V4, ����ϲ���TCP/UDP, ����������ΪADDR_TYPE_IPV4, �����Ipv6_over_ipv4����, ������IP���ַ���� */
 	pstream->addr.addrtype = __ADDR_TYPE_IP_PAIR_V6;
 	pstream->addr.addrlen = sizeof(struct layer_addr_ipv6);
 	pstream_pr->addr_use_as_hash = 1;
@@ -731,10 +680,10 @@ static void set_ipv6_stream(struct streaminfo_private *pfstream_pr, struct strea
 	//ptmp->stream.p_layer_header = ip6hdr;
 //	ptmp->stream.offset_to_raw_pkt_hdr = (char *)ip6hdr - (char *)raw_pkt->raw_pkt_data;
 	pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
-	pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
+	pstream_pr->raw_pkt = raw_pkt;
 
 	if((pfstream_pr != NULL)
-	  && (g_overlay_layer_set[pfstream_pr->stream_public.addr.addrtype][pfstream_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay���pfather��ΪNULL, ������ɼ� */
+	  && (g_overlay_layer_set[pfstream_pr->stream_public.addr.addrtype][pfstream_pr->layer_index] != 0)){
 		pstream->pfather = NULL;
 	}else{
 		pstream->pfather=&pfstream_pr->stream_public;
@@ -752,14 +701,6 @@ static void set_ipv6_stream(struct streaminfo_private *pfstream_pr, struct strea
 }
 
 
-/* 
-	IPv6���ݰ��������.
-	����˵��:
-		pfstream: �ײ�����ָ��.
-		a_packet: ԭʼIPv6���ݰ�ͷָ��
-		thread_num: �߳�ID
-		routedir: �ײ���Ĵ��䷽��
-*/
 int ipv6_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_hdr, int thread_num, 
 		unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
@@ -793,7 +734,6 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 		return PASS;
 	}
 	
-	/* NOTE: ���߻����·���Ī�������IP��, ��������ѭ��, һ��Ҫ��ͷ���Ϸ��Լ��!! */
 	if(unlikely(checkipv6pkt(a_packet, (int)payload_len, raw_pkt->raw_pkt_len) < 0)){
 		local_sys_stat->count[SAPP_STAT_DROP_IPV6]++;
 		local_sys_stat->length[SAPP_STAT_DROP_IPV6]+=raw_pkt->raw_pkt_len;
@@ -811,7 +751,6 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 	}
 
 	if((sapp_global_mthread[thread_num].ipv6_pkt_type_flag & PKT_TYPE_IPREBUILD) == 0){
-		/* IP��Ƭ����İ�������ipv6_entry, �����ټ��� */
 		local_sys_stat->count[SAPP_STAT_RCV_IPV6]++;
 		local_sys_stat->length[SAPP_STAT_RCV_IPV6]+=payload_len + sizeof(struct mesa_ip6_hdr);
 		if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
@@ -828,9 +767,8 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 
 	set_ipv6_stream(pfstream_pr, &tmp_index, &ip6_addr, a_packet, routedir, thread_num, raw_pkt, offset_to_raw_pkt_hdr);
 
-	plocal_stream->addr.pkttype = sapp_global_mthread[thread_num].ipv6_pkt_type_flag;/* 2014-12-25 lijia add */
+	plocal_stream->addr.pkttype = sapp_global_mthread[thread_num].ipv6_pkt_type_flag;
 
-	/* 2015-02-03 lijia add */
 	if(PKT_TYPE_NORMAL == plocal_stream->addr.pkttype){
 		stream_process_ipv6_frag(plocal_stream, (const struct ip6_hdr *)this_layer_hdr,
 								thread_num, routedir, raw_pkt);
@@ -875,7 +813,6 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 				{
 					goto done;
 				}
-				/* 2015-02-03 lijia add */
 				plocal_stream->addr.pktipfragtype = PKT_TYPE_IP_FRAG;
 				stream_process_ipv6_frag(plocal_stream, (const struct ip6_hdr *)this_layer_hdr,
 										thread_num, routedir, raw_pkt);
@@ -883,18 +820,16 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 						  (struct ipv6_frag_hdr *)next_hdr_ptr, last_hdr-(uchar *)a_packet, raw_pkt); 
 				if(new_ip6h)
 				{
-					//assert(new_ip6h->ip6_nxt_hdr != NEXTHDR_FRAGMENT); /* ǿ��У��, ��Ƭ����İ����������Ƿ�Ƭ, ����ѭ����!! */
+					//assert(new_ip6h->ip6_nxt_hdr != NEXTHDR_FRAGMENT);
 					if(new_ip6h->ip6_nxt_hdr == NEXTHDR_FRAGMENT)
 					{
 						need_free=1;
 						goto done;
 					}
-					/* ��������IP��ַ��Ϣ */
 					set_ipv6_stream(pfstream_pr, &(tmp_index), &ip6_addr, new_ip6h, routedir, thread_num, raw_pkt, skip_len+offset_to_raw_pkt_hdr);
-					/* �ݹ��������һ��,����IPv6����չͷ��,�����ϲ㴦��ģ�� */
 					sapp_global_mthread[thread_num].ipv6_pkt_type_flag = PKT_TYPE_IPREBUILD;
 					action = ipv6_entry(pfstream_pr, (const void *)new_ip6h, thread_num, routedir, raw_pkt,
-									skip_len+offset_to_raw_pkt_hdr); /* ��Ƭ����İ��ݹ��������, �������sizeof(struct mesa_ip6_hdr)ͷ */
+									skip_len+offset_to_raw_pkt_hdr);
 					need_free = 1;
 					sapp_global_mthread[thread_num].ipv6_pkt_type_flag = PKT_TYPE_NORMAL;
 					IPV6_PRINT("ipv6_frag_reassemble_num: %u\n", ipv6_frag_reassemble_num++);
@@ -909,7 +844,7 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 			case NEXTHDR_AUTH:
 			case NEXTHDR_DEST:
 				//skip_len = *(next_hdr_ptr + 1) + 1;
-				skip_len = (*(next_hdr_ptr + 1))*8 + 8; /* ѡ�����8�ֽ�Ϊ��λ */			
+				skip_len = (*(next_hdr_ptr + 1))*8 + 8;			
 			break;
 
 			case NEXTHDR_NONE:			
@@ -938,7 +873,6 @@ if(likely(pfstream_pr != NULL && pfstream_pr->layer_index < SAPP_SUPPORT_LAYER_N
 				if(ret==DROP){
 					goto prosecc_pkt_drop;
 				}					
-				/* 2014-12-10 lijia add */
 				((raw_pkt_t *)raw_pkt)->offset_to_raw_pkt_hdr =  sizeof(struct mesa_ip6_hdr)+skip_len+offset_to_raw_pkt_hdr;
 				ret = ipv4_entry(&(tmp_index.stream), (const void *)next_hdr_ptr, thread_num, 
 							  routedir, raw_pkt, sizeof(struct mesa_ip6_hdr)+skip_len+offset_to_raw_pkt_hdr);
@@ -1058,8 +992,8 @@ MESA_htable_handle ipv6_frag_htable_create(void)
 	hargs.key2index = ipv6_frag_hash_index;
 	hargs.data_free = ipv6_frag_ipq_free_all;
 	hargs.data_expire_with_condition = NULL;
-	hargs.complex_key_dup = ipv6_frag_key_dup; /* ���ڸ��ӽṹ��key����, ��copyһ����ַ���� */
-	hargs.complex_key_free = ipv6_frag_key_free; /* ɾ��ʱ�ͷ�key���ڴ���Դ */
+	hargs.complex_key_dup = ipv6_frag_key_dup;
+	hargs.complex_key_free = ipv6_frag_key_free;
 
 	return MESA_htable_create(&hargs, sizeof(MESA_htable_create_args_t));
 }
@@ -1115,4 +1049,3 @@ void ipv6_frag_exit(void)
 #ifdef __cplusplus
 }
 #endif
-

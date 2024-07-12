@@ -2,25 +2,23 @@
 extern "C" {
 #endif
 
-#include "sapp_api.h"
-#include "sapp_private_api.h"
 #include "sapp_declaration.h"
 #include "MESA_htable.h"
 #include "MESA_list.h"
 
-#define STREAM_BRIDGE_MAGIC_SUCC (0x62726765)  // "brge" 十六进制
+#define STREAM_BRIDGE_MAGIC_SUCC (0x62726765) 
 
 typedef struct{	
-	int magic_num; /* 安全性校验, 也表示当前bridge曾经注册成功过 */
+	int magic_num;
 	int bridge_id;
 	char bridge_name[NAME_MAX];
 	stream_bridge_free_cb_t *async_data_free_cb;
-	MESA_list_t sync_callback_fun_list; /* 支持多个接收者 */
+	MESA_list_t sync_callback_fun_list;
 }stream_bridge_manage_t;
 
 struct stream_bridge_item{
 	long long value; 
-	char valid_flag; /* 用于识别初始状态值为0, 和外部调用者设置了0. 两种值相同, 但是两个不同的状态 */
+	char valid_flag;
 }__attribute__((packed, aligned(1)));
 typedef struct stream_bridge_item stream_bridge_item_t;
 
@@ -130,7 +128,6 @@ static int stream_bridege_create_new_bridge(const char *bridge_name)
 }
 
 
-/* 新建一个流结构时调用 */
 void *stream_bridge_create_per_stream(int mem_used_type, int thread_num)
 {
 	stream_bridge_item_t *stream_bridge_array;
