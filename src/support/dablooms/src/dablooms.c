@@ -592,7 +592,7 @@ struct expiry_dablooms_handle* expiry_dablooms_init(int partition_num, unsigned 
     struct expiry_dablooms_handle *handle = (struct expiry_dablooms_handle *)calloc(1, sizeof(struct expiry_dablooms_handle));
     handle->bm_partition_num = partition_num;
     handle->bm_handle = (struct expiry_dablooms_handle_entity **)calloc(partition_num, sizeof(struct expiry_dablooms_handle_entity *));
-
+    unsigned int every_partition_capacity = capacity / partition_num;
     long spread_expire_timeout;
     srand(time(NULL));
     int polarity = 1;
@@ -603,7 +603,7 @@ struct expiry_dablooms_handle* expiry_dablooms_init(int partition_num, unsigned 
             spread_expire_timeout = expiry_time_ms;
         }
         polarity *= -1;
-        handle->bm_handle[i] = expiry_dablooms_init_entity(capacity, error_rate, cur_time_ms, spread_expire_timeout, transition_time_ms);
+        handle->bm_handle[i] = expiry_dablooms_init_entity(every_partition_capacity, error_rate, cur_time_ms, spread_expire_timeout, transition_time_ms);
         if(handle->bm_handle[i] == NULL){
             goto error_out;
         }
