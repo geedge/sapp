@@ -9,7 +9,7 @@ extern "C" {
  __attribute__((__used__)) const char *sapp_git_ver = GIT_VERSION;
 #endif
 
-/* ´Ë´¦µ¥¶ÀÊ¹ÓÃÒ»¸öÈ«¾Ö±äÁ¿, ÎªÁËÔÚsapp_gval_init()º¯ÊıÖĞÅĞ¶ÏÊÇ·ñ¿ªÆôÁËdictator, ²»ÄÜÔ¤ÏÈ·ÖÅäÄÚ´æ */
+/* ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Ò»ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½, Îªï¿½ï¿½ï¿½ï¿½sapp_gval_init()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¶ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½dictator, ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½È·ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ */
 char g_cmd_args_main_cfg_file[PATH_MAX] = "./etc/sapp.toml";
 
 static inline int dumpfile_speed_check(const char *opt_name, const char *opt_arg)
@@ -59,7 +59,7 @@ static int get_dumpfile_list_array(const char *opt_arg)
 	char *exec_result, *tobe_free_result;
 	char *save_ptr;
 
-	/* ÏÈÖ´ĞĞÒ»±é, ¿´ÃüÁîÊÇ·ñ³É¹¦ */
+	/* ï¿½ï¿½Ö´ï¿½ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½É¹ï¿½ */
 	sapp_log(10, ~0, ~0, "Executing command --dumpfile-file '%s' ... ", opt_arg);
 	if(system(opt_arg) != 0){
 		sapp_log(30, ~0, ~0, "Execute command --dumpfile-file '%s' error!", opt_arg);
@@ -86,7 +86,7 @@ static int get_dumpfile_list_array(const char *opt_arg)
 	sapp_global_val->cla.dumpfie_list_array = NULL;
 	
 	while((ptr_cont = strtok_r(exec_result, delim, &save_ptr))){
-		sapp_global_val->cla.dumpfie_list_array = (char **)sapp_mem_realloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sapp_global_val->cla.dumpfie_list_array, sizeof(void *) * (line_num + 2));//µ±Ç°Òª´æ´¢µÄÖ¸ÕëÔÙ¼ÓÉÏEOF
+		sapp_global_val->cla.dumpfie_list_array = (char **)sapp_mem_realloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sapp_global_val->cla.dumpfie_list_array, sizeof(void *) * (line_num + 2));//ï¿½ï¿½Ç°Òªï¿½æ´¢ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ù¼ï¿½ï¿½ï¿½EOF
 		sapp_global_val->cla.dumpfie_list_array[line_num] = sapp_strdup(ptr_cont);;
 		line_num++;
 		exec_result = NULL;
@@ -101,10 +101,10 @@ static int get_dumpfile_list_array(const char *opt_arg)
 }
 
 
-/* ¾²Ì¬Ö»¶ÁÈ«¾Ö±äÁ¿¿ÉÒÔ·ÅÔÚÈÎºÎ´úÂë¶Î, ÎŞĞèÔÚsapp_global_valÀï */
+/* ï¿½ï¿½Ì¬Ö»ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½ï¿½ÎºÎ´ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sapp_global_valï¿½ï¿½ */
 static const sapp_cmd_args_usage_t cmd_args_usage[] = 
 {
-	/* °´×ÖÄ¸Ë³ĞòÅÅÁĞÊä³ö: */
+	/* ï¿½ï¿½ï¿½ï¿½Ä¸Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: */
 	{"-c", "main-config-file", 	"required", NULL,	"specifies sapp main configuration file, default is './etc/sapp.toml', for example:\n \
 						./sapp -c /opt/MESA/config/sapp.toml"},
 	{"-C", "config-root-dir", 	"required", NULL,	"specifies the configuration root directory for plugins, \n \
@@ -128,10 +128,10 @@ static const sapp_cmd_args_usage_t cmd_args_usage[] =
 	{NULL,	NULL, NULL,NULL,NULL}
 };
 
-/* ¾²Ì¬Ö»¶ÁÈ«¾Ö±äÁ¿¿ÉÒÔ·ÅÔÚÈÎºÎ´úÂë¶Î, ÎŞĞèÔÚsapp_global_valÀï */
+/* ï¿½ï¿½Ì¬Ö»ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½ï¿½ÎºÎ´ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sapp_global_valï¿½ï¿½ */
 static const char *sapp_cla_short_options = "dhgvnsc:C:D:e:r:p:f:t";
 
-/* ¾²Ì¬Ö»¶ÁÈ«¾Ö±äÁ¿¿ÉÒÔ·ÅÔÚÈÎºÎ´úÂë¶Î, ÎŞĞèÔÚsapp_global_valÀï */
+/* ï¿½ï¿½Ì¬Ö»ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½ï¿½ÎºÎ´ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sapp_global_valï¿½ï¿½ */
 static const struct option sapp_cla_long_options[] = 
 {
 	{"help",			no_argument,      	NULL,      'h'},
@@ -173,7 +173,7 @@ static int check_args_legality(const char *opt_name, const char *opt_arg)
 	int index = 0, ret = 0;
 
 	while(cmd_args_usage[index].long_opt_name != NULL){
-		/* Ñ¡ÏîÃû³ÆÒªÓÃ²»Í¬µÄ³¤¶È±È½ÏÁ½´Î, ·ÀÖ¹dumpfile Óë dumpfile-speedÊ¹ÓÃ½Ï¶Ì³¤¶È±È½Ï, ¶øÎóÃüÖĞµÄÇé¿ö */
+		/* Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ã²ï¿½Í¬ï¿½Ä³ï¿½ï¿½È±È½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ö¹dumpfile ï¿½ï¿½ dumpfile-speedÊ¹ï¿½Ã½Ï¶Ì³ï¿½ï¿½È±È½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğµï¿½ï¿½ï¿½ï¿½ */
 		if((strncasecmp(opt_name, cmd_args_usage[index].long_opt_name, strlen(opt_name)) == 0)
 		 && (strncasecmp(opt_name, cmd_args_usage[index].long_opt_name, strlen(cmd_args_usage[index].long_opt_name)) == 0)
 		 && (cmd_args_usage[index].check_fun != NULL)){
@@ -187,7 +187,7 @@ static int check_args_legality(const char *opt_name, const char *opt_arg)
 	return ret;
 }
 
-/* ¼ì²é²»Í¬²ÎÊıÖ®¼äµÄÏà»¥¹ØÁª¹ØÏµ */
+/* ï¿½ï¿½é²»Í¬ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½ï¿½à»¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµ */
 static int check_args_sanity(void)
 {
 	char *no_use;
@@ -245,7 +245,7 @@ int sapp_get_cla_raw(const char *opt_long_name, char ** const opt_string_value)
 	local_tmp_cla_num = sapp_global_val->cla.cmd_args_num;
 	
 	for(i = 0; i < local_tmp_cla_num; i++){
-		/* Ñ¡ÏîÃû³ÆÒªÓÃ²»Í¬µÄ³¤¶È±È½ÏÁ½´Î, ·ÀÖ¹dumpfile Óë dumpfile-speedÊ¹ÓÃ½Ï¶Ì³¤¶È±È½Ï, ¶øÎóÃüÖĞµÄÇé¿ö */
+		/* Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ã²ï¿½Í¬ï¿½Ä³ï¿½ï¿½È±È½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ö¹dumpfile ï¿½ï¿½ dumpfile-speedÊ¹ï¿½Ã½Ï¶Ì³ï¿½ï¿½È±È½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğµï¿½ï¿½ï¿½ï¿½ */
 		if((strncasecmp(opt_long_name, local_tmp_array[i]->long_opt_name, strlen(opt_long_name)) == 0)
 		 && (strncasecmp(opt_long_name, local_tmp_array[i]->long_opt_name, strlen(local_tmp_array[i]->long_opt_name)) == 0)){
 			if(local_tmp_array[i]->arg_val.string_value != NULL){
@@ -315,11 +315,11 @@ static int store_cmd_args(const char *opt_name, const char *opt_arg)
 }
 
 /*
-	½«Ïà¶ÔÎÄ¼şÂ·¾¶×ª»»Îª¾ø¶ÔÂ·¾¶, ÊÜÃüÁîĞĞ²ÎÊı-DºÍÅäÖÃÎÄ¼şÊÇ·ñÊ¹ÓÃ¾ø¶ÔÂ·¾¶Ó°Ïì.
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ²ï¿½ï¿½ï¿½-Dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ç·ï¿½Ê¹ï¿½Ã¾ï¿½ï¿½ï¿½Â·ï¿½ï¿½Ó°ï¿½ï¿½.
 
-	sappµÄ¶ş¼¶ÈÕÖ¾ÎÄ¼şÂ·¾¶´Ósapp.toml»ñÈ¡, 
-	Èç¹ûÒÑ¾­ÊÇ¾ø¶ÔÂ·¾¶(¼´ÒÔ/¿ªÊ¼), Ôò²»ÊÜÃüÁî²ÎÊı-D¿ØÖÆ, 
-	·ñÔòÒÔ-DÎª¸ùÄ¿Â¼, ÔÙ×·¼Ósapp.tomlÖĞµÄÂ·¾¶Îª×ÓÄ¿Â¼´´½¨ÎÄ¼ş. 
+	sappï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½Ä¼ï¿½Â·ï¿½ï¿½ï¿½ï¿½sapp.tomlï¿½ï¿½È¡, 
+	ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½Â·ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½Ê¼), ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-Dï¿½ï¿½ï¿½ï¿½, 
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-DÎªï¿½ï¿½Ä¿Â¼, ï¿½ï¿½×·ï¿½ï¿½sapp.tomlï¿½Ğµï¿½Â·ï¿½ï¿½Îªï¿½ï¿½Ä¿Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½. 
 */
 static void sapp_convert_relative_to_absolute(const char *raw_relative_path, char **absolute_path, const char *cmd_arg_root_dir)
 {
@@ -329,7 +329,7 @@ static void sapp_convert_relative_to_absolute(const char *raw_relative_path, cha
 	cfg_is_absolute_path = sapp_is_absolute_path(raw_relative_path);
 
 	if(cfg_is_absolute_path){
-		/* ÒÔ/¿ªÊ¼µÄÂ·¾¶, absoluteµÈÓÚ  relative */
+		/* ï¿½ï¿½/ï¿½ï¿½Ê¼ï¿½ï¿½Â·ï¿½ï¿½, absoluteï¿½ï¿½ï¿½ï¿½  relative */
 		*absolute_path = sapp_strdup(raw_relative_path);	
 		return;
 	}
@@ -351,7 +351,7 @@ void sapp_update_main_config_file(const char *main_entry_cfg)
 		pconfig->cfg_main_entry_absolute = sapp_strdup("./etc/sapp.toml");
 	}
 
-	/* ÒòÎªÓĞ-c²ÎÊı, sapp.toml¿ÉÄÜ²»ÊÇÄ¬ÈÏÂ·¾¶ÁË, ÔÙÖØĞÂ»ñÈ¡Ò»±éÅäÖÃÎÄ¼şÏà¶ÔÂ·¾¶ */
+	/* ï¿½ï¿½Îªï¿½ï¿½-cï¿½ï¿½ï¿½ï¿½, sapp.tomlï¿½ï¿½ï¿½Ü²ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Â»ï¿½È¡Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ */
 	sapp_get_secondary_file_path();
 
 	pconfig->cfg_sapp_log_absolute = sapp_strdup(pconfig->cfg_sapp_log_relative);
@@ -400,7 +400,7 @@ void sapp_update_data_root_dir(const char *data_root_dir)
 	pdata = &sapp_global_val->config.data_file_path;
 
 	if(data_root_dir != NULL){
-		/* Êı¾İÄ¿Â¼²»ÓÃÊÂÏÈ¼ì²éÓĞÃ»ÓĞ, ÒòÎªĞ´ÈÕÖ¾¿ÉÒÔ¶¯Ì¬´´½¨Ä¿Â¼ºÍÎÄ¼ş, ¸ÕÆô¶¯Ê±¿ÉÄÜÈ·Êµ²»´æÔÚ, µ«ÊÇÈç¹û´æÔÚ±ØĞëÊÇÄ¿Â¼ */
+		/* ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½, ï¿½ï¿½ÎªĞ´ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½Ô¶ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ï¿½ï¿½Ä¼ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½È·Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú±ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ */
 		struct stat dir_fstat;
 		if((stat(data_root_dir, &dir_fstat) >= 0) && (S_ISDIR(dir_fstat.st_mode) == 0)){
 			printf("\033[1;31;40mdata-root-dir '%s' already exist, but is not directory\033[0m\n", data_root_dir);
@@ -413,14 +413,15 @@ void sapp_update_data_root_dir(const char *data_root_dir)
 		pdata->data_files_root_dir = sapp_strdup("./");
 	}	
 
-	/* sappµÄ¶ş¼¶ÈÕÖ¾ÎÄ¼şÂ·¾¶´Ósapp.toml»ñÈ¡, 
-	   Èç¹ûÒÑ¾­ÊÇ¾ø¶ÔÂ·¾¶(¼´ÒÔ/¿ªÊ¼), Ôò²»ÊÜÃüÁî²ÎÊı-D¿ØÖÆ, 
-	   ·ñÔòÒÔ-DÎª¸ùÄ¿Â¼, ÔÙ×·¼Ósapp.tomlÖĞµÄÂ·¾¶Îª×ÓÄ¿Â¼´´½¨ÎÄ¼ş. 
+	/* sappï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½Ä¼ï¿½Â·ï¿½ï¿½ï¿½ï¿½sapp.tomlï¿½ï¿½È¡, 
+	   ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½Â·ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½Ê¼), ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-Dï¿½ï¿½ï¿½ï¿½, 
+	   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-DÎªï¿½ï¿½Ä¿Â¼, ï¿½ï¿½×·ï¿½ï¿½sapp.tomlï¿½Ğµï¿½Â·ï¿½ï¿½Îªï¿½ï¿½Ä¿Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½. 
 	*/
 
 	sapp_convert_relative_to_absolute(pdata->data_sapp_sysinfo_log_relative, (char **)&pdata->data_sapp_sysinfo_log_absolute, pdata->data_files_root_dir);
 	sapp_convert_relative_to_absolute(pdata->data_sapp_fs2_log_relative, (char **)&pdata->data_sapp_fs2_log_absolute, pdata->data_files_root_dir);
 	sapp_convert_relative_to_absolute(pdata->data_sapp_fs3_log_relative, (char **)&pdata->data_sapp_fs3_log_absolute, pdata->data_files_root_dir);
+	sapp_convert_relative_to_absolute(pdata->data_sapp_fs4_log_relative, (char **)&pdata->data_sapp_fs4_log_absolute, pdata->data_files_root_dir);
 	sapp_convert_relative_to_absolute(pdata->data_sapp_fs2_process_latency_relative, (char **)&pdata->data_sapp_fs2_process_latency_absolute, pdata->data_files_root_dir);
 	sapp_convert_relative_to_absolute(pdata->data_inline_keepalive_log_relative, (char **)&pdata->data_inline_keepalive_log_absolute, pdata->data_files_root_dir);	
 	sapp_convert_relative_to_absolute(pdata->data_load_plugin_stat_log_relative, (char **)&pdata->data_load_plugin_stat_log_absolute, pdata->data_files_root_dir);	
@@ -454,7 +455,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 	int option_array_index;
 	int test_config_flag = 0;
 
-	optind = 1; /* sappÖ§³Ö²»ÍË³ö½ø³Ì¶øÖØĞÂ³õÊ¼»¯, Ã¿´Î½âÎöcmd argsÖ®Ç°Òª°ÑoptindÖØÖÃÎª1 */
+	optind = 1; /* sappÖ§ï¿½Ö²ï¿½ï¿½Ë³ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½ï¿½ï¿½Â³ï¿½Ê¼ï¿½ï¿½, Ã¿ï¿½Î½ï¿½ï¿½ï¿½cmd argsÖ®Ç°Òªï¿½ï¿½optindï¿½ï¿½ï¿½ï¿½Îª1 */
 
 	while(1){
 		c = getopt_long(argc, argv, sapp_cla_short_options, sapp_cla_long_options, NULL);
@@ -480,20 +481,20 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 				cfg_main_entry_changed = 1;
 				cmd_arg_cfg_main_entry = sapp_strdup(optarg);
 				strncpy(g_cmd_args_main_cfg_file, optarg, PATH_MAX);
-				/* cmd argsÃ»ÓĞÏÈºóË³Ğò, ´Ë´¦ÏÈ²»ÒªÖ±½Óµ÷ÓÃ sapp_update_config_root_dir() */
+				/* cmd argsÃ»ï¿½ï¿½ï¿½Èºï¿½Ë³ï¿½ï¿½, ï¿½Ë´ï¿½ï¿½È²ï¿½ÒªÖ±ï¿½Óµï¿½ï¿½ï¿½ sapp_update_config_root_dir() */
 			break;
 
 			case 'C':
 				cfg_root_dir_changed = 1;
 				cmd_arg_cfg_root_dir = sapp_strdup(optarg);
-				/* cmd argsÃ»ÓĞÏÈºóË³Ğò, ´Ë´¦ÏÈ²»ÒªÖ±½Óµ÷ÓÃ sapp_update_main_config_file() */
+				/* cmd argsÃ»ï¿½ï¿½ï¿½Èºï¿½Ë³ï¿½ï¿½, ï¿½Ë´ï¿½ï¿½È²ï¿½ÒªÖ±ï¿½Óµï¿½ï¿½ï¿½ sapp_update_main_config_file() */
 			break;
 			
 
 			case 'D':
 				data_root_dir_changed = 1;
 				cmd_arg_data_root_dir = sapp_strdup(optarg);
-				/* cmd argsÃ»ÓĞÏÈºóË³Ğò, ´Ë´¦ÏÈ²»ÒªÖ±½Óµ÷ÓÃ sapp_update_data_root_dir() */
+				/* cmd argsÃ»ï¿½ï¿½ï¿½Èºï¿½Ë³ï¿½ï¿½, ï¿½Ë´ï¿½ï¿½È²ï¿½ÒªÖ±ï¿½Óµï¿½ï¿½ï¿½ sapp_update_data_root_dir() */
 			break;
 
 			case 'e':
@@ -508,7 +509,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 
 			case 'g':
 				sapp_update_main_config_file(NULL);
-				sapp_parse_config(); /* ÏÈ¶ÁÈ¡ÅäÎÄ¼ş, ÔÙµ÷ÓÃbreakpad_mini */
+				sapp_parse_config(); /* ï¿½È¶ï¿½È¡ï¿½ï¿½ï¿½Ä¼ï¿½, ï¿½Ùµï¿½ï¿½ï¿½breakpad_mini */
 				sapp_init_breakpad_mini();
 				sapp_segv_generate();
 				continue;
@@ -575,7 +576,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 		return -1;
 	}
 
-	/* cmd argsÃ»ÓĞË³Ğò, Èç¹ûÏÈÖ¸¶¨ÁË-D ºóÃæ¼ÓÁË-c²ÎÊı, Ò²ÒªÓÅÏÈ½âÎö-c */
+	/* cmd argsÃ»ï¿½ï¿½Ë³ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½-D ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-cï¿½ï¿½ï¿½ï¿½, Ò²Òªï¿½ï¿½ï¿½È½ï¿½ï¿½ï¿½-c */
 	if(0 == cfg_main_entry_changed){
 		sapp_update_main_config_file(NULL);
 	}else{
@@ -583,7 +584,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 		sapp_mem_free(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, (void*)cmd_arg_cfg_main_entry);
 	}
 
-	/* cmd argsÃ»ÓĞË³Ğò, Èç¹ûÏÈÖ¸¶¨ÁË-D ºóÃæ¼ÓÁË-c²ÎÊı, Ò²ÒªÓÅÏÈ½âÎö-c */
+	/* cmd argsÃ»ï¿½ï¿½Ë³ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½-D ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-cï¿½ï¿½ï¿½ï¿½, Ò²Òªï¿½ï¿½ï¿½È½ï¿½ï¿½ï¿½-c */
 	if(0 == cfg_root_dir_changed){
 		sapp_update_config_root_dir(NULL);
 	}else{
@@ -591,7 +592,7 @@ int sapp_parse_cmd_args(int argc, char *argv[])
 		SAPP_GLOBAL_FREE(cmd_arg_cfg_root_dir);
 	}
 
-	/* cmd argsÃ»ÓĞË³Ğò, Èç¹ûÏÈÖ¸¶¨ÁË-D ºóÃæ¼ÓÁË-c²ÎÊı, Ò²ÒªÓÅÏÈ½âÎö-c */
+	/* cmd argsÃ»ï¿½ï¿½Ë³ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½-D ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-cï¿½ï¿½ï¿½ï¿½, Ò²Òªï¿½ï¿½ï¿½È½ï¿½ï¿½ï¿½-c */
 	if(0 == data_root_dir_changed){
 		sapp_update_data_root_dir(NULL);
 	}else{

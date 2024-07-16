@@ -199,7 +199,7 @@ endif()
 add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
     -D__USE_BSD=1 -D_GNU_SOURCE=1  -DMESA_SAPP_PLATFORM=1)
 
-set(SAPP_DEPEND_DYN_LIB MESA_handle_logger MESA_prof_load MESA_htable  MESA_field_stat2 fieldstat3 cjson MESA_jump_layer breakpad_mini ${SYSTEMD_LIBRARIES} pthread dl pcap)
+set(SAPP_DEPEND_DYN_LIB MESA_handle_logger MESA_prof_load MESA_htable  MESA_field_stat2 fieldstat3 fieldstat4 cjson MESA_jump_layer breakpad_mini ${SYSTEMD_LIBRARIES} pthread dl pcap)
 set(SAPP_INNER_STATIC_LIB sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
 			config inline_keepalive gdev_assistant sapp_assistant sapp_metrics plugctrl project timer
 			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  

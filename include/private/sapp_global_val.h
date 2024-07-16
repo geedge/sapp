@@ -151,6 +151,7 @@ typedef struct{
 	sapp_config_profiling_log_t log;
 	sapp_config_profiling_metric_t fs2;
 	sapp_config_profiling_metric_t fs3;
+	sapp_config_profiling_metric_t fs4;
 
 	//process_latency and sanity_check
 	char process_latency_log_category[NAME_MAX];
@@ -329,6 +330,10 @@ typedef struct{
 	const char *data_sapp_fs3_log_relative;
 	const char *data_sapp_fs3_log_absolute;
 
+
+	const char *data_sapp_fs4_log_relative;
+	const char *data_sapp_fs4_log_absolute;
+
 	const char *data_sapp_fs2_process_latency_relative;
 	const char *data_sapp_fs2_process_latency_absolute;
 
@@ -397,6 +402,12 @@ typedef struct{
 	int metrics_ids[2][SAPP_STAT_NUM_MAX];
 }sapp_gval_individual_fixed_fs3_t; 
 
+
+typedef struct{
+	struct fieldstat_easy *fs_metric_handle;
+	int metrics_ids[2][SAPP_STAT_NUM_MAX];
+}sapp_gval_individual_fixed_fs4_t; 
+
 typedef struct{
 	void *log_handle; /* runtime.log */
 	void *plugin_log_handle; /* runtime.log */
@@ -410,6 +421,7 @@ typedef struct{
 
 	sapp_gval_individual_fixed_fs2_t fs2_runtime;
 	sapp_gval_individual_fixed_fs3_t fs3_runtime;
+	sapp_gval_individual_fixed_fs4_t fs4_runtime;
 
 	pthread_t thread_obtain_id[SAPP_MAX_THREADS]; 
 	pid_t thread_tid[SAPP_MAX_THREADS];

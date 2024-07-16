@@ -1,3 +1,4 @@
+#include "fieldstat/fieldstat_easy.h"
 #include "field_stat2.h"
 #include "fieldstat.h"
 
@@ -565,14 +566,6 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 								NULL, 0);	
 	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_S2C] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_S2C_ALL", 
 								NULL, 0);	
-
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_Double_ALL", 
-								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_C2S_ALL", 
-								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_S2C] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_S2C_ALL", 
-								NULL, 0);		
-	
 	fs3_rt->metrics_ids[0][SAPP_STAT_SND_TCP_RST] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Send_Tcp_Rst", 
 								NULL, 0);	
 	fs3_rt->metrics_ids[0][SAPP_STAT_SND_TCP_SYNACK] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Send_Tcp_S/A", 
@@ -670,6 +663,181 @@ static void sapp_fs3_destroy(sapp_global_t *global_paramters)
 	return;
 }
 
+void sapp_fs4_metric_set(int column_idx, int column_idy, long long value)
+{
+	sapp_gval_individual_fixed_fs4_t *fs4_rt = &sapp_global_val->individual_fixed.fs4_runtime;
+	if(fs4_rt->fs_metric_handle!=NULL)
+	{
+		fieldstat_easy_counter_set(fs4_rt->fs_metric_handle, 
+								0,
+								fs4_rt->metrics_ids[column_idx][column_idy], 
+								NULL,
+								0,
+								value);
+	}
+	return;
+}
+
+void sapp_fs4_metric_incrby(int column_idx, int column_idy,long long value)
+{
+	sapp_gval_individual_fixed_fs4_t *fs4_rt = &sapp_global_val->individual_fixed.fs4_runtime;
+	if(fs4_rt->fs_metric_handle!=NULL)
+	{
+		fieldstat_easy_counter_incrby(fs4_rt->fs_metric_handle, 
+								0,
+								fs4_rt->metrics_ids[column_idx][column_idy], 
+								NULL,
+								0,
+								value);
+	}
+	return;
+}
+
+static int sapp_fs4_init(sapp_global_t *global_paramters)
+{
+	sapp_config_profiling_metric_t *fs4_para = &global_paramters->config.profiling.fs4;
+	sapp_gval_individual_fixed_fs4_t *fs4_rt = &global_paramters->individual_fixed.fs4_runtime;
+
+	fs4_rt->fs_metric_handle = fieldstat_easy_new(1, fs4_para->app_name, NULL, 0);
+	if(fs4_rt->fs_metric_handle == NULL)
+	{
+		return -1;
+	}
+	struct fieldstat_easy *fs4_handle = fs4_rt->fs_metric_handle;
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_RCV_LINE] = fieldstat_easy_register_counter(fs4_handle, "Line_Pkt");
+	fs4_rt->metrics_ids[1][SAPP_STAT_RCV_LINE] = fieldstat_easy_register_counter(fs4_handle, "Line_Bit");								
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_RCV_ETHERNET] = fieldstat_easy_register_counter(fs4_handle, "Eth_Pkt");
+	fs4_rt->metrics_ids[1][SAPP_STAT_RCV_ETHERNET] = fieldstat_easy_register_counter(fs4_handle, "Eth_Bit");	
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_ETH_INBOUND] = fieldstat_easy_register_counter(fs4_handle, "Pkt_Inbound");
+	fs4_rt->metrics_ids[1][SAPP_STAT_ETH_INBOUND] = fieldstat_easy_register_counter(fs4_handle, "Bit_Inbound");	
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_ETH_OUTBOUND] = fieldstat_easy_register_counter(fs4_handle, "Pkt_Outbound");
+	fs4_rt->metrics_ids[1][SAPP_STAT_ETH_OUTBOUND] = fieldstat_easy_register_counter(fs4_handle, "Bit_Outbound");	
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_RCV_UNKNOWN] = fieldstat_easy_register_counter(fs4_handle, "Unknown_Pkt");
+	fs4_rt->metrics_ids[1][SAPP_STAT_RCV_UNKNOWN] = fieldstat_easy_register_counter(fs4_handle, "Unknown_Bit");
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_SND_ERROR] = fieldstat_easy_register_counter(fs4_handle, "Snd_Err_Pkt");
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_RCV_IPV4] = fieldstat_easy_register_counter(fs4_handle, "Ipv4_Pkt");
+	fs4_rt->metrics_ids[1][SAPP_STAT_RCV_IPV4] = fieldstat_easy_register_counter(fs4_handle, "Ipv4_Bit");
+
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_RCV_IPV6] = fieldstat_easy_register_counter(fs4_handle, "Ipv6_Pkt");
+	fs4_rt->metrics_ids[1][SAPP_STAT_RCV_IPV6] = fieldstat_easy_register_counter(fs4_handle, "Ipv6_Bit");
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_RCV_TCP] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Pkt");
+	fs4_rt->metrics_ids[1][SAPP_STAT_RCV_TCP] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Bit");
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_RCV_DUP_TCP] = fieldstat_easy_register_counter(fs4_handle, "Dup_Tcp_Pkt");
+	fs4_rt->metrics_ids[1][SAPP_STAT_RCV_DUP_TCP] = fieldstat_easy_register_counter(fs4_handle, "Dup_Tcp_Bit");
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_LOST_PKT_STREAM_NUM] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Lost_STM");
+
+	fs4_rt->metrics_ids[1][SAPP_STAT_TCP_LOST_PKT] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Lost_Bit");
+
+	//fs4_rt->metrics_ids[0][SAPP_STAT_DUP_IDENTIFY_ERR] = fieldstat_easy_register_counter(fs4_handle, "Dup_Key_Err");
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_CLOSE_BY_TIMEOUT] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Close_byT");
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_CLOSE_BY_KICKOUT] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Close_byK");
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_RCV_UDP] = fieldstat_easy_register_counter(fs4_handle, "Udp_Pkt");
+	fs4_rt->metrics_ids[1][SAPP_STAT_RCV_UDP] = fieldstat_easy_register_counter(fs4_handle, "Udp_Bit");
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_RCV_DUP_UDP] = fieldstat_easy_register_counter(fs4_handle, "Dup_Udp_Pkt");
+	fs4_rt->metrics_ids[1][SAPP_STAT_RCV_DUP_UDP] = fieldstat_easy_register_counter(fs4_handle, "Dup_Udp_Bit");
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_CLOSE_BY_TIMEOUT] = fieldstat_easy_register_counter(fs4_handle, "Udp_Close_byT");
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_CLOSE_BY_KICKOUT] = fieldstat_easy_register_counter(fs4_handle, "Udp_Close_byK");							
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_NEW] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Link_New");
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_DEL] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Link_Del");		
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_DATA] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Concurrent");		
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_NEW] = fieldstat_easy_register_counter(fs4_handle, "Udp_Link_New");
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_DEL] = fieldstat_easy_register_counter(fs4_handle, "Udp_Link_Del");		
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_MORE] = fieldstat_easy_register_counter(fs4_handle, "Udp_Concurrent");	
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_DOUBLE] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Link_Double");
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_C2S] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Link_C2S");		
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_S2C] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Link_S2C");	
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Link_Double_ALL");
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_C2S] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Link_C2S_ALL");		
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_S2C] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Link_S2C_ALL");	
+								
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_DOUBLE] = fieldstat_easy_register_counter(fs4_handle, "Udp_Link_Double");
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_C2S] = fieldstat_easy_register_counter(fs4_handle, "Udp_Link_C2S");		
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_S2C] = fieldstat_easy_register_counter(fs4_handle, "Udp_Link_S2C");	
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE] = fieldstat_easy_register_counter(fs4_handle, "Udp_Link_Double_ALL");
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_C2S] = fieldstat_easy_register_counter(fs4_handle, "Udp_Link_C2S_ALL");		
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_S2C] = fieldstat_easy_register_counter(fs4_handle, "Udp_Link_S2C_ALL");	
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_SND_TCP_RST] = fieldstat_easy_register_counter(fs4_handle, "Send_Tcp_Rst");
+	fs4_rt->metrics_ids[0][SAPP_STAT_SND_TCP_SYNACK] = fieldstat_easy_register_counter(fs4_handle, "Send_Tcp_S/A");		
+	fs4_rt->metrics_ids[0][SAPP_STAT_SND_UDP] = fieldstat_easy_register_counter(fs4_handle, "Send_Udp");	
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_GLOBAL_BYPASS] = fieldstat_easy_register_counter(fs4_handle, "DDOS_Bypass");	
+	
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_BYPASS_STREAM] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Bypass_STM");
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_BYPASS_PKTS] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Bypass_Pkt");		
+	fs4_rt->metrics_ids[1][SAPP_STAT_TCP_BYPASS_BYTES] = fieldstat_easy_register_counter(fs4_handle, "Tcp_Bypass_Bit");		
+								
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_BYPASS_STREAM] = fieldstat_easy_register_counter(fs4_handle, "Udp_Bypass_STM");
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_BYPASS_PKTS] = fieldstat_easy_register_counter(fs4_handle, "Udp_Bypass_Pkt");		
+	fs4_rt->metrics_ids[1][SAPP_STAT_UDP_BYPASS_BYTES] = fieldstat_easy_register_counter(fs4_handle, "Udp_Bypass_Bit");			
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_DUP_KICK_STREAM] = fieldstat_easy_register_counter(fs4_handle, "Udp_DUP_STM");
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_OPENING_OVERSPEED] = fieldstat_easy_register_counter(fs4_handle, "Tcp_OPEN_SPD");		
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_OPENING_OVERSPEED] = fieldstat_easy_register_counter(fs4_handle, "Udp_OPEN_SPD");
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_TIMEOUTS_OVERSPEED] = fieldstat_easy_register_counter(fs4_handle, "Tcp_TIMED_SPD");		
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_TIMEOUTS_OVERSPEED] = fieldstat_easy_register_counter(fs4_handle, "Udp_TIMED_SPD");							
+	fs4_rt->metrics_ids[0][SAPP_STAT_TCP_TRY_TIMEOUTS] = fieldstat_easy_register_counter(fs4_handle, "Tcp_TRY_TIMED");		
+	fs4_rt->metrics_ids[0][SAPP_STAT_UDP_TRY_TIMEOUTS] = fieldstat_easy_register_counter(fs4_handle, "Udp_TRY_TIMED");								
+
+
+	const sapp_dup_pkt_t *dup_cfg = &global_paramters->config.packet_io.dup_pkt_para;
+	if (dup_cfg->kickout_udp_stream_enabled 
+	  || dup_cfg->dup_pkt_distinguish_ipv4_tcp 
+	  || dup_cfg->dup_pkt_distinguish_ipv4_udp 
+	  || dup_cfg->dup_pkt_distinguish_all_inject)
+	{
+		fs4_rt->metrics_ids[0][SAPP_STAT_BM_HASH_NUM] = fieldstat_easy_register_counter(fs4_handle, "BM_HASH_NUM");
+
+		fs4_rt->metrics_ids[0][SAPP_STAT_BM_EXPAND_NUM] = fieldstat_easy_register_counter(fs4_handle, "BM_EXPAND");
+		fs4_rt->metrics_ids[0][SAPP_STAT_BM_SLICE_NUM_NEW] = fieldstat_easy_register_counter(fs4_handle, "BM_SLICE_NEW");
+		fs4_rt->metrics_ids[0][SAPP_STAT_BM_SLICE_NUM_FREE] = fieldstat_easy_register_counter(fs4_handle, "BM_SLICE_FREE");
+		fs4_rt->metrics_ids[0][SAPP_STAT_BM_CUR_SLICE_NUM] = fieldstat_easy_register_counter(fs4_handle, "BM_MAX_SLICE");
+		fs4_rt->metrics_ids[0][SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE] = fieldstat_easy_register_counter(fs4_handle, "APBM_EXPAND_MULTIPLE");
+		fs4_rt->metrics_ids[0][SAPP_STAT_DABM_RESIZE_MAX_RATIO] = fieldstat_easy_register_counter(fs4_handle, "DABM_MAX_RESIZE_RATIO");
+	}	
+	return 0;
+}
+
+static int sapp_fs4_start(sapp_global_t *global_paramters)
+{
+	sapp_config_profiling_metric_t *fs4_para = &global_paramters->config.profiling.fs4;
+	sapp_gval_individual_fixed_fs4_t *fs4_rt = &global_paramters->individual_fixed.fs4_runtime;
+	struct fieldstat_easy *fs4_handle = fs4_rt->fs_metric_handle;
+
+	fieldstat_easy_enable_auto_output(fs4_handle, ABBR_FS4_LOG_DATA_FILE, fs4_para->refresh_interval_s);
+	fieldstat_easy_enable_delta_in_active_output(fs4_handle);
+	return 0;
+}
+
+
+static void sapp_fs4_destroy(sapp_global_t *global_paramters)
+{
+	sapp_gval_individual_fixed_fs4_t *fs4_rt = &global_paramters->individual_fixed.fs4_runtime;
+	fieldstat_easy_free(fs4_rt->fs_metric_handle);
+}
 
 int sapp_metric_init(void)
 {
@@ -682,6 +850,10 @@ int sapp_metric_init(void)
 	{
 		sapp_fs3_init(sapp_global_val);
 	}
+	if( sapp_global_val->config.profiling.fs4.enabled == 1)
+	{
+		sapp_fs4_init(sapp_global_val);
+	}	
 	if( sapp_global_val->config.profiling.histogram_enabled == 1)
 	{
 		sapp_process_latency_metric_init(sapp_global_val);
@@ -701,6 +873,10 @@ int sapp_metric_start(void)
 	{
 		sapp_fs3_start(sapp_global_val);
 	}
+	if( sapp_global_val->config.profiling.fs4.enabled == 1)
+	{
+		sapp_fs4_start(sapp_global_val);
+	}	
 	if( sapp_global_val->config.profiling.histogram_enabled == 1)
 	{
 		if(sapp_global_val->individual_fixed.fs2_runtime.fs_process_lantency_handle)
@@ -722,6 +898,10 @@ void sapp_metric_destroy(void)
 	{
 		sapp_fs3_destroy(sapp_global_val);
 	}
+	if( sapp_global_val->config.profiling.fs4.enabled == 1)
+	{
+		sapp_fs4_destroy(sapp_global_val);
+	}	
 	if( sapp_global_val->config.profiling.histogram_enabled == 1)
 	{
 		if (sapp_global_val->individual_fixed.fs2_runtime.fs_process_lantency_handle)

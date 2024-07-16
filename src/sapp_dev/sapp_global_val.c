@@ -18,62 +18,62 @@ extern char g_cmd_args_main_cfg_file[PATH_MAX];
 extern int g_sapp_global_mem_used_block;
 extern int g_sapp_global_mem_used_bytes;
 
-/* ²âÊÔÊ±ÏÈÊ¹ÓÃÈ«¾Ö±äÁ¿, ÒÔºó¶¯Ì¬¶ÁÈ¡ÅäÖÃÎÄ¼þ,
-   overlay²ã¶¨Òå, ±ÈÈçvxlanµÄ»·¾³ÏÂ, overlay°üÀ¨ËÄ²ã, eth[0], ipv4[1], udp[2], vxlan[3], ÕâÐ©²ã²»ÊÇÔ­Ê¼°üÄÚÈÝ, ÊÇÎªÁË±ãÓÚ·ÖÁ÷ÉúÔì³öÀ´µÄ²ã, ²»ÄÜµ÷ÓÃ²å¼þ, 
-   µ«Êµ¼Ê»Ø×¢¡¢·¢°üÊ±Ò²ÒªÐ¯´ø,
+/* ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ê¹ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½, ï¿½Ôºï¿½Ì¬ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½,
+   overlayï¿½ã¶¨ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½vxlanï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½, overlayï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½, eth[0], ipv4[1], udp[2], vxlan[3], ï¿½ï¿½Ð©ï¿½ã²»ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Îªï¿½Ë±ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½, ï¿½ï¿½ï¿½Üµï¿½ï¿½Ã²ï¿½ï¿½, 
+   ï¿½ï¿½Êµï¿½Ê»ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Ò²ÒªÐ¯ï¿½ï¿½,
 
-   TODO, ÄÇvxlan±£»î²å¼þÔõÃ´°ì?  
-   ½«gdev_keepaliveÄ£¿éÒÆµ½sappÄÚ²¿, ²»×÷Îª²å¼þ.so¹ÒÔØ, Ê¹ÓÃsapp.toml¿ª¹Ø¿ØÖÆ¶ø²»ÊÇ¿¿plug conflist¿ØÖÆ.
+   TODO, ï¿½ï¿½vxlanï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã´ï¿½ï¿½?  
+   ï¿½ï¿½gdev_keepaliveÄ£ï¿½ï¿½ï¿½Æµï¿½sappï¿½Ú²ï¿½, ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½.soï¿½ï¿½ï¿½ï¿½, Ê¹ï¿½ï¿½sapp.tomlï¿½ï¿½ï¿½Ø¿ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½plug conflistï¿½ï¿½ï¿½ï¿½.
 
-   TODO: ÒÆ¶¯µ½È«¾Ö±äÁ¿sapp_global_valÖÐ.
+   TODO: ï¿½Æ¶ï¿½ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½sapp_global_valï¿½ï¿½.
 */
 int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];    
 
 /* 
-   ×¢Èë°üÐÞ¼ô²ã¶¨Òå, ¼´·¢°üÊ±Ìø¹ý´Ë²ã, 
-   mirrorÄ£Ê½ÏÂ, ²¶°üºÍ×¢Èëµã²»Ò»ÑùÊ±, ·¢rst°üÒªÌø¹ývlan, mpls, gtpµÈ²ã, 
-   ÒòÎª²»Ïñoverlay, overlay¸ñÊ½¿Ï¶¨ÊÇÔ¤ÏÈ¹æ¶¨ºÃµÄ, µ«ÕæÊµÁ÷Á¿²»Ò»¶¨ÄÜÔ¤ÏÈÖ¸¶¨Ä³¸öÐ­ÒéÔÚÄÄ²ã, 
-   ËùÒÔÖ§³ÖÄ£ºý²ãÊý, ÓÃ*±íÊ¾, Èçvlan[*], gtp[*]µÈ, ±íÊ¾·¢°üÊ±°üÀ¨´Ë²ã¿Ï¶¨Ìø¹ý, ²»ÂÛÔÚÄÄÒ»²ã,
-   Èç¹ûÊÇip-in-ip, ip-gre-ip, 4over6, 6over4ÕâÀàËíµÀ, ÏëÌø¹ýÍâ²ãipÖ±½Ó×¢ÈëÄÚ²ãipºÍËÄÔª×é, ÊÇ·Ç³£Î£ÏÕµÄ, 
-   ÒòÎª¼´²»ÄÜÐ´³Éip[*], Ò²²»ÄÜÐ´³Éip[1], ip[2]ÕâÖÖ, »á°Ñ²»º¬ËíµÀµÄ´¿ip/tcp°ü¸ãÂÒ, 
+   ×¢ï¿½ï¿½ï¿½ï¿½Þ¼ï¿½ï¿½ã¶¨ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½, 
+   mirrorÄ£Ê½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ã²»Ò»ï¿½ï¿½Ê±, ï¿½ï¿½rstï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½vlan, mpls, gtpï¿½È²ï¿½, 
+   ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½overlay, overlayï¿½ï¿½Ê½ï¿½Ï¶ï¿½ï¿½ï¿½Ô¤ï¿½È¹æ¶¨ï¿½Ãµï¿½, ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½Ö¸ï¿½ï¿½Ä³ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½, 
+   ï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½*ï¿½ï¿½Ê¾, ï¿½ï¿½vlan[*], gtp[*]ï¿½ï¿½, ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½Ï¶ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½,
+   ï¿½ï¿½ï¿½ï¿½ï¿½ip-in-ip, ip-gre-ip, 4over6, 6over4ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ipÖ±ï¿½ï¿½×¢ï¿½ï¿½ï¿½Ú²ï¿½ipï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½, ï¿½Ç·Ç³ï¿½Î£ï¿½Õµï¿½, 
+   ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ip[*], Ò²ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ip[1], ip[2]ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ñ²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä´ï¿½ip/tcpï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, 
 
-   ËùÒÔÉèÖÃ³ÉÒ»¸öµØÖ·²ãÊý×é, ±ØÐëÍ¬Ê±·ûºÏÖ¸¶¨Êý×éËùÓÐ²ã, ²ÅÌø¹ý.
+   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã³ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
 */
 
 /*
-	·¢°üÊ±±ØÐëÍ¬Ê±Âú×ãÒ»ÌõÍêÕûµÄpruneÁ´²ÅÌø¹ý, Ë³ÐòÊÇ´Óinternalµ½external, 
-	×î¶à¿ÉÖ§³ÖNÌõÌø²ãÅäÖÃ,   mirrorÄ£Ê½ÏÂ, ×îµ×²ãµÄethernetÐ´²»Ð´¶¼¿ÉÒÔ, 
+	ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pruneï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ë³ï¿½ï¿½ï¿½Ç´ï¿½internalï¿½ï¿½external, 
+	ï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½Nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,   mirrorÄ£Ê½ï¿½ï¿½, ï¿½ï¿½×²ï¿½ï¿½ethernetÐ´ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, 
 
-	±ÈÈçÎÀÐÇÏîÄ¿gtpÔ­Ê¼°ü²ãÊýÎª:     ethernet/ipv4/udp/gtp/ipv4/tcp/http, Ìø¹ýgtpµÄÅäÖÃ: "gtp[3],udp[2],ip[1]", 
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿gtpÔ­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª:     ethernet/ipv4/udp/gtp/ipv4/tcp/http, ï¿½ï¿½ï¿½ï¿½gtpï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: "gtp[3],udp[2],ip[1]", 
 
-	±ÈÈçÄ³GREËíµÀÔ­Ê¼°ü²ãÊýÎª: ethernet/ipv4/gre/ipv4/udp/dns,   Ìø¹ý×îÍâ²ãËíµÀµÄÅäÖÃ: "gre[2],ip[1]", 
-	TODO: ÒÆ¶¯µ½È«¾Ö±äÁ¿sapp_global_valÖÐ.
+	ï¿½ï¿½ï¿½ï¿½Ä³GREï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª: ethernet/ipv4/gre/ipv4/udp/dns,   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: "gre[2],ip[1]", 
+	TODO: ï¿½Æ¶ï¿½ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½sapp_global_valï¿½ï¿½.
 */
 
 embed_layer_t g_prune_inject_layer_set[SAPP_PRUNE_LAYER_NUM_MAX];
 
 
 /*
-	ÃèÊöÄÄÐ©²ãÊÇ·Ç¶Ô³Æ´æÔÚ²ã, ¼´C2SºÍS2C·½ÏòÓÐ¿ÉÄÜÃ»ÓÐÕâÒ»²ã,µ¼ÖÂ´´½¨Á÷compare_addrÊ±Á½²à²»¶Ô³Æ, ÐèÒª´´½¨Ò»¸ö¿Õ²ã, µ«×¢Èë°üÊ±ÓÈÆä×¢Òâ, ÐèÒªÌø¹ý. 
-	TODO: ÒÆ¶¯µ½È«¾Ö±äÁ¿sapp_global_valÖÐ.
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð©ï¿½ï¿½ï¿½Ç·Ç¶Ô³Æ´ï¿½ï¿½Ú²ï¿½, ï¿½ï¿½C2Sï¿½ï¿½S2Cï¿½ï¿½ï¿½ï¿½ï¿½Ð¿ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½,ï¿½ï¿½ï¿½Â´ï¿½ï¿½ï¿½ï¿½ï¿½compare_addrÊ±ï¿½ï¿½ï¿½à²»ï¿½Ô³ï¿½, ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Õ²ï¿½, ï¿½ï¿½×¢ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½, ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½. 
+	TODO: ï¿½Æ¶ï¿½ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½sapp_global_valï¿½ï¿½.
 */
 asymmetric_presence_layer_t g_asymmetric_presence_layer_set[__ADDR_TYPE_MAX];    
 
 
 /*
-	Óëg_asymmetric_presence_layer_setº¬Òå²»Í¬, ÃèÊöÄÄÐ©²ãÊÇ²ãÊýÒ»Ñùµ«Ë«ÏòµØÖ·²»Ò»ÖÂµÄ²ã, 
-	¼´C2SºÍS2C·½ÏòµÄ²ãÊýËäÈ»ÊÇÒ»ÑùµÄ,µ«Ë«ÏòµÄµØÖ·²»Ò»Ñù, ³£¼ûµÄÈçgtp, gre, mplsµÈ, ethernet, vlanÒ²ÓÐ¿ÉÄÜ.
-	Èç¹û·´Ïò×¢ÈëÊý¾Ý°ü, ±ØÐëÊÇË«ÏòÁ÷, 
-	ÐèÒª¸üÐÂ¶Ô²àÐÅÏ¢, ×¢Èë°üÊ±ÓÈÆä×¢Òâ. 
-	Èç¹ûÊÇµ¥ÏòÁ÷, ÇÒ¿ªÆô´ËÏîÅäÖÃ, ·´Ïò×¢Èë°üÊÇÊ§°ÜµÄ!!
-	TODO: ÒÆ¶¯µ½È«¾Ö±äÁ¿sapp_global_valÖÐ.
+	ï¿½ï¿½g_asymmetric_presence_layer_setï¿½ï¿½ï¿½å²»Í¬, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð©ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ë«ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ò»ï¿½ÂµÄ²ï¿½, 
+	ï¿½ï¿½C2Sï¿½ï¿½S2Cï¿½ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½È»ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½Ë«ï¿½ï¿½Äµï¿½Ö·ï¿½ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½gtp, gre, mplsï¿½ï¿½, ethernet, vlanÒ²ï¿½Ð¿ï¿½ï¿½ï¿½.
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë«ï¿½ï¿½ï¿½ï¿½, 
+	ï¿½ï¿½Òªï¿½ï¿½ï¿½Â¶Ô²ï¿½ï¿½ï¿½Ï¢, ×¢ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½. 
+	ï¿½ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ò¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Üµï¿½!!
+	TODO: ï¿½Æ¶ï¿½ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½sapp_global_valï¿½ï¿½.
 */
 embed_layer_t g_asymmetric_addr_layer_set; 
 
 
 /* 
-    ÓÃÓÚÖ¸¶¨ÄÄÐ©Ð­Òé²ã×÷ÎªµØÖ·²ÎÊý, ÓÃÓÚÎ¨Ò»È·¶¨Ò»¸öÁ÷, ±ÈÈç²»Í¬ËíµÀÄÚ¶¼Ê¹ÓÃË½ÓÐµØÖ·Ê±, ÊÇÓÐ¿ÉÄÜ³åÍ»µÄ, Ó¦¸Ã°Ñµ×²ãvlan,mplsµÈ²ãÒ²×÷ÎªµØÖ·±È½Ï²ÎÊý,
-    TODO: ÒÆ¶¯µ½È«¾Ö±äÁ¿sapp_global_valÖÐ.
+    ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ð©Ð­ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Î¨Ò»È·ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ç²»Í¬ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½Ê¹ï¿½ï¿½Ë½ï¿½Ðµï¿½Ö·Ê±, ï¿½ï¿½ï¿½Ð¿ï¿½ï¿½Ü³ï¿½Í»ï¿½ï¿½, Ó¦ï¿½Ã°Ñµ×²ï¿½vlan,mplsï¿½È²ï¿½Ò²ï¿½ï¿½Îªï¿½ï¿½Ö·ï¿½È½Ï²ï¿½ï¿½ï¿½,
+    TODO: ï¿½Æ¶ï¿½ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½sapp_global_valï¿½ï¿½.
 */
 embed_layer_t g_stream_compare_layer_set; 
 
@@ -121,7 +121,7 @@ static void sapp_include_header_check_file(const char *file_name, const char *st
 	return;
 }
 
-/* ¼ì²âµ±Ç°ÔËÐÐ»·¾³ÏÂµÄ.hÓë±àÒë»·¾³ÊÇ·ñÒ»ÖÂ */
+/* ï¿½ï¿½âµ±Ç°ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½ï¿½Âµï¿½.hï¿½ï¿½ï¿½ï¿½ë»·ï¿½ï¿½ï¿½Ç·ï¿½Ò»ï¿½ï¿½ */
 void sapp_include_header_check(void)
 {
 	const char *hdr_dir;
@@ -187,7 +187,7 @@ static inline int mem_alignment_pad(int size)
 
 void sapp_global_val_sanity_check(void)
 {
-	/* ¶àÏß³ÌÈ«¾Ö±äÁ¿size±ØÐëÊÇ64×Ö½ÚÕûÊý±¶, ·ñÔò¶àºËcache»º´æ³åÍ», ¼«´óÓ°ÏìÐÔÄÜ */
+	/* ï¿½ï¿½ï¿½ß³ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½sizeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½64ï¿½Ö½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½cacheï¿½ï¿½ï¿½ï¿½ï¿½Í», ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	if((sizeof(struct sapp_global_mthread_t) % 64) != 0){
 		printf("\033[1;31;40msizeof(struct sapp_global_mthread_t)=%zu, is not multiple of 64B!\033[0m\n", sizeof(struct sapp_global_mthread_t));
 		printf("\033[1;31;40mYou must add %d bytes padding to sapp_global_mthread_t!\033[0m\n", mem_alignment_pad(sizeof(struct sapp_global_mthread_t)));
@@ -224,7 +224,7 @@ void sapp_gval_init(void)
 {
 	int tseq;
 
-	/* ÄÚ´æÍ³¼ÆµÄÊý¾Ý×ÔÉí¾ÍÊÇ´æ´¢ÔÚÈ«¾Ö±äÁ¿ÖÐ, ÕâÊÇÏÈÓÐ¼¦»¹ÊÇÏÈÓÐµ°µÄÎÊÌâ, ´Ë´¦Ö±½ÓÓÃÏµÍ³µÄcalloc, ¶ÀÁ¢¼ÆÊý */
+	/* ï¿½Ú´ï¿½Í³ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç´æ´¢ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ë´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½calloc, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	sapp_global_val = (sapp_global_t *)calloc(1, sizeof(sapp_global_t));
 	g_sapp_global_mem_used_block++;
 	g_sapp_global_mem_used_bytes += sizeof(sapp_global_t);
@@ -235,7 +235,7 @@ void sapp_gval_init(void)
 	
 	for(tseq = 0; tseq < SAPP_MAX_THREADS; tseq++){
 		sapp_global_val->mthread_volatile[tseq] = (sapp_gval_mthread_t *)calloc(1, sizeof(sapp_gval_mthread_t));
-		sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[tseq] = -1; /* ³õÊ¼»¯ÉèÖÃÎª-1, ±íÊ¾Ã»°ó¶¨µ½ÈÎºÎÒ»¸öcpu core */
+		sapp_global_val->individual_fixed.cpu_bind_core_id_per_thread[tseq] = -1; /* ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª-1, ï¿½ï¿½Ê¾Ã»ï¿½ó¶¨µï¿½ï¿½Îºï¿½Ò»ï¿½ï¿½cpu core */
 		g_sapp_global_mem_used_block++;
 		g_sapp_global_mem_used_bytes += sizeof(sapp_gval_mthread_t);
 	}
@@ -261,7 +261,7 @@ void sapp_gval_destroy(void)
 			SAPP_GLOBAL_FREE(free_opt);
 		}
 		
-		SAPP_GLOBAL_FREE(sapp_global_val->cla.cmd_args_array);//´Ë´¦Ê¹ÓÃÁËrealloc×·¼Ó, ÒªÓÃsapp_mem_free()
+		SAPP_GLOBAL_FREE(sapp_global_val->cla.cmd_args_array);//ï¿½Ë´ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½realloc×·ï¿½ï¿½, Òªï¿½ï¿½sapp_mem_free()
 		if (sapp_global_val->cla.dumpfie_list_array)
 		{
 			int num = 0;
@@ -316,6 +316,8 @@ void sapp_gval_destroy(void)
 	SAPP_GLOBAL_FREE(pdata->data_sapp_fs2_log_absolute);
 	SAPP_GLOBAL_FREE(pdata->data_sapp_fs3_log_relative);
 	SAPP_GLOBAL_FREE(pdata->data_sapp_fs3_log_absolute);
+	SAPP_GLOBAL_FREE(pdata->data_sapp_fs4_log_relative);
+	SAPP_GLOBAL_FREE(pdata->data_sapp_fs4_log_absolute);
 	SAPP_GLOBAL_FREE(pdata->data_sapp_fs2_process_latency_absolute);
 	SAPP_GLOBAL_FREE(pdata->data_sapp_fs2_process_latency_relative);
 	SAPP_GLOBAL_FREE(pdata->data_inline_keepalive_log_relative);
@@ -333,15 +335,15 @@ void sapp_gval_destroy(void)
 	SAPP_GLOBAL_FREE(sapp_global_val->config.tools.pkt_dump.bpf_filter);
 	SAPP_GLOBAL_FREE(sapp_global_val->config.tools.pkt_dump.storge_path);
 
-	/* individual_volatile, sapp_global_val×îºófree */
+	/* individual_volatile, sapp_global_valï¿½ï¿½ï¿½free */
 	if(sapp_global_val->individual_volatile){
-		free(sapp_global_val->individual_volatile); /* ³õÊ¼»¯Ê±ÓÃcalloc, ´Ë´¦Ö»ÄÜÓÃfree */
+		free(sapp_global_val->individual_volatile); /* ï¿½ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½calloc, ï¿½Ë´ï¿½Ö»ï¿½ï¿½ï¿½ï¿½free */
 		g_sapp_global_mem_used_block--;
 		g_sapp_global_mem_used_bytes -= sizeof(sapp_gval_individual_volatile_t);
 	}
 
 	for(tseq = 0; tseq < SAPP_MAX_THREADS; tseq++){
-		free(sapp_global_val->mthread_volatile[tseq]); /* ³õÊ¼»¯Ê±ÓÃcalloc, ´Ë´¦Ö»ÄÜÓÃfree */
+		free(sapp_global_val->mthread_volatile[tseq]); /* ï¿½ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½calloc, ï¿½Ë´ï¿½Ö»ï¿½ï¿½ï¿½ï¿½free */
 		g_sapp_global_mem_used_block--;
 		g_sapp_global_mem_used_bytes -= sizeof(sapp_gval_mthread_t);
 	}	

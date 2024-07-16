@@ -1396,6 +1396,16 @@ int sapp_get_secondary_file_path(void)
 		pconfig->data_file_path.data_sapp_fs2_log_relative = sapp_strdup(pconfig->profiling.fs2.local_file);
 	}
 
+	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs4", (char *)"local_file", pconfig->profiling.fs4.local_file, NAME_MAX, "");
+	if (strlen(pconfig->profiling.fs4.local_file) > 0)
+	{
+		if (pconfig->data_file_path.data_sapp_fs4_log_relative)
+		{
+			SAPP_GLOBAL_FREE(pconfig->data_file_path.data_sapp_fs4_log_relative);
+		}
+		pconfig->data_file_path.data_sapp_fs4_log_relative = sapp_strdup(pconfig->profiling.fs4.local_file);
+	}
+
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"local_file", pconfig->profiling.fs3.local_file, NAME_MAX, "");
 	if (strlen(pconfig->profiling.fs3.local_file) > 0)
 	{
@@ -1744,6 +1754,13 @@ int sapp_parse_config(void)
 		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"refresh_interval_s", (int *)&pconfig->profiling.fs3.refresh_interval_s, 2);
 		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"prometheus_url_path", pconfig->profiling.fs3.prometheus_service_uri, NAME_MAX, "");
 		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs3", (char *)"app_name", pconfig->profiling.fs3.app_name, NAME_MAX, "sapp4");
+	}
+
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs4", (char *)"enabled", (int *)&pconfig->profiling.fs4.enabled, 0);
+	if(pconfig->profiling.fs4.enabled)
+	{
+		tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs4", (char *)"refresh_interval_s", (int *)&pconfig->profiling.fs4.refresh_interval_s, 2);
+		tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.metric.fs4", (char *)"app_name", pconfig->profiling.fs4.app_name, NAME_MAX, "sapp4");
 	}
 
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"profiling.process_latency", (char *)"histogram_enabled", (int *)&pconfig->profiling.histogram_enabled, 0);

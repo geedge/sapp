@@ -23,7 +23,7 @@ extern volatile long long g_current_time_ms;
 
 #define MAX_DEFALUT_TIMEOUT_S 86400
 
-/* ÒòÇ¶Ì×²ã´ÎÌ«¶à, Ê¹ÓÃ¼ò³ÆÃèÊö */
+/* ï¿½ï¿½Ç¶ï¿½×²ï¿½ï¿½Ì«ï¿½ï¿½, Ê¹ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 #define ABBR_SAPP_LOG_HANDLE 	sapp_global_val->individual_fixed.log_handle
 
 #define ABBR_SAPP_PLUGIN_LOG_HANDLE 	sapp_global_val->individual_fixed.plugin_log_handle
@@ -57,13 +57,14 @@ extern volatile long long g_current_time_ms;
 #define ABBR_SYSINFO_LOG_DATA_FILE		sapp_global_val->config.data_file_path.data_sapp_sysinfo_log_absolute
 #define ABBR_FS2_LOG_DATA_FILE			sapp_global_val->config.data_file_path.data_sapp_fs2_log_absolute
 #define ABBR_FS3_LOG_DATA_FILE			sapp_global_val->config.data_file_path.data_sapp_fs3_log_absolute
+#define ABBR_FS4_LOG_DATA_FILE			sapp_global_val->config.data_file_path.data_sapp_fs4_log_absolute
 #define ABBR_PROCESS_LATENTCY_DATA_FILE			sapp_global_val->config.data_file_path.data_sapp_fs2_process_latency_absolute
 #define ABBR_INLINE_KEEPALIVE_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_inline_keepalive_log_absolute
 #define ABBR_LOAD_PLUG_STAT_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_load_plugin_stat_log_absolute
 #define ABBR_MARSIO_LIBRARY_FILE  	sapp_global_val->config.library_file_path.libmarsio_file_path
 #define ABBR_MEMORY_STAT_LOG_DATA_FILE  sapp_global_val->config.data_file_path.data_memory_stat_log_absolute
 
-/* ½«Ö®Ç°·ÖÉ¢µÄÈ«¾Ö±äÁ¿Ç¿ÖÆ¸üÐÂÎªÐÂµÄÈ«¾Ö±äÁ¿ */
+/* ï¿½ï¿½Ö®Ç°ï¿½ï¿½É¢ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½Ç¿ï¿½Æ¸ï¿½ï¿½ï¿½Îªï¿½Âµï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½ */
 #define g_CurrentTime_ms		g_current_time_ms
 #define g_CurrentTime 			g_current_time
 #define g_sapp_log_handle		sapp_global_val->individual_fixed.log_handle
@@ -137,6 +138,9 @@ void sapp_fs2_set_plug_entry_latency(int entry_id, long long time_cost);
 
 void sapp_fs3_metric_incrby(int column_idx, int column_idy,long long value);
 void sapp_fs3_metric_set(int metric_idx, int metric_idy, long long value);
+
+void sapp_fs4_metric_incrby(int column_idx, int column_idy,long long value);
+void sapp_fs4_metric_set(int metric_idx, int metric_idy, long long value);
 
 int sapp_independent_thread_init(void);
 

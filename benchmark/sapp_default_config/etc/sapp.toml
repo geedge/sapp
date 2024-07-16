@@ -200,6 +200,11 @@
         refresh_interval_s=1
         app_name="sapp4"
 
+        [profiling.metric.fs4]
+        enabled=1
+        local_file="./metrics/fs4_sysinfo.json"
+        refresh_interval_s=1
+        app_name="sapp4"
 
     [profiling.process_latency]
     log_category="sapp_process_latency_log"
