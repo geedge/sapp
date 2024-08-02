@@ -64,7 +64,7 @@ static const unsigned short INIT_SPORT = 0x1234;
 static const unsigned short INIT_DPORT = 0x4321;
 
 static struct fieldstat_easy *fs4_instance;
-static struct fieldstat_tag FS4_HISGRAM_TAG = {"bm_test", TAG_INTEGER , 0};
+static struct field FS4_HISGRAM_TAG = {"bm_test", FIELD_VALUE_INTEGER , 0};
 static int fs4_add_metric_id, fs4_check_true_metric_id, fs4_check_false_metric_id;
 static int fs4_expand_num_metric_id, fs4_slice_new_metric_id, fs4_slice_free_metric_id;
 

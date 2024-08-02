@@ -56,8 +56,8 @@ void sapp_fs2_set_plug_entry_latency(int entry_id, long long time_cost)
 }
 
 /*
-	Ä£ºı¼ÆËã°ü´¦ÀíÑÓÊ±, ²»ÓÃÃ¿¸ö°ü¶¼µ÷ÓÃÒ»´ÎFS_operate(),
-	ÓÉsapp timerÏß³ÌÃ¿¸ôÒ»¶ÎÊ±¼äµ÷ÓÃsapp_fuzzy_latency_update(), ¸üĞÂfiled_stat2¼ÆÊı.
+	Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±, ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½FS_operate(),
+	ï¿½ï¿½sapp timerï¿½ß³ï¿½Ã¿ï¿½ï¿½Ò»ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½sapp_fuzzy_latency_update(), ï¿½ï¿½ï¿½ï¿½filed_stat2ï¿½ï¿½ï¿½ï¿½.
 */
 extern "C" void sapp_fs2_fuzzy_latency_update_per_thread(int thead_seq, long long time_cost)
 {
@@ -99,7 +99,7 @@ extern "C" void sapp_fs2_fuzzy_latency_update_per_entry(int thead_seq, int entry
 
 
 /*
-	ÓÉsapp timer¶ÀÁ¢Ïß³Ìµ÷ÓÃ, Ã¿¸ôÒ»¶ÎÊ±¼ä, ½«»ıÀÛµÄ°ü´¦ÀíÑÓÊ±Êı¾İË¢ĞÂ¸øfield_stat2.
+	ï¿½ï¿½sapp timerï¿½ï¿½ï¿½ï¿½ï¿½ß³Ìµï¿½ï¿½ï¿½, Ã¿ï¿½ï¿½Ò»ï¿½ï¿½Ê±ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ÛµÄ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ë¢ï¿½Â¸ï¿½field_stat2.
 */
 void sapp_fuzzy_latency_update(void)
 {
@@ -117,9 +117,9 @@ void sapp_fuzzy_latency_update(void)
 
 		if(this_stat_count > 0){
 			memset(this_thread_stat, 0, sizeof(sapp_fuzzy_latency_stat_t));
-			this_thread_stat->min_time_cost = 999999999; /* Òª¼ÇÂ¼×îĞ¡Öµ, ³õÊ¼»¯ÒªÉè³É×î´óÖµ */
+			this_thread_stat->min_time_cost = 999999999; /* Òªï¿½ï¿½Â¼ï¿½ï¿½Ğ¡Öµ, ï¿½ï¿½Ê¼ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ */
 
-			/* Ã¿´Î¸üĞÂÈı¸öÖµ, ×î´ó,×îĞ¡ºÍÆ½¾ùÖµ */
+			/* Ã¿ï¿½Î¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ, ï¿½ï¿½ï¿½,ï¿½ï¿½Ğ¡ï¿½ï¿½Æ½ï¿½ï¿½Öµ */
 			sapp_fs2_set_latency(tid, min_latency);
 			sapp_fs2_set_latency(tid, max_latency);
 			sapp_fs2_set_latency(tid, (long long)avg_latency);
@@ -133,7 +133,7 @@ void sapp_fuzzy_latency_update(void)
 			this_stat_count = this_entry_stat->stat_count;
 			if(this_stat_count > 0){
 				memset(this_entry_stat, 0, sizeof(sapp_fuzzy_latency_stat_t));
-				this_entry_stat->min_time_cost = 999999999; /* Òª¼ÇÂ¼×îĞ¡Öµ, ³õÊ¼»¯ÒªÉè³É×î´óÖµ */
+				this_entry_stat->min_time_cost = 999999999; /* Òªï¿½ï¿½Â¼ï¿½ï¿½Ğ¡Öµ, ï¿½ï¿½Ê¼ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ */
 				
 				sapp_fs2_set_latency(tid, min_latency);
 				sapp_fs2_set_latency(tid, max_latency);
@@ -175,24 +175,24 @@ static int sapp_process_latency_metric_init(sapp_global_t *global_paramters)
 	{
 			char histogram_name[16];
 			sprintf(histogram_name, "TD_ns(tid_%d)", i);
-			p_fs2_rt->fs_latency_id_array[i] = FS_register_histogram(fs2_handle,	 // Field Stat¾ä±ú
-																	 FS_CALC_SPEED,	 // Êä³öÀÛ¼ÆÖµ»òË²Ê±Öµ
-																	 histogram_name, // Í³¼ÆÏîÃû³Æ£¬×Ö·û´®
-																	 1,				 // ¿É×·×ÙµÄ×îĞ¡Öµ
-																	 1000000,		 // ¿É×·×ÙµÄ×î´óÖµ
-																	 2);			 // ¾«¶È£¬¼´Ğ¡Êıµãºó¼¸Î»£¬·¶Î§1~4
+			p_fs2_rt->fs_latency_id_array[i] = FS_register_histogram(fs2_handle,	 // Field Statï¿½ï¿½ï¿½
+																	 FS_CALC_SPEED,	 // ï¿½ï¿½ï¿½ï¿½Û¼ï¿½Öµï¿½ï¿½Ë²Ê±Öµ
+																	 histogram_name, // Í³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
+																	 1,				 // ï¿½ï¿½×·ï¿½Ùµï¿½ï¿½ï¿½Ğ¡Öµ
+																	 1000000,		 // ï¿½ï¿½×·ï¿½Ùµï¿½ï¿½ï¿½ï¿½Öµ
+																	 2);			 // ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½Î§1~4
 			FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &p_fs2_rt->fs_latency_id_array[i], sizeof(int));
 	}
 
-	/* 0±£Áô¸øsappÄÚÖÃ²å¼ş, index´Ó1¿ªÊ¼ */
+	/* 0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sappï¿½ï¿½ï¿½Ã²ï¿½ï¿½, indexï¿½ï¿½1ï¿½ï¿½Ê¼ */
 	for (int i = 1; i < g_plug_global_entry_index; i++)
 	{
-			p_fs2_rt->fs_latency_plug_entrg_id_array[i] = FS_register_histogram(p_fs2_rt->fs_metric_handle,				// Field Stat¾ä±ú
-																				FS_CALC_SPEED,							// Êä³öÀÛ¼ÆÖµ»òË²Ê±Öµ
-																				g_plug_global_entry[i].plug_entry_name, // Í³¼ÆÏîÃû³Æ£¬×Ö·û´®
-																				1,										// ¿É×·×ÙµÄ×îĞ¡Öµ
-																				1000000,								// ¿É×·×ÙµÄ×î´óÖµ
-																				2);										// ¾«¶È£¬¼´Ğ¡Êıµãºó¼¸Î»£¬·¶Î§1~4
+			p_fs2_rt->fs_latency_plug_entrg_id_array[i] = FS_register_histogram(p_fs2_rt->fs_metric_handle,				// Field Statï¿½ï¿½ï¿½
+																				FS_CALC_SPEED,							// ï¿½ï¿½ï¿½ï¿½Û¼ï¿½Öµï¿½ï¿½Ë²Ê±Öµ
+																				g_plug_global_entry[i].plug_entry_name, // Í³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
+																				1,										// ï¿½ï¿½×·ï¿½Ùµï¿½ï¿½ï¿½Ğ¡Öµ
+																				1000000,								// ï¿½ï¿½×·ï¿½Ùµï¿½ï¿½ï¿½ï¿½Öµ
+																				2);										// ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½Î§1~4
 			if (p_fs2_rt->fs_latency_plug_entrg_id_array[i] < 0)
 			{
 			sapp_runtime_log(RLOG_LV_FATAL, "FS_register_histogram() error, plug name:%s", g_plug_global_entry[i].plug_entry_name);
@@ -204,12 +204,12 @@ static int sapp_process_latency_metric_init(sapp_global_t *global_paramters)
 	{
 		char histogram_name[16];
 		sprintf(histogram_name, "Work(tid_%d)", i);
-		p_fs2_rt->fs_work_percent_id_array[i] = FS_register_histogram(fs2_handle,	 // Field Stat¾ä±ú
-																 FS_CALC_SPEED,	 // Êä³öÀÛ¼ÆÖµ»òË²Ê±Öµ
-																 histogram_name, // Í³¼ÆÏîÃû³Æ£¬×Ö·û´®
-																 1,				 // ¿É×·×ÙµÄ×îĞ¡Öµ
-																 100,		 // ¿É×·×ÙµÄ×î´óÖµ
-																 1);			 // ¾«¶È£¬¼´Ğ¡Êıµãºó¼¸Î»£¬·¶Î§1~4
+		p_fs2_rt->fs_work_percent_id_array[i] = FS_register_histogram(fs2_handle,	 // Field Statï¿½ï¿½ï¿½
+																 FS_CALC_SPEED,	 // ï¿½ï¿½ï¿½ï¿½Û¼ï¿½Öµï¿½ï¿½Ë²Ê±Öµ
+																 histogram_name, // Í³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
+																 1,				 // ï¿½ï¿½×·ï¿½Ùµï¿½ï¿½ï¿½Ğ¡Öµ
+																 100,		 // ï¿½ï¿½×·ï¿½Ùµï¿½ï¿½ï¿½ï¿½Öµ
+																 1);			 // ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½Î§1~4
 		FS_set_para(fs2_handle, NOT_SEND_METRIC_TO_SERVER, &p_fs2_rt->fs_work_percent_id_array[i], sizeof(int));
 	}
 	return 0;
@@ -309,7 +309,7 @@ static int sapp_fs2_init(sapp_global_t *global_paramters)
     p_fs2_rt->fs_id_length_array[SAPP_STAT_TCP_LOST_PKT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Lost_Bit");	
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_LOST_PKT_STREAM_NUM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Lost_STM");	
 
-	p_fs2_rt->fs_id_count_array[SAPP_STAT_DUP_IDENTIFY_ERR] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Key_Err"); /* dupÖØ¸´°üÊ¶±ğÌí¼Ókey´íÎó¼ÆÊı */	
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_DUP_IDENTIFY_ERR] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Dup_Key_Err"); /* dupï¿½Ø¸ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½keyï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */	
 
     p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_CLOSE_BY_TIMEOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Close_byT");	
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_CLOSE_BY_KICKOUT] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Close_byK");	
@@ -447,182 +447,182 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 	}	
 
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_LINE] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Line_Pkt", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_LINE] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Line_Pkt", 
 								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_LINE] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Line_Bit", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_LINE] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Line_Bit", 
 								NULL, 0);								
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_ETHERNET] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Eth_Pkt", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_ETHERNET] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Eth_Pkt", 
 								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_ETHERNET] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Eth_Bit", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_ETHERNET] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Eth_Bit", 
 								NULL, 0);		
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_ETH_INBOUND] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Pkt_Inbound", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_ETH_INBOUND] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Pkt_Inbound", 
 								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_ETH_INBOUND] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Bit_Inbound", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_ETH_INBOUND] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Bit_Inbound", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_ETH_OUTBOUND] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Pkt_Outbound", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_ETH_OUTBOUND] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Pkt_Outbound", 
 								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_ETH_OUTBOUND] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Bit_Outbound", 
-								NULL, 0);	
-
-
-	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_UNKNOWN] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Unknown_Pkt", 
-								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_UNKNOWN] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Unknown_Bit", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_ETH_OUTBOUND] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Bit_Outbound", 
 								NULL, 0);	
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_SND_ERROR] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Snd_Err_Pkt", 
-								NULL, 0);
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_IPV4] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Ipv4_Pkt", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_UNKNOWN] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Unknown_Pkt", 
 								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_IPV4] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Ipv4_Bit", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_UNKNOWN] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Unknown_Bit", 
 								NULL, 0);	
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_IPV6] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Ipv6_Pkt", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_SND_ERROR] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Snd_Err_Pkt", 
 								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_IPV6] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Ipv6_Bit", 
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_IPV4] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Ipv4_Pkt", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_IPV4] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Ipv4_Bit", 
 								NULL, 0);	
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_TCP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Pkt", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_IPV6] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Ipv6_Pkt", 
 								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_TCP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Bit", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_IPV6] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Ipv6_Bit", 
 								NULL, 0);	
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_DUP_TCP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Dup_Tcp_Pkt", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_TCP] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Pkt", 
 								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_DUP_TCP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Dup_Tcp_Bit", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_TCP] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Bit", 
 								NULL, 0);	
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_LOST_PKT_STREAM_NUM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Lost_STM", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_DUP_TCP] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Dup_Tcp_Pkt", 
 								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_TCP_LOST_PKT] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Lost_Bit", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_DUP_TCP] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Dup_Tcp_Bit", 
 								NULL, 0);	
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_DUP_IDENTIFY_ERR] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Dup_Key_Err", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_LOST_PKT_STREAM_NUM] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Lost_STM", 
+								NULL, 0);
+	fs3_rt->metrics_ids[1][SAPP_STAT_TCP_LOST_PKT] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Lost_Bit", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_DUP_IDENTIFY_ERR] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Dup_Key_Err", 
 								NULL, 0);
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_CLOSE_BY_TIMEOUT] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Close_byT", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_CLOSE_BY_TIMEOUT] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Close_byT", 
 								NULL, 0);
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_CLOSE_BY_KICKOUT] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Close_byK", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_CLOSE_BY_KICKOUT] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Close_byK", 
 								NULL, 0);								
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_UDP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Pkt", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_UDP] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_Pkt", 
 								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_UDP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Bit", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_UDP] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_Bit", 
 								NULL, 0);		
-	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_DUP_UDP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Dup_Udp_Pkt", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_RCV_DUP_UDP] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Dup_Udp_Pkt", 
 								NULL, 0);
-	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_DUP_UDP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Dup_Udp_Bit", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_RCV_DUP_UDP] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Dup_Udp_Bit", 
 								NULL, 0);									
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_CLOSE_BY_TIMEOUT] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Close_byT", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_CLOSE_BY_TIMEOUT] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_Close_byT", 
 								NULL, 0);
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_CLOSE_BY_KICKOUT] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Close_byK", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_CLOSE_BY_KICKOUT] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_Close_byK", 
 								NULL, 0);		
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_NEW] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Link_New", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_NEW] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Link_New", 
 								NULL, 0);
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_DEL] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Link_Del", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_DEL] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Link_Del", 
 								NULL, 0);	
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_DATA] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Concurrent", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_DATA] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Tcp_Concurrent", 
 								NULL, 0);									
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_NEW] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Link_New", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_NEW] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_Link_New", 
 								NULL, 0);
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_DEL] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Link_Del", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_DEL] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_Link_Del", 
 								NULL, 0);	
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_MORE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Concurrent", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_MORE] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Udp_Concurrent", 
 								NULL, 0);	
 
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_DOUBLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_Double", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_DOUBLE] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Tcp_Link_Double", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_C2S", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_C2S] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Tcp_Link_C2S", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_S2C] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_S2C", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_S2C] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Tcp_Link_S2C", 
 								NULL, 0);									
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_Double_ALL", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Tcp_Link_Double_ALL", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_C2S_ALL", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_C2S] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Tcp_Link_C2S_ALL", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_S2C] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Tcp_Link_S2C_ALL", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_STREAM_TOTAL_S2C] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Tcp_Link_S2C_ALL", 
 								NULL, 0);	
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_DOUBLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_Double", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_DOUBLE] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Udp_Link_Double", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_C2S", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_C2S] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Udp_Link_C2S", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_S2C] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_S2C", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_S2C] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Udp_Link_S2C", 
 								NULL, 0);									
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_Double_ALL", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Udp_Link_Double_ALL", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_C2S] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_C2S_ALL", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_C2S] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Udp_Link_C2S_ALL", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_S2C] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "Udp_Link_S2C_ALL", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_STREAM_TOTAL_S2C] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "Udp_Link_S2C_ALL", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_SND_TCP_RST] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Send_Tcp_Rst", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_SND_TCP_RST] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Send_Tcp_Rst", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_SND_TCP_SYNACK] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Send_Tcp_S/A", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_SND_TCP_SYNACK] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Send_Tcp_S/A", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_SND_UDP] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Send_Udp", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_SND_UDP] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Send_Udp", 
 								NULL, 0);		
 								
 	
-	fs3_rt->metrics_ids[0][SAPP_STAT_GLOBAL_BYPASS] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "DDOS_Bypass", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_GLOBAL_BYPASS] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "DDOS_Bypass", 
 								NULL, 0);	
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_BYPASS_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Bypass_STM", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_BYPASS_STREAM] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Bypass_STM", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_BYPASS_PKTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Bypass_Pkt", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_BYPASS_PKTS] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Bypass_Pkt", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[1][SAPP_STAT_TCP_BYPASS_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Bypass_Bit", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_TCP_BYPASS_BYTES] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Bypass_Bit", 
 								NULL, 0);								
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_BYPASS_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Bypass_STM", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_BYPASS_STREAM] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_Bypass_STM", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_BYPASS_PKTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Bypass_Pkt", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_BYPASS_PKTS] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_Bypass_Pkt", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[1][SAPP_STAT_UDP_BYPASS_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Bypass_Bit", 
+	fs3_rt->metrics_ids[1][SAPP_STAT_UDP_BYPASS_BYTES] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_Bypass_Bit", 
 								NULL, 0);	
 
-	//fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OFFLOAD_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Offload_STM", 
+	//fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OFFLOAD_STREAM] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Offload_STM", 
 	//							NULL, 0);	
-	//fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OFFLOAD_PKTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Offload_Pkt", 
+	//fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OFFLOAD_PKTS] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Offload_Pkt", 
 	//							NULL, 0);	
-	//fs3_rt->metrics_ids[1][SAPP_STAT_TCP_OFFLOAD_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_Offload_Bit", 
+	//fs3_rt->metrics_ids[1][SAPP_STAT_TCP_OFFLOAD_BYTES] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_Offload_Bit", 
 	//							NULL, 0);	
 
-	//fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OFFLOAD_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_STM", 
+	//fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OFFLOAD_STREAM] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_Offload_STM", 
 	//							NULL, 0);	
-	//fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OFFLOAD_PKTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_Pkt", 
+	//fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OFFLOAD_PKTS] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_Offload_Pkt", 
 	//							NULL, 0);	
-	//fs3_rt->metrics_ids[1][SAPP_STAT_UDP_OFFLOAD_BYTES] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_Offload_Bit", 
+	//fs3_rt->metrics_ids[1][SAPP_STAT_UDP_OFFLOAD_BYTES] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_Offload_Bit", 
 	//							NULL, 0);	
 								
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_DUP_KICK_STREAM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_DUP_STM", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_DUP_KICK_STREAM] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_DUP_STM", 
 								NULL, 0);									
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OPENING_OVERSPEED] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_OPEN_SPD", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_OPENING_OVERSPEED] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_OPEN_SPD", 
 								NULL, 0);									
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OPENING_OVERSPEED] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_OPEN_SPD", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_OPENING_OVERSPEED] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_OPEN_SPD", 
 								NULL, 0);									
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_TIMEOUTS_OVERSPEED] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_TIMED_SPD", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_TIMEOUTS_OVERSPEED] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_TIMED_SPD", 
 								NULL, 0);									
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_TIMEOUTS_OVERSPEED] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_TIMED_SPD", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_TIMEOUTS_OVERSPEED] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_TIMED_SPD", 
 								NULL, 0);									
 
-	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_TRY_TIMEOUTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Tcp_TRY_TIMED", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_TCP_TRY_TIMEOUTS] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Tcp_TRY_TIMED", 
 								NULL, 0);	
-	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_TRY_TIMEOUTS] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "Udp_TRY_TIMED", 
+	fs3_rt->metrics_ids[0][SAPP_STAT_UDP_TRY_TIMEOUTS] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Udp_TRY_TIMED", 
 								NULL, 0);					
 
 	const sapp_dup_pkt_t *dup_cfg = &global_paramters->config.packet_io.dup_pkt_para;
@@ -631,13 +631,13 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 	  || dup_cfg->dup_pkt_distinguish_ipv4_udp 
 	  || dup_cfg->dup_pkt_distinguish_all_inject)
 	{
-		fs3_rt->metrics_ids[0][SAPP_STAT_BM_HASH_NUM] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "BM_HASH_NUM",  NULL, 0);	
-		fs3_rt->metrics_ids[0][SAPP_STAT_BM_EXPAND_NUM] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "BM_EXPAND", NULL, 0);	
-		fs3_rt->metrics_ids[0][SAPP_STAT_BM_SLICE_NUM_NEW] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "BM_SLICE_NEW", NULL, 0);	
-		fs3_rt->metrics_ids[0][SAPP_STAT_BM_SLICE_NUM_FREE] = fieldstat_register(fs3_handle, FIELD_TYPE_COUNTER, "BM_SLICE_FREE", NULL, 0);			
-		fs3_rt->metrics_ids[0][SAPP_STAT_BM_CUR_SLICE_NUM] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "BM_MAX_SLICE", NULL, 0);	
-		fs3_rt->metrics_ids[0][SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "APBM_EXPAND_MULTIPLE", NULL, 0);
-		fs3_rt->metrics_ids[0][SAPP_STAT_DABM_RESIZE_MAX_RATIO] = fieldstat_register(fs3_handle, FIELD_TYPE_GAUGE, "DABM_MAX_RESIZE_RATIO", NULL, 0);
+		fs3_rt->metrics_ids[0][SAPP_STAT_BM_HASH_NUM] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "BM_HASH_NUM",  NULL, 0);	
+		fs3_rt->metrics_ids[0][SAPP_STAT_BM_EXPAND_NUM] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "BM_EXPAND", NULL, 0);	
+		fs3_rt->metrics_ids[0][SAPP_STAT_BM_SLICE_NUM_NEW] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "BM_SLICE_NEW", NULL, 0);	
+		fs3_rt->metrics_ids[0][SAPP_STAT_BM_SLICE_NUM_FREE] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "BM_SLICE_FREE", NULL, 0);			
+		fs3_rt->metrics_ids[0][SAPP_STAT_BM_CUR_SLICE_NUM] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "BM_MAX_SLICE", NULL, 0);	
+		fs3_rt->metrics_ids[0][SAPP_STAT_APBM_EXPAND_MAX_MULTIPLE] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "APBM_EXPAND_MULTIPLE", NULL, 0);
+		fs3_rt->metrics_ids[0][SAPP_STAT_DABM_RESIZE_MAX_RATIO] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "DABM_MAX_RESIZE_RATIO", NULL, 0);
 	}
 								
 	return 0;
@@ -828,7 +828,7 @@ static int sapp_fs4_start(sapp_global_t *global_paramters)
 	struct fieldstat_easy *fs4_handle = fs4_rt->fs_metric_handle;
 
 	fieldstat_easy_enable_auto_output(fs4_handle, ABBR_FS4_LOG_DATA_FILE, fs4_para->refresh_interval_s);
-	fieldstat_easy_enable_delta_in_active_output(fs4_handle);
+	//fieldstat_easy_enable_delta_in_active_output(fs4_handle);
 	return 0;
 }
 
