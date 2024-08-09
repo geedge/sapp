@@ -2943,9 +2943,11 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 					sapp_runtime_log(RLOG_LV_INFO, "TCP stream:%s under ddos bypass!", printaddr(&pstream->addr, pstream->threadnum));
 					ret = PASS;
 				}else{
-					ret=tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);
-					if((PASS == ret) && (tcplen > 0)){ // for TFO
+					if(tcplen > 0){ // for TFO
 						ret = deal_tcp_tfo(pstream, this_iphdr, this_tcphdr, tcplen, raw_pkt);
+					}
+					if(ret == PASS){ //TFO, call TCP->TCPALL
+					ret=tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);
 					}
 				}
 			}
