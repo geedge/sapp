@@ -21,11 +21,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/sapp_devel.cpp "")
 
 
 add_library(sapp_devel SHARED sapp_devel.cpp)
-target_link_libraries(sapp_devel -Wl,--whole-archive ${SAPP_INNER_STATIC_LIB} -Wl,--no-whole-archive)
-
-if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
-    target_link_libraries(sapp_devel libjemalloc-static)
-endif()
+target_link_libraries(sapp_devel -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive)
 
 
 add_library(test_app_sapp SHARED test_app_sapp.c)

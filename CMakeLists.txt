@@ -87,6 +87,8 @@ message(STATUS "PLATFORM_MODE='${PLATFORM_MODE}'")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLINK_MODE_DYNAMIC=0")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLINK_MODE_DYNAMIC=0")
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # CPU profiler
 set(CPU_PROFILE "OFF" CACHE STRING
     " set cpu profiler chosen by the user, using OFF as default")
@@ -200,13 +202,33 @@ add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
     -D__USE_BSD=1 -D_GNU_SOURCE=1  -DMESA_SAPP_PLATFORM=1)
 
 set(SAPP_DEPEND_DYN_LIB MESA_handle_logger MESA_prof_load MESA_htable  MESA_field_stat2 fieldstat3 fieldstat4 cjson MESA_jump_layer breakpad_mini ${SYSTEMD_LIBRARIES} pthread dl pcap)
-set(SAPP_INNER_STATIC_LIB sapp_dev dealpkt packet_io  packet_io_pcap packet_io_marsio common 
-			config inline_keepalive gdev_assistant sapp_assistant sapp_metrics plugctrl project timer
-			md5 symbol_check tomlc99_wrap MESA_socket_wrap timestamp_record  
-			MESA_sleep dpdk_ip_hash  cpu_limit timeout ap_bloom libdabloom token_bucket)
+set(SAPP_DEPEND_DYN_LIB ${SAPP_DEPEND_DYN_LIB} packet_io_pcap)
+if(CAPTURE_MODE STREQUAL "MARSIO")
+	set(SAPP_DEPEND_DYN_LIB ${SAPP_DEPEND_DYN_LIB} packet_io_marsio)
+endif()
+	
+if(CAPTURE_MODE STREQUAL "TUN")
+	set(SAPP_DEPEND_DYN_LIB ${SAPP_DEPEND_DYN_LIB} packet_io_tun)
+endif()	
 
-if(LIBEVENT_ENABLED)
-    set(SAPP_INNER_STATIC_LIB ${SAPP_INNER_STATIC_LIB} libevent-static)
+set(SAPP_MODULES timestamp_record md5 
+	symbol_check MESA_sleep MESA_socket_wrap 
+	packet_io dealpkt project plugctrl common 
+	config timer tomlc99_wrap dpdk_ip_hash  
+	gdev_assistant inline_keepalive ap_bloom libdabloom
+	sapp_dev sapp_assistant sapp_metrics 
+	platform_support cpu_limit timeout token_bucket)
+
+if(LIBEVENT_ENABLED STREQUAL "ON")
+	set(SAPP_MODULES ${SAPP_MODULES} libevent-static)
+endif()
+
+if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
+	set(SAPP_MODULES ${SAPP_MODULES} libjemalloc-static)
+endif()
+
+if(MEM_POOL STREQUAL "MIMALLOC")
+	set(SAPP_MODULES ${SAPP_MODULES} libmimalloc-static)
 endif()
 
 file(MD5 ${PROJECT_SOURCE_DIR}/include/public/stream_inc/stream_base.h MD5_STREAM_BASE)

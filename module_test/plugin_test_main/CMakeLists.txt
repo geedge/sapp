@@ -2,11 +2,10 @@ include_directories(${PROJECT_SOURCE_DIR}/include/public)
 add_executable(plugin_test_main plugin_test_main.cpp)
 #target_link_libraries(plugin_test_main sapp_devel)
 
-target_link_libraries(plugin_test_main -Wl,--whole-archive ${SAPP_INNER_STATIC_LIB} -Wl,--no-whole-archive)
-if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
-    target_link_libraries(plugin_test_main libjemalloc-static)
-endif()
+target_link_libraries(plugin_test_main -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive)
+
 
 target_link_libraries(plugin_test_main gtest-static)
 target_link_libraries(plugin_test_main ${SAPP_DEPEND_DYN_LIB})
+
 

@@ -17,12 +17,9 @@ if(CAPTURE_MODE STREQUAL "MARSIO")
 endif()
 
 
-
 if(HASP_ENABLED)
 	include_directories(/opt/tsg/hasp-tools/include/)
 endif()
-
-
 
 add_executable(sapp sapp_main.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
@@ -34,34 +31,7 @@ if(HASP_ENABLED STREQUAL "ON")
 	target_link_libraries(sapp ${HASP_TOOLS_LIB})
 endif()
 
-set(SAPP_MODULES timestamp_record md5 
-	symbol_check MESA_sleep MESA_socket_wrap 
-	packet_io dealpkt project plugctrl common 
-	config timer tomlc99_wrap dpdk_ip_hash  
-	gdev_assistant inline_keepalive ap_bloom libdabloom
-	sapp_dev sapp_assistant sapp_metrics 
-	platform_support cpu_limit timeout token_bucket)
-
-if(LIBEVENT_ENABLED STREQUAL "ON")
-	set(SAPP_MODULES ${SAPP_MODULES} libevent-static)
-endif()
-
-if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
-	set(SAPP_MODULES ${SAPP_MODULES} libjemalloc-static)
-endif()
-
-if(MEM_POOL STREQUAL "MIMALLOC")
-	set(SAPP_MODULES ${SAPP_MODULES} libmimalloc-static)
-endif()
-
 target_link_libraries(sapp -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive)
 target_link_libraries(sapp ${SAPP_DEPEND_DYN_LIB})
-target_link_libraries(sapp packet_io_pcap)
-if(CAPTURE_MODE STREQUAL "MARSIO")
-	target_link_libraries(sapp packet_io_marsio)
-endif()
-	
-if(CAPTURE_MODE STREQUAL "TUN")
-	target_link_libraries(sapp packet_io_tun)
-endif()	
+
 

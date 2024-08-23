@@ -26,7 +26,7 @@ if(MEM_POOL STREQUAL "JEMALLOC_STATIC")
         ExternalProject_Add(libjemalloc PREFIX libjemalloc
                 URL ${CMAKE_CURRENT_SOURCE_DIR}/jemalloc-5.3.0.tar.gz
                 URL_MD5 594dd8e0a1e8c1ef8a1b210a1a5aff5b
-                CONFIGURE_COMMAND ./autogen.sh CFLAGS=-fPIC --disable-shared --enable-prof
+                CONFIGURE_COMMAND ./autogen.sh CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared --enable-prof
                 #$<IF:$<CONFIG:Debug>,--enable-prof,>
                 --prefix=<INSTALL_DIR>
                 BUILD_COMMAND make -j${CPU_COUNT}
