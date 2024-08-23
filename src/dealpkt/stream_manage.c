@@ -343,7 +343,7 @@ void streamaddlist(struct streamindex *pindex,struct stream_list *plist)
         next_timeout_ms = tcp_opening_timeout * 1000 + g_CurrentTime_ms;
     }
     else if ((pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP) &&
-            (sapp_global_val->config.stream.tcp.fast_close_nouse == 1))
+            (sapp_global_val->config.stream.tcp.fast_close_discard == 1))
     {
 		if(pstream_pr->set_special_timeout==0)
 		{
@@ -551,7 +551,7 @@ int lrustream(struct streamindex *pindex)
             timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout * 1000 + g_CurrentTime_ms);
         }
         else if (pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP &&
-                (sapp_global_val->config.stream.tcp.fast_close_nouse == 1))
+                (sapp_global_val->config.stream.tcp.fast_close_discard == 1))
         {
 			if(pstream_pr->set_special_timeout==0)
 			{

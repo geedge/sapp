@@ -32,7 +32,7 @@ extern int g_raw_pkt_broken_check;
 extern int g_skip_ethernet_layer_sw;
 //extern int g_kill_tcp_remedy_sw;
 extern int g_encapsulate_with_ddp;
-extern int g_encapsulate_with_L2E; /* Ê¹ÓÃDDPĞ­Òé·â×°µÄx27Ô­Ê¼IP°ü */
+extern int g_encapsulate_with_L2E; /* Ê¹ï¿½ï¿½DDPĞ­ï¿½ï¿½ï¿½×°ï¿½ï¿½x27Ô­Ê¼IPï¿½ï¿½ */
 
 extern int g_PollingFunNum;
 extern int packet_io_set_ipv6_raw_socket_enable(int op_switch);
@@ -60,17 +60,17 @@ extern volatile unsigned long g_sapp_destory_env_done_state;
 static void sapp_platform_finish_up(void)
 {
 	/* 
-		ĞÂ½¨ÎÄ¼ş¼Ğ: ./sapp_status/
+		ï¿½Â½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½: ./sapp_status/
 		
-		Êä³öÒÑ×¢²á³É¹¦µÄproject tag ÁĞ±í, project_list.status, 
+		ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½É¹ï¿½ï¿½ï¿½project tag ï¿½Ğ±ï¿½, project_list.status, 
 		name, type
 
 		
-		Êä³öËùÓĞ²å¼şµÄ¼ÓÔØĞÅÏ¢, ²»¹ÜÊÇ³É¹¦»¹ÊÇ²»³É¹¦, Òª²»Ã¿´Îcat | grep runtime.log
+		ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ²ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢, ï¿½ï¿½ï¿½ï¿½ï¿½Ç³É¹ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½É¹ï¿½, Òªï¿½ï¿½Ã¿ï¿½ï¿½cat | grep runtime.log
 		plug_load.status, plug_name, plug_path, state(succ,fail)
 
 		
-		Êä³ösapp×´Ì¬Ç¨ÒÆ±ä»¯µÄÊ±¼ä¼ÇÂ¼, sapp_state.staus:
+		ï¿½ï¿½ï¿½sapp×´Ì¬Ç¨ï¿½Æ±ä»¯ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Â¼, sapp_state.staus:
 		start_time  	state
 		01:00:00		just_start
 		01:00:01		platform_init
@@ -102,7 +102,7 @@ int MESA_platform_init(int argc, char *argv[])
 
 	ipv4_frag_init(g_iThreadNum, 1024 * 512);
 	ipv6_frag_init(g_iThreadNum, 1024 * 256);
-	tcp_set_stream_num(max_tcp_stream_num*3,max_tcp_stream_num,max_tcp_stream_num*2);
+	tcp_set_stream_num(sapp_global_val->config.stream.tcp.max_opening,max_tcp_stream_num,sapp_global_val->config.stream.tcp.max_discard);
 	udp_set_stream_num(sapp_global_val->config.stream.udp.max_opening,sapp_global_val->config.stream.udp.max_pair,sapp_global_val->config.stream.udp.max);
 
 	MESA_load_profile_int_def("conf/main.conf","Module", "timedelay_threshold", &int_tmp, 10000000);
@@ -226,12 +226,12 @@ int MESA_platform_init(int argc, char *argv[])
 	//MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"reverse_ethernet_addr", &g_reverse_ethernet_addr_sw, 0);
 
 
-	/* Æ½Ì¨ÄÚÖÃ¹Ì¶¨¿ªÆôµÄ²å¼ş */
+	/* Æ½Ì¨ï¿½ï¿½ï¿½Ã¹Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ */
 	stream_register_udp_raw(udp_teredo_identify_entry);
 	//stream_register_udp_raw(udp_gtp_identify_entry);
 	stream_register_udp(udp_l2tp_identify_entry);
 
-	/* 2020-12-23 lijia add, vxlan±£»î²å¼şÄÚÖÃ */
+	/* 2020-12-23 lijia add, vxlanï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	if(DEPLOYMENT_MODE_INLINE == sapp_global_val->config.packet_io.deployment_mode_bin){
 		stream_register_overlay_ip((IPv4_CB_FUN_T)gdev_keepalive_ip_entry);
 		stream_register_overlay_udp(gdev_keepalive_udp_entry);
@@ -244,8 +244,8 @@ int MESA_platform_init(int argc, char *argv[])
 
 	MESA_load_profile_int_def((char *)"conf/main.conf", (char *)"Module", (char *)"symbol_conflict_check", &int_tmp,0);
 	if(int_tmp != 0){
-		/* NOTE: ·ûºÅÃû¼ì²âÒ»¶¨ÒªÔÚplugctrl_proc(), ¼´ËùÓĞ²å¼ş¼ÓÔØÖ®ºó, Ä¬ÈÏ¿ªÆô */
-		symbol_check(); /* 2016-01-13 Lijia add, ¼ì²éÈ«¾Ö·ûºÅÃû³åÍ» */
+		/* NOTE: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Òªï¿½ï¿½plugctrl_proc(), ï¿½ï¿½ï¿½ï¿½ï¿½Ğ²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½, Ä¬ï¿½Ï¿ï¿½ï¿½ï¿½ */
+		symbol_check(); /* 2016-01-13 Lijia add, ï¿½ï¿½ï¿½È«ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í» */
 	}
 	sapp_global_val_sanity_check();
 
@@ -260,19 +260,19 @@ int MESA_platform_init(int argc, char *argv[])
 	
 	/* 2017-02-24 lijia modify,
 		NOTE:
-		ÏÈ³õÊ¼»¯²å¼ş, ²å¼şÄÚ²¿¿ÉÄÜ»áµ÷ÓÃpthread_create¶¯Ì¬´´½¨Ïß³Ì,
-		ÎÊÌâÊÇ, ÔÚDPDKÄ£Ê½ÏÂ, dpdk³õÊ¼»¯½×¶Î¾Í»á°ó¶¨µ±Ç°Ïß³Ìµ½Ä³CPUºËĞÄ,
-		ÄÇÃ´ºóĞøµÄpthread_createµÄÏß³ÌÄ¬ÈÏ¼Ì³ĞÕâ¸öĞĞÎª,
-		ËùÒÔ, ÏÈ³õÊ¼»¯Ïß³ÌÔÙ³õÊ¼»¯packet_io.
+		ï¿½È³ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½Ü»ï¿½ï¿½ï¿½ï¿½pthread_createï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½,
+		ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½DPDKÄ£Ê½ï¿½ï¿½, dpdkï¿½ï¿½Ê¼ï¿½ï¿½ï¿½×¶Î¾Í»ï¿½ó¶¨µï¿½Ç°ï¿½ß³Ìµï¿½Ä³CPUï¿½ï¿½ï¿½ï¿½,
+		ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pthread_createï¿½ï¿½ï¿½ß³ï¿½Ä¬ï¿½Ï¼Ì³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª,
+		ï¿½ï¿½ï¿½ï¿½, ï¿½È³ï¿½Ê¼ï¿½ï¿½ï¿½ß³ï¿½ï¿½Ù³ï¿½Ê¼ï¿½ï¿½packet_io.
 	*/
 	/*
-		2019-04-11, marsioÒÑ¾­ÎŞÉÏÊöÎÊÌâ, ÔÙ»Ö¸´³ÉÏÈµ÷ÓÃpacket_io_init(), ºóµ÷ÓÃplugctrl().
+		2019-04-11, marsioï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ù»Ö¸ï¿½ï¿½ï¿½ï¿½Èµï¿½ï¿½ï¿½packet_io_init(), ï¿½ï¿½ï¿½ï¿½ï¿½plugctrl().
 	*/
 
 	/*
-		2020-09-15, Èç¹ûpacket_io_initÏÈµ÷ÓÃ, Çı¶¯ÒÑ¾­´ò¿ªÊÕ°ü¶ÓÁĞ, 
-		µ«ÊÇ²å¼ş¿ÉÄÜ»¹Ã»³õÊ¼»¯Íê³É, sapp²»»áÕæÕı¿ªÊ¼ÊÕ°ü, Á÷Á¿´óµÄÇé¿öÏÂ, Çı¶¯¶ÓÁĞ»º³åÇøÂúÁË»áµ¼ÖÂ¶ª°ü,
-		¸Ä³ÉÏÈµ÷ÓÃplugctrl(), ºóµ÷ÓÃpacket_io_init().
+		2020-09-15, ï¿½ï¿½ï¿½packet_io_initï¿½Èµï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Õ°ï¿½ï¿½ï¿½ï¿½ï¿½, 
+		ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½ï¿½ï¿½Ü»ï¿½Ã»ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½, sappï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½Õ°ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë»áµ¼ï¿½Â¶ï¿½ï¿½ï¿½,
+		ï¿½Ä³ï¿½ï¿½Èµï¿½ï¿½ï¿½plugctrl(), ï¿½ï¿½ï¿½ï¿½ï¿½packet_io_init().
 	*/
 
 
@@ -282,11 +282,11 @@ int MESA_platform_init(int argc, char *argv[])
 		return -1;
 	}
 
-	sapp_independent_thread_init(); /* Òª·ÅÔÚ²å¼ş³õÊ¼»¯Ö®Ç°, ²å¼ş³õÊ¼»¯Ê±»áÆô¶¯ independent_thread ¶ÀÁ¢·¢°üÏß³Ì */
+	sapp_independent_thread_init(); /* Òªï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ö®Ç°, ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ independent_thread ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ */
 
 	sapp_dup_pkt_init();
 
-	/* 2021-07-05, sapp_assistant_init()ÒÆ¶¯µ½plugctrl_proc()Ö®ºó, ÒªÓÃÒÑ¼ÓÔØ²å¼şËùÓĞentryµÄÁĞ±í */
+	/* 2021-07-05, sapp_assistant_init()ï¿½Æ¶ï¿½ï¿½ï¿½plugctrl_proc()Ö®ï¿½ï¿½, Òªï¿½ï¿½ï¿½Ñ¼ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½entryï¿½ï¿½ï¿½Ğ±ï¿½ */
 	if(sapp_metric_init() < 0){
 		return -1;
 	}
@@ -298,7 +298,7 @@ int MESA_platform_init(int argc, char *argv[])
 		return -1;
 	}
 
-	sapp_platform_finish_up(); /* Ö§³Ö¶¯Ì¬project tag×¢²á, ±ØĞëÔÚËùÓĞ²å¼ş³õÊ¼»¯Íê³Éºóµ÷ÓÃ, ×öÒ»Ğ©Æ½Ì¨³õÊ¼»¯½×¶ÎµÄÊÕÎ²¹¤×÷ */
+	sapp_platform_finish_up(); /* Ö§ï¿½Ö¶ï¿½Ì¬project tag×¢ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ²ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Éºï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ò»Ğ©Æ½Ì¨ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½×¶Îµï¿½ï¿½ï¿½Î²ï¿½ï¿½ï¿½ï¿½ */
 	sapp_set_current_state(SAPP_STATE_PLUG_INITED);
 
 	sapp_set_current_state(SAPP_STATE_PKT_IO_INITED);
@@ -310,7 +310,7 @@ int MESA_platform_init(int argc, char *argv[])
 	return 0;	
 }
 
-/* ¼ì²é±¾½ø³ÌÊÇ·ñÍ¨¹ıSYSTEMDÆô¶¯ */
+/* ï¿½ï¿½é±¾ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Í¨ï¿½ï¿½SYSTEMDï¿½ï¿½ï¿½ï¿½ */
 static int check_is_started_by_notify()
 {
 	char *notify_socket = getenv("NOTIFY_SOCKET");
@@ -320,10 +320,10 @@ static int check_is_started_by_notify()
 void MESA_platform_run(void)
 {
 	/* 
-		Ê¹ÓÃatexit()×¢²áµÄº¯Êı, µ÷ÓÃÓë×¢²áº¯ÊıÏà·´, ËùÒÔ¾¡¿ÉÄÜÑÓºóatexit()×¢²áÎ»ÖÃ,
-		·ÅÔÚËùÓĞ³õÊ¼»¯Íê³ÉÖ®ºó, packet_io_run()Ö®Ç°¡£
+		Ê¹ï¿½ï¿½atexit()×¢ï¿½ï¿½Äºï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½áº¯ï¿½ï¿½ï¿½à·´, ï¿½ï¿½ï¿½Ô¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óºï¿½atexit()×¢ï¿½ï¿½Î»ï¿½ï¿½,
+		ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ³ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½, packet_io_run()Ö®Ç°ï¿½ï¿½
 
-		µ÷ÓÃÁËsapp_gval_destroy()Ö®ºó, È«¾Ö±äÁ¿sapp_global_val¶¼±»freeÁË, ´Ë´¦ÁÙÊ±´æÒ»ÏÂ.
+		ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sapp_gval_destroy()Ö®ï¿½ï¿½, È«ï¿½Ö±ï¿½ï¿½ï¿½sapp_global_valï¿½ï¿½ï¿½ï¿½freeï¿½ï¿½, ï¿½Ë´ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ò»ï¿½ï¿½.
 	*/
 
 	__sapp_timer_platform_run();

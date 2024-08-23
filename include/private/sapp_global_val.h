@@ -106,7 +106,9 @@ typedef struct{
 	int max_timeouts_per_sec;
 	int max_opening_per_sec;
 	int reorder_on_closing;
-	int fast_close_nouse;
+	int fast_close_discard;
+	int max_opening;
+	int max_discard;
 }sapp_config_stream_tcp_t;
 
 
