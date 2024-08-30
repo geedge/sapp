@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-static struct frag_manage *g_ipv6_frag_manage = NULL;
+struct frag_manage *g_ipv6_frag_manage = NULL;
 static unsigned int FRAG_IP6_RANDOM;
 //extern int g_packet_io_thread_num;
 extern void raw_frags_list_free_one(int thread_seq, void *project_req_value);
@@ -443,6 +443,7 @@ static struct mesa_ip6_hdr *ipv6_defrag(struct streaminfo_private *pstream_pr,
 #endif
 
 	ipv6_qp->frags_num++;
+	ipv6_qp->frags_len+=raw_pkt->raw_pkt_len;
 
 	if(NULL == ipv6_qp->private_info)
 	{
@@ -616,6 +617,9 @@ copy_data:
 
 		int ip6_payload_len = htons(ipv6_qp->meat);
 		char raw_next_hdr = private_info->raw_next_hdr;
+		//set scratch before frag_reassemble, cause frag_reassemble will free ipq
+		ip6_frag_handle->scratch_frag_cnt=ipv6_qp->frags_num;
+		ip6_frag_handle->scratch_frag_len=ipv6_qp->frags_len;
 #if USE_MESA_STREAM_HASH
 		new_ip6h = (struct mesa_ip6_hdr *)frag_reassemble_v6(ip6_frag_handle, ipv6_qp, &ip6_frag_key);
 #else

@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+#include "ip_reassembly.h"
+
 extern int udp_stream_table_size;
 extern int raw_ip_frag_list_stream_attach(struct streaminfo *stream);
 extern int raw_ip_frag_list_stream_detach(struct streaminfo *stream);
@@ -54,6 +56,9 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 		return ;
 	}
 
+	int frag_cnt = 0, frag_len = 0;
+	stream_get_scratch_frag_stat(a_udp, &frag_cnt, &frag_len);
+
 	if(a_udp->curdir==DIR_C2S)
 	{
 		pdetail->serverpktnum++;	
@@ -62,12 +67,18 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 			a_udp->dir=DIR_DOUBLE;
 		}
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1 && raw_pkt->is_ctrl_pkt == 0){
-			pdetail_pr->flow_stat->C2S_pkt++;
-			pdetail_pr->flow_stat->C2S_byte += datalen;
-			pdetail_pr->flow_stat->C2S_all_byte_raw +=MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
 			if(a_udp->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
 			{
-				pdetail_pr->flow_stat->C2S_ip_fragment_pkt=1;
+				pdetail_pr->flow_stat->C2S_pkt+=MAX(1, frag_cnt);
+				pdetail_pr->flow_stat->C2S_byte += MAX(datalen, frag_len);
+				pdetail_pr->flow_stat->C2S_all_byte_raw +=MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,frag_len);
+				pdetail_pr->flow_stat->C2S_ip_fragment_pkt+=MAX(1, frag_cnt);
+			}
+			else
+			{
+				pdetail_pr->flow_stat->C2S_pkt++;
+				pdetail_pr->flow_stat->C2S_byte += datalen;
+				pdetail_pr->flow_stat->C2S_all_byte_raw +=MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
 			}
 		}
 	}	
@@ -80,12 +91,19 @@ static void udp_change_stream_state(struct streamindex *pindex, struct mesa_udp_
 		}
 
 		if(G_UDP_FLOW_STAT_PROJECT_ID != -1 && raw_pkt->is_ctrl_pkt == 0){
-			pdetail_pr->flow_stat->S2C_pkt++;
-			pdetail_pr->flow_stat->S2C_byte += datalen;
-			pdetail_pr->flow_stat->S2C_all_byte_raw += MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
+
 			if(a_udp->addr.pktipfragtype & PKT_TYPE_IPREBUILD)
 			{
-				pdetail_pr->flow_stat->S2C_ip_fragment_pkt=1;
+				pdetail_pr->flow_stat->S2C_pkt+=MAX(1, frag_cnt);
+				pdetail_pr->flow_stat->S2C_byte += MAX(datalen, frag_len);
+				pdetail_pr->flow_stat->S2C_all_byte_raw += MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,frag_len);
+				pdetail_pr->flow_stat->S2C_ip_fragment_pkt+=MAX(1, frag_cnt);
+			}
+			else
+			{
+				pdetail_pr->flow_stat->S2C_pkt++;
+				pdetail_pr->flow_stat->S2C_byte += datalen;
+				pdetail_pr->flow_stat->S2C_all_byte_raw += MAX(raw_pkt->raw_pkt_len-raw_pkt->overlay_layer_bytes,0);
 			}
 		}
 			

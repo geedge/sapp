@@ -43,7 +43,7 @@ extern int tcp_support_all;
 
 #define UNORDER_MAX_NUM  (tcp_default_unorder) 
 
-//µ×²ãÁ´½Ó¹ÜÀíÓÃ×´Ì¬¶¨Òå
+//ï¿½×²ï¿½ï¿½ï¿½ï¿½Ó¹ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½
 #define TCP_SYN_STATE    0
 #define TCP_DATA_STATE   1
 #define TCP_NOUSE_STATE  2
@@ -62,7 +62,7 @@ extern int tcp_support_all;
 #define STREAM_LINK_RESET 4
 #define STREAM_LINK_TIMEOUT 5
 #define STREAM_LINK_LRU_OUT	6
-#define STREAM_FAKE_CLOSE_BY_DEPRIVE 7 /* ÆäËû²å¼þ·µ»ØKILL_FOLLOW, KILL_OTHERºó, ±»Ç¿ÖÆCLOSEµÄ²å¼þ×´Ì¬ */
+#define STREAM_FAKE_CLOSE_BY_DEPRIVE 7 /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½KILL_FOLLOW, KILL_OTHERï¿½ï¿½, ï¿½ï¿½Ç¿ï¿½ï¿½CLOSEï¿½Ä²ï¿½ï¿½×´Ì¬ */
 #define STREAM_CLOSE_BY_DUMPFILE_END 8  /* 2021-05-20 lijia add, for pcap dumpfile mode */
 
 
@@ -104,11 +104,11 @@ struct stream_index_list_item
 struct global_stream
 {
 	struct streamindex **tcp_stream_table;
-	unsigned short  *tcp_stream_talbe_hash_count; /* lijia comment: Ò»¸öHASH_SlotÏÂ³åÍ»Á´±íÔªËØ¸öÊý */
+	unsigned short  *tcp_stream_talbe_hash_count; /* lijia comment: Ò»ï¿½ï¿½HASH_Slotï¿½Â³ï¿½Í»ï¿½ï¿½ï¿½ï¿½Ôªï¿½Ø¸ï¿½ï¿½ï¿½ */
 	struct stream_list tcpList[MAX_TCP_STATE];
 
 	struct streamindex **udp_stream_table;
-	unsigned short  *udp_stream_talbe_hash_count;/* lijia comment: Ò»¸öHASH_SlotÏÂ³åÍ»Á´±íÔªËØ¸öÊý */
+	unsigned short  *udp_stream_talbe_hash_count;/* lijia comment: Ò»ï¿½ï¿½HASH_Slotï¿½Â³ï¿½Í»ï¿½ï¿½ï¿½ï¿½Ôªï¿½Ø¸ï¿½ï¿½ï¿½ */
 	struct stream_list udpList[MAX_UDP_STATE];
 
 	STAILQ_HEAD(STREAM_INDEX_LIST,stream_index_list_item) freeList;
@@ -131,7 +131,7 @@ typedef struct _stStreamFunInfo
 	struct timeout timeout;
 	const struct streaminfo *pstream;
 	int set_timer_s;
-	int entry_id; /* È«¾ÖÎ¨Ò»µÄid, ÓÃÓÚÃ¿¸ö²å¼þÈë¿Úº¯ÊýµÄÖ´ÐÐÊ±¼äÍ³¼Æ */
+	int entry_id; /* È«ï¿½ï¿½Î¨Ò»ï¿½ï¿½id, ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½Ê±ï¿½ï¿½Í³ï¿½ï¿½ */
 	char pad[7];
 	char appState;
 	enum fun_type_t funtype;/* 2014-12-31 lqy add */
@@ -188,6 +188,9 @@ int checkstreamorder(const struct streaminfo_private *top_stream_pr, struct stre
 struct streaminfo_private *copy_stream_info_to_heap_single_layer(int mem_used_type, const struct streaminfo_private *stack_stream_pr, int reverse);
 
 unsigned int sapp_jhash_4words(unsigned int a, unsigned int b, unsigned int c, unsigned int initval, unsigned int *out_val);
+
+
+void stream_get_scratch_frag_stat(struct streaminfo *pstream, int *frag_cnt, int *frag_len);
 
 
 #ifdef __cplusplus

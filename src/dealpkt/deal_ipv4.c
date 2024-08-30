@@ -5,8 +5,8 @@
 
   update log:
 		2012-06-28, by LiJia<lijia@nismail.iie.ac.cn>
-		Ê¹ÓÃIP·ÖÆ¬¹«¹²º¯Êý£¬Óë°æ±¾Ïà¹Ø²¿·Ö¶ÀÁ¢³öÀ´, ²»ÔÙÊ¹ÓÃthread_node½á¹¹£¬
-		ÕûÌåÁ÷³Ì¼°¼Ü¹¹Î´±ä»¯.
+		Ê¹ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ±¾ï¿½ï¿½Ø²ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½thread_nodeï¿½á¹¹ï¿½ï¿½
+		ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¼ï¿½ï¿½Ü¹ï¿½Î´ï¿½ä»¯.
   
 */
 
@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-static struct frag_manage *g_ipv4_frag_manage;
+struct frag_manage *g_ipv4_frag_manage;
 static unsigned int FRAG_IP4_RANDOM;
 extern int g_overlay_layer_set[__ADDR_TYPE_MAX][SAPP_SUPPORT_LAYER_NUM_MAX];   
 extern int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_iphdr,
@@ -54,8 +54,8 @@ static void ipv4_frag_key_free(uchar *key, uint key_size);
 #endif
 #if IPV4_DEBUG
 /* 2012-04-10 LiJia add, 
-   ±ê×¼ICMPÍ·²¿¶¨Òå¹ýÓÚ¸´ÔÓ£¬
-   ¼ò»¯ICMPÐ­ÒéÍ·²¿£¬ÊÊÓÃÓÚ×î³£¼ûµÄECHO_REQUESTºÍECHO_REPLAY.
+   ï¿½ï¿½×¼ICMPÍ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½Ó£ï¿½
+   ï¿½ï¿½ICMPÐ­ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½î³£ï¿½ï¿½ï¿½ï¿½ECHO_REQUESTï¿½ï¿½ECHO_REPLAY.
 */
 void test_print_icmp(const struct mesa_ip4_hdr *a_packet)
 {
@@ -80,12 +80,12 @@ static inline int ipv4_buff_size(int tot_len)
 #if (0 == USE_MESA_STREAM_HASH	)
 /* 
 	return value:
-	0: keyÖµÏàÍ¬ 
-	ÆäËû:keyÖµ²»Í¬
+	0: keyÖµï¿½ï¿½Í¬ 
+	ï¿½ï¿½ï¿½ï¿½:keyÖµï¿½ï¿½Í¬
 */
 static int ipv4_frag_hash_cmp(void *hash_key1, void *hash_key2)
 {
-#if 0 /* ipv4_frag_key½á¹¹ÖÐÓÐpad×Ö¶Î, Ðè¾«È·±È½ÏÃ¿¸ö±äÁ¿ */
+#if 0 /* ipv4_frag_keyï¿½á¹¹ï¿½ï¿½ï¿½ï¿½padï¿½Ö¶ï¿½, ï¿½è¾«È·ï¿½È½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	return memcmp(hash_key1, hash_key2, sizeof(struct ipv4_frag_key));
 #else
 	const struct ipv4_frag_key *ipv4_fkey1 = (const struct ipv4_frag_key *)hash_key1;
@@ -129,7 +129,7 @@ static unsigned int ipv4_frag_hash_index(void *hash_key)
 
 static int ipv4_attack_detect(struct frag_ipq *ipv4_qp)
 {
-	/* Èç¹ûÒÑ¾­¼ì²â¹ýÓÐ¹¥»÷ÐÐÎª */
+	/* ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½ï¿½Îª */
 	if(ipv4_qp->attack_flag != 0)
 	{
 		return ipv4_qp->attack_flag;
@@ -141,13 +141,13 @@ static int ipv4_attack_detect(struct frag_ipq *ipv4_qp)
 		return IP_FRAG_IGNORE;
 	}
 	
-	// to do: ´ýÌí¼ÓÆäËû²ßÂÔ
+	// to do: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	
 	return IP_FRAG_OK;
 }
 
 #if (0 == USE_MESA_STREAM_HASH)
-/* ÒÀ¾Ý³¬Ê±²ßÂÔÇåÀíÄÚ´æ */
+/* ï¿½ï¿½ï¿½Ý³ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ */
 static void ipv4_frag_mem_clean_by_time(struct frag_manage *handle)
 {
 	struct frag_ipq *tmp, *next;
@@ -160,7 +160,7 @@ static void ipv4_frag_mem_clean_by_time(struct frag_manage *handle)
 		
 		frag_ipq_kill(handle, tmp);
 
-		/* Ã¿´ÎÖ»ÊÍ·ÅÒ»¶¨ÊýÁ¿µÄÄÚ´æ£¬±ÜÃâ³¤Ê±¼äÔÚ´Ëº¯ÊýÔËÐÐ£¬¼æ¹ËÆäËû´¦ÀíÁ÷³Ì */
+		/* Ã¿ï¿½ï¿½Ö»ï¿½Í·ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´æ£¬ï¿½ï¿½ï¿½â³¤Ê±ï¿½ï¿½ï¿½Ú´Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		if(raw_mem_size-handle->total_mem >= IPV4_FRAG_MEM_FREE_ONCE)
 		{
 			break;
@@ -171,7 +171,7 @@ static void ipv4_frag_mem_clean_by_time(struct frag_manage *handle)
 }
 
 
-/* ÒÀ¾ÝÕ¼ÓÃÄÚ´æÊýÁ¿ÇåÀíÄÚ´æ */
+/* ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ */
 static void ipv4_frag_mem_clean_by_size(struct frag_manage *handle)
 {
 	struct frag_ipq *tmp, *next;
@@ -184,7 +184,7 @@ static void ipv4_frag_mem_clean_by_size(struct frag_manage *handle)
 		
 		frag_ipq_kill(handle, tmp);
 
-		/* Ã¿´ÎÖ»ÊÍ·ÅÒ»¶¨ÊýÁ¿µÄÄÚ´æ£¬±ÜÃâ³¤Ê±¼äÔÚ´Ëº¯ÊýÔËÐÐ£¬¼æ¹ËÆäËû´¦ÀíÁ÷³Ì */
+		/* Ã¿ï¿½ï¿½Ö»ï¿½Í·ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´æ£¬ï¿½ï¿½ï¿½â³¤Ê±ï¿½ï¿½ï¿½Ú´Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		if(raw_mem_size-handle->total_mem >= IPV4_FRAG_MEM_FREE_ONCE)
 		{
 			break;
@@ -195,7 +195,7 @@ static void ipv4_frag_mem_clean_by_size(struct frag_manage *handle)
 }
 
 
-/* ÇåÀíÄÚ´æ£¬°´Ê±¼äºÍÕ¼ÓÃÄÚ´æÊýÁ¿ */
+/* ï¿½ï¿½ï¿½ï¿½ï¿½Ú´æ£¬ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ */
 static inline void ipv4_frag_mem_clean(struct frag_manage *handle)
 {
 	ipv4_frag_mem_clean_by_time(handle);
@@ -221,10 +221,10 @@ static struct frag_ipq *ipv4_frag_queue_find(struct streaminfo *pstream,
 #endif
 
 
-/* IP·ÖÆ¬ÖØ×éº¯ÊýÈë¿Ú
+/* IPï¿½ï¿½Æ¬ï¿½ï¿½ï¿½éº¯ï¿½ï¿½ï¿½ï¿½ï¿½
 	return value:
-	NULL: ·ÖÆ¬ÖØ×éÉÐÎ´Íê³É£¬»òÊÇ´íÎóµÄ·ÖÆ¬°ü;
-	·ÇNULL: ÖØ×éÍê³ÉºóµÄÍêÕûIP°üÍ·²¿Ö¸Õë£¬Ê¹ÓÃÍêºó£¬ÐèÒªfree().
+	NULL: ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î´ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½Ç´ï¿½ï¿½ï¿½Ä·ï¿½Æ¬ï¿½ï¿½;
+	ï¿½ï¿½NULL: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Éºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Í·ï¿½ï¿½Ö¸ï¿½ë£¬Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªfree().
 */
 static /*@null@*/ struct mesa_ip4_hdr *process_ipv4_frag(struct streaminfo_private *pfstream_pr, 
 		const struct mesa_ip4_hdr *a_packet, int thread_num,const raw_pkt_t *raw_pkt)
@@ -249,10 +249,10 @@ static /*@null@*/ struct mesa_ip4_hdr *process_ipv4_frag(struct streaminfo_priva
 #endif
 
 
-#if (USE_MESA_STREAM_HASH==0) /* »ùÓÚMESA_htable×Ô¶¯³¬Ê±ÌÔÌ­ */
+#if (USE_MESA_STREAM_HASH==0) /* ï¿½ï¿½ï¿½ï¿½MESA_htableï¿½Ô¶ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ì­ */
 	ipv4_frag_mem_clean(ip4_frag_handle); 
 #else
-	/* Ê¹ÓÃMESA_htableºó, ×Ô¶¯°´³¬Ê±ÌÔÌ­ */
+	/* Ê¹ï¿½ï¿½MESA_htableï¿½ï¿½, ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ì­ */
 	
 #endif	
 
@@ -270,7 +270,7 @@ static /*@null@*/ struct mesa_ip4_hdr *process_ipv4_frag(struct streaminfo_priva
 
 	IPV4_PRINT("##### ipv4_qp: %p\n", ipv4_qp);
 	
-	/* ¹¥»÷¼ì²â */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	attack_flag = ipv4_attack_detect(ipv4_qp);
 	switch(attack_flag)
 	{
@@ -301,6 +301,7 @@ static /*@null@*/ struct mesa_ip4_hdr *process_ipv4_frag(struct streaminfo_priva
 #endif
 
 	ipv4_qp->frags_num++;
+	ipv4_qp->frags_len+=raw_pkt->raw_pkt_len;
 
 	offset = ntohs(a_packet->ip_off);
 	flags = offset & ~IPv4_FRAG_OFFSET;
@@ -310,7 +311,7 @@ static /*@null@*/ struct mesa_ip4_hdr *process_ipv4_frag(struct streaminfo_priva
 	ip_hl = a_packet->ip_hl * 4;
 	end = offset + ntohs(a_packet->ip_len) - ip_hl;
 
-	if(NULL == ipv4_qp->private_info) /* ÊÕµ½µÄµÚÒ»¸ö·ÖÆ¬°ü */
+	if(NULL == ipv4_qp->private_info) /* ï¿½Õµï¿½ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ */
 	{
 		IPV4_PRINT("##### ipv4 frag first pkt!\n");
 		ipv4_qp->private_info = frag_malloc(ip4_frag_handle, sizeof(struct ipv4_frag_private));
@@ -335,7 +336,7 @@ static /*@null@*/ struct mesa_ip4_hdr *process_ipv4_frag(struct streaminfo_priva
 		return NULL;
 	}
 	
-	/* ´íÎóÅÐ¶Ï */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ */
 	if((flags & IPv4_FRAG_MF) == 0) 
 	{
 		/* If we already have some bits beyond end
@@ -352,7 +353,7 @@ static /*@null@*/ struct mesa_ip4_hdr *process_ipv4_frag(struct streaminfo_priva
 	} 
 	else 
 	{
-		if(end & 7) /* ·Ç8µÄÕûÊý±¶ */
+		if(end & 7) /* ï¿½ï¿½8ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		{
 			goto err;
 		}
@@ -369,11 +370,11 @@ static /*@null@*/ struct mesa_ip4_hdr *process_ipv4_frag(struct streaminfo_priva
 		{
 			ipv4_qp->last_in |= IP_FRAG_FIRST_IN;
 			IPV4_PRINT("### ipv4 frag first flag!\n");
-			if(ip_hl > private_info->raw_ip_hdr_len){ /* Êµ¼ÊÍ·²¿³¤¶È³¬¹ýÔ¤ÁôÍ·²¿³¤¶È */
-				if (end + ip_hl > ipv4_qp->buf_size){  /* ÊÇ·ñÐèÒªÀ©³ä»º´æ¿Õ¼ä */
+			if(ip_hl > private_info->raw_ip_hdr_len){ /* Êµï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½È³ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+				if (end + ip_hl > ipv4_qp->buf_size){  /* ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ä»ºï¿½ï¿½Õ¼ï¿½ */
 					new_buf_size = ipv4_buff_size(end + ip_hl);
 					new_ip4h = (struct mesa_ip4_hdr *)frag_malloc(ip4_frag_handle, new_buf_size);
-					if(ipv4_qp->meat > 0){ /* meat>0, Ö®Ç°ÒÑ¾­´æ´¢¹ýÊý¾Ý, Í¨³£¿ÉÄÜÊÇ·ÖÆ¬ÂÒÐò, ¼´ÏÈÊÕµ½ºóÐøµÄ·ÖÆ¬°ü */
+					if(ipv4_qp->meat > 0){ /* meat>0, Ö®Ç°ï¿½Ñ¾ï¿½ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½Æ¬ï¿½ï¿½ */
 						memcpy((char *)new_ip4h + ip_hl, (char *)ipv4_qp->new_iph + private_info->raw_ip_hdr_len,  ipv4_qp->buf_size);
 					}
 					frag_free(ip4_frag_handle, ipv4_qp->new_iph, ipv4_qp->buf_size);
@@ -381,8 +382,8 @@ static /*@null@*/ struct mesa_ip4_hdr *process_ipv4_frag(struct streaminfo_priva
 					ipv4_qp->buf_size = new_buf_size;
 				}
 			}
-			private_info->raw_ip_hdr_len = ip_hl; /* ¸üÐÂµÚÒ»¸ö°üµÄÊµ¼ÊÍ·²¿³¤¶È */
-			memcpy(ipv4_qp->new_iph, a_packet, ip_hl); /* ±£ÁôµÚÒ»¸öIP·ÖÆ¬°üÍ·²¿ */
+			private_info->raw_ip_hdr_len = ip_hl; /* ï¿½ï¿½ï¿½Âµï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+			memcpy(ipv4_qp->new_iph, a_packet, ip_hl); /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½Í·ï¿½ï¿½ */
 		}
 	}
 	if(end <= offset)
@@ -551,10 +552,13 @@ found:
 		ipv4_qp->ipfrag_list = NULL;
 #endif
 
-		/* Warning, µ÷ÓÃfrag_reassemble()ºó£¬ipv4_qp½«±»free£¬
-		   ËùÒÔ£¬ÒªÏÈ½«ÆäÖÐÓÐÓÃµÄÐÅÏ¢ÌáÈ¡³öÀ´£¬±ÈÈçÔ­Ê¼IP°ü³¤¶È.
-		*/
+		/* Warning, ï¿½ï¿½ï¿½ï¿½frag_reassemble()ï¿½ï¿½ipv4_qpï¿½ï¿½ï¿½ï¿½freeï¿½ï¿½
+		   ï¿½ï¿½ï¿½Ô£ï¿½Òªï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½Ï¢ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼IPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
+		*/	
 		raw_ip_len = ntohs(ipv4_qp->meat + private_info->raw_ip_hdr_len);
+		//set scratch before frag_reassemble, cause frag_reassemble will free ipq
+		ip4_frag_handle->scratch_frag_cnt=ipv4_qp->frags_num;
+		ip4_frag_handle->scratch_frag_len=ipv4_qp->frags_len;		
 #if USE_MESA_STREAM_HASH
 		new_ip4h = (struct mesa_ip4_hdr*)frag_reassemble_v4(ip4_frag_handle, ipv4_qp, &ip4_frag_key);
 #else
@@ -584,20 +588,20 @@ static inline void set_ipv4_addr(struct stream_tuple4_v4 *addr, struct mesa_ip4_
 {
 	addr->saddr = iphdr->ip_src.s_addr;
 	addr->daddr = iphdr->ip_dst.s_addr;
-	addr->source = 0; /* ¶Ë¿ÚÐÅÏ¢ÔÚtcp/udp²ãÉèÖÃ */
-	addr->dest = 0;/* ¶Ë¿ÚÐÅÏ¢ÔÚtcp/udp²ãÉèÖÃ */
+	addr->source = 0; /* ï¿½Ë¿ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½tcp/udpï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	addr->dest = 0;/* ï¿½Ë¿ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½tcp/udpï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 }
 
 extern int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_pkt_t *rawpkt);
 extern int stream_process_overlay_ipv4(struct streaminfo *pfstream, const struct ip* this_layer_hdr,
 				int thread_num,unsigned char routedir, const raw_pkt_t *raw_pkt);
 
-/* IPv4Êý¾Ý°üÈë¿Úº¯Êý, °üÀ¨·ÖÆ¬°ü */
+/* IPv4ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ */
 int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_data, int thread_num, 
 			unsigned char routedir, const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
 {
 	const struct mesa_ip4_hdr *a_packet = (const struct mesa_ip4_hdr *)this_layer_data;
-	struct mesa_ip4_hdr *new_iph = NULL; /* Èç¹ûÔ­Ê¼°ü±»·ÖÆ¬£¬´ËÖ¸ÕëÖ¸ÏòÖØ×éÍê³ÉºóµÄÐÂIP°ü */
+	struct mesa_ip4_hdr *new_iph = NULL; /* ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Éºï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½ */
 	unsigned short offset, flags;
 	int ret = PASS;
 	char need_free = 0;
@@ -608,7 +612,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	struct streaminfo_private *pstream_pr;
 	struct streaminfo *pstream;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
-	/* ×¢Òâ, ´Ë´¦»ñÈ¡µ±Ç°²ã³¤¶ÈÓÃipÍ·²¿×Ö¶Î¼ÆËãµÃ³ö, ¶ø²»ÊÇthis_layer_data- raw_pkt->raw_pkt_data, ÒòÎªÄ³Ð©²»×ã64×Ö½ÚµÄÐ¡°üºóÃæ»áÓÐtriler, µ¼ÖÂÁ½Õß¼ÆËã²»Ò»ÖÂ */
+	/* ×¢ï¿½ï¿½, ï¿½Ë´ï¿½ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ã³¤ï¿½ï¿½ï¿½ï¿½ipÍ·ï¿½ï¿½ï¿½Ö¶Î¼ï¿½ï¿½ï¿½Ã³ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½this_layer_data- raw_pkt->raw_pkt_data, ï¿½ï¿½ÎªÄ³Ð©ï¿½ï¿½ï¿½ï¿½64ï¿½Ö½Úµï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½triler, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ã²»Ò»ï¿½ï¿½ */
 	int this_layer_len = ntohs(a_packet->ip_len);
 	int this_layer_is_overlay = 0;
 
@@ -620,9 +624,9 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	}
 
 
-	/* NOTE, ×¢Òâ, ÇÐ¼Ç: 
-	   ÔÚÏß»·¾³ÏÂÔø·¢ÏÖÄªÃûÆäÃîµÄIPv4°ü, Í·²¿×Ö¶Î²»ºÏ·¨,
-	   »áÔì³ÉÆ½Ì¨coredump, ÉõÖÁ»áËÀÑ­»·, Ò»¶¨Òª×öÍ·²¿ºÏ·¨ÐÔ¼ì²é!! 
+	/* NOTE, ×¢ï¿½ï¿½, ï¿½Ð¼ï¿½: 
+	   ï¿½ï¿½ï¿½ß»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPv4ï¿½ï¿½, Í·ï¿½ï¿½ï¿½Ö¶Î²ï¿½ï¿½Ï·ï¿½,
+	   ï¿½ï¿½ï¿½ï¿½ï¿½Æ½Ì¨coredump, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½, Ò»ï¿½ï¿½Òªï¿½ï¿½Í·ï¿½ï¿½ï¿½Ï·ï¿½ï¿½Ô¼ï¿½ï¿½!! 
 	 */
 	if(unlikely(checkipv4pkt(a_packet, raw_pkt) < 0)){
 		local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
@@ -647,9 +651,9 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	}
 	set_ipv4_addr(&addr, (struct mesa_ip4_hdr *)a_packet);
 	pstream->addr.paddr = &addr;
-	/* ÔÚIP²ãÏÈÉèÖÃÎª__ADDR_TYPE_IP_PAIR_V4, Èç¹ûÉÏ²ãÊÇTCP/UDP, »áÖØÐÂÉèÖÃÎªADDR_TYPE_IPV4, Èç¹ûÊÇIpv6_over_ipv4ËíµÀ, Ôò±£Áô´¿IP²ãµØÖ·ÌØÐÔ */
+	/* ï¿½ï¿½IPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª__ADDR_TYPE_IP_PAIR_V4, ï¿½ï¿½ï¿½ï¿½Ï²ï¿½ï¿½ï¿½TCP/UDP, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªADDR_TYPE_IPV4, ï¿½ï¿½ï¿½ï¿½ï¿½Ipv6_over_ipv4ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ */
 	pstream->addr.addrtype = __ADDR_TYPE_IP_PAIR_V4;
-	pstream->addr.addrlen = sizeof(struct stream_tuple4_v4); /* µØÖ·³¤¶È¹Ì¶¨Ê¹ÓÃËÄÔª×é¸ñÊ½µÄ, Èç¹ûÊÇËíµÀ, ÔòÀË·ÑÁ½¸ö¶Ë¿Ú,4×Ö½Ú¿Õ¼ä */
+	pstream->addr.addrlen = sizeof(struct stream_tuple4_v4); /* ï¿½ï¿½Ö·ï¿½ï¿½ï¿½È¹Ì¶ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½Ê½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¿ï¿½,4ï¿½Ö½Ú¿Õ¼ï¿½ */
 	pstream->addr.pkttype = PKT_TYPE_NORMAL;
 	pstream->addr.pktipfragtype = PKT_TYPE_NORMAL; /* 2014-12-25 lijia add */
 	this_layer_is_overlay = sapp_is_overlay_layer(pstream_pr, raw_pkt);
@@ -660,7 +664,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 		pstream_pr->addr_use_as_hash = 1;	
 	}
 
-	/* 2012-11-01 add, ÔÚinlineÄ£Ê½ÏÂ£¬Íâ²ãoverlay²ã²»´¦Àí×é²¥µØÖ· */
+	/* 2012-11-01 add, ï¿½ï¿½inlineÄ£Ê½ï¿½Â£ï¿½ï¿½ï¿½ï¿½overlayï¿½ã²»ï¿½ï¿½ï¿½ï¿½ï¿½é²¥ï¿½ï¿½Ö· */
 	if((g_topology_mode & __NET_CONN_GDEV) && (this_layer_is_overlay != 0)){
 		if(is_multicast_addr_v4(ntohl(a_packet->ip_dst.s_addr))){
 			local_sys_stat->count[SAPP_STAT_DROP_IPV4]++;
@@ -674,8 +678,8 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;
 	pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
 
-	/* LiJia add, ÈËÎªÓÃÄ³ÖÖËã·¨ËæÒâ¶¨ÒåÒ»¸ö±¾²ãµØÖ·µÄ·½Ïò, ÀýÈçÅÐ¶ÏmemcmpµÄ½á¹û */
-//	if(memcmp(&(a_packet->ip_src.s_addr), &(a_packet->ip_dst.s_addr), sizeof(int)) >= 0){ /* Ö±½ÓÅÐ¶Ï, ²»ÔÙµ÷ÓÃmemcmpº¯Êý */
+	/* LiJia add, ï¿½ï¿½Îªï¿½ï¿½Ä³ï¿½ï¿½ï¿½ã·¨ï¿½ï¿½ï¿½â¶¨ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½Ä·ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½memcmpï¿½Ä½ï¿½ï¿½ */
+//	if(memcmp(&(a_packet->ip_src.s_addr), &(a_packet->ip_dst.s_addr), sizeof(int)) >= 0){ /* Ö±ï¿½ï¿½ï¿½Ð¶ï¿½, ï¿½ï¿½ï¿½Ùµï¿½ï¿½ï¿½memcmpï¿½ï¿½ï¿½ï¿½ */
 	if(a_packet->ip_src.s_addr >= a_packet->ip_dst.s_addr){
 		pstream_pr->layer_dir = 1;
 		pstream->curdir = DIR_C2S;
@@ -685,7 +689,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	}
 
 	if((pfstream_pr != NULL)
-	  && (g_overlay_layer_set[pfstream_pr->stream_public.addr.addrtype][pfstream_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlay²ãµÄpfatherÉèÎªNULL, ²å¼þ²»¿É¼û */
+	  && (g_overlay_layer_set[pfstream_pr->stream_public.addr.addrtype][pfstream_pr->layer_index] != 0)){ /* 2021-01-11 lijia add, overlayï¿½ï¿½ï¿½pfatherï¿½ï¿½ÎªNULL, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¼ï¿½ */
 		pstream->pfather = NULL;
 	}else{
 		pstream->pfather=pfstream;
@@ -695,14 +699,14 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
 
-	/* 2020-12-23 lijia add, ÎÞmrtunnatÄ£Ê½, Èç¹ûÊÇoverlay²ã, ²»µ÷ÓÃÆÕÍ¨²å¼þ */
+	/* 2020-12-23 lijia add, ï¿½ï¿½mrtunnatÄ£Ê½, ï¿½ï¿½ï¿½ï¿½ï¿½overlayï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ */
 	if(this_layer_is_overlay != 0){
 		ret = stream_process_overlay_ipv4(pstream, (const struct ip *)this_layer_data, thread_num, routedir, raw_pkt);
 		if(DROP == ret){
 			return DROP;
 		}
 		int next_layer_offest = offset_to_raw_pkt_hdr + (a_packet->ip_hl << 2);
-		/* Èç¹ûÊÇVXLANÄ£Ê½µÄoverlay²ã, ²»×öip·ÖÆ¬»¹Ô­,Ö±½ÓÌø×ªµ½udp_entry */
+		/* ï¿½ï¿½ï¿½ï¿½ï¿½VXLANÄ£Ê½ï¿½ï¿½overlayï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ipï¿½ï¿½Æ¬ï¿½ï¿½Ô­,Ö±ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½udp_entry */
 		ret=dealipv4udppkt(ptmp,a_packet,thread_num,routedir,raw_pkt, next_layer_offest);
 		return ret;
 	}
@@ -722,7 +726,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
         }
         pstream->addr.pktipfragtype = PKT_TYPE_IP_FRAG;
 #if USE_MESA_STREAM_HASH
-        /* »ùÓÚËíµÀÇ¶Ì×Ä£Ê½, Ê¹ÓÃ±¾²ãÁ÷½á¹¹, ¶ø·Çfather->stream */
+        /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½Ä£Ê½, Ê¹ï¿½Ã±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹, ï¿½ï¿½ï¿½ï¿½father->stream */
         new_iph = (struct mesa_ip4_hdr *)process_ipv4_frag(&ptmp->stream, a_packet, thread_num, raw_pkt);
 #else
         new_iph = (struct mesa_ip4_hdr *)process_ipv4_frag(pfstream_pr, a_packet, thread_num, raw_pkt);
@@ -731,10 +735,10 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
         {
             local_sys_stat->count[SAPP_STAT_RCV_IPV4_FRAG]++;
             local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG]++;
-            /* ´¿IP·ÖÆ¬, »¹Î´ÖØ×éÍê³É, ´Ë´¦Ö»µ÷ÓÃIPFRAG,
-               ²»±Ø¿´sapp_global_single.ipentry_priority_over_ipfrag,
-               Èç¹ûÊÇ×îºóÒ»¸ö·ÖÆ¬µ½´ï, ÇÒÈ«²¿IP°üÖØ×éÍê³É, ÐèÒªÅÐ¶Ïsapp_global_single.ipentry_priority_over_ipfrag,
-               ¾ö¶¨ÏÈµ÷ÓÃip_entry, »¹ÊÇip_frag_entry.
+            /* ï¿½ï¿½IPï¿½ï¿½Æ¬, ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ë´ï¿½Ö»ï¿½ï¿½ï¿½ï¿½IPFRAG,
+               ï¿½ï¿½ï¿½Ø¿ï¿½sapp_global_single.ipentry_priority_over_ipfrag,
+               ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½È«ï¿½ï¿½IPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Òªï¿½Ð¶ï¿½sapp_global_single.ipentry_priority_over_ipfrag,
+               ï¿½ï¿½ï¿½ï¿½ï¿½Èµï¿½ï¿½ï¿½ip_entry, ï¿½ï¿½ï¿½ï¿½ip_frag_entry.
             */
             stream_process_ipv4_frag(pstream, (const struct ip *)a_packet, thread_num, routedir, raw_pkt);
             return PASS;
@@ -749,7 +753,7 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 		local_sys_stat->length[SAPP_STAT_RCV_IPV4_FRAG] += this_layer_len;
 	}else{
 		//if(0 == this_layer_is_overlay)
-		{ /* ·Çoverlay²ã²ÅÀÛ¼ÓÏà¹Ø²ã¼ÆÊý */
+		{ /* ï¿½ï¿½overlayï¿½ï¿½ï¿½ï¿½Û¼ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ */
 			local_sys_stat->count[SAPP_STAT_RCV_IPV4]++;
 			local_sys_stat->length[SAPP_STAT_RCV_IPV4] += this_layer_len;
 			if (routedir == sapp_global_val->config.packet_io.inbound_route_dir)
@@ -766,17 +770,17 @@ int ipv4_entry(struct streaminfo_private *pfstream_pr, const void *this_layer_da
 	}
 
 	/* 2017-05-11 lijia add, 
-	   ÅÐ¶ÏIPºÍIPFRAG²ãË­±»ÓÅÏÈµ÷ÓÃ,
-	   ÔÚÖ÷´ÓÄ£Ê½ÏÂ, "¿ÛÁô"×îºóÒ»¸öIP·ÖÆ¬°ü, ´ïµ½¶ªÆúÕû¸öÔ­Ê¼IP°üµÄÄ¿µÄ!
+	   ï¿½Ð¶ï¿½IPï¿½ï¿½IPFRAGï¿½ï¿½Ë­ï¿½ï¿½ï¿½ï¿½ï¿½Èµï¿½ï¿½ï¿½,
+	   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½, "ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½ï¿½Ò»ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½, ï¿½ïµ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼IPï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½!
 	 */
   	if(unlikely(sapp_global_single.ipentry_priority_over_ipfrag != 0)){
 		ret = process_ipv4_pkt(ptmp, a_packet, thread_num, routedir, raw_pkt, offset_to_raw_pkt_hdr);
 		if((PASS == ret) && (pstream->addr.pktipfragtype & (PKT_TYPE_IP_FRAG | PKT_TYPE_IP_FRAG_LAST))){
-			/* NOTE: ´Ë´¦Ê¹ÓÃthis_layer_data, ¼´ÍøÂçÖÐÕæÊµµÄÔ­Ê¼IP·ÖÆ¬°ü */
+			/* NOTE: ï¿½Ë´ï¿½Ê¹ï¿½ï¿½this_layer_data, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½Ô­Ê¼IPï¿½ï¿½Æ¬ï¿½ï¿½ */
 			ret = stream_process_ipv4_frag(pstream, (const struct ip *)this_layer_data, thread_num, routedir, raw_pkt);
 		}
   	}else{
-  		/* NOTE: ´Ë´¦Ê¹ÓÃthis_layer_data, ¼´ÍøÂçÖÐÕæÊµµÄÔ­Ê¼IP·ÖÆ¬°ü */
+  		/* NOTE: ï¿½Ë´ï¿½Ê¹ï¿½ï¿½this_layer_data, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½Ô­Ê¼IPï¿½ï¿½Æ¬ï¿½ï¿½ */
   		if(pstream->addr.pktipfragtype & (PKT_TYPE_IP_FRAG | PKT_TYPE_IP_FRAG_LAST)){
 			ret = stream_process_ipv4_frag(pstream, (const struct ip *)this_layer_data, thread_num, routedir, raw_pkt);	
 		}
@@ -859,15 +863,15 @@ MESA_htable_handle ipv4_frag_htable_create(void)
 	hargs.thread_safe = 0;
 	hargs.recursive = 0;
 	hargs.hash_slot_size = 1048576;
-	hargs.max_elem_num = 50000;   /* TODO 1: Éè¸öÄ¬ÈÏÖµ, Ôö¼ÓÅäÖÃÎÄ¼þ,¿ÉÖ¸¶¨×î´ó·ÖÆ¬¶ÓÁÐÊýÁ¿ !! */
+	hargs.max_elem_num = 50000;   /* TODO 1: ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Öµ, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½,ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ !! */
 	hargs.eliminate_type = HASH_ELIMINATE_ALGO_LRU;
 	hargs.expire_time = IPV4_FRAG_TIMEOUT;
 	hargs.key_comp = ipv4_frag_key_cmp_cb;
 	hargs.key2index = ipv4_frag_hash_index;
 	hargs.data_free = ipv4_frag_ipq_free_all;
 	hargs.data_expire_with_condition = NULL;
-	hargs.complex_key_dup = ipv4_frag_key_dup; /* ÓÃÓÚ¸´ÔÓ½á¹¹µÄkey¸´ÖÆ, ÈçcopyÒ»¸öµØÖ·Á´±í */
-	hargs.complex_key_free = ipv4_frag_key_free; /* É¾³ýÊ±ÊÍ·ÅkeyµÄÄÚ´æ×ÊÔ´ */
+	hargs.complex_key_dup = ipv4_frag_key_dup; /* ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½Ó½á¹¹ï¿½ï¿½keyï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½copyÒ»ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ */
+	hargs.complex_key_free = ipv4_frag_key_free; /* É¾ï¿½ï¿½Ê±ï¿½Í·ï¿½keyï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ô´ */
 
 	return MESA_htable_create(&hargs, sizeof(MESA_htable_create_args_t));
 }
@@ -960,7 +964,7 @@ static inline int checkipv4pkt(const struct mesa_ip4_hdr * iph, const raw_pkt_t 
 
 #if 0
 	switch(iph->ip_p){
-		/* Ä¿Ç°Æ½Ì¨Ö»´¦ÀíÈçÏÂ¼¸ÀàÐ­Òé, ÆäËûÔÝ²»Ö§³Ö»òÊÇÒì³£Êý¾Ý°ü */
+		/* Ä¿Ç°Æ½Ì¨Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Ð­ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ý²ï¿½Ö§ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ì³£ï¿½ï¿½ï¿½Ý°ï¿½ */
 		case IPPROTO_TCP:
 		case IPPROTO_UDP:
 		case IPPROTO_IPV6:	
@@ -980,7 +984,7 @@ static inline int checkipv4pkt(const struct mesa_ip4_hdr * iph, const raw_pkt_t 
 	}
 #else
 	ip_proto = iph->ip_p;
-	if(ip_proto >= 0x8F){ /* IPÐ­Òé×Ö¶Î´óÓÚ0x8fµÄÄ¿Ç°²»ºÏ·¨ */
+	if(ip_proto >= 0x8F){ /* IPÐ­ï¿½ï¿½ï¿½Ö¶Î´ï¿½ï¿½ï¿½0x8fï¿½ï¿½Ä¿Ç°ï¿½ï¿½ï¿½Ï·ï¿½ */
 		sapp_runtime_log(RLOG_LV_DEBUG, "ipv4 packet check error: unknow proto: %u", ip_proto);
 		return -1;
 	}
@@ -1093,7 +1097,7 @@ static void ipv4_frag_ipq_free_all(void *data)
 {
 	struct frag_ipq *ipq = (struct frag_ipq *)data;
 
-	/* ÒòÖØ×é´íÎóÉ¾³ýÊ±, ÒªÊÍ·Ånew_iphÄÚ´æ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½Ê±, Òªï¿½Í·ï¿½new_iphï¿½Ú´ï¿½ */
 	if(ipq->new_iph){
 		sapp_mem_free(SAPP_MEM_DYN_IP_FRAG_PKT,ipq->thread_num, ipq->new_iph);
 	}

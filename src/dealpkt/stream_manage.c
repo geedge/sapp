@@ -42,6 +42,29 @@ static inline void update_stream_status(UCHAR threadnum, UCHAR type, UCHAR strea
 int project_requirement_global_init(void);
 static inline void __do_streamleavlist(struct streamindex *pindex,struct stream_list *plist);
 
+#include "ip_reassembly.h"
+extern struct frag_manage *g_ipv4_frag_manage;
+extern struct frag_manage *g_ipv6_frag_manage;
+
+inline void stream_get_scratch_frag_stat(struct streaminfo *pstream, int *frag_cnt, int *frag_len)
+{
+	if(g_ipv4_frag_manage == NULL || g_ipv6_frag_manage == NULL)return;
+    if (pstream == NULL || frag_cnt == NULL || frag_len == NULL)return;
+	struct frag_manage *thread_frag_manage = NULL;
+    if (pstream->addr.addrtype == ADDR_TYPE_IPV4)
+    {
+		thread_frag_manage=&g_ipv4_frag_manage[pstream->threadnum];
+    }
+    if (pstream->addr.addrtype == ADDR_TYPE_IPV6)
+    {
+		thread_frag_manage=&g_ipv6_frag_manage[pstream->threadnum];
+
+    }
+	*frag_cnt = thread_frag_manage->scratch_frag_cnt;
+    *frag_len = thread_frag_manage->scratch_frag_len;
+    return;
+}
+
 int tcp_stream_table_size=0;
 int udp_stream_table_size=0;
 int tcpstate_num[MAX_TCP_STATE]={8000,2000,4000};

@@ -4,20 +4,20 @@
 #include "stream_internal.h" 
 
 
-#define USE_MESA_STREAM_HASH			(1) /* Ê¹ÓÃ»ùÓÚËíµÀÄ£Ê½ÐÂµÄHASH±í */	
+#define USE_MESA_STREAM_HASH			(1) /* Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Âµï¿½HASHï¿½ï¿½ */	
 #if USE_MESA_STREAM_HASH
 #include "MESA_htable.h"
 #endif
 
-#define IP_FRAG_DEFAULT_BUF_SIZE		(2048) /* Ô¤ÁôµÄÄ¬ÈÏIP·ÖÆ¬ÖØ×é»º³åÇø´óÐ¡, Í¨¹ýÍ³¼ÆµÃ³ö, ÖØ×éºóµÄIP°ü³¤¶ÈÐ¡ÓÚ2KBµÄÕ¼90%ÒÔÉÏ */
+#define IP_FRAG_DEFAULT_BUF_SIZE		(2048) /* Ô¤ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½ï¿½é»ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡, Í¨ï¿½ï¿½Í³ï¿½ÆµÃ³ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½2KBï¿½ï¿½Õ¼90%ï¿½ï¿½ï¿½ï¿½ */
 
-#define IP_FRAG_OK					(0x00)	/* ¼ì²âÕý³£ */
-#define IP_FRAG_INVALID_PACKET			(0x10)	/* ÎÞÐ§·ÖÆ¬°ü£¬´Ë·ÖÆ¬°ü²»ÔÙ´¦Àí£¬µ«¼ÌÐø´¦ÀíÍ¬Ò»IPQµÄÏÂÒ»¸ö·ÖÆ¬°ü */
-#define IP_FRAG_DISCARD				(0x08)	/* ¹¥»÷·ÖÆ¬°ü£¬Á¢¼´ÊÍ·ÅÕû¸öIPQ¶ÓÁÐ */
-#define IP_FRAG_IGNORE					(0x04)	/* ¹¥»÷·ÖÆ¬°ü£¬ÒÔºóÍ¬Ò»IPQ¶ÓÁÐµÄ·ÖÆ¬°ü¶¼²»ÔÙ´¦Àí£¬µ«²»Çå³ýIPQ£¬Ö±ÖÁ³¬Ê± */
+#define IP_FRAG_OK					(0x00)	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+#define IP_FRAG_INVALID_PACKET			(0x10)	/* ï¿½ï¿½Ð§ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½Ë·ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ò»IPQï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ */
+#define IP_FRAG_DISCARD				(0x08)	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½IPQï¿½ï¿½ï¿½ï¿½ */
+#define IP_FRAG_IGNORE					(0x04)	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½Ôºï¿½Í¬Ò»IPQï¿½ï¿½ï¿½ÐµÄ·ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPQï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Ê± */
 
-#define IP_FRAG_FIRST_IN              		(0x02)	/* ÒÑÊÕµ½ÁËµÚÒ»¸ö·ÖÆ¬°ü */
-#define IP_FRAG_LAST_IN               		(0x01)	/* ÒÑÊÕµ½ÁË×îºóÒ»¸ö·ÖÆ¬°ü */
+#define IP_FRAG_FIRST_IN              		(0x02)	/* ï¿½ï¿½ï¿½Õµï¿½ï¿½Ëµï¿½Ò»ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ */
+#define IP_FRAG_LAST_IN               		(0x01)	/* ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ */
 
 
 struct addr_list{
@@ -26,59 +26,62 @@ struct addr_list{
 };
 
 
-/* Ò»¸ö·ÖÆ¬°ü */
+/* Ò»ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ */
 struct ip_frags{
-	int offset;				/* ´Ë·ÖÆ¬°üµÚÒ»¸ö×Ö½ÚÏà¶ÔÔ­Ê¼°üµÄÆ«ÒÆÁ¿ */
-	int end;            	/* ´Ë·ÖÆ¬°ü×îºóÒ»¸ö×Ö½ÚÏà¶ÔÔ­Ê¼°üµÄÆ«ÒÆÁ¿ */
-	struct ip_frags *next;	/* ´Ë·ÖÆ¬°üÔÚ·ÖÆ¬Á´±íÖÐµÄºó¼Ì½Úµã */
-	struct ip_frags *prev;	/* ´Ë·ÖÆ¬°üÔÚ·ÖÆ¬Á´±íÖÐµÄÇ°Çý½Úµã */
+	int offset;				/* ï¿½Ë·ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ */
+	int end;            	/* ï¿½Ë·ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ */
+	struct ip_frags *next;	/* ï¿½Ë·ï¿½Æ¬ï¿½ï¿½ï¿½Ú·ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄºï¿½Ì½Úµï¿½ */
+	struct ip_frags *prev;	/* ï¿½Ë·ï¿½Æ¬ï¿½ï¿½ï¿½Ú·ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½Ç°ï¿½ï¿½ï¿½Úµï¿½ */
 };
 
 
-/* ·ÖÆ¬ÖØ×é¶ÓÁÐ */
+/* ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 struct frag_ipq{
-	int buf_size; 		/* ÐÂIP°ü»º´æµÄ³¤¶È */
-	short last_in; 		/* ±êÖ¾Î»£¬ÊÕµ½µÚÒ»¸ö°ü»ò×îºóÒ»¸ö°ü */
-	short attack_flag;  /* ±êÖ¾Î»£¬ÊÇ·ñ¼ì²âµ½¶ñÒâ¹¥»÷Êý¾Ý°ü */
-	int tot_len; 		/* µ±Ç°ÊÕµ½·ÖÆ¬°üµÄ×î´óÆ«ÒÆÁ¿ */
-	int meat;			/* Êµ¼ÊÊÕµ½µÄIP·ÖÆ¬°üÓÐÐ§Êý¾Ý³¤¶È */
-	unsigned int hash_index; 	/* ±£´æ¼ÆËã³öµÄHASHÖµ£¬ÒÔºóÖØ¸´Ê¹ÓÃ£¬ÎÞÐèÔÙ´Î¼ÆËã */
+	int buf_size; 		/* ï¿½ï¿½IPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ */
+	short last_in; 		/* ï¿½ï¿½Ö¾Î»ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ */
+	short attack_flag;  /* ï¿½ï¿½Ö¾Î»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½âµ½ï¿½ï¿½ï¿½â¹¥ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ */
+	int tot_len; 		/* ï¿½ï¿½Ç°ï¿½Õµï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ */
+	int meat;			/* Êµï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½ */
+	unsigned int hash_index; 	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½HASHÖµï¿½ï¿½ï¿½Ôºï¿½ï¿½Ø¸ï¿½Ê¹ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù´Î¼ï¿½ï¿½ï¿½ */
 	int hash_key_size;
-	int private_len;	/* ÓëÐ­ÒéÃÜÇÐÏà¹ØµÄ¶ÀÁ¢²ÎÊý³¤¶È */
-	int frags_num;		/* ÊÕµ½µÄ·ÖÆ¬°ü¸öÊý */
-	time_t create_time; /* ipq½¨Á¢Ê±¼ä£¬¼´ÊÕµ½µÚÒ»¸ö·ÖÆ¬°üµÄÊ±¼ä */
-	void *new_iph; 		/* ÖØ×éºóµÄÐÂIP°üÍ·²¿Ö¸Õë */
-	struct ip_frags *fragments;			/* ·ÖÆ¬°üÁ´±íÍ· */
-	struct ip_frags *fragments_tail;	/* ·ÖÆ¬°üÁ´±íÎ² */
+	int private_len;	/* ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ØµÄ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	int frags_num;		/* ï¿½Õµï¿½ï¿½Ä·ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	time_t create_time; /* ipqï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ */
+	void *new_iph; 		/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Í·ï¿½ï¿½Ö¸ï¿½ï¿½ */
+	struct ip_frags *fragments;			/* ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í· */
+	struct ip_frags *fragments_tail;	/* ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î² */
+	int frags_len;
 #if USE_MESA_STREAM_HASH
-	int thread_num;	/* Ê¹ÓÃÐÂHASHÊ±, thread_num²»ºÃ´«µÝ, ·ÅÓÚ´Ë½á¹¹ÄÚ */
+	int thread_num;	/* Ê¹ï¿½ï¿½ï¿½ï¿½HASHÊ±, thread_numï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ú´Ë½á¹¹ï¿½ï¿½ */
 #else
-	struct frag_ipq *hash_prev;  		/* HASH³åÍ»Á´±íµÄÇ°Çý½Úµã */
-	struct frag_ipq *hash_next;  		/* HASH³åÍ»Á´±íµÄºó¼Ì½Úµã */
-	struct frag_ipq *lru_prev;  		/* LRUÁ´±íµÄÇ°Çý½Úµã */
-	struct frag_ipq *lru_next;  		/* LRUÁ´±íµÄºó¼Ì½Úµã */
+	struct frag_ipq *hash_prev;  		/* HASHï¿½ï¿½Í»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Úµï¿½ */
+	struct frag_ipq *hash_next;  		/* HASHï¿½ï¿½Í»ï¿½ï¿½ï¿½ï¿½ï¿½Äºï¿½Ì½Úµï¿½ */
+	struct frag_ipq *lru_prev;  		/* LRUï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Úµï¿½ */
+	struct frag_ipq *lru_next;  		/* LRUï¿½ï¿½ï¿½ï¿½ï¿½Äºï¿½Ì½Úµï¿½ */
 #endif	
-	void *hash_key; /* hash key£¬ÓëÐ­ÒéÎÞ¹Ø£¬ÓÉ¹«¹²Ä£¿éÉêÇë¿Õ¼ä£¬³¤¶ÈÓÉhash_key_sizeÖ¸¶¨ */
-	void *private_info; 	/* ÓëÐ­ÒéÃÜÇÐÏà¹ØµÄ¶ÀÁ¢²ÎÊý£¬Ðè×ÔÐÐÉêÇë¿Õ¼ä, ³¤¶ÈÓÉprivate_lenÖ¸¶¨ */
-	raw_ipfrag_list_t *ipfrag_list; /* ÔÝÊ±´æ´¢ËùÓÐÔ­Ê¼·ÖÆ¬°ü */
+	void *hash_key; /* hash keyï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½Þ¹Ø£ï¿½ï¿½É¹ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ä£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½hash_key_sizeÖ¸ï¿½ï¿½ */
+	void *private_info; 	/* ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ØµÄ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½private_lenÖ¸ï¿½ï¿½ */
+	raw_ipfrag_list_t *ipfrag_list; /* ï¿½ï¿½Ê±ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½Æ¬ï¿½ï¿½ */
 };
 
 
-/* ·ÖÆ¬ÖØ×éµÄ¹ÜÀí½á¹¹£¬Óë¾ßÌåÐ­Òé°æ±¾ÎÞ¹Ø */
+/* ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ä¹ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½æ±¾ï¿½Þ¹ï¿½ */
 struct frag_manage{
-	int thread_num;					/* Ïß³ÌID */
-	unsigned int total_mem;			/* µ±Ç°Õ¼ÓÃÄÚ´æ×ÜÁ¿ */
+	int thread_num;					/* ï¿½ß³ï¿½ID */
+	unsigned int total_mem;			/* ï¿½ï¿½Ç°Õ¼ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ */
 #if USE_MESA_STREAM_HASH
 	MESA_htable_handle frag_hash_table;
 #else
-	unsigned int hash_table_size;	/* HASH±í´óÐ¡ */
+	unsigned int hash_table_size;	/* HASHï¿½ï¿½ï¿½ï¿½Ð¡ */
 	int __pad__;
-	struct frag_ipq **frag_hash_table;					/* HASH±íÍ·Ö¸Õë */
-	unsigned int (*hash_index)(void *hash_key);			/* HASHº¯ÊýÖ¸Õë */
-	int (*hash_cmp)(void *hash_key1, void *hash_key2);	/* key±È½Ïº¯ÊýÖ¸Õë */
-	struct frag_ipq *lru_head;	/* lruÁ´±íÍ· */
-	struct frag_ipq *lru_tail;	/* lruÁ´±íÎ² */
+	struct frag_ipq **frag_hash_table;					/* HASHï¿½ï¿½Í·Ö¸ï¿½ï¿½ */
+	unsigned int (*hash_index)(void *hash_key);			/* HASHï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ */
+	int (*hash_cmp)(void *hash_key1, void *hash_key2);	/* keyï¿½È½Ïºï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ */
+	struct frag_ipq *lru_head;	/* lruï¿½ï¿½ï¿½ï¿½Í· */
+	struct frag_ipq *lru_tail;	/* lruï¿½ï¿½ï¿½ï¿½Î² */
 #endif	
+	int scratch_frag_cnt;
+	int scratch_frag_len;
 };
 
 #define JHASH_INITVAL        0xdeadbeef
