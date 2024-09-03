@@ -21,10 +21,12 @@ if(HASP_ENABLED)
 	include_directories(/opt/tsg/hasp-tools/include/)
 endif()
 
+
 add_executable(sapp sapp_main.c)
 target_compile_options(sapp PUBLIC ${MEM_POOL_DEFINITIONS})
 target_include_directories(sapp PRIVATE ${SYSTEMD_INCLUDE_DIRS})
 
+set_target_properties(sapp ${SAPP_MODULES} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 if(HASP_ENABLED STREQUAL "ON")
 	find_library(HASP_TOOLS_LIB NAMES hasp-tools PATHS /opt/tsg/hasp-tools/lib)
