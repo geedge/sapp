@@ -21,7 +21,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/sapp_devel.cpp "")
 
 
 add_library(sapp_devel SHARED sapp_devel.cpp)
-target_link_libraries(sapp_devel -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive)
+target_link_libraries(sapp_devel -Wl,--whole-archive ${SAPP_MODULES} -Wl,--no-whole-archive ${SAPP_DEPEND_DYN_LIB})
 
 
 add_library(test_app_sapp SHARED test_app_sapp.c)
