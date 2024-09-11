@@ -1441,29 +1441,20 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 	pstream->curdir = saved_curdir;
 
 	pstream_pr->raw_pkt = raw_pkt; /* �������ʱ��̭, ��ֵΪNULL; �����RST������̭, Ϊ��ʵԭʼ�� */
-	
-	if(pstream->stream_state==TCP_DATA_STATE)
-	{
-		if(pdetail_pr->apme!=NULL)
-		{
-			pstream->opstate=OP_STATE_CLOSE;
-			//tcp stream �ص�
-			pkt_ret = stream_process_tcp(pstream, this_ip_hdr, transport_hdr, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));  
-			pdetail_pr->apme=NULL;
-		}
-	}
 
-	//�����κ�״̬�ص�ȫ��������������
-	if(pdetail_pr->pAllpktpme!=NULL)
+    if (pdetail_pr->apme != NULL)
+    {
+        pstream->opstate = OP_STATE_CLOSE;
+        // tcp stream �ص�
+        pkt_ret =
+            stream_process_tcp(pstream, this_ip_hdr, transport_hdr, raw_pkt, &(pdetail_pr->apme), &(pstream->opstate));
+        pdetail_pr->apme = NULL;
+    }
+
+    if(pdetail_pr->pAllpktpme!=NULL)
 	{
 			pstream->pktstate=OP_STATE_CLOSE;
-			//tcp stream �ص�
-#if 0			
-			pkt_ret = stream_process_tcp_allpkt(pstream, this_ip_hdr, transport_hdr, raw_pkt,&(pdetail_pr->pAllpktpme),&(pstream->pktstate));  
-#else
-			/* 2017-12-13 lijia modify, TCPALL��Ϊ�ȵ���, ������tcp_free_stream��, ���ֻ��TCPALL���������CLOSE״̬, ���ٸ�ԭʼ��, ָ��̶�ΪNULL, ������ظ��� */
 			pkt_ret = stream_process_tcp_allpkt(pstream, this_ip_hdr, transport_hdr, raw_pkt, &(pdetail_pr->pAllpktpme),&(pstream->pktstate)); 
-#endif
 			pdetail_pr->pAllpktpme=NULL;
 	}
 
