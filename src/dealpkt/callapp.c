@@ -65,7 +65,7 @@ extern int G_TCP_FLOW_STAT_PROJECT_ID;
 
 #ifdef IIEFD_DUAL_STACK
 static int judge_pure_ipv4_stack(const struct streaminfo *pstream, const void *a_packet);
-/* iiefd´úÂëÖÐµÄ×Ü»Øµ÷º¯Êý, Ö»ÓÐ´¿IPv4µÄ°ü²Å´¦Àí */
+/* iiefdï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½Ü»Øµï¿½ï¿½ï¿½ï¿½ï¿½, Ö»ï¿½Ð´ï¿½IPv4ï¿½Ä°ï¿½ï¿½Å´ï¿½ï¿½ï¿½ */
 extern "C" char calltcpApp_old(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet);
 extern "C" char callIpApp_old(struct streaminfo *pstream,int routedir, int thread_seq,void *a_packet);
 #endif
@@ -73,7 +73,7 @@ extern "C" char callIpApp_old(struct streaminfo *pstream,int routedir, int threa
 extern void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pkt, int thread_seq);
 
 /* 2014-12-31 lqy add 
-	TODO, ÕâÐ©ÄÚÖÃ²å¼þÃ»ÓÐdestroy½Ó¿Ú.
+	TODO, ï¿½ï¿½Ð©ï¿½ï¿½ï¿½Ã²ï¿½ï¿½Ã»ï¿½ï¿½destroyï¿½Ó¿ï¿½.
 */
 int stream_register_funtoArray(enum fun_type_t funtype,char (*x)(void),stFunArray *pArrary,int *pNum, int plug_entry_id)
 {
@@ -276,7 +276,7 @@ int stream_register_overlay_udp(STREAM_CB_FUN_T x)
 
 /*
 	lijia 2015-01-12 add this_iphdr, 
-	Èç¹ûÊÇIP·ÖÆ¬ÖØ×éµÄ°ü, ±ØÐëÏÔÊ½µÄ´«µÝIP°üÍ·, ·ñÔòÖ»´«raw_hdr, ÎÞ·¨»ñÈ¡ÖØ×éºóµÄIP°üÍ·.
+	ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ä°ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½Ä´ï¿½ï¿½ï¿½IPï¿½ï¿½Í·, ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½raw_hdr, ï¿½Þ·ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Í·.
 */
 char plugin_call_streamentry(int type,StreamFunInfo *pFunInfo,struct streaminfo *a_stream,const void *transport_hdr,int thread_seq,const void *a_packet)
 {
@@ -366,7 +366,7 @@ static void plug_entry_kick_out_one(StreamFunInfo *node, struct streaminfo *a_st
     UCHAR saved_pktstate = a_stream->pktstate;
     saved_linkstate = ptcpdetail_pr->link_state;
 
-    /* ÁÙÊ±ÐÞ¸ÄÎªCLOSE, ÔÙ»Ö¸´Ô­×´Ì¬ */
+    /* ï¿½ï¿½Ê±ï¿½Þ¸ï¿½ÎªCLOSE, ï¿½Ù»Ö¸ï¿½Ô­×´Ì¬ */
     a_stream->opstate = OP_STATE_CLOSE;
     a_stream->pktstate = OP_STATE_CLOSE;
     ptcpdetail_pr->link_state = STREAM_FAKE_CLOSE_BY_DEPRIVE;
@@ -387,84 +387,6 @@ static void plug_entry_kick_out_one(StreamFunInfo *node, struct streaminfo *a_st
 	return;
 }
 
-
-/* ½«Ê£Óà²å¼þentryÁ´È«²¿CLOSE */
-static void plug_entry_kick_out_tot_list(StreamFunInfo *list_head, struct streaminfo *a_stream)
-{
-	UCHAR saved_linkstate;
-	StreamFunInfo *tmp_ptr;
-	struct tcpdetail_private *ptcpdetail_pr = (struct tcpdetail_private *)a_stream->ptcpdetail;
-
-	UCHAR saved_opstate = a_stream->opstate;
-	UCHAR saved_pktstate = a_stream->pktstate;
-	saved_linkstate = ptcpdetail_pr->link_state;
-	
-	/* ÁÙÊ±ÐÞ¸ÄÎªCLOSE, ÔÙ»Ö¸´Ô­×´Ì¬ */
-	a_stream->opstate = OP_STATE_CLOSE;
-	a_stream->pktstate = OP_STATE_CLOSE;
-	ptcpdetail_pr->link_state = STREAM_FAKE_CLOSE_BY_DEPRIVE;
-	
-	while(list_head){
-		if(is_raw_cb(list_head->funtype)){
-			plugin_call_streamentry(CALL_FUN_TYPE_RAW, list_head, a_stream, NULL, a_stream->threadnum, NULL);
-		}else{
-			plugin_call_streamentry(CALL_FUN_TYPE_NORAW, list_head, a_stream, NULL, a_stream->threadnum, NULL);
-		}	
-
-		tmp_ptr = list_head->next;
-		sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, a_stream->threadnum, list_head);
-		list_head = tmp_ptr;
-	}
-
-	a_stream->opstate = saved_opstate;
-	a_stream->pktstate = saved_pktstate;	
-	ptcpdetail_pr->link_state = saved_linkstate;
-}
-
-static StreamFunInfo *plug_entry_kick_out_tot_list_by_priority(StreamFunInfo *list_head, struct streaminfo *a_stream, int kicker_priority)
-{
-	UCHAR saved_linkstate;
-	StreamFunInfo *tmp_ptr = NULL, *cur_node = list_head;
-	struct tcpdetail_private *ptcpdetail_pr = (struct tcpdetail_private *)a_stream->ptcpdetail;
-
-	UCHAR saved_opstate = a_stream->opstate;
-	UCHAR saved_pktstate = a_stream->pktstate;
-	saved_linkstate = ptcpdetail_pr->link_state;
-	
-	/* ÁÙÊ±ÐÞ¸ÄÎªCLOSE, ÔÙ»Ö¸´Ô­×´Ì¬ */
-	a_stream->opstate = OP_STATE_CLOSE;
-	a_stream->pktstate = OP_STATE_CLOSE;
-	ptcpdetail_pr->link_state = STREAM_FAKE_CLOSE_BY_DEPRIVE;
-
-    while (cur_node)
-    {
-		tmp_ptr = cur_node->next;
-        if (plug_priority_get(cur_node->entry_id) <= kicker_priority)
-        {
-            if (is_raw_cb(cur_node->funtype))
-            {
-                plugin_call_streamentry(CALL_FUN_TYPE_RAW, cur_node, a_stream, NULL, a_stream->threadnum, NULL);
-            }
-            else
-            {
-                plugin_call_streamentry(CALL_FUN_TYPE_NORAW, cur_node, a_stream, NULL, a_stream->threadnum, NULL);
-            }
-			if(cur_node == list_head)
-			{
-				list_head=tmp_ptr;
-			}
-        	sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, a_stream->threadnum, cur_node);
-        	
-        }
-		cur_node = tmp_ptr;
-		
-    }
-
-    a_stream->opstate = saved_opstate;
-	a_stream->pktstate = saved_pktstate;	
-	ptcpdetail_pr->link_state = saved_linkstate;
-	return list_head;
-}
 
 static int stream_set_offload_flag(struct streaminfo *pstream, unsigned char smart_offload_flag)
 {
@@ -508,7 +430,7 @@ static int copy_funcation_from_entry_to_stream(StreamFunInfo **oneStreamFunInfo,
 int call_streamentry(struct streaminfo *a_stream, const void *this_iphdr, const void *transport_hdr, const void *raw_pkt, StreamFunInfo *pFunInfo)
 {
 	//add by lqy 20141230
-	//×¢ÒâÈçÏÂµÄÖ»ÓÐÊÇstream_rawÀàÐÍµÄº¯Êý£¬º¯Êýµ÷ÓÃ²»Ò»Ñù
+	//×¢ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½Ö»ï¿½ï¿½ï¿½ï¿½stream_rawï¿½ï¿½ï¿½ÍµÄºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã²ï¿½Ò»ï¿½ï¿½
 	if(is_raw_cb(pFunInfo->funtype))
 	{
 		pFunInfo->appState=plugin_call_streamentry(CALL_FUN_TYPE_RAW,pFunInfo,a_stream,transport_hdr,a_stream->threadnum,raw_pkt);
@@ -571,7 +493,7 @@ static int stream_state_pending_process(struct streaminfo *a_stream,const void *
         }
 		if(entry_ret&APP_STATE_KILL_OTHER || entry_ret&APP_STATE_KILL_FOLLOW)
 		{
-            // É¾³ýÓÅÏÈ¼¶Ð¡ÓÚµÈÓÚµ±Ç°´¦ÀíÆ÷µÄÆäËû½Úµã
+            // É¾ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½Ð¡ï¿½Úµï¿½ï¿½Úµï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½
             StreamFunInfo* current = p_plugin_runtime_list;
             StreamFunInfo* prev = NULL;
 			int kicker_entry_id=(p_plugin_entrys+i)->entry_id;
@@ -592,7 +514,7 @@ static int stream_state_pending_process(struct streaminfo *a_stream,const void *
                 }
             }
 
-            // Ìø¹ýºóÐøÓÅÏÈ¼¶Ð¡ÓÚµÈÓÚµ±Ç°²å¼þÓÅÏÈ¼¶µÄÈë¿Úµ÷ÓÃ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½Ð¡ï¿½Úµï¿½ï¿½Úµï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½
             while (i + 1 < funnum && plug_priority_get((p_plugin_entrys+i+1)->entry_id) <= kicker_priority) 
 			{
                 ++i;
@@ -731,249 +653,6 @@ static int stream_state_data_process(struct streaminfo *a_stream,const void *thi
 	return ret;
 }
 
-int stream_state_pending(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
-				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate, unsigned char smart_offload_flag)
-{
-	int i=0;
-	int ret=PASS;
-	StreamFunInfo *pFunList=NULL;
-	StreamFunInfo *pFunInfo=NULL;
-	StreamFunInfo *pNext=NULL,*pPrev=NULL;
-	UCHAR threadnum = a_stream->threadnum;
-	UCHAR local_app_ret;
-	int kicker_plugin_priority=-1;
-
-	pFunList = (StreamFunInfo*)(*apme);
-
-	for(i=0;i<funnum;i++)
-	{
-		copy_funcation_from_entry_to_stream(&pFunInfo, &pfunAarry[i], threadnum);
-		local_app_ret=call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, pFunInfo);
-
-		if(local_app_ret&APP_STATE_DROPME)
-		{
-			/* 2019-11-15 lijia add for plug kill other */
-			if(local_app_ret & APP_STATE_KILL_OTHER)
-			{
-
-                kicker_plugin_priority = plug_priority_get(pfunAarry[i].entry_id);
-                if (kicker_plugin_priority >= max_plug_priority_get())
-                {
-                    /* µ±Ç°²å¼þ·µ»ØÁËDROPME, ÇÒKILL_OTHER, ËµÃ÷ËùÓÐ²å¼þ¶¼½áÊø */
-                    plug_entry_kick_out_tot_list(pFunList, a_stream);
-                    pFunList = NULL;
-                    *apme = NULL; /* 2020-05-08 lijia modify */
-                    break;
-                }
-            }
-		}
-		else
-		{
-			/* 2019-11-15 lijia add for plug kill other */
-			if(local_app_ret & APP_STATE_KILL_OTHER)
-			{
-				plug_entry_kick_out_tot_list(pFunList, a_stream);
-				pFunList = NULL; /* ½«ÆäÓà²å¼þÈ«²¿CLOSE, Ö»Ê£µ±Ç°²å¼þ */
-			}
-
-			if(local_app_ret & APP_STATE_GIVESTATE)
-			{
-				pFunInfo->appState=APP_STATE_GIVESTATE;
-			}
-
-			if(pFunList==NULL)
-			{
-				pFunList=pFunInfo;
-			}
-			else
-			{
-				pPrev->next=pFunInfo;
-			}
-			
-			pPrev=pFunInfo;
-			pFunInfo=NULL;
-		}
-
-		if(local_app_ret & APP_STATE_DROPPKT)	
-		{
-			ret=DROP;
-			break; 
-		}	
-
-		/* 2019-11-15 lijia add for plug kill other */
-		if(local_app_ret & (APP_STATE_KILL_FOLLOW | APP_STATE_KILL_OTHER))
-		{
-			/* Èç¹ûÔÚpending½×¶Î, KILL FOLLOWÖ±½ÓÍË³öÑ­»·¼´¿É */
-			break;
-		}
-	}
-	
-	//²»ÐèÒªÔÙ´ÎËÍÈë°üµÄfun£¬ÔÚÕâÀïÊÍ·Å
-	if(pFunInfo!=NULL)
-	{
-		sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, threadnum,pFunInfo);
-		pFunInfo = NULL;		
-	}
-
-	
-	//ÓÐÐèÒªÔÙ´ÎËÍ°üµÄ»Øµ÷º¯Êý
-	if(pFunList!=NULL)
-	{
-		*apme = pFunList;
-		*opstate= OP_STATE_DATA;
-
-		pNext=pFunList;
-		while(pNext)	//ËùÓÐ²å¼þDROPME£¬»òÕß¾ùÉèÖÃGIVESTATE×´Ì¬
-		{
-			if(pNext->appState!=APP_STATE_GIVESTATE)
-			{
-				return ret;
-			}
-
-			pNext=pNext->next;
-		}
-
-		stream_set_offload_flag(a_stream, smart_offload_flag);
-	}
-	else
-	{
-		*opstate= OP_STATE_CLOSE;	
-		stream_set_offload_flag(a_stream, smart_offload_flag);
-	}
-	
-	return ret;
-
-}
-
-static int stream_state_data(struct streaminfo *a_stream,const void *this_iphdr, const void *transport_hdr, const void *raw_pkt,
-				int funnum,stFunArray *pfunAarry,void **apme,unsigned char *opstate, unsigned char smart_offload_flag)
-{
-	int ret=PASS;
-	UCHAR local_app_ret;
-	StreamFunInfo *pFunList=NULL;
-	StreamFunInfo *pFunInfo=NULL;
-	StreamFunInfo *pNext=NULL,*pPrev=NULL;
-
-	pFunList = (StreamFunInfo *)*apme;	
-	pFunInfo=pFunList;
-	pPrev=NULL;
-	while(pFunInfo)
-	{
-		if(pFunInfo->appState==APP_STATE_GIVESTATE)
-		{
-			pFunInfo=pFunInfo->next;
-			continue;
-		}
-		
-		local_app_ret=call_streamentry(a_stream, this_iphdr, transport_hdr, raw_pkt, pFunInfo);
-		if(pFunInfo->appState&APP_STATE_DROPME)
-		{
-			if(pPrev==NULL)
-			{
-				pFunList=pFunInfo->next;
-				*apme= pFunList;
-			}	
-			else
-			{
-				pPrev->next=pFunInfo->next;
-			}
-			pNext=pFunInfo->next;
-			sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL,a_stream->threadnum,pFunInfo);
-			pFunInfo=pNext;
-
-			if(local_app_ret & APP_STATE_KILL_FOLLOW)
-			{
-				plug_entry_kick_out_tot_list(pNext, a_stream);
-				if(NULL == pPrev)
-				{
-					/* µ±Ç°²å¼þÔÚµÚÒ»¸ö, KILL_FOLLOW &    APP_STATE_DROPMEÏàµ±ÓÚÈ«²¿²å¼þDROPME*/
-					pFunList = NULL; /* È«²¿²å¼þCLOSE */
-					*apme = NULL; /* 2020-05-08 lijia modify */
-				}
-				else
-				{
-					pPrev->next = NULL;
-				}
-			/* 2019-11-15 lijia add for plug kill other */
-			}
-			else if(local_app_ret & APP_STATE_KILL_OTHER)
-			{
-				plug_entry_kick_out_tot_list(pFunList, a_stream);
-				pFunList = NULL; /* È«²¿²å¼þCLOSE */
-				*apme = NULL; /* 2020-05-08 lijia modify */
-			}
-		}
-		else
-		{
-			/* 2019-11-15 lijia add for plug kill other */
-			if(local_app_ret & APP_STATE_KILL_OTHER){
-				/* °Ñµ±Ç°plug info´ÓÁ´±íÖÐÏÈÒÆ³ý */
-				if(pPrev==NULL)
-				{
-					pFunList=pFunInfo->next;
-				}
-				else
-				{
-					pPrev->next=pFunInfo->next;
-				}
-				/* °ÑÊ£ÓàµÄÈ«CLOSE */
-				plug_entry_kick_out_tot_list(pFunList, a_stream);
-				
-				pFunList = pFunInfo;
-				pFunList->next = NULL;
-				*apme= pFunList;
-			}
-			else if(local_app_ret & APP_STATE_KILL_FOLLOW)
-			{
-				plug_entry_kick_out_tot_list(pFunInfo->next, a_stream);
-				pFunInfo->next = NULL;
-			}
-
-			if(local_app_ret & APP_STATE_GIVESTATE)
-			{
-				pFunInfo->appState=APP_STATE_GIVESTATE;
-			}
-			
-			pPrev=pFunInfo;
-			pFunInfo=pFunInfo->next;
-		}
-
-		if(local_app_ret&APP_STATE_DROPPKT)	
-		{
-			ret=DROP;	
-			break;
-		}
-
-		/* 2019-11-15 lijia add for plug kill other */
-		if(local_app_ret & (APP_STATE_KILL_FOLLOW | APP_STATE_KILL_OTHER))
-		{
-			break;
-		}
-	}
-
-	//´¦Àí¹ý³ÌÖÐ´ó¼Ò¶¼²»ÐèÒªÁË
-	if(pFunList==NULL)
-	{
-		*opstate = OP_STATE_CLOSE;	
-		stream_set_offload_flag(a_stream, smart_offload_flag);
-	}	
-
-	pNext=pFunList;
-	while(pNext)	//ËùÓÐ²å¼þDROPME£¬»òÕß¾ùÉèÖÃGIVESTATE×´Ì¬
-	{
-		if(pNext->appState!=APP_STATE_GIVESTATE)
-		{
-			return ret;
-		}
-	
-		pNext=pNext->next;
-	}
-
-	//ËùÓÐ²å¼þDROPME£¬»òÕß¾ùÉèÖÃGIVESTATE×´Ì¬	
-	stream_set_offload_flag(a_stream, smart_offload_flag);
-
-	return ret;
-}
 
 
 //add end
@@ -997,14 +676,14 @@ int stream_process(struct streaminfo *a_stream,const void *this_iphdr, const voi
 			ret = stream_state_pending_process(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate, smart_offload_flag);
 			break;
 		case	OP_STATE_DATA:	
-			if(*apme==NULL) //Èç¹ûÒÑ¾­Ã»ÓÐÒª´¦ÀíµÄº¯ÊýÁË
+			if(*apme==NULL) //ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½Ã»ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½
 			{
 				*opstate= OP_STATE_CLOSE;
 				break;
 			}
 			ret =  stream_state_data_process(a_stream, this_iphdr, transport_hdr, raw_pkt, funnum, pfunAarry, apme, opstate, smart_offload_flag);
 			break;
-		case	OP_STATE_CLOSE: //Á´½Ó¹Ø±Õ,Çå³ý×´Ì¬
+		case	OP_STATE_CLOSE: //ï¿½ï¿½ï¿½Ó¹Ø±ï¿½,ï¿½ï¿½ï¿½×´Ì¬
 				pFunInfo=(StreamFunInfo *)(*apme);
 				while(pFunInfo)
 				{
@@ -1047,7 +726,7 @@ int stream_process_udp_single(struct streaminfo *a_udp,const void * a_packet,voi
 	{
 		funtype=g_StreamUdpFun[i].funtype;
 		//add by lqy 20141230
-		//×¢ÒâÈçÏÂµÄÖ»ÓÐÊÇstream_rawÀàÐÍµÄº¯Êý£¬º¯Êýµ÷ÓÃ²»Ò»Ñù
+		//×¢ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½Ö»ï¿½ï¿½ï¿½ï¿½stream_rawï¿½ï¿½ï¿½ÍµÄºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã²ï¿½Ò»ï¿½ï¿½
 		//if(funtype>FUN_TYPE_IPV6_RAW)
 		if(is_raw_cb((enum fun_type_t)funtype)){
 			appState=g_StreamUdpFun[i].sapp_stream_fun(a_udp,a_packet,a_packet,&(pAppInfo));
@@ -1065,7 +744,7 @@ int stream_process_udp_single(struct streaminfo *a_udp,const void * a_packet,voi
 
 /*
 	lijia 2015-01-12 modify, add this_iphdr, 
-	Èç¹ûÊÇIP·ÖÆ¬ÖØ×éµÄ°ü, ±ØÐëÏÔÊ½µÄ´«µÝIP°üÍ·, ·ñÔòÖ»´«raw_hdr, ÎÞ·¨»ñÈ¡ÖØ×éºóµÄIP°üÍ·.
+	ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ä°ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½Ä´ï¿½ï¿½ï¿½IPï¿½ï¿½Í·, ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½raw_hdr, ï¿½Þ·ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Í·.
 */
 int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const void *transport_hdr, 
 						const raw_pkt_t * raw_pkt,void **apme,unsigned char *popstate)
@@ -1078,7 +757,7 @@ int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const v
 	if((G_TCP_FLOW_STAT_PROJECT_ID != -1) 
 	&& (a_tcp->ptcpdetail->datalen > 0)
 	&& (STREAM_TYPE_TCP == a_tcp->type)
-	&& (raw_pkt != NULL && raw_pkt->is_ctrl_pkt == 0)){ /* ¼´Ê¹G_TCP_FLOW_STAT_PROJECT_ID¿ªÆô, a_tcp¿ÉÄÜÊÇ´úÀíÁ÷, ²»Ò»¶¨ÊÇTCP, ´Ë´¦ÒªÅÐ¶ÏÁ÷ÀàÐÍ */
+	&& (raw_pkt != NULL && raw_pkt->is_ctrl_pkt == 0)){ /* ï¿½ï¿½Ê¹G_TCP_FLOW_STAT_PROJECT_IDï¿½ï¿½ï¿½ï¿½, a_tcpï¿½ï¿½ï¿½ï¿½ï¿½Ç´ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½TCP, ï¿½Ë´ï¿½Òªï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		struct tcpdetail_private *pdetail_pr = (struct tcpdetail_private *)a_tcp->pdetail;
 		if(DIR_C2S == a_tcp->curdir){
 			pdetail_pr->flow_stat->C2S_data_pkt ++;
@@ -1101,7 +780,7 @@ int stream_process_tcp(struct streaminfo *a_tcp, const void *this_iphdr, const v
 
 /*
 	lijia 2015-01-12 modify, add this_iphdr, 
-	Èç¹ûÊÇIP·ÖÆ¬ÖØ×éµÄ°ü, ±ØÐëÏÔÊ½µÄ´«µÝIP°üÍ·, ·ñÔòÖ»´«raw_hdr, ÎÞ·¨»ñÈ¡ÖØ×éºóµÄIP°üÍ·.
+	ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ä°ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½Ä´ï¿½ï¿½ï¿½IPï¿½ï¿½Í·, ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½raw_hdr, ï¿½Þ·ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Í·.
 */
 
 int stream_process_udp(struct streaminfo *a_udp, const void *this_iphdr, const void *transport_hdr, 
@@ -1147,7 +826,7 @@ int stream_process_overlay_udp(struct streaminfo *a_udp, const void *this_iphdr,
 
 /*
 	lijia 2015-01-12 modify, add this_iphdr, 
-	Èç¹ûÊÇIP·ÖÆ¬ÖØ×éµÄ°ü, ±ØÐëÏÔÊ½µÄ´«µÝIP°üÍ·, ·ñÔòÖ»´«raw_hdr, ÎÞ·¨»ñÈ¡ÖØ×éºóµÄIP°üÍ·.
+	ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ä°ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½Ä´ï¿½ï¿½ï¿½IPï¿½ï¿½Í·, ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½raw_hdr, ï¿½Þ·ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Í·.
 */
 
 int stream_process_tcp_allpkt(struct streaminfo *a_tcp,const void *this_iphdr, const void *transport_hdr, 
@@ -1357,8 +1036,8 @@ int stream_process_ipv6_frag(struct streaminfo *pstream,const struct ip6_hdr *th
 
 /* 
 	2016-09-26 lijia add, 
-	Ã»ÓÐ°üÊ±, ²å¼þ»á×èÈû, 
-	ÐÂÔö±¾º¯Êý, µ×²ãÊÕ²»µ½°üÊ±, Ò²»áµ÷ÓÃ²å¼þ, Ê¹²å¼þÄÜ¼°Ê±»ñµÃCPU, ×öÒ»Ð©·Ç°üÇý¶¯µÄ´¦ÀíÂß¼­.
+	Ã»ï¿½Ð°ï¿½Ê±, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, 
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½×²ï¿½ï¿½Õ²ï¿½ï¿½ï¿½ï¿½ï¿½Ê±, Ò²ï¿½ï¿½ï¿½ï¿½Ã²ï¿½ï¿½, Ê¹ï¿½ï¿½ï¿½ï¿½Ü¼ï¿½Ê±ï¿½ï¿½ï¿½CPU, ï¿½ï¿½Ò»Ð©ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ß¼ï¿½.
 */
 int stream_process_polling(int thread_seq)
 {
@@ -1401,7 +1080,7 @@ extern int g_use_MESA_sleep_sw;
 extern void MESA_sleep(void);
 /* 
 	2016-09-26 lijia add,
-	µ×²ãÇý¶¯Ã»ÓÐ°üÊ±, »áµ÷ÓÃ´Ëº¯Êý, ¸ù¾ÝÆ½Ì¨ÐèÇóÊÇ·ñ×èÈûµÈ´ý, »¹ÊÇµ÷ÓÃÉÏ²ãÂÖÑ¯²å¼þ. 
+	ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ð°ï¿½Ê±, ï¿½ï¿½ï¿½ï¿½Ã´Ëºï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Æ½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½, ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½Ï²ï¿½ï¿½ï¿½Ñ¯ï¿½ï¿½ï¿½. 
 */
 void idle_polling_call(int thread_seq)
 {
@@ -1482,7 +1161,7 @@ int platform_register_action_judge(char (*action_cb_fun)(int net_conn_mode, char
 }
 
 
-/* Çå¿Õ¸÷ÖÖ¼ÆÊý, É÷ÓÃÈ«¾Ö±äÁ¿!! */
+/* ï¿½ï¿½Õ¸ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½!! */
 void stream_destroy_plugin(void)
 {
 	g_StreamTcpFunNum=0;
