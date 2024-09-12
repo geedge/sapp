@@ -4,20 +4,20 @@
 #include "stream_internal.h" 
 
 
-#define USE_MESA_STREAM_HASH			(1) /* ʹ�û�������ģʽ�µ�HASH�� */	
+#define USE_MESA_STREAM_HASH			(1) 
 #if USE_MESA_STREAM_HASH
 #include "MESA_htable.h"
 #endif
 
-#define IP_FRAG_DEFAULT_BUF_SIZE		(2048) /* Ԥ����Ĭ��IP��Ƭ���黺������С, ͨ��ͳ�Ƶó�, ������IP������С��2KB��ռ90%���� */
+#define IP_FRAG_DEFAULT_BUF_SIZE		(2048) 
 
-#define IP_FRAG_OK					(0x00)	/* ������� */
-#define IP_FRAG_INVALID_PACKET			(0x10)	/* ��Ч��Ƭ�����˷�Ƭ�����ٴ���������������ͬһIPQ����һ����Ƭ�� */
-#define IP_FRAG_DISCARD				(0x08)	/* ������Ƭ���������ͷ�����IPQ���� */
-#define IP_FRAG_IGNORE					(0x04)	/* ������Ƭ�����Ժ�ͬһIPQ���еķ�Ƭ�������ٴ������������IPQ��ֱ����ʱ */
+#define IP_FRAG_OK					(0x00)	
+#define IP_FRAG_INVALID_PACKET			(0x10)	
+#define IP_FRAG_DISCARD				(0x08)	
+#define IP_FRAG_IGNORE					(0x04)	
 
-#define IP_FRAG_FIRST_IN              		(0x02)	/* ���յ��˵�һ����Ƭ�� */
-#define IP_FRAG_LAST_IN               		(0x01)	/* ���յ������һ����Ƭ�� */
+#define IP_FRAG_FIRST_IN              		(0x02)	
+#define IP_FRAG_LAST_IN               		(0x01)	
 
 
 struct addr_list{
@@ -26,59 +26,56 @@ struct addr_list{
 };
 
 
-/* һ����Ƭ�� */
 struct ip_frags{
-	int offset;				/* �˷�Ƭ����һ���ֽ����ԭʼ����ƫ���� */
-	int end;            	/* �˷�Ƭ�����һ���ֽ����ԭʼ����ƫ���� */
-	struct ip_frags *next;	/* �˷�Ƭ���ڷ�Ƭ�����еĺ�̽ڵ� */
-	struct ip_frags *prev;	/* �˷�Ƭ���ڷ�Ƭ�����е�ǰ���ڵ� */
+	int offset;				
+	int end;            	
+	struct ip_frags *next;	
+	struct ip_frags *prev;	
 };
 
 
-/* ��Ƭ������� */
 struct frag_ipq{
-	int buf_size; 		/* ��IP������ĳ��� */
-	short last_in; 		/* ��־λ���յ���һ���������һ���� */
-	short attack_flag;  /* ��־λ���Ƿ��⵽���⹥�����ݰ� */
-	int tot_len; 		/* ��ǰ�յ���Ƭ�������ƫ���� */
-	int meat;			/* ʵ���յ���IP��Ƭ����Ч���ݳ��� */
-	unsigned int hash_index; 	/* ����������HASHֵ���Ժ��ظ�ʹ�ã������ٴμ��� */
+	int buf_size; 		
+	short last_in; 		
+	short attack_flag;  
+	int tot_len; 		
+	int meat;			
+	unsigned int hash_index; 	
 	int hash_key_size;
-	int private_len;	/* ��Э��������صĶ����������� */
-	int frags_num;		/* �յ��ķ�Ƭ������ */
-	time_t create_time; /* ipq����ʱ�䣬���յ���һ����Ƭ����ʱ�� */
-	void *new_iph; 		/* ��������IP��ͷ��ָ�� */
-	struct ip_frags *fragments;			/* ��Ƭ������ͷ */
-	struct ip_frags *fragments_tail;	/* ��Ƭ������β */
+	int private_len;	
+	int frags_num;		
+	time_t create_time; 
+	void *new_iph; 		
+	struct ip_frags *fragments;			
+	struct ip_frags *fragments_tail;	
 	int frags_len;
 #if USE_MESA_STREAM_HASH
-	int thread_num;	/* ʹ����HASHʱ, thread_num���ô���, ���ڴ˽ṹ�� */
+	int thread_num;	
 #else
-	struct frag_ipq *hash_prev;  		/* HASH��ͻ������ǰ���ڵ� */
-	struct frag_ipq *hash_next;  		/* HASH��ͻ�����ĺ�̽ڵ� */
-	struct frag_ipq *lru_prev;  		/* LRU������ǰ���ڵ� */
-	struct frag_ipq *lru_next;  		/* LRU�����ĺ�̽ڵ� */
+	struct frag_ipq *hash_prev;  		
+	struct frag_ipq *hash_next;  		
+	struct frag_ipq *lru_prev;  		
+	struct frag_ipq *lru_next;  		
 #endif	
-	void *hash_key; /* hash key����Э���޹أ��ɹ���ģ������ռ䣬������hash_key_sizeָ�� */
-	void *private_info; 	/* ��Э��������صĶ�������������������ռ�, ������private_lenָ�� */
-	raw_ipfrag_list_t *ipfrag_list; /* ��ʱ�洢����ԭʼ��Ƭ�� */
+	void *hash_key; 
+	void *private_info; 	
+	raw_ipfrag_list_t *ipfrag_list; 
 };
 
 
-/* ��Ƭ����Ĺ����ṹ�������Э��汾�޹� */
 struct frag_manage{
-	int thread_num;					/* �߳�ID */
-	unsigned int total_mem;			/* ��ǰռ���ڴ����� */
+	int thread_num;					
+	unsigned int total_mem;			
 #if USE_MESA_STREAM_HASH
 	MESA_htable_handle frag_hash_table;
 #else
-	unsigned int hash_table_size;	/* HASH����С */
+	unsigned int hash_table_size;	
 	int __pad__;
-	struct frag_ipq **frag_hash_table;					/* HASH��ͷָ�� */
-	unsigned int (*hash_index)(void *hash_key);			/* HASH����ָ�� */
-	int (*hash_cmp)(void *hash_key1, void *hash_key2);	/* key�ȽϺ���ָ�� */
-	struct frag_ipq *lru_head;	/* lru����ͷ */
-	struct frag_ipq *lru_tail;	/* lru����β */
+	struct frag_ipq **frag_hash_table;					
+	unsigned int (*hash_index)(void *hash_key);			
+	int (*hash_cmp)(void *hash_key1, void *hash_key2);	
+	struct frag_ipq *lru_head;	
+	struct frag_ipq *lru_tail;	
 #endif	
 	int scratch_frag_cnt;
 	int scratch_frag_len;

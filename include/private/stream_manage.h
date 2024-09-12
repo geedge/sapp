@@ -62,7 +62,7 @@ extern int tcp_support_all;
 #define STREAM_LINK_RESET 4
 #define STREAM_LINK_TIMEOUT 5
 #define STREAM_LINK_LRU_OUT	6
-#define STREAM_FAKE_CLOSE_BY_DEPRIVE 7 /* �����������KILL_FOLLOW, KILL_OTHER��, ��ǿ��CLOSE�Ĳ��״̬ */
+#define STREAM_FAKE_CLOSE_BY_DEPRIVE 7 
 #define STREAM_CLOSE_BY_DUMPFILE_END 8  /* 2021-05-20 lijia add, for pcap dumpfile mode */
 
 
@@ -104,11 +104,11 @@ struct stream_index_list_item
 struct global_stream
 {
 	struct streamindex **tcp_stream_table;
-	unsigned short  *tcp_stream_talbe_hash_count; /* lijia comment: һ��HASH_Slot�³�ͻ����Ԫ�ظ��� */
+	unsigned short  *tcp_stream_talbe_hash_count;
 	struct stream_list tcpList[MAX_TCP_STATE];
 
 	struct streamindex **udp_stream_table;
-	unsigned short  *udp_stream_talbe_hash_count;/* lijia comment: һ��HASH_Slot�³�ͻ����Ԫ�ظ��� */
+	unsigned short  *udp_stream_talbe_hash_count;
 	struct stream_list udpList[MAX_UDP_STATE];
 
 	STAILQ_HEAD(STREAM_INDEX_LIST,stream_index_list_item) freeList;
@@ -131,7 +131,7 @@ typedef struct _stStreamFunInfo
 	struct timeout timeout;
 	const struct streaminfo *pstream;
 	int set_timer_s;
-	int entry_id; /* ȫ��Ψһ��id, ����ÿ�������ں�����ִ��ʱ��ͳ�� */
+	int entry_id; 
 	char pad[7];
 	char appState;
 	enum fun_type_t funtype;/* 2014-12-31 lqy add */
