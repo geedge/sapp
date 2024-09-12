@@ -1,37 +1,37 @@
 /*********************************************************************************************
-ÎÄ¼þÃû:plugin.c
-¹¦ÄÜ:  
-×÷Õß: LiuY
-µ±Ç°°æ±¾:2.0
-Íê³ÉÈÕÆÚ:20140411
-ÐÞ¸ÄËµÃ÷:Í¨¹ýÅäÖÃÎÄ¼þ¼ÓÔØ²å¼þ
+ï¿½Ä¼ï¿½ï¿½ï¿½:plugin.c
+ï¿½ï¿½ï¿½ï¿½:  
+ï¿½ï¿½ï¿½ï¿½: LiuY
+ï¿½ï¿½Ç°ï¿½æ±¾:2.0
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:20140411
+ï¿½Þ¸ï¿½Ëµï¿½ï¿½:Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½
 **********************************************************************************************
 time:20140413
-content:1¡¢¼ÓÔØÒµÎñ²ã²å¼þµÄupdateÖ¸Õë
+content:1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½updateÖ¸ï¿½ï¿½
 **********************************************************************************************
-Ê±¼ä:2014-11-9
-ÄÚÈÝ:
-1-ÕûÀí²å¼þ¹ÜÀí¹¦ÄÜ³ÉÎª¶ÀÁ¢Ä£¿é£¬¿ÉÒÔ±»sappÆ½Ì¨¼ÓÔØ£»
-2-ÒµÎñ²å¼þ·µ»ØÖµ£¬ÎÞÂÛ²å¼þÈë¿Úº¯ÊýÊÇÊ²Ã´£¬·µ»ØÖµ¶¼ÊÇÏàÍ¬µÄËÄ¸öºê£»
-3-½âÎö²ãclose×´Ì¬µ÷ÓÃÒµÎñ²ã²å¼þÊ±£¬Èç¹ûµ±Ç°Êý¾Ý²»ÊÇÒµÎñ²ã¸ÐÐËÈ¤µÄÓò£¬ÔòbufºÍbuflenÎª¿Õ£»
-4-½âÎö²ãclose×´Ì¬µ÷ÓÃÒµÎñ²ã²å¼þÊ±£¬Èç¹ûµ±Ç°Êý¾Ý²»ÊÇÒµÎñ²ã¸ÐÐËÈ¤µÄÓò£¬ÔòbufºÍbuflenÎª¿Õ£»
+Ê±ï¿½ï¿½:2014-11-9
+ï¿½ï¿½ï¿½ï¿½:
+1-ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½Îªï¿½ï¿½ï¿½ï¿½Ä£ï¿½é£¬ï¿½ï¿½ï¿½Ô±ï¿½sappÆ½Ì¨ï¿½ï¿½ï¿½Ø£ï¿½
+2-Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½Û²ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½ï¿½Ê²Ã´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ê£»
+3-ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½close×´Ì¬ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½bufï¿½ï¿½buflenÎªï¿½Õ£ï¿½
+4-ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½close×´Ì¬ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½bufï¿½ï¿½buflenÎªï¿½Õ£ï¿½
 **********************************************************************************************
-Ê±¼ä:2014-11-23
-ÄÚÈÝ:
-1-ÎªÁËÏòºó¼æÈÝÐÔ£¬ÒµÎñ²ã²å¼þµÄ·µ»ØÖµ±ä¸ü»áÔ­À´µÄPROTÏµÁÐ£»
-2-É¾³ýÖ®Ç°µÄPROT_KILLME,Ôö¼ÓPRTO_DROPPKT£¬Îª¶ªÆúµ±Ç°°üº¬Òå£»
+Ê±ï¿½ï¿½:2014-11-23
+ï¿½ï¿½ï¿½ï¿½:
+1-Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ï¿½ï¿½PROTÏµï¿½Ð£ï¿½
+2-É¾ï¿½ï¿½Ö®Ç°ï¿½ï¿½PROT_KILLME,ï¿½ï¿½ï¿½ï¿½PRTO_DROPPKTï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½å£»
 **********************************************************************************************
-Ê±¼ä:2014-11-24
-ÄÚÈÝ:plugin_call_flagstate£¨£©ÖÐÈ¥µôflag³õÖµÎª1£»
+Ê±ï¿½ï¿½:2014-11-24
+ï¿½ï¿½ï¿½ï¿½:plugin_call_flagstateï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¥ï¿½ï¿½flagï¿½ï¿½ÖµÎª1ï¿½ï¿½
 **********************************************************************************************
-Ê±¼ä:2014-12-22
-ÄÚÈÝ:add ipv4_raw_entry and ipv6_raw_entry
+Ê±ï¿½ï¿½:2014-12-22
+ï¿½ï¿½ï¿½ï¿½:add ipv4_raw_entry and ipv6_raw_entry
 **********************************************************************************************
-Ê±¼ä:2014-12-30
-ÄÚÈÝ:add TCP_RAW,TCPALL_RAW,UDP_RAW
+Ê±ï¿½ï¿½:2014-12-30
+ï¿½ï¿½ï¿½ï¿½:add TCP_RAW,TCPALL_RAW,UDP_RAW
 **********************************************************************************************
-Ê±¼ä:20150129
-ÄÚÈÝ:
+Ê±ï¿½ï¿½:20150129
+ï¿½ï¿½ï¿½ï¿½:
 1-modify runtime_log ---> MESA_handle_runtime_log
 2-enum fun_type_t{
 	FUN_TYPE_IPV4=0,
@@ -47,44 +47,44 @@ content:1¡¢¼ÓÔØÒµÎñ²ã²å¼þµÄupdateÖ¸Õë
 };
 int stream_register_fun(int funtype,char (*x)(void), int);
 **********************************************************************************************
-Ê±¼ä:2015-02-28
-ÄÚÈÝ:plugin.c:150 add total_flag=0;·ñÔòÈç¹ûÃ»ÓÐÈÎºÎÒµÎñ²ã²å¼þ£¬½âÎö²ãÊÕµ½µÄ
-	flagÖµÊÇËæ»úÖµ
+Ê±ï¿½ï¿½:2015-02-28
+ï¿½ï¿½ï¿½ï¿½:plugin.c:150 add total_flag=0;ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Îºï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½
+	flagÖµï¿½ï¿½ï¿½ï¿½ï¿½Öµ
 **********************************************************************************************
-Ê±¼ä:201503-16-2
-ÄÚÈÝ:
+Ê±ï¿½ï¿½:201503-16-2
+ï¿½ï¿½ï¿½ï¿½:
 	1-plugin.c:1259 add funelem->called_flag =1;
-		·ñÔòÈç¹ûpending×´Ì¬Ã»ÓÐµ÷ÓÃÒµÎñ²ã²å¼þ£¬Ã¿¸ödata×´Ì¬¶¼»áÓÐpendingµÄ±êÊ¾
-	2-pending Ôö¼Ócalled_flagµÄ³õÊ¼»¯
-	3-closeÔö¼Ó¶Ôµ÷ÓÃµÄÅÐ¶Ï:Èç¹û¸Ã²å¼þÔø¾­±»µ÷ÓÃ¹ý»òÕßµ±Ç°×Ö¶ÎÊÇ¸Ã²å¼þËù
-	    ÐèÒªµÄ×Ö¶Î²ÅÔÚclose×´Ì¬µ÷ÓÃ£¬·ñÔò²»µ÷ÓÃ
+		ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pending×´Ì¬Ã»ï¿½Ðµï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½data×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pendingï¿½Ä±ï¿½Ê¾
+	2-pending ï¿½ï¿½ï¿½ï¿½called_flagï¿½Ä³ï¿½Ê¼ï¿½ï¿½
+	3-closeï¿½ï¿½ï¿½Ó¶Ôµï¿½ï¿½Ãµï¿½ï¿½Ð¶ï¿½:ï¿½ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ßµï¿½Ç°ï¿½Ö¶ï¿½ï¿½Ç¸Ã²ï¿½ï¿½ï¿½ï¿½
+	    ï¿½ï¿½Òªï¿½ï¿½ï¿½Ö¶Î²ï¿½ï¿½ï¿½close×´Ì¬ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ò²»µï¿½ï¿½ï¿½
 **********************************************************************************************
-Ê±¼ä:201503-18 yangwei
-ÄÚÈÝ:
-	1-Ôö¼Óreset_cwd()ÇÐ»»µ±Ç°Â·¾¶µÄº¯Êý£»ÒòÎªµÚÈý·½²å¼þÓÐ³õÊ¼»¯Ê±ÇÐ»»µ±Ç°Â·¾¶
-	   Îª²å¼þËùÔÚÂ·¾¶µ¼ÖÂºóÐø³ÌÐòÖ´ÐÐ´íÎóµÄÇé¿ö£»ËùÒÔÔÚÃ¿¸ö²å¼þ³õÊ¼»¯½áÊø
-	   ºó¶¼½«µ±Ç°Â·¾¶ÇÐ»»ÎªÖ÷³ÌÐòËùÔÚµÄÂ·¾¶£»
+Ê±ï¿½ï¿½:201503-18 yangwei
+ï¿½ï¿½ï¿½ï¿½:
+	1-ï¿½ï¿½ï¿½ï¿½reset_cwd()ï¿½Ð»ï¿½ï¿½ï¿½Ç°Â·ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð³ï¿½Ê¼ï¿½ï¿½Ê±ï¿½Ð»ï¿½ï¿½ï¿½Ç°Â·ï¿½ï¿½
+	   Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½Âºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	   ï¿½ó¶¼½ï¿½ï¿½ï¿½Ç°Â·ï¿½ï¿½ï¿½Ð»ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½Â·ï¿½ï¿½ï¿½ï¿½
 **********************************************************************************************
-Ê±¼ä:201503-25 
-ÄÚÈÝ:
-	1-¸ü¸ÄÍ·ÎÄ¼þÐÎÊ½£¬ÔÚmakefileÖÐÖ¸¶¨Â·¾¶£»
-**********************************************************************************************
-
-Ê±¼ä:2016-03-14 LiJia 
-ÄÚÈÝ:
-	1-ÐÞ¸Äprocess_conf_entryname()º¯ÊýÉ¾³ýÄ©Î²"\r\n"µÄBUG.
+Ê±ï¿½ï¿½:201503-25 
+ï¿½ï¿½ï¿½ï¿½:
+	1-ï¿½ï¿½ï¿½ï¿½Í·ï¿½Ä¼ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½makefileï¿½ï¿½Ö¸ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½
 **********************************************************************************************
 
-Ê±¼ä:2016-05-30 LiJia 
-ÄÚÈÝ:
-	1-ÐÞ¸Äplugin_porcess_data()º¯ÊýÐÞ¸ÄÁËsession_stateµ«Ã»ÓÐ»Ö¸´, Ôì³ÉºóÐø²å¼þsession_state²»¶ÔBUG;
-	2-ÐÞ¸Äplugin_porcess_close()º¯ÊýÂß¼­, ¿ÉÄÜ»áÔì³ÉÒµÎñ²å¼þÄÚ´æÐ¹Â©.
+Ê±ï¿½ï¿½:2016-03-14 LiJia 
+ï¿½ï¿½ï¿½ï¿½:
+	1-ï¿½Þ¸ï¿½process_conf_entryname()ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½Ä©Î²"\r\n"ï¿½ï¿½BUG.
+**********************************************************************************************
+
+Ê±ï¿½ï¿½:2016-05-30 LiJia 
+ï¿½ï¿½ï¿½ï¿½:
+	1-ï¿½Þ¸ï¿½plugin_porcess_data()ï¿½ï¿½ï¿½ï¿½ï¿½Þ¸ï¿½ï¿½ï¿½session_stateï¿½ï¿½Ã»ï¿½Ð»Ö¸ï¿½, ï¿½ï¿½Éºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½session_stateï¿½ï¿½ï¿½ï¿½BUG;
+	2-ï¿½Þ¸ï¿½plugin_porcess_close()ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½, ï¿½ï¿½ï¿½Ü»ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ð¹Â©.
 
 **********************************************************************************************
 
-Ê±¼ä:2016-05-30 LiJia 
-ÄÚÈÝ:
-	1-Ôö¼ÓIP_FRAGÈë¿Ú.
+Ê±ï¿½ï¿½:2016-05-30 LiJia 
+ï¿½ï¿½ï¿½ï¿½:
+	1-ï¿½ï¿½ï¿½ï¿½IP_FRAGï¿½ï¿½ï¿½.
 **********************************************************************************************
 
 */
@@ -116,7 +116,7 @@ stPlugRuntimeInfo plugctrl_runtime_info;
 
 /*
 	Lijia note:
-	³öÏÖË³ÐòÒªºÍenum fun_type_tÀàÐÍË³ÐòÒ»ÖÂ.
+	ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½Òªï¿½ï¿½enum fun_type_tï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½Ò»ï¿½ï¿½.
 */
 const char* g_plugin_entryname[PLUGIN_MAX_ENTRYNUM] = 
 {
@@ -154,7 +154,7 @@ static inline long __plug_record_time_elapse_us(struct timespec *start)
     return elapsed;
 }
 
- /* É¾³ý¿ªÍ·µÄ¿Õ¸ñ,tab, ÒÔ¼°Ä©Î²µÄ»»ÐÐ·û, ¿Õ¸ñ, tabµÈ "\r\n " */
+ /* É¾ï¿½ï¿½ï¿½ï¿½Í·ï¿½Ä¿Õ¸ï¿½,tab, ï¿½Ô¼ï¿½Ä©Î²ï¿½Ä»ï¿½ï¿½Ð·ï¿½, ï¿½Õ¸ï¿½, tabï¿½ï¿½ "\r\n " */
 static void plugin_del_blank_rn(char *data, int max_len)
 {
 	int i;
@@ -176,10 +176,10 @@ static void plugin_del_blank_rn(char *data, int max_len)
 
 
 /****************************************************************************
-º¯ÊýÃû:reset_cwd()
-¹¦ÄÜ£ºÇÐ»»µ±Ç°Â·¾¶
-ÊäÈë£º
-Êä³ö£º
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:reset_cwd()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½Ð»ï¿½ï¿½ï¿½Ç°Â·ï¿½ï¿½
+ï¿½ï¿½ï¿½ë£º
+ï¿½ï¿½ï¿½ï¿½ï¿½
 //add by yw 20150318, reset cwd to exe dir
 *****************************************************************************/
 #if 0 
@@ -221,7 +221,7 @@ static int reset_cwd()
     }
     path[path_len] = '\0';
 
-    // »ñÈ¡¿ÉÖ´ÐÐÎÄ¼þËùÔÚµÄÄ¿Â¼
+    // ï¿½ï¿½È¡ï¿½ï¿½Ö´ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Úµï¿½Ä¿Â¼
     char *dir = dirname(path);
 
     if (chdir(dir) == -1) {
@@ -234,10 +234,10 @@ static int reset_cwd()
 
 
 /****************************************************************************
-º¯ÊýÃû:get_propluginfo_name()
-¹¦ÄÜ£º¼ì²é½âÎö²ã²å¼þÊÇ·ñÒÑ¾­¹ÒÔØ
-ÊäÈë£º²å¼þÃû 
-Êä³ö£ºNULL:Ã»ÓÐÕÒµ½
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:get_propluginfo_name()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ë£ºï¿½ï¿½ï¿½ï¿½ï¿½ 
+ï¿½ï¿½ï¿½ï¿½ï¿½NULL:Ã»ï¿½ï¿½ï¿½Òµï¿½
 *****************************************************************************/
 stProtocolPlugInfo* get_propluginfo_name(char* plugname)
 {
@@ -259,10 +259,10 @@ stProtocolPlugInfo* get_propluginfo_name(char* plugname)
 
 
 /****************************************************************************
-º¯ÊýÃû:get_propluginfo_name()
-¹¦ÄÜ£º¼ì²é½âÎö²ã²å¼þÊÇ·ñÒÑ¾­¹ÒÔØ
-ÊäÈë£º²å¼þÃû 
-Êä³ö£ºNULL:Ã»ÓÐÕÒµ½
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:get_propluginfo_name()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ë£ºï¿½ï¿½ï¿½ï¿½ï¿½ 
+ï¿½ï¿½ï¿½ï¿½ï¿½NULL:Ã»ï¿½ï¿½ï¿½Òµï¿½
 *****************************************************************************/
 
 #if 0 /* 2016-05-30 lijia modify */
@@ -293,10 +293,10 @@ stProtocolPlugInfo* get_propluginfo_plugid(unsigned short plugid)
 
 
 /****************************************************************************
-º¯ÊýÃû:stream_register_app()
-¹¦ÄÜ£º×¢²áÓ¦ÓÃ²ãº¯Êý
-ÊäÈë£º
-Êä³ö£º0:sucess
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:stream_register_app()
+ï¿½ï¿½ï¿½Ü£ï¿½×¢ï¿½ï¿½Ó¦ï¿½Ã²ãº¯ï¿½ï¿½
+ï¿½ï¿½ï¿½ë£º
+ï¿½ï¿½ï¿½ï¿½ï¿½0:sucess
 		   -1:error
 *****************************************************************************/
 
@@ -335,11 +335,11 @@ int stream_register_app(stProtocolFunInfo** fun_list,unsigned short plugid,AppEn
 
 
 /****************************************************************************
-º¯ÊýÃû:plugin_call_flagstate()
-¹¦ÄÜ£ºµ÷ÓÃ½âÎö²ãFLAG_STATEº¯Êý£¬Í¨Öª½âÎö²ãÉÏ¹ÒÔÚËùÓÐÒµÎñ
-		   ²å¼þÐèÒªµÄflagÖµÈ«¼¯£»
-ÊäÈë£º 
-Êä³ö£º
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:plugin_call_flagstate()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½Ã½ï¿½ï¿½ï¿½ï¿½ï¿½FLAG_STATEï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½
+		   ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½flagÖµÈ«ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ë£º 
+ï¿½ï¿½ï¿½ï¿½ï¿½
 *****************************************************************************/
 void plugin_call_flagstate()
 {
@@ -385,13 +385,13 @@ void plugin_call_flagstate()
 
 
 /****************************************************************************
-º¯ÊýÃû:check_name_fromentrylist()
-¹¦ÄÜ£º¼ì²éÒµÎñ²ã¹ÒÔØÈë¿Ú»òÕß½âÎö²ãº¯ÊýÃûÊÇ·ñ
-		   ÔÚentrylist.confÅäÖÃÎÄ¼þÖÐ
-ÊäÈë£ºÎÞ 
-Êä³ö£º1:ÃüÖÐ
-		   0:Ã»ÓÐÃüÖÐ
-		   -1:´íÎó
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:check_name_fromentrylist()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú»ï¿½ï¿½ß½ï¿½ï¿½ï¿½ï¿½ãº¯ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½
+		   ï¿½ï¿½entrylist.confï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ë£ºï¿½ï¿½ 
+ï¿½ï¿½ï¿½ï¿½ï¿½1:ï¿½ï¿½ï¿½ï¿½
+		   0:Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		   -1:ï¿½ï¿½ï¿½ï¿½
 *****************************************************************************/
 int check_name_fromentrylist(char* entryname)
 {
@@ -410,12 +410,12 @@ int check_name_fromentrylist(char* entryname)
 
 
 /****************************************************************************
-º¯ÊýÃû:check_entryname_fromplug()
-¹¦ÄÜ£º¼ì²éÒµÎñ²ã²å¼þÈë¿Úº¯ÊýÊÇ·ñÕýÈ·£»
-ÊäÈë£ºÎÞ 
-Êä³ö£º1:ÃüÖÐ
-		   0:Ã»ÓÐÃüÖÐ
-		   -1:´íÎó
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:check_entryname_fromplug()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½È·ï¿½ï¿½
+ï¿½ï¿½ï¿½ë£ºï¿½ï¿½ 
+ï¿½ï¿½ï¿½ï¿½ï¿½1:ï¿½ï¿½ï¿½ï¿½
+		   0:Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		   -1:ï¿½ï¿½ï¿½ï¿½
 *****************************************************************************/
 int check_entryname_fromplug(char* entryname)
 {
@@ -436,13 +436,13 @@ int check_entryname_fromplug(char* entryname)
 }
 
 /****************************************************************************
-º¯ÊýÃû:check_name_fromentrylist()
-¹¦ÄÜ£º¼ì²éÒµÎñ²ã¹ÒÔØÈë¿Ú»òÕß½âÎö²ãº¯ÊýÃûÊÇ·ñ
-		   ÔÚentrylist.confÅäÖÃÎÄ¼þÖÐ
-ÊäÈë£ºÎÞ 
-Êä³ö£º1:ÃüÖÐ
-		   0:Ã»ÓÐÃüÖÐ
-		   -1:´íÎó
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:check_name_fromentrylist()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú»ï¿½ï¿½ß½ï¿½ï¿½ï¿½ï¿½ãº¯ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½
+		   ï¿½ï¿½entrylist.confï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ë£ºï¿½ï¿½ 
+ï¿½ï¿½ï¿½ï¿½ï¿½1:ï¿½ï¿½ï¿½ï¿½
+		   0:Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		   -1:ï¿½ï¿½ï¿½ï¿½
 *****************************************************************************/
 int check_plug_conf(char* filename,int plugtype)
 {
@@ -461,7 +461,7 @@ int check_plug_conf(char* filename,int plugtype)
 	{
 		memset(config_buf,0,PLUGIN_MAX_CONFLEN);
 
-		//»ñÈ¡ÎÄ¼þÖÐÃ¿ÐÐÄÚÈÝ
+		//ï¿½ï¿½È¡ï¿½Ä¼ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if((fgets(config_buf,PLUGIN_MAX_CONFLEN,fp)) == NULL)
 		{
 			break;
@@ -469,7 +469,7 @@ int check_plug_conf(char* filename,int plugtype)
 
 		plugin_del_blank_rn(config_buf, sizeof(config_buf));
 
-		//µÚÒ»¸ö×Ö·û²»ÊÇ"[",²»×ö´¦Àí
+		//ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½"[",ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if(memcmp(config_buf,KEYWORD_SPECIAL1,strlen(KEYWORD_SPECIAL1)) != 0)
 		{
 			continue;
@@ -477,7 +477,7 @@ int check_plug_conf(char* filename,int plugtype)
 
 		begin = config_buf+1;
 		
-		//Èç¹ûÊÇ[PLUGINFO]£¬²»×ö´¦Àí
+		//ï¿½ï¿½ï¿½ï¿½ï¿½[PLUGINFO]ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if(memcmp(begin,SECTION_PLUGINFO,strlen(SECTION_PLUGINFO)) == 0)
 		{
 			continue;
@@ -521,10 +521,10 @@ int check_plug_conf(char* filename,int plugtype)
 
 
 /****************************************************************************
-º¯ÊýÃû:plugin_load_entryname()
-¹¦ÄÜ£º¼ÓÔØËùÓÐº¯ÊýÃû£¬¼´¹ÒÔØ²ãµÄÃû³Æ
-ÊäÈë£ºÎÞ 
-Êä³ö£º0:sucess
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:plugin_load_entryname()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ë£ºï¿½ï¿½ 
+ï¿½ï¿½ï¿½ï¿½ï¿½0:sucess
 		   -1:error
 *****************************************************************************/
 int process_conf_entryname()
@@ -567,13 +567,13 @@ int process_conf_entryname()
 			return 0;
 		}
 
-		//×¢ÊÍ
+		//×¢ï¿½ï¿½
 		if(buf_entryname[0]=='#')
 		{
 			continue;
 		}
 
-#if 0 /* 2016-03-14 lijia modify, ´Ë´¦²»ÄÜÈÏÎªÄ©Î²¾ÍÊÇ\r\n, »¹¿ÉÄÜÊÇ\n */
+#if 0 /* 2016-03-14 lijia modify, ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÄ©Î²ï¿½ï¿½ï¿½ï¿½\r\n, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n */
 		///r/n
 		len = strlen(buf_entryname);
 		buf_entryname[len-2] = '\0';
@@ -584,7 +584,7 @@ int process_conf_entryname()
 			continue;
 		}
 		
-		//Æ½Ì¨Èë¿Ú,IP,IPV6,TCP,TCPALL,UDP
+		//Æ½Ì¨ï¿½ï¿½ï¿½,IP,IPV6,TCP,TCPALL,UDP
 		if( ((strcmp(buf_entryname,SECTION_FUN_IP)==0))||
 		      (strcmp(buf_entryname,SECTION_FUN_IP_FRAG)==0)||
 			(strcmp(buf_entryname,SECTION_FUN_IPV6)==0)||
@@ -613,12 +613,12 @@ int process_conf_entryname()
 extern int plugin_load_new_plug(const char *plug_name, const char *plug_path);
 extern int plugin_is_necessary(const char *plug_path, int *priority);
 /****************************************************************************
-º¯ÊýÃû:process_confelem_plugname()
-¹¦ÄÜ£º´¦Àí²å¼þÅäÖÃÎÄ¼þµÄ²å¼þÃû×Ö¶Î
-ÊäÈë£ºfilename:²å¼þÅäÖÃÎÄ¼þÃû[IN], ./plug/business/example/example.inf
-		  plugtype:²å¼þÀàÐÍ£¬½âÎö²ã²å¼þÐèÒª¼ì²éÎÄ¼þÃû£¬ÒµÎñ²ã²»ÐèÒª
-		   plugname:´ÓÅäÖÃÎÄ¼þ¶ÁÈ¡²å¼þÃû£¬´æ´¢µ½´Ë±äÁ¿ÖÐ[OUT]
-Êä³ö£º0:sucess
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:process_confelem_plugname()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½
+ï¿½ï¿½ï¿½ë£ºfilename:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½[IN], ./plug/business/example/example.inf
+		  plugtype:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ã²»ï¿½ï¿½Òª
+		   plugname:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½ï¿½Ë±ï¿½ï¿½ï¿½ï¿½ï¿½[OUT]
+ï¿½ï¿½ï¿½ï¿½ï¿½0:sucess
 		   -1:error
 *****************************************************************************/
 int process_confelem_plugname(char* filename,int plugtype,char** plugname)
@@ -669,16 +669,16 @@ plug_init_error:
 
 
 /****************************************************************************
-º¯ÊýÃû:process_confelem_sofilename()
-¹¦ÄÜ£º´¦Àí²å¼þÅäÖÃÎÄ¼þµÄsoÎÄ¼þÂ·¾¶Ãû×Ö¶Î
-		1¡¢Í¨¹ýdlopen´ò¿ªÎÄ¼þ
-		2¡¢¼ÓÔØ³õÊ¼»¯º¯ÊýCHAR_INIT£¬²¢µ÷ÓÃ³õÊ¼»¯º¯Êý
-		3¡¢¼ÓÔØÐ¶ÔØº¯ÊýCHAR_DESTROY£¬²»ÊÇ±ØÐëµÄ
-		4¡¢Èç¹ûÊÇ½âÎö²ã²å¼þ:¼ÓÔØ±ê¼ÇÎ»Í¨ÖªFLAG_STATEºÍ±ê¼ÇÎ»×ª»»FLAG_CHANGEº¯Êý
-ÊäÈë£ºfilename:²å¼þÅäÖÃÎÄ¼þÃû[IN]
-		  plugtype:²å¼þÀàÐÍ£¬½âÎö²ã²å¼þÐèÒª¼ì²éÎÄ¼þÃû£¬ÒµÎñ²ã²»ÐèÒª
-		   plugname:´ÓÅäÖÃÎÄ¼þ¶ÁÈ¡²å¼þÃû£¬´æ´¢µ½´Ë±äÁ¿ÖÐ[OUT]
-Êä³ö£º0:sucess
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:process_confelem_sofilename()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½soï¿½Ä¼ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½
+		1ï¿½ï¿½Í¨ï¿½ï¿½dlopenï¿½ï¿½ï¿½Ä¼ï¿½
+		2ï¿½ï¿½ï¿½ï¿½ï¿½Ø³ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CHAR_INITï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã³ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½Øºï¿½ï¿½ï¿½CHAR_DESTROYï¿½ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½ï¿½
+		4ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ï¿½ï¿½ï¿½Ø±ï¿½ï¿½Î»Í¨ÖªFLAG_STATEï¿½Í±ï¿½ï¿½Î»×ªï¿½ï¿½FLAG_CHANGEï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ë£ºfilename:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½[IN]
+		  plugtype:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ã²»ï¿½ï¿½Òª
+		   plugname:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½ï¿½Ë±ï¿½ï¿½ï¿½ï¿½ï¿½[OUT]
+ï¿½ï¿½ï¿½ï¿½ï¿½0:sucess
 		   -1:error
 *****************************************************************************/
 int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* pluginfo_pro,stBusinessPlugInfo* pluginfo_bus)
@@ -706,7 +706,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 
 	if((plugtype == PLUGTYPE_PLATFORM) || (plugtype == PLUGTYPE_PROTOCOL))
 	{
-		//Æ½Ì¨²ãºÍ½âÎö²ã²å¼þ·ûºÅ±í¹«¿ª
+		//Æ½Ì¨ï¿½ï¿½Í½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å±ï¿½ï¿½ï¿½ï¿½ï¿½
 		#if defined(USE_TCMALLOC) || defined(USE_MIMALLOC) || defined(ASAN_ENABLED)
 			filepoint = dlopen(buf_sofilename,RTLD_NOW|RTLD_LAZY|RTLD_GLOBAL);
 		#else
@@ -715,7 +715,7 @@ int process_confelem_sofilename(char* filename,int plugtype,stProtocolPlugInfo* 
 	}
 	else
 	{
-		//ÒµÎñ²ã²å¼þ·ûºÅ±íÓÅÏÈµ÷ÓÃ×Ô¼º·ûºÅ±í
+		//Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å±ï¿½ï¿½ï¿½ï¿½Èµï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½Å±ï¿½
 		#if defined(USE_TCMALLOC) || defined(USE_MIMALLOC) || defined(ASAN_ENABLED)
 			filepoint = dlopen(buf_sofilename,RTLD_NOW|RTLD_LAZY|RTLD_LOCAL);
 		#else
@@ -918,15 +918,15 @@ plug_init_error:
 extern int plugin_load_new_plug_entry(const char *plug_name, const char *plug_entry_type, void *entry_addr);
 extern int stream_register_fun(enum fun_type_t funtype,char (*x)(void), int plug_entry_id);
 /****************************************************************************
-º¯ÊýÃû:process_confelem_platentry()
-¹¦ÄÜ£º¼ÓÔØÆ½Ì¨Èë¿Úº¯Êý
-		1¡¢IP_ENTRY,IPV6_ENTRY,TCP_ENTRY,UDP_ENTRY
-		2¡¢Æ½Ì¨Èë¿Úº¯ÊýÃûÄ¿Ç°¹Ì¶¨£¬²»ÊÇ´ÓÅäÖÃÎÄ¼þÖÐ¶ÁÈ¡
-ÊäÈë£ºfilename:²å¼þÅäÖÃÎÄ¼þÃû[IN]
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:process_confelem_platentry()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½Æ½Ì¨ï¿½ï¿½Úºï¿½ï¿½ï¿½
+		1ï¿½ï¿½IP_ENTRY,IPV6_ENTRY,TCP_ENTRY,UDP_ENTRY
+		2ï¿½ï¿½Æ½Ì¨ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½ï¿½Ä¿Ç°ï¿½Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ð¶ï¿½È¡
+ï¿½ï¿½ï¿½ë£ºfilename:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½[IN]
 		 
-Êä³ö£º0:sucess
+ï¿½ï¿½ï¿½ï¿½ï¿½0:sucess
 		   -1:error
-±¸×¢:ÈÎºÎÒ»¸öÅäÖÃÎÄ¼þÖÐÌîÐ´µÄÈë¿Úº¯Êý´íÎó£¬Ôò·µ»Ø´íÎó
+ï¿½ï¿½×¢:ï¿½Îºï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò·µ»Ø´ï¿½ï¿½ï¿½
 *****************************************************************************/
 int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname)
 {
@@ -985,20 +985,20 @@ int process_confelem_platentry(char* filename,void* fp_dlopen,char* plugname)
 }
 
 /****************************************************************************
-º¯ÊýÃû:process_confelem_appentry()
-¹¦ÄÜ£º¼ÓÔØÒµÎñ²å¼þµÄ½âÎö²ãÈë¿Úº¯Êý
-		1¡¢ÂÖÑ¯ËùÓÐentrylist.confÖÐº¯ÊýÈë¿ÚÊÇ·ñ¹ÒÔØ
-		2¡¢¼ì²é¸Ã½âÎö²ã²å¼þÊÇ·ñ´æÔÚ£»
-		3¡¢×Ô¶¯×ª»»Èë¿Úº¯ÊýÃû
-		4¡¢µ÷ÓÃ½âÎö²ã²å¼þµÄFLAG_CHANGº¯Êý×ª»»flagÖµ
-		5¡¢¹ÒÔØµ½¶ÔÓ¦½âÎö²ãº¯ÊýÁ´ÉÏ£»
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:process_confelem_appentry()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½
+		1ï¿½ï¿½ï¿½ï¿½Ñ¯ï¿½ï¿½ï¿½ï¿½entrylist.confï¿½Ðºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½
+		2ï¿½ï¿½ï¿½ï¿½ï¿½Ã½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ú£ï¿½
+		3ï¿½ï¿½ï¿½Ô¶ï¿½×ªï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½ï¿½
+		4ï¿½ï¿½ï¿½ï¿½ï¿½Ã½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½FLAG_CHANGï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½flagÖµ
+		5ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ãº¯ï¿½ï¿½ï¿½ï¿½ï¿½Ï£ï¿½
 		 
-Êä³ö£º0:sucess
+ï¿½ï¿½ï¿½ï¿½ï¿½0:sucess
 		   -1:error
-±¸×¢:
-	1¡¢ÒòÎª²ÉÓÃÂÖÑ¯entrylist.confÖÐº¯ÊýÈë¿ÚÊÇ·ñ¹ÒÔØ£¬ËùÓÐ
-		³ÌÐòÖ»¼ì²â²å¼þÅäÖÃÎÄ¼þÖÐÊÇ·ñÓµÓÐÕýÈ·µÄ¹ÒÔØ½Ó¿Ú£»
-		µ«ÊÇÅäÖÃÎÄ¼þÖÐÈç¹û¹ÒÔØ½Ó¿Ú´íÎó£¬ÎÞ·¨¼ì²é£»
+ï¿½ï¿½×¢:
+	1ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¯entrylist.confï¿½Ðºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½
+		ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Óµï¿½ï¿½ï¿½ï¿½È·ï¿½Ä¹ï¿½ï¿½Ø½Ó¿Ú£ï¿½
+		ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø½Ó¿Ú´ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½é£»
 *****************************************************************************/
 int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 {
@@ -1019,7 +1019,7 @@ int process_confelem_appentry(char* filename,stBusinessPlugInfo* pluginfo_bus)
 	
 		entryname = g_entryname_info->entryname[i].name;
 
-		/* ´Ó²å¼þµÄ.infÅäÖÃÎÄ¼þÖÐ, ¶ÁÈ¡ÊÇ·ñÓÐ¹ÒÔØµ½µ±Ç°entryÃû×ÖµÄÈë¿Ú */
+		/* ï¿½Ó²ï¿½ï¿½ï¿½ï¿½.infï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½, ï¿½ï¿½È¡ï¿½Ç·ï¿½ï¿½Ð¹ï¿½ï¿½Øµï¿½ï¿½ï¿½Ç°entryï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ */
 		MESA_load_profile_string_nodef(filename,entryname,KEYWORD_FUNFLAG,buf_funflag,PLUGIN_MAX_CONFLEN);
 		if(buf_funflag[0] != '\0')  
 		{
@@ -1182,10 +1182,10 @@ static void confilist_file_check(void)
 
 
 /****************************************************************************
-º¯ÊýÃû:process_conflist()
-¹¦ÄÜ£º´¦Àí¸÷Àà²å¼þÅäÖÃÎÄ¼þÁÐ±íÄÚÈÝ
-ÊäÈë£º
-Êä³ö£º0:sucess
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:process_conflist()
+ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ë£º
+ï¿½ï¿½ï¿½ï¿½ï¿½0:sucess
 		   -1:error
 *****************************************************************************/
 int process_conflist(int plug_type)
@@ -1194,7 +1194,7 @@ int process_conflist(int plug_type)
 
 	confilist_file_check();
 
-	/* 20190605 lijia modify, Ê¹ÓÃµ¥Ò»ÅäÖÃÎÄ¼þ, ´úÌæÔ­À´µÄÈý¸ö²å¼þ¿ØÖÆÎÄ¼þ */
+	/* 20190605 lijia modify, Ê¹ï¿½Ãµï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½, ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ */
 	if(PLUGTYPE_PLATFORM == plug_type){
 		rec = process_conflist_single((char *)ABBR_PLUG_LIST_CONF_FILE, plug_type, "platform");
 	}else if(PLUGTYPE_PROTOCOL == plug_type){
@@ -1319,7 +1319,7 @@ char plugin_process_pending(stProtocolFunInfo* funlist_pro,stSessionInfo* sessio
 	{
 		if(funelem_session == NULL)
 		{
-			funelem_session = (stSessionFunInfo*)malloc(sizeof(stSessionFunInfo));
+			funelem_session = (stSessionFunInfo*)sapp_mem_calloc(SAPP_MEM_DYN_PLUG_CTRL, thread_seq, sizeof(stSessionFunInfo));
 		}
 	
 		funelem_session->next=NULL;
@@ -1335,8 +1335,8 @@ char plugin_process_pending(stProtocolFunInfo* funlist_pro,stSessionInfo* sessio
 
 		if(funelem_session->protflag&prot_flag)
 		{
-			/* 2016-05-30 lijia add, ÓÐ¹ØÐÄµÄÊý¾Ý±ØÐëÉèÖÃSESSION_STATE_DATA
-				µ«´Ë´¦»¹²»ÄÜ¸Ä, ÒòÎªºÜ¶à²å¼þÓÃÈçÏÂÓï¾äÅÐ¶Ï×´Ì¬:
+			/* 2016-05-30 lijia add, ï¿½Ð¹ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½Ý±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SESSION_STATE_DATA
+				ï¿½ï¿½ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü¸ï¿½, ï¿½ï¿½Îªï¿½Ü¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½×´Ì¬:
 
 				if(session_state == SESSION_STATE_PENDING)
 				{
@@ -1344,8 +1344,8 @@ char plugin_process_pending(stProtocolFunInfo* funlist_pro,stSessionInfo* sessio
 				}
 				switch(session_state)
 				
-				Èç¹û¼ÓÉÏsession_info->session_state |= SESSION_STATE_DATA;
-				ºÜ¶àÁ÷¾Í¶¼²»´¦ÀíÁË.
+				ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½session_info->session_state |= SESSION_STATE_DATA;
+				ï¿½Ü¶ï¿½ï¿½ï¿½ï¿½Í¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
 			*/	
 			//session_info->session_state |= SESSION_STATE_DATA; 
 //del by liuy 20170525 for wy serial
@@ -1387,7 +1387,7 @@ char plugin_process_pending(stProtocolFunInfo* funlist_pro,stSessionInfo* sessio
 
 	if(funelem_session != NULL)
 	{
-		free(funelem_session);
+		sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, thread_seq, funelem_session);
 		funelem_session=NULL;
 	}
 
@@ -1481,7 +1481,7 @@ char plugin_process_data(stSessionInfo* session_info,void **pme, int thread_seq,
 			}
 			next=funelem->next;
 			
-			free(funelem);
+			sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, thread_seq, funelem);
 			funelem=next;		
 		}
 		else
@@ -1636,7 +1636,7 @@ char plugin_process_close(int callbake_flag,stSessionInfo* session_info,void **p
 		}
 
 		next=funelem->next;
-		free(funelem);
+		sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, thread_seq, funelem);
 		
 		funelem=next;	
 	}
@@ -1649,11 +1649,11 @@ char plugin_process_close(int callbake_flag,stSessionInfo* session_info,void **p
 #endif
 
 /*
-	¶à¸ösession_state×´Ì¬Í¬Ê±Êä³öÊ±, ±ÈÈç: SESSION_STATE_PENDING|SESSION_STATE_DATA|SESSION_STATE_CLOSE
+	ï¿½ï¿½ï¿½session_state×´Ì¬Í¬Ê±ï¿½ï¿½ï¿½Ê±, ï¿½ï¿½ï¿½ï¿½: SESSION_STATE_PENDING|SESSION_STATE_DATA|SESSION_STATE_CLOSE
 
-	Ö»freeÏà¹ØstSessionFunInfo½á¹¹, ²»ÔÙµ÷ÓÃÒµÎñ²å¼þ.
+	Ö»freeï¿½ï¿½ï¿½stSessionFunInfoï¿½á¹¹, ï¿½ï¿½ï¿½Ùµï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½.
 */
-static char session_multi_state_context_free(stSessionInfo* session_info,void **pme)
+static char session_multi_state_context_free(stSessionInfo* session_info,int thread_seq, void **pme)
 {
 	stSessionFunInfo* funlist=(stSessionFunInfo*)(*pme);
 	stSessionFunInfo* funelem=funlist;
@@ -1662,7 +1662,7 @@ static char session_multi_state_context_free(stSessionInfo* session_info,void **
 	while(funelem)
 	{
 		next=funelem->next;
-		free(funelem);
+		sapp_mem_free(SAPP_MEM_DYN_PLUG_CTRL, thread_seq, funelem);
 		funelem=next;	
 	}
 
@@ -1712,10 +1712,10 @@ char PROT_PROCESS(stSessionInfo* session_info, void **pme, int thread_seq,struct
 	{
 		ret1=plugin_process_pending(funlist_pro,session_info,pme,thread_seq,a_stream,a_packet);
 
-        /* 2021-05-12 lijia modify, close×´Ì¬ÒÑ¾­Êä³ö¹ýÒ»´ÎÁË, ²»ÔÙÖØ¸´µ÷ÓÃÒµÎñ²å¼þ */
+        /* 2021-05-12 lijia modify, close×´Ì¬ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ */
 		if(session_state&SESSION_STATE_CLOSE)
 		{
-			session_multi_state_context_free(session_info, pme);
+			session_multi_state_context_free(session_info, thread_seq, pme);
 		}
 
 		return ret1;
@@ -1729,10 +1729,10 @@ char PROT_PROCESS(stSessionInfo* session_info, void **pme, int thread_seq,struct
 		}
 		ret1 = plugin_process_data(session_info,pme,thread_seq,a_stream,a_packet);
 
-        /* 2021-05-12 lijia modify, close×´Ì¬ÒÑ¾­Êä³ö¹ýÒ»´ÎÁË, ²»ÔÙÖØ¸´µ÷ÓÃÒµÎñ²å¼þ */
+        /* 2021-05-12 lijia modify, close×´Ì¬ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ */
 		if(session_state&SESSION_STATE_CLOSE)
 		{
-			session_multi_state_context_free(session_info, pme);
+			session_multi_state_context_free(session_info, thread_seq, pme);
 		}
 
 		return ret1;
