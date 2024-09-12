@@ -1,38 +1,38 @@
 /*
-20120603 : 1)�޸Ľ������ӵĲ��� ��datalen>0�İ�ֱ�ӽ�������
-		   2)Ӧ�ò㲻��Ҫ�����ӣ�ת��nouse״̬��������ֱ���ͷ�
+20120603 : 1)?????????????? ??datalen>0?????????????
+		   2)??��??????????????nouse????????????????
 
-20140322 : 1)ԭ�����ֻ�е�����data״̬�󣬲ŷ���pdetail�Ŀռ䣻�����޸�Ϊ
-			��һ�����ͷ���pdetail�Ŀռ䣬������data��ŷ���half�Ŀռ�
-		    2)ԭ��������ص�һЩ������ȫ������pdetail
-		    3) �����Ĺ������������ĵ�ַ��hash���ö���ַ���бȽ�
+20140322 : 1)????????��?????data????????pdetail????????????
+			????????????pdetail??????????data??????half????
+		    2)????????????��?????????????pdetail
+		    3) ???????????????????????hash???????????��??
 		    
-20140329 1)�ָ���tcpdetail��¼���ζ����ֽ���pdetail->lostlen
-		 2)������tcpallpktģʽ�����ڲ������������飬����ȷ��fin��rst�ȵĵ���shunx
-			˳����˲���������close״̬��ֻ�ܵ���̭��
-	        3)�������м�¼ÿ��İ����ֽ�����λ�õ�����Ϊʵ�ʵ����˳��
-			��¼����¼�а����˲������صİ���Ŀ����ͳϵͳ�м�¼�˴����صİ���
+20140329 1)?????tcpdetail??????��????????pdetail->lostlen
+		 2)??????tcpallpkt????????????????????�???????fin??rst??????shunx
+			???????????????close?????????????
+	        3)???????��????????????????��??????????????????
+			?????????��?????????????????????????��?????????????
 
-20141210 1)ȫ�����streaminfo����ؽṹ�壬ʹ�÷���ṹ��Ĳ�ͬ����
-20141213 1)����tcp_add_new_stream_bydata���水tcplen=0�İ������ӣ�����nouse����
-			nouse���������������һ����data��������opstate=close�����
-			�ڶ����Ǵ�һ�����ͽ�����nouse����ʱopsate=pending,
-		 2) �������ڶ������nouse���������ݰ�ʱ���ָ���data������
+20141210 1)??????streaminfo???????��??��?????????????
+20141213 1)????tcp_add_new_stream_bydata???ˮtcplen=0??????????????nouse????
+			nouse????????????????????data????????opstate=close?????
+			????????????????????nouse?????opsate=pending,
+		 2) ??????????????nouse???????????????????data??????
 
-20141217 1)����c2s�������ĵڶ�������ack���Ƿ������ڣ�һֱ�������飬
-	   Ŀǰ�汾�в����ϸ���
+20141217 1)????c2s????????????????ack?????????????????????�
+	   ???��?��????????
 
 
-20150114 ���ں����ĵ���˳�����ȵ���tcpall�ӿڣ������ȵ���tcp�ӿڽ����˷�������
-	 ԭ���ȵ���tcpall�������tcp�����ֶ�syn�ش��޷��ж��Ƿ���Ч���Ƿ�����
-	 ���Ϊ�ȵ���tcp���ٵ���tcpall������ ����ĳˮ䰹��̣�tcp�ӿڣ�����tcpall�ı�ǩ
-	 ���ڵ���Ϊ���½���������data�����ӣ������ȵ���all���ڵ���tcp��	   
-20150126 ������
-	����tcp_free_stream,tcp_reset_stream�Ĳ�������Ϊ�ȵ���tcp���ٵ���tcpall
+20150114 ??????????????????????tcpall?????????????tcp???????????????
+	 ????????tcpall???????tcp???????syn???????��??????��?????????
+	 ?????????tcp???????tcpall?????? ???????????tcp????????tcpall????
+	 ?????????????????????data????????????????all???????tcp??	   
+20150126 ??????
+	????tcp_free_stream,tcp_reset_stream???????????????tcp???????tcpall
 20150210 lqy
-	����syn+ack����syn�����ݵ���������±�������seqʱҪ�ж��Ƿ��syn
-	 nouse�����ĵ��������
-	���Ӹ��� ,syn״̬��Ҫ����tcp��״̬
+	????syn+ack????syn???????????????��???????seq???��?????syn
+	 nouse??????????????
+	??????? ,syn?????????tcp????
 */
 #include "sapp_api.h"
 #include "sapp_private_api.h"
@@ -56,10 +56,10 @@ int copy_ipport_union_addr(struct streaminfo *pstream_heap, struct streaminfo *p
 void iterate_stream_list(const struct streaminfo *stream);
 int del_stream_by_time(struct stream_list *plist, const struct streamindex *current_drive_index, int thread_id, enum stream_type_t type);
 
-//int g_kill_tcp_remedy_sw = 0; /* 2016-06-21 lijia add, �Ƿ����FD���� */
+//int g_kill_tcp_remedy_sw = 0; /* 2016-06-21 lijia add, ??????FD???? */
 
 int G_TCP_FLOW_STAT_PROJECT_ID = -1; /* 2016-07-14 lijia copy from sapp */
-int G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID = -1; /* ������, ����ACK����ƶϳ��ĶԶ����۽��յ����ݳ��� */
+int G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID = -1; /* ??????, ????ACK?????????????????????????? */
 
 #if DEBUG
 static void packet_io_status_tcp_pkt_update(int tid, unsigned char tcp_flags, int payload_len);
@@ -104,9 +104,9 @@ static int checkcreatlinkseq(struct streaminfo_private*pstream_pr,int this_seq)
 		curseq=pdetail_pr->iclientseq;
 	}
 	//adjust by lqy 20120923 
-	//��һ�γ������ݣ���Ϊ������
+	//????��?????????????????
 	if(curseq==0) return 1;
-	//��γ���syn����һ�����ݰ����Ϊ׼
+	//??��???syn?????????????????
 	if(pdetail_pr->multisynflag==1)
 	{
 		if(pstream->curdir == DIR_C2S)
@@ -137,7 +137,7 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 	const unsigned char *opt;
 	int opt_num = 0, opt_len;
 	struct tcp_option *out_raw_result = raw_result;
-	int parsed_opt; /* ��ȷ������OPT��׼λ */
+	int parsed_opt; /* ?????????OPT???�� */
 
 	if((NULL == raw_result) || (res_num <= 0)){
 		return -1;
@@ -158,10 +158,10 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 
 		switch (*opt)
 		{
-		case TCP_OPT_EOL: /* ��ʵ������, ����¼��ѡ�������� */
+		case TCP_OPT_EOL: /* ?????????, ???????????????? */
 			return opt_num;
 
-		case TCP_OPT_NOP: /* ��ʵ������, ����¼��ѡ�������� */
+		case TCP_OPT_NOP: /* ?????????, ???????????????? */
 			opt++;
 			opt_len--; /* Ref: RFC 793 section 3.1 */
 			continue;
@@ -239,7 +239,7 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 					goto err;
 				}
 				out_raw_result->len -= 2;
-				out_raw_result->char_value = 1; /* SACKʵ��û��ֵ, �˴���ֵ��Ϊ�˱����ⲿ���ʹ�� */
+				out_raw_result->char_value = 1; /* SACK???????, ?????????????????????? */
 				opt_len -= 2;
 				parsed_opt = 1;
 				break;
@@ -267,7 +267,7 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 				parsed_opt = 1;
 				break;
 
-			/* ����ʶ���ݲ�������ѡ��, ���� */
+			/* ???????????????????, ???? */
 			case TCP_OPT_SACK_EDGE:
 			case TCP_OPT_MD5:
 			case TCP_OPT_MULTI_PATH_TCP:
@@ -277,7 +277,7 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 				int this_opt_len;
 
 				if (opt_len <= 1)
-				{ /* ��ǰѡ���Ϊ0, ��ʣ��ѡ���ֻ��һ���ֽ�, ��ѡ�����ͷ�0��1, �����! */
+				{ /* ?????????0, ???????????????????, ??????????0??1, ?????! */
 					goto err;
 				}
 				this_opt_len = opt[1];
@@ -296,7 +296,7 @@ int MESA_get_tcp_pkt_opts(const struct tcphdr *tcphdr, struct tcp_option *raw_re
 				int this_opt_len;
 
 				if (opt_len <= 1)
-				{ /* ��ǰѡ���Ϊ0, ��ʣ��ѡ���ֻ��һ���ֽ�, ��ѡ�����ͷ�0��1, �����! */
+				{ /* ?????????0, ???????????????????, ??????????0??1, ?????! */
 					goto err;
 				}
 				this_opt_len = opt[1];
@@ -336,7 +336,7 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 	const unsigned char *opt;
 	int opt_num = 0, opt_len;
 	struct tcp_option_ext *out_raw_result = raw_result;
-	int parsed_opt; /* ��ȷ������OPT��׼λ */
+	int parsed_opt; /* ?????????OPT???�� */
 
 	if((NULL == raw_result) || (res_num <= 0)){
 		return -1;
@@ -357,10 +357,10 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 
 		switch (*opt)
 		{
-		case TCP_OPT_EOL: /* ��ʵ������, ����¼��ѡ�������� */
+		case TCP_OPT_EOL: /* ?????????, ???????????????? */
 			return opt_num;
 
-		case TCP_OPT_NOP: /* ��ʵ������, ����¼��ѡ�������� */
+		case TCP_OPT_NOP: /* ?????????, ???????????????? */
 			opt++;
 			opt_len--; /* Ref: RFC 793 section 3.1 */
 			continue;
@@ -438,7 +438,7 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 					goto err;
 				}
 				out_raw_result->len -= 2;
-				out_raw_result->char_value = 1; /* SACKʵ��û��ֵ, �˴���ֵ��Ϊ�˱����ⲿ���ʹ�� */
+				out_raw_result->char_value = 1; /* SACK???????, ?????????????????????? */
 				opt_len -= 2;
 				parsed_opt = 1;
 				break;
@@ -485,7 +485,7 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 			}
 			break;
 
-			/* ����ʶ���ݲ�������ѡ��, ���� */
+			/* ???????????????????, ???? */
 			case TCP_OPT_SACK_EDGE:
 			case TCP_OPT_MD5:
 			case TCP_OPT_RIVER_PROBE:
@@ -494,7 +494,7 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 				int this_opt_len;
 
 				if (opt_len <= 1)
-				{ /* ��ǰѡ���Ϊ0, ��ʣ��ѡ���ֻ��һ���ֽ�, ��ѡ�����ͷ�0��1, �����! */
+				{ /* ?????????0, ???????????????????, ??????????0??1, ?????! */
 					goto err;
 				}
 				this_opt_len = opt[1];
@@ -513,7 +513,7 @@ int MESA_get_tcp_pkt_opts_ext(const struct tcphdr *tcphdr, struct tcp_option_ext
 				int this_opt_len;
 
 				if (opt_len <= 1)
-				{ /* ��ǰѡ���Ϊ0, ��ʣ��ѡ���ֻ��һ���ֽ�, ��ѡ�����ͷ�0��1, �����! */
+				{ /* ?????????0, ???????????????????, ??????????0??1, ?????! */
 					goto err;
 				}
 				this_opt_len = opt[1];
@@ -600,8 +600,8 @@ static char tcp_processallpkt( struct streaminfo *pstream, const void *this_iphd
 }
 
 
-/* LiJia comment: ������½�����, ��resetflag=0, ����pindexָ��ջ����ڴ�;
-				�������Ԫ������, ����pindexָ�������ڴ�;
+/* LiJia comment: ????????????, ??resetflag=0, ????pindex??????????;
+				??????????????, ????pindex??????????;
 */
 static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	const void *this_iphdr, struct mesa_tcp_hdr *this_tcphdr,int datalen,int resetflag, const raw_pkt_t *raw_pkt)
@@ -613,7 +613,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	struct streaminfo *pstream;
 	struct tcpdetail *pdetail=NULL;
 	struct tcpdetail_private *pdetail_pr=NULL;
-	int need_reverse = 0; /* copy��ַʱ, �Ƿ���Ҫ��src, dst�ߵ� */
+	int need_reverse = 0; /* copy????, ????????src, dst??? */
 
 	if ((this_tcphdr->th_flags & TH_SYN)
 		&& !(this_tcphdr->th_flags & TH_ACK)
@@ -631,12 +631,12 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	{
 		//runtime_log(RLOG_LV_FATAL, "[tcp_add_new_stream_bysyn]:","tcpflags=:%0x\n",this_tcphdr->th_flags);
 		//adjust by lqy 20130530 
-		//ֻ�е����ν���ʱֱ�ӷ���
+		//??��????��??????????
 		if(resetflag==0)
 			return NULL;
 	}
 	if(likely(0 == resetflag)){
-		/* �˺���copy������pindex�ṹ, ��addr��ַ��������һ���ڴ�, ���Բ�û��copy, ʵ�ʻ�����pindexָ����ڴ���� */
+		/* ?????copy??????pindex??, ??addr?????????????????, ????????copy, ????????pindex?????????? */
 		pindex_tcp=malloc_and_copy_streamindex(threadnum, pindex);
 		
 		//memcpy(pindex_tcp,pindex,sizeof(struct streamindex));
@@ -644,18 +644,18 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pstream = &pstream_pr->stream_public;		
 
 		/* 2014-11-13 lijia modify */
-		if(DIR_C2S == createdir){ /* ��ǰ��ַ��TCP�߼������Ϸ���C->S���䷽�� */
+		if(DIR_C2S == createdir){ /* ????????TCP????????????C->S?????? */
 			if(1 == pstream_pr->layer_dir){
-				pstream_pr->stream_dir = 1; /* �ڵ�ַ�������, ��"���ַ�ǿͻ���"�����෴ */
+				pstream_pr->stream_dir = 1; /* ???????????, ??"??????????"?????? */
 			}else{
 				pstream_pr->stream_dir = 0;
 			}
 			need_reverse = 0;
 			pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir;
 		}else{
-			need_reverse = 1; /* ���뽫��ַ����ߵ�, �����ȡ��ַ�ṹʱ, src�̶�ָ���߼��ϵ�Դ��ַ */
+			need_reverse = 1; /* ?????????????, ????????????, src???????????????? */
 			if(1 == pstream_pr->layer_dir){
-				/* ��Ϊ��copy_stream_info_to_heap()�л�����ַ�ߵ�, ���Դ˴��ͺ�"���ַ�ǿͻ���"������ͬ�� */
+				/* ?????copy_stream_info_to_heap()?��?????????, ?????????"??????????"????????? */
 				pstream_pr->stream_dir = 0; 
 			}else{
 				pstream_pr->stream_dir = 1;
@@ -665,9 +665,9 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 
 #if USE_RBTREE_INSTEAD_LIST
 		/* note:
-			��Ϊ����rbtreeʱ��Ҫ���������������Ƚ�, ����ȷ������left����right��֧,
-			���ڱ�����˵, layer_dir����û��������, ��Ҫ���ں��������Ƚϵ�ַ��С, 
-			���Խ�layer_dir = stream_dir;
+			???????rbtree?????????????????????, ???????????left????right???,
+			??????????, layer_dir?????????????, ?????????????????????��, 
+			?????layer_dir = stream_dir;
 		*/
 		pstream_pr->layer_dir = pstream_pr->stream_dir;
 #endif
@@ -682,11 +682,11 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 #if SAPP_INSECTICIDE
 		iterate_stream_list(pstream);
 #endif
-		/* 2016-07-25 lijia add, ��¼��ǰ����ײ���������, ÿ����ֻ�ڴ���ʱ��һ�μ��� */
+		/* 2016-07-25 lijia add, ????????????????????, ????????????????��??? */
 		get_stream_carry_tunnel_type(pstream, NULL, &pstream_pr->stream_low_layer_tunnel_type);
 		
 #if 0
-		/* TCP��洢����ָ��, ��ʵ��ַ���ݴ洢��IP��, ����� */
+		/* TCP??��???????, ??????????��??IP??, ????? */
 		//set_stream_addr(pindex_tcp->stream.pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, &pindex_tcp->stream.addr);
 		//set_stream_addr(pindex_tcp->stream.pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, &pindex_tcp->stream);
 
@@ -702,7 +702,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		memset(pdetail_pr,0,sizeof(struct tcpdetail_private));   
 		pdetail->createtime=g_CurrentTime;
 		pstream_pr->stream_create_timestamp_ms=g_CurrentTime_ms;
-		//adjust by lqy 20140515 ֻ���½�ʱ����
+		//adjust by lqy 20140515 ???????????
 		if(createdir==DIR_S2C){
 			pdetail->clientpktnum++;
 			pdetail->clientbytes+= datalen; /* 2014-12-19 lijia add, for SYN pkt append data */
@@ -720,15 +720,15 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	else
 	{
 	 /* TODO 1:
-		�����������, ��ò�ʹ��ԭ����streamindex�ṹ, free��������һ���µ�,
-		����ʹstreamindex��ַ��ԭ����һ��, ��Ҫ����DEBUG.
+		???????????, ??��?????????streamindex??, free??????????????,
+		?????streamindex?????????????, ???????DEBUG.
 	 */
 	 pindex_tcp = pindex;
 	 pstream_pr = &pindex_tcp->stream;
 	 pstream = &pstream_pr->stream_public;
 	 pdetail_pr = (struct tcpdetail_private *)pstream->pdetail;
 	 pdetail = (struct tcpdetail *)pdetail_pr;
-	 // add by lqy 20150107, ���ü���
+	 // add by lqy 20150107, ???��???
 	 if (createdir == DIR_S2C)
 	 {
 		 pdetail->clientpktnum = 1;
@@ -747,13 +747,13 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pstream_pr->has_duplicate_pkt = 0;
 		pdetail_pr->drop_stream_flag = 0;
 		
-		/* ���Ӹ���, ��������һ���µ�streamid */
+		/* ???????, ??????????????streamid */
 		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);
 		pindex_tcp->stream.stream_trace_id=0;
 		pdetail->createtime=g_CurrentTime;
 		pstream_pr->stream_create_timestamp_ms=g_CurrentTime_ms;	
 
-		/* ��������, �����ж�һ��ddos ״̬ */
+		/* ????????, ?????��????ddos ?? */
 		if(pstream_pr->create_dir_by_well_known_port != 1)
 		{
 			pstream_pr->under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
@@ -783,7 +783,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	
 	pstream->dir=createdir;
 	pstream->curdir=createdir;
-	//δ����ȫ���ӿ�ģʽ�£�ֱ�ӹر�, add by lqy 20141213
+	//��????????????????????, add by lqy 20141213
 	if(tcp_support_all==TCP_SUPPORT_ENTRYALL_OFF)
 	{
 		pstream->pktstate=OP_STATE_CLOSE;
@@ -797,17 +797,17 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 
 	if(createdir==DIR_S2C)
 	{
-		//��ʱ������ʼ��seq
+		//????????????seq
 		pdetail_pr->iclientseq =ntohl (this_tcphdr->th_seq) + 1;
 		pdetail_pr->iserverseq=ntohl (this_tcphdr->th_ack);
-		//pdetail->clientpkt++; //adjust by lqy 20140515 ֻ���½�ʱ����
+		//pdetail->clientpkt++; //adjust by lqy 20140515 ???????????
 		pdetail_pr->S2C_first_ack_seq = pdetail_pr->iserverseq;
 	}
 	else if(createdir==DIR_C2S)
 	{
-		pdetail_pr->iclientseq = 0; /* 2017-12-06 lijia add, ��ʱS2C�����ISN��δ��ȡ�� */
+		pdetail_pr->iclientseq = 0; /* 2017-12-06 lijia add, ???S2C?????ISN??��????? */
 		pdetail_pr->iserverseq=ntohl (this_tcphdr->th_seq)+1;
-		//pdetail->serverpkt++; //adjust by lqy 20140515 ֻ���½�ʱ����
+		//pdetail->serverpkt++; //adjust by lqy 20140515 ???????????
 		pdetail_pr->C2S_first_ack_seq = ntohl (this_tcphdr->th_ack);
 	}
 	pdetail->lastmtime=g_CurrentTime;	
@@ -816,14 +816,14 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	pstream->stream_state=TCP_SYN_STATE;
 
 	if(pstream_pr->under_ddos_bypass){
-		/* bypass״̬�������κβ��, ������project,  parse_tcp_option�Ȳ��������Ժ�����,�Խ�Լcpu��Դ */
+		/* bypass?????????�ʦ�??, ??????project,  parse_tcp_option????????????????,????cpu??? */
 		pstream->stream_state=TCP_NOUSE_STATE;
 		streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]));
 		return pindex_tcp;
 	}
 	streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]));
 
-	/* LiJia add, ĳЩ��Ŀ����Ӧ�ó�ʼ��, ���ǩ��ԭʼIP��Ƭ�б��� */
+	/* LiJia add, ?��?????????��????, ????????IP????��??? */
 	pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_TCP_PROJECT, pstream->threadnum);
 	pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_TCP_BRIDGE, pstream->threadnum);
 
@@ -916,7 +916,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		if(DIR_S2C == createdir){
 			pdetail_pr->S2C_first_ack_seq = ntohl(this_tcphdr->th_ack);
 		}else{
-			; /* SYN��ľ��ACK, ���� */
+			; /* SYN?????ACK, ???? */
 		}
 	}
 
@@ -935,10 +935,10 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 }
 
 /*
-	1)ԭ�����Ϊû��syn������£�ֱ�ӿ���һ�����ݰ���������
-	2) Ϊ�˼���ȫ���ӿڣ�����û�����ݵİ�Ҳ���������ӽ���NOUSE ״̬
+	1)??????????syn??????????????????????????????
+	2) ????????????????????????????????????????NOUSE ??
 
-	2015-06-10 lijia add "resetflag", ��������ʱ��̭�½�����.
+	2015-06-10 lijia add "resetflag", ???????????????????.
 */
 static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
  struct mesa_tcp_hdr *this_tcphdr, int datalen, int resetflag, const raw_pkt_t * raw_pkt)
@@ -974,7 +974,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		iterate_stream_list(pstream);
 #endif
 
- 		/* 2016-07-25 lijia add, ��¼��ǰ����ײ���������, ÿ����ֻ�ڴ���ʱ��һ�μ��� */
+ 		/* 2016-07-25 lijia add, ????????????????????, ????????????????��??? */
 		get_stream_carry_tunnel_type(pstream, NULL, &pstream_pr->stream_low_layer_tunnel_type);
 		
 		pstream->dir=createdir;
@@ -986,24 +986,24 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 
 #if USE_RBTREE_INSTEAD_LIST
 		if(1 == pstream_pr->layer_dir){
-			pstream_pr->stream_dir  = 1; /* ��Ϊ�ǰ�DATA������, ����stream_dir�϶���Ĭ�Ϲ�����ͬ */
+			pstream_pr->stream_dir  = 1; /* ??????DATA??????, ????stream_dir?????????????? */
 			//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir;
 			//set_stream_addr(pstream->pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, pstream);
 		}else{
-			pstream_pr->stream_dir  = 1; /* ��Ϊ�ǰ�DATA������, ����stream_dir�϶���Ĭ�Ϲ�����ͬ */
-			//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir ^ 1; /* IP�㴴�����ķ����뵱ǰ�����䷽���෴ */
+			pstream_pr->stream_dir  = 1; /* ??????DATA??????, ????stream_dir?????????????? */
+			//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir ^ 1; /* IP???????????????????????? */
 			//set_stream_addr(pstream->pfather, this_tcphdr->th_dport, this_tcphdr->th_sport, pstream);
 		}
 
 		/* note:
-			��Ϊ����rbtreeʱ��Ҫ���������������Ƚ�, ����ȷ������left����right��֧,
-			���ڱ�����˵, layer_dir����û��������, ��Ҫ���ں��������Ƚϵ�ַ��С, 
-			��data��������, layer_dir = 1;
+			???????rbtree?????????????????????, ???????????left????right???,
+			??????????, layer_dir?????????????, ?????????????????????��, 
+			??data????????, layer_dir = 1;
 		*/
 		pstream_pr->layer_dir = 1;
 #endif
 
-		hash_add_stream(pindex_tcp); /* ���resetflag=1, ˵�������Ӹ���, tcp_reset_stream()û�д�hash����ɾ��, Ҳ�Ͳ����ظ������� */
+		hash_add_stream(pindex_tcp); /* ???resetflag=1, ????????????, tcp_reset_stream()??��?hash???????, ??????????????? */
 	}else{
 		pindex_tcp=pindex;
 		pstream_pr=&(pindex_tcp->stream);
@@ -1031,11 +1031,11 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 			pstream_pr->stream_c2s_route_dir = raw_pkt->route_dir;
 		}
 		pstream_pr->stream_killed_flag = 0;
-		/* ���Ӹ���, ��������һ���µ�streamid */
+		/* ???????, ??????????????streamid */
 		pindex_tcp->stream.global_stream_id = get_global_stream_id(threadnum);	
 		pindex_tcp->stream.stream_trace_id=0;
 
-		/* ���Ӹ���, �����ж�һ��ddos ״̬ */
+		/* ???????, ?????��????ddos ?? */
 		if(pstream_pr->create_dir_by_well_known_port != 1)
 		{
 			pstream_pr->under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
@@ -1046,9 +1046,9 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	pstream->curdir=createdir;
 	//pindex_tcp->stream.stream_dir=pindex_tcp->stream.layer_dir;
 
-	//�����ݱ���ֱ�ӽ���data״̬, by lqy 20141213
+	//???????????????data??, by lqy 20141213
 	//if(datalen>0)
-	//�����ĵ��ǲ���������־�ı���adjust by lqy 20150215
+	//????????????????????????adjust by lqy 20150215
 	if((datalen>0) && (!(this_tcphdr->th_flags & TH_FIN)) && (!(this_tcphdr->th_flags & TH_RST)))	
 	{
 		pstream->stream_state=TCP_DATA_STATE;
@@ -1058,7 +1058,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		pstream->stream_state=TCP_NOUSE_STATE;	
 	}
 	
-	/* TCP��洢����ָ��, ��ʵ��ַ���ݴ洢��IP��, ����� */
+	/* TCP??��???????, ??????????��??IP??, ????? */
 	//set_stream_addr(pindex_tcp->stream.pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, &pindex_tcp->stream.addr);
 	//set_stream_addr(pindex_tcp->stream.pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, &pindex_tcp->stream);
 
@@ -1066,12 +1066,12 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	set_stream_addr(pindex_tcp->stream.pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, &pindex_tcp->stream);
 #else  /* 2014-12-16 lijia modify */
 	if(1 == pstream_pr->layer_dir){
-		pstream_pr->stream_dir  = 1; /* ��Ϊ�ǰ�DATA������, ����stream_dir�϶���Ĭ�Ϲ�����ͬ */
+		pstream_pr->stream_dir  = 1; /* ??????DATA??????, ????stream_dir?????????????? */
 		//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir;
 		//set_stream_addr(pstream->pfather, this_tcphdr->th_sport, this_tcphdr->th_dport, pstream);
 	}else{
-		pstream_pr->stream_dir  = 1; /* ��Ϊ�ǰ�DATA������, ����stream_dir�϶���Ĭ�Ϲ�����ͬ */
-		//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir ^ 1; /* IP�㴴�����ķ����뵱ǰ�����䷽���෴ */
+		pstream_pr->stream_dir  = 1; /* ??????DATA??????, ????stream_dir?????????????? */
+		//((struct streaminfo_private *)pstream->pfather)->stream_dir = ((struct streaminfo_private *)pstream->pfather)->layer_dir ^ 1; /* IP???????????????????????? */
 		//set_stream_addr(pstream->pfather, this_tcphdr->th_dport, this_tcphdr->th_sport, pstream);
 	}
 #endif
@@ -1094,7 +1094,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	pdetail_pr->link_state=STREAM_LINK_DATA;	
 
 	if(pstream_pr->under_ddos_bypass){
-		/* bypass״̬�������κβ��, ������project,  bridge,parse_opt,��ʼ��half_stream�Ȳ��������Ժ����� */
+		/* bypass?????????�ʦ�??, ??????project,  bridge,parse_opt,?????half_stream???????????????? */
 		pstream->stream_state=TCP_NOUSE_STATE;
 		streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]));
 		return pindex_tcp;
@@ -1103,14 +1103,14 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	streamaddlist(pindex_tcp,&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]));
 	
 	//if(datalen>0)
-	//�����ĵ��ǲ���������־�ı���adjust by lqy 20150325
+	//????????????????????????adjust by lqy 20150325
 	if((datalen>0) && (!(this_tcphdr->th_flags & TH_FIN)) && (!(this_tcphdr->th_flags & TH_RST)))	
 	{
 		if(pstream->dir==DIR_C2S)
 		{
 			pdetail_pr->pserver=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM, threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pserver,0,sizeof(struct half_tcpstream));
-			//������
+			//??????
 			pdetail_pr->pserver->first_data_seq=(ntohl (this_tcphdr->th_seq) );
 			/* 2014-07-31 LiJia add, for set one stream unorder number */
 			pdetail_pr->pserver->maxunorder = tcp_default_unorder;
@@ -1119,17 +1119,17 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 		{
 			pdetail_pr->pclient=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM,threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pclient,0,sizeof(struct half_tcpstream));
-			//������
+			//??????
 			pdetail_pr->pclient->first_data_seq=(ntohl (this_tcphdr->th_seq) );
 			/* 2014-07-31 LiJia add, for set one stream unorder number */
 			pdetail_pr->pclient->maxunorder = tcp_default_unorder;
 		}
 	}
-	else //�����ݵ������¼��ʱseqֵ
+	else //????????????????seq?
 	{
 		if(createdir==DIR_S2C)
 		{
-			//��ʱ������ʼ��seq
+			//????????????seq
 			pdetail_pr->iclientseq =ntohl (this_tcphdr->th_seq) ;
 			pdetail_pr->iserverseq=ntohl (this_tcphdr->th_ack);
 			
@@ -1142,7 +1142,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 	}
 	pstream->pdetail=(void *)pdetail_pr;
 
-	/* 2014-03-26 LiJia add, ĳЩ��Ŀ����Ӧ�ó�ʼ��, ���ǩ��ԭʼIP��Ƭ�б��� */
+	/* 2014-03-26 LiJia add, ?��?????????��????, ????????IP????��??? */
 	pstream_pr->pproject = project_requirement_create(SAPP_MEM_DYN_TCP_PROJECT,threadnum);
 	pstream_pr->stream_bridge = stream_bridge_create_per_stream(SAPP_MEM_DYN_TCP_BRIDGE,pstream->threadnum);
 
@@ -1190,7 +1190,7 @@ static struct streamindex *tcp_add_new_stream_bydata(struct streamindex *pindex,
 				}
 			}
 		}
-		/* NOTE, tcp_data������stream_process_tcp()���ۼ� */
+		/* NOTE, tcp_data??????stream_process_tcp()????? */
 	}
 
 	if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
@@ -1248,9 +1248,9 @@ static void tcp_change_stream_todata(struct streamindex *pindex,struct mesa_tcp_
 		if(NULL == pdetail_pr->pserver){
 			pdetail_pr->pserver=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM,threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pserver,0,sizeof(struct half_tcpstream));
-			//������
+			//??????
 			pdetail_pr->pserver->first_data_seq=pdetail_pr->iserverseq;
-			/* pdetail_pr->iserverseq=0; */  /* 2016-04-27 lijia modify, ���ڻ�ȡ��ǰ����ISN */
+			/* pdetail_pr->iserverseq=0; */  /* 2016-04-27 lijia modify, ?????????????ISN */
 			
 			/* 2014-10-20 LiJia add, for set one stream unorder number */
 			pdetail_pr->pserver->maxunorder = tcp_default_unorder;
@@ -1261,9 +1261,9 @@ static void tcp_change_stream_todata(struct streamindex *pindex,struct mesa_tcp_
 		if(NULL == pdetail_pr->pclient){
 			pdetail_pr->pclient=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM,threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pclient,0,sizeof(struct half_tcpstream));
-			//������
+			//??????
 			pdetail_pr->pclient->first_data_seq=pdetail_pr->iclientseq;
-			/* pdetail_pr->iclientseq=0; */ /* 2016-04-27 lijia modify, ���ڻ�ȡ��ǰ����ISN */
+			/* pdetail_pr->iclientseq=0; */ /* 2016-04-27 lijia modify, ?????????????ISN */
 			
 			/* 2014-10-20 LiJia add, for set one stream unorder number */
 			pdetail_pr->pclient->maxunorder = tcp_default_unorder;
@@ -1287,7 +1287,7 @@ static void tcp_free_half(struct half_tcpstream *phalf,int threadnum)
 	//phalf = NULL;
 }
 
-/* ������֤pindex�Ƿ���plist�� */
+/* ???????pindex?????plist?? */
 static int inline stream_in_timeout_list(const struct streamindex *pindex, const struct stream_list *plist)
 {
 	if(timeout_pending((struct timeout *)&(pindex->timeout)))
@@ -1309,8 +1309,8 @@ static void tcp_change_stream_tonouse(struct streamindex *pindex)
 
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]);
 	/* 2017-01-03 lijia add, 
-	   �����tcp_reset_stream()����ջ��, ������tcp_change_stream_tonouse, 
-	   pindex�Ѿ����Ƴ���ǰ����list, �����ټ���ִ��streamleavlist��streamaddlist��.
+	   ?????tcp_reset_stream()???????, ??????tcp_change_stream_tonouse, 
+	   pindex???????????????list, ????????????streamleavlist??streamaddlist??.
 	*/
 	if(stream_in_timeout_list(pindex, plist) == 0){
 		return;
@@ -1335,16 +1335,16 @@ static void tcp_change_stream_tonouse(struct streamindex *pindex)
 		pdetail_pr->pserver = NULL;
 	}
 	/* 2017-12-20 lijia add, 
-	   ��FIN������������NOUSE״̬,
-	   deal_tcp_stream()ÿ�ζ���TCP_SYN_STATE��TCP_DATA_STATE״̬,
-	   �޷���TCP_NOUSE_STATE״̬�µ�����̭��ȥ,
-	   ���Դ˴���ɨ��һ��TCP_NOUSE_STATE�ĳ�ʱ��.
+	   ??FIN????????????NOUSE??,
+	   deal_tcp_stream()??��???TCP_SYN_STATE??TCP_DATA_STATE??,
+	   ?????TCP_NOUSE_STATE?????????????,
+	   ??????????????TCP_NOUSE_STATE??????.
 	 */
 	del_stream_by_time(plist, pindex, threadnum, STREAM_TYPE_TCP);
 }
 
 
-/* ���������tcp�����Ѿ�������, ����Ϊ��TCP_ALL���, ����ʵ�ʻ�����free, ���������ջ���TIMEOUT��KICKOUT���� */
+/* ?????????tcp?????????????, ???????TCP_ALL???, ????????????free, ?????????????TIMEOUT??KICKOUT???? */
 static inline void tcp_update_should_close_reason_stat(int tid)
 {
 	sapp_gval_mthread_sys_stat_t *local_sys_stat;
@@ -1412,40 +1412,40 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]);
 
 	/* TODO 1,
-		free��ƽ̨��time, list_lruԭ��, ��ʱ����������free,
-		����ǲ������CLOSEME, ��ֻ�ͷ����pdetail�ڴ�, ���Խ�tcp���ṹ����, Ϊ��FD���ȹ���.
+		free??????time, list_lru???, ?????????????free,
+		???????????CLOSEME, ?????????pdetail???, ?????tcp????????, ???FD???????.
 
-		���Ϊ��������:
-		tcp_lite_free(); //ֻfree data, ���������ṹ
+		????????????:
+		tcp_lite_free(); //?free data, ??????????
 
-		tcp_struct_free(); //free Ӧ�ò�����
+		tcp_struct_free(); //free ??��?????
 		
-		tcp_thorough_free(); // del_stream_by_time(), streamaddlist()ʱ������������Ⱥ���Ҫ����, ������free
-							// ����tcp_light_free(); tcp_struct_free();��������
+		tcp_thorough_free(); // del_stream_by_time(), streamaddlist()??????????????????????, ??????free
+							// ????tcp_light_free(); tcp_struct_free();????????
 
 		TODO 1:
-			����ڵ���tcp_deal_unorder()��, �������������kill_tcp, Ӧ���ж�stream_killed_flag���, 
-			���stream_killed_flag=1, ������İ����ٴ���, ֱ��tcp_free_half()�ͷ�.
+			????????tcp_deal_unorder()??, ?????????????kill_tcp, ????��?stream_killed_flag???, 
+			???stream_killed_flag=1, ???????????????, ???tcp_free_half()???.
 	*/
 
-	/* 2014-07-24 lijia add, ������ǰ��������� */
-	saved_curdir = pstream->curdir; /* 2015-11-16 LiJia add, ���浱ǰ������, �����������Ҫ�ָ���ǰֵ */
+	/* 2014-07-24 lijia add, ???????????????? */
+	saved_curdir = pstream->curdir; /* 2015-11-16 LiJia add, ???��???????, ??????????????????? */
 	if(pclient && (pclient->unorderlist != NULL)){
-		pstream->curdir = DIR_S2C; /* ��ʱ�޸� */
+		pstream->curdir = DIR_S2C; /* ?????? */
 		tcp_deal_unorder(pindex, pstream, pclient, pserver, !CHECK_ORDER_DATA);		
 	}
 	if(pserver && (pserver->unorderlist != NULL)){
-		pstream->curdir = DIR_C2S; /* ��ʱ�޸� */
+		pstream->curdir = DIR_C2S; /* ?????? */
 		tcp_deal_unorder(pindex, pstream, pserver, pclient, !CHECK_ORDER_DATA);		
 	}
 	pstream->curdir = saved_curdir;
 
-	pstream_pr->raw_pkt = raw_pkt; /* �������ʱ��̭, ��ֵΪNULL; �����RST������̭, Ϊ��ʵԭʼ�� */
+	pstream_pr->raw_pkt = raw_pkt; /* ???????????, ????NULL; ?????RST???????, ???????? */
 
     if (pdetail_pr->apme != NULL)
     {
         pstream->opstate = OP_STATE_CLOSE;
-        // tcp stream �ص�
+        // tcp stream ???
         pkt_ret =
             stream_process_tcp(pstream, this_ip_hdr, transport_hdr, raw_pkt, &(pdetail_pr->apme), &(pstream->opstate));
         pdetail_pr->apme = NULL;
@@ -1472,7 +1472,7 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
             tcp_free_half(pserver, threadnum);
             pserver = NULL;
     }
-    /* �����������ٴӽṹ���Ƴ�, ��Ϊ���ò��ʱ, ���ܻ����stream_set_single_stream_timeout(), �������ǰ����LRU�����е�λ�� */
+    /* ???????????????????, ??????��???, ????????stream_set_single_stream_timeout(), ????????????LRU?????��?��?? */
 	streamleavlist(pindex, plist);
 	hash_del_stream(pindex);
 	
@@ -1484,7 +1484,7 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 
 
 
-	if(pstream_pr->set_special_timeout != 0){ /* ���Ӷ��г�ʱʱ��, ���ټ��� */
+	if(pstream_pr->set_special_timeout != 0){ /* ??????��?????, ??????? */
 		sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
 	}
 	
@@ -1542,7 +1542,7 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	int ret = 0;
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[threadnum]->sys_stat;
 	
-	 //add by lqy 20150107 ���˼���
+	 //add by lqy 20150107 ???????
         if(pstream->curdir==DIR_S2C)
         {
                 pdetail->clientpktnum--;
@@ -1578,8 +1578,8 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]);
 
-	/* 2014-07-24 lijia add, ������ǰ��������� */
-	saved_curdir = pstream->curdir; /* 2015-11-16 LiJia add, ���浱ǰ������, �����������Ҫ�ָ���ǰֵ */
+	/* 2014-07-24 lijia add, ???????????????? */
+	saved_curdir = pstream->curdir; /* 2015-11-16 LiJia add, ???��???????, ??????????????????? */
 	if(pdetail_pr->pclient && pdetail_pr->pclient->unorderlist != NULL){
 		pstream->curdir = DIR_S2C; 
 		tcp_deal_unorder(pindex, pstream, pdetail_pr->pclient, pdetail_pr->pserver, !CHECK_ORDER_DATA);		
@@ -1588,42 +1588,39 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 		pstream->curdir = DIR_C2S;
 		tcp_deal_unorder(pindex, pstream, pdetail_pr->pserver, pdetail_pr->pclient, !CHECK_ORDER_DATA);		
 	}
-	/* tcp_deal_unorder()�������ܻ��޸�pstream_pr->raw_pkt, �˴��ָ�raw_pkt */
+	/* tcp_deal_unorder()????????????pstream_pr->raw_pkt, ??????raw_pkt */
 	pstream_pr->raw_pkt = raw_pkt;
 	pstream->curdir = saved_curdir;
 
 	/* 2015-02-04 lijia add, 
-	   �Ƚ�������ʱ������Ԫ��������̭, ��ǰ��������Ϊ������ԭʼ��, 
-	   ������˵��ò���������MESA_kill_xxx, ������pstream_pr->raw_pkt = NULL.
+	   ??????????????????????????, ??????????????????????, 
+	   ?????????��?????????MESA_kill_xxx, ??????pstream_pr->raw_pkt = NULL.
 	 */
 	const raw_pkt_t *saved_raw_pkt = pstream_pr->raw_pkt;
 	pstream_pr->raw_pkt = NULL; 
 	pstream_pr->stream_killed_flag = 0;
-	
-	if(pstream->stream_state==TCP_DATA_STATE)
-	{
-		if(pdetail_pr->apme!=NULL)
-		{
-			pstream->opstate=OP_STATE_CLOSE;
-			stream_process_tcp(pstream,NULL, NULL,NULL,&(pdetail_pr->apme),&(pstream->opstate));  
-			pdetail_pr->apme=NULL;
-		}
-		if(pdetail_pr->pclient!=NULL)
-		{
-			tcp_free_half(pdetail_pr->pclient,threadnum);
-			pdetail_pr->pclient=NULL;
-		}
-		if(pdetail_pr->pserver!=NULL)
-		{
-			tcp_free_half(pdetail_pr->pserver,threadnum);
-			pdetail_pr->pserver=NULL;
-		}	
-	}
 
-	if(pdetail_pr->pAllpktpme!=NULL)
+    if (pdetail_pr->apme != NULL)
+    {
+        pstream->opstate = OP_STATE_CLOSE;
+        stream_process_tcp(pstream, NULL, NULL, NULL, &(pdetail_pr->apme), &(pstream->opstate));
+        pdetail_pr->apme = NULL;
+    }
+    if (pdetail_pr->pclient != NULL)
+    {
+        tcp_free_half(pdetail_pr->pclient, threadnum);
+        pdetail_pr->pclient = NULL;
+    }
+    if (pdetail_pr->pserver != NULL)
+    {
+        tcp_free_half(pdetail_pr->pserver, threadnum);
+        pdetail_pr->pserver = NULL;
+    }
+
+    if(pdetail_pr->pAllpktpme!=NULL)
 	{
 			pstream->pktstate=OP_STATE_CLOSE;
-			//tcp stream �ص�
+			//tcp stream ???
 			stream_process_tcp_allpkt(pstream,NULL,NULL,NULL,&(pdetail_pr->pAllpktpme),&(pstream->pktstate));  
 			pdetail_pr->pAllpktpme=NULL;
 	}
@@ -1635,16 +1632,16 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 
 
 	
-	/* �����������ٴӽṹ���Ƴ�, ��Ϊ���ò��ʱ, ���ܻ����stream_set_single_stream_timeout(), �������ǰ����LRU�����е�λ�� */
+	/* ???????????????????, ??????��???, ????????stream_set_single_stream_timeout(), ????????????LRU?????��?��?? */
 	streamleavlist(pindex, plist);
 	
 
 
-	/* �ָ�֮ǰ�洢��raw_pkt */
+	/* ??????��??raw_pkt */
 	pstream_pr->raw_pkt = saved_raw_pkt;
 
-	pstream_pr->syn_opt_num = 0;     /* ���ѡ����� */
-	pstream_pr->synack_opt_num = 0; /* ���ѡ����� */
+	pstream_pr->syn_opt_num = 0;     /* ????????? */
+	pstream_pr->synack_opt_num = 0; /* ????????? */
 	if(pstream_pr->syn_opt_array){
 		sapp_mem_free(SAPP_MEM_DYN_TCP_SYN_OPT, threadnum, pstream_pr->syn_opt_array);
 		pstream_pr->syn_opt_array = NULL;
@@ -1674,7 +1671,7 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	}
 
 	if (pstream_pr->set_special_timeout != 0)
-	{ /* ���Ӷ��г�ʱʱ��, ���ټ��� */
+	{ /* ??????��?????, ??????? */
 		sapp_global_mthread[threadnum].tcp_stream_special_timeout_num--;
 	}
 	if(this_tcphdr->th_flags & TH_SYN){
@@ -1685,7 +1682,7 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 			tcp_add_new_stream_bydata(pindex,this_tcphdr,datalen,REUSE_OLD_LINK, raw_pkt);
 			ret = 1;
 		}else{
-			/* 20190506 lijia add, reset֮�������������, ֱ��free�� */
+			/* 20190506 lijia add, reset??????????????, ???free?? */
 			hash_del_stream(pindex);
 			if(pstream->pdetail != NULL)
 			{
@@ -1758,14 +1755,14 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
             {
                 if (thisack == curseq)
                 {
-                    pstream->dir = DIR_DOUBLE; /* ����dir */
+                    pstream->dir = DIR_DOUBLE; /* ????dir */
                     pdetail_pr->link_state = STREAM_LINK_RESET;
                     tcp_free_stream(pindex, this_iphdr, this_tcphdr, raw_pkt);
                     return PASS;
                 }
             }
             else
-                //������������������
+                //??????????????????
                 if (thisack == curseq)
                 {
                     pstream->dir = DIR_DOUBLE;
@@ -1782,11 +1779,11 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
                     return PASS;
                 }
         }
-        else //ͬ������
+        else //???????
         {
 			pdetail_pr->C2S_ack_seq = thisack;
 			pdetail_pr->last_c2s_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
-            //������
+            //??????
             if (thisseq == curseq)
             {
                 if ((this_tcphdr->th_flags & TH_RST) && (datalen == 0))
@@ -1795,8 +1792,8 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
                     tcp_free_stream(pindex, this_iphdr, this_tcphdr, raw_pkt);
                     return PASS;
                 }
-                // add by lqy 20130802 �����������������е�������
-                //�������ڶ���ack
+                // add by lqy 20130802 ?????????????????��???????
+                //???????????ack
                 else if ((this_tcphdr->th_flags == TH_ACK) && (datalen == 0))
                 {
                     pdetail_pr->tcpstateflag = TCP_SYN_RECV;
@@ -1822,7 +1819,7 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 			pdetail_pr->last_c2s_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
             if ((this_tcphdr->th_flags & TH_RST) && (datalen == 0))
             {
-                pstream->dir = DIR_DOUBLE; /* ����dir */
+                pstream->dir = DIR_DOUBLE; /* ????dir */
                 pdetail_pr->link_state = STREAM_LINK_RESET;
                 tcp_free_stream(pindex, this_iphdr, this_tcphdr, raw_pkt);
                 return PASS;
@@ -1837,10 +1834,10 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
                 return PASS;
             }
         }
-        else //ͬ������
+        else //???????
         {
 			pdetail_pr->last_s2c_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
-            //����rst
+            //????rst
             if ((thisseq == curseq) && (this_tcphdr->th_flags & TH_RST) && (datalen == 0))
 
             {
@@ -1850,7 +1847,7 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
             }
         }
     }
-    // add by lqy 20130805 ˫�����������������������data��
+    // add by lqy 20130805 ????????????????????????data??
     else if (pstream->dir == DIR_DOUBLE)
     {
         if ((pdetail_pr->tcpstateflag == TCP_SYN_RECV) && (curdir == DIR_C2S))
@@ -1862,11 +1859,11 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
             }
         }
     }
-    //syn�ش�
+    //syn???
 	/*
 		TODO, 
-		��Ԫ����ͬ������SYN��, ��Ҫ��һ���ж�SEQ�Ƿ�һ�²������ش�, ��������Ԫ������,
-		��Ҫreset.
+		??????????????SYN??, ?????????��?SEQ??????????????, ???????????????,
+		???reset.
 	*/
 	if(this_tcphdr->th_flags == TH_SYN)
 	{
@@ -1894,32 +1891,32 @@ static void tcp_half_handle_ack_and_seq(struct half_tcpstream *phalf, struct mes
 
 	rcv = phalf;
 
-	//���տ�ʼ��ack_seq��Ϊ0����ʱֱ�ӽ���ͷ��ack_seq��ֵ��rcv->ack_seq
+	//????????ack_seq???0??????????????ack_seq?????rcv->ack_seq
 	if (0 == *cur_half_stream_ack)
 		*cur_half_stream_ack = ntohl(this_tcphdr->th_ack);
 	else
 	{
 		ackdiff = (int)(ntohl (this_tcphdr->th_ack) - *cur_half_stream_ack);
-#if 0 /* 20160930 lijia modify, �������뾯�� */
-		if (ackdiff > 0 || ackdiff < -(2 << 30)) //��ֹ�ش�����Խ�������
+#if 0 /* 20160930 lijia modify, ?????????? */
+		if (ackdiff > 0 || ackdiff < -(2 << 30)) //??????????????????
 #else
-		if (ackdiff > 0 || ackdiff < (int)0x80000000) //��ֹ�ش�����Խ�������
+		if (ackdiff > 0 || ackdiff < (int)0x80000000) //??????????????????
 #endif
 		{
 			*cur_half_stream_ack = ntohl (this_tcphdr->th_ack);
 		}
 	}
 
-	//ͬ��
+	//???
 	if (0 == rcv->seq)
 		rcv->seq = ntohl(this_tcphdr->th_seq);
 	else
 	{
 		seqdiff = (int)(ntohl(this_tcphdr->th_seq) - rcv->seq);
-#if 0	/* 20160930 lijia modify, �������뾯��, ʹ��������0x80000000 */	
+#if 0	/* 20160930 lijia modify, ??????????, ?????????0x80000000 */	
 		if (seqdiff > 0 || seqdiff < -(2 << 30))
 #else
-		if (seqdiff > 0 || seqdiff < (int)0x80000000) //��ֹ�ش�����Խ�������
+		if (seqdiff > 0 || seqdiff < (int)0x80000000) //??????????????????
 #endif
 		{
 			rcv->seq = ntohl(this_tcphdr->th_seq);
@@ -1974,7 +1971,7 @@ static int tcp_deal_ack(struct streaminfo *a_tcp,struct mesa_tcp_hdr *this_tcphd
 		{
 			phalf=pdetail_pr->pclient;
 			phother=pdetail_pr->pserver;		
-			/* 2017-08-02 lijia modify, ��¼�����һ��ACK��, ��ack_seqһ����Լ�����������Բ���������� */
+			/* 2017-08-02 lijia modify, ???????????ACK??, ??ack_seq???????????????????????????? */
 			if(0 == pdetail_pr->S2C_first_ack_seq){
 				pdetail_pr->S2C_first_ack_seq = ntohl (this_tcphdr->th_ack);
 			}
@@ -1985,12 +1982,12 @@ static int tcp_deal_ack(struct streaminfo *a_tcp,struct mesa_tcp_hdr *this_tcphd
 		{
 			phalf=pdetail_pr->pserver;
 			phother=pdetail_pr->pclient;
-			/* 2017-08-02 lijia add, C2S��������ȡ�Զ�ISN */
+			/* 2017-08-02 lijia add, C2S????????????ISN */
 			if((0 == pdetail_pr->iclientseq)
-			 &&(ntohl(this_tcphdr->th_seq) == pdetail_pr->iserverseq)){ /* C2S����SYN����ĵ�һ��ACK�� */
+			 &&(ntohl(this_tcphdr->th_seq) == pdetail_pr->iserverseq)){ /* C2S????SYN?????????ACK?? */
 				pdetail_pr->iclientseq = ntohl (this_tcphdr->th_ack);
 			}
-			/* 2017-08-02 lijia modify, ��¼�����һ��ACK��, ��ack_seqһ����Լ�����������Բ���������� */
+			/* 2017-08-02 lijia modify, ???????????ACK??, ??ack_seq???????????????????????????? */
 			if(0 == pdetail_pr->C2S_first_ack_seq){
 				pdetail_pr->C2S_first_ack_seq = ntohl (this_tcphdr->th_ack);
 			}
@@ -1998,23 +1995,23 @@ static int tcp_deal_ack(struct streaminfo *a_tcp,struct mesa_tcp_hdr *this_tcphd
 			cur_half_stream_ack = &pdetail_pr->C2S_ack_seq;
 		}
 		
-		/* 2017-08-03 lijia add, ������, ������ack�ƶϳ��Բ�������Ӧ���յ������� */
+		/* 2017-08-03 lijia add, ??????, ??????ack????????????????????????? */
 		if(DIR_C2S == a_tcp->dir){
 			pdetail = a_tcp->ptcpdetail;
 			//pdetail->clientbytes = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq;
 			if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
-				pdetail_pr->deduce_flow_stat->C2S_data_byte = pdetail->serverbytes; /* ���������˸������ṹ���еı��� */
-				pdetail_pr->deduce_flow_stat->C2S_data_pkt = pdetail->serverpktnum;/* ���������˸������ṹ���еı��� */
+				pdetail_pr->deduce_flow_stat->C2S_data_byte = pdetail->serverbytes; /* ????????????????????��???? */
+				pdetail_pr->deduce_flow_stat->C2S_data_pkt = pdetail->serverpktnum;/* ????????????????????��???? */
 				
-				pdetail_pr->deduce_flow_stat->S2C_all_byte = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq; /* �ƶϳ��Ľ��, all��data��һ����, ��û��pkt */
-				pdetail_pr->deduce_flow_stat->S2C_data_byte = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq; /* �ƶϳ��Ľ��, all��data��һ����, ��û��pkt */
+				pdetail_pr->deduce_flow_stat->S2C_all_byte = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq; /* ????????, all??data???????, ?????pkt */
+				pdetail_pr->deduce_flow_stat->S2C_data_byte = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq; /* ????????, all??data???????, ?????pkt */
 			}
 		}else if(DIR_S2C == a_tcp->dir){
 			pdetail = a_tcp->ptcpdetail;
 			//pdetail->serverbytes = pdetail_pr->C2S_ack_seq - pdetail_pr->C2S_first_ack_seq;
 			if(G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID != -1){
-				pdetail_pr->deduce_flow_stat->S2C_data_byte = pdetail->clientbytes; /* ���������˸������ṹ���еı��� */
-				pdetail_pr->deduce_flow_stat->S2C_data_pkt = pdetail->clientpktnum;/* ���������˸������ṹ���еı��� */
+				pdetail_pr->deduce_flow_stat->S2C_data_byte = pdetail->clientbytes; /* ????????????????????��???? */
+				pdetail_pr->deduce_flow_stat->S2C_data_pkt = pdetail->clientpktnum;/* ????????????????????��???? */
 				
 				pdetail_pr->deduce_flow_stat->C2S_all_byte = pdetail_pr->S2C_ack_seq - pdetail_pr->S2C_first_ack_seq;
 				pdetail_pr->deduce_flow_stat->C2S_data_byte = pdetail_pr->S2C_ack_seq - pdetail_pr->S2C_first_ack_seq;
@@ -2059,19 +2056,19 @@ static void  tcp_set_new_data(struct streaminfo *a_tcp,struct  half_tcpstream  *
 
 	if(is_ctrl_pkt==0)
 	{
-		//��һ��������Ŀ������ش������ǳ��ȱ�ԭ����
+		//???????????????????????????????????
 		if(this_seq< EXP_SEQ)
 		{
 			havelen = EXP_SEQ - this_seq;
 			if (datalen - havelen > 0)
 			{
-				//20150225 ��¼�ص��ĳ���
+				//20150225 ???????????
 				pdetail_pr->tcpoverlen=havelen;		
 				len_new= datalen - havelen; 
 				pdata_new=data+havelen;
 			}
 		}
-		else //����ı���
+		else //????????
 		{
 			len_new=datalen;
 			pdata_new=data;
@@ -2130,12 +2127,12 @@ static void  tcp_set_new_data(struct streaminfo *a_tcp,struct  half_tcpstream  *
 
 /*
 	LiJia add, to do:
-	�����Ϊ��������, 1,2,3,4,x,6, ��5��������, ��6����������,
-	�����6��������������Ϣ, ��Ҫkill_tcp,
-	����5��������ʱ, streaminfo��洢�Ķ��ǵ�5��������Ϣ,
-	Ȼ���ٴ��������е�6����������, ��ʱ����kill_tcp, ��ز����ǲ��Ե�,
-	ʵ�ʵ�seq��ackʹ�õ��ǵ�5������!
-	Ӧ��ʹ��buf_unorder�е�seq��ack, �����ǵ�ǰ����ԭʼ��.
+	??????????????, 1,2,3,4,x,6, ??5????????, ??6??????????,
+	?????6???????????????, ???kill_tcp,
+	????5?????????, streaminfo??��??????5?????????,
+	?????????????��?6??????????, ???????kill_tcp, ????????????,
+	????seq??ack???????5??????!
+	??????buf_unorder?��?seq??ack, ????????????????.
 */
 #if 0
 int tcp_save_unorder(struct streaminfo *a_tcp,struct  half_tcpstream  *rcv,char *rawdata,int rawlen,struct mesa_tcp_hdr *this_tcphdr,int tcpdatalen)
@@ -2255,7 +2252,7 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 
 		if (after (unorder_packet->seq + unorder_packet->tcpdatalen+unorder_packet->fin+unorder_packet->rst, EXP_SEQ))
 		{                    
-			/* 2015-01-13 lijia add, ��������������kill_tcp��inject��غ���, ��Ҫ����ԭʼ����Ϣ */
+			/* 2015-01-13 lijia add, ??????????????kill_tcp??inject??????, ?????????????? */
 			update_stream_list_raw_pkt_pointer(a_tcp_pr, &unorder_packet->raw_pkt);
 			
 			if(unorder_packet->rst )//add by lqy 20100805)
@@ -2278,14 +2275,14 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 					stream_process_tcp(a_tcp,unorder_packet->this_ip_hdr, unorder_packet->this_tcp_hdr, &(unorder_packet->raw_pkt),&(pdetail_pr->apme),&(a_tcp->opstate));
 				}
 				a_tcp->addr.pkttype=tmpktype;
-				/* 2016-05-12 lijia add, ��������������unorder_list����BUG, �˴�Ӧ��������nouse״̬ */
+				/* 2016-05-12 lijia add, ??????????????unorder_list????BUG, ????????????nouse?? */
 				if(STREAM_LINK_DATA == last_link_state){
 				    tcp_update_should_close_reason_stat(a_tcp->threadnum);
 					tcp_change_stream_tonouse(pindex);
 					ret = DROP;
 					goto done;
 				}
-				/* ��Ϊ������update_stream_list_raw_pkt_pointer, �˴����ܷ���, �Ȼָ�ԭʼ��ָ�� */
+				/* ?????????update_stream_list_raw_pkt_pointer, ??????????, ??????????? */
 				ret = PASS;
 				goto done;
 			}
@@ -2303,13 +2300,13 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 						orderflag = CHECK_ORDER_DATA;
 				}
 
-				//get tcp��data��len
+				//get tcp??data??len
 
 				tcp_set_new_data(a_tcp,rcv,snd,(u_char *)(unorder_packet->tcpdata),
 				unorder_packet->tcpdatalen,unorder_packet->seq,unorder_packet->fin, 0);
 				if(unorder_packet->tcpdatalen >0)
 				{
-					/* 2021-04-29 lijia add, ���������Kill_tcp,����������MSO_DROP_STREAM, �������ݴ�������, Ҳ���ٵ��ò�� */
+					/* 2021-04-29 lijia add, ?????????Kill_tcp,??????????MSO_DROP_STREAM, ???????????????, ???????��?? */
 					if((0 == a_tcp_pr->stream_killed_flag) && (0 == pdetail_pr->drop_stream_flag)){
 						tmpktype=a_tcp->addr.pkttype;
 						a_tcp->addr.pkttype = PKT_TYPE_TCPREORDER;
@@ -2329,13 +2326,13 @@ static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 						tcp_clear_newdata(a_tcp,rcv);
 					}
 					
-					//���ֵ���Ϣ����������
+					//??????????????????
 					//if(ret!=PASS)
-					/* 2015-01-16 lijia modify, ����ģʽ��, ���������Kill_tcp(), �����᷵��DROP, Ϊ������������Կ��Կ����˰� */
+					/* 2015-01-16 lijia modify, ????????, ?????????Kill_tcp(), ????????DROP, ??????????????????????? */
 					//if((ret!=PASS) || (a_tcp_pr->stream_killed_flag != 0)) 
-					if((a_tcp_pr->stream_killed_flag != 0) || (pdetail_pr->drop_stream_flag != 0))  /* 2015-11-02 lqy modify, ������������жϷ���ֵ */
+					if((a_tcp_pr->stream_killed_flag != 0) || (pdetail_pr->drop_stream_flag != 0))  /* 2015-11-02 lqy modify, ????????????��????? */
 					{
-						/* ��Ϊ������update_stream_list_raw_pkt_pointer, �˴����ܷ���, �Ȼָ�ԭʼ��ָ�� */
+						/* ?????????update_stream_list_raw_pkt_pointer, ??????????, ??????????? */
 						goto done;
 					}
 				}
@@ -2406,7 +2403,7 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 
 	if (!after (this_seq, EXP_SEQ))
 	{
-		//�������ݰ�
+		//?????????
 		if (after(this_seq + datalen + 
 			(this_tcphdr->th_flags & TH_FIN), EXP_SEQ))
 		{
@@ -2416,16 +2413,16 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 				ret=stream_process_tcp(pstream,this_iphdr,(const void *)this_tcphdr, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
 				//tcp_clear_newdata(pstream,rcv); /*  2016-09-12 lijia move to outside if(datalen > 0) */
 			}
-			tcp_clear_newdata(pstream,rcv); /* 2016-09-12 lijia move to here, ����datalen�Ƿ�>0, ��Ϊ������tcp_set_new_data, ����Ҫ����clear */
+			tcp_clear_newdata(pstream,rcv); /* 2016-09-12 lijia move to here, ????datalen???>0, ?????????tcp_set_new_data, ?????????clear */
 
-#if 0	/* lqy 2015-11-02 modify, ��������Ĵ������, ��Ӱ�쵱ǰ���ķ���ֵ */		
+#if 0	/* lqy 2015-11-02 modify, ???????????????, ?????????????? */		
 			if(ret==PASS) 
 			{	
 				ret = tcp_deal_unorder(pindex,pstream,rcv,snd,CHECK_ORDER_DATA);
 				
 			}
 #else
-		/* 2020-04-24 lijia modify, ���ret=stream_process_tcp����ֵ��DROP,   tcp_deal_unorder()����ֵ��PASS, ��ǰ������PASS, �����CT��! */
+		/* 2020-04-24 lijia modify, ???ret=stream_process_tcp???????DROP,   tcp_deal_unorder()???????PASS, ?????????PASS, ?????CT??! */
 			ret_unorder = tcp_deal_unorder(pindex,pstream,rcv,snd,CHECK_ORDER_DATA);
 #endif			
 			if((DROP == ret_unorder) || (DROP == ret)){
@@ -2433,11 +2430,11 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 			}
 			return ret;			
 		}
-		//����ԭ����������ݰ��Ƿ��Ѿ����򣬽��д���
+		//?????????????????????????????��???
 	}
 	else
 	{
-		//�������ݰ�����
+		//?????????????
 		tcp_save_unorder(pstream,rcv,this_iphdr,raw_pkt,this_tcphdr,tcpdata, datalen);		
 		if(rcv->unorder_cnt > rcv->maxunorder)
 		{
@@ -2450,9 +2447,9 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 
 /*
 	2017-10-16 lijia add,
-	�ж�NOUSE״̬��, �յ�SYN, SYN/ACK�������Ԫ������, ���������ش�, �������۵��µ�ʱ�����.
+	?��?NOUSE????, ???SYN, SYN/ACK??????????????, ???????????, ??????????????????.
 	TODO:
-	    ���ӳ�ʱ�ж�, ����ͳ�Ʒ���, ��������Ԫ������ͨ������30������.
+	    ???????��?, ??????????, ??????????????????????30??????.
 */
 static inline int tcp_tuple4_reuse(const struct streaminfo *pstream, const struct tcpdetail_private *pdetail_pr, const struct mesa_tcp_hdr *this_tcphdr)
 {
@@ -2476,7 +2473,7 @@ static inline int tcp_tuple4_reuse(const struct streaminfo *pstream, const struc
 	/* lijia 2017-12-06 add */  
 	if((1 == is_reuse) && (sapp_global_val->config.stream.tcp.tuple4_reuse_time_interval > 0)){
 		if(pdetail_pr->tcpdetail_public.createtime + sapp_global_val->config.stream.tcp.tuple4_reuse_time_interval >= (UINT64)g_CurrentTime){
-			is_reuse = 0; /* ��Ԫ����ͬ, ����Ų�ͬ�����������ʱ��̫��, һ��30������, ���ƹ��������� */
+			is_reuse = 0; /* ????????, ????????????????????????, ???30??????, ????????????? */
 		}
 	}
 
@@ -2528,7 +2525,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 	pcurhalf->pktcout++;
 	curseq=pcurhalf->first_data_seq + pcurhalf->count_ideal ;
 	thisseq=ntohl (this_tcphdr->th_seq);
-	//�ش�������
+	//?????????
 	//if((thisseq<curseq)&&(thisseq+datalen<=curseq)&&(!(this_tcphdr->th_flags & TH_SYN))){ // modify by lqy 20150325
 	if(before(thisseq,curseq)&&before(thisseq+datalen,curseq+1)&&(!(th_flags & TH_SYN))){
 		pstream->addr.pkttype = PKT_TYPE_TCPRETRANS;
@@ -2558,7 +2555,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		 //syn+rst drop packet
 		 if(th_flags & TH_SYN)
 			return PASS; 
-		 //�����rst����
+		 //?????rst????
 		 //if((thisseq-curseq<=1)&&(datalen==0))
 		if(before(thisseq, curseq+2)&&(datalen==0))//modify by lqy 20150325
 		 {
@@ -2582,13 +2579,13 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		
 			return PASS;
 		 }
-		 //�����rst���ģ��������δ�������ᶪ���������Ѿ����������������
+		 //?????rst????????????��??????????????????????????????????
 	}
 
-	//���Ӹ��� 
+	//??????? 
 	if (th_flags & TH_SYN)
 	{
-		//syn�ش� add by lqy 20100808
+		//syn??? add by lqy 20100808
 	   if((datalen>0) || ((UINT32)thisseq+1 == rcv->first_data_seq) || ((UINT32)thisseq==rcv->first_data_seq)) 
 	   {
 		pstream->addr.pkttype = PKT_TYPE_TCPRETRANS;
@@ -2605,11 +2602,11 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		return PASS;
 	   }else{
 			/* 2017-12-19 lijia add, 
-				��SYN�ش�, Ҫ�жϳ�ʱʱ��, �پ����Ƿ���Ԫ���������õ�ǰ���� ,
-				������һ���յ���, ��������3��, ������̫��������Ԫ������, 
-				��Ϊ�Ƕ�������.
+				??SYN???, ??��??????, ??????????????????????????? ,
+				??????????????, ????????3??, ??????????????????????, 
+				????????????.
 				
-				��������ͳ��ֵ, ��Ԫ�������������ӵ�ʱ����һ���ڷ��Ӽ�.
+				????????????, ????????????????????????????????.
 			*/
 			if(tcp_tuple4_reuse(pstream, pdetail_pr, this_tcphdr) == 0){
 				return PASS;
@@ -2617,7 +2614,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 	   }
 	   //adjust by lqy 20150107
 	   //if(thisseq==rcv->first_data_seq) return PASS;
-	   //add by lqy 20110507 syn�����ݵ���Ϊ�ǹ�������
+	   //add by lqy 20110507 syn???????????????????
 	   //if(datalen>0) return PASS;
 	   //return PASS;	
 	   if(th_flags & TH_RST)
@@ -2628,21 +2625,21 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 	    pdetail_pr->link_state=STREAM_LINK_REUSE_BYSYN;
 		pstream->opstate= OP_STATE_CLOSE;
 		
-#if 0		//del by lqy 20150107 tcp_reset_stream�����������������
+#if 0		//del by lqy 20150107 tcp_reset_stream?????????????????
 		ret=stream_process_tcp(pstream,raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
 #endif		
 		tcp_reset_stream(pindex,this_iphdr,this_tcphdr,datalen,raw_pkt);
 		return PASS;		
 	}
-	if(datalen + (th_flags & TH_FIN) +(th_flags & TH_RST)> 0)//����TCP����
+	if(datalen + (th_flags & TH_FIN) +(th_flags & TH_RST)> 0)//????TCP????
 	{
 		tcpdata=(unsigned char*)(this_tcphdr) + 4 * this_tcphdr->th_off;
 		ret=tcp_deal_data(pindex,this_iphdr,raw_pkt,this_tcphdr,tcpdata,datalen);	
 
-/* 2016-05-12 lijia modify, ��������������unorder_list����BUG, ��ǰ������Ѿ���CLOSE״̬, �˴�Ӧ������return, ���ü���ִ�� */			
+/* 2016-05-12 lijia modify, ??????????????unorder_list????BUG, ?????????????CLOSE??, ??????????return, ???��?????? */			
 
 		
-		//���ϲ�ر����ӣ����ߴ������������rst����
+		//????????????????????????????rst????
 		if((pstream->opstate==OP_STATE_CLOSE)&&(pdetail_pr->link_state!=STREAM_LINK_RESET))
 		{	
 			tcp_change_stream_tonouse(pindex);
@@ -2652,12 +2649,12 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		if(ret==DROP)
 			return DROP;
 	}
-	//add by lqy 20120922 �ϲ���Ҫack����Ϣʱ�ϴ��������ݵı���
+	//add by lqy 20120922 ??????ack?????????????????????
 	else if(pdetail_pr->needackflag!=0)
 	{
 		ret=stream_process_tcp(pstream,this_iphdr,this_tcphdr, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
-		//���ϲ�ر����ӣ����ߴ������������rst����
-		/* 2017-08-01 lijia modify, ��Ҫ�ж�TCPALL���״̬, ����ֻ����TCPALL���ʱ, opstate�Ѿ���CLOSE��, ��������NOUSE̬ */
+		//????????????????????????????rst????
+		/* 2017-08-01 lijia modify, ????��?TCPALL?????, ?????????TCPALL????, opstate?????CLOSE??, ????????NOUSE? */
 		if((pstream->opstate==OP_STATE_CLOSE)
 		&& (OP_STATE_CLOSE == pstream->pktstate)
 		&&(pdetail_pr->link_state!=STREAM_LINK_RESET))
@@ -2688,13 +2685,13 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		pdetail_pr->link_state=STREAM_LINK_CLOSE;
 		finclose=1;
 	}
-	//��������ݵ�rst����Ҫ�ر�	
+	//??????????rst????????	
 	if ((th_flags & TH_RST)&&(thisseq==curseq) &&(datalen!=0))
 	{
 		pdetail_pr->link_state=STREAM_LINK_RESET;
 		finclose=1;
 	}
-	/* 2015-11-12 lijia add, ������RST, FIN���������� */
+	/* 2015-11-12 lijia add, ??????RST, FIN?????????? */
 	if(pdetail_pr->ignore_rst_fin != 0){
 		finclose = 0;
 	}
@@ -2703,7 +2700,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 		pstream->opstate = OP_STATE_CLOSE;
 	
 		ret=stream_process_tcp(pstream,this_iphdr,this_tcphdr, raw_pkt,&(pdetail_pr->apme),&(pstream->opstate));
-		//adjust by lqy �����ȫ�����յĺ�������ʱ
+		//adjust by lqy ?????????????????????
 		if(pstream->pktstate!=OP_STATE_CLOSE)
 		{
 			tcp_update_should_close_reason_stat(pstream->threadnum);
@@ -2726,7 +2723,7 @@ static int tcp_deal_nouse_stream(struct streamindex *pindex,const void *this_iph
 	struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private *)pstream->pdetail;
 
 	//add by lqy 20141213
-	//����ǿ�ack���������ӣ�Ӧ�ò�δ������,��ָ������������з���
+	//??????ack?????????????��?��??????,???????????????��???
 	//if((pstream->opstate == OP_STATE_PENDING) && (datalen>0)) //modify by lqy 20150325
 	if((pstream->opstate == OP_STATE_PENDING) 
 	  && (datalen>0) 
@@ -2739,10 +2736,10 @@ static int tcp_deal_nouse_stream(struct streamindex *pindex,const void *this_iph
 	}
 
 
-	//fin��rst���п����������ģ�����ڴ˴���̭�����������п��ܻ����ȥ�������ݽ������ӣ���˲���̭
+	//fin??rst???��?????????????????????????????????��???????????????????????????????
 	
-	//���Ӹ��� add by lqy 20150210 �������Ӻ��������ʱ�ָܻ���data������
-	//add by lqy 20130822 �������а������յĺ�������ʱ������������̭
+	//??????? add by lqy 20150210 ???????????????????????data??????
+	//add by lqy 20130822 ???????��?????????????????????????????
 	if (this_tcphdr->th_flags & TH_SYN)
 	{
 		if(1 == tcp_tuple4_reuse(pstream, pdetail_pr, this_tcphdr)){
@@ -2835,12 +2832,12 @@ static char tcp_process_newstreambydata(struct streamindex *pindex_tcp,const voi
 		}
 	}
 	
-	//�½����ӱ����ȵ���all����
+	//???????????????all????
 	ret=tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);	
 
 	if(DROP == ret){ 
 		/* 2016-06-08 lijia add,
-			for HMD, ������й���ǰ����kill, �������ٵ��ú������.
+			for HMD, ??????��????????kill, ??????????��??????.
 		*/
 		return DROP;
 	}
@@ -2870,7 +2867,7 @@ static int deal_tcp_stream_dup_pkt_check(int tid, struct streaminfo_private *pst
 	if ((ADDR_TYPE_IPV4 == pstream_pr->stream_public.addr.addrtype) 
 	&& (dup_pkt_para->dup_pkt_distinguish_ipv4_tcp || dup_pkt_para->dup_pkt_distinguish_all_inject))
 	{
-		// ����ԭʼ�����, ֻ�ж�ǰN����, ���û�����ظ�����, ����Ϊ�Ժ�Ķ������ظ���!
+		// ???????????, ??��??N????, ???????????????, ???????????????????!
 		if((0 == pstream_pr->has_duplicate_pkt) 
 		  && (ptcpdetail_pr->tcpdetail_public.clientpktnum+ptcpdetail_pr->tcpdetail_public.serverpktnum >= dup_pkt_para->first_packets)){ 
 			dup_check_enabled = 0;
@@ -2879,7 +2876,7 @@ static int deal_tcp_stream_dup_pkt_check(int tid, struct streaminfo_private *pst
 		}
 	}
 
-	/* 24.04: ����IPv6��˵, ��Ϊ��֧��ԭʼ�����ظ����, ����ע���ʶ��Ҳ��֧�ֿ���·��. */
+	/* 24.04: ????IPv6???, ????????????????????, ????????????????????��??. */
 	if ((ADDR_TYPE_IPV6 == pstream_pr->stream_public.addr.addrtype) 
 	  && (dup_pkt_para->dup_pkt_distinguish_all_inject != 0))
 	{
@@ -2905,9 +2902,9 @@ static int deal_tcp_tfo(struct streaminfo *pstream, const void *this_iphdr, stru
 		if(NULL == pdetail_pr->pserver){
 			pdetail_pr->pserver=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM,pstream->threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pserver,0,sizeof(struct half_tcpstream));
-			//������
+			//??????
 			pdetail_pr->pserver->first_data_seq=pdetail_pr->iserverseq;
-			/* pdetail_pr->iserverseq=0; */  /* 2016-04-27 lijia modify, ���ڻ�ȡ��ǰ����ISN */
+			/* pdetail_pr->iserverseq=0; */  /* 2016-04-27 lijia modify, ?????????????ISN */
 			
 			/* 2014-10-20 LiJia add, for set one stream unorder number */
 			pdetail_pr->pserver->maxunorder = tcp_default_unorder;
@@ -2920,9 +2917,9 @@ static int deal_tcp_tfo(struct streaminfo *pstream, const void *this_iphdr, stru
 		if(NULL == pdetail_pr->pclient){
 			pdetail_pr->pclient=(struct half_tcpstream *)sapp_mem_malloc(SAPP_MEM_DYN_TCP_HALF_STREAM,pstream->threadnum,sizeof(struct half_tcpstream));
 			memset(pdetail_pr->pclient,0,sizeof(struct half_tcpstream));
-			//������
+			//??????
 			pdetail_pr->pclient->first_data_seq=pdetail_pr->iclientseq;
-			/* pdetail_pr->iclientseq=0; */ /* 2016-04-27 lijia modify, ���ڻ�ȡ��ǰ����ISN */
+			/* pdetail_pr->iclientseq=0; */ /* 2016-04-27 lijia modify, ?????????????ISN */
 			
 			/* 2014-10-20 LiJia add, for set one stream unorder number */
 			pdetail_pr->pclient->maxunorder = tcp_default_unorder;
@@ -2936,7 +2933,7 @@ static int deal_tcp_tfo(struct streaminfo *pstream, const void *this_iphdr, stru
 	return ret;
 }
 
-/* LiJia comment: pstreamָ��ջ����ڴ� */
+/* LiJia comment: pstream?????????? */
 //int deal_tcp_stream(struct streamindex *pstream,struct mesa_tcp_hdr *this_tcphdr,int tcplen,const void *rawippkt,int iplen)
 static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, struct mesa_tcp_hdr *this_tcphdr,
 	int tcplen,const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
@@ -2949,12 +2946,12 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	struct streaminfo_private *pstream_pr = &pindex->stream;
 	struct streaminfo *pstream = &pstream_pr->stream_public;
 	int try_to_update_addr_info = 0;
-	int call_tcpall_after_reset = 0; /* 2019-10-18 lijia modify, ��ǰ����reset֮��,��֤�ȵ���tcpall,�ٵ���tcp */	
+	int call_tcpall_after_reset = 0; /* 2019-10-18 lijia modify, ???????reset???,????????tcpall,?????tcp */	
 	sapp_gval_mthread_sys_stat_t *local_sys_stat = &sapp_global_val->mthread_volatile[pstream->threadnum]->sys_stat;
 
 	pindex_tcp = findstreamindex (pindex, raw_pkt);
 	if(unlikely(!pindex_tcp)){
-		/* ÿ�������װ�������, Ҳ�޷���֪�Ƿ��ظ�, ��Ҫ����bloom filter */
+		/* ????????????????, ?????????????, ???????bloom filter */
 		if((ADDR_TYPE_IPV4 == pstream->addr.addrtype) 
 		  && sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp){
 			sapp_dup_pkt_mark_l4(pstream, this_iphdr, (const void *)this_tcphdr);
@@ -2997,13 +2994,13 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		else
 		{
 			/*   2017-12-07 lijia add,  
-				TCPRFC�涨, �����ӻ�δ�����������, �յ��Զ˵����ݰ�, ��Ӧ��RST�����Ϊ0, 
-				���һ�����ĵ�һ����, ���Ǹ�seq=0��RST��, ��ʱ����������, ������.
+				TCPRFC?��, ???????��???????????, ????????????, ?????RST??????0, 
+				????????????????, ?????seq=0??RST??, ?????????????, ??????.
 			*/
 			if((this_tcphdr->th_flags & TH_RST) && (0 == this_tcphdr->th_seq)){
 				return PASS;
 			}
-			//add by lqy 20141213ȫ���ӿ��²���tcplen=0�İ�������
+			//add by lqy 20141213???????????tcplen=0?????????
 			if((tcplen==0)&&(tcp_support_all==TCP_SUPPORT_ENTRYALL_OFF))
 				return PASS;		
 			if(TCP_CTEAT_LINK_BYDATA  & tcp_creatlink_model )
@@ -3015,7 +3012,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 					pstream_pr = &pindex_tcp->stream;
 					pstream = &pstream_pr->stream_public;
 					pstream_pr->raw_pkt = raw_pkt;  //add by lijia 20171206
-					//add by lqy 20150114 �½��������ӱ����ȵ���all����
+					//add by lqy 20150114 ???????????????????all????
 					if(pstream_pr->under_ddos_bypass)
 					{
 						local_sys_stat->count[SAPP_STAT_TCP_BYPASS_STREAM]++;
@@ -3053,7 +3050,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 //		pindex_tcp->stream.offset_to_raw_pkt_hdr = (char *)this_tcphdr - (char *)raw_pkt->raw_pkt_data;
 		//pstream_pr->offset_to_raw_pkt_hdr = offset_to_raw_pkt_hdr;	
 		pstream_pr->raw_pkt = raw_pkt; /* 2014-12-30 lijia add */
-		/* 2015-11-04 lijia add, IP��Ƭ���͸���, pstreamָ�������еĽṹ, pindexΪջ�ﵱǰ���ṹ */	
+		/* 2015-11-04 lijia add, IP??????????, pstream????????��??, pindex????????? */	
 		pstream->addr.pktipfragtype = pindex->stream.stream_public.addr.pktipfragtype; 
 	}
 
@@ -3061,11 +3058,11 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	pdetail =(struct tcpdetail *)(&pdetail_pr->tcpdetail_public);
 
 
-	/* ddos bypass���ȼ���� */
+	/* ddos bypass???????? */
 	if(pstream_pr->under_ddos_bypass){
 		local_sys_stat->count[SAPP_STAT_TCP_BYPASS_PKTS]++;
 		local_sys_stat->length[SAPP_STAT_TCP_BYPASS_BYTES]+= tcplen;
-		/* ����ddos����ʱֻ�Ǳ�������, �����ò����ԼCPU, ���԰����ж�������, �����Ƿ���PASS */
+		/* ????ddos???????????????, ?????��?????CPU, ????????��???????, ?????????PASS */
 		cycle_pkt_dump_by_classify(pstream->threadnum, raw_pkt, PKT_CLASSIFY_BYPASS);
 		return PASS;
 	}
@@ -3073,9 +3070,9 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 
 
 
-	/* 2014-10-11 lijia add, Fd������ƽ̨ʵ�� */
+	/* 2014-10-11 lijia add, Fd??????????? */
 	if(unlikely(pstream_pr->stream_killed_flag != 0) && raw_pkt->is_ctrl_pkt==0){
-		if((pdetail_pr->auto_remedy_flag != 0) && (tcplen > 0)){ /* ��ֹflood����, ֻ�д����ݵİ��ŷ�RST */
+		if((pdetail_pr->auto_remedy_flag != 0) && (tcplen > 0)){ /* ???flood????, ??��??????????RST */
 			sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, kill_tcp remedy, curdir:%d, send RST pkt.", 
 				printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 			pstream_pr->plugin_process_context=1;
@@ -3089,16 +3086,16 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			tcp_processallpkt(pstream,this_iphdr,this_tcphdr,tcplen,raw_pkt);
 		}
 #endif		
-		//return DROP; /* 2019-11-20 lijia modify, kill_tcp��Ĭ����Ϊ����DROP, ֻ����rst��, �Ƿ񶪰�ȡ����drop_stream_flag */
+		//return DROP; /* 2019-11-20 lijia modify, kill_tcp????????????DROP, ?????rst??, ?????????drop_stream_flag */
 	}
 
 	/* 
 		2021-05-18 lijia close ipv6 dup pkt check:
-		IPv6��Ϊû��Ipid�ֶ�, �޷�����������Ӧ�ò��ش����ظ�����, �����˻ᵼ�¶�������CT, ���Բ�֧��!!!
+		IPv6??????Ipid???, ???????????????��?????????????, ????????????????CT, ????????!!!
 	
-		����IPv6���������:
-		   1)��������˴�������, �ش�����ʶ������ظ����Ļ�, sapp��ֱ��PASS��, ʵ���Ǹ�������ʵͨ��˫������, û�о���tfe����, ���ܾͶ�����.
-		   2)���������firewall��drop����, ��һ��drop�ɹ���, ��Ӧ�ò���ش�, �ش�����ʶ������ظ����Ļ�, sapp��ֱ��PASS��, ����CT.
+		????IPv6?????????:
+		   1)????????????????, ?????????????????????, sapp?????PASS??, ???????????????????????, ??��???tfe????, ??????????.
+		   2)?????????firewall??drop????, ?????drop?????, ????��?????, ?????????????????????, sapp?????PASS??, ????CT.
 	*/
 	if(raw_pkt->is_ctrl_pkt==0 &&
 		deal_tcp_stream_dup_pkt_check(pstream->threadnum, pstream_pr, pdetail_pr, (const struct mesa_ip4_hdr *)this_iphdr, this_tcphdr) != 0){
@@ -3124,7 +3121,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		}
 	}
 
-// ����kill remedy��drop stream���ظ�������sappֱ�Ӵ���������׷�����ϵ�sid,����ת����service chain����������SF������
+// ????kill remedy??drop stream???????????sapp????????????????????sid,?????????service chain??????????SF??????
 	if(pstream_pr->sid_append_list != NULL)
 	{
 		((raw_pkt_t *)raw_pkt)->append_list=pstream_pr->sid_append_list;
@@ -3141,7 +3138,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 
 	if(pstream->curdir==DIR_S2C)
 	{
-		if(pdetail->clientpktnum == 0) /* ��ǰ����ĵ�һ����, ���Ը��µײ������ĵ����ַ��Ϣ(��MPLS, GTP) */
+		if(pdetail->clientpktnum == 0) /* ??????????????, ???????????????????????(??MPLS, GTP) */
 		{
 			try_to_update_addr_info = 1;
 		}
@@ -3150,7 +3147,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	}
 	else
 	{
-		if(pdetail->serverpktnum == 0) /* ��ǰ����ĵ�һ����, ���Ը��µײ������ĵ����ַ��Ϣ(��MPLS, GTP) */
+		if(pdetail->serverpktnum == 0) /* ??????????????, ???????????????????????(??MPLS, GTP) */
 		{
 			try_to_update_addr_info = 1;
 		}
@@ -3167,7 +3164,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
     int frag_cnt = 0, frag_len = 0;
     stream_get_scratch_frag_stat(pstream, &frag_cnt, &frag_len);
 
-    /* flow_stat��ȫ����״̬��¼, �������ش����������� */
+    /* flow_stat????????????, ??????????????????? */
 	if(G_TCP_FLOW_STAT_PROJECT_ID != -1 && raw_pkt->is_ctrl_pkt == 0){
 		if(DIR_C2S == pstream->curdir){
 			pdetail_pr->flow_stat->C2S_syn_pkt+=((this_tcphdr->th_flags & TH_SYN) ? 1 : 0);
@@ -3222,13 +3219,13 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		pstream_pr->ip_ttl_s2c = pindex->stream.ip_ttl_c2s; /* Not a mistake, that's it! */
 	}
 	
-	/* note: reset�����ü���, ����clientbytes+=, clientpktnum++����֮�� */
+	/* note: reset?????��???, ????clientbytes+=, clientpktnum++??????? */
 	if(1 == lrustream(pindex_tcp)){
 		ret = tcp_reset_stream(pindex_tcp, this_iphdr,this_tcphdr, tcplen,raw_pkt);		
 		if(0 == ret){
 			return PASS;
 		}
-		/* �����tcp_reset_stream()�½���ʱ, ��������bypass��־, �˴�ֱ�ӷ���, �����ٵ���tcp_processallpkt */
+		/* ?????tcp_reset_stream()??????, ????????bypass???, ?????????, ?????????tcp_processallpkt */
 		if(pstream_pr->under_ddos_bypass){
 			return PASS;
 		}
@@ -3271,10 +3268,10 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 			else if (pstream->stream_state == TCP_SYN_STATE)
 			{
 				ret = tcp_deal_syn_stream(pindex_tcp, raw_pkt, this_iphdr, this_tcphdr, tcplen);
-				// �������ı��ģ����������к�̴���
+				// ?????????????????????��?????
 				if (DROP == ret)
 				{
-					// return PASS;//�����к�̴��������Ǳ��뷵��PASS�������߼�����
+					// return PASS;//?????��????????????????PASS?????????????
 					ret = PASS;
 					goto fun_exit;
 				}
@@ -3284,7 +3281,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 					// ret=tcp_deal_data_stream(pindex_tcp,rawippkt,iplen,this_tcphdr,tcplen);
 					ret = tcp_deal_data_stream(pindex_tcp, this_iphdr, raw_pkt, this_tcphdr, tcplen);
 				}
-				// add by lqy 20150215 �½����Ӹտ�ʼ��������
+				// add by lqy 20150215 ??????????????????
 				else
 				{
 					pindex_tcp->stream.stream_public.addr.pkttype = PKT_TYPE_TCPUNORDER;
@@ -3297,18 +3294,18 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		}
 	}
 	
-	/* �����tcp_deal_nouse_stream(),tcp_deal_data_stream()������, ���ù�tcp_reset_stream()���õ�ǰ��ʱ, 
-	   ���ɱ�������bypass��־, �˴�Ҫֱ�ӷ���, �����ٵ���stream_process_tcp_allpkt()  
+	/* ?????tcp_deal_nouse_stream(),tcp_deal_data_stream()??????, ???��?tcp_reset_stream()?????????, 
+	   ???????????bypass???, ??????????, ?????????stream_process_tcp_allpkt()  
 	 */
 	if(pstream_pr->under_ddos_bypass){
 		return ret;
 	}	
 	
 	pdetail_pr =(struct tcpdetail_private*)(pstream->pdetail);
-	//adjust by lqy 20150107 Ϊ�˷�ֹSYN�ؽ�����ʱSYN�ڵ�һ��������
+	//adjust by lqy 20150107 ?????SYN????????SYN????????????
 	if((pdetail_pr != NULL) && (0 == call_tcpall_after_reset) && pindex_tcp && (pstream->pktstate!=OP_STATE_CLOSE))
 	{
-		//ȫ���ӿ��õ�������ָ��ǰ����ԭʼ����
+		//?????????????????????????????
 		if(tcplen == 0)
 		{
 			pdetail->pdata = NULL;
@@ -3351,7 +3348,7 @@ fun_exit:
 
 /*
 	lijia 2015-01-12 add this_iphdr, 
-	�����IP��Ƭ����İ�, ������ʽ�Ĵ���IP��ͷ, ����ֻ��tcp_hdr��raw_hdr, �޷���ȡ������IP��ͷ.
+	?????IP?????????, ????????????IP???, ???????tcp_hdr??raw_hdr, ????????????IP???.
 */
 static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struct mesa_tcp_hdr *this_tcphdr, 
 	int thread_num,unsigned char routedir, int tcpdatalen, const raw_pkt_t *raw_packet, int offset_to_raw_pkt_hdr)
@@ -3362,7 +3359,7 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 	//struct layer_addr *tcp_stream_addr;
 #endif
 
-	/* IPPORT-union�汾, IP��TCP��ʹ��ͬһ��index�ṹ, ��ֱ��ͨ��IP�㴫�ݵ�pfindex */
+	/* IPPORT-union?��, IP??TCP?????????index??, ????????IP?????pfindex */
 	//struct streamindex tmp_tcp_stream;
 	//struct streamindex *ptmp=&tmp_tcp_stream;
 	struct streaminfo_private *pstream_pr = (struct streaminfo_private *)(&pfindex->stream);
@@ -3388,7 +3385,7 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 
 	pstream->addr.pkttype = PKT_TYPE_NORMAL;//add by lqy 20151222, init pkttype
 	
-	pstream_pr->addr_use_as_hash = 1; /* ��Ԫ����Ϣ����IP�� */
+	pstream_pr->addr_use_as_hash = 1; /* ????????????IP?? */
 //	ptmp->stream.p_layer_header = this_tcphdr;
 	//ptmp->stream.offset_to_raw_pkt_hdr = (char *)this_tcphdr - (char *)raw_packet->raw_pkt_data;
 	pstream_pr->offset_to_ip_hdr = (char *)this_tcphdr - (char *)this_iphdr;
@@ -3397,14 +3394,14 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 	pstream->routedir=routedir;
 	pstream->threadnum=thread_num;
 
-	local_sys_stat->count_per_layer[ADDR_TYPE_TCP][pstream_pr->layer_index]++; /* tcp��ip����һ�� */
-	local_sys_stat->length_per_layer[ADDR_TYPE_TCP][pstream_pr->layer_index] += tcpdatalen + this_tcphdr->th_off*4; /* tcp��ip����һ�� */
+	local_sys_stat->count_per_layer[ADDR_TYPE_TCP][pstream_pr->layer_index]++; /* tcp??ip??????? */
+	local_sys_stat->length_per_layer[ADDR_TYPE_TCP][pstream_pr->layer_index] += tcpdatalen + this_tcphdr->th_off*4; /* tcp??ip??????? */
 	
 	//return deal_tcp_stream(ptmp,this_tcphdr,tcpdatalen,raw_packet,raw_len);
 	return deal_tcp_stream(pfindex,this_iphdr, this_tcphdr,tcpdatalen, raw_packet, offset_to_raw_pkt_hdr);
 }
 
-/* lijia comment: this_iphdr��������ʵԭʼ��, Ҳ������malloc��IP�����, ��addr.pkttype���� */
+/* lijia comment: this_iphdr?????????????, ???????malloc??IP?????, ??addr.pkttype???? */
 int dealipv4tcppkt(struct streamindex *pfindex, const struct mesa_ip4_hdr *this_iphdr,int thread_num,
 					unsigned char routedir, const raw_pkt_t *raw_pkt,  int offset_to_raw_pkt_hdr)
 {
@@ -3432,8 +3429,8 @@ int dealipv4tcppkt(struct streamindex *pfindex, const struct mesa_ip4_hdr *this_
 	}
 	
 			
-	/* lijia 2016-06-15 add, �����Ż�, ������ACK�� */
-#if HIGH_PERF /* ������ģʽ���Զ�����ACK */
+	/* lijia 2016-06-15 add, ???????, ??????ACK?? */
+#if HIGH_PERF /* ?????????????????ACK */
 	if((0 == datalen) && (TH_ACK == this_tcphdr->th_flags)){
 		return PASS;
 	}
@@ -3545,7 +3542,7 @@ void set_tcp_takeoverflag(struct streaminfo *pstream,int flag)
 
 
 /*
-	ԭʼ��������: etc/well_known_port.conf
+	??????????: etc/well_known_port.conf
 	return value:
 		0      : not found in well known port array;
 		1: in well known port array;
@@ -3581,8 +3578,8 @@ static int is_well_known_port(int stream_type, unsigned short port_host_order)
 
 
 /*
-	2021-06-08֮ǰ, ����udp��tcp��SYN�������, ���ǰ�"��˿��ǿͻ���"����ȷ�����ķ���,
-	2021-06-08֮��, �����жϹ�֪�˿�, ����80, 8088, 53�ȶ˿ڵ�, ��Ϊ�Ƿ����.
+	2021-06-08??, ????udp??tcp??SYN???????, ?????"??????????"??????????????,
+	2021-06-08???, ?????��??????, ????80, 8088, 53?????, ?????????.
 
 	return value:
 		0      : not found in well known port array;
@@ -3595,15 +3592,15 @@ static int adjust_stream_dir_by_well_known_ports(unsigned char stream_type,UINT1
 
 	ret = is_well_known_port(stream_type,dport_host);
 	if(ret != 0){
-		return DIR_C2S; /* dport���й���, ��C2S���� */
+		return DIR_C2S; /* dport???��???, ??C2S???? */
 	}
 
 	ret = is_well_known_port(stream_type,sport_host);
 	if(ret != 0){
-		return DIR_S2C; /* sport���й���, ��S2C���� */
+		return DIR_S2C; /* sport???��???, ??S2C???? */
 	}	
 
-	/* �����˿ڶ�û������well known port, ��֮ǰ���ж��߼�, "��˿��ǿͻ���"���� */
+	/* ???????????????well known port, ???????��????, "??????????"???? */
 	return 0;
 }
 
@@ -3617,8 +3614,8 @@ int set_transport_addr(struct streaminfo *this_stream, int enable_well_known_por
 	
 	if(__ADDR_TYPE_IP_PAIR_V4 == this_addr->addrtype){
 		struct stream_tuple4_v4 *ip4_addr = this_addr->tuple4_v4;
-		/* ���ö˿�, ��IP-PORT-union�汾��port˳����Ϊlayer_dir�Ĳ���,
-		   ͬʱ����layer_dir, ���ڼ���HASHʱ, ��ַ����˳�� */
+		/* ??????, ??IP-PORT-union?��??port??????layer_dir?????,
+		   ??????layer_dir, ???????HASH?, ?????????? */
 		if(enable_well_known_port){
 			dir_by_well_known_port = adjust_stream_dir_by_well_known_ports(this_stream->type, ntohs(sport), ntohs(dport));
 		}
@@ -3633,7 +3630,7 @@ int set_transport_addr(struct streaminfo *this_stream, int enable_well_known_por
 			this_stream_pr->create_dir_by_well_known_port = 1;
 		}else{
 			if(ntohs(sport) > ntohs(dport)){
-				this_stream_pr->layer_dir = 1; /* ���˿�˳�������Ԫ��layer_dir */
+				this_stream_pr->layer_dir = 1; /* ????????????????layer_dir */
 				this_stream->curdir = DIR_C2S;
 			}else{
 				if(unlikely(sport == dport)){
@@ -3652,7 +3649,7 @@ int set_transport_addr(struct streaminfo *this_stream, int enable_well_known_por
 		}
 		ip4_addr->source = sport;
 		ip4_addr->dest = dport;
-		this_addr->addrtype = ADDR_TYPE_IPV4; /* ����pappƽ̨, ��������Ԫ��ʹ��'ADDR_TYPE_IPV4��ʾ' */
+		this_addr->addrtype = ADDR_TYPE_IPV4; /* ????papp??, ??????????????'ADDR_TYPE_IPV4???' */
 		this_addr->addrlen = sizeof(struct stream_tuple4_v4);
 	}else if(__ADDR_TYPE_IP_PAIR_V6 == this_addr->addrtype){
 		struct stream_tuple4_v6 *ip6_addr = this_addr->tuple4_v6;
@@ -3690,7 +3687,7 @@ int set_transport_addr(struct streaminfo *this_stream, int enable_well_known_por
 		
 		ip6_addr->source = sport;
 		ip6_addr->dest = dport;
-		this_addr->addrtype = ADDR_TYPE_IPV6; /* ����pappƽ̨, ��������Ԫ��ʹ��'ADDR_TYPE_IPV6��ʾ' */
+		this_addr->addrtype = ADDR_TYPE_IPV6; /* ????papp??, ??????????????'ADDR_TYPE_IPV6???' */
 		this_addr->addrlen = sizeof(struct stream_tuple4_v6);
 	}else{
 		assert(0);
@@ -3702,7 +3699,7 @@ int set_transport_addr(struct streaminfo *this_stream, int enable_well_known_por
 
 
 
-/* 2014-12-30 lijia add, ��������Ϊһ������ṹ, ����Ϊ��ȡ��ַ��ʵ�ʽṹ, ����֮ */
+/* 2014-12-30 lijia add, ?????????????????, ?????????????????, ????? */
 struct streaminfo *skip_proxy_phony_stream(struct streaminfo *a_tcp)
 {
 int proxy_layer_num = 0;
@@ -3740,26 +3737,26 @@ static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const v
 	//carry_ip_stream = skip_proxy_phony_stream(a_tcp->pfather);
 	carry_ip_stream = skip_proxy_phony_stream(a_tcp);
 
-	/* �洢ԭʼ�� */
+	/* ?��???? */
 	memcpy(&(uo_packet->raw_pkt),  stack_raw_pkt, sizeof(raw_pkt_t));	
 	uo_packet->raw_pkt.raw_pkt_data = sapp_mem_malloc(SAPP_MEM_DYN_TCP_UNORDER,a_tcp->threadnum, stack_raw_pkt->raw_pkt_len);
 	memcpy((void *)uo_packet->raw_pkt.raw_pkt_data, stack_raw_pkt->raw_pkt_data, stack_raw_pkt->raw_pkt_len);
 
 
-	/* 	iphdr���������:
-		1)��IP��Ƭ��:
-			ֻ��洢������ԭʼ��, �����Ķ���ָ������, ֻ��freeһ��;
-		2)IP����İ�:
-			�洢������ԭʼ��(���һ����Ƭ), �������malloc��IP��, ����ʹ��ָ������;
+	/* 	iphdr?????????:
+		1)??IP?????:
+			???��??????????, ????????????????, ???free???;
+		2)IP??????:
+			?��??????????(?????????), ???????malloc??IP??, ??????????????;
 	*/
 #if 0	 
 
 #else
-	/* ��ΪIPv4�п��ܶ��Ƕ��, ����: MAC->IPv4->UDP->IPv6->IPv4->TCP->APP,
-		���ܽ��жϵ�ǰ����IPv4���Ƿ��Ƿ�Ƭ, ��ײ��IPv4��Ҳ������Դ��IP��Ƭ����İ�.
-		����, ʹ��ԭʼ��ָ��͵�ǰIPͷָ��ľ���ֵƫ�����ж�, 
-		�����İ�, ��ǰ��ͷ��ԭʼ��ͷ�ĵ�ַƫ�����϶���MTU��Χ��,
-		���������MTU, ��ǰIP���϶�����malloc��, ����Ƭ����İ�.
+	/* ???IPv4?��????????, ????: MAC->IPv4->UDP->IPv6->IPv4->TCP->APP,
+		??????��???????IPv4?????????, ?????IPv4????????????IP?????????.
+		????, ?????????????IP???????????????��?, 
+		???????, ???????????????????????????MTU??��??,
+		?????????MTU, ???IP?????????malloc??, ???????????.
 	*/
 	if(labs((char *)this_iphdr - (char *)stack_raw_pkt->raw_pkt_data) > MTU_MAX){
 #endif
@@ -3791,7 +3788,7 @@ static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const v
 	uo_packet->urg = (this_tcphdr->th_flags & TH_URG);
 	uo_packet->urg_ptr = ntohs (this_tcphdr->th_urp);	
 
-	/* IP��Ƭ����ָ���ƶ���pakiet�ṹ��, ��ȫ�ֵ�G_IP_FRAG_LIST[tid]ָ���ÿ�, ���ⱻip_entry���ͷ� */
+	/* IP???????????????pakiet????, ??????G_IP_FRAG_LIST[tid]??????, ????ip_entry????? */
 	uo_packet->ipfrag_list = raw_ip_frag_list_global_move_pkt(a_tcp);
 
 	a_tcp->addr.pkttype = PKT_TYPE_TCPUNORDER;//add by lqy 20151222, mark unorder
@@ -3834,15 +3831,15 @@ static int get_ip_pkt_tot_len(struct streaminfo *ipinfo, const void *this_iphdr)
 }
 
 /* 2015-01-13 lijia add, 
-	��Ϊkill_xxxϵ�к���ʹ��stream_pr�ṹ�е�raw_pktָ��,
-	����������������ĳ����, ����kill_xxxϵ�к���,
-	��ʱ��
+	???kill_xxx??��??????stream_pr???��?raw_pkt???,
+	?????????????????????, ????kill_xxx??��???,
+	?????
 */
 static inline void update_stream_list_raw_pkt_pointer(struct streaminfo_private *a_tcp_pr, const raw_pkt_t *raw_pkt)
 {
 	a_tcp_pr->raw_pkt = raw_pkt;
 
-	/* TODO 3: �Ƿ���Ҫ�ݹ�Ľ�a_tcp->pfather->raw_pktҲȫ������?! */
+	/* TODO 3: ???????????a_tcp->pfather->raw_pkt?????????! */
 
 	return;
 }
@@ -3854,7 +3851,7 @@ static void tcp_flow_stat_free(int thread_seq, void *project_req_value)
 }
 
 
-/* 2015-12-25 lijia add, for TCP/UDP����ͳ�� */
+/* 2015-12-25 lijia add, for TCP/UDP??????? */
 int tcp_flow_stat_init(void)
 {
 	int project_req_id;
@@ -3863,7 +3860,7 @@ int tcp_flow_stat_init(void)
 	if(project_req_id >= 0){
 		G_TCP_FLOW_STAT_PROJECT_ID = project_req_id;
 	}else{
-		/* �����ļ�û��'tcp_flow_stat'��, �رմ˹��� */
+		/* ??????????'tcp_flow_stat'??, ??????? */
 		G_TCP_FLOW_STAT_PROJECT_ID = -1;
 	}
 
@@ -3871,7 +3868,7 @@ int tcp_flow_stat_init(void)
 	if(project_req_id >= 0){
 		G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID = project_req_id;
 	}else{
-		/* �����ļ�û��'tcp_flow_stat'��, �رմ˹��� */
+		/* ??????????'tcp_flow_stat'??, ??????? */
 		G_TCP_DEDUCE_FLOW_STAT_PROJECT_ID = -1;
 	}
 	
