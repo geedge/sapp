@@ -19,14 +19,14 @@ static int g_pcap_version_internal = 20210907;
 #define PCAP_SNAPLEN_MAX	(65535)
 
 typedef struct{
-	int raw_eth_fd; /* ½öÓÃÓÚ·¢ËÍEthernetÔ­Ê¼±¨ÎÄ */
+	int raw_eth_fd; /* ï¿½ï¿½ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½EthernetÔ­Ê¼ï¿½ï¿½ï¿½ï¿½ */
 	int thread_num; 
 	struct sockaddr saddr_up;
 	struct sockaddr saddr_down;
 	UINT8 pcap_send_buf[SENDPACKET_BUF_LEN];
 }pcap_send_handle;
 
-/* ·ÖÁ÷Ä£Ê½, °´ÄÚ²ã¶þÔª×é»¹ÊÇÍâ²ã¶þÔª×é, TODO:°´ÐèÇó¿ª·¢, ÒÔºó¿ÉÒÔÖ§³ÖËÄÔª×é */
+/* ï¿½ï¿½ï¿½ï¿½Ä£Ê½, ï¿½ï¿½ï¿½Ú²ï¿½ï¿½Ôªï¿½é»¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½, TODO:ï¿½ï¿½ï¿½ï¿½ï¿½ó¿ª·ï¿½, ï¿½Ôºï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ */
 typedef enum{ 
 	PCAP_DISTMODE_INNER_TUPLE2,
 	PCAP_DISTMODE_OUTER_TUPLE2,
@@ -49,7 +49,7 @@ static struct bpf_program g_pcap_bpf_filter_bin;
 static int g_pcap_buf_queue_num = 10000;
 static int g_pcap_cap_mode = CAP_MODEL_PCAP_ONLINE;
 static int g_pcap_topology_mode = NET_CONN_PARALLEL;
-static int g_pcap_cap_level = CAP_LEVEL_MAC; /* ±¾¿â²¶°üÆðÊ¼Î»ÖÃ,Ä¬ÈÏMAC²ã */
+static int g_pcap_cap_level = CAP_LEVEL_MAC; /* ï¿½ï¿½ï¿½â²¶ï¿½ï¿½ï¿½ï¿½Ê¼Î»ï¿½ï¿½,Ä¬ï¿½ï¿½MACï¿½ï¿½ */
 static int g_pcap_work_thread_num = 1;
 static pcap_t *pcap_up_handle; /* if in parallel mode, use this arg */
 static pcap_t *pcap_down_handle;
@@ -57,10 +57,10 @@ static PACKET_IO_CB_T g_pcap_work_fun;
 static PACKET_IO_EXIT_CB_T g_pcap_exit_cb_fun;
 static volatile long pcap_app_drop_num[MAX_THREAD_NUM];
 static volatile int get_pcap_lib_drop_flag = 0;
-static volatile long pcap_lib_drop_up_num = 0; /* ²¢ÁªÄ£Ê½Ä¬ÈÏÊ¹ÓÃ´Ë±äÁ¿´æ´¢ */
+static volatile long pcap_lib_drop_up_num = 0; /* ï¿½ï¿½ï¿½ï¿½Ä£Ê½Ä¬ï¿½ï¿½Ê¹ï¿½Ã´Ë±ï¿½ï¿½ï¿½ï¿½æ´¢ */
 static volatile long pcap_lib_drop_down_num = 0;
-static struct mesa_ethernet_hdr *raw_pkt_hdr[MAX_THREAD_NUM]; /* ¼ÇÂ¼Ô­Ê¼°üÍ·Ö¸Õë, ÓÃÓÚ·¢°ü»ñÈ¡MACµØÖ·ÓÃ */
-static unsigned char raw_pkt_route_dir[MAX_THREAD_NUM]; /* ¼ÇÂ¼Ô­Ê¼°ü·½Ïò, ÓÃÓÚ·¢ËÍÊý¾Ý°ü */
+static struct mesa_ethernet_hdr *raw_pkt_hdr[MAX_THREAD_NUM]; /* ï¿½ï¿½Â¼Ô­Ê¼ï¿½ï¿½Í·Ö¸ï¿½ï¿½, ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½È¡MACï¿½ï¿½Ö·ï¿½ï¿½ */
+static unsigned char raw_pkt_route_dir[MAX_THREAD_NUM]; /* ï¿½ï¿½Â¼Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ */
 static unsigned long long tot_up_rcv_pkt_num, tot_down_rcv_pkt_num;
 static int pcap_device_up_mtu = 1500;
 static int pcap_device_down_mtu = 1500;
@@ -75,17 +75,17 @@ extern void timestamp_record(enum timestamp_level level, const raw_pkt_t *raw_pk
 extern void timestamp_record_lib(const raw_pkt_t *raw_pkt);
 /*
 
-	×¢²á¿ØÖÆÃüÁî,
+	×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,
 	"set timestamp record minimum xxx",
-	¼´³¬Ê±×îÐ¡ÊÇxxxÊ±²ÅÏÔÊ¾.
-	³¬Ê±·ÖÎªÈçÏÂ¼¸¸ö¼¶±ð:
+	ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ð¡ï¿½ï¿½xxxÊ±ï¿½ï¿½ï¿½ï¿½Ê¾.
+	ï¿½ï¿½Ê±ï¿½ï¿½Îªï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:
 
-	Ó²¼þÊ±¼ä´Á--->×îµ×²ãÄÃµ½°ü-->IPv4²ãÈë¿Ú-->befor_stream_process()->after_stream_process()
+	Ó²ï¿½ï¿½Ê±ï¿½ï¿½ï¿½--->ï¿½ï¿½×²ï¿½ï¿½Ãµï¿½ï¿½ï¿½-->IPv4ï¿½ï¿½ï¿½ï¿½ï¿½-->befor_stream_process()->after_stream_process()
 
-	·Ö±ðÔÚ__pkt_handle, ipv4_entry, stream_process()º¯ÊýÇ°ºó¼ÇÂ¼Ê±¼ä:
+	ï¿½Ö±ï¿½ï¿½ï¿½__pkt_handle, ipv4_entry, stream_process()ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Â¼Ê±ï¿½ï¿½:
 	"netdev--xxx---libentry---xxx---IPv4_entry---xxx---Before_call_plug---xxx---After_call_plug
 
-	»òÕßÃ¿´ÎÖ»´òÓ¡Ê±¼äÖµ, ²»ÒªÌáÊ¾·û, 
+	ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½Ö»ï¿½ï¿½Ó¡Ê±ï¿½ï¿½Öµ, ï¿½ï¿½Òªï¿½ï¿½Ê¾ï¿½ï¿½, 
 	"0 -- 1 -- 4 -- 10 -- 20"
 */
 
@@ -118,7 +118,7 @@ typedef struct {
 
 static pcap_work_thread_t work_thread_pool[MAX_THREAD_NUM];
 
-#if PROCESS_BAR_SW /* 2013-12-04 LiJia add, for ¶Á´ó°ü½ø¶ÈÊµÊ±ÏÔÊ¾ */
+#if PROCESS_BAR_SW /* 2013-12-04 LiJia add, for ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÊµÊ±ï¿½ï¿½Ê¾ */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -132,7 +132,7 @@ static unsigned long dumpfile_read_size = 0;
 static char process_bar[100][101];
 static unsigned long PKTps = 500000;
 static int dumpfile_according_timestamp = 0;
-static long long dumpfile_timestamp_diff_with_start = 0; /* µ±Ç°½ø³ÌÆô¶¯Ê±¼äÓëÊÕµ½µÚÒ»¸ö°üµÄÊ±¼ä´ÁµÄ²îÖµ */
+static long long dumpfile_timestamp_diff_with_start = 0; /* ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ä²ï¿½Öµ */
 
 static long long __get_current_time_in_ms(void)
 {
@@ -228,7 +228,7 @@ static const char* format_pretty_timeval(struct timeval start, struct timeval en
 
 
 const char* beautify_size(long bytes) {
-    static char beautify_size_result[100]; // Îª½á¹û×Ö·û´®·ÖÅäÄÚ´æ
+    static char beautify_size_result[100]; // Îªï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½
     if(bytes >= 1073741824) {
         sprintf(beautify_size_result, "%.2f G", bytes / 1073741824.0);
     } else if(bytes >= 1048576) {
@@ -272,7 +272,7 @@ static double process_bar_calc_byte_per_sec(void)
 }
 
 
-/* ¸ù¾ÝÒÔÍùµÄËÙÂÊ, ¼ÆËãÒ»¸öÆ½¾ùÖµ */
+/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Æ½ï¿½ï¿½Öµ */
 static double process_bar_calc_byte_per_sec_average(void)
 {
 	double __pass_bpms = 0.0;
@@ -348,7 +348,7 @@ static void process_bar_print(int len)
 		strcpy(read_size_str, read_size_ptr);
 		total_size_ptr = beautify_size(dumpfile_total_size);
 		strcpy(total_size_str, total_size_ptr);
-		/* ²Â²âÊ£ÓàÊ±¼ä */
+		/* ï¿½Â²ï¿½Ê£ï¿½ï¿½Ê±ï¿½ï¿½ */
 		bytes_per_sec = process_bar_calc_byte_per_sec_average();
 		if((percent < 99.0) && (bytes_per_sec > 100000.0) && (dumpfile_total_size-dumpfile_read_size > 100000)){
 			remain_time = ((double)(dumpfile_total_size-dumpfile_read_size)/bytes_per_sec);
@@ -376,7 +376,7 @@ static void process_bar_print(int len)
 
 
 #if 0
-	/* Ô¤¹À¶ÁÍê°üµÄÊ±¼ä */
+	/* Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ */
 	bytes_per_sec = process_bar_get_pps();
 	if(bytes_per_sec > 0){
 		printf("^_^ I guess,  read file dumpfile over need time: \033[41m %fs  \033[0m \n", (float)(dumpfile_total_size-dumpfile_read_size)/(float)bytes_per_sec);
@@ -423,9 +423,9 @@ inline void process_bar_print(int len)
 
 /*
 	TODO, 
-	´Ë¹¦ÄÜÒªÔÙ³éÏóÒ»ÏÂ, ½ö¶ÔÄÚ²ãtcp°ü×ö²ð·Ö, ÇÒMTUÓÉÅäÖÃÎÄ¼þ¿ØÖÆ, ²»ÄÜÐ´ËÀ!
-	Íâ²ã¿ÉÒÔÊÇÆäËûËíµÀÐ­Òé, »òvxlanµÈµÈ, 
-	½ö±£Ö¤´óµÄÊý¾Ý°üÄÜ±»²ð·Ö·¢³ö(²»ÊÇIP·ÖÆ¬), ¶ø²»±£Ö¤ÍøÂç´«ÊäµÄ¿É¿¿ÐÔ.
+	ï¿½Ë¹ï¿½ï¿½ï¿½Òªï¿½Ù³ï¿½ï¿½ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½tcpï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½MTUï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½!
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½, ï¿½ï¿½vxlanï¿½Èµï¿½, 
+	ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½Ü±ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Æ¬), ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ç´«ï¿½ï¿½Ä¿É¿ï¿½ï¿½ï¿½.
 */
 static int sendpacket_tcp_offload(char *raw_data, int raw_datalen, int fd, const struct sockaddr *sa)
 {
@@ -465,11 +465,11 @@ static int sendpacket_tcp_offload(char *raw_data, int raw_datalen, int fd, const
 	}
 #endif
 
-	fix_hdr_len = sizeof(struct sendpacket_ethernet_hdr) + raw_ip_hdr->ip_hl * 4 + raw_tcp_hdr->th_off * 4; /* ¹Ì¶¨Í·²¿³¤¶È, ¿ÉÄÜÓÐÑ¡Ïî */
+	fix_hdr_len = sizeof(struct sendpacket_ethernet_hdr) + raw_ip_hdr->ip_hl * 4 + raw_tcp_hdr->th_off * 4; /* ï¿½Ì¶ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ */
 
 	memcpy(tmp_send_buf, raw_data, fix_hdr_len);
 	send_seq = ntohl(raw_tcp_hdr->th_seq);
-	leftlen = ntohs(raw_ip_hdr->ip_len) - raw_ip_hdr->ip_hl * 4 - raw_tcp_hdr->th_off * 4; /* Ê£ÓàµÄ´¿TCP¸ºÔØ²¿·Ö³¤¶È */
+	leftlen = ntohs(raw_ip_hdr->ip_len) - raw_ip_hdr->ip_hl * 4 - raw_tcp_hdr->th_off * 4; /* Ê£ï¿½ï¿½Ä´ï¿½TCPï¿½ï¿½ï¿½Ø²ï¿½ï¿½Ö³ï¿½ï¿½ï¿½ */
 	data = raw_data + fix_hdr_len;
 	send_ip_hdr = (struct sendpacket_ip_hdr *)(tmp_send_buf+ sizeof(struct sendpacket_ethernet_hdr));
 	send_tcp_hdr = (struct mesa_tcp_hdr *)(tmp_send_buf+ sizeof(struct sendpacket_ethernet_hdr) + send_ip_hdr->ip_hl*4);
@@ -478,12 +478,12 @@ static int sendpacket_tcp_offload(char *raw_data, int raw_datalen, int fd, const
 		retry_times = 0;
 		this_send_len = MIN(leftlen, TCP_TSO_SPLIT_MTU);
 
-		memcpy(tmp_send_buf + fix_hdr_len, data, this_send_len); /* ÐèÒª¼ÆËãÐ£ÑéºÍ, ²»ÄÜÐÞ¸ÄÔ­Ê¼°ü, copyµ½ÁÙÊ±»º³åÇø */
+		memcpy(tmp_send_buf + fix_hdr_len, data, this_send_len); /* ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Þ¸ï¿½Ô­Ê¼ï¿½ï¿½, copyï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		send_ip_hdr->ip_len = htons(raw_ip_hdr->ip_hl * 4 + raw_tcp_hdr->th_off * 4 + this_send_len);
-		send_tcp_hdr->th_seq = htonl(send_seq); /* ²ð·ÖTCP¸ºÔØ, ÐòºÅÒÀ´ÎºóÒÆ, ACK²»±ä */
+		send_tcp_hdr->th_seq = htonl(send_seq); /* ï¿½ï¿½ï¿½TCPï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½, ACKï¿½ï¿½ï¿½ï¿½ */
 		/* NOTE:
-			×¢Òâ, ´Ë´¦²»ÄÜÊ¹ÓÃ¹Ì¶¨³¤¶Èsizeof(struct sendpacket_tcp_hdr),
-			ÒòÎªÊµ¼Ê°üÍ·ÖÐ¿ÉÄÜ°üº¬Ñ¡Ïî, ÒªÊ¹ÓÃÔ­Ê¼°üµÄÊµ¼Ê³¤¶È: raw_tcp_hdr->th_off * 4.
+			×¢ï¿½ï¿½, ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã¹Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½sizeof(struct sendpacket_tcp_hdr),
+			ï¿½ï¿½ÎªÊµï¿½Ê°ï¿½Í·ï¿½Ð¿ï¿½ï¿½Ü°ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½, ÒªÊ¹ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½Êµï¿½Ê³ï¿½ï¿½ï¿½: raw_tcp_hdr->th_off * 4.
 		*/
 		sendpacket_do_checksum((unsigned char *)send_ip_hdr, IPPROTO_TCP, raw_tcp_hdr->th_off*4 + this_send_len);
 		sendpacket_do_checksum((unsigned char *)send_ip_hdr, IPPROTO_IP, raw_ip_hdr->ip_hl * 4);
@@ -618,7 +618,7 @@ int pcap_dl_io_set_work_thread_num(int thread_num_max)
 	return 0;
 }
 
-/* ´Ë½Ó¿ÚÕë¶ÔpagÄ£Ê½·¢ËÍrst, Êý¾ÝºÍÈÕÖ¾, pcapÄ£Ê½²»Çø±ð */
+/* ï¿½Ë½Ó¿ï¿½ï¿½ï¿½ï¿½pagÄ£Ê½ï¿½ï¿½ï¿½ï¿½rst, ï¿½ï¿½ï¿½Ýºï¿½ï¿½ï¿½Ö¾, pcapÄ£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 int pcap_dl_io_set_send_type(int send_type)
 {
 	return 0;
@@ -639,13 +639,13 @@ long pcap_dl_io_get_lib_drop_num(void)
 
 void * pcap_dl_io_device_alias(unsigned int target_id, char *device_args)
 {
-	/* ¶ÔÓÚpcapÄ£Ê½À´Ëµ, ¾ÍÊÇÉè±¸Ãû³Æ eth1, eth2, etc. */
+	/* ï¿½ï¿½ï¿½ï¿½pcapÄ£Ê½ï¿½ï¿½Ëµ, ï¿½ï¿½ï¿½ï¿½ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ eth1, eth2, etc. */
 	return (void *)sapp_strdup(device_args);
 }
 
 void pcap_dl_io_device_alias_free(unsigned int target_id, char *device_args)
 {
-	/* ¶ÔÓÚpcapÄ£Ê½À´Ëµ, ¾ÍÊÇÉè±¸Ãû³Æ eth1, eth2, etc. */
+	/* ï¿½ï¿½ï¿½ï¿½pcapÄ£Ê½ï¿½ï¿½Ëµ, ï¿½ï¿½ï¿½ï¿½ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ eth1, eth2, etc. */
 	SAPP_GLOBAL_FREE(device_args);
 }
 
@@ -677,7 +677,7 @@ void pcap_dl_io_free_sendbuf(void *phandle, int thread_num)
 	(void)phandle;
 	(void)thread_num;
 	
-	/* PCAPÄ£Ê½ÎÞÐèÊÍ·Å */
+	/* PCAPÄ£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ */
 	return;
 }
 
@@ -736,9 +736,9 @@ int pcap_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, void
 	strncpy(snd_addr.sa_data, snd_raw_args->dev_name, sizeof(snd_addr.sa_data));	
 	snd_addr.sa_family = PF_INET;
 
-/* 2017-02-28 lijia add, for tcp offload sendback, Ä³Ð©ÂÒÆß°ËÔãµÄÆÆÍø¿¨, GRO, GSOµÈÌØÐÔ¹Ø²»µô, µ¼ÖÂ´®ÁªÄ£Ê½´ó°ü¶ª°ü */
-	//TODO, ´Ë´¦¹¦ÄÜÒªÒÆµ½sappµÄÉÏ²ã·¢°ü½Ó¿Ú, ²»ÔÙÕâÃ´µ×²ãµÄ½Ó¿Ú×öoffload, ÒòÎª»¹¿ÉÄÜÉæ¼°µ½marsioÄ£Ê½
-    //¸ù¾Ý·¢°üÍø¿¨µÄMTU×Ô¶¯ÅÐ¶Ï, ÊÇ·ñÐèÒªoffload.
+/* 2017-02-28 lijia add, for tcp offload sendback, Ä³Ð©ï¿½ï¿½ï¿½ß°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, GRO, GSOï¿½ï¿½ï¿½ï¿½ï¿½Ô¹Ø²ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Â´ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	//TODO, ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Æµï¿½sappï¿½ï¿½ï¿½Ï²ã·¢ï¿½ï¿½ï¿½Ó¿ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã´ï¿½×²ï¿½Ä½Ó¿ï¿½ï¿½ï¿½offload, ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ¼°ï¿½ï¿½marsioÄ£Ê½
+    //ï¿½ï¿½ï¿½Ý·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MTUï¿½Ô¶ï¿½ï¿½Ð¶ï¿½, ï¿½Ç·ï¿½ï¿½ï¿½Òªoffload.
 #if 0 
 	if(datalen > 1514){
 		if(sapp_global_single.cfg_send_tcp_offload_sw){
@@ -756,7 +756,7 @@ send_again:
 	ret = sendto(send_handle->raw_eth_fd, data, datalen, 0, (struct sockaddr *)&snd_addr, sizeof(struct sockaddr));
 	if(ret < 0){
 		if(EINTR == errno){
-			goto send_again; /* ÒòÖÐ¶Ï»ò»º´æÂúµ¼ÖÂ·¢ËÍÊ§°Ü, ÖØÊÔ */
+			goto send_again; /* ï¿½ï¿½ï¿½Ð¶Ï»ò»º´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½Ê§ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ */
 		}else if((EAGAIN == errno) || (ENOBUFS == errno)){
 			if(retry_times++ < 5){
 				goto send_again; 
@@ -783,7 +783,7 @@ int pcap_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 	int ret;
 	struct sockaddr *snd_addr;
 
-	/* 2018-07-26 lijia add, Ôö¼ÓÁË²å¼þ×Ô¼º´´½¨µÄÏß³Ì·¢°ü¹¦ÄÜ, µ«ÊÇ±ØÐë·¢ËÍÍêÕûµÄethernet°ü, µ×²ãmacÇý¶¯²ãÎÞ·¨Ìî³ä */
+	/* 2018-07-26 lijia add, ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³Ì·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ë·¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ethernetï¿½ï¿½, ï¿½×²ï¿½macï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ */
 	if(thread_num >= g_pcap_work_thread_num){
 		sapp_runtime_log(30, "\033[1;31;40m send thread_seq is:%d, bigger than total thread num(%d) !\033[0m\n", thread_num, g_pcap_work_thread_num);
 		return -1;
@@ -806,7 +806,7 @@ int pcap_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 	}
 
 	//net_common_build_send_mac(data, raw_pkt_hdr[thread_num], eth_carry_layer_addr_type, dir_reverse,g_pcap_topology_mode);
-	/* delete by lijia 2014-12-10, datalenÒÑ¾­°üº¬ÁËmacµØÖ·³¤¶È */
+	/* delete by lijia 2014-12-10, datalenï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½macï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ */
 	//datalen += sizeof(struct mesa_ethernet_hdr); 
 
 	packet_io_hook_sendto(raw_pkt, dir, (char *)data, NULL);
@@ -898,9 +898,9 @@ static int pcap_forward_pkt(int thread_num, const unsigned char *data,int data_l
 	struct sockaddr *sock_addr;
 
 	if(NET_CONN_SERIAL_GDEV == g_pcap_topology_mode){
-		/* ÌØÖÖÉè±¸Ä£Ê½, ÊÕ·¢Ê¹ÓÃÍ¬Ò»¿éÍø¿¨ */
+		/* ï¿½ï¿½ï¿½ï¿½ï¿½è±¸Ä£Ê½, ï¿½Õ·ï¿½Ê¹ï¿½ï¿½Í¬Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		sock_addr = &work_thread_pool[thread_num].sock_addr_up;
-#if 0	//2020-12-25 , v4.2°æ±¾ÔÚ	packet_io_hook_output_vxlan()º¯ÊýÒÑ¾­ÐÞ¸ÄÁË¸÷²ãµØÖ·, ´Ë´¦Ö±½Ó×ª·¢¼´¿É.
+#if 0	//2020-12-25 , v4.2ï¿½æ±¾ï¿½ï¿½	packet_io_hook_output_vxlan()ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½Þ¸ï¿½ï¿½Ë¸ï¿½ï¿½ï¿½ï¿½Ö·, ï¿½Ë´ï¿½Ö±ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
 		net_common_adjust_forward_mac((struct mesa_ethernet_hdr *)data, g_pcap_topology_mode);
 #endif		
 	}else{	
@@ -936,7 +936,7 @@ static void pcap_clear_pkt_queue_left(int thread_index)
 		sapp_usleep(1);
 	}
 
-	if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode){ /* Ë«Íø¿¨´®ÁªÄ£Ê½ */	
+	if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode){ /* Ë«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ */	
 		while(0 == g_pcap_io_stop_flag_down){
 			sapp_usleep(1);
 		}
@@ -952,7 +952,7 @@ static void pcap_clear_pkt_queue_left(int thread_index)
 		}
 		if(PCAP_OP_FLAG_PKT == pkt_queue_node.op_flag){
 			ret = (*g_pcap_work_fun)(&(pkt_queue_node.raw_pkt), pkt_queue_node.raw_pkt.route_dir, thread_index);
-			/* ´®ÁªÄ£Ê½ÇÒ·µ»ØÖµÎªPASS, ÐèÒª×ª·¢°ü */
+			/* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Ò·ï¿½ï¿½ï¿½ÖµÎªPASS, ï¿½ï¿½Òª×ªï¿½ï¿½ï¿½ï¿½ */
 			if((g_pcap_topology_mode & __NET_CONN_SERIAL) && (PASS == ret)){
 				pcap_forward_pkt(thread_index, (unsigned char *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data, 
 							pkt_queue_node.raw_pkt.__lib_raw_pkt_len, pkt_queue_node.raw_pkt.route_dir);
@@ -975,7 +975,7 @@ static void *__pcap_work_thread(void *arg)
 	int ret;
 	int total_call_times = 0, rcv_pkt_tims = 0, polling_work_times = 0;
 
-#if(__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__ >= 480) /* °æ±¾ÅÐ¶Ï, ºÜ¶à¾ÉÏµÍ³ÎÞ·¨±àÒë */
+#if(__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__ >= 480) /* ï¿½æ±¾ï¿½Ð¶ï¿½, ï¿½Ü¶ï¿½ï¿½ÏµÍ³ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ */
 #ifdef _GNU_SOURCE
 	pthread_setname_np(pthread_self(), "sapp_pkt_process");
 #endif
@@ -996,7 +996,7 @@ static void *__pcap_work_thread(void *arg)
 	}
 
 	/* for perf optimize
-	   Æµ·±µ÷ÓÃstream_process_polling()µÈº¯Êý, ´Ë´¦ÏÈÔÚº¯ÊýÍâ²¿ÅÐ¶ÏÒ»ÏÂÊÇ·ñÐèÒªµ÷ÓÃ.
+	   Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½stream_process_polling()ï¿½Èºï¿½ï¿½ï¿½, ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½â²¿ï¿½Ð¶ï¿½Ò»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½.
 	*/
 	int polling_enabled = sapp_global_val->config.packet_io.polling_priority;
 
@@ -1037,8 +1037,12 @@ static void *__pcap_work_thread(void *arg)
 		total_call_times++;
 		if (total_call_times >= sapp_global_val->config.packet_io.polling_priority)
 		{
-			/* Èç¹ûÁ÷Á¿¾Þ´ó, Ò»Ö±ÓÐ°üÊ±, Ã¿¸ôpolling_priority¸ö°üÒ²Òªµ÷ÓÃpolling½Ó¿Ú */
+			
 			if (polling_enabled && (stream_process_polling(thread_num) & POLLING_STATE_WORK))
+			{
+				polling_work_times++;
+			}
+			if (polling_enabled && (polling_stream_timeout(thread_num) & POLLING_STATE_WORK))
 			{
 				polling_work_times++;
 			}
@@ -1073,7 +1077,7 @@ static void *__pcap_work_thread(void *arg)
 		if (pkt_queue_node.raw_pkt.__lib_raw_pkt_len > 0 && pkt_queue_node.raw_pkt.__lib_raw_pkt_data != NULL)
 		{
 			ret = (*g_pcap_work_fun)(&(pkt_queue_node.raw_pkt), pkt_queue_node.raw_pkt.route_dir, thread_num);
-			/* ´®ÁªÄ£Ê½ÇÒ·µ»ØÖµÎªPASS, ÐèÒª×ª·¢°ü */
+			/* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Ò·ï¿½ï¿½ï¿½ÖµÎªPASS, ï¿½ï¿½Òª×ªï¿½ï¿½ï¿½ï¿½ */
 			if ((g_pcap_topology_mode & __NET_CONN_SERIAL) && (PASS == ret))
 			{
 				pcap_forward_pkt(thread_num, (unsigned char *)pkt_queue_node.raw_pkt.__lib_raw_pkt_data,
@@ -1087,7 +1091,7 @@ static void *__pcap_work_thread(void *arg)
 		PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
 	}
 
-	/* pcapÊ¹ÓÃÒì²½Ä£Ê½, »º´æ¶ÓÁÐÖÐ¿ÉÄÜ»¹ÓÐÎ´´¦ÀíµÄÊý¾Ý°ü */
+	/* pcapÊ¹ï¿½ï¿½ï¿½ì²½Ä£Ê½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¿ï¿½ï¿½Ü»ï¿½ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ */
 	pcap_clear_pkt_queue_left(thread_num);
 
 	libsapp_destroy_env_per_thread(thread_num);
@@ -1126,7 +1130,7 @@ static int pcap_create_work_thread(void)
 			assert(0);
 		}
 		work_thread_pool[i].op_status = PCAP_OP_FLAG_PKT;
-		/* ×¢Òâ:´Ë´¦²»ÓÃMESA_lqueue×Ô´øµÄÏß³Ì°²È«Ëø, ÎªÁËÊµÏÖ__pcap_work_thread()µÄcond_wait¹¦ÄÜ. */
+		/* ×¢ï¿½ï¿½:ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½MESA_lqueueï¿½Ô´ï¿½ï¿½ï¿½ï¿½ß³Ì°ï¿½È«ï¿½ï¿½, Îªï¿½ï¿½Êµï¿½ï¿½__pcap_work_thread()ï¿½ï¿½cond_waitï¿½ï¿½ï¿½ï¿½. */
 		work_thread_pool[i].pkt_queue = MESA_lqueue_create(0, g_pcap_buf_queue_num+1);
 
 		ret = pthread_create(&work_thread_pool[i].work_tid, NULL, __pcap_work_thread, &work_thread_pool[i].thread_num);
@@ -1195,7 +1199,7 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 	}
 	if(res){
 		ipv6_hdr = (const struct ip6_hdr *)res;
-		/* Ö»Ê¹ÓÃIPv6µØÖ·µÄÒ»²¿·Ö */
+		/* Ö»Ê¹ï¿½ï¿½IPv6ï¿½ï¿½Ö·ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ */
 		if(memcmp(&ipv6_hdr->ip6_src.s6_addr32[3], &ipv6_hdr->ip6_dst.s6_addr32[3], sizeof(int)) >= 0){
 			disp_arg1 = (unsigned char *)&ipv6_hdr->ip6_src;
 			disp_arg2 = (unsigned char *)&ipv6_hdr->ip6_dst;
@@ -1207,8 +1211,8 @@ static unsigned int __pcap_dispatch_thread(const u_char *data)
 		goto disp;
 	}
 
-	/* ·ÇIPv4, ·ÇIPv6Ð­Òé, ÔÝÊ±·µ»Ø0, ¹Ì¶¨ÓÃÒ»¸öÏß³Ì´¦Àí.
-		to do: Ê¶±ð¾¡¿ÉÄÜ¶àµÄÒÑÖªÐ­ÒéÀàÐÍ, ¼ÆËãÒ»¸öhashÖµ.
+	/* ï¿½ï¿½IPv4, ï¿½ï¿½IPv6Ð­ï¿½ï¿½, ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½0, ï¿½Ì¶ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ß³Ì´ï¿½ï¿½ï¿½.
+		to do: Ê¶ï¿½ð¾¡¿ï¿½ï¿½Ü¶ï¿½ï¿½ï¿½ï¿½ÖªÐ­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½hashÖµ.
 	*/
 	return 0;
 
@@ -1315,7 +1319,7 @@ static int gen_route_dir_for_dumpfile_mode(const u_char *data)
 	}
 
 	/* 
-		todo, Á½¸öIPµØÖ·Ò»ÑùÔõÃ´°ì? ±ÈÈç127.0.0.1±¾»úÍ¨ÐÅ, ÔÙ±È¶Ë¿Ú.
+		todo, ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Ö·Ò»ï¿½ï¿½ï¿½ï¿½Ã´ï¿½ï¿½? ï¿½ï¿½ï¿½ï¿½127.0.0.1ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½, ï¿½Ù±È¶Ë¿ï¿½.
 	*/
 
 	return route_dir;
@@ -1349,6 +1353,7 @@ static void __pcap_pkt_handle(u_char *user, const struct pcap_pkthdr *hdr, const
 
 			dumpfile_wait_according_timestamp(hdr);
 		}
+		__pcap_nodify_work_thread(PCAP_OP_FLAG_IDLE_POLLING);
 	}
 
 #if 0
@@ -1366,7 +1371,7 @@ retry:
 	}else{
 		if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
 			sapp_usleep(1);
-			goto retry;  /* ÔÚ¶Á°üÄ£Ê½ÏÂ, ±£Ö¤²»Òò¶ÓÁÐÂú¶ø¶ª°ü */
+			goto retry;  /* ï¿½Ú¶ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½, ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		}
 		pcap_app_drop_num[thread_num]++;
 	}
@@ -1388,17 +1393,17 @@ retry:
 	memcpy((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data), data, hdr->caplen);
 	//pkt_queue_node.raw_pkt.raw_pkt_len = hdr->len;
 	/* 2015-09-28 lijia modify,
-		´Ë´¦ÒªÊ¹ÓÃcaplen, ÒòÎª¿ÉÄÜÓÉÓÚÃ»ÓÐ¼Ó-s0Ñ¡Ïî, Êµ¼Ê²¶°üÓëÀíÂÛ°ü³¤²»Ò»ÖÂ!
+		ï¿½Ë´ï¿½ÒªÊ¹ï¿½ï¿½caplen, ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ð¼ï¿½-s0Ñ¡ï¿½ï¿½, Êµï¿½Ê²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Û°ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½!
 	*/
 	pkt_queue_node.raw_pkt.__lib_raw_pkt_len = hdr->caplen;
 	
-	/* pcap°üÍ·µÄtimestamp¿ÉÄÜÊÇ32bitµÄ, Ê¹ÓÃµ¥¶À¸³ÖµÓï¾ä */
+	/* pcapï¿½ï¿½Í·ï¿½ï¿½timestampï¿½ï¿½ï¿½ï¿½ï¿½ï¿½32bitï¿½ï¿½, Ê¹ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ */
 	pkt_queue_node.raw_pkt.raw_pkt_ts.tv_sec = hdr->ts.tv_sec;
 	pkt_queue_node.raw_pkt.raw_pkt_ts.tv_usec = hdr->ts.tv_usec;
 	pkt_queue_node.raw_pkt.low_layer_type = (enum addr_type_t)g_pcap_cap_level;
 	pkt_queue_node.raw_pkt.magic_num = RAW_PKT_MAGIC_NUM; /* 2014-12-11 lijia add */
-	pkt_queue_node.raw_pkt.hd_hash = 0; /* 2016-05-05 lijia add, pcapÄ£Ê½²»Ö§³ÖÓ²¼þHASH */
-	pkt_queue_node.raw_pkt.io_lib_pkt_reference = pkt_queue_node.raw_pkt.__lib_raw_pkt_data; /* ¼æÈÝdpdkÄ£Ê½, ½«´Ë±äÁ¿¸³Öµ */
+	pkt_queue_node.raw_pkt.hd_hash = 0; /* 2016-05-05 lijia add, pcapÄ£Ê½ï¿½ï¿½Ö§ï¿½ï¿½Ó²ï¿½ï¿½HASH */
+	pkt_queue_node.raw_pkt.io_lib_pkt_reference = pkt_queue_node.raw_pkt.__lib_raw_pkt_data; /* ï¿½ï¿½ï¿½ï¿½dpdkÄ£Ê½, ï¿½ï¿½ï¿½Ë±ï¿½ï¿½ï¿½ï¿½ï¿½Öµ */
 	pkt_queue_node.raw_pkt.vlan_flipping_couple[0] = 0;
 	pkt_queue_node.raw_pkt.vlan_flipping_couple[1] = 0;
 	pkt_queue_node.raw_pkt.mac_flipping_enable = 0;
@@ -1408,7 +1413,7 @@ retry:
 	pkt_queue_node.raw_pkt.d_pkt = NULL;
 
 	if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode){
-		/* ¶Á°üÄ£Ê½ÏÂ±¾À´Ã»ÓÐroutedirµÄ¸ÅÄî, ÎªÁË±ãÓÚ²âÊÔÉÏ²ãÒµÎñ, Ê¹ÓÃ×îµ×²ãµØÖ·±È½ÏËã³öÒ»¸öroutedir */
+		/* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Â±ï¿½ï¿½ï¿½Ã»ï¿½ï¿½routedirï¿½Ä¸ï¿½ï¿½ï¿½, Îªï¿½Ë±ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½Ï²ï¿½Òµï¿½ï¿½, Ê¹ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½Ö·ï¿½È½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½routedir */
 		pkt_queue_node.raw_pkt.route_dir = gen_route_dir_for_dumpfile_mode(data);
 	}else{
 		pkt_queue_node.raw_pkt.route_dir = *((unsigned char *)user);
@@ -1439,11 +1444,11 @@ retry:
 			{
 				MESA_sleep();
 			}
-			goto retry; /* ÔÚ¶Á°üÄ£Ê½ÏÂ, ±£Ö¤²»Òò¶ÓÁÐÂú¶ø¶ª°ü, Òª²»¶ÏÖØÊÔ */
+			goto retry; /* ï¿½Ú¶ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½, ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		}
 		else
 		{
-			pcap_app_drop_num[thread_num]++; /* ÔÚÏßÄ£Ê½¼ÇÂ¼¶ª°üÊý */
+			pcap_app_drop_num[thread_num]++; /* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 			PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
 		}
 	}
@@ -1504,7 +1509,7 @@ static void wait_all_work_thread(void)
 
 
 	if(1 == update_packet_io_status_sw){
-		sysinfo_output(); /* ×îºóÒ»´ÎÐ´Í³¼ÆÐÅÏ¢, ¹Ø±Õ±êÖ¾Î», ÒòÎªÁ÷±í½«±»Çå¿Õ, ÔÙÐ´¾ÍÃ»ÒâÒåÁË */
+		sysinfo_output(); /* ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ð´Í³ï¿½ï¿½ï¿½ï¿½Ï¢, ï¿½Ø±Õ±ï¿½Ö¾Î», ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ð´ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		update_packet_io_status_sw = 0;
 	}
 	
@@ -1571,7 +1576,7 @@ static void pcap_io_dumpfile_list(void)
 			pcap_close(pcap_handle);
 			pcap_up_handle = NULL;
 
-			dumpfile_timestamp_diff_with_start = 0; /* Ã¿¸öpcap°üµÄÊ±¼ä´Á¶¼²»Ò»Ñù, ´¦ÀíÍêºóÖØÖÃÏà¶ÔÊ±¼ä´Á */
+			dumpfile_timestamp_diff_with_start = 0; /* Ã¿ï¿½ï¿½pcapï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ */
 		}
 		pcap_file_num++;
 		dumpfile_list_total_pkt+=dumpfile_total_cnt;
@@ -1589,7 +1594,7 @@ static void pcap_io_dumpfile_list(void)
 
 static void *pcap_io_thread(void *arg)
 {
-	long route_dir_arg = (long)arg; /* ÌÓ¹ý±àÒëÆ÷precision¼ì²é */
+	long route_dir_arg = (long)arg; /* ï¿½Ó¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½precisionï¿½ï¿½ï¿½ */
 	unsigned char route_dir = (unsigned char)route_dir_arg;
 	pcap_t *handle;
 	int pcap_ret;
@@ -1597,7 +1602,7 @@ static void *pcap_io_thread(void *arg)
 	volatile int *stop_flag;
 	int exit_prog_flag = 0;
 
-#if(__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__ >= 480) /* °æ±¾ÅÐ¶Ï, ºÜ¶à¾ÉÏµÍ³ÎÞ·¨±àÒë */
+#if(__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__ >= 480) /* ï¿½æ±¾ï¿½Ð¶ï¿½, ï¿½Ü¶ï¿½ï¿½ÏµÍ³ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ */
 #ifdef _GNU_SOURCE
 	pthread_setname_np(pthread_self(), "sapp");
 #endif
@@ -1669,7 +1674,7 @@ int pcap_dl_io_init(int argc, char *argv[])
 	printf("\033[41m Warning! 'PCAP_CAP_FROM_IP' is enable!. \033[0m\n");
 #endif
 
-	if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode) /* pcap±¾µØ¶Á°üÄ£Ê½ */	
+	if(CAP_MODEL_PCAP_DUMPFILE == g_pcap_cap_mode) /* pcapï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½Ä£Ê½ */	
 	{
 		if(g_pcap_topology_mode & __NET_CONN_SERIAL){
 			printf("\033[1;31;40m[Error]cap_mode is %d, but topology is serial!\033[0m\n", g_pcap_cap_mode);
@@ -1679,7 +1684,7 @@ int pcap_dl_io_init(int argc, char *argv[])
 		process_bar_prt_init(sapp_global_val->config.packet_io.pcap_dumpfile_name);
 #endif
 		if(sapp_get_cla_raw("dumpfile-list", &no_use) >= 0){
-			;//¶ÁÁÐ±íÄ£Ê½, ÎÞÐè´Ë´¦´ò¿ªdumpfileÎÄ¼þ
+			;//ï¿½ï¿½ï¿½Ð±ï¿½Ä£Ê½, ï¿½ï¿½ï¿½ï¿½Ë´ï¿½ï¿½ï¿½dumpfileï¿½Ä¼ï¿½
 		}else{
 			time_t curtime;
 			char *str;
@@ -1698,9 +1703,9 @@ int pcap_dl_io_init(int argc, char *argv[])
 
 
 		pcap_set_filter(pcap_up_handle, g_pcap_cap_filter);
-		//g_pcap_topology_model = NET_CONN_PARA_NOSEND; /* ±¾µØ¶Á°üÄ£Ê½£¬ÍøÂçÍØÆËÄ£Ê½ÉèÎª²¢Áª²»·¢°ü */
+		//g_pcap_topology_model = NET_CONN_PARA_NOSEND; /* ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	}
-	else /* ÍøÂç×¥°üÄ£Ê½ */
+	else /* ï¿½ï¿½ï¿½ï¿½×¥ï¿½ï¿½Ä£Ê½ */
 	{
 		if((strncasecmp(sapp_global_val->config.packet_io.deployment_mode_str, "transparent", strlen("transparent")) == 0)
 		  && (strstr(sapp_global_val->config.packet_io.pcap_capture_direction, "out") != NULL)){
@@ -1728,9 +1733,9 @@ int pcap_dl_io_init(int argc, char *argv[])
 		if(pcap_device_up_mtu < 1500){
 			printf("\033[41m Warning! '%s' MTU is %d!. \033[0m\n", g_pcap_up_dev_name, pcap_device_up_mtu);
 		}
-		pcap_device_up_mtu += sizeof(struct mesa_ethernet_hdr); /* MTU²»º¬ethernet²ã³¤¶È, µ«pcap²¶°üÊÇ°üÀ¨µÄ, ÐèÒª¼ÓÉÏÕâ¸öÍ·²¿ */
+		pcap_device_up_mtu += sizeof(struct mesa_ethernet_hdr); /* MTUï¿½ï¿½ï¿½ï¿½ethernetï¿½ã³¤ï¿½ï¿½, ï¿½ï¿½pcapï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ */
 		
-		if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode) /* Ë«Íø¿¨´®ÁªÄ£Ê½ */	
+		if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode) /* Ë«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ */	
 		{
 			pcap_down_handle = pcap_open_live(g_pcap_down_dev_name, PCAP_SNAPLEN_MAX,1,1,pcap_errbuf);
 			if(NULL == pcap_down_handle)
@@ -1744,7 +1749,7 @@ int pcap_dl_io_init(int argc, char *argv[])
 			if(pcap_device_down_mtu < 1500){
 				printf("\033[41m Warning! '%s' MTU is %d!. \033[0m\n", g_pcap_down_dev_name, pcap_device_down_mtu);
 			}
-			pcap_device_down_mtu += sizeof(struct mesa_ethernet_hdr); /* MTU²»º¬ethernet²ã³¤¶È, µ«pcap²¶°üÊÇ°üÀ¨µÄ, ÐèÒª¼ÓÉÏÕâ¸öÍ·²¿ */
+			pcap_device_down_mtu += sizeof(struct mesa_ethernet_hdr); /* MTUï¿½ï¿½ï¿½ï¿½ethernetï¿½ã³¤ï¿½ï¿½, ï¿½ï¿½pcapï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ */
 			pcap_set_filter(pcap_down_handle, g_pcap_cap_filter);
 			pcap_setdirection(pcap_down_handle, PCAP_D_IN);
 		}
@@ -1764,7 +1769,7 @@ int pcap_dl_io_init(int argc, char *argv[])
 	}else{
 		if(strncasecmp(dumpfile_speed_mode, "timestamp", strlen("timestamp")) == 0){
 			dumpfile_according_timestamp = 1;	
-			dumpfile_timestamp_diff_with_start = 0;/* ³õÊ¼»¯Éè³É0, ¶ÁÈ¡µ½µÚÒ»¸ö°üÊ±¼ÆËãÓëpcap°üµÄÊ±¼ä´Á²îÖµ */
+			dumpfile_timestamp_diff_with_start = 0;/* ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½0, ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pcapï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Öµ */
 		}
 	}
 #endif
@@ -1794,7 +1799,7 @@ void pcap_dl_io_run(void)
 	pthread_create(&g_pcap_io_pid_up, NULL, pcap_io_thread, (void *)dir_up);
 	pthread_detach(g_pcap_io_pid_up);
 	
-	if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode){ /* Ë«Íø¿¨´®ÁªÄ£Ê½ */	
+	if(NET_CONN_SERIAL_2CARD == g_pcap_topology_mode){ /* Ë«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ */	
 		pthread_create(&g_pcap_io_pid_down, NULL, pcap_io_thread, (void *)dir_down);
 		pthread_detach(g_pcap_io_pid_down);
 	}
@@ -1802,7 +1807,7 @@ void pcap_dl_io_run(void)
 	return;
 }
 
-/* pcap Ä£Ê½¿ÉÄÜ±»pcap_loop()×èÈû, ÐèÒªÖ÷¶¯µ÷ÓÃpcap_breakloop()ÍË³öËÀÑ­»·×´Ì¬ */
+/* pcap Ä£Ê½ï¿½ï¿½ï¿½Ü±ï¿½pcap_loop()ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pcap_breakloop()ï¿½Ë³ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½×´Ì¬ */
 void pcap_dl_io_stop(void)
 {
 	char *no_use;
