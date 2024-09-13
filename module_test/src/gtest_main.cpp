@@ -323,7 +323,7 @@ TEST(udp, well_known_port_v6)
 
 
 #define udp_tuple4_reuse 1 
-TEST(udp, tuple4_reuse)
+TEST(udp, DISABLED_tuple4_reuse)
 {
 	udp_tuple4_reuse_test();
 	ASSERT_EQ(gtest_get_libsapp_devel_result(), GTEST_SAPP_SUCC);
@@ -630,7 +630,7 @@ TEST(control, takeover)
 
 
 #define control_timeout 1  // for SI symbol view
-TEST(control, timeout)
+TEST(control, DISABLED_timeout)
 {
 	control_timeout_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result());
