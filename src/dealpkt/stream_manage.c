@@ -564,37 +564,30 @@ int lrustream(struct streamindex *pindex)
 		plist=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->tcpList[pstream->stream_state]);
 
 	}
-	if(1 == del_stream_by_time(plist, pindex, pstream->threadnum, pstream->type))
-	{
-		return 1;	
-	}
-	else
-	{
-        if (pstream->stream_state == TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
+    if (pstream->stream_state == TCP_SYN_STATE && pstream->type == STREAM_TYPE_TCP)
+    {
+        timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout * 1000 + g_CurrentTime_ms);
+    }
+    else if (pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP &&
+             (sapp_global_val->config.stream.tcp.fast_close_discard == 1))
+    {
+        if (pstream_pr->set_special_timeout == 0)
         {
-            timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_opening_timeout * 1000 + g_CurrentTime_ms);
-        }
-        else if (pstream->stream_state == TCP_NOUSE_STATE && pstream->type == STREAM_TYPE_TCP &&
-                (sapp_global_val->config.stream.tcp.fast_close_discard == 1))
-        {
-			if(pstream_pr->set_special_timeout==0)
-			{
-   	         	timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout * 1000 + g_CurrentTime_ms);
-			}
-			else
-			{
-				 timeouts_add(plist->streamindex_timer, &pindex->timeout, pindex->stream.timeout * 1000 + g_CurrentTime_ms);
-			}
+            timeouts_add(plist->streamindex_timer, &pindex->timeout, tcp_closing_timeout * 1000 + g_CurrentTime_ms);
         }
         else
         {
-            long set_timeout = pindex->stream.timeout;
-            if (set_timeout == 0)
-                set_timeout = MAX_DEFALUT_TIMEOUT_S;
-            timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout * 1000 + g_CurrentTime_ms);
+            timeouts_add(plist->streamindex_timer, &pindex->timeout, pindex->stream.timeout * 1000 + g_CurrentTime_ms);
         }
     }
-	return 0;
+    else
+    {
+        long set_timeout = pindex->stream.timeout;
+        if (set_timeout == 0)
+            set_timeout = MAX_DEFALUT_TIMEOUT_S;
+        timeouts_add(plist->streamindex_timer, &pindex->timeout, set_timeout * 1000 + g_CurrentTime_ms);
+    }
+	return del_stream_by_time(plist, pindex, pstream->threadnum, pstream->type);
 }
 
 static int cmpaddr_mpls(const struct layer_addr_mpls *addr_heap, const struct layer_addr_mpls  *addr_stack)
