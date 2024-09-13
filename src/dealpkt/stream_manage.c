@@ -511,6 +511,7 @@ int del_stream_by_time(struct stream_list *plist, const struct streamindex *curr
                 }
                 else
                 {
+					 timeouts_add(plist->streamindex_timer, t, g_CurrentTime_ms);
                     if (type == STREAM_TYPE_UDP)
                         local_sys_stat->count[SAPP_STAT_UDP_TIMEOUTS_OVERSPEED]++;
                     else if (type == STREAM_TYPE_TCP)
