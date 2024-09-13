@@ -962,6 +962,11 @@ static void pcap_clear_pkt_queue_left(int thread_index)
 				PCAP_FREE((void *)(pkt_queue_node.raw_pkt.__lib_raw_pkt_data));
 			}
 		}
+		else if (PCAP_OP_FLAG_IDLE_POLLING == pkt_queue_node.op_flag)
+		{
+			idle_polling_call(thread_index);
+			polling_stream_timeout(thread_index);
+		}
 	}
 }
 

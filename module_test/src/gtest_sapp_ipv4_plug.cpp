@@ -147,3 +147,10 @@ extern "C" char iplayer_readjust_time_entry(const struct streaminfo *pstream, un
 	g_current_time = g_current_time_ms / 1000;
 	return APP_STATE_GIVEME;
 }
+
+extern "C" char timer_add_1s_polling_entry(struct streaminfo *stream ,  void **pme , int thread_seq ,void *a_packet )
+{
+		if(g_current_time_ms >= 0)g_current_time_ms+=1000;
+		return POLLING_STATE_IDLE;
+}
+

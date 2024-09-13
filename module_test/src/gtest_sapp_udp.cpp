@@ -49,6 +49,7 @@ void udp_link_c2s_1pkt_run(void)
 	update_plugin_inf("IP", "iplayer_readjust_time_entry");
 	append_plugin_inf("UDP", "udp_link_c2s_1pkt_entry");
 	append_plugin_inf("TCP", "udp_link_check_result_tcp_entry");
+	append_plugin_inf("POLLING", "timer_add_1s_polling_entry");
 
 	set_pcap_dumpfile("for_gtest_only/udp/udp_C2S_1.pcap");
 

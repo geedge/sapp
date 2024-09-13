@@ -21,7 +21,7 @@ void control_max_unorder_run(void)
 {
 	set_default_config();
 #if SAPP_V3
-	update_config_file("conf/main.conf", "MaxUnorderNum", "3"); /* È«¾Ö×î´óÂÒÐòÊýÐ¡ÓÚÊµ¼ÊÂÒÐòµÄ°ü¼ä¸ô, »áµ¼ÖÂÈÏÎªÊÇ¶ª°ü */
+	update_config_file("conf/main.conf", "MaxUnorderNum", "3"); /* È«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä°ï¿½ï¿½ï¿½ï¿½, ï¿½áµ¼ï¿½ï¿½ï¿½ï¿½Îªï¿½Ç¶ï¿½ï¿½ï¿½ */
 #elif SAPP_V4
 	update_config_file("etc/sapp.toml", "reorder_pkt_max", "3");
 #else 
@@ -81,6 +81,7 @@ void control_timeout_run(void)
 #endif
 	update_plugin_inf("IP", "iplayer_readjust_time_entry");
 	append_plugin_inf("TCP", "ctrl_tcp_timeout_entry");
+	append_plugin_inf("POLLING", "timer_add_1s_polling_entry");
 	
 	set_pcap_dumpfile("tcp/tcp_timeout_reset.pcap");
 
@@ -200,7 +201,7 @@ void control_tunnel_type_l2tp_run(void)
 {
 	set_default_config();
 
-	/* l2tpÊ¶±ðÄ¿Ç°ÐèÒª¹ÒÔØl2tp_protocol²å¼þ */
+	/* l2tpÊ¶ï¿½ï¿½Ä¿Ç°ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½l2tp_protocolï¿½ï¿½ï¿½ */
 	insert_into_conflist_inf("protocol", "./plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.inf");
 	
 	update_plugin_inf("TCP", "ctrl_tunnel_l2tp_entry");
@@ -230,7 +231,7 @@ void control_tunnel_type_gtp_run(void)
 	set_default_config();
 	
 #if SAPP_V3	
-	update_config_file("conf/main.conf", "CreatLinkMode", "3"); /* gtp_simple.pcapÃ»ÓÐsyn°ü */
+	update_config_file("conf/main.conf", "CreatLinkMode", "3"); /* gtp_simple.pcapÃ»ï¿½ï¿½synï¿½ï¿½ */
 #elif SAPP_V4
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 #else
@@ -244,7 +245,7 @@ void control_tunnel_type_gtp_run(void)
 	call_libsapp_devel_with_args(2, sapp_start_args);
 }
 
-/* ²âÊÔsapp_get_platform_opt()½Ó¿ÚÏà¹Ø¹¦ÄÜ */
+/* ï¿½ï¿½ï¿½ï¿½sapp_get_platform_opt()ï¿½Ó¿ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½ï¿½ */
 void control_stream_and_traffic_run(void)
 {
 	set_default_config();
@@ -272,7 +273,7 @@ void project_simple_run(void)
 {
 	set_default_config();
 
-	/* ¸üÐÂgtest.inf */
+	/* ï¿½ï¿½ï¿½ï¿½gtest.inf */
 	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "project_test_init", NULL, "TCP", "project_customer_entry");	
 	append_plugin_inf("TCP_ALL", "project_producer_entry");
 	
@@ -293,18 +294,18 @@ void project_simple_run(void)
 	call_libsapp_devel_with_args(2, sapp_start_args);
 }
 
-#if 0 //ÓÃbridge½Ó¿Ú´úÌæ
+#if 0 //ï¿½ï¿½bridgeï¿½Ó¿Ú´ï¿½ï¿½ï¿½
 void project_nodify_run(void)
 {
 	set_default_config();
 
-	/* ¸üÐÂgtest.inf */
+	/* ï¿½ï¿½ï¿½ï¿½gtest.inf */
 	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "project_test_init", NULL, "TCP", "project_customer_entry");	
 
-	/* project_producer_notify_entry ×¢²áµ½TCP_ALL, ±£Ö¤ÒªÏÈÓÚTCP²å¼þµ÷ÓÃ, ÏÈ²åÈëprojectÖµ */	
+	/* project_producer_notify_entry ×¢ï¿½áµ½TCP_ALL, ï¿½ï¿½Ö¤Òªï¿½ï¿½ï¿½ï¿½TCPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½È²ï¿½ï¿½ï¿½projectÖµ */	
 	append_plugin_inf("TCP_ALL", "project_producer_notify_entry");
 
-	/* ¸´ÓÃsapp_appstate²âÊÔÓÃÀýµÄ²å¼þÄ¿Â¼, ÓÃÀ´²âÊÔproject nofity¹¦ÄÜ */
+	/* ï¿½ï¿½ï¿½ï¿½sapp_appstateï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½ï¿½Ä¿Â¼, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½project nofityï¿½ï¿½ï¿½ï¿½ */
 	update_plugin_inf_with_options("./plug/business/gtest_sapp_appstate_1", "notify1", "project_nofity_custom1_init", NULL, "TCP", "project_customer_entry1");
 	update_plugin_inf_with_options("./plug/business/gtest_sapp_appstate_2", "notify2", "project_nofity_custom2_init", NULL, "TCP", "project_customer_entry2");
 
@@ -349,8 +350,8 @@ void timer_simple_run(void)
 	update_plugin_inf("TCP_ALL", "timer_tcpall_entry");
 
 	/* 
-		¹¹ÔìÒ»¸öpcap°ü, Ê¹Æä¼ä¸ô·Ç³£³¤, Ê¹ÓÃ--dumpfile-speed=timestamp²ÎÊý,±£Ö¤Æ½Ì¨³¤Ê±¼ä²»ÍË³ö!
-		Èç¹ûÊÇpcap_onlineÄ£Ê½²¶»ñlo¿¨,·Ç³£¿ÉÄÜÃ»ÓÐÊý¾Ý,µ¼ÖÂ²å¼þ²»»á±»µ÷ÓÃ.
+		ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½pcapï¿½ï¿½, Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½Ç³ï¿½ï¿½ï¿½, Ê¹ï¿½ï¿½--dumpfile-speed=timestampï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½Ö¤Æ½Ì¨ï¿½ï¿½Ê±ï¿½ä²»ï¿½Ë³ï¿½!
+		ï¿½ï¿½ï¿½ï¿½ï¿½pcap_onlineÄ£Ê½ï¿½ï¿½ï¿½ï¿½loï¿½ï¿½,ï¿½Ç³ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Â²ï¿½ï¿½ï¿½ï¿½ï¿½á±»ï¿½ï¿½ï¿½ï¿½.
 	*/
 	set_pcap_dumpfile("for_gtest_only/timer/timer_tcp_test.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "7bfc59d66bb44f76603cd6cedfd19091"),0);
@@ -369,7 +370,7 @@ void timer_simple_run(void)
 	while(sapp_get_current_state() != SAPP_STATE_PROCESSING){
 		usleep(10);
 	}
-	/* ×¢Òâ: ´Ë´¦ÐèÒª¶îÍâ¶ÀÁ¢sleep() 10ÃëÒÔÉÏ!! */
+	/* ×¢ï¿½ï¿½: ï¿½Ë´ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sleep() 10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½!! */
 	sleep(12);
 	
 	libsapp_destroy_env();
@@ -420,7 +421,7 @@ void global_stream_id_tuple4_reuse_run(void)
 }
 
 /*
-	²âÊÔËÄÔª×éÖØÓÃºó, Á÷µÄ´´½¨Ê±¼äÊÇ·ñ¸üÐÂ.
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½Ãºï¿½, ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½.
 */
 void stream_creattime_tuple4_reuse_run(void)
 {
@@ -488,7 +489,7 @@ void control_platform_opt_run(void)
 {
 	set_default_config();
 
-	/* ¸üÐÂgtest.inf, ´Ë´¦Ö÷ÒªÊÇ¸üÐÂtest_get_platform_opt_init()º¯Êý, ²å¼þÆäÊµÎÞËùÎ½, Ëæ±ã¼Ó¸ötcp²å¼þ */
+	/* ï¿½ï¿½ï¿½ï¿½gtest.inf, ï¿½Ë´ï¿½ï¿½ï¿½Òªï¿½Ç¸ï¿½ï¿½ï¿½test_get_platform_opt_init()ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½Î½, ï¿½ï¿½ï¿½Ó¸ï¿½tcpï¿½ï¿½ï¿½ */
 	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "test_get_platform_opt_init", NULL, "TCP", "tcp_simple");
 
 	set_pcap_dumpfile("tcp/tcp_simple.pcap");
@@ -518,12 +519,12 @@ void control_stream_create_timestamp_ms_run(void)
 }
 
 
-/* ²âÊÔ»ñÈ¡µ±Ç°²ãÉÏ²ã³ÐÔØµÄËíµÀ, Óëµ×²ãËíµÀ²»Í¬ */
+/* ï¿½ï¿½ï¿½Ô»ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ï²ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ */
 void control_up_layer_tunnel_gtp_run(void)
 {
 	set_default_config();
 
-	/* gtp_dns.pcapÓÐ¼¸¸öÖØ¸´Êý¾Ý°ü, µÃ¹Ø±ÕÖØ¸´°ü¼ì²â¹¦ÄÜ */
+	/* gtp_dns.pcapï¿½Ð¼ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½Ý°ï¿½, ï¿½Ã¹Ø±ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½â¹¦ï¿½ï¿½ */
 	update_config_file("etc/sapp.toml", "original_ipv4_udp_enabled", "0");
 	update_config_file("etc/sapp.toml", "inject_all_enabled", "0");
 
@@ -537,12 +538,12 @@ void control_up_layer_tunnel_gtp_run(void)
 }
 
 
-/* ²âÊÔ»ñÈ¡µ±Ç°²ãÉÏ²ã³ÐÔØµÄËíµÀ, Óëµ×²ãËíµÀ²»Í¬ */
+/* ï¿½ï¿½ï¿½Ô»ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ï²ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ */
 void control_up_layer_tunnel_l2tp_run(void)
 {
 	set_default_config();
 
-	/* l2tpÊ¶±ðÄ¿Ç°ÐèÒª¹ÒÔØl2tp_protocol²å¼þ */
+	/* l2tpÊ¶ï¿½ï¿½Ä¿Ç°ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½l2tp_protocolï¿½ï¿½ï¿½ */
 	insert_into_conflist_inf("protocol", "./plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.inf");
 
 	update_plugin_inf("UDP", "up_layer_tunnel_l2tp_entry");
@@ -555,7 +556,7 @@ void control_up_layer_tunnel_l2tp_run(void)
 }
 
 
-/* ²âÊÔ»ñÈ¡µ±Ç°²ãÉÏ²ã³ÐÔØµÄËíµÀ, Óëµ×²ãËíµÀ²»Í¬ */
+/* ï¿½ï¿½ï¿½Ô»ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ï²ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ */
 void control_up_layer_tunnel_teredo_run(void)
 {
 	set_default_config();
@@ -570,20 +571,20 @@ void control_up_layer_tunnel_teredo_run(void)
 }
 
 
-/* ²âÊÔ²å¼þµÄpme */
+/* ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½ï¿½pme */
 void control_get_plug_pme_run(void)
 {
 	set_default_config();
 
-	update_plugin_inf("TCP", "void_entry"); /* ´Ë²å¼þÖ÷ÒªÓÃÓÚµ÷ÓÃ gtest_sapp_slave_init, entryº¯ÊýÉ¶Ò²²»¸É */
+	update_plugin_inf("TCP", "void_entry"); /* ï¿½Ë²ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ gtest_sapp_slave_init, entryï¿½ï¿½ï¿½ï¿½É¶Ò²ï¿½ï¿½ï¿½ï¿½ */
 
 	update_plugin_inf_with_options("./plug/business/gtest_get_plug_pme1", "get_plug_pme1", "get_plug_pme_init", NULL, "TCP_ALL", "get_plug_pme_tcpall_entry");
 	update_plugin_inf_with_options("./plug/business/gtest_get_plug_pme2", "get_plug_pme2", "get_plug_pme_init", NULL, "TCP", "get_plug_pme_tcp_entry");
 
-	/* ÐèÒª×¢Òâ: 
-		sapp¼ÓÔØbusiness²å¼þÊÇdlopen + RTLD_LOCAL±¾µØÄ£Ê½, ²¢²»ÊÇ-l¿¿ÏµÍ³×Ô¶¯¼ÓÔØµÄ, 
-		Á½¸ö²»Í¬²å¼þµÄÈë¿Úº¯ÊýÃû³ÆËäÈ»Ò»Ñù, µ«ÄÚ´æµØÖ·Êµ¼ÊÊÇ²»Ò»ÑùµÄ!! 
-		ËùÒÔÐèÒª¼ÓÔØµ½platform²ã.	
+	/* ï¿½ï¿½Òª×¢ï¿½ï¿½: 
+		sappï¿½ï¿½ï¿½ï¿½businessï¿½ï¿½ï¿½ï¿½ï¿½dlopen + RTLD_LOCALï¿½ï¿½ï¿½ï¿½Ä£Ê½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-lï¿½ï¿½ÏµÍ³ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½Øµï¿½, 
+		ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È»Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ö·Êµï¿½ï¿½ï¿½Ç²ï¿½Ò»ï¿½ï¿½ï¿½ï¿½!! 
+		ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Øµï¿½platformï¿½ï¿½.	
 	*/
 	update_plugin_inf_with_options("./plug/platform/gtest_get_plug_pme3", "get_plug_pme3", "get_plug_pme_init", NULL, "UDP", "get_plug_pme_udp_entry1");
 	update_plugin_inf_with_options("./plug/platform/gtest_get_plug_pme4", "get_plug_pme4", "get_plug_pme_init", NULL, "UDP", "get_plug_pme_udp_entry2");
@@ -608,12 +609,12 @@ void control_get_plug_pme_run(void)
 }
 
 
-/* ²âÊÔ±ØÒª²å¼þµÄ³õÊ¼»¯, ²å¼þ.infºÍ.so¶¼´æÔÚ, init()º¯Êý·µ»Ø´íÎó */
+/* ï¿½ï¿½ï¿½Ô±ï¿½Òªï¿½ï¿½ï¿½ï¿½Ä³ï¿½Ê¼ï¿½ï¿½, ï¿½ï¿½ï¿½.infï¿½ï¿½.soï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, init()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½ */
 void control_plug_necessary_run(void)
 {
 	set_default_config();
 	
-	/* Ä¬ÈÏ½á¹ûÊÇ³É¹¦, ³ý·Ç²å¼þ·¢ËÍ´íÎó½á¹û */
+	/* Ä¬ï¿½Ï½ï¿½ï¿½ï¿½Ç³É¹ï¿½, ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½ï¿½ï¿½Í´ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	gtest_set_timeout_default_result(GTEST_SAPP_SUCC);
 
 	update_plugin_inf_with_options("./plug/business/necessary", "plug_necessary", "plug_necessary_init", NULL, "TCP", "plug_necessary_not_call_entry");
@@ -633,12 +634,12 @@ void control_plug_necessary_run(void)
 	call_libsapp_devel_with_args(2, sapp_start_args);
 }
 
-/* ²âÊÔ±ØÒª²å¼þµÄ³õÊ¼»¯,µ«ÊÇ²å¼þ.inf²»´æÔÚ, ¶ÁÈ¡²å¼þ.soÂ·¾¶, º¯Êý·ûºÅÃûµÈ»á³öÏÖ´íÎó */
+/* ï¿½ï¿½ï¿½Ô±ï¿½Òªï¿½ï¿½ï¿½ï¿½Ä³ï¿½Ê¼ï¿½ï¿½,ï¿½ï¿½ï¿½Ç²ï¿½ï¿½.infï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½È¡ï¿½ï¿½ï¿½.soÂ·ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È»ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ */
 void control_plug_necessary_run_no_inf(void)
 {
 	set_default_config();
 
-	/* Ä¬ÈÏ½á¹ûÊÇ³É¹¦, ³ý·Ç²å¼þ·¢ËÍ´íÎó½á¹û */
+	/* Ä¬ï¿½Ï½ï¿½ï¿½ï¿½Ç³É¹ï¿½, ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½ï¿½ï¿½Í´ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	gtest_set_timeout_default_result(GTEST_SAPP_SUCC);
 
 	update_plugin_inf_with_options("./plug/business/necessary", "plug_necessary", "plug_necessary_init", NULL, "TCP", "plug_necessary_not_call_entry");
@@ -647,7 +648,7 @@ void control_plug_necessary_run_no_inf(void)
 	append_conflist_inf("./plug/business/necessary/gtest_sapp.inf"); 
 	append_conflist_inf("./plug/business/indifferent/gtest_sapp.inf"); 
 	
-	system("rm -f ./plug/business/necessary/gtest_sapp.inf"); /* ¹ÊÒâÉ¾³ýnecessaryµÄ.infÎÄ¼þ */
+	system("rm -f ./plug/business/necessary/gtest_sapp.inf"); /* ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½necessaryï¿½ï¿½.infï¿½Ä¼ï¿½ */
 	
 	set_pcap_dumpfile("tcp/tcp_simple.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "df138740a6a22ca9c977052f21f7a470"),0);
@@ -658,12 +659,12 @@ void control_plug_necessary_run_no_inf(void)
 }
 
 
-/* ²âÊÔ±ØÒª²å¼þµÄ³õÊ¼»¯,²å¼þ.inf´æÔÚ, µ«ÊÇ.so²»´æÔÚ, dlopen»á³öÏÖ´íÎó */
+/* ï¿½ï¿½ï¿½Ô±ï¿½Òªï¿½ï¿½ï¿½ï¿½Ä³ï¿½Ê¼ï¿½ï¿½,ï¿½ï¿½ï¿½.infï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½.soï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, dlopenï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ */
 void control_plug_necessary_run_no_sofile(void)
 {
 	set_default_config();
 
-	/* Ä¬ÈÏ½á¹ûÊÇ³É¹¦, ³ý·Ç²å¼þ·¢ËÍ´íÎó½á¹û */
+	/* Ä¬ï¿½Ï½ï¿½ï¿½ï¿½Ç³É¹ï¿½, ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½ï¿½ï¿½Í´ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	gtest_set_timeout_default_result(GTEST_SAPP_SUCC);
 
 	update_plugin_inf_with_options("./plug/business/necessary", "plug_necessary", "plug_necessary_init", NULL, "TCP", "plug_necessary_not_call_entry");
@@ -672,7 +673,7 @@ void control_plug_necessary_run_no_sofile(void)
 	append_conflist_inf("./plug/business/necessary/gtest_sapp.inf"); 
 	append_conflist_inf("./plug/business/indifferent/gtest_sapp.inf"); 
 	
-	system("rm -f ./plug/business/necessary/libgtest_sapp.so"); /* ¹ÊÒâÉ¾³ýnecessaryµÄ.soÎÄ¼þ */
+	system("rm -f ./plug/business/necessary/libgtest_sapp.so"); /* ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½necessaryï¿½ï¿½.soï¿½Ä¼ï¿½ */
 	system("cp -f ./plug/business/gtest_sapp/libgtest_sapp.so ./plug/business/indifferent/");
 	
 	set_pcap_dumpfile("tcp/tcp_simple.pcap");
@@ -684,7 +685,7 @@ void control_plug_necessary_run_no_sofile(void)
 }
 
 
-/* ²âÊÔ²å¼þ»ñÈ¡ÖØ¸´Á÷Á¿×´Ì¬, tcp°ü */
+/* ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½ï¿½È¡ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬, tcpï¿½ï¿½ */
 void control_plug_dup_pkt_tcp_run(void)
 {
 	set_default_config();
@@ -705,7 +706,7 @@ void control_plug_dup_pkt_tcp_run(void)
 }
 
 
-/* ²âÊÔ²å¼þ»ñÈ¡ÖØ¸´Á÷Á¿×´Ì¬, udp°ü */
+/* ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½ï¿½È¡ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬, udpï¿½ï¿½ */
 void control_plug_dup_pkt_udp_run(void)
 {
 	set_default_config();
@@ -725,7 +726,7 @@ void control_plug_dup_pkt_udp_run(void)
 }
 
 /*
-	Í¨¹ýÃüÁîÐÐ²ÎÊý-cÐÞ¸ÄÅäÖÃÎÄ¼þ¸ùÄ¿Â¼, -DÐÞ¸ÄÊý¾ÝÎÄ¼þ¸ùÄ¿Â¼ºóµÄ²âÊÔ.
+	Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½ï¿½ï¿½-cï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ä¿Â¼, -Dï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ï¿½Ä²ï¿½ï¿½ï¿½.
 */
 void control_get_root_dir_run(void)
 {
@@ -754,9 +755,9 @@ void control_get_root_dir_run(void)
 
 	update_config_file("./etc/sapp.toml", "dumpfile_sleep_time_before_exit", "0");
 
-	/* ÒòÎªÅäÖÃÎÄ¼þÂ·¾¶Àï°üÀ¨'/', »áºÍsedÃüÁî³åÍ», ÐèÒªÊ¹ÓÃ¶þ´Î×ªÒå, 
-       µÚÒ»´ÎÓÃÁ½¸öÁ¬ÐøµÄ\\, ±íÊ¾ÕæÊµµÄ'\',
-       µÚ¶þ´Î×ªÒåºóÆäÊµ±ä³ÉÁË\x2F, ¶ÔÓÚsedÀ´Ëµ±íÊ¾ÕæÊµµÄ'/'
+	/* ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½'/', ï¿½ï¿½ï¿½sedï¿½ï¿½ï¿½ï¿½ï¿½Í», ï¿½ï¿½ÒªÊ¹ï¿½Ã¶ï¿½ï¿½ï¿½×ªï¿½ï¿½, 
+       ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\\, ï¿½ï¿½Ê¾ï¿½ï¿½Êµï¿½ï¿½'\',
+       ï¿½Ú¶ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½\x2F, ï¿½ï¿½ï¿½ï¿½sedï¿½ï¿½Ëµï¿½ï¿½Ê¾ï¿½ï¿½Êµï¿½ï¿½'/'
 	*/
 	update_config_file("./etc/sapp.toml", "cfg_file_sapp_log", "\\x22\\x2Ftmp\\x2Fsapp_change_root_dir_test\\x2Fconfig\\x2Fetc\\x2Fsapp_log.conf\\x22");
 	update_config_file("./etc/sapp.toml", "cfg_file_plug_list", "\\x22\\x2Ftmp\\x2Fsapp_change_root_dir_test\\x2Fconfig\\x2Fplug\\x2Fconflist.inf\\x22");
@@ -767,7 +768,7 @@ void control_get_root_dir_run(void)
 	update_plugin_inf("TCP", "ctrl_get_root_dir_entry");
 
 	
-	/* µÈÐÞ¸ÄÍêÄ¬ÈÏ²ÎÊýºó, ÔÙ½«Æäcopyµ½Ö¸¶¨²âÊÔÄ¿Â¼ÏÂ */
+	/* ï¿½ï¿½ï¿½Þ¸ï¿½ï¿½ï¿½Ä¬ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ù½ï¿½ï¿½ï¿½copyï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ï¿½ */
 	system("cp -f ./etc/sapp.toml /tmp/sapp_change_root_dir_test/config/sapp/etc/sapp.toml");
 	system("cp -f ./plug/conflist.inf /tmp/sapp_change_root_dir_test/config/plug/conflist.inf");
 	
@@ -777,7 +778,7 @@ void control_get_root_dir_run(void)
 	
 	call_libsapp_devel_with_args(8, sapp_change_root_dir_args);	
 
-	/* Ö´ÐÐÍêºóÔÙ¼ì²éÒ»ÏÂÊý¾ÝÄ¿Â¼ÊÇ·ñÓÐsysinfo.log, ÊÇ·ñÈÕÖ¾ÀïµÄÊý¾Ý·ûºÏÔ¤ÆÚ */
+	/* Ö´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¼ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ï¿½Ç·ï¿½ï¿½ï¿½sysinfo.log, ï¿½Ç·ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý·ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ */
 	ASSERT_EQ(expect_file_has_some_string("/tmp/sapp_change_root_dir_test/data/sysinfo.log", "17.75K"), 0);
 	ASSERT_EQ(expect_file_has_some_string("/tmp/sapp_change_root_dir_test/data/sysinfo.log", "16.82K"), 0);
 	ASSERT_EQ(expect_file_has_some_string("/tmp/sapp_change_root_dir_test/data/sysinfo.log", "13674"), 0);
@@ -785,13 +786,13 @@ void control_get_root_dir_run(void)
 
 
 /*
-	²âÊÔstream bridge½Ó¿Ú¹¦ÄÜ
+	ï¿½ï¿½ï¿½ï¿½stream bridgeï¿½Ó¿Ú¹ï¿½ï¿½ï¿½
 */
 void stream_bridge_test_run(void)
 {
 	set_default_config();
 	
-	/* ÖÁÉÙÐèÒªÈý¸ö²å¼þ²âÊÔbridge¹¦ÄÜ, ´´½¨Á½¸öÐÂ²å¼þÄ¿Â¼ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½bridgeï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â²ï¿½ï¿½Ä¿Â¼ */
 	system("mkdir -p ./plug/business/gtest_sapp_1");
 	system("mkdir -p ./plug/business/gtest_sapp_2");
 	system("cp ./plug/business/gtest_sapp/libgtest_sapp.so ./plug/business/gtest_sapp_1/");
@@ -801,7 +802,7 @@ void stream_bridge_test_run(void)
 	update_plugin_inf_with_options("./plug/business/gtest_sapp_1", "gtest1", "tcp_bridge_customer1_init", NULL, "TCP", "tcp_bridge_customer1_entry");
 	update_plugin_inf_with_options("./plug/business/gtest_sapp_2", "gtest2", "tcp_bridge_customer2_init", NULL, "TCP", "tcp_bridge_customer2_entry");
 	
-	/* ¸üÐÂ²å¼þconflist, µÚÒ»´ÎÊ¹ÓÃupdate, ºóÐøÊ¹ÓÃappend */
+	/* ï¿½ï¿½ï¿½Â²ï¿½ï¿½conflist, ï¿½ï¿½Ò»ï¿½ï¿½Ê¹ï¿½ï¿½update, ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½append */
 	update_conflist_inf("./plug/business/gtest_sapp/gtest_sapp.inf");
 	append_conflist_inf("./plug/business/gtest_sapp_1/gtest_sapp.inf"); 
 	append_conflist_inf("./plug/business/gtest_sapp_2/gtest_sapp.inf"); 
@@ -814,9 +815,9 @@ void stream_bridge_test_run(void)
 
 
 /*
-	²å¼þÍ¨¹ýËÄÔª×éÕÒµ½streaminfo²âÊÔ,
+	ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½Òµï¿½streaminfoï¿½ï¿½ï¿½ï¿½,
 
-	Í¨¹ý¶ÁÈ¡Ò»¶Ñpcap°ü, ´ÓÖÐ¾«È·ÕÒµ½Ò»¸öÁ÷.
+	Í¨ï¿½ï¿½ï¿½ï¿½È¡Ò»ï¿½ï¿½pcapï¿½ï¿½, ï¿½ï¿½ï¿½Ð¾ï¿½È·ï¿½Òµï¿½Ò»ï¿½ï¿½ï¿½ï¿½.
 */
 void find_streaminfo_v4_run(void)
 {
@@ -829,7 +830,7 @@ void find_streaminfo_v4_run(void)
 	
 	set_default_config();
 	
-	update_config_file("etc/sapp.toml", "worker_threads", "4"); /* °ÑÏß³ÌÊýÉè¶àÒ»Ð©, ²âÊÔÔÚ²»Í¬Ïß³ÌÀïpolling²éÕÒ¹¦ÄÜ */
+	update_config_file("etc/sapp.toml", "worker_threads", "4"); /* ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»Ð©, ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½Í¬ï¿½ß³ï¿½ï¿½ï¿½pollingï¿½ï¿½ï¿½Ò¹ï¿½ï¿½ï¿½ */
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "reorder_pkt_max", "100");
 	update_config_file("etc/sapp.toml", "timeout", "0");
@@ -856,7 +857,7 @@ void find_streaminfo_v6_run(void)
 	
 	set_default_config();
 	
-	update_config_file("etc/sapp.toml", "worker_threads", "6"); /* °ÑÏß³ÌÊýÉè¶àÒ»Ð©, ²âÊÔÔÚ²»Í¬Ïß³ÌÀïpolling²éÕÒ¹¦ÄÜ */
+	update_config_file("etc/sapp.toml", "worker_threads", "6"); /* ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»Ð©, ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½Í¬ï¿½ß³ï¿½ï¿½ï¿½pollingï¿½ï¿½ï¿½Ò¹ï¿½ï¿½ï¿½ */
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "reorder_pkt_max", "100");
 	update_config_file("etc/sapp.toml", "timeout", "0");
@@ -873,7 +874,7 @@ void find_streaminfo_v6_run(void)
 
 
 /*
-	ÄÚ²ãËÄÔª×éÒ»Ñù, µ«Íâ²ã²»Ò»ÑùµÄËÄÔª×éµØÖ·²éÑ¯.
+	ï¿½Ú²ï¿½ï¿½ï¿½Ôªï¿½ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ã²»Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ñ¯.
 */
 void find_streaminfo_diff_tunnel_v4_run(void)
 {	
@@ -905,10 +906,10 @@ void find_streaminfo_diff_tunnel_v4_run(void)
 
 
 /*
-	³ÌÐò±ÀÀ£ºóbreakpad»áforkÒ»¸öÐÂ½ø³Ì£¬ÊÕ¼¯±ÀÀ£ÏÖ³¡£¬²¢ÉÏ´«µ½·þÎñÆ÷£¬
-	´Ë¹ý³Ì»á¼Ì³Ðsapp¼àÌýµÄËùÓÐsocket£¬Èç¹ûminidumpÉÏ´«Ê±¼ä±È½Ï³¤£¬	
-	»áµ¼ÖÂsappÔÙÖØÆôÊ±»á·¢ÏÖ¶Ë¿Ú»¹ÔÚ±»minidumpÕ¼ÓÃ£¬¶øÎÞ·¨¼°Ê±Æô¶¯¡£
-	´ËÓÃÀýÓÃÓÚÑéÖ¤sappµÄsocketºÍÕ¼ÓÃ¶Ë¿ÚÊÇ·ñÄÜ±»¼°Ê±¹Ø±Õ.
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½breakpadï¿½ï¿½forkÒ»ï¿½ï¿½ï¿½Â½ï¿½ï¿½Ì£ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	ï¿½Ë¹ï¿½ï¿½Ì»ï¿½Ì³ï¿½sappï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½socketï¿½ï¿½ï¿½ï¿½ï¿½minidumpï¿½Ï´ï¿½Ê±ï¿½ï¿½È½Ï³ï¿½ï¿½ï¿½	
+	ï¿½áµ¼ï¿½ï¿½sappï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½á·¢ï¿½Ö¶Ë¿Ú»ï¿½ï¿½Ú±ï¿½minidumpÕ¼ï¿½Ã£ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤sappï¿½ï¿½socketï¿½ï¿½Õ¼ï¿½Ã¶Ë¿ï¿½ï¿½Ç·ï¿½ï¿½Ü±ï¿½ï¿½ï¿½Ê±ï¿½Ø±ï¿½.
 */
 void control_fork_listen_port_run(void)
 {
@@ -939,11 +940,11 @@ void control_fork_listen_port_run(void)
 	
 	call_libsapp_devel_with_args(3, sapp_timestamp_argv);	
 
-	/*************** Ö´ÐÐµ½´Ë´¦, ¸¸sapp½ø³ÌÒÑ¾­ÍË³ö, fork³öÀ´µÄsapp×Ó½ø³Ì¿ÉÄÜ¸Õ¸ÕÆô¶¯, ¼ì²éÒ»ÏÂ12345ÊÇ·ñ»¹±»Õ¼ÓÃ *****************/
+	/*************** Ö´ï¿½Ðµï¿½ï¿½Ë´ï¿½, ï¿½ï¿½sappï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½Ë³ï¿½, forkï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sappï¿½Ó½ï¿½ï¿½Ì¿ï¿½ï¿½Ü¸Õ¸ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ò»ï¿½ï¿½12345ï¿½Ç·ñ»¹±ï¿½Õ¼ï¿½ï¿½ *****************/
 
 	sleep(1);
 
-	result_fp = popen(check_listen_cmd, "r"); /* ¸¸½ø³ÌÍË³öºó, fork³öÀ´µÄ×Ó½ø³Ì²»Ó¦¸ÃÔÙ¼àÌýÈÎºÎ¶Ë¿ÚÁË!! */
+	result_fp = popen(check_listen_cmd, "r"); /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½, forkï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó½ï¿½ï¿½Ì²ï¿½Ó¦ï¿½ï¿½ï¿½Ù¼ï¿½ï¿½ï¿½ï¿½ÎºÎ¶Ë¿ï¿½ï¿½ï¿½!! */
 	if(NULL == result_fp){
 		printf("\033[1;31;40mfork_listen_port error, popen cmd %s fail\033[0m\n", check_listen_cmd);
 		gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);	
@@ -952,7 +953,7 @@ void control_fork_listen_port_run(void)
 
 	fgets(result, sizeof(result), result_fp);
 	
-	if(strlen(result) == 0){ /* netstatÃüÁîÎÞ½á¹û, ÊÇÕýÈ·µÄ */
+	if(strlen(result) == 0){ /* netstatï¿½ï¿½ï¿½ï¿½ï¿½Þ½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ */
 		printf("\033[32mfork_listen_port test success!\033[0m\n");
 		gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
 	}else{
@@ -962,7 +963,7 @@ void control_fork_listen_port_run(void)
 
 	fclose(result_fp);
 
-	system("killall -9 sapp"); /* °Ñsapp²å¼þforkµÄ×Ó½ø³ÌÉ±µô */
+	system("killall -9 sapp"); /* ï¿½ï¿½sappï¿½ï¿½ï¿½forkï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½É±ï¿½ï¿½ */
 }
 
 
@@ -985,7 +986,7 @@ void get_linkdir_from_mac_run(void)
 {
 	set_default_config();
 	/* 
-		16½øÖÆ ×Ö·û
+		16ï¿½ï¿½ï¿½ï¿½ ï¿½Ö·ï¿½
 		0x22   "
 		0x2F   /
 	*/	
@@ -1003,7 +1004,7 @@ void get_linkdir_from_mac_run2(void)
 	set_default_config();
 
 	/* 
-		16½øÖÆ ×Ö·û
+		16ï¿½ï¿½ï¿½ï¿½ ï¿½Ö·ï¿½
 		0x22   "
 		0x2F   /
 	*/	
@@ -1023,7 +1024,7 @@ void get_deployment_mode_mirror(void)
 	set_default_config();
 	update_plugin_inf("TCP", "get_deployment_mode_tcp_udp_entry");
 	
-	set_pcap_dumpfile("tcp/tcp_simple.pcap");  /* Ëæ±ãÕÒ¸ö°ü, Ê²Ã´¶¼ÐÐ, µ«ÊÇÎªÁËÇø±ð, Èý¸öÄ£Ê½µÄ°üÒª²»Ò»Ñù */
+	set_pcap_dumpfile("tcp/tcp_simple.pcap");  /* ï¿½ï¿½ï¿½ï¿½Ò¸ï¿½ï¿½ï¿½, Ê²Ã´ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Ä°ï¿½Òªï¿½ï¿½Ò»ï¿½ï¿½ */
 	ASSERT_EQ(file_md5_checksum("dumpfile", "df138740a6a22ca9c977052f21f7a470"),0);
 	
 	call_libsapp_devel_with_args(2, sapp_start_args);	
@@ -1039,7 +1040,7 @@ void get_deployment_mode_transparent(void)
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 2, "name", "lo");
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.external.interface", 1, "name", "lo");
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.external.interface", 2, "name", "lo");
-	set_pcap_dumpfile("tcp/tcp_isn_c2s_single.pcap");  /* Ëæ±ãÕÒ¸ö°ü, Ê²Ã´¶¼ÐÐ, µ«ÊÇÎªÁËÇø±ð, Èý¸öÄ£Ê½µÄ°üÒª²»Ò»Ñù */
+	set_pcap_dumpfile("tcp/tcp_isn_c2s_single.pcap");  /* ï¿½ï¿½ï¿½ï¿½Ò¸ï¿½ï¿½ï¿½, Ê²Ã´ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Ä°ï¿½Òªï¿½ï¿½Ò»ï¿½ï¿½ */
 	ASSERT_EQ(file_md5_checksum("dumpfile", "a5d0d96ee6f44f729d79aeac5cc2fee0"),0);
 	call_libsapp_devel_with_args(1, sapp_transparent_start_args);	
 
@@ -1053,14 +1054,14 @@ void get_deployment_mode_inline(void)
 	update_config_file_by_lastline("etc/sapp.toml", "packet_io.deployment", "mode", "inline");
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 1, "name", "lo");
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 2, "name", "lo");
-	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 1, "type", "pcap");  /* ´Ë´¦ÓÃpcapÄ£Ê½²âÊÔ, ²»ÐèÒª½èÖúfake marsio */
-	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 2, "type", "pcap");  /* ´Ë´¦ÓÃpcapÄ£Ê½²âÊÔ, ²»ÐèÒª½èÖúfake marsio */
+	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 1, "type", "pcap");  /* ï¿½Ë´ï¿½ï¿½ï¿½pcapÄ£Ê½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½fake marsio */
+	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 2, "type", "pcap");  /* ï¿½Ë´ï¿½ï¿½ï¿½pcapÄ£Ê½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½fake marsio */
 	update_config_file("etc/sapp.toml", "pcap_capture_direction", "\"in\"");
-	set_default_asymmetric_presence_layer_conf("#"); /* vxlan inlineÄ£Ê½ÏÂ, asymmetric_presence_layerÄ¬ÈÏÎª¿Õ */
+	set_default_asymmetric_presence_layer_conf("#"); /* vxlan inlineÄ£Ê½ï¿½ï¿½, asymmetric_presence_layerÄ¬ï¿½ï¿½Îªï¿½ï¿½ */
 	update_config_file("etc/gdev.conf", "sendto_gdev_ip", "10.3.36.1");
 	update_plugin_inf("POLLING", "get_deployment_mode_tcp_udp_entry"); 
 
-	set_pcap_dumpfile("for_gtest_only/inline/tcp_flow_stat.pcap"); /* Ëæ±ãÕÒ¸ö°ü, Ê²Ã´¶¼ÐÐ, µ«ÊÇÎªÁËÇø±ð, Èý¸öÄ£Ê½µÄ°üÒª²»Ò»Ñù */
+	set_pcap_dumpfile("for_gtest_only/inline/tcp_flow_stat.pcap"); /* ï¿½ï¿½ï¿½ï¿½Ò¸ï¿½ï¿½ï¿½, Ê²Ã´ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Ä°ï¿½Òªï¿½ï¿½Ò»ï¿½ï¿½ */
 	ASSERT_EQ(file_md5_checksum("dumpfile", "917fd6b8bc70e02812a036adf637479b"),0);
 
 	call_libsapp_devel_with_args(1, sapp_inline_start_args);
