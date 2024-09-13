@@ -669,7 +669,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 	 pstream = &pstream_pr->stream_public;
 	 pdetail_pr = (struct tcpdetail_private *)pstream->pdetail;
 	 pdetail = (struct tcpdetail *)pdetail_pr;
-	 // add by lqy 20150107, ???¨¹???
+	 // add by lqy 20150107, ???ï¿½ï¿½???
 	 if (createdir == DIR_S2C)
 	 {
 		 pdetail->clientpktnum = 1;
@@ -694,7 +694,7 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pdetail->createtime=g_CurrentTime;
 		pstream_pr->stream_create_timestamp_ms=g_CurrentTime_ms;	
 
-		/* ????????, ?????§Ø????ddos ?? */
+		/* ????????, ?????ï¿½ï¿½????ddos ?? */
 		if(pstream_pr->create_dir_by_well_known_port != 1)
 		{
 			pstream_pr->under_ddos_bypass = packet_io_under_ddos_should_bypass(threadnum);
@@ -2798,7 +2798,10 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 						printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 		pdetail->lastmtime = g_CurrentTime;
 		pstream_pr->stream_lastupdate_timestamp_ms = g_CurrentTime_ms;
-		lrustream(pindex_tcp);
+		if(1 == lrustream(pindex_tcp))
+		{
+			tcp_reset_stream(pindex_tcp, this_iphdr,this_tcphdr, tcplen,raw_pkt);	
+		}
 		if((this_tcphdr->th_flags & TH_RST) && tcplen == 0)
 		{
 			return PASS;
@@ -3382,7 +3385,7 @@ static struct buf_unorder *tcp_save_unorder_pkt(struct streaminfo *a_tcp,const v
 	//carry_ip_stream = skip_proxy_phony_stream(a_tcp->pfather);
 	carry_ip_stream = skip_proxy_phony_stream(a_tcp);
 
-	/* ?›¥???? */
+	/* ?ï¿½ï¿½???? */
 	memcpy(&(uo_packet->raw_pkt),  stack_raw_pkt, sizeof(raw_pkt_t));	
 	uo_packet->raw_pkt.raw_pkt_data = sapp_mem_malloc(SAPP_MEM_DYN_TCP_UNORDER,a_tcp->threadnum, stack_raw_pkt->raw_pkt_len);
 	memcpy((void *)uo_packet->raw_pkt.raw_pkt_data, stack_raw_pkt->raw_pkt_data, stack_raw_pkt->raw_pkt_len);
