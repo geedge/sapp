@@ -558,10 +558,13 @@ static void expiry_dablooms_destroy_entity(struct expiry_dablooms_handle_entity 
 }
 
 void expiry_dablooms_destroy(struct expiry_dablooms_handle *handle){
+    if(handle==NULL)return;
     for (size_t i = 0; i < handle->bm_partition_num; i++)
     {
         expiry_dablooms_destroy_entity(handle->bm_handle[i]);
     }
+    if(handle->bm_handle != NULL)free(handle->bm_handle);
+    free(handle);
 }
 
 
