@@ -792,29 +792,29 @@ static inline unsigned long long __get_stream_opt_traffic_raw(int cltype, int io
 		if('i' == iotype){ /* inbound */
 			if(sapp_global_val->config.packet_io.inbound_route_dir == pstream_pr->stream_c2s_route_dir){
 				if(STREAM_TYPE_TCP == pstream_pr->stream_public.type){
-					tval = pstream->ptcpdetail->serverpktnum;
+					tval = ((struct tcpdetail_private *)pstream->ptcpdetail)->flow_stat->C2S_all_pkt;
 				}else{
-					tval = pstream->pudpdetail->serverpktnum;
+					tval = ((struct udpdetail_private *)pstream->pudpdetail)->flow_stat->C2S_pkt;
 				}
 			}else{
 				if(STREAM_TYPE_TCP == pstream_pr->stream_public.type){
-					tval = pstream->ptcpdetail->clientpktnum;
+					tval = ((struct tcpdetail_private *)pstream->ptcpdetail)->flow_stat->S2C_all_pkt;
 				}else{
-					tval = pstream->pudpdetail->clientpktnum;
+					tval = ((struct udpdetail_private *)pstream->pudpdetail)->flow_stat->S2C_pkt;
 				}
 			}
 		}else{ /* outbound */
 			if(sapp_global_val->config.packet_io.inbound_route_dir == pstream_pr->stream_c2s_route_dir){
 				if(STREAM_TYPE_TCP == pstream_pr->stream_public.type){
-					tval = pstream->ptcpdetail->clientpktnum;
+					tval = ((struct tcpdetail_private *)pstream->ptcpdetail)->flow_stat->S2C_all_pkt;
 				}else{
-					tval = pstream->pudpdetail->clientpktnum;
+					tval = ((struct udpdetail_private *)pstream->pudpdetail)->flow_stat->S2C_pkt;
 				}
 			}else{
 				if(STREAM_TYPE_TCP == pstream_pr->stream_public.type){
-					tval = pstream->ptcpdetail->serverpktnum;
+					tval = ((struct tcpdetail_private *)pstream->ptcpdetail)->flow_stat->C2S_all_pkt;
 				}else{
-					tval = pstream->pudpdetail->serverpktnum;
+					tval = ((struct udpdetail_private *)pstream->pudpdetail)->flow_stat->C2S_pkt;
 				}
 			}			
 		}
@@ -1670,7 +1670,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			unsigned long long *inbound_pkt = (unsigned long long *)opt_val;
-			*inbound_pkt = __get_stream_opt_traffic('c', 'i', (struct streaminfo_private *)pstream);
+			*inbound_pkt = __get_stream_opt_traffic_raw('c', 'i', (struct streaminfo_private *)pstream);
 		}	
 		break;
 
@@ -1682,7 +1682,7 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			unsigned long long *outbound_pkt = (unsigned long long *)opt_val;
-			*outbound_pkt = __get_stream_opt_traffic('c', 'o', (struct streaminfo_private *)pstream);
+			*outbound_pkt = __get_stream_opt_traffic_raw('c', 'o', (struct streaminfo_private *)pstream);
 		}	
 		break;
 
