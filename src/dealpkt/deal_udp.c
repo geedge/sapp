@@ -710,19 +710,10 @@ int dealipv4udppkt(struct streamindex *pindex, const struct mesa_ip4_hdr * this_
 			return DROP;
 		}
 
-        if (pstream_pr->sid_append_list != NULL)
-        {
-            ((raw_pkt_t *)raw_pkt)->append_list = pstream_pr->sid_append_list;
-        }
-        if (pstream_pr->sid_prepend_list != NULL)
-        {
-            ((raw_pkt_t *)raw_pkt)->prepend_list = pstream_pr->sid_prepend_list;
-        }
-        if (pstream_pr->stream_trace_id != 0)
-        {
-            ((raw_pkt_t *)raw_pkt)->stream_trace_id = pstream_pr->stream_trace_id;
-        }
-
+		//sync marsio metadata to raw_pkt
+		if(pstream_pr->sid_append_list != NULL)((raw_pkt_t *)raw_pkt)->append_list=pstream_pr->sid_append_list;
+		if(pstream_pr->sid_prepend_list != NULL)((raw_pkt_t *)raw_pkt)->prepend_list=pstream_pr->sid_prepend_list;
+		if(pstream_pr->stream_trace_id != 0)((raw_pkt_t *)raw_pkt)->stream_trace_id=pstream_pr->stream_trace_id;
 
 
 		if(pstream->curdir==DIR_S2C){
@@ -976,18 +967,10 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 					return PASS;
 		}
 
-		if (pstream_pr->sid_append_list != NULL)
-        {
-            ((raw_pkt_t *)raw_pkt)->append_list = pstream_pr->sid_append_list;
-        }
-        if (pstream_pr->sid_prepend_list != NULL)
-        {
-            ((raw_pkt_t *)raw_pkt)->prepend_list = pstream_pr->sid_prepend_list;
-        }
-        if (pstream_pr->stream_trace_id != 0)
-        {
-            ((raw_pkt_t *)raw_pkt)->stream_trace_id = pstream_pr->stream_trace_id;
-        }
+		//sync marsio metadata to raw_pkt
+		if(pstream_pr->sid_append_list != NULL)((raw_pkt_t *)raw_pkt)->append_list=pstream_pr->sid_append_list;
+		if(pstream_pr->sid_prepend_list != NULL)((raw_pkt_t *)raw_pkt)->prepend_list=pstream_pr->sid_prepend_list;
+		if(pstream_pr->stream_trace_id != 0)((raw_pkt_t *)raw_pkt)->stream_trace_id=pstream_pr->stream_trace_id;
 
 		if(unlikely(a_index->stream.stream_killed_flag != 0) && raw_pkt->is_ctrl_pkt==0){
 			return DROP;
@@ -1065,7 +1048,7 @@ int dealipv6udppkt(struct streamindex *pindex,const struct mesa_ip6_hdr *a_packe
 	if(DROP == ret){
 		sapp_runtime_log(RLOG_LV_DEBUG, "UDP stream: %s, curdir:%d, return DROP.", printaddr(&pstream->addr, pstream->threadnum), pstream->curdir);
 	}
-	
+
 	return ret;
 }
 

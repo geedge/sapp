@@ -2668,7 +2668,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 	pindex_tcp = findstreamindex (pindex, raw_pkt);
 	if(unlikely(!pindex_tcp)){
 		if((ADDR_TYPE_IPV4 == pstream->addr.addrtype) 
-		  && sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp){
+		&& sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp){
 			sapp_dup_pkt_mark_l4(pstream, this_iphdr, (const void *)this_tcphdr);
 		}
 
@@ -2812,19 +2812,9 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		}
 	}
 
-	if(pstream_pr->sid_append_list != NULL)
-	{
-		((raw_pkt_t *)raw_pkt)->append_list=pstream_pr->sid_append_list;
-	}
-	if(pstream_pr->sid_prepend_list != NULL)
-	{
-		((raw_pkt_t *)raw_pkt)->prepend_list=pstream_pr->sid_prepend_list;
-	}
-
-	if(pstream_pr->stream_trace_id != 0)
-	{
-		((raw_pkt_t *)raw_pkt)->stream_trace_id=pstream_pr->stream_trace_id;
-	}
+	if(pstream_pr->sid_append_list != NULL)((raw_pkt_t *)raw_pkt)->append_list=pstream_pr->sid_append_list;
+	if(pstream_pr->sid_prepend_list != NULL)((raw_pkt_t *)raw_pkt)->prepend_list=pstream_pr->sid_prepend_list;
+	if(pstream_pr->stream_trace_id != 0)((raw_pkt_t *)raw_pkt)->stream_trace_id=pstream_pr->stream_trace_id;
 
 	if(pstream->curdir==DIR_S2C)
 	{

@@ -70,6 +70,9 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_SND_UDP,
 	SAPP_STAT_SND_CTRL,
 
+	SAPP_STAT_BUILD_LAYER_ERR,
+	SAPP_STAT_BUILD_CTRL_ERR,
+
 	SAPP_STAT_SND_ERROR,
 
 	/*************  special condition  *************/

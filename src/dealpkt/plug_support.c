@@ -1133,6 +1133,10 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 					memset(pstream_pr->sid_append_list, 0, sizeof(struct segment_id_list));
 				}
 			}
+			if(pstream_pr->raw_pkt)
+			{
+				((raw_pkt_t *)pstream_pr->raw_pkt)->append_list=pstream_pr->sid_append_list;
+			}
 			ret = 0;
 		}
 		break;	
@@ -1166,6 +1170,10 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 					memset(pstream_pr->sid_prepend_list, 0, sizeof(struct segment_id_list));
 				}
 			}
+			if(pstream_pr->raw_pkt)
+			{
+				((raw_pkt_t *)pstream_pr->raw_pkt)->prepend_list=pstream_pr->sid_prepend_list;
+			}
             ret = 0;
 		}
 		break;
@@ -1178,6 +1186,10 @@ int MESA_set_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 				break;
 			}
 			pstream_pr->stream_trace_id=*((unsigned long long *)opt_val);
+			if(pstream_pr->raw_pkt)
+			{
+				((raw_pkt_t *)pstream_pr->raw_pkt)->stream_trace_id=pstream_pr->stream_trace_id;
+			}
             ret=0;
 		}
 		break;

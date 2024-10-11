@@ -110,6 +110,9 @@ static void packet_io_update_metrics_fs2(void)
 	sapp_fs2_update_count(SAPP_STAT_SND_UDP,  cur_count[SAPP_STAT_SND_UDP]);
 	sapp_fs2_update_count(SAPP_STAT_SND_CTRL,  cur_count[SAPP_STAT_SND_CTRL]);
 
+	sapp_fs2_update_count(SAPP_STAT_BUILD_LAYER_ERR,  cur_count[SAPP_STAT_BUILD_LAYER_ERR]);
+	sapp_fs2_update_count(SAPP_STAT_BUILD_CTRL_ERR,  cur_count[SAPP_STAT_BUILD_CTRL_ERR]);
+
 	sapp_fs2_update_count(SAPP_STAT_GLOBAL_BYPASS, packet_io_under_ddos_global_status());
 
 	sapp_fs2_update_count(SAPP_STAT_TCP_BYPASS_STREAM,  cur_count[SAPP_STAT_TCP_BYPASS_STREAM]);
@@ -209,6 +212,9 @@ static void packet_io_update_metrics_fs3(void)
 	sapp_fs3_metric_incrby(0, SAPP_STAT_SND_TCP_SYNACK,cur_count[SAPP_STAT_SND_TCP_SYNACK]-history_count[SAPP_STAT_SND_TCP_SYNACK]);
 	sapp_fs3_metric_incrby(0, SAPP_STAT_SND_UDP,cur_count[SAPP_STAT_SND_UDP]-history_count[SAPP_STAT_SND_UDP]);
 	sapp_fs3_metric_incrby(0, SAPP_STAT_SND_CTRL,cur_count[SAPP_STAT_SND_CTRL]-history_count[SAPP_STAT_SND_CTRL]);
+
+	sapp_fs3_metric_incrby(0, SAPP_STAT_BUILD_LAYER_ERR,cur_count[SAPP_STAT_BUILD_LAYER_ERR]-history_count[SAPP_STAT_BUILD_LAYER_ERR]);
+	sapp_fs3_metric_incrby(0, SAPP_STAT_BUILD_CTRL_ERR,cur_count[SAPP_STAT_BUILD_CTRL_ERR]-history_count[SAPP_STAT_BUILD_CTRL_ERR]);
 
 	sapp_fs3_metric_set(0, SAPP_STAT_GLOBAL_BYPASS,packet_io_under_ddos_global_status());
 
@@ -337,6 +343,9 @@ static void packet_io_update_metrics_fs4(void)
 	sapp_fs4_metric_incrby(0, SAPP_STAT_SND_TCP_SYNACK,cur_count[SAPP_STAT_SND_TCP_SYNACK]-history_count[SAPP_STAT_SND_TCP_SYNACK]);
 	sapp_fs4_metric_incrby(0, SAPP_STAT_SND_UDP,cur_count[SAPP_STAT_SND_UDP]-history_count[SAPP_STAT_SND_UDP]);
 	sapp_fs4_metric_incrby(0, SAPP_STAT_SND_CTRL,cur_count[SAPP_STAT_SND_CTRL]-history_count[SAPP_STAT_SND_CTRL]);
+
+	sapp_fs4_metric_incrby(0, SAPP_STAT_BUILD_LAYER_ERR,cur_count[SAPP_STAT_BUILD_LAYER_ERR]-history_count[SAPP_STAT_BUILD_LAYER_ERR]);
+	sapp_fs4_metric_incrby(0, SAPP_STAT_BUILD_CTRL_ERR,cur_count[SAPP_STAT_BUILD_CTRL_ERR]-history_count[SAPP_STAT_BUILD_CTRL_ERR]);
 
 	sapp_fs4_metric_set(0, SAPP_STAT_GLOBAL_BYPASS,packet_io_under_ddos_global_status());
 
@@ -696,10 +705,15 @@ void sysinfo_output(void)
 
 	fprintf(fp,"#################################################################\n");
 	fprintf(fp,"%-12s %12s %12s %12s %12s\n","SND-PKT", "total_pkt", "total_len","pps", "bps");
+
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "TCP_RST", cur_count[SAPP_STAT_SND_TCP_RST], byte_convert_human(cur_length[SAPP_STAT_SND_TCP_RST], 1, 1, s1),(cur_count[SAPP_STAT_SND_TCP_RST]-history_count[SAPP_STAT_SND_TCP_RST]), byte_convert_human((cur_length[SAPP_STAT_SND_TCP_RST]-history_length[SAPP_STAT_SND_TCP_RST]), 1,8,s2));
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "TCP_S/A", cur_count[SAPP_STAT_SND_TCP_SYNACK], byte_convert_human(cur_length[SAPP_STAT_SND_TCP_SYNACK], 1, 1, s1),(cur_count[SAPP_STAT_SND_TCP_SYNACK]-history_count[SAPP_STAT_SND_TCP_SYNACK]), byte_convert_human((cur_length[SAPP_STAT_SND_TCP_SYNACK]-history_length[SAPP_STAT_SND_TCP_SYNACK]),1,8,s2));
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "UDP", cur_count[SAPP_STAT_SND_UDP], byte_convert_human(cur_length[SAPP_STAT_SND_UDP],1,1,s1),(cur_count[SAPP_STAT_SND_UDP]-history_count[SAPP_STAT_SND_UDP]), byte_convert_human((cur_length[SAPP_STAT_SND_UDP]-history_length[SAPP_STAT_SND_UDP]),1,8,s2));
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "CTRL", cur_count[SAPP_STAT_SND_CTRL], byte_convert_human(cur_length[SAPP_STAT_SND_CTRL],1,1,s1),(cur_count[SAPP_STAT_SND_CTRL]-history_count[SAPP_STAT_SND_CTRL]), byte_convert_human((cur_length[SAPP_STAT_SND_CTRL]-history_length[SAPP_STAT_SND_CTRL]),1,8,s2));
+	
+	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "LAYER-ERR", cur_count[SAPP_STAT_BUILD_LAYER_ERR], byte_convert_human(cur_length[SAPP_STAT_BUILD_LAYER_ERR], 1, 1, s1),(cur_count[SAPP_STAT_BUILD_LAYER_ERR]-history_count[SAPP_STAT_BUILD_LAYER_ERR]), byte_convert_human((cur_length[SAPP_STAT_BUILD_LAYER_ERR]-history_length[SAPP_STAT_BUILD_LAYER_ERR]),1,8,s2));
+	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "CTRL-ERR", cur_count[SAPP_STAT_BUILD_CTRL_ERR], byte_convert_human(cur_length[SAPP_STAT_BUILD_CTRL_ERR],1,1,s1),(cur_count[SAPP_STAT_BUILD_CTRL_ERR]-history_count[SAPP_STAT_BUILD_CTRL_ERR]), byte_convert_human((cur_length[SAPP_STAT_BUILD_CTRL_ERR]-history_length[SAPP_STAT_BUILD_CTRL_ERR]),1,8,s2));
+
 	fprintf(fp,"%-12s %12llu %12s %12llu %12s\n", "SEND-ERR", cur_count[SAPP_STAT_SND_ERROR], byte_convert_human(cur_length[SAPP_STAT_SND_ERROR],1,1,s1),(cur_count[SAPP_STAT_SND_ERROR]-history_count[SAPP_STAT_SND_ERROR]), byte_convert_human((cur_length[SAPP_STAT_SND_ERROR]-history_length[SAPP_STAT_SND_ERROR]),1,8,s2));
     fprintf(fp,"#################################################################\n\n");
 	fclose(fp);

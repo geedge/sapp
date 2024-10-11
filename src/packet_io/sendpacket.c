@@ -959,7 +959,7 @@ static int calc_gtp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_st
 	if(raw_net_gtp_hdr->flags & (GTP_HDR_FLAG_SEQ_NUM | GTP_HDR_FLAG_N_PDU | GTP_HDR_FLAG_NEXT_EXT_HDR))
 	{
 		if(0 == sapp_global_val->config.protocol_feature.skip_gtp_S_PN_E_field_for_inject){
-			sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+			sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
         	sapp_runtime_log(RLOG_LV_INFO, "calc_gtp_hdr_len error, inject GTP pkt not support SEQ or N-PDU or Extension header, you should set 'skip_gtp_S_PN_E_field_for_inject' to avoid this!");
         	return -1;
         }
@@ -969,13 +969,13 @@ static int calc_gtp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_st
 		/* ���GTP�����˷ǶԳƱ��, ���뱣֤��ǰע�뷽��֮ǰ���������ݰ� */
 		if(send_stream_dir == DIR_C2S){
 			if(0 == p_gtp_layer_addr->teid_c2s){
-				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 				 sapp_runtime_log(RLOG_LV_INFO, "inject dir:%d packet error, GTP addr is asymmetric, but stream dir is:%d", send_stream_dir, stream_pr->stream_public.dir);
 				 return -1;
 			}
 		}else{
 			if(0 == p_gtp_layer_addr->teid_s2c){
-				 sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				 sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 				 sapp_runtime_log(RLOG_LV_INFO, "inject dir:%d packet error, GTP addr is asymmetric, but stream dir is:%d", send_stream_dir, stream_pr->stream_public.dir);
 				 return -1;
 			}		
@@ -1279,7 +1279,7 @@ static int build_net_layer_ethernet(const struct streaminfo *top_stream, struct 
 		}		
 	}else{
 		if((top_stream->dir & send_stream_dir) == 0){
-			sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+			sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 			sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_ethernet() error! ethernet[%d] asymmetric_addr_layer is enabled, but has not recv this dir packet!\n", stream_pr->layer_index);
 			return -1;
 		}
@@ -1580,7 +1580,7 @@ static int build_net_layer_vlan(struct streaminfo_private *stream_pr, int carry_
 				build_net_multilayer_vlan(in_stream_addr->s2c_addr_array, in_stream_addr->s2c_layer_num, (struct mesa_vlan_detail_hdr *)buf);
 				///memcpy(buf, in_stream_addr->s2c_addr_array, layer_len);
 			}else{
-				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_vlan() error, no c2s vlan addr, but asymmetric_addr_layer is set!\n");
 				return -1;
 			}
@@ -1597,7 +1597,7 @@ static int build_net_layer_vlan(struct streaminfo_private *stream_pr, int carry_
 				//memcpy(buf, in_stream_addr->c2s_addr_array, layer_len);
 				build_net_multilayer_vlan(in_stream_addr->c2s_addr_array, in_stream_addr->c2s_layer_num, (struct mesa_vlan_detail_hdr *)buf);
 			}else{
-				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_vlan() error, no s2c vlan addr, but asymmetric_addr_layer is set!\n");
 				return -1;
 			}
@@ -1820,7 +1820,7 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 					layer_len += sizeof(int);
 				}				
 			}else{
-				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_mpls() error, no c2s mpls addr, but asymmetric_addr_layer is set!\n");
 				return -1;
 			}
@@ -1845,7 +1845,7 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 					layer_len += sizeof(int);
 				}
 			}else{
-				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_mpls() error, no s2c mpls addr, but asymmetric_addr_layer is set!\n");
 				return -1;
 			}
@@ -1868,7 +1868,7 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
 	if(DIR_C2S == send_stream_dir){
 		if(0 == p_gtp_layer_addr->teid_c2s){
 			if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_GPRS_TUNNEL][stream_pr->layer_index] != 0){
-				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_gtp() error, no c2s gtp addr, but asymmetric_addr_layer is set!\n");
 				return -1;				
 			}else{
@@ -1880,7 +1880,7 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
 	}else{
 		if(0 == p_gtp_layer_addr->teid_s2c){
 			if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_GPRS_TUNNEL][stream_pr->layer_index] != 0){
-				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_gtp() error, no s2c gtp addr, but asymmetric_addr_layer is set!\n");
 				return -1;				
 			}else{
@@ -2008,7 +2008,7 @@ static int build_net_layer_vxlan(struct streaminfo_private *stream_pr, int carry
 			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VXLAN][stream_pr->layer_index]){
 				build_net_single_layer_vxlan(stream_pr, send_vxlan_hdr, raw_vxlan_hdr, send_stream_dir ^ DIR_DOUBLE);
 			}else{
-				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_vxlan() error, no c2s vxlan addr, but asymmetric_addr_layer is set!\n");
 				return -1;
 			}
@@ -2021,7 +2021,7 @@ static int build_net_layer_vxlan(struct streaminfo_private *stream_pr, int carry
 			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VXLAN][stream_pr->layer_index]){
 				build_net_single_layer_vxlan(stream_pr, send_vxlan_hdr, raw_vxlan_hdr, send_stream_dir ^ DIR_DOUBLE);
 			}else{
-				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 				sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_vxlan() error, no s2c vxlan addr, but asymmetric_addr_layer is set!\n");
 				return -1;
 			}
@@ -2665,6 +2665,7 @@ int __MESA_rst_tcp(struct streaminfo *stream, unsigned char rst_th_flags, int rs
 	stream_pr = (struct streaminfo_private *)stream;
 	raw_pkt = (const raw_pkt_t *)stream_pr->raw_pkt;
 	if(NULL == raw_pkt){
+		local_sys_stat->count[SAPP_STAT_BUILD_LAYER_ERR]++;
 		return -1;
 	}
 
@@ -2885,21 +2886,20 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 {
 	sapp_gval_mthread_sys_stat_t *local_sys_stat=&sapp_global_val->mthread_volatile[stream->threadnum]->sys_stat;
 	if(dir_check(snd_routedir) < 0 || stream == NULL || payload == NULL || payload_len <=0){
-		local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
+		local_sys_stat->count[SAPP_STAT_BUILD_CTRL_ERR]++;
         sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error, dir_check < 0 or payload_len illgel!");
 		return -1;
 	}
     struct streaminfo_private *raw_stream_pr = (struct streaminfo_private *)stream;
-	//raw_pkt_t *raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_routedir_reverse);
-	raw_pkt_t *raw_pkt=(raw_pkt_t *)raw_stream_pr->raw_pkt;
-	if(NULL == raw_pkt)
+	const raw_pkt_t *p_raw_pkt=raw_stream_pr->raw_pkt;
+	if(NULL == p_raw_pkt)
 	{
 
         if (raw_stream_pr->polling_inject_context == NULL || 
 		(raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S-1] == NULL &&
 			raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C-1] == NULL))
         {
-            local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
+            local_sys_stat->count[SAPP_STAT_BUILD_CTRL_ERR]++;
             sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error, not found raw_pkt!");
             return -1;
         }
@@ -2907,53 +2907,50 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 		if(snd_routedir==raw_stream_pr->stream_c2s_route_dir)
 		{
 			if(raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S-1])
-				raw_pkt=(raw_pkt_t *)raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S-1];
+				p_raw_pkt=raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S-1];
 			else
 			{
-				raw_pkt=(raw_pkt_t *)raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C-1];
+				p_raw_pkt=raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C-1];
 				snd_routedir^=1;
 			}
 		}
 		else
 		{
 			if(raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C-1])
-				raw_pkt=(raw_pkt_t *)raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C-1];
+				p_raw_pkt=raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C-1];
 			else
 			{
-				raw_pkt=(raw_pkt_t *)raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S-1];
+				p_raw_pkt=raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S-1];
 				snd_routedir^=1;
 			};
 		}
     }	
-	raw_pkt->meta_route_dir[raw_stream_pr->stream_c2s_route_dir]=raw_stream_pr->polling_inject_context->meta_stream_dir[DIR_C2S-1];
-    raw_pkt->meta_route_dir[raw_stream_pr->stream_c2s_route_dir^1]=raw_stream_pr->polling_inject_context->meta_stream_dir[DIR_S2C-1];
-	
-	if(raw_stream_pr->sid_prepend_list != NULL)
+	raw_pkt_t raw_pkt;
+	memcpy(&raw_pkt, p_raw_pkt, sizeof(raw_pkt_t));
+	//SYNC metadata to stack raw_pkt
+	if(raw_stream_pr->polling_inject_context)
 	{
-		raw_pkt->prepend_list=raw_stream_pr->sid_prepend_list;
-    }
-	if(raw_stream_pr->sid_append_list != NULL)
-	{
-		raw_pkt->append_list=raw_stream_pr->sid_append_list;
-    }
-	if (raw_stream_pr->stream_trace_id != 0)
-	{
-		raw_pkt->stream_trace_id = raw_stream_pr->stream_trace_id;
+		raw_pkt.meta_route_dir[raw_stream_pr->stream_c2s_route_dir]=raw_stream_pr->polling_inject_context->meta_stream_dir[DIR_C2S-1];
+    	raw_pkt.meta_route_dir[raw_stream_pr->stream_c2s_route_dir^1]=raw_stream_pr->polling_inject_context->meta_stream_dir[DIR_S2C-1];
 	}
+	
+	if(raw_stream_pr->sid_prepend_list != NULL)raw_pkt.prepend_list=raw_stream_pr->sid_prepend_list;
+	if(raw_stream_pr->sid_append_list != NULL)raw_pkt.append_list=raw_stream_pr->sid_append_list;
+	if (raw_stream_pr->stream_trace_id != 0)raw_pkt.stream_trace_id = raw_stream_pr->stream_trace_id;
 
     int low_net_layer_type = get_eth_carry_layer_type(stream, stream->curdir);
-	int raw_pkt_l2_l3_hdr_len=raw_pkt->offset_to_raw_pkt_hdr - raw_pkt->overlay_layer_bytes;
+	int raw_pkt_l2_l3_hdr_len=raw_pkt.offset_to_raw_pkt_hdr - raw_pkt.overlay_layer_bytes;
 	int raw_pkt_l4_hdr_len=0;
 	if(stream->type==STREAM_TYPE_TCP)
 	{
-		if(raw_pkt->raw_pkt_len < raw_pkt_l2_l3_hdr_len + (int)sizeof(struct mesa_tcp_hdr))
+		if(raw_pkt.raw_pkt_len < raw_pkt_l2_l3_hdr_len + (int)sizeof(struct mesa_tcp_hdr))
 		{
-			local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
+			local_sys_stat->count[SAPP_STAT_BUILD_CTRL_ERR]++;
 			sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error! raw_pkt_len:%d < raw_pkt_l3_hdr_len:%d+tcphdr_len:d\n",
-                        raw_pkt->raw_pkt_len, raw_pkt_l2_l3_hdr_len, (int)sizeof(struct mesa_tcp_hdr));
+                        raw_pkt.raw_pkt_len, raw_pkt_l2_l3_hdr_len, (int)sizeof(struct mesa_tcp_hdr));
 			return -1;
 		}
-		struct mesa_tcp_hdr *tcph = (struct mesa_tcp_hdr *)((char *)raw_pkt->raw_pkt_data + raw_pkt->offset_to_raw_pkt_hdr);
+		struct mesa_tcp_hdr *tcph = (struct mesa_tcp_hdr *)((char *)raw_pkt.raw_pkt_data + raw_pkt.offset_to_raw_pkt_hdr);
 		raw_pkt_l4_hdr_len = tcph->th_off<<2;
 	}
 	else if(stream->type==STREAM_TYPE_UDP)
@@ -2962,22 +2959,22 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 	}
 	else 
 	{
-		local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
+		local_sys_stat->count[SAPP_STAT_BUILD_CTRL_ERR]++;
 		sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error! not support stream_type:%d.\n",
                         stream->type);
 		return -1;
 	}
 
-	if(raw_pkt->overlay_layer_bytes + raw_pkt_l2_l3_hdr_len + raw_pkt_l4_hdr_len > raw_pkt->raw_pkt_len)
+	if(raw_pkt.overlay_layer_bytes + raw_pkt_l2_l3_hdr_len + raw_pkt_l4_hdr_len > raw_pkt.raw_pkt_len)
 	{
-		local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
+		local_sys_stat->count[SAPP_STAT_BUILD_CTRL_ERR]++;
         sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error! overlay_len:%d, l3_hdr_len:%d + l4_hdr_len:%d > raw_pkt_len:%d.\n",
-                        raw_pkt->overlay_layer_bytes, raw_pkt_l2_l3_hdr_len, raw_pkt_l2_l3_hdr_len, raw_pkt->raw_pkt_len);
+                        raw_pkt.overlay_layer_bytes, raw_pkt_l2_l3_hdr_len, raw_pkt_l2_l3_hdr_len, raw_pkt.raw_pkt_len);
         return -1;
 	}
     if (payload_len + raw_pkt_l2_l3_hdr_len + raw_pkt_l4_hdr_len > MTU_MAX)
     {
-		local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
+		local_sys_stat->count[SAPP_STAT_BUILD_CTRL_ERR]++;
         sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error! payload_len too long:%d.\n",
                         payload_len + raw_pkt_l2_l3_hdr_len);
         return -1;
@@ -2985,15 +2982,14 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 	MESA_send_handle *send_handle = &g_send_handle[stream->threadnum];
 	send_handle->send_buf = packet_io_get_sendbuf(SEND_TYPE_LINK_INJECT, stream->threadnum);
 	send_handle->user_arg = (void *)stream;
-    memcpy(send_handle->send_buf, (const char *)(raw_pkt->raw_pkt_data)+raw_pkt->overlay_layer_bytes, raw_pkt_l2_l3_hdr_len+raw_pkt_l4_hdr_len);
+    memcpy(send_handle->send_buf, (const char *)(raw_pkt.raw_pkt_data)+raw_pkt.overlay_layer_bytes, raw_pkt_l2_l3_hdr_len+raw_pkt_l4_hdr_len);
 	memcpy(send_handle->send_buf+raw_pkt_l2_l3_hdr_len+raw_pkt_l4_hdr_len, payload, payload_len);
-	((raw_pkt_t *)raw_pkt)->is_ctrl_pkt=1;
-	int raw_payload_len=((raw_pkt_t *)raw_pkt)->payload_len;
-	((raw_pkt_t *)raw_pkt)->payload_len=payload_len;
+	raw_pkt.is_ctrl_pkt=1;
+	raw_pkt.payload_len=payload_len;
 	int ret = packet_io_send(send_handle, raw_pkt_l4_hdr_len+raw_pkt_l2_l3_hdr_len+payload_len, SEND_TYPE_LINK_INJECT, 
 						low_net_layer_type, snd_routedir, stream->threadnum,
 						(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER,
-						raw_pkt);	
+						&raw_pkt);	
 	if(ret < 0)
 	{
 		send_handle->tot_send_err++;
@@ -3004,10 +3000,8 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 		send_handle->tot_send_pkt++;
 		send_handle->tot_send_byte += payload_len;
 		local_sys_stat->count[SAPP_STAT_SND_CTRL]++;
-		local_sys_stat->length[SAPP_STAT_SND_CTRL]+= raw_pkt->raw_pkt_len;	
+		local_sys_stat->length[SAPP_STAT_SND_CTRL]+= payload_len;	
 	}
-	((raw_pkt_t *)raw_pkt)->is_ctrl_pkt=0;
-	((raw_pkt_t *)raw_pkt)->payload_len=raw_payload_len;
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, stream->threadnum);		
 	return ret;
 }
@@ -3080,7 +3074,7 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	/* ��ı���ĳЩ�ص�������ԭʼ������ΪIP��ͷ, ���Բ���Ҫ�������ԭʼ��, ��Ϣ���洢��˽�����ṹ���� */
 	raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_routedir_reverse);
 	if(NULL == raw_pkt){
-		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 		sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_pkt() error, not found raw_pkt!");
 		return -1;
 	}
@@ -3128,13 +3122,13 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 
 	low_net_layer_type = get_eth_carry_layer_type(raw_stream, send_stream_dir);
 	if(low_net_layer_type < 0){
-		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 		sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_pkt(): can't get ethernet carry layer type");
 		return -1;
 	}
 	
 	if(payload_len + reserved_hdr_len > MTU_MAX){
-		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 		sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_pkt() error! payload_len too long:%d.\n", 
 		                payload_len + reserved_hdr_len);	
 		return -1;
@@ -3311,7 +3305,7 @@ int MESA_sendpacket_ethlayer(int thread_num,const char *data, int data_len, unsi
 	if(data_len > MTU_MAX)
 	{
 		sapp_runtime_log(RLOG_LV_INFO, "MESA_sendpacket_ethlayer(): data length:%d is more than MTU:%d\n", data_len, MTU_MAX);
-		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
+		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_BUILD_LAYER_ERR]++;
 		return -1;
 	}
 

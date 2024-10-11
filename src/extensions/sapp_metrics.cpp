@@ -354,6 +354,9 @@ static int sapp_fs2_init(sapp_global_t *global_paramters)
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_SND_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Udp");
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_SND_CTRL] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_CTRL");
 
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_BUILD_LAYER_ERR] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Build_LAYER_Err");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_BUILD_CTRL_ERR] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Build_CTRL_Err");
+
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_GLOBAL_BYPASS] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "DDOS_Bypass");
 
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_TCP_BYPASS_STREAM] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Tcp_Bypass_STM");	
@@ -577,6 +580,12 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 	fs3_rt->metrics_ids[0][SAPP_STAT_SND_CTRL] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Send_CTRL", 
 								NULL, 0);										
 	
+	fs3_rt->metrics_ids[0][SAPP_STAT_BUILD_LAYER_ERR] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Build_Layer_Err", 
+								NULL, 0);	
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_BUILD_CTRL_ERR] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Build_CTRL_Err", 
+								NULL, 0);	
+
 	fs3_rt->metrics_ids[0][SAPP_STAT_GLOBAL_BYPASS] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "DDOS_Bypass", 
 								NULL, 0);	
 
@@ -787,6 +796,9 @@ static int sapp_fs4_init(sapp_global_t *global_paramters)
 	fs4_rt->metrics_ids[0][SAPP_STAT_SND_TCP_SYNACK] = fieldstat_easy_register_counter(fs4_handle, "Send_Tcp_S/A");		
 	fs4_rt->metrics_ids[0][SAPP_STAT_SND_UDP] = fieldstat_easy_register_counter(fs4_handle, "Send_Udp");	
 	fs4_rt->metrics_ids[0][SAPP_STAT_SND_CTRL] = fieldstat_easy_register_counter(fs4_handle, "Send_CTRL");	
+
+	fs4_rt->metrics_ids[0][SAPP_STAT_BUILD_LAYER_ERR] = fieldstat_easy_register_counter(fs4_handle, "Build_Layer_Err");		
+	fs4_rt->metrics_ids[0][SAPP_STAT_BUILD_CTRL_ERR] = fieldstat_easy_register_counter(fs4_handle, "Build_CTRL_Err");	
 
 	fs4_rt->metrics_ids[0][SAPP_STAT_GLOBAL_BYPASS] = fieldstat_easy_register_counter(fs4_handle, "DDOS_Bypass");	
 	
