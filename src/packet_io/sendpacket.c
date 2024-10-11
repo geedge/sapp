@@ -10,7 +10,7 @@ extern "C" {
 
 
 //#define KILL_TCP_RST_NUM				(3)
-#define KILL_TCP_SYN_ACK_NUM			(1) /* Ðé¼ÙSYN/ACKÖ»·¢ËÍÒ»¸ö¼´¿É */
+#define KILL_TCP_SYN_ACK_NUM			(1) /* ï¿½ï¿½ï¿½SYN/ACKÖ»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 
 typedef struct{
 	UINT32 gateway_ip;	/* network order */
@@ -22,7 +22,7 @@ typedef struct{
 MESA_send_handle g_send_handle[MAX_THREAD_NUM];
 static volatile UINT64 g_rand_seed = 0x013579ABCDEF;
 
-/* ¼æÈÝÀÏÆ½Ì¨¼ÆËãrandÖµµÄËã·¨, ÓÃÓÚÐ£ÑéRST°üÊÇ·ñÎª±¾ÏµÍ³·¢ËÍ */
+/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ½Ì¨ï¿½ï¿½ï¿½ï¿½randÖµï¿½ï¿½ï¿½ã·¨, ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½RSTï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½ */
 static int randgroup[MAX_THREAD_NUM];
 //static int g_iRandKey=13;
 //static int g_iMaxRandVal=65535;
@@ -30,7 +30,7 @@ static int randgroup[MAX_THREAD_NUM];
 typedef struct{
 	unsigned char ip_ttl;
 	unsigned short ip_id_host_order;
-	char __cache_align_pad_[60]; /* ¶àÏß³ÌÈ«¾Ö±äÁ¿, ±£Ö¤64×Ö½Úcache¶ÔÆë±ß½ç */
+	char __cache_align_pad_[60]; /* ï¿½ï¿½ï¿½ß³ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½, ï¿½ï¿½Ö¤64ï¿½Ö½ï¿½cacheï¿½ï¿½ï¿½ï¿½ß½ï¿½ */
 }bulid_layer_ipv4_args_t;
 
 typedef struct{
@@ -41,7 +41,7 @@ typedef struct{
 	unsigned char tcp_flags;
 	unsigned short tcp_win_host_order;
 	unsigned int tcp_seq;
-	char __cache_align_pad_[56]; /* ¶àÏß³ÌÈ«¾Ö±äÁ¿, ±£Ö¤64×Ö½Úcache¶ÔÆë±ß½ç */
+	char __cache_align_pad_[56]; /* ï¿½ï¿½ï¿½ß³ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½, ï¿½ï¿½Ö¤64ï¿½Ö½ï¿½cacheï¿½ï¿½ï¿½ï¿½ß½ï¿½ */
 }bulid_layer_tcp_args_t;
 
 
@@ -49,7 +49,7 @@ typedef struct{
 	unsigned char ip_ttl;
 	unsigned short ip_id_host_order;
 	unsigned short tcp_win_host_order;
-	char __cache_align_pad_[58]; /* ¶àÏß³ÌÈ«¾Ö±äÁ¿, ±£Ö¤64×Ö½Úcache¶ÔÆë±ß½ç */
+	char __cache_align_pad_[58]; /* ï¿½ï¿½ï¿½ß³ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½, ï¿½ï¿½Ö¤64ï¿½Ö½ï¿½cacheï¿½ï¿½ï¿½ï¿½ß½ï¿½ */
 }tcp_rst_finger_mark_t;
 
 static bulid_layer_ipv4_args_t g_build_ipv4_args[MAX_THREAD_NUM];
@@ -87,7 +87,7 @@ struct gtp_cache_addr_t g_addr_register_for_gtp_cache[MAX_THREAD_NUM];
 //struct layer_addr_mpls g_mpls_register_addr[MAX_THREAD_NUM];
 
 /*
-	¸ù¾ÝÊÕµ½µÄ×Ö½ÚÊý¡¢ÓëÉÏ¸ö°üµÄ³¤¶È²î¡¢¼°Êý¾Ý°üµÄµØÖ·²¿·Ö, µÃµ½¼ÆËãËæ»úÊýµÄÖÖ×Ó.
+	ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½È²î¡¢ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½Äµï¿½Ö·ï¿½ï¿½ï¿½ï¿½, ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
 */
 #if 0
 void random_seed(int pkt_len, UINT64 *pkt_rand)
@@ -135,7 +135,7 @@ int set_rst_max_rnd_val(int max_rnd_val)
 }
 
 /*
-	ÎªÁË¼æÈÝÀÏ°æÏµÍ³, ¿É×·×Ù±¾ÏµÍ³·¢³öµÄRST°ü.
+	Îªï¿½Ë¼ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ÏµÍ³, ï¿½ï¿½×·ï¿½Ù±ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½RSTï¿½ï¿½.
 	IN ARG:
 		sip, dip: network order;
 		
@@ -184,7 +184,7 @@ static void trick_algo_getrandval_with_seed(int thread_id,unsigned sip,unsigned 
 }
 
 
-/* 2014-08-26 lijia add, ¿É×·×Ù±¾ÏµÍ³·¢³öµÄRST°ü.*/
+/* 2014-08-26 lijia add, ï¿½ï¿½×·ï¿½Ù±ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½RSTï¿½ï¿½.*/
 static tcp_rst_finger_mark_t *make_tcp_rst_finger_mark(int thread_id,  const raw_pkt_t *raw_pkt)
 {
 	tcp_rst_finger_mark_t *rst_finger;
@@ -192,10 +192,10 @@ static tcp_rst_finger_mark_t *make_tcp_rst_finger_mark(int thread_id,  const raw
 
 	rst_finger = &g_tcp_rst_finger[thread_id];
 
-	/* NOTE, Ö»ÓÐIPv4ÄÜÔÚip_idÉÏ×öÐ©±ê¼Ç, IPv6ÔÝ²»Ö§³ÖRSTÖ¸ÎÆ */
-	/* TODO 2, ´Ë´¦Èç¹ûÓÐËíµÀ, ¿¿jump_to_layer²»ÖªµÀÌøµ½ÄÄÒ»²ã, Ó¦¸ÃÓÃstream_private->offset_to_ip_hdrÆ«ÒÆµ½±¾²ãµÄIPÍ·²¿ */
+	/* NOTE, Ö»ï¿½ï¿½IPv4ï¿½ï¿½ï¿½ï¿½ip_idï¿½ï¿½ï¿½ï¿½Ð©ï¿½ï¿½ï¿½, IPv6ï¿½Ý²ï¿½Ö§ï¿½ï¿½RSTÖ¸ï¿½ï¿½ */
+	/* TODO 2, ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½jump_to_layerï¿½ï¿½Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½, Ó¦ï¿½ï¿½ï¿½ï¿½stream_private->offset_to_ip_hdrÆ«ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPÍ·ï¿½ï¿½ */
 	ip4_hdr = (const struct mesa_ip4_hdr *)MESA_jump_layer(raw_pkt->raw_pkt_data, raw_pkt->low_layer_type, __ADDR_TYPE_IP_PAIR_V4);
-	if((NULL == ip4_hdr) || (0 == ABBR_INJECT_RST_SIGN)){ /* Ëæ»úÌî³ä, ÎÞÖ¸ÎÆÐÅÏ¢ */
+	if((NULL == ip4_hdr) || (0 == ABBR_INJECT_RST_SIGN)){ /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ï¢ */
 		rst_finger->ip_id_host_order = (unsigned short)MESA_rand();
 		rst_finger->ip_ttl = (unsigned short)MESA_rand_range(48, 120);
 		rst_finger->tcp_win_host_order = (unsigned short)MESA_rand_range(1000, 1460);
@@ -219,13 +219,13 @@ static tcp_rst_finger_mark_t *make_tcp_rst_finger_mark(int thread_id,  const raw
     (x = (x >> 16) + (x & 0xffff), (~(x + (x >> 16)) & 0xffff))
 
 
-/* 2012-04-10 LiJia add, »ñÈ¡Íø¿¨IPv4µØÖ·
-²ÎÊý:
-	device: Íø¿¨Ãû³Æ
-	ip_add: ´æ´¢IPµØÖ·µÄÖ¸Õë£¬½á¹ûÎªÍøÂçÐò.
-·µ»ØÖµ:
-	0: Õý³£
-	-1:´íÎó
+/* 2012-04-10 LiJia add, ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½IPv4ï¿½ï¿½Ö·
+ï¿½ï¿½ï¿½ï¿½:
+	device: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	ip_add: ï¿½æ´¢IPï¿½ï¿½Ö·ï¿½ï¿½Ö¸ï¿½ë£¬ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
+ï¿½ï¿½ï¿½ï¿½Öµ:
+	0: ï¿½ï¿½ï¿½ï¿½
+	-1:ï¿½ï¿½ï¿½ï¿½
 */
 int MESA_get_dev_ipv4(const char *device, int *ip_add)
 {
@@ -258,14 +258,14 @@ err_exit:
 }
 
 
-/* 2012-04-10 LiJia add, »ñÈ¡Íø¿¨MACµØÖ·
-²ÎÊý:
-	device: Íø¿¨Ãû³Æ
-	mac: ´æ´¢MACµØÖ·µÄÊý×é,½á¹ûÎªÍøÂçÐò,
-		 ÈçÍø¿¨MACµØÖ·Îª11:22:33:44:55:66,Ôòmac[0]Îª0x11,mac[5]Îª0x66.
-·µ»ØÖµ:
-	0: Õý³£
-	-1:´íÎó
+/* 2012-04-10 LiJia add, ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½MACï¿½ï¿½Ö·
+ï¿½ï¿½ï¿½ï¿½:
+	device: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	mac: ï¿½æ´¢MACï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,
+		 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MACï¿½ï¿½Ö·Îª11:22:33:44:55:66,ï¿½ï¿½mac[0]Îª0x11,mac[5]Îª0x66.
+ï¿½ï¿½ï¿½ï¿½Öµ:
+	0: ï¿½ï¿½ï¿½ï¿½
+	-1:ï¿½ï¿½ï¿½ï¿½
 */
 int MESA_get_dev_mac(const char *device, unsigned char mac[6])
 {
@@ -304,16 +304,16 @@ err_exit:
 }
 
 
-/*  2012-04-11 LiJia add,½«MAC×Ö·û´®ÐÎÊ½×ª»»Îª16½øÖÆMACµØÖ·.
-²ÎÊý:
-	str:   MACµØÖ·×Ö·û´®
-	delim: ×Ö·û´®·Ö¸ô·û£¬³£¼ûÎª':', '-'µÈ,Èç: xx:xx:xx:xx:xx:xx
-			Èç¹û×Ö·û´®ÎÞ·Ö¸ô·û£¬delimÉèÎª-1.
-	mac:   ´æ´¢MACµØÖ·µÄÊý×é(Ö¸Õë),½á¹ûÎªÍøÂçÐò,
-		   ÈçÍø¿¨MACµØÖ·Îª11:22:33:44:55:66,Ôòmac[0]Îª0x11,mac[5]Îª0x66.
-·µ»ØÖµ:
-	0: Õý³£
-	-1:´íÎó
+/*  2012-04-11 LiJia add,ï¿½ï¿½MACï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ê½×ªï¿½ï¿½Îª16ï¿½ï¿½ï¿½ï¿½MACï¿½ï¿½Ö·.
+ï¿½ï¿½ï¿½ï¿½:
+	str:   MACï¿½ï¿½Ö·ï¿½Ö·ï¿½ï¿½ï¿½
+	delim: ï¿½Ö·ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª':', '-'ï¿½ï¿½,ï¿½ï¿½: xx:xx:xx:xx:xx:xx
+			ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½Þ·Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½delimï¿½ï¿½Îª-1.
+	mac:   ï¿½æ´¢MACï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(Ö¸ï¿½ï¿½),ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,
+		   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MACï¿½ï¿½Ö·Îª11:22:33:44:55:66,ï¿½ï¿½mac[0]Îª0x11,mac[5]Îª0x66.
+ï¿½ï¿½ï¿½ï¿½Öµ:
+	0: ï¿½ï¿½ï¿½ï¿½
+	-1:ï¿½ï¿½ï¿½ï¿½
 */
 int MESA_mac_pton(const char *str, int delim, char *mac)
 {
@@ -322,7 +322,7 @@ int MESA_mac_pton(const char *str, int delim, char *mac)
 	const char *s = str;
 	int i; 
 
-	/* ¼ì²éÊäÈëºÏ·¨ÐÔ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï·ï¿½ï¿½ï¿½ */
 	if(delim != -1)
 	{
 		if(strlen(str) != MAC_STR_LEN_DELIM) 
@@ -340,10 +340,10 @@ int MESA_mac_pton(const char *str, int delim, char *mac)
 		}
 	}
 
-	/* ¼ì²éÊäÈëºÏ·¨ÐÔ£¬Í¬Ê±×ª»»³É16½øÖÆÖµ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï·ï¿½ï¿½Ô£ï¿½Í¬Ê±×ªï¿½ï¿½ï¿½ï¿½16ï¿½ï¿½ï¿½ï¿½Öµ */
 	for(i = 0; i < 6; i++)
 	{
-		mac[i] = 0; /* ÏÈÇåÁã£¬¸³ÖµÓï¾ä¶¼ÊÇ»ò²Ù×÷ */
+		mac[i] = 0; /* ï¿½ï¿½ï¿½ï¿½ï¿½ã£¬ï¿½ï¿½Öµï¿½ï¿½ä¶¼ï¿½Ç»ï¿½ï¿½ï¿½ï¿½ */
 		if(isxdigit(*s)==0)
 		{
 			printf("MAC string type error!\n");
@@ -449,7 +449,7 @@ int sendpacket_do_checksum(unsigned char *buf, int protocol, int len)
     sum = 0;
     iph_p = (struct mesa_ip4_hdr *)buf;
 
-    if(4 == iph_p->ip_v)  /* IP°æ±¾ºÅ×Ö¶Î£¬IPv4ºÍIPv6¸ñÊ½ÊÇÏàÍ¬µÄ */
+    if(4 == iph_p->ip_v)  /* IPï¿½æ±¾ï¿½ï¿½ï¿½Ö¶Î£ï¿½IPv4ï¿½ï¿½IPv6ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½ */
     {
         ip_hl = iph_p->ip_hl << 2;
         ip6h_p = NULL;
@@ -575,8 +575,8 @@ int sendpacket_build_ipv4(u_int16_t carry_layer_len, u_int8_t tos, u_int16_t id,
 	ip_hdr->ip_ttl  = ttl;                           /* time to live */
 	ip_hdr->ip_p    = prot;                          /* transport protocol */
 	ip_hdr->ip_sum  = 0;                             /* do this later */
-	ip_hdr->ip_src.s_addr = src; /* ÎªÊ²Ã´µØÖ·ÓÃÍøÂçÐò? ÀúÊ·ÒÅÁôÔ­Òò, ¸Ä¶¯Ì«¶à,Ö»ÄÜÕâÃ´¼ÌÐøÁË */
-	ip_hdr->ip_dst.s_addr = dst; /* ÎªÊ²Ã´µØÖ·ÓÃÍøÂçÐò? ÀúÊ·ÒÅÁôÔ­Òò, ¸Ä¶¯Ì«¶à,Ö»ÄÜÕâÃ´¼ÌÐøÁË */
+	ip_hdr->ip_src.s_addr = src; /* ÎªÊ²Ã´ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½? ï¿½ï¿½Ê·ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½, ï¿½Ä¶ï¿½Ì«ï¿½ï¿½,Ö»ï¿½ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	ip_hdr->ip_dst.s_addr = dst; /* ÎªÊ²Ã´ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½? ï¿½ï¿½Ê·ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½, ï¿½Ä¶ï¿½Ì«ï¿½ï¿½,Ö»ï¿½ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	if (payload && payload_s){
 	    /*
 	     *  Unchecked runtime error for buf + IP_H + payload to be greater than
@@ -590,7 +590,7 @@ int sendpacket_build_ipv4(u_int16_t carry_layer_len, u_int8_t tos, u_int16_t id,
 }
 
 
-/* TODO 2: ´øÀ©Õ¹Í·²¿µÄIPv6°ü */
+/* TODO 2: ï¿½ï¿½ï¿½ï¿½Õ¹Í·ï¿½ï¿½ï¿½ï¿½IPv6ï¿½ï¿½ */
 int sendpacket_build_ipv6(u_int8_t traffic_class, u_int32_t flow_lable,
                               u_int16_t len, u_int8_t next_header, u_int8_t hop,
                               const struct in6_addr *src, const struct in6_addr *dst,
@@ -630,7 +630,7 @@ int sendpacket_build_ipv6(u_int8_t traffic_class, u_int32_t flow_lable,
 	return 0;
 }
 
-/* 2012-04-10 LiJia add, ÓÃÓÚ¹¹½¨ICMP-ECHO-REQUEST, ICMP-ECHO-REPLAY°ü */
+/* 2012-04-10 LiJia add, ï¿½ï¿½ï¿½Ú¹ï¿½ï¿½ï¿½ICMP-ECHO-REQUEST, ICMP-ECHO-REPLAYï¿½ï¿½ */
 int sendpacket_build_icmpv4_echo(u_int8_t type, u_int8_t code, u_int16_t sum,
 	u_int16_t id, u_int16_t seq, u_int8_t *payload, u_int32_t payload_s, unsigned char *buf)
 {
@@ -769,7 +769,7 @@ int sendpacket_build_udp(u_int16_t sp, u_int16_t dp, const char *payload, int pa
 }
 
 /* lijia add carry_layer_len args, 
-	ÔÚÇ¶Ì×¡¢ËíµÀÄ£Ê½ÏÂ¹¹ÔìÊý¾Ý°ü, Ã»ÓÐpayload, µ«Êµ¼Ê»¹ÓÐÉÏ²ãÐ­Òé, Èçteredo, µÈÐ­ÒéÊ±Ê¹ÓÃ.
+	ï¿½ï¿½Ç¶ï¿½×¡ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Â¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½, Ã»ï¿½ï¿½payload, ï¿½ï¿½Êµï¿½Ê»ï¿½ï¿½ï¿½ï¿½Ï²ï¿½Ð­ï¿½ï¿½, ï¿½ï¿½teredo, ï¿½ï¿½Ð­ï¿½ï¿½Ê±Ê¹ï¿½ï¿½.
 */
 int sendpacket_build_udp_dual_stack(u_int16_t sp, u_int16_t dp, const char *payload, 
 					int payload_s, int carry_layer_len, unsigned char *buf)
@@ -879,7 +879,7 @@ static int calc_mpls_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_s
 			}		
 		}
 	}else{
-		/* Èç¹û²»Ç¿ÖÆÒªÇó·Ç¶Ô³ÆµØÖ·, Èç¹û±¾²àÃ»ÓÐµØÖ·, ÏÈÊ¹ÓÃ¶Ô²àµØÖ·ÐÅÏ¢ */
+		/* ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½Òªï¿½ï¿½Ç¶Ô³Æµï¿½Ö·, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ðµï¿½Ö·, ï¿½ï¿½Ê¹ï¿½Ã¶Ô²ï¿½ï¿½Ö·ï¿½ï¿½Ï¢ */
 		if(send_stream_dir == DIR_C2S){
 			if(mpls_addr->c2s_layer_num > 0){
 				mpls_layer_len = sizeof(struct mesa_mpls_hdr) * mpls_addr->c2s_layer_num;
@@ -922,7 +922,7 @@ static int calc_vlan_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_s
 			vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->s2c_layer_num;		
 		}
 	}else{
-		/* Èç¹û²»Ç¿ÖÆÒªÇó·Ç¶Ô³ÆµØÖ·, Èç¹û±¾²àÃ»ÓÐ, ÏÈÊ¹ÓÃ¶Ô²àµØÖ·ÐÅÏ¢ */
+		/* ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½Òªï¿½ï¿½Ç¶Ô³Æµï¿½Ö·, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½, ï¿½ï¿½Ê¹ï¿½Ã¶Ô²ï¿½ï¿½Ö·ï¿½ï¿½Ï¢ */
 		if(send_stream_dir == DIR_C2S){
 			if(vlan_addr->c2s_layer_num != 0){
 				vlan_layer_len = sizeof(struct mesa_vlan_hdr) * vlan_addr->c2s_layer_num;
@@ -950,11 +950,11 @@ static int calc_gtp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_st
 	 
 	raw_net_gtp_hdr = (const struct gtp_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr);
 	/* 
-	    ÔÝ²»Ö§³Ö´øÐòºÅµÄGTPËíµÀ, 
-		Ò»¸öGTPËíµÀ¿ÉÄÜ³ÐÔØ¶à¸öÄÚ²¿ËÄÔª×é, °´ÄÚ²ã¶þÔª×é·ÖÁ÷»¹²»Ò»¶¨·Öµ½Í¬Ò»¸öÏß³ÌÉÏ, 
-		ÔõÃ´±£Ö¤¶à¸öÄÚ²ãTCP/UDPÁ¬½ÓÖ®¼äµÄGTPÐòºÅÍ¬²½??
-	    Ì«¸´ÔÓÁË!  
-	    TODO°É!!
+	    ï¿½Ý²ï¿½Ö§ï¿½Ö´ï¿½ï¿½ï¿½Åµï¿½GTPï¿½ï¿½ï¿½ï¿½, 
+		Ò»ï¿½ï¿½GTPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½Ôªï¿½ï¿½, ï¿½ï¿½ï¿½Ú²ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Öµï¿½Í¬Ò»ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½, 
+		ï¿½ï¿½Ã´ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½Ú²ï¿½TCP/UDPï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½GTPï¿½ï¿½ï¿½Í¬ï¿½ï¿½??
+	    Ì«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½!  
+	    TODOï¿½ï¿½!!
 	*/
 	if(raw_net_gtp_hdr->flags & (GTP_HDR_FLAG_SEQ_NUM | GTP_HDR_FLAG_N_PDU | GTP_HDR_FLAG_NEXT_EXT_HDR))
 	{
@@ -966,7 +966,7 @@ static int calc_gtp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_st
     }
 
 	if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_GPRS_TUNNEL][stream_pr->layer_index] != 0){
-		/* Èç¹ûGTPÉèÖÃÁË·Ç¶Ô³Æ±ê¼Ç, ±ØÐë±£Ö¤µ±Ç°×¢Èë·½ÏòÖ®Ç°Ôø¾­ÓÐÊý¾Ý°ü */
+		/* ï¿½ï¿½ï¿½GTPï¿½ï¿½ï¿½ï¿½ï¿½Ë·Ç¶Ô³Æ±ï¿½ï¿½, ï¿½ï¿½ï¿½ë±£Ö¤ï¿½ï¿½Ç°×¢ï¿½ë·½ï¿½ï¿½Ö®Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ */
 		if(send_stream_dir == DIR_C2S){
 			if(0 == p_gtp_layer_addr->teid_c2s){
 				sapp_global_val->mthread_volatile[stream_pr->stream_public.threadnum]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
@@ -981,7 +981,7 @@ static int calc_gtp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_st
 			}		
 		}
 	}else{
-		/* ²»Ç¿ÖÆGTPµØÖ··Ç¶Ô³Æ, sapp·¢°ü¿Ï¶¨ÊÇ¿ÉÒÔµÄ, µ«ÊÇ¿ÉÄÜ¶Ô¶Ë²»½ÓÊÜ */
+		/* ï¿½ï¿½Ç¿ï¿½ï¿½GTPï¿½ï¿½Ö·ï¿½Ç¶Ô³ï¿½, sappï¿½ï¿½ï¿½ï¿½ï¿½Ï¶ï¿½ï¿½Ç¿ï¿½ï¿½Ôµï¿½, ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½Ü¶Ô¶Ë²ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	}
 	
 	return hdr_len;
@@ -989,11 +989,11 @@ static int calc_gtp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_st
 
 extern int calc_l2tp_hdr_len(struct streaminfo_private * stream_pr, UCHAR send_stream_dir);
 /*
-	1-¼ÆËãËùÓÐ°üÍ·µÄ³¤¶È, ÓÃÓÚÔ¤Áô¿Õ¼ä. ¼ÆËãµ½×îµ×²ãÐ­Òé, Èç¹ûÓÐMACÒ²°üº¬MACÍ·¿Õ¼ä;
-	2-µÝ¹é¹ý³ÌÖÐ»ñÈ¡Ethernet²ã³ÐÔØµÄÐ­ÒéÀàÐÍ.
+	1-ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð°ï¿½Í·ï¿½Ä³ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½Õ¼ï¿½. ï¿½ï¿½ï¿½ãµ½ï¿½ï¿½×²ï¿½Ð­ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½MACÒ²ï¿½ï¿½ï¿½ï¿½MACÍ·ï¿½Õ¼ï¿½;
+	2-ï¿½Ý¹ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½È¡Ethernetï¿½ï¿½ï¿½ï¿½Øµï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
 
 	2020-09-25 lijia add args send_stream_dir, 
-	send_stream_dir: ÒòMPLSÐ­ÒéÖ»ÓÐµ¥ÏòµØÖ·, ¿ÉÄÜ²ãÊý»¹ÊÇ·Ç¶Ô³ÆµÄ, ÐèÒªÖªµÀ·¢°ü·½Ïò, ²ÅÄÜÈ·¶¨Ô¤ÁôÍ·²¿³¤¶È. 
+	send_stream_dir: ï¿½ï¿½MPLSÐ­ï¿½ï¿½Ö»ï¿½Ðµï¿½ï¿½ï¿½ï¿½Ö·, ï¿½ï¿½ï¿½Ü²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·Ç¶Ô³Æµï¿½, ï¿½ï¿½ÒªÖªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½Ô¤ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. 
 */
 static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type, UCHAR send_stream_dir)
 {
@@ -1001,38 +1001,38 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
     struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
     int pfather_hdr_len;
 
-	if(NULL == stream){ /* µÝ¹é¼ÆËãÖÕ½áÌõ¼þ! */
+	if(NULL == stream){ /* ï¿½Ý¹ï¿½ï¿½ï¿½ï¿½ï¿½Õ½ï¿½ï¿½ï¿½ï¿½ï¿½! */
 		return 0;
 	}
     
-	if(is_proxy_stream(stream)){ /* ´úÀíÁ÷½á¹¹ÎªÐéÄâ½á¹¹, Êµ¼Ê¹¹Ôì°üÊ±Ìø¹ý²»´¦Àí */
+	if(is_proxy_stream(stream)){ /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹Îªï¿½ï¿½ï¿½ï¿½á¹¹, Êµï¿½Ê¹ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		return calc_reserved_hdr_len((struct streaminfo *)stream->pfather, net_layer_type, send_stream_dir);
 	}
 	
 	switch(stream->addr.addrtype){
 		case ADDR_TYPE_IPV4:
-			/* 2015-12-30 lijia modify, IPºÍ¶Ë¿ÚÍ¬Ê±´æ´¢ÓÚ´Ë½á¹¹ */
+			/* 2015-12-30 lijia modify, IPï¿½Í¶Ë¿ï¿½Í¬Ê±ï¿½æ´¢ï¿½Ú´Ë½á¹¹ */
 			if(STREAM_TYPE_TCP == stream->type){
 				reserved_hdr_len = sizeof(struct mesa_tcp_hdr) + sizeof(struct mesa_ip4_hdr);
 			}else if (STREAM_TYPE_UDP == stream->type){
 				reserved_hdr_len = sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip4_hdr);
 			}else{
 				//printf("addr type is tuple4v4, but stream type is not TCP or UDP!\n");
-				sapp_runtime_log(RLOG_LV_FATAL, "calc_reserved_hdr_len(): addr type is tuple4v4, but stream type is :%d, not TCP or UDP.\n", stream->type);		
+				sapp_runtime_log(RLOG_LV_FATAL, "calc_reserved_hdr_len(): addr type is tuple4v4, but stream type is :%d, not TCP or UDP.", stream->type);		
 				return -1;
 				//assert(0);
 			}
 		break;
 		
 		case ADDR_TYPE_IPV6:
-			/* 2015-12-30 lijia modify, IPºÍ¶Ë¿ÚÍ¬Ê±´æ´¢ÓÚ´Ë½á¹¹ */
+			/* 2015-12-30 lijia modify, IPï¿½Í¶Ë¿ï¿½Í¬Ê±ï¿½æ´¢ï¿½Ú´Ë½á¹¹ */
 			if(STREAM_TYPE_TCP == stream->type){
 				reserved_hdr_len = sizeof(struct mesa_tcp_hdr) + sizeof(struct mesa_ip6_hdr);;
 			}else if (STREAM_TYPE_UDP == stream->type){
 				reserved_hdr_len = sizeof(struct mesa_udp_hdr) + sizeof(struct mesa_ip6_hdr);;
 			}else{
 				//printf("addr type is tuple4v6, but stream type is not TCP or UDP!\n");
-				sapp_runtime_log(RLOG_LV_FATAL, "calc_reserved_hdr_len(): addr type is tuple4v6, but stream type is :%d, not TCP or UDP.\n", stream->type);		
+				sapp_runtime_log(RLOG_LV_FATAL, "calc_reserved_hdr_len(): addr type is tuple4v6, but stream type is :%d, not TCP or UDP.", stream->type);		
 				return -1;
 				//assert(0);
 			}
@@ -1048,7 +1048,7 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 
 		case ADDR_TYPE_ARP:
 			//printf("Sendpacket use ARP!\n");
-			sapp_runtime_log(RLOG_LV_INFO, "calc_reserved_hdr_len(): Sendpacket use ARP.\n");		
+			sapp_runtime_log(RLOG_LV_INFO, "calc_reserved_hdr_len(): Sendpacket use ARP.");		
 			return -1;
 			//assert(0);
 		break;
@@ -1069,8 +1069,8 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 		break;
 		
 		case ADDR_TYPE_TCP:
-			/* to do, Èç¹û·¢ËÍ´øÑ¡ÏîµÄ°ü, ¶øÇÒºÍÔ­Ê¼°ü²»Ò»ÑùµÄ»°, ÔõÃ´¼ÆËã? 
-				ÏÈÔ¤Áô×î´ó³¤¶È, È»ºó¸ù¾ÝÊµ¼ÊÑ¡Ïî³¤¶È, ÓÃmemmoveÒÆ¶¯ÒÑ¹¹ÔìµÄ¸ºÔØ.
+			/* to do, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í´ï¿½Ñ¡ï¿½ï¿½Ä°ï¿½, ï¿½ï¿½ï¿½Òºï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ä»ï¿½, ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½? 
+				ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ó³¤¶ï¿½, È»ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½Ñ¡ï¿½î³¤ï¿½ï¿½, ï¿½ï¿½memmoveï¿½Æ¶ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½.
 			*/
 			reserved_hdr_len = sizeof(struct mesa_tcp_hdr);
 		break;
@@ -1092,17 +1092,17 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 		break;
 
 		case __ADDR_TYPE_IP_PAIR_V4:
-			/* to do, Èç¹û¹¹Ôì´øÑ¡ÏîµÄ°ü, ÔõÃ´¼ÆËã? */
+			/* to do, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½Ä°ï¿½, ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½? */
 			reserved_hdr_len = sizeof(struct mesa_ip4_hdr);
 		break;
 		
 		case __ADDR_TYPE_IP_PAIR_V6:
-			/* to do, Èç¹û¹¹Ôì´øÑ¡ÏîµÄ°ü, ÔõÃ´¼ÆËã? */
+			/* to do, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½Ä°ï¿½, ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½? */
 			reserved_hdr_len = sizeof(struct mesa_ip6_hdr);
 		break;
 
 		case ADDR_TYPE_PPP:
-			assert(0); /* ²»ÔÙµ¥¶ÀÉèPPP²ã, ºÍL2TP, PPTP¹²ÎªÒ»²ã */
+			assert(0); /* ï¿½ï¿½ï¿½Ùµï¿½ï¿½ï¿½ï¿½ï¿½PPPï¿½ï¿½, ï¿½ï¿½L2TP, PPTPï¿½ï¿½ÎªÒ»ï¿½ï¿½ */
 			reserved_hdr_len = sizeof(struct mesa_ppp_hdr);
 		break;
 
@@ -1140,12 +1140,12 @@ static int calc_reserved_hdr_len(struct streaminfo *stream, int *net_layer_type,
 	if(CAP_LEVEL_MAC == g_packet_io_cap_level) {
 		if(stream_pr->pfather_pr 
 		 && ((ADDR_TYPE_MAC_IN_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype) || (ADDR_TYPE_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype))){
-			/* ¼ÇÂ¼MAC²ãÖ®ÉÏµÄÐ­ÒéµØÖ·ÀàÐÍ, ÓÃÓÚÌî³äEthernet->type×Ö¶Î, ¶ÔÓÚMAC-in-MACµÄinner_eth, ¼ÇÂ¼ÉÏ²ãÐ­ÒéÀàÐÍ */
+			/* ï¿½ï¿½Â¼MACï¿½ï¿½Ö®ï¿½Ïµï¿½Ð­ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ethernet->typeï¿½Ö¶ï¿½, ï¿½ï¿½ï¿½ï¿½MAC-in-MACï¿½ï¿½inner_eth, ï¿½ï¿½Â¼ï¿½Ï²ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 			*net_layer_type = (int)stream->addr.addrtype;
 		}
 	}else{
 		/* to do:
-			Èç¹û²¶°ü¿â×Ô¶¯ÆÁ±ÎÁËethernet²ã, ÉõÖÁ°þµôÁËvlanµÈ²ã¶øÇÒ»¹Òª·¢°üÔõÃ´°ì?
+			ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ethernetï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½vlanï¿½È²ï¿½ï¿½ï¿½Ò»ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã´ï¿½ï¿½?
 		*/
 		if(NULL == stream_pr->pfather_pr){
 			if(g_packet_io_cap_level == stream->addr.addrtype){
@@ -1250,9 +1250,9 @@ static int build_net_layer_ethernet(const struct streaminfo *top_stream, struct 
 			int carry_layer_len, unsigned char *buf, UCHAR send_stream_dir, const raw_pkt_t *raw_pkt)
 {
 	/* 
-	   ×¢Òâ´Ë´¦²»ÄÜÊ¹ÓÃÔ­Ê¼°üÖÐµÄµØÖ·, ÒòÎªÉæ¼°µ½Á½²àµØÖ·²»¶Ô³Æ, ²»ÏñipµØÖ·ºÍ¶Ë¿Ú, µßµ¹srcºÍdst¼´¿É,
-	   Èç¹ûC2SºÍS2CÁ÷Á¿·Ö±ðÀ´×ÔÁ½ÌõÁ´Â·, C2SºÍS2C·½ÏòµÄmacÈ«²¿²»Ò»Ñù, Ò»¹²»áÓÐËÄ¸öMACµØÖ·, ¶ø²»ÊÇÁ½¸ö!
-	   Èç¹ûÊÇ·´Ïò·¢°ü, ¼´Ê¹µßµ¹src, dstÒ²ÊÇ´íÎóµÄ!!
+	   ×¢ï¿½ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ÐµÄµï¿½Ö·, ï¿½ï¿½Îªï¿½æ¼°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½Ô³ï¿½, ï¿½ï¿½ï¿½ï¿½ipï¿½ï¿½Ö·ï¿½Í¶Ë¿ï¿½, ï¿½ßµï¿½srcï¿½ï¿½dstï¿½ï¿½ï¿½ï¿½,
+	   ï¿½ï¿½ï¿½C2Sï¿½ï¿½S2Cï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â·, C2Sï¿½ï¿½S2Cï¿½ï¿½ï¿½ï¿½ï¿½macÈ«ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½, Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½MACï¿½ï¿½Ö·, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½!
+	   ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ò·¢°ï¿½, ï¿½ï¿½Ê¹ï¿½ßµï¿½src, dstÒ²ï¿½Ç´ï¿½ï¿½ï¿½ï¿½!!
 	*/
 	const struct layer_addr_mac *in_stream_addr;
 	in_stream_addr = (struct layer_addr_mac *)(stream_pr->stream_public.addr.mac);
@@ -1260,9 +1260,9 @@ static int build_net_layer_ethernet(const struct streaminfo *top_stream, struct 
 
 	send_hdr->ether_type = htons(eth_type_host);
 
-	/* ²¢ÁªÄ£Ê½ÏÂ,×îµ×²ãÎÞÐè¹¹½¨ethernetµØÖ·,
-	   ÎÞÂÛinject_pkt_modeÊÇÊ²Ã´Ä£Ê½, sys_route»¹ÊÇraw_ethernet_single_gatewayµÈµÈ, ×îÍâ²ãmacÊµ¼Ê¶¼²»ÊÇÔ­Ê¼°üÖÐµÄmacµØÖ·,
-	   ´ËÊ±Ò²²»¹ØÐÄÅäÖÃÎÄ¼þetc/asymmetric_addr_layer.confµÄethernet[0]ÊÇ·ñ¿ªÆô, ´Ó¶øµ¼ÖÂµ¥ÏòÁ÷µÄ·´Ïò·¢°üÎÞÐ§.
+	/* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½,ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½è¹¹ï¿½ï¿½ethernetï¿½ï¿½Ö·,
+	   ï¿½ï¿½ï¿½ï¿½inject_pkt_modeï¿½ï¿½Ê²Ã´Ä£Ê½, sys_routeï¿½ï¿½ï¿½ï¿½raw_ethernet_single_gatewayï¿½Èµï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½macÊµï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½Ðµï¿½macï¿½ï¿½Ö·,
+	   ï¿½ï¿½Ê±Ò²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½etc/asymmetric_addr_layer.confï¿½ï¿½ethernet[0]ï¿½Ç·ï¿½ï¿½ï¿½, ï¿½Ó¶ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ò·¢°ï¿½ï¿½ï¿½Ð§.
 	*/
 	if((NULL == stream_pr->pfather_pr)  
 	 && (DEPLOYMENT_MODE_MIRROR == sapp_global_val->config.packet_io.deployment_mode_bin)){
@@ -1284,10 +1284,10 @@ static int build_net_layer_ethernet(const struct streaminfo *top_stream, struct 
 			return -1;
 		}
 		if(DIR_C2S == send_stream_dir){
-			memcpy(send_hdr->ether_shost, in_stream_addr->src_addr.h_source, ETHER_ADDR_LEN); /* µØÖ·Í¬Ïòcopy */
+			memcpy(send_hdr->ether_shost, in_stream_addr->src_addr.h_source, ETHER_ADDR_LEN); /* ï¿½ï¿½Ö·Í¬ï¿½ï¿½copy */
 			memcpy(send_hdr->ether_dhost, in_stream_addr->src_addr.h_dest, ETHER_ADDR_LEN);
 		}else{
-			memcpy(send_hdr->ether_shost, in_stream_addr->dst_addr.h_source, ETHER_ADDR_LEN); /* µØÖ·Í¬Ïòcopy */
+			memcpy(send_hdr->ether_shost, in_stream_addr->dst_addr.h_source, ETHER_ADDR_LEN); /* ï¿½ï¿½Ö·Í¬ï¿½ï¿½copy */
 			memcpy(send_hdr->ether_dhost, in_stream_addr->dst_addr.h_dest, ETHER_ADDR_LEN);
 		}
 	}
@@ -1374,7 +1374,7 @@ static int build_net_layer_udp(struct streaminfo_private *stream_pr, int carry_l
 #endif
 
 	if((reverse)
-	&& (g_overlay_layer_set[ADDR_TYPE_UDP][stream_pr->layer_index] == 0)){ /* vxlanµÈoverlay²ã²»·­×ª¶Ë¿Ú */
+	&& (g_overlay_layer_set[ADDR_TYPE_UDP][stream_pr->layer_index] == 0)){ /* vxlanï¿½ï¿½overlayï¿½ã²»ï¿½ï¿½×ªï¿½Ë¿ï¿½ */
 		sendpacket_build_udp_dual_stack(ntohs(raw_udp_hdr->uh_dport),
 							ntohs(raw_udp_hdr->uh_sport),
 							NULL,
@@ -1510,20 +1510,20 @@ static int build_net_layer_pppoe_ses(struct streaminfo_private *stream_pr, int c
 
 	raw_hdr = (struct mesa_pppoe_session_hdr *)(stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data);
 	
-	/* PPPOEÎÞ·½ÏòÐÔ, ½«Ô­Ê¼±¨ÎÄcopy¼´¿É */
+	/* PPPOEï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½copyï¿½ï¿½ï¿½ï¿½ */
 	(void)reverse;
 	memcpy(send_hdr, raw_hdr, sizeof(struct mesa_pppoe_session_hdr));
 
 	/* lijia comment:
-		´Ë´¦ÎªºÎÒª¼Ósizeof(send_hdr->ppp_protocol)?
-		ÒòÎªPPPOE_SES°üÍ·±¾À´ÊÇ²»º¬PPPÐ­ÒéÀàÐÍ×Ö¶ÎµÄ, ÊÇÎªÁË·½±ã´¦Àí, °ÑÁ½²ã2ºÏ1ÁË.
+		ï¿½Ë´ï¿½Îªï¿½ï¿½Òªï¿½ï¿½sizeof(send_hdr->ppp_protocol)?
+		ï¿½ï¿½ÎªPPPOE_SESï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½PPPÐ­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶Îµï¿½, ï¿½ï¿½Îªï¿½Ë·ï¿½ï¿½ã´¦ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½2ï¿½ï¿½1ï¿½ï¿½.
 	*/
 	send_hdr->len = htons(carry_layer_len + sizeof(send_hdr->ppp_protocol));
 
 	return sizeof(struct mesa_pppoe_session_hdr);
 }
 
-/* °ÑÍøÂç´«ÊäµÄµØÖ·×ª»»ÎªÄÚ´æ½á¹¹, ·½±ãÒµÎñ²å¼þ´¦Àí */
+/* ï¿½ï¿½ï¿½ï¿½ï¿½ç´«ï¿½ï¿½Äµï¿½Ö·×ªï¿½ï¿½Îªï¿½Ú´ï¿½á¹¹, ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 int vlan_addr_net_to_mem(const struct mesa_vlan_detail_hdr *net_vlan_hdr, struct single_layer_vlan_addr *mem_vlan_hdr)
 {
 	mem_vlan_hdr->VID = htons(net_vlan_hdr->vlan_id_high << 8 | net_vlan_hdr->vlan_id_low);
@@ -1534,7 +1534,7 @@ int vlan_addr_net_to_mem(const struct mesa_vlan_detail_hdr *net_vlan_hdr, struct
 	return 0;
 }
 
-/* °ÑÄÚ´æµØÖ·½á¹¹×ª»»ÎªRFC±ê×¼Í·²¿¸ñÊ½, ·¢ËÍµ½ÍøÂçÖÐ */
+/* ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ö·ï¿½á¹¹×ªï¿½ï¿½ÎªRFCï¿½ï¿½×¼Í·ï¿½ï¿½ï¿½ï¿½Ê½, ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 int vlan_addr_mem_to_net(const struct single_layer_vlan_addr *mem_vlan_hdr, struct mesa_vlan_detail_hdr *net_vlan_hdr)
 {
 	net_vlan_hdr->vlan_id_high = (ntohs(mem_vlan_hdr->VID) & 0xF00) >> 8;
@@ -1574,7 +1574,7 @@ static int build_net_layer_vlan(struct streaminfo_private *stream_pr, int carry_
 			//memcpy(buf, in_stream_addr->c2s_addr_array, layer_len);
 			build_net_multilayer_vlan(in_stream_addr->c2s_addr_array, in_stream_addr->c2s_layer_num, (struct mesa_vlan_detail_hdr *)buf);
 		}else{ 
-			/* ±¾²àÃ»ÓÐµØÖ·, È¡¾öÓÚÅäÖÃÎÄ¼þasymmetric_addr_layerÊÇ·ñ¿ÉÒÔÓÃ¶Ô²àµØÖ· */
+			/* ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ðµï¿½Ö·, È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½asymmetric_addr_layerï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶Ô²ï¿½ï¿½Ö· */
 			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index]){
 				layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->s2c_layer_num;
 				build_net_multilayer_vlan(in_stream_addr->s2c_addr_array, in_stream_addr->s2c_layer_num, (struct mesa_vlan_detail_hdr *)buf);
@@ -1591,7 +1591,7 @@ static int build_net_layer_vlan(struct streaminfo_private *stream_pr, int carry_
 			//memcpy(buf, in_stream_addr->s2c_addr_array, layer_len);
 			build_net_multilayer_vlan(in_stream_addr->s2c_addr_array, in_stream_addr->s2c_layer_num, (struct mesa_vlan_detail_hdr *)buf);
 		}else{
-			/* ±¾²àÃ»ÓÐµØÖ·, È¡¾öÓÚÅäÖÃÎÄ¼þasymmetric_addr_layerÊÇ·ñ¿ÉÒÔÓÃ¶Ô²àµØÖ· */
+			/* ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ðµï¿½Ö·, È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½asymmetric_addr_layerï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶Ô²ï¿½ï¿½Ö· */
 			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index]){
 				layer_len = sizeof(struct mesa_vlan_hdr) * in_stream_addr->c2s_layer_num;
 				//memcpy(buf, in_stream_addr->c2s_addr_array, layer_len);
@@ -1645,10 +1645,10 @@ static int build_net_layer_gerv1_exthdr(const struct mesa_gre_hdr *parsed_hdr,
 	unsigned short payload_len = (unsigned short)carry_layer_len;
 	payload_len = htons(payload_len);
 
-	memcpy(send_ext_value, &payload_len, sizeof(short)); /* GREv1 ±Ø¶¨ÓÐlength×Ö¶Î */
+	memcpy(send_ext_value, &payload_len, sizeof(short)); /* GREv1 ï¿½Ø¶ï¿½ï¿½ï¿½lengthï¿½Ö¶ï¿½ */
 	send_ext_value += sizeof(short);	
 
-	memcpy(send_ext_value, &send_call_id, sizeof(short)); /* GREv1 ±Ø¶¨ÓÐcallid×Ö¶Î */
+	memcpy(send_ext_value, &send_call_id, sizeof(short)); /* GREv1 ï¿½Ø¶ï¿½ï¿½ï¿½callidï¿½Ö¶ï¿½ */
 	send_ext_value += sizeof(short);		
 
 	if(0 == reverse){
@@ -1699,7 +1699,7 @@ static int build_net_layer_gre(const struct streaminfo *top_stream, struct strea
 	int gre_hdr_len, ret;
 	const struct layer_addr_pptp *raw_pptp_addr = stream_pr->stream_public.addr.pptp;
 #if 0	
-	/* NOTE: BUGFIX, µ±Ç°Á÷µÄcurdir¿ÉÄÜ²¢Ã»ÓÐÉèÖÃ, ÒòÎªÖ»ÔÚTCP²ãÉèÖÃÁËcurdir, ËùÒÔ²»ÄÜÈ¡±¾²ãÁ÷µÄcurdirÖµ */
+	/* NOTE: BUGFIX, ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½curdirï¿½ï¿½ï¿½Ü²ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ÎªÖ»ï¿½ï¿½TCPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½curdir, ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½curdirÖµ */
 	UCHAR curdir = stream_pr->stream_public.curdir;
 #endif
 	UINT16 send_call_id;
@@ -1711,20 +1711,20 @@ static int build_net_layer_gre(const struct streaminfo *top_stream, struct strea
 	}
 	
 	if((reverse != 0) && (top_stream->dir != DIR_DOUBLE)){
-	    	/* ·´·½ÏòÃ»ÓÐÊÕµ½¹ý°ü, ·´Ïò·¢ËÍÎÞ·¨Ìî³ä */
+	    	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ */
 	    	sapp_runtime_log(20, "in gre layer, send dir is reverse, but haven't get opposite single stream info!\n");
 		return -1;
 	}
 
 	if(0 == reverse){
 		if(stack_hdr.gre_extend.call_id == raw_pptp_addr->C2S_call_id){
-			/* Í¬Ïò·¢°ü, ºÍµ±Ç°À´°üÒ»Ñù */
+			/* Í¬ï¿½ò·¢°ï¿½, ï¿½Íµï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
 			send_call_id = raw_pptp_addr->C2S_call_id;
 		}else{
 			send_call_id = raw_pptp_addr->S2C_call_id;
 		}
 	}else{
-		/* ·´Ïò·¢°ü, Ê¹ÓÃ¶Ô¶ËµÄcallid */
+		/* ï¿½ï¿½ï¿½ò·¢°ï¿½, Ê¹ï¿½Ã¶Ô¶Ëµï¿½callid */
 		if(stack_hdr.gre_extend.call_id == raw_pptp_addr->C2S_call_id){
 			send_call_id = raw_pptp_addr->S2C_call_id;
 		}else{
@@ -1749,7 +1749,7 @@ static int build_net_layer_gre(const struct streaminfo *top_stream, struct strea
 	return gre_hdr_len;
 }
 
-/* °ÑÍøÂç´«ÊäµÄµØÖ·×ª»»ÎªÄÚ´æ½á¹¹, ·½±ãÒµÎñ²å¼þ´¦Àí */
+/* ï¿½ï¿½ï¿½ï¿½ï¿½ç´«ï¿½ï¿½Äµï¿½Ö·×ªï¿½ï¿½Îªï¿½Ú´ï¿½á¹¹, ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 int mpls_addr_net_to_mem(const struct mesa_mpls_hdr *net_mpls_hdr, struct single_layer_mpls_addr *mem_mpls_hdr)
 {
 	memset(mem_mpls_hdr, 0, sizeof(struct single_layer_mpls_addr));
@@ -1762,7 +1762,7 @@ int mpls_addr_net_to_mem(const struct mesa_mpls_hdr *net_mpls_hdr, struct single
 	return 0;
 }
 
-/* °ÑÄÚ´æµØÖ·½á¹¹×ª»»ÎªRFC±ê×¼Í·²¿¸ñÊ½, ·¢ËÍµ½ÍøÂçÖÐ */
+/* ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ö·ï¿½á¹¹×ªï¿½ï¿½ÎªRFCï¿½ï¿½×¼Í·ï¿½ï¿½ï¿½ï¿½Ê½, ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 int mpls_addr_mem_to_net(const struct single_layer_mpls_addr *mem_mpls_hdr, struct mesa_mpls_hdr *net_mpls_hdr)
 {
 	memset(net_mpls_hdr, 0, sizeof(struct mesa_mpls_hdr));
@@ -1810,7 +1810,7 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 				layer_len += sizeof(int);
 			}
 		}else{
-			/* ±¾²àÃ»ÓÐµØÖ·, È¡¾öÓÚÅäÖÃÎÄ¼þasymmetric_addr_layerÊÇ·ñ¿ÉÒÔÓÃ¶Ô²àµØÖ· */
+			/* ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ðµï¿½Ö·, È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½asymmetric_addr_layerï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶Ô²ï¿½ï¿½Ö· */
 			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index]){
 				layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->s2c_layer_num;
 				//memcpy(buf, in_stream_addr->dest_mpls_pkt, layer_len);
@@ -1835,7 +1835,7 @@ static int build_net_layer_mpls(struct streaminfo_private *stream_pr, int carry_
 				layer_len += sizeof(int);
 			}
 		}else{
-			/* ±¾²àÃ»ÓÐµØÖ·, È¡¾öÓÚÅäÖÃÎÄ¼þasymmetric_addr_layerÊÇ·ñ¿ÉÒÔÓÃ¶Ô²àµØÖ· */
+			/* ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ðµï¿½Ö·, È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½asymmetric_addr_layerï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶Ô²ï¿½ï¿½Ö· */
 			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index]){
 				layer_len = sizeof(struct mesa_mpls_hdr) * in_stream_addr->c2s_layer_num;
 				//memcpy(buf, in_stream_addr->src_mpls_pkt, layer_len);
@@ -1891,7 +1891,7 @@ static int build_net_layer_gtp(struct streaminfo_private *stream_pr, int carry_l
 		}
 	}
 
-	gtp_send_hdr->flags = 0x30; /* ÔÝÊ±Ö»Ö§³Öv1°æ±¾, ²»º¬seq */
+	gtp_send_hdr->flags = 0x30; /* ï¿½ï¿½Ê±Ö»Ö§ï¿½ï¿½v1ï¿½æ±¾, ï¿½ï¿½ï¿½ï¿½seq */
 	gtp_send_hdr->msg_type = 0xFF; /* T-PDU */
 	gtp_send_hdr->len = htons(carry_layer_len);
 	gtp_send_hdr->teid = this_pkt_teid;
@@ -1918,7 +1918,7 @@ static int build_net_layer_ppp(struct streaminfo_private *stream_pr, int carry_l
 			int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt, int ppp_hdr_len)
 {
 
-	/* PPPÎÞ·½ÏòÐÔ, ½«Ô­Ê¼±¨ÎÄcopy¼´¿É */
+	/* PPPï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½copyï¿½ï¿½ï¿½ï¿½ */
 	(void)reverse;
 	memcpy(buf, stream_pr->offset_to_raw_pkt_hdr + (char *)raw_pkt->raw_pkt_data, ppp_hdr_len);		
 
@@ -2004,7 +2004,7 @@ static int build_net_layer_vxlan(struct streaminfo_private *stream_pr, int carry
 		if(in_stream_addr->C2S_vxlan_addr.flag != 0){
 			build_net_single_layer_vxlan(stream_pr, send_vxlan_hdr, raw_vxlan_hdr, send_stream_dir);
 		}else{ 
-			/* ±¾²àÃ»ÓÐµØÖ·, È¡¾öÓÚÅäÖÃÎÄ¼þasymmetric_addr_layerÊÇ·ñ¿ÉÒÔÓÃ¶Ô²àµØÖ· */
+			/* ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ðµï¿½Ö·, È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½asymmetric_addr_layerï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶Ô²ï¿½ï¿½Ö· */
 			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VXLAN][stream_pr->layer_index]){
 				build_net_single_layer_vxlan(stream_pr, send_vxlan_hdr, raw_vxlan_hdr, send_stream_dir ^ DIR_DOUBLE);
 			}else{
@@ -2017,7 +2017,7 @@ static int build_net_layer_vxlan(struct streaminfo_private *stream_pr, int carry
 		if(in_stream_addr->S2C_vxlan_addr.flag > 0){
 			build_net_single_layer_vxlan(stream_pr, send_vxlan_hdr, raw_vxlan_hdr, send_stream_dir);
 		}else{
-			/* ±¾²àÃ»ÓÐµØÖ·, È¡¾öÓÚÅäÖÃÎÄ¼þasymmetric_addr_layerÊÇ·ñ¿ÉÒÔÓÃ¶Ô²àµØÖ· */
+			/* ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ðµï¿½Ö·, È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½asymmetric_addr_layerï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶Ô²ï¿½ï¿½Ö· */
 			if(0 == g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VXLAN][stream_pr->layer_index]){
 				build_net_single_layer_vxlan(stream_pr, send_vxlan_hdr, raw_vxlan_hdr, send_stream_dir ^ DIR_DOUBLE);
 			}else{
@@ -2029,7 +2029,7 @@ static int build_net_layer_vxlan(struct streaminfo_private *stream_pr, int carry
 	}
 
 	/*
-		TODO: ppp, hdlc²ãÒ²·Öc2s, s2cÁ½¸ö·½Ïò´æ´¢.
+		TODO: ppp, hdlcï¿½ï¿½Ò²ï¿½ï¿½c2s, s2cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ´¢.
 	*/
 	if(VXLAN_ENCAP_HDLC == raw_vxlan_hdr->addr_public.C2S_vxlan_addr.link_type){
 		struct hdlc_net_hdr *snd_hdlc_hdr = (struct hdlc_net_hdr *)(buf + sizeof(inline_vxlan_hdr_t));
@@ -2061,8 +2061,8 @@ static int build_net_layer_l2tp(const struct streaminfo *top_stream, struct stre
 	
 	if(0 == (top_stream->dir & send_stream_dir)){
 		/* TODO 2:
-			L2TP°üc2sºÍs2c·½ÏòTUNNEL-ID²»Ò»Ñù, Ä¿Ç°Ã»ÓÐÐÎ³ÉL2TPÁ÷, ÎÞ·¨±£´æÁíÒ»¸ö·½ÏòµÄÐÅÏ¢ ,
-			ËùÒÔ, ²»Ö§³Öµ¥ÏòÁ÷·´Ïò×¢ÈëÊý¾Ý°ü.
+			L2TPï¿½ï¿½c2sï¿½ï¿½s2cï¿½ï¿½ï¿½ï¿½TUNNEL-IDï¿½ï¿½Ò»ï¿½ï¿½, Ä¿Ç°Ã»ï¿½ï¿½ï¿½Î³ï¿½L2TPï¿½ï¿½, ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ ,
+			ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ö§ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½.
 		*/
 		sapp_runtime_log(RLOG_LV_INFO, "build_net_layer_l2tp() error, not support inject reverse pkt for single dir stream!");
 		return -1;
@@ -2071,16 +2071,16 @@ static int build_net_layer_l2tp(const struct streaminfo *top_stream, struct stre
 	memset(buf, 0, l2tp_raw_hdr_len);
 	
 	inject_net_hdr = (struct l2tp_hdr_v2 *)buf;
-	inject_ptr = buf + sizeof(struct l2tp_hdr_v2); /* Ö¸Ïò¹Ì¶¨Í·²¿ºóÃæµÄ»º³åÇø */
+	inject_ptr = buf + sizeof(struct l2tp_hdr_v2); /* Ö¸ï¿½ï¿½Ì¶ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	
-	inject_net_hdr->type = 0; /* Ä¿Ç°½öÖ§³Ö×¢Èëdata message */
+	inject_net_hdr->type = 0; /* Ä¿Ç°ï¿½ï¿½Ö§ï¿½ï¿½×¢ï¿½ï¿½data message */
 	inject_net_hdr->offset_present = 0;
 	inject_net_hdr->priority = 0;
 	inject_net_hdr->seq_present = 0; 
-	inject_net_hdr->version = 2; /* Ä¿Ç°¹Ì¶¨Ö§³Öv2 */
+	inject_net_hdr->version = 2; /* Ä¿Ç°ï¿½Ì¶ï¿½Ö§ï¿½ï¿½v2 */
 
 	/* 
-		×¢Èël2tpÊý¾Ý°ü¹Ì¶¨´øÓÐlength×Ö¶Î
+		×¢ï¿½ï¿½l2tpï¿½ï¿½ï¿½Ý°ï¿½ï¿½Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½lengthï¿½Ö¶ï¿½
 	*/
 	{
 		inject_net_hdr->length_present = 1;
@@ -2124,20 +2124,20 @@ static int build_net_layer_l2tp(const struct streaminfo *top_stream, struct stre
 
 
 /* 
-    ´Ëº¯ÊýÄÚ²¿²»ÓÃÔÙÅÐ¶ÏÊÇ·ñÐèÒª¼ÓÈëbloom filter, ÔÚº¯ÊýÍâ²¿ÒÑ¾­ÅÐ¶Ï.
+    ï¿½Ëºï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½bloom filter, ï¿½Úºï¿½ï¿½ï¿½ï¿½â²¿ï¿½Ñ¾ï¿½ï¿½Ð¶ï¿½.
 */
 
 
 
 extern int sapp_is_overlay_layer(const struct streaminfo_private *stream_pr, const raw_pkt_t *rawpkt);
 /* 
-	buf: Ö´ÏòÓ¦ÓÃ²ã¸ºÔØµØÖ·, skip hdr.
-	reverse: ´ÓÓ¦ÓÃ²ãµÄ½Ç¶ÈÇø±ðdir, ±íÊ¾Óëµ±Ç°raw_pkt°üÏà±È, ·½ÏòÊÇ·ñÒ»ÖÂ, ¶ÔÓÚÓÐ·½ÏòÐÔµÄµØÖ·, Ðè·´ÏòÔì°ü.
+	buf: Ö´ï¿½ï¿½Ó¦ï¿½Ã²ã¸ºï¿½Øµï¿½Ö·, skip hdr.
+	reverse: ï¿½ï¿½Ó¦ï¿½Ã²ï¿½Ä½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½dir, ï¿½ï¿½Ê¾ï¿½ëµ±Ç°raw_pktï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ð·ï¿½ï¿½ï¿½ï¿½ÔµÄµï¿½Ö·, ï¿½è·´ï¿½ï¿½ï¿½ï¿½ï¿½.
 
 	2020-09-25 lijia add args send_stream_dir:
-	send_stream_dir: ±íÊ¾µ±Ç°·¢°üµÄÁ÷·½Ïò, DIR_C2S»òÕßDIR_S2C, 
-	                 ÒòÎªMPLS, GTPµÈ²ãÔ­Ê¼°üÀïÖ»ÓÐµ¥ÏòµØÖ·, reverseµÄº¬Òå²»ÄÜ¾«È·±íÊ¾mpls, gtpµÈ²ãµ½µ×Ê¹ÓÃÄÄ¸ö·½ÏòµÄµØÖ·.
-	top_stream: ×îÉÏ²ãµÄÁ÷½á¹¹Ìå, Í¨³£¼´tcp»òudpÁ÷, ´ËÖµËùÓÐº¯ÊýÕ»ÖÐ±£³Ö²»±ä.                 
+	send_stream_dir: ï¿½ï¿½Ê¾ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, DIR_C2Sï¿½ï¿½ï¿½ï¿½DIR_S2C, 
+	                 ï¿½ï¿½ÎªMPLS, GTPï¿½È²ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½Ö»ï¿½Ðµï¿½ï¿½ï¿½ï¿½Ö·, reverseï¿½Äºï¿½ï¿½å²»ï¿½Ü¾ï¿½È·ï¿½ï¿½Ê¾mpls, gtpï¿½È²ãµ½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½Ö·.
+	top_stream: ï¿½ï¿½ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½, Í¨ï¿½ï¿½ï¿½ï¿½tcpï¿½ï¿½udpï¿½ï¿½, ï¿½ï¿½Öµï¿½ï¿½ï¿½Ðºï¿½ï¿½ï¿½Õ»ï¿½Ð±ï¿½ï¿½Ö²ï¿½ï¿½ï¿½.                 
 */
 static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct streaminfo *up_stream, struct streaminfo_private *stream_pr, int carry_layer_type,
 			int carry_layer_len, unsigned char *buf, int reverse, const raw_pkt_t *raw_pkt, UCHAR send_stream_dir)
@@ -2162,7 +2162,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 		return -1;
 	}
 
-	if(is_proxy_stream(stream)){ /* ´úÀíÁ÷½á¹¹ÎªÐéÄâ½á¹¹, Êµ¼ÊµÄ°ü²»´æÔÚ´Ë²ã, ¹¹Ôì°üÊ±Ìø¹ý²»´¦Àí */
+	if(is_proxy_stream(stream)){ /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹Îªï¿½ï¿½ï¿½ï¿½á¹¹, Êµï¿½ÊµÄ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´Ë²ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		return build_net_layer_pkt(top_stream, carry_layer_stream, (struct streaminfo_private *)stream->pfather, carry_layer_type, 
 								this_layer_len+carry_layer_len, buf, reverse, raw_pkt, send_stream_dir);
 	}
@@ -2170,7 +2170,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 	switch(stream->addr.addrtype){
 		case ADDR_TYPE_IPV4:
 		{
-			/* 2015-12-30 lijia modify, IPºÍ¶Ë¿Ú´æ´¢ÓÚÒ»¸ö½á¹¹, ÏÈ¹¹ÔìTCP/UDP²ã */
+			/* 2015-12-30 lijia modify, IPï¿½Í¶Ë¿Ú´æ´¢ï¿½ï¿½Ò»ï¿½ï¿½ï¿½á¹¹, ï¿½È¹ï¿½ï¿½ï¿½TCP/UDPï¿½ï¿½ */
 			if(STREAM_TYPE_TCP == stream->type){
 				transport_layer_len = sizeof(struct mesa_tcp_hdr);
 				buf -= sizeof(struct mesa_tcp_hdr);
@@ -2183,12 +2183,12 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 				carry_layer_type = ADDR_TYPE_UDP;	
 			}
 
-			/* 2015-12-30 lijia modify, IPºÍ¶Ë¿Ú´æ´¢ÓÚÒ»¸ö½á¹¹, ¼ÌÐø¹¹ÔìIPv4²ã */
+			/* 2015-12-30 lijia modify, IPï¿½Í¶Ë¿Ú´æ´¢ï¿½ï¿½Ò»ï¿½ï¿½ï¿½á¹¹, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPv4ï¿½ï¿½ */
 			this_layer_len += sizeof(struct mesa_ip4_hdr) + transport_layer_len;
 			buf -= sizeof(struct mesa_ip4_hdr);
 			build_net_layer_ipv4(stream_pr, carry_layer_type, carry_layer_len + transport_layer_len, buf, reverse, raw_pkt);
 			
-			/* TCP²ãÐ£ÑéºÍÐèÒªIPµØÖ·ÐÅÏ¢, ËùÒÔÒªÔÚ¹¹ÔìÍêIP²ãÐÅÏ¢ºó, ÔÙ¼ÆËãchecksum */
+			/* TCPï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ÒªIPï¿½ï¿½Ö·ï¿½ï¿½Ï¢, ï¿½ï¿½ï¿½ï¿½Òªï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½, ï¿½Ù¼ï¿½ï¿½ï¿½checksum */
 			checksum_for_carry_layer(buf, __ADDR_TYPE_IP_PAIR_V4, carry_layer_type, carry_layer_len+transport_layer_len);
 			carry_layer_type = __ADDR_TYPE_IP_PAIR_V4;
 			const struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)buf;
@@ -2196,8 +2196,8 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 							sapp_raw_ipv4_ntop(ip4hdr, debug_print_buf, sizeof(debug_print_buf)), send_stream_dir,
 							ntohs(ip4hdr->ip_id), ntohs(ip4hdr->ip_sum));
 
-			/* ÖØ¸´Á÷Á¿×¢Èë°üÊ¶±ð, ¼Óµ½ÕâÀïÊÇÒòÎªÈç¹ûÓÐËíµÀ, ¿ÉÄÜ»áÓÐ¶à²ã, ÇÒ²»ÓÃÔÙ¾­¹ýjump_layerÌø×ªµ½ÄÚ²¿udp/tcp²ãÁË 
-               vxlanÄ£Ê½µ×²ãudpÃ»±ØÒªÆµ·±¼ÓÈëbloom filter, ÏÈµ÷ÓÃsapp_is_overlay_layer()Ê¶±ðÒ»ÏÂ.
+			/* ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½, ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ü»ï¿½ï¿½Ð¶ï¿½ï¿½, ï¿½Ò²ï¿½ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½jump_layerï¿½ï¿½×ªï¿½ï¿½ï¿½Ú²ï¿½udp/tcpï¿½ï¿½ï¿½ï¿½ 
+               vxlanÄ£Ê½ï¿½×²ï¿½udpÃ»ï¿½ï¿½ÒªÆµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½bloom filter, ï¿½Èµï¿½ï¿½ï¿½sapp_is_overlay_layer()Ê¶ï¿½ï¿½Ò»ï¿½ï¿½.
 			*/
 			if((sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
 			 && (sapp_is_overlay_layer(stream_pr, raw_pkt) == 0)){
@@ -2207,7 +2207,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 		break;
 		
 		case ADDR_TYPE_IPV6:
-			/* 2015-12-30 lijia modify, IPºÍ¶Ë¿Ú´æ´¢ÓÚÒ»¸ö½á¹¹, ÏÈ¹¹ÔìTCP/UDP²ã */
+			/* 2015-12-30 lijia modify, IPï¿½Í¶Ë¿Ú´æ´¢ï¿½ï¿½Ò»ï¿½ï¿½ï¿½á¹¹, ï¿½È¹ï¿½ï¿½ï¿½TCP/UDPï¿½ï¿½ */
 			if(STREAM_TYPE_TCP == stream->type){
 				transport_layer_len = sizeof(struct mesa_tcp_hdr);
 				buf -= sizeof(struct mesa_tcp_hdr);
@@ -2220,28 +2220,28 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 				carry_layer_type = ADDR_TYPE_UDP;	
 			}
 
-			/* 2015-12-30 lijia modify, IPºÍ¶Ë¿Ú´æ´¢ÓÚÒ»¸ö½á¹¹, ¼ÌÐø¹¹ÔìIPv6²ã */
+			/* 2015-12-30 lijia modify, IPï¿½Í¶Ë¿Ú´æ´¢ï¿½ï¿½Ò»ï¿½ï¿½ï¿½á¹¹, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPv6ï¿½ï¿½ */
 			this_layer_len += sizeof(struct mesa_ip6_hdr) + transport_layer_len;
 			buf -= sizeof(struct mesa_ip6_hdr);
 			build_net_layer_ipv6(stream_pr, carry_layer_type, carry_layer_len + transport_layer_len, buf, reverse, raw_pkt);
 			
-			/* TCP²ãÐ£ÑéºÍÐèÒªIPµØÖ·ÐÅÏ¢, ËùÒÔÒªÔÚ¹¹ÔìÍêIP²ãÐÅÏ¢ºó, ÔÙ¼ÆËãchecksum */
+			/* TCPï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ÒªIPï¿½ï¿½Ö·ï¿½ï¿½Ï¢, ï¿½ï¿½ï¿½ï¿½Òªï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½, ï¿½Ù¼ï¿½ï¿½ï¿½checksum */
 			checksum_for_carry_layer(buf, __ADDR_TYPE_IP_PAIR_V6, carry_layer_type, carry_layer_len+transport_layer_len);
 			carry_layer_type = __ADDR_TYPE_IP_PAIR_V6;
 
-			/* ÖØ¸´Á÷Á¿Ê¶±ð, ¼Óµ½ÕâÀïÊÇÒòÎªÈç¹ûÓÐËíµÀ, ¿ÉÄÜ»áÓÐ¶à²ã, ÇÒ²»ÓÃÔÙ¾­¹ýjump_layerÌø×ªµ½ÄÚ²¿udp/tcp²ãÁË */
+			/* ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½, ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ü»ï¿½ï¿½Ð¶ï¿½ï¿½, ï¿½Ò²ï¿½ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½jump_layerï¿½ï¿½×ªï¿½ï¿½ï¿½Ú²ï¿½udp/tcpï¿½ï¿½ï¿½ï¿½ */
 			if(sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0){
 				sapp_dup_pkt_mark_l4((struct streaminfo *)top_stream, (const void *)buf, (const char *)buf+sizeof(struct mesa_ip6_hdr));
 			}			
 		break;
 		
 		case __ADDR_TYPE_IP_PAIR_V4:
-			/* to do, Èç¹û¹¹Ôì´øÑ¡ÏîµÄ°ü, ÔõÃ´¼ÆËã? */
+			/* to do, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½Ä°ï¿½, ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½? */
 			this_layer_len = sizeof(struct mesa_ip4_hdr);
 			buf -= sizeof(struct mesa_ip4_hdr);
 			build_net_layer_ipv4(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
 			
-			/* TCP²ãÐ£ÑéºÍÐèÒªIPµØÖ·ÐÅÏ¢, ËùÒÔÒªÔÚ¹¹ÔìÍêIP²ãÐÅÏ¢ºó, ÔÙ¼ÆËãchecksum */
+			/* TCPï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ÒªIPï¿½ï¿½Ö·ï¿½ï¿½Ï¢, ï¿½ï¿½ï¿½ï¿½Òªï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½, ï¿½Ù¼ï¿½ï¿½ï¿½checksum */
 			checksum_for_carry_layer(buf, __ADDR_TYPE_IP_PAIR_V4, carry_layer_type, carry_layer_len);
 			carry_layer_type = __ADDR_TYPE_IP_PAIR_V4;
 		break;
@@ -2258,7 +2258,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			this_layer_len = calc_vlan_hdr_len(stream_pr, send_stream_dir);
 			if(0 == this_layer_len){
 				if(0 == stream_pr->need_update_opposite_addr){
-					/* ¸´ÓÃ·´ÏòµØÖ·, ´ÓÐÂ¼ÆËã³¤¶È, ¹¹ÔìvlanµØÖ· */
+					/* ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½ï¿½Ö·, ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ã³¤ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½vlanï¿½ï¿½Ö· */
 					this_layer_len = calc_vlan_hdr_len(stream_pr, send_stream_dir ^ DIR_DOUBLE);
 					buf -= this_layer_len;
 					ret = build_net_layer_vlan(stream_pr, carry_layer_type, carry_layer_len, buf, send_stream_dir ^ DIR_DOUBLE, raw_pkt);
@@ -2286,8 +2286,8 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 		case ADDR_TYPE_MAC:
 		{
 			buf -= sizeof(struct mesa_ethernet_hdr); 
-			/* Èç¹ûÊÇ²¢ÁªÄ£Ê½, ´Ë´¦¿ÉÒÔ²»¹¹ÔìmacµØÖ·, ½ö¸æÖªpacket_io_send_fake_pktº¯Êýµ×²ãÀàÐÍ, MAC»¹ÊÇMAC_IN_MAC 
-				´®ÁªÄ£Ê½ÐèÒª¸ù¾Ýµ±Ç°Ô­Ê¼°ü, ºÍsend_dir¹¹ÔìmacµØÖ·.
+			/* ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½Ä£Ê½, ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½ï¿½ï¿½macï¿½ï¿½Ö·, ï¿½ï¿½ï¿½ï¿½Öªpacket_io_send_fake_pktï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½, MACï¿½ï¿½ï¿½ï¿½MAC_IN_MAC 
+				ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½Òªï¿½ï¿½ï¿½Ýµï¿½Ç°Ô­Ê¼ï¿½ï¿½, ï¿½ï¿½send_dirï¿½ï¿½ï¿½ï¿½macï¿½ï¿½Ö·.
 			*/
 			unsigned short eth_type_host = net_layer_to_ethernet_protocol_by_stream(up_stream);
 			if((unsigned short)-1 == eth_type_host){
@@ -2302,13 +2302,13 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 
 			this_layer_len = sizeof(struct mesa_ethernet_hdr);
 			carry_layer_type = ADDR_TYPE_MAC;
-			//ethernet²»Ò»¶¨ÊÇ×îºóÒ»²ã, ÒòÎªÓÐMAC-in-MAC, ±¾º¯ÊýµÝ¹é½áÊø¿¿ÅÐ¶ÏNULL == fstream_prÌõ¼þ.
+			//ethernetï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½Îªï¿½ï¿½MAC-in-MAC, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½NULL == fstream_prï¿½ï¿½ï¿½ï¿½.
 			//return carry_layer_len;
 			//sapp_runtime_log(RLOG_LV_DEBUG, "build_net_layer_pkt()-->ADDR_TYPE_MAC, buf start addr:%p, this_layer_len:%d\n", buf, this_layer_len);
 		}
 		break;
 
-		/* TODO 2: GRE v1ÓÐcallid, ·Ö±ð´æ´¢ÓÚC2S, S2CÁ½¸ö·½ÏòµÄÊý¾Ý°ü, ·¢ËÍË«ÏòRSTÐèÒª¼ÇÂ¼ÁíÒ»·½ÏòµÄÖµ */
+		/* TODO 2: GRE v1ï¿½ï¿½callid, ï¿½Ö±ï¿½æ´¢ï¿½ï¿½C2S, S2Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½, ï¿½ï¿½ï¿½ï¿½Ë«ï¿½ï¿½RSTï¿½ï¿½Òªï¿½ï¿½Â¼ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Öµ */
 		case ADDR_TYPE_GRE:
 			this_layer_len = calc_gre_hdr_len(
 						 (const struct mesa_gre_hdr *)((const char *)stream_pr->raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr));
@@ -2325,7 +2325,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 		{
 			this_layer_len = calc_mpls_hdr_len(stream_pr, send_stream_dir);
 			if(0 == this_layer_len){
-				/* ·Ç¶Ô³ÆMPLS, ÎªÁËÁ÷¶ÔÆëÉúÔì³öÀ´µÄÒ»²ã, ²»¹¹ÔìÊµ¼Ê°üÍ· */
+				/* ï¿½Ç¶Ô³ï¿½MPLS, Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½Ê°ï¿½Í· */
 				sapp_runtime_log(RLOG_LV_DEBUG, "%s, build_net_layer_mpls() send streamdir:%d, skip fake mpls layer.\n", printaddr(&stream->addr, stream->threadnum), send_stream_dir);
 				carry_layer_stream = up_stream;
 				break;
@@ -2367,7 +2367,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 		break;
 	
 		case ADDR_TYPE_TCP:
-			/* to do, Èç¹û¹¹Ôì´øÑ¡ÏîµÄ°ü, ÔõÃ´¼ÆËã? */
+			/* to do, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½Ä°ï¿½, ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½? */
 			this_layer_len = sizeof(struct mesa_tcp_hdr);
 			buf -= sizeof(struct mesa_tcp_hdr);
 			build_net_layer_tcp(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt);
@@ -2397,7 +2397,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 		break;
 
 		case ADDR_TYPE_PPP:
-			assert(0); /* PPTPËíµÀ½«greºÍpppºÏ²¢ÎªÒ»²ã, ´úÂë²»»áÔÙÖ´ÐÐµ½´Ë´¦ */
+			assert(0); /* PPTPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½greï¿½ï¿½pppï¿½Ï²ï¿½ÎªÒ»ï¿½ï¿½, ï¿½ï¿½ï¿½ë²»ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ðµï¿½ï¿½Ë´ï¿½ */
 		break;
 		
 		case ADDR_TYPE_PPTP:
@@ -2419,7 +2419,7 @@ static int build_net_layer_pkt(const struct streaminfo *top_stream, const struct
 			buf -= ppp_hdr_len;
 			build_net_layer_ppp(stream_pr, carry_layer_type, carry_layer_len, buf, reverse, raw_pkt, ppp_hdr_len);	
 			
-			/* Ö±½Ócopy pppÍ·²¿¼´¿É */
+			/* Ö±ï¿½ï¿½copy pppÍ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 			memcpy(buf, (char *)raw_pkt->raw_pkt_data + stream_pr->offset_to_raw_pkt_hdr + gre_layer_len, ppp_hdr_len);
 			
 			buf -= gre_layer_len;
@@ -2465,7 +2465,7 @@ static raw_pkt_t *update_raw_pkt(struct streaminfo_private *stream_pr, uchar snd
 
     if (stream_pr->plugin_process_context != 0)
     {
-            /* ÔÚ°ü´¦ÀíÉÏÏÂÎÄ, »òÕßÃ»ÓÐ¿ªÆôpolling, do nothing */
+            /* ï¿½Ú°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ð¿ï¿½ï¿½ï¿½polling, do nothing */
             *inject_dir_reverse = ((snd_dir == stream_pr->stream_public.routedir) ? 0 : 1);
             inject_raw_pkt = (raw_pkt_t *)stream_pr->raw_pkt;
     }
@@ -2491,8 +2491,8 @@ static raw_pkt_t *update_raw_pkt(struct streaminfo_private *stream_pr, uchar snd
                     *inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 0 : 1);
                 }
                 else
-                { /* ±¾¶Ë»¹Ã»ÊÕµ½¹ý°ü,Ê¹ÓÃ¶Ô¶ËÊý¾Ý°ü¹¹Ôì±¾¶ËµÄ°ü,¶ÔÓÚÄ³Ð©·Ç¶Ô³ÆÐ­Òé,ÈçGRE, MPLSµÈ,»áÓÐÎÊÌâ!
-                     reverseÐèÒª·´Ïò */
+                { /* ï¿½ï¿½ï¿½Ë»ï¿½Ã»ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½,Ê¹ï¿½Ã¶Ô¶ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½ï¿½ì±¾ï¿½ËµÄ°ï¿½,ï¿½ï¿½ï¿½ï¿½Ä³Ð©ï¿½Ç¶Ô³ï¿½Ð­ï¿½ï¿½,ï¿½ï¿½GRE, MPLSï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½!
+                     reverseï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ */
                     inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_up;
                     *inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 1 : 0);
                 }
@@ -2505,8 +2505,8 @@ static raw_pkt_t *update_raw_pkt(struct streaminfo_private *stream_pr, uchar snd
                     *inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 1 : 0);
                 }
                 else
-                { /* ±¾¶Ë»¹Ã»ÊÕµ½¹ý°ü,Ê¹ÓÃ¶Ô¶ËÊý¾Ý°ü¹¹Ôì±¾¶ËµÄ°ü,¶ÔÓÚÄ³Ð©·Ç¶Ô³ÆÐ­Òé,ÈçGRE, MPLSµÈ,»áÓÐÎÊÌâ!
-                     reverseÐèÒª·´Ïò */
+                { /* ï¿½ï¿½ï¿½Ë»ï¿½Ã»ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½,Ê¹ï¿½Ã¶Ô¶ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½ï¿½ì±¾ï¿½ËµÄ°ï¿½,ï¿½ï¿½ï¿½ï¿½Ä³Ð©ï¿½Ç¶Ô³ï¿½Ð­ï¿½ï¿½,ï¿½ï¿½GRE, MPLSï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½!
+                     reverseï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ */
                     inject_raw_pkt = (raw_pkt_t *)stream_pr->polling_inject_context->raw_pkt_down;
                     *inject_dir_reverse = (((snd_dir & DIR_ROUTE_DOWN) == DIR_ROUTE_DOWN) ? 0 : 1);
                 }
@@ -2546,12 +2546,12 @@ static raw_pkt_t *update_raw_pkt(struct streaminfo_private *stream_pr, uchar snd
 
 /*
 	LiJia note, to do:
-	Èç¹ûÒòÎª¶ª°üÂÒÐò, 1,2,3,4,x,6, µÚ5¸ö°ü¶ªÁË, µÚ6¸ö°ü±»»º´æ,
-	¼ÙÉèµÚ6¸ö°üÄÚÓÐÌØÊâÐÅÏ¢, ÐèÒªkill_tcp,
-	µ±µÚ5¸ö°üµ½À´Ê±, streaminfoÀï´æ´¢µÄ¶¼ÊÇµÚ5¸ö°üµÄÐÅÏ¢,
-	È»ºóÔÙ´¦Àí»º´æÖÐµÚ6¸ö°üµÄÊý¾Ý, ´ËÊ±µ÷ÓÃkill_tcp, Ïà¹Ø²ÎÊýÊÇ²»¶ÔµÄ,
-	Êµ¼ÊµÄseqºÍackÊ¹ÓÃµÄÊÇµÚ5¸ö°üµÄ!
-	Ó¦¸ÃÊ¹ÓÃbuf_unorderÖÐµÄseqºÍack, ¶ø²»ÊÇµ±Ç°Á÷µÄÔ­Ê¼°ü.
+	ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, 1,2,3,4,x,6, ï¿½ï¿½5ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½6ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,
+	ï¿½ï¿½ï¿½ï¿½ï¿½6ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢, ï¿½ï¿½Òªkill_tcp,
+	ï¿½ï¿½ï¿½ï¿½5ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±, streaminfoï¿½ï¿½æ´¢ï¿½Ä¶ï¿½ï¿½Çµï¿½5ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢,
+	È»ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½6ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½kill_tcp, ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½Ôµï¿½,
+	Êµï¿½Êµï¿½seqï¿½ï¿½ackÊ¹ï¿½Ãµï¿½ï¿½Çµï¿½5ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½!
+	Ó¦ï¿½ï¿½Ê¹ï¿½ï¿½buf_unorderï¿½Ðµï¿½seqï¿½ï¿½ack, ï¿½ï¿½ï¿½ï¿½ï¿½Çµï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½.
 */
 
 int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
@@ -2572,11 +2572,11 @@ int MESA_kill_tcp(struct streaminfo *stream, const void *ext_raw_pkt)
 	rst_paras.signature_seed2 = sapp_global_val->config.stream.tcp.inject.rst_signature_seed2;
 
 	ret1 = MESA_rst_tcp(stream, &rst_paras, sizeof(struct rst_tcp_para));
-	/* ´Ë´¦²»¹ÜÊÇ·ñ·¢Éú´íÎó, ·´·½ÏòµÄÒ²Òª·¢ËÍ, Ä³¸öµ¥·½Ïò³É¹¦Ò²ÊÇ¿ÉÒÔ²úÉúÊµ¼ÊÐ§¹ûµÄ */
+	/* ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò²Òªï¿½ï¿½ï¿½ï¿½, Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¹ï¿½Ò²ï¿½Ç¿ï¿½ï¿½Ô²ï¿½ï¿½ï¿½Êµï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ */
 	rst_paras.dir = stream->curdir ^ DIR_DOUBLE;
 	ret2 = MESA_rst_tcp(stream, &rst_paras, sizeof(struct rst_tcp_para));
 
-	/* ¼æÈÝÐÂµÄ±êÖ¾Î», kill_tcp×Ô¶¯ÉèÖÃ, ±£³Ö¹¦ÄÜ¸úÖ®Ç°Ò»ÖÂ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ÂµÄ±ï¿½Ö¾Î», kill_tcpï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ö¹ï¿½ï¿½Ü¸ï¿½Ö®Ç°Ò»ï¿½ï¿½ */
 	stream_pr->stream_killed_flag = 1;
 
 	struct tcpdetail_private *pdetail_pr=(struct tcpdetail_private*)(stream->pdetail);
@@ -2678,7 +2678,7 @@ int __MESA_rst_tcp(struct streaminfo *stream, unsigned char rst_th_flags, int rs
 				rst_pkt_len = sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr);
 				build_net_layer_tcp(stream_pr, stream->addr.addrtype, 0, rst_pkt_buf+sizeof(struct mesa_ip4_hdr), 0, raw_pkt);	
 				build_net_layer_ipv4(stream_pr, ADDR_TYPE_TCP, sizeof(struct mesa_tcp_hdr), rst_pkt_buf, 0, raw_pkt);
-				/* Ê¹ÓÃSIO_EXCLUDE_THIS_LAYER_HDRÀàÐÍ, ÐèÒª×ÔÐÐ¼ÆËãÐ£ÑéºÍ */
+				/* Ê¹ï¿½ï¿½SIO_EXCLUDE_THIS_LAYER_HDRï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Òªï¿½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ */
 				checksum_for_carry_layer(rst_pkt_buf, __ADDR_TYPE_IP_PAIR_V4, ADDR_TYPE_TCP, sizeof(struct mesa_tcp_hdr));				
 			}else{
 				rst_pkt_len = sizeof(struct mesa_ip6_hdr) + sizeof(struct mesa_tcp_hdr);
@@ -2693,8 +2693,8 @@ int __MESA_rst_tcp(struct streaminfo *stream, unsigned char rst_th_flags, int rs
 			}
 			local_sys_stat->count[SAPP_STAT_SND_TCP_RST]++;
 		}
-		/* ¿ÉÄÜÊÇË«Ïò·¢°ü, ËùÒÔÕâÀï²»ÊÇelse if */
-		if((DIR_DOUBLE == snd_rst_dir) || ((stream->curdir ^ snd_rst_dir) & 0x3) == DIR_DOUBLE){ /* ·´Ïò·¢°ü */	
+		/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë«ï¿½ò·¢°ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï²»ï¿½ï¿½else if */
+		if((DIR_DOUBLE == snd_rst_dir) || ((stream->curdir ^ snd_rst_dir) & 0x3) == DIR_DOUBLE){ /* ï¿½ï¿½ï¿½ò·¢°ï¿½ */	
 			if(ADDR_TYPE_IPV4 == stream->addr.addrtype){
 				rst_pkt_len = sizeof(struct mesa_ip4_hdr) + sizeof(struct mesa_tcp_hdr);
 				build_net_layer_tcp(stream_pr, stream->addr.addrtype, 0, rst_pkt_buf+sizeof(struct mesa_ip4_hdr), 1, raw_pkt);	
@@ -2789,8 +2789,8 @@ inline int MESA_inject_pkt(struct streaminfo *stream, const char *payload, int p
 
 /*
 	TODO:
-		ÏÈÅÐ¶ÏÕâÒ»²ãÊÇ²»ÊÇasymmetric_presence_layer,
-		È»ºóÔÙÅÐ¶Ï±¾²ãµØÖ·ÓÐÃ»ÓÐ.
+		ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½asymmetric_presence_layer,
+		È»ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ï±ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ã»ï¿½ï¿½.
 */
 static int skip_asymmetric_presence_layer(const struct streaminfo *stream, UCHAR send_stream_dir)
 {
@@ -2802,17 +2802,17 @@ static int skip_asymmetric_presence_layer(const struct streaminfo *stream, UCHAR
 		{
 			const struct layer_addr_vlan *vaddr = stream->addr.vlan;
 
-			/* Èç¹û²»ÊÇÉúÔì³öÀ´µÄÐéÄâ¿Õ²ã, »¹ÓÐ¿ÉÄÜÊÇµ¥ÏòÁ÷, »¹Òª¿´Êµ¼ÊÓÐÃ»ÓÐµØÖ· */
+			/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ²ï¿½, ï¿½ï¿½ï¿½Ð¿ï¿½ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Òªï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ðµï¿½Ö· */
 			if(DIR_C2S == send_stream_dir){
 				if(0 == vaddr->c2s_layer_num){
-					/* Èç¹û±¾²àÃ»ÓÐµØÖ·, ¿´ÊÇ·ñÇ¿ÖÆÒªÇó·Ç¶Ô³ÆÔ­Ôò, Èç¹ûÊÇ, ÆäÊµ¶¼×ß²»µ½ÕâÀï,¹¹Ôì°üÊ±¾ÍÊ§°ÜÁË; Èç¹û²»ÊÇ¿ÉÒÔ¸´ÓÃ¶Ô²àµØÖ· */
+					/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ðµï¿½Ö·, ï¿½ï¿½ï¿½Ç·ï¿½Ç¿ï¿½ï¿½Òªï¿½ï¿½Ç¶Ô³ï¿½Ô­ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Êµï¿½ï¿½ï¿½ß²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ê§ï¿½ï¿½ï¿½ï¿½; ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½Ô¸ï¿½ï¿½Ã¶Ô²ï¿½ï¿½Ö· */
 					if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
 						need_skip = 1;
 					}
 				}
 			}else{
 				if(0 == vaddr->s2c_layer_num){
-					/* Èç¹û±¾²àÃ»ÓÐµØÖ·, ¿´ÊÇ·ñÇ¿ÖÆÒªÇó·Ç¶Ô³ÆÔ­Ôò, Èç¹ûÊÇ, ÆäÊµ¶¼×ß²»µ½ÕâÀï,¹¹Ôì°üÊ±¾ÍÊ§°ÜÁË; Èç¹û²»ÊÇ¿ÉÒÔ¸´ÓÃ¶Ô²àµØÖ· */
+					/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ðµï¿½Ö·, ï¿½ï¿½ï¿½Ç·ï¿½Ç¿ï¿½ï¿½Òªï¿½ï¿½Ç¶Ô³ï¿½Ô­ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Êµï¿½ï¿½ï¿½ß²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ê§ï¿½ï¿½ï¿½ï¿½; ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½Ô¸ï¿½ï¿½Ã¶Ô²ï¿½ï¿½Ö· */
 					if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_VLAN][stream_pr->layer_index] != 0){
 						need_skip = 1;
 					}
@@ -2827,7 +2827,7 @@ static int skip_asymmetric_presence_layer(const struct streaminfo *stream, UCHAR
 
 			if(DIR_C2S == send_stream_dir){
 				if(0 == maddr->c2s_layer_num){
-					/* Èç¹û±¾²àÃ»ÓÐµØÖ·, ¿´ÊÇ·ñÇ¿ÖÆÒªÇó·Ç¶Ô³ÆÔ­Ôò, Èç¹ûÊÇ, ÆäÊµ¶¼×ß²»µ½ÕâÀï,¹¹Ôì°üÊ±¾ÍÊ§°ÜÁË; Èç¹û²»ÊÇ¿ÉÒÔ¸´ÓÃ¶Ô²àµØÖ· */
+					/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ðµï¿½Ö·, ï¿½ï¿½ï¿½Ç·ï¿½Ç¿ï¿½ï¿½Òªï¿½ï¿½Ç¶Ô³ï¿½Ô­ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Êµï¿½ï¿½ï¿½ß²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ê§ï¿½ï¿½ï¿½ï¿½; ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½Ô¸ï¿½ï¿½Ã¶Ô²ï¿½ï¿½Ö· */
 					if(g_asymmetric_addr_layer_set.layer_type_index[ADDR_TYPE_MPLS][stream_pr->layer_index] != 0){
 						need_skip = 1;
 					}
@@ -2862,7 +2862,7 @@ static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream
                 ((ADDR_TYPE_MAC_IN_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype) ||
                  (ADDR_TYPE_MAC == stream_pr->pfather_pr->stream_public.addr.addrtype)))
             {
-                /* ¼ÇÂ¼MAC²ãÖ®ÉÏµÄÐ­ÒéµØÖ·ÀàÐÍ, ÓÃÓÚÌî³äEthernet->type×Ö¶Î, ¶ÔÓÚMAC-in-MACµÄinner_eth, ¼ÇÂ¼ÉÏ²ãÐ­ÒéÀàÐÍ
+                /* ï¿½ï¿½Â¼MACï¿½ï¿½Ö®ï¿½Ïµï¿½Ð­ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ethernet->typeï¿½Ö¶ï¿½, ï¿½ï¿½ï¿½ï¿½MAC-in-MACï¿½ï¿½inner_eth, ï¿½ï¿½Â¼ï¿½Ï²ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                  */
                 ret = (int)stream->addr.addrtype;
             }
@@ -2870,7 +2870,7 @@ static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream
         else
         {
             /* to do:
-                Èç¹û²¶°ü¿â×Ô¶¯ÆÁ±ÎÁËethernet²ã, ÉõÖÁ°þµôÁËvlanµÈ²ã¶øÇÒ»¹Òª·¢°üÔõÃ´°ì?
+                ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ethernetï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½vlanï¿½È²ï¿½ï¿½ï¿½Ò»ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã´ï¿½ï¿½?
             */
         }
 
@@ -2883,27 +2883,62 @@ static int get_eth_carry_layer_type(struct streaminfo *stream, UCHAR send_stream
 
 int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir)
 {
-	if(dir_check(snd_routedir) < 0){
+	sapp_gval_mthread_sys_stat_t *local_sys_stat=&sapp_global_val->mthread_volatile[stream->threadnum]->sys_stat;
+	if(dir_check(snd_routedir) < 0 || stream == NULL || payload == NULL || payload_len <=0){
+		local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
+        sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error, dir_check < 0 or payload_len illgel!");
 		return -1;
 	}
-	int snd_routedir_reverse;
     struct streaminfo_private *raw_stream_pr = (struct streaminfo_private *)stream;
-	const raw_pkt_t *raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_routedir_reverse);
-	if(NULL == raw_pkt){
-		sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_ctrl_pkt() error, not found raw_pkt!");
-		return -1;
-	}	
+	//raw_pkt_t *raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_routedir_reverse);
+	raw_pkt_t *raw_pkt=(raw_pkt_t *)raw_stream_pr->raw_pkt;
+	if(NULL == raw_pkt)
+	{
+
+        if (raw_stream_pr->polling_inject_context == NULL || 
+		(raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S-1] == NULL &&
+			raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C-1] == NULL))
+        {
+            local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
+            sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error, not found raw_pkt!");
+            return -1;
+        }
+
+		if(snd_routedir==raw_stream_pr->stream_c2s_route_dir)
+		{
+			if(raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S-1])
+				raw_pkt=(raw_pkt_t *)raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S-1];
+			else
+			{
+				raw_pkt=(raw_pkt_t *)raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C-1];
+				snd_routedir^=1;
+			}
+		}
+		else
+		{
+			if(raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C-1])
+				raw_pkt=(raw_pkt_t *)raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_S2C-1];
+			else
+			{
+				raw_pkt=(raw_pkt_t *)raw_stream_pr->polling_inject_context->raw_pkt_stream_dir[DIR_C2S-1];
+				snd_routedir^=1;
+			};
+		}
+    }	
+	raw_pkt->meta_route_dir[raw_stream_pr->stream_c2s_route_dir]=raw_stream_pr->polling_inject_context->meta_stream_dir[DIR_C2S-1];
+    raw_pkt->meta_route_dir[raw_stream_pr->stream_c2s_route_dir^1]=raw_stream_pr->polling_inject_context->meta_stream_dir[DIR_S2C-1];
+	
 	if(raw_stream_pr->sid_prepend_list != NULL)
 	{
-		((raw_pkt_t *)raw_pkt)->prepend_list=raw_stream_pr->sid_prepend_list;
+		raw_pkt->prepend_list=raw_stream_pr->sid_prepend_list;
     }
 	if(raw_stream_pr->sid_append_list != NULL)
 	{
-		((raw_pkt_t *)raw_pkt)->append_list=raw_stream_pr->sid_append_list;
+		raw_pkt->append_list=raw_stream_pr->sid_append_list;
     }
 	if (raw_stream_pr->stream_trace_id != 0)
 	{
-		((raw_pkt_t *)raw_pkt)->stream_trace_id = raw_stream_pr->stream_trace_id;
+		raw_pkt->stream_trace_id = raw_stream_pr->stream_trace_id;
 	}
 
     int low_net_layer_type = get_eth_carry_layer_type(stream, stream->curdir);
@@ -2913,6 +2948,7 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 	{
 		if(raw_pkt->raw_pkt_len < raw_pkt_l2_l3_hdr_len + (int)sizeof(struct mesa_tcp_hdr))
 		{
+			local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
 			sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error! raw_pkt_len:%d < raw_pkt_l3_hdr_len:%d+tcphdr_len:d\n",
                         raw_pkt->raw_pkt_len, raw_pkt_l2_l3_hdr_len, (int)sizeof(struct mesa_tcp_hdr));
 			return -1;
@@ -2926,6 +2962,7 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 	}
 	else 
 	{
+		local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
 		sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error! not support stream_type:%d.\n",
                         stream->type);
 		return -1;
@@ -2933,13 +2970,15 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 
 	if(raw_pkt->overlay_layer_bytes + raw_pkt_l2_l3_hdr_len + raw_pkt_l4_hdr_len > raw_pkt->raw_pkt_len)
 	{
-        sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_ctrl_pkt() error! overlay_len:%d, l3_hdr_len:%d + l4_hdr_len:%d > raw_pkt_len:%d.\n",
+		local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
+        sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error! overlay_len:%d, l3_hdr_len:%d + l4_hdr_len:%d > raw_pkt_len:%d.\n",
                         raw_pkt->overlay_layer_bytes, raw_pkt_l2_l3_hdr_len, raw_pkt_l2_l3_hdr_len, raw_pkt->raw_pkt_len);
         return -1;
 	}
     if (payload_len + raw_pkt_l2_l3_hdr_len + raw_pkt_l4_hdr_len > MTU_MAX)
     {
-        sapp_runtime_log(RLOG_LV_INFO, "__sapp_inject_ctrl_pkt() error! payload_len too long:%d.\n",
+		local_sys_stat->count[SAPP_STAT_SND_ERROR]++;
+        sapp_runtime_log(RLOG_LV_FATAL, "__sapp_inject_ctrl_pkt() error! payload_len too long:%d.\n",
                         payload_len + raw_pkt_l2_l3_hdr_len);
         return -1;
     }
@@ -2955,12 +2994,20 @@ int __sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, 
 						low_net_layer_type, snd_routedir, stream->threadnum,
 						(char *)KILL_TCP_PHONY_POINTER, (int *)KILL_TCP_PHONY_POINTER,
 						raw_pkt);	
-	((raw_pkt_t *)raw_pkt)->is_ctrl_pkt=0;
-	((raw_pkt_t *)raw_pkt)->payload_len=raw_payload_len;
 	if(ret < 0)
 	{
+		send_handle->tot_send_err++;
 		sapp_runtime_log(RLOG_LV_FATAL, "packet_io_send() ret < 0, stream_type:%d, addrtype:%d\n", stream->type, stream->addr.addrtype);					 
 	}
+	else
+	{
+		send_handle->tot_send_pkt++;
+		send_handle->tot_send_byte += payload_len;
+		local_sys_stat->count[SAPP_STAT_SND_CTRL]++;
+		local_sys_stat->length[SAPP_STAT_SND_CTRL]+= raw_pkt->raw_pkt_len;	
+	}
+	((raw_pkt_t *)raw_pkt)->is_ctrl_pkt=0;
+	((raw_pkt_t *)raw_pkt)->payload_len=raw_payload_len;
 	packet_io_free_sendbuf(SEND_TYPE_LINK_INJECT, stream->threadnum);		
 	return ret;
 }
@@ -2996,11 +3043,11 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	local_sys_stat = &sapp_global_val->mthread_volatile[thread_num]->sys_stat;
     if ((SIO_EXCLUDE_THIS_LAYER_HDR & sio) != 0)
     {
-        /* Ìø¹ýµ±Ç°²ã */
+        /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ */
         inject_stream = raw_stream->pfather;
         inject_stream_pr = (struct streaminfo_private *)inject_stream;
-        /* Èç¹û²å¼þ·¢°üÊ±Ö¸¶¨ÁËSIO_EXCLUDE_THIS_LAYER_HDR, ËµÃ÷ÄÚ²ãËÄÔª×éÊÇÓÉ²å¼þ¹¹ÔìµÄ, ±ÈÈçkni,
-           Ò»°ã²»»áÔÙ×ßµ½build_pktµÄº¯ÊýÖÐ, ´Ë´¦ÐèÒª½âÎöip°ü²¢¼ÓÈëbloom filter */
+        /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Ö¸ï¿½ï¿½ï¿½ï¿½SIO_EXCLUDE_THIS_LAYER_HDR, Ëµï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½É²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½kni,
+           Ò»ï¿½ã²»ï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½build_pktï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ë´ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ipï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½bloom filter */
         if (sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject != 0)
         {
             const struct mesa_ip4_hdr *ip4hdr;
@@ -3022,15 +3069,15 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
     {
         /*
            2021-09-18 fix bug:
-           Ô­À´½öIpv4Ôö¼Óbuild-args, Ô­ÒâÊÇÔÚipv4ºÍtcp°üÍ·Ôö¼ÓÖ¸ÎÆ,
-           ¸ÄÎªipv6Ò²¼Ó build_args,
-           ·ñÔòÔÚbuild_net_layer_tcp()Ê±ÅÐ¶Ïbuild_tcp_argsÊÇNULL, »áÊ¹ÓÃËæ»úÐòºÅ, ·¢°ü¾Í²»¶ÔÁË!!
+           Ô­ï¿½ï¿½ï¿½ï¿½Ipv4ï¿½ï¿½ï¿½ï¿½build-args, Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ipv4ï¿½ï¿½tcpï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½,
+           ï¿½ï¿½Îªipv6Ò²ï¿½ï¿½ build_args,
+           ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½build_net_layer_tcp()Ê±ï¿½Ð¶ï¿½build_tcp_argsï¿½ï¿½NULL, ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Í²ï¿½ï¿½ï¿½ï¿½ï¿½!!
          */
         set_build_layer_tcp_args(thread_num, TH_PUSH | TH_ACK, MESA_rand_range(1000, 1460), 0);
     }
 
     raw_stream_pr = (struct streaminfo_private *)raw_stream;
-	/* Òò¸Ä±äÁËÄ³Ð©»Øµ÷º¯ÊýµÄÔ­Ê¼°üÀàÐÍÎªIP°üÍ·, ËùÒÔ²»ÐèÒª²å¼þ´«ÊäÔ­Ê¼°ü, ÐÅÏ¢¶¼´æ´¢ÓÚË½ÓÐÁ÷½á¹¹ÌåÄÚ */
+	/* ï¿½ï¿½Ä±ï¿½ï¿½ï¿½Ä³Ð©ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªIPï¿½ï¿½Í·, ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½, ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½Ë½ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ */
 	raw_pkt = update_raw_pkt(raw_stream_pr, snd_routedir, &snd_routedir_reverse);
 	if(NULL == raw_pkt){
 		sapp_global_val->mthread_volatile[thread_num]->sys_stat.count[SAPP_STAT_SND_ERROR]++;
@@ -3061,9 +3108,9 @@ int __sapp_inject_pkt(struct streaminfo *raw_stream, enum sapp_inject_opt sio,
 	{
 		((raw_pkt_t *)raw_pkt)->stream_trace_id = raw_stream_pr->stream_trace_id;
 	}
-	/* injectÊ¹ÓÃµÄÊÇroutedir, ´Ë´¦×ª»»³Éstream dir, 
-	   ×¢Òâ: ²å¼þ·¢°üµÄ¶¯×÷¿ÉÄÜ²»ÊÇÓÉµ±Ç°°ü´¥·¢µÄ,  ±ÈÈçkni, ÊÇ´ÓÆäËûÍø¿¨ÊÕµ½Êý¾Ý°ü, ÔÙ×¢ÈëÁ´Â·µÄ,
-	         ²»ÄÜ´Óraw_pkt»òraw_stream->routedirÅÐ¶Ï·½Ïò!!!!
+	/* injectÊ¹ï¿½Ãµï¿½ï¿½ï¿½routedir, ï¿½Ë´ï¿½×ªï¿½ï¿½ï¿½ï¿½stream dir, 
+	   ×¢ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü²ï¿½ï¿½ï¿½ï¿½Éµï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,  ï¿½ï¿½ï¿½ï¿½kni, ï¿½Ç´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½Ý°ï¿½, ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½,
+	         ï¿½ï¿½ï¿½Ü´ï¿½raw_pktï¿½ï¿½raw_stream->routedirï¿½Ð¶Ï·ï¿½ï¿½ï¿½!!!!
 	*/
 	if(snd_routedir == raw_stream_pr->stream_c2s_route_dir){
 		send_stream_dir = DIR_C2S;
@@ -3167,7 +3214,7 @@ static int send_handle_init(int tot_thread_num)
 	int i, ret;
 	int max_thread_num;
 	const sapp_config_packet_io_t *pcfg_io = &sapp_global_val->config.packet_io;
-#if 0 /* 2018 lijia modify , Ôö¼Ó²å¼þ´´½¨µÄÏß³ÌÖ÷¶¯·¢°ü¹¦ÄÜ */
+#if 0 /* 2018 lijia modify , ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	for(i = 0; i < tot_thread_num; i++){
 #else
 
@@ -3199,7 +3246,7 @@ static int send_handle_init(int tot_thread_num)
 			struct sockaddr_in listen_addr;
 			memset(&listen_addr, 0, sizeof(listen_addr));
 			listen_addr.sin_family = AF_INET;
-			listen_addr.sin_port = htons((unsigned short)sapp_global_val->config.packet_io.inject_mode_inline_device_sport); /* ¸ù¾ÝÅäÖÃÎÄ¼þÌîÐ´vxlanÔ´¶Ë¿Ú */
+			listen_addr.sin_port = htons((unsigned short)sapp_global_val->config.packet_io.inject_mode_inline_device_sport); /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ð´vxlanÔ´ï¿½Ë¿ï¿½ */
 			if(bind(g_send_handle[i].raw_udp_fd, (struct sockaddr *) &listen_addr, sizeof(listen_addr)) != 0){
 				sapp_log(30, ~0, ~0, "socket bind udp port '%u' error", sapp_global_val->config.packet_io.inject_mode_inline_device_sport);
 				return -1;
@@ -3256,7 +3303,7 @@ void send_handle_destroy(int thread_index)
 }
 
 
-/* 2015-01-04 lijia add, ´ÓpappÆ½Ì¨Ç¨ÒÆµ½sappÆ½Ì¨, µ×²ã·¢°ü½Ó¿Ú²»Í¬ */
+/* 2015-01-04 lijia add, ï¿½ï¿½pappÆ½Ì¨Ç¨ï¿½Æµï¿½sappÆ½Ì¨, ï¿½×²ã·¢ï¿½ï¿½ï¿½Ó¿Ú²ï¿½Í¬ */
 int MESA_sendpacket_ethlayer(int thread_num,const char *data, int data_len, unsigned int target_id)
 {
 	int ret;
@@ -3289,7 +3336,7 @@ int sendpacket_init_new(int tot_thread_num)
 	/* to do, TODO 1,
 		//get_gateway_info();
 	
-		´´½¨Ò»¸öÏß³Ì, ¶¯Ì¬»ñÈ¡Ä¬ÈÏÍø¹ØµÄMACµØÖ·, ·¢°üÄ¿±êÈç¹ûÊÇIPv4µØÖ·¶øÇÒÊÇÄÚÍøIP,·¢ËÍarpÇëÇó,
+		ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ß³ï¿½, ï¿½ï¿½Ì¬ï¿½ï¿½È¡Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½MACï¿½ï¿½Ö·, ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPv4ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IP,ï¿½ï¿½ï¿½ï¿½arpï¿½ï¿½ï¿½ï¿½,
 		pthread_create(sendpacket_keepalive_with_gateway);
 	*/
 
@@ -3332,10 +3379,10 @@ void sendpacket_destroy(int tot_thread_num)
 
 /*************************************************************************************** 	
 	NOTE:
-	MESA_sendpacket_xxxºÍMESA_fakepacket_send_xxxÏµÁÐº¯ÊýÖÐ, dirÓësappÖÐµÄroutedir¶¨Òå²»Í¬,
-	pappÆ½Ì¨ÖÐµÄdirÊ¹ÓÃ×î¸ßÎ»bit±íÊ¾·½Ïò, ÈçÉÏÐÐÎª0x00, ÏÂÐÐÎª0x80,
-	¶øsappÖÐµÄroutedirÓÃ×îµÍÎ»±íÊ¾·½Ïò, ÈçÉÏÐÐÎª0x00, ÏÂÐÐÎª0x01.
-	ÎªÁËÍ¬Ê±¼æÈÝ´ËÁ½ÀàÆ½Ì¨ºÍ²å¼þ, ÐÂÔöMESA_dir_reverse()º¯Êý, ÓÃÓÚ·´Ïò·¢°ü.
+	MESA_sendpacket_xxxï¿½ï¿½MESA_fakepacket_send_xxxÏµï¿½Ðºï¿½ï¿½ï¿½ï¿½ï¿½, dirï¿½ï¿½sappï¿½Ðµï¿½routedirï¿½ï¿½ï¿½å²»Í¬,
+	pappÆ½Ì¨ï¿½Ðµï¿½dirÊ¹ï¿½ï¿½ï¿½ï¿½ï¿½Î»bitï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª0x00, ï¿½ï¿½ï¿½ï¿½Îª0x80,
+	ï¿½ï¿½sappï¿½Ðµï¿½routedirï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª0x00, ï¿½ï¿½ï¿½ï¿½Îª0x01.
+	Îªï¿½ï¿½Í¬Ê±ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½ï¿½ï¿½Æ½Ì¨ï¿½Í²ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½MESA_dir_reverse()ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ò·¢°ï¿½.
 ****************************************************************************************/
 unsigned char MESA_dir_reverse(unsigned char raw_dir)
 {
@@ -3365,14 +3412,14 @@ unsigned char MESA_dir_reverse(unsigned char raw_dir)
 
 /*************************************************************************************** 	
 	NOTE:
-		ÔÚ±»¶¯Ä£Ê½ÏÂ, ²å¼þÎÞÐè¹ØÐÄroute_dirµÄ¾ø¶ÔÖµ, Ö»ÐèÒªÀí½âÍ¬ÏòºÍ·´Ïò¼´¿É,
-		µ«Ö÷¶¯·¢°ü±ØÐëÒª¾«È·Àí½âroute_dirÊÇ0»¹ÊÇ1, ÒòÍâ½çÍøÂçÍØÆËÄ£Ê½²»Í¬, ¿ÉÄÜËæÊ±»á±ä»¯,
-		ËùÒÔÉèÖÃ´Ë½Ó¿Ú, ²å¼þÖ»Ðè´«ÈëÈËÒ×Àí½âµÄ·½Ïò, ·µ»Øµ±Ç°Á´Â·µÄlink route dir,
-		×¢Òâetc/sapp.toml inbound_route_dirÒªÉèÖÃÕýÈ·.
+		ï¿½Ú±ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½route_dirï¿½Ä¾ï¿½ï¿½ï¿½Öµ, Ö»ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½Í·ï¿½ï¿½ò¼´¿ï¿½,
+		ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½route_dirï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½1, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½Í¬, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ä»¯,
+		ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã´Ë½Ó¿ï¿½, ï¿½ï¿½ï¿½Ö»ï¿½è´«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Øµï¿½Ç°ï¿½ï¿½Â·ï¿½ï¿½link route dir,
+		×¢ï¿½ï¿½etc/sapp.toml inbound_route_dirÒªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·.
 
-	args: ±íÊ¾·¢°üÄ¿±êÏà¶ÔÓÚµ±Ç°Éè±¸ËùÔÚµÄµØÀíÎ»ÖÃ,
-		'E' or 'e': ±íÊ¾·¢°ü·½ÏòÊÇ´ÓInternal to External.
-		'I' or 'i': ±íÊ¾·¢°ü·½ÏòÊÇ´ÓExternal to Internal.
+	args: ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½Ç°ï¿½è±¸ï¿½ï¿½ï¿½ÚµÄµï¿½ï¿½ï¿½Î»ï¿½ï¿½,
+		'E' or 'e': ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç´ï¿½Internal to External.
+		'I' or 'i': ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç´ï¿½External to Internal.
 
 	return value:
 		0 or 1: success.
@@ -3403,12 +3450,12 @@ int MESA_dir_human_to_link(int human_dir)
 
 /*
 	args:
-		Á´Â·´«Êä·½Ïò: 0»ò1, Í¨³£À´×Ôstream->routedir;
+		ï¿½ï¿½Â·ï¿½ï¿½ï¿½ä·½ï¿½ï¿½: 0ï¿½ï¿½1, Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½stream->routedir;
 	
-	·µ»ØÖµ:
-		'E' or 'e': ±íÊ¾·¢°ü·½ÏòÊÇ´ÓInternal to External.
-		'I' or 'i': ±íÊ¾·¢°ü·½ÏòÊÇ´ÓExternal to Internal.
-		'x': ²ÎÊý´íÎó;
+	ï¿½ï¿½ï¿½ï¿½Öµ:
+		'E' or 'e': ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç´ï¿½Internal to External.
+		'I' or 'i': ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç´ï¿½External to Internal.
+		'x': ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½;
 */
 int MESA_dir_link_to_human(int link_route_dir)
 {	
@@ -3439,7 +3486,7 @@ int MESA_dir_link_to_human(int link_route_dir)
 
 static inline int dir_check(unsigned char raw_dir)
 {
-	if(raw_dir & DIR_BIT_UNUSE_MASK){ /* ·½ÏòÖ»Ê¹ÓÃÁË×î¸ßºÍ×îµÍÎ»bit, Èç¹û³öÏÖÆäËûÖµ,ËµÃ÷²å¼þÔÚ×ª»»dirÊ±³öÁË´íÎó */
+	if(raw_dir & DIR_BIT_UNUSE_MASK){ /* ï¿½ï¿½ï¿½ï¿½Ö»Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ßºï¿½ï¿½ï¿½ï¿½Î»bit, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ,Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½dirÊ±ï¿½ï¿½ï¿½Ë´ï¿½ï¿½ï¿½ */
 		sapp_runtime_log(30, "dir = 0x%x, is invalid, only the most or least significant bit can be used!", raw_dir);
 		//assert(0);
 		return -1;

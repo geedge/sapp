@@ -352,6 +352,7 @@ static int sapp_fs2_init(sapp_global_t *global_paramters)
     p_fs2_rt->fs_id_count_array[SAPP_STAT_SND_TCP_RST] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Tcp_Rst");
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_SND_TCP_SYNACK] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Tcp_S/A");
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_SND_UDP] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_Udp");
+	p_fs2_rt->fs_id_count_array[SAPP_STAT_SND_CTRL] = FS_register(fs2_handle, FS_STYLE_FIELD, FS_CALC_CURRENT, "Send_CTRL");
 
 	p_fs2_rt->fs_id_count_array[SAPP_STAT_GLOBAL_BYPASS] = FS_register(fs2_handle,FS_STYLE_STATUS, FS_CALC_CURRENT, "DDOS_Bypass");
 
@@ -572,7 +573,9 @@ static int sapp_fs3_init(sapp_global_t *global_paramters)
 								NULL, 0);	
 	fs3_rt->metrics_ids[0][SAPP_STAT_SND_UDP] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Send_Udp", 
 								NULL, 0);		
-								
+
+	fs3_rt->metrics_ids[0][SAPP_STAT_SND_CTRL] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_COUNTER, "Send_CTRL", 
+								NULL, 0);										
 	
 	fs3_rt->metrics_ids[0][SAPP_STAT_GLOBAL_BYPASS] = fieldstat_register(fs3_handle, FIELD_METRIC_TYPE_GAUGE, "DDOS_Bypass", 
 								NULL, 0);	
@@ -783,6 +786,7 @@ static int sapp_fs4_init(sapp_global_t *global_paramters)
 	fs4_rt->metrics_ids[0][SAPP_STAT_SND_TCP_RST] = fieldstat_easy_register_counter(fs4_handle, "Send_Tcp_Rst");
 	fs4_rt->metrics_ids[0][SAPP_STAT_SND_TCP_SYNACK] = fieldstat_easy_register_counter(fs4_handle, "Send_Tcp_S/A");		
 	fs4_rt->metrics_ids[0][SAPP_STAT_SND_UDP] = fieldstat_easy_register_counter(fs4_handle, "Send_Udp");	
+	fs4_rt->metrics_ids[0][SAPP_STAT_SND_CTRL] = fieldstat_easy_register_counter(fs4_handle, "Send_CTRL");	
 
 	fs4_rt->metrics_ids[0][SAPP_STAT_GLOBAL_BYPASS] = fieldstat_easy_register_counter(fs4_handle, "DDOS_Bypass");	
 	

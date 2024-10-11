@@ -9,14 +9,14 @@ extern "C" {
 #endif
 
 /*
-	MESA_kill_tcpÊµ¼ÊÊÇÏÈ¹¹ÔìºÃµ±Ç°²ãµÄIP, TCPÍ·²¿, 
-	Èç¹ûĞèÒªÔö¼ÓÖ¸ÎÆĞÅÏ¢, Ò²ÊÇĞ´Ò»¸öassistantÄ£¿é, ÔõÃ´¹¹Ôìipttl, ipid, tcpwinµÈÖµ.
-	È»ºóµ÷ÓÃ__sapp_inject_pkt(), sio = SIO_EXCLUDE_THIS_LAYER_HDR.
+	MESA_kill_tcpÊµï¿½ï¿½ï¿½ï¿½ï¿½È¹ï¿½ï¿½ï¿½Ãµï¿½Ç°ï¿½ï¿½ï¿½IP, TCPÍ·ï¿½ï¿½, 
+	ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ï¢, Ò²ï¿½ï¿½Ğ´Ò»ï¿½ï¿½assistantÄ£ï¿½ï¿½, ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ipttl, ipid, tcpwinï¿½ï¿½Öµ.
+	È»ï¿½ï¿½ï¿½ï¿½ï¿½__sapp_inject_pkt(), sio = SIO_EXCLUDE_THIS_LAYER_HDR.
 
-	sapp²»ÔÙÖ±½Ó¸ºÔğÄ³¸öÍ·²¿×Ö¶ÎÔõÃ´¸³Öµ, ¿¿assistantÄ£¿é¸ºÔğ, sapp¾ÍÊÇÊÕ°ü¡¢·¢°ü¶øÒÑ.
+	sappï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó¸ï¿½ï¿½ï¿½Ä³ï¿½ï¿½Í·ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½Ã´ï¿½ï¿½Öµ, ï¿½ï¿½assistantÄ£ï¿½é¸ºï¿½ï¿½, sappï¿½ï¿½ï¿½ï¿½ï¿½Õ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
 
-	kill_remedyÒ²ÊÇ¿¿assistant¸ù¾İµ±Ç°seq, ¾ö¶¨rst°üµÄseq, Èç¹ûÆµ·±fd²»³É¹¦, ĞèÒªÏòºó×·¼Ó¶àÉÙ.
-	¶¼ÊÇassistant¾ö¶¨.
+	kill_remedyÒ²ï¿½Ç¿ï¿½assistantï¿½ï¿½ï¿½İµï¿½Ç°seq, ï¿½ï¿½ï¿½ï¿½rstï¿½ï¿½ï¿½ï¿½seq, ï¿½ï¿½ï¿½Æµï¿½ï¿½fdï¿½ï¿½ï¿½É¹ï¿½, ï¿½ï¿½Òªï¿½ï¿½ï¿½×·ï¿½Ó¶ï¿½ï¿½ï¿½.
+	ï¿½ï¿½ï¿½ï¿½assistantï¿½ï¿½ï¿½ï¿½.
 */
 
 
@@ -32,10 +32,10 @@ int sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const v
 	if(MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, RLOG_LV_DEBUG)){
 		int log_level;
 		const char *string_res;
-		/* injectÊ¹ÓÃµÄÊÇroutedir, ´Ë´¦×ª»»³Éstream dir, 
-		×¢Òâ: ²å¼ş·¢°üµÄ¶¯×÷¿ÉÄÜ²»ÊÇÓÉµ±Ç°°ü´¥·¢µÄ,  ±ÈÈçkni, ÊÇ´ÓÆäËûÍø¿¨ÊÕµ½Êı¾İ°ü, ÔÙ×¢ÈëÁ´Â·µÄ,
-		²»ÄÜ´Óraw_pkt»òraw_stream->routedirÅĞ¶Ï·½Ïò,
-		Òª´ÓÁ÷´´½¨µÄÀúÊ·¼ÇÂ¼ÖĞÅĞ¶Ïroute_dirºÍstream_dirµÄ¹ØÏµ!!!!
+		/* injectÊ¹ï¿½Ãµï¿½ï¿½ï¿½routedir, ï¿½Ë´ï¿½×ªï¿½ï¿½ï¿½ï¿½stream dir, 
+		×¢ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü²ï¿½ï¿½ï¿½ï¿½Éµï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,  ï¿½ï¿½ï¿½ï¿½kni, ï¿½Ç´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½İ°ï¿½, ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½,
+		ï¿½ï¿½ï¿½Ü´ï¿½raw_pktï¿½ï¿½raw_stream->routedirï¿½Ğ¶Ï·ï¿½ï¿½ï¿½,
+		Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê·ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Ğ¶ï¿½route_dirï¿½ï¿½stream_dirï¿½Ä¹ï¿½Ïµ!!!!
 		*/	
 		if(stream_pr->stream_c2s_route_dir == snd_routedir){
 			send_stream_dir = DIR_C2S;
@@ -52,7 +52,7 @@ int sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const v
 		}
 		
 		if(SIO_EXCLUDE_THIS_LAYER_HDR & sio){
-			/* ipÔ­Ê¼°üÓÉÒµÎñ²å¼ş×ÔĞĞ¹¹Ôì */
+			/* ipÔ­Ê¼ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¹ï¿½ï¿½ï¿½ */
 			if(ADDR_TYPE_IPV4 == stream->addr.addrtype){
 				const struct mesa_ip4_hdr *ip4hdr = (struct mesa_ip4_hdr *)payload;
 				sapp_runtime_log(log_level, "sapp_inject_pkt()->IPV4 %s, exclude ip header, stream:%s, stream_curdir:%d, stream_cur_routedir:%d, stream_C2S_routedir:%d, send_ipv4_pkt_hdr:%s, send_routedir:%d, send_stream_dir:%d, send_payload_len:%d, ttl:%d, ipid:%u, ip_checksum:0x%x", 
@@ -70,7 +70,7 @@ int sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const v
 								snd_routedir, send_stream_dir, payload_len, ip6hdr->ip6_hop);		
 			}
 		}else{
-			/* ²å¼şÖ»¹¹½¨Ó¦ÓÃ²ã¸ºÔØ¼°Ö¸¶¨·¢°ü·½Ïò, ip°üÍ·ÓÉsapp¹¹½¨ */
+			/* ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã²ã¸ºï¿½Ø¼ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ipï¿½ï¿½Í·ï¿½ï¿½sappï¿½ï¿½ï¿½ï¿½ */
 			sapp_runtime_log(log_level, "sapp_inject_pkt() with SIO_DEFAULT %s, stream:%s, stream_curdir:%d, stream_cur_routedir:%d, stream_C2S_routedir:%d, send_routedir:%d, send_stream_dir:%d, send_payload_len:%d", 
 								string_res, printaddr(&stream->addr, stream->threadnum),
 								stream->curdir, stream->routedir, stream_pr->stream_c2s_route_dir,
@@ -84,17 +84,7 @@ int sapp_inject_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const v
 
 int sapp_inject_ctrl_pkt(struct streaminfo *stream, enum sapp_inject_opt sio, const void *payload, int payload_len, unsigned char snd_routedir)
 {
-	struct streaminfo_private *stream_pr = (struct streaminfo_private *)stream;
 
-	if(stream_pr == NULL)
-	{
-		return -1;
-	}
-/*
-	stream_pr->is_ctrl_pkt=1;
-	int ret=sapp_inject_pkt(stream, SIO_DEFAULT, payload, payload_len, snd_routedir);
-	stream_pr->is_ctrl_pkt=0;
-*/
 	return __sapp_inject_ctrl_pkt(stream, sio, payload, payload_len, snd_routedir);
 }
 

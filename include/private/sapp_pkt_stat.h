@@ -2,36 +2,36 @@
 #define _SAPP_PKT_STAT_H_ 1
 
 /*
-	Ê¹ÓÃenum¶¨Òå, ´úÌæÔ­À´sysinfo.hÖÐÓÃºê¶¨Òå¹Ì¶¨Öµ·½Ê½,
-	ÒòÎªÕâÐ©±äÁ¿²»¶ÔÍâ¿ª·Å, Èç¹ûºóÆÚÐèÒªÔö¼ÓÐÂÀàÐÍ, ÔÚÈÎÒâÎ»ÖÃ¶¼¿ÉÒÔÔö¼ÓÐÂ±äÁ¿,
-	ÖØÐÂ±àÒë¼´¿É!
+	Ê¹ï¿½ï¿½enumï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½sysinfo.hï¿½ï¿½ï¿½Ãºê¶¨ï¿½ï¿½Ì¶ï¿½Öµï¿½ï¿½Ê½,
+	ï¿½ï¿½Îªï¿½ï¿½Ð©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â¿ªï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â±ï¿½ï¿½ï¿½,
+	ï¿½ï¿½ï¿½Â±ï¿½ï¿½ë¼´ï¿½ï¿½!
 */
 
 typedef enum __sapp_sys_stat_type{
-	SAPP_STAT_FETCH_PKT,  /* sapp³¢ÊÔ´Ópcap, marsio»ñÈ¡Êý¾Ý°üµÄ´ÎÊý, ²»¹ØÐÄ½á¹û, Ö÷ÒªÓÃÓÚËÀËø¼à²â */
+	SAPP_STAT_FETCH_PKT,  /* sappï¿½ï¿½ï¿½Ô´ï¿½pcap, marsioï¿½ï¿½È¡ï¿½ï¿½ï¿½Ý°ï¿½ï¿½Ä´ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½, ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	
 	/* 
-		LINE°üÀ¨overlayµÄÁ÷Á¿, ÒÔÏÂ²»´øLINEµÄ¶¼ÊÇÍøÂçÖÐµÄÕæÊµÍ¨ÐÅË«·½µÄÁ÷Á¿, ²»º¬vxlanµÈ·â×°²ã×Ö½ÚÊý,
-		±ÈÈçÒ»¸övxlan°ü×Ü³¤¶ÈÊÇ1000×Ö½Ú, vxlan overlay²ã°üÀ¨ethernet,ipv4,udp,vxlan, ×Ü³¤¶ÈÊÇ50×Ö½Ú,
-		ÔòSAPP_STAT_RCV_LINEÊÇ1000×Ö½Ú, SAPP_STAT_RCV_RAWÊÇ950×Ö½Ú.
+		LINEï¿½ï¿½ï¿½ï¿½overlayï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Â²ï¿½ï¿½ï¿½LINEï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ÊµÍ¨ï¿½ï¿½Ë«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½vxlanï¿½È·ï¿½×°ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½,
+		ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½vxlanï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½ï¿½ï¿½1000ï¿½Ö½ï¿½, vxlan overlayï¿½ï¿½ï¿½ï¿½ï¿½ethernet,ipv4,udp,vxlan, ï¿½Ü³ï¿½ï¿½ï¿½ï¿½ï¿½50ï¿½Ö½ï¿½,
+		ï¿½ï¿½SAPP_STAT_RCV_LINEï¿½ï¿½1000ï¿½Ö½ï¿½, SAPP_STAT_RCV_RAWï¿½ï¿½950ï¿½Ö½ï¿½.
 	*/
 	SAPP_STAT_RCV_LINE, 
 	
 	/*************  receive packet  ****************/
-	SAPP_STAT_RCV_RAW, /* ÊÕµ½µÄÕæÊµÔ­Ê¼°üÊýÁ¿, ²»Ò»¶¨µÈÓÚethernet, ethernetÓÉÓÚmac-in-mac, vplsµÈÔ­ÒòÒ²¿ÉÄÜ»áÖØ¸´¼ÆËã */
+	SAPP_STAT_RCV_RAW, /* ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ÊµÔ­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ethernet, ethernetï¿½ï¿½ï¿½ï¿½mac-in-mac, vplsï¿½ï¿½Ô­ï¿½ï¿½Ò²ï¿½ï¿½ï¿½Ü»ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	
 	SAPP_STAT_RCV_ETHERNET,
-	SAPP_STAT_RCV_IPV4,		 /* ²»°üÀ¨SAPP_STAT_RCV_IPV4_FRAG */
-	SAPP_STAT_RCV_IPV4_FRAG, /* ²»º¬ÔÚSAPP_STAT_RCV_IPV4Ö®ÄÚ,  ¶ÀÁ¢¼ÆÊý   */
-	SAPP_STAT_RCV_IPV6,		 /* ²»°üÀ¨SAPP_STAT_RCV_IPV6_FRAG */
-	SAPP_STAT_RCV_IPV6_FRAG, /* ²»º¬ÔÚSAPP_STAT_RCV_IPV6Ö®ÄÚ,  ¶ÀÁ¢¼ÆÊý   */
+	SAPP_STAT_RCV_IPV4,		 /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SAPP_STAT_RCV_IPV4_FRAG */
+	SAPP_STAT_RCV_IPV4_FRAG, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SAPP_STAT_RCV_IPV4Ö®ï¿½ï¿½,  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½   */
+	SAPP_STAT_RCV_IPV6,		 /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SAPP_STAT_RCV_IPV6_FRAG */
+	SAPP_STAT_RCV_IPV6_FRAG, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SAPP_STAT_RCV_IPV6Ö®ï¿½ï¿½,  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½   */
 	SAPP_STAT_RCV_TCP,
 	SAPP_STAT_RCV_UDP,
 
-	SAPP_STAT_RCV_DUP_TCP, /* ÖØ¸´Á÷Á¿ */
-	SAPP_STAT_RCV_DUP_UDP, /* ÖØ¸´Á÷Á¿ */
+	SAPP_STAT_RCV_DUP_TCP, /* ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	SAPP_STAT_RCV_DUP_UDP, /* ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½ */
 
-	SAPP_STAT_DUP_IDENTIFY_ERR, /* ÖØ¸´Á÷Á¿Ê¶±ðkeyÌí¼Ó´íÎó */
+	SAPP_STAT_DUP_IDENTIFY_ERR, /* ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½keyï¿½ï¿½ï¿½Ó´ï¿½ï¿½ï¿½ */
 
 	SAPP_STAT_RCV_UNKNOWN,
 	
@@ -40,20 +40,20 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_RAW_INBOUND,
 	SAPP_STAT_RAW_OUTBOUND,
 
-	SAPP_STAT_ETH_INBOUND,  /* ´®ÁªÄ£Ê½ÏÂ, ·Çµ±Ç°Íø¿¨µÄI/OÁ÷Á¿, ¶øÊÇÏà¶ÔÓÚµ±Ç°Éè±¸ËùÔÚÎïÀíÎ»ÖÃ, ³öÈë¾³·½ÏòÁ÷Á¿ */
-	SAPP_STAT_ETH_OUTBOUND, /* ´®ÁªÄ£Ê½ÏÂ, ·Çµ±Ç°Íø¿¨µÄI/OÁ÷Á¿, ¶øÊÇÏà¶ÔÓÚµ±Ç°Éè±¸ËùÔÚÎïÀíÎ»ÖÃ, ³öÈë¾³·½ÏòÁ÷Á¿ */
+	SAPP_STAT_ETH_INBOUND,  /* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½, ï¿½Çµï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½I/Oï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½Ç°ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½, ï¿½ï¿½ï¿½ë¾³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	SAPP_STAT_ETH_OUTBOUND, /* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½, ï¿½Çµï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½I/Oï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½Ç°ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½, ï¿½ï¿½ï¿½ë¾³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 
-	SAPP_STAT_IPV4_INBOUND,		 /* ²»°üÀ¨SAPP_STAT_RCV_IPV4_FRAG */
-	SAPP_STAT_IPV4_FRAG_INBOUND, /* ²»º¬ÔÚSAPP_STAT_RCV_IPV4Ö®ÄÚ,  ¶ÀÁ¢¼ÆÊý   */
-	SAPP_STAT_IPV6_INBOUND,		 /* ²»°üÀ¨SAPP_STAT_RCV_IPV6_FRAG */
-	SAPP_STAT_IPV6_FRAG_INBOUND, /* ²»º¬ÔÚSAPP_STAT_RCV_IPV6Ö®ÄÚ,  ¶ÀÁ¢¼ÆÊý   */
+	SAPP_STAT_IPV4_INBOUND,		 /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SAPP_STAT_RCV_IPV4_FRAG */
+	SAPP_STAT_IPV4_FRAG_INBOUND, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SAPP_STAT_RCV_IPV4Ö®ï¿½ï¿½,  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½   */
+	SAPP_STAT_IPV6_INBOUND,		 /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SAPP_STAT_RCV_IPV6_FRAG */
+	SAPP_STAT_IPV6_FRAG_INBOUND, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SAPP_STAT_RCV_IPV6Ö®ï¿½ï¿½,  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½   */
 	SAPP_STAT_TCP_INBOUND,
 	SAPP_STAT_UDP_INBOUND,	
 
-	SAPP_STAT_IPV4_OUTBOUND,		 /* ²»°üÀ¨SAPP_STAT_RCV_IPV4_FRAG */
-	SAPP_STAT_IPV4_FRAG_OUTBOUND, /* ²»º¬ÔÚSAPP_STAT_RCV_IPV4Ö®ÄÚ,  ¶ÀÁ¢¼ÆÊý   */
-	SAPP_STAT_IPV6_OUTBOUND,		 /* ²»°üÀ¨SAPP_STAT_RCV_IPV6_FRAG */
-	SAPP_STAT_IPV6_FRAG_OUTBOUND, /* ²»º¬ÔÚSAPP_STAT_RCV_IPV6Ö®ÄÚ,  ¶ÀÁ¢¼ÆÊý   */
+	SAPP_STAT_IPV4_OUTBOUND,		 /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SAPP_STAT_RCV_IPV4_FRAG */
+	SAPP_STAT_IPV4_FRAG_OUTBOUND, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SAPP_STAT_RCV_IPV4Ö®ï¿½ï¿½,  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½   */
+	SAPP_STAT_IPV6_OUTBOUND,		 /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SAPP_STAT_RCV_IPV6_FRAG */
+	SAPP_STAT_IPV6_FRAG_OUTBOUND, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SAPP_STAT_RCV_IPV6Ö®ï¿½ï¿½,  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½   */
 	SAPP_STAT_TCP_OUTBOUND,
 	SAPP_STAT_UDP_OUTBOUND,	
 
@@ -61,13 +61,14 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_UNKNOWN_OUTBOUND,
 
 
-	SAPP_STAT_SND_ETHERNET, /* ²å¼þÖ÷¶¯·¢ËÍµÄÁ÷Á¿, ²»°üÀ¨´®Áª»ØÁ÷Á÷Á¿ */
+	SAPP_STAT_SND_ETHERNET, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	SAPP_STAT_SND_IPV4,
 	SAPP_STAT_SND_IPV6,
 	SAPP_STAT_SND_TCP,
 	SAPP_STAT_SND_TCP_RST,
 	SAPP_STAT_SND_TCP_SYNACK,
 	SAPP_STAT_SND_UDP,
+	SAPP_STAT_SND_CTRL,
 
 	SAPP_STAT_SND_ERROR,
 
@@ -94,17 +95,17 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_TCP_STREAM_DATA,
 	SAPP_STAT_TCP_STREAM_NOUSE,
 
-	SAPP_STAT_TCP_STREAM_C2S, /* Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ  (total pkt num > m and total byte > n) */
-	SAPP_STAT_TCP_STREAM_S2C,/*  Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ(total pkt num > m and total byte > n) */
-	SAPP_STAT_TCP_STREAM_DOUBLE,/*  Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ  (total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_C2S, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½  (total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_S2C,/*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½(total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_DOUBLE,/*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½  (total pkt num > m and total byte > n) */
 
-	SAPP_STAT_TCP_STREAM_C2S_PKTS, /* Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ  (total pkt num > m and total byte > n) */
-	SAPP_STAT_TCP_STREAM_S2C_PKTS,/*  Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ(total pkt num > m and total byte > n) */
-	SAPP_STAT_TCP_STREAM_DOUBLE_PKTS,/*  Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ  (total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_C2S_PKTS, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½  (total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_S2C_PKTS,/*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½(total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_DOUBLE_PKTS,/*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½  (total pkt num > m and total byte > n) */
 
-	SAPP_STAT_TCP_STREAM_C2S_BYTES, /* Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ  (total pkt num > m and total byte > n) */
-	SAPP_STAT_TCP_STREAM_S2C_BYTES,/*  Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ(total pkt num > m and total byte > n) */
-	SAPP_STAT_TCP_STREAM_DOUBLE_BYTES,/*  Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ  (total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_C2S_BYTES, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½  (total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_S2C_BYTES,/*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½(total pkt num > m and total byte > n) */
+	SAPP_STAT_TCP_STREAM_DOUBLE_BYTES,/*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½  (total pkt num > m and total byte > n) */
 
 	SAPP_STAT_TCP_STREAM_NEW,
 	SAPP_STAT_TCP_STREAM_DEL,
@@ -117,56 +118,56 @@ typedef enum __sapp_sys_stat_type{
 	SAPP_STAT_UDP_STREAM_DEL,
 	SAPP_STAT_UDP_STREAM_RESET,
 
-	SAPP_STAT_TCP_STREAM_TOTAL_C2S, /* È«²¿TCPÁ÷Í³¼Æ Á¬½ÓÊý*/
-	SAPP_STAT_TCP_STREAM_TOTAL_S2C,/* È«²¿TCPÁ÷Í³¼Æ Á¬½ÓÊý*/
-	SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE,	/* È«²¿TCPÁ÷Í³¼Æ Á¬½ÓÊý*/
+	SAPP_STAT_TCP_STREAM_TOTAL_C2S, /* È«ï¿½ï¿½TCPï¿½ï¿½Í³ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
+	SAPP_STAT_TCP_STREAM_TOTAL_S2C,/* È«ï¿½ï¿½TCPï¿½ï¿½Í³ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
+	SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE,	/* È«ï¿½ï¿½TCPï¿½ï¿½Í³ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
 
-	SAPP_STAT_TCP_STREAM_TOTAL_C2S_PKTS, /* È«²¿TCPÁ÷Í³¼Æ °üÊý */
-	SAPP_STAT_TCP_STREAM_TOTAL_S2C_PKTS,/* È«²¿TCPÁ÷Í³¼Æ °üÊý*/
-	SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_PKTS,	/* È«²¿TCPÁ÷Í³¼Æ °üÊý*/
+	SAPP_STAT_TCP_STREAM_TOTAL_C2S_PKTS, /* È«ï¿½ï¿½TCPï¿½ï¿½Í³ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */
+	SAPP_STAT_TCP_STREAM_TOTAL_S2C_PKTS,/* È«ï¿½ï¿½TCPï¿½ï¿½Í³ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½*/
+	SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_PKTS,	/* È«ï¿½ï¿½TCPï¿½ï¿½Í³ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½*/
 
-	SAPP_STAT_TCP_STREAM_TOTAL_C2S_BYTES, /* È«²¿TCPÁ÷Í³¼Æ ×Ö½ÚÊý */
-	SAPP_STAT_TCP_STREAM_TOTAL_S2C_BYTES,/* È«²¿TCPÁ÷Í³¼Æ ×Ö½ÚÊý*/
-	SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_BYTES,	/* È«²¿TCPÁ÷Í³¼Æ ×Ö½ÚÊý*/
+	SAPP_STAT_TCP_STREAM_TOTAL_C2S_BYTES, /* È«ï¿½ï¿½TCPï¿½ï¿½Í³ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½ï¿½ */
+	SAPP_STAT_TCP_STREAM_TOTAL_S2C_BYTES,/* È«ï¿½ï¿½TCPï¿½ï¿½Í³ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½ï¿½*/
+	SAPP_STAT_TCP_STREAM_TOTAL_DOUBLE_BYTES,	/* È«ï¿½ï¿½TCPï¿½ï¿½Í³ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½ï¿½*/
 
-	SAPP_STAT_TCP_LOST_PKT_STREAM_NUM, /* Ôø¾­¶ª°üµÄÁ÷¼ÆÊý */
-	SAPP_STAT_TCP_LOST_PKT, /* ¶ª°ü×Ö½Ú×Ü¼ÆÊý */
+	SAPP_STAT_TCP_LOST_PKT_STREAM_NUM, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	SAPP_STAT_TCP_LOST_PKT, /* ï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½ï¿½Ü¼ï¿½ï¿½ï¿½ */
 
-	SAPP_STAT_UDP_STREAM_C2S, /* Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ  (total pkt num > m and total byte > n) */
-	SAPP_STAT_UDP_STREAM_S2C,/*  Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ(total pkt num > m and total byte > n) */
-	SAPP_STAT_UDP_STREAM_DOUBLE,/*  Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ  (total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_C2S, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½  (total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_S2C,/*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½(total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_DOUBLE,/*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½  (total pkt num > m and total byte > n) */
 	
 
-	SAPP_STAT_UDP_STREAM_C2S_PKTS, /* Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ  (total pkt num > m and total byte > n) */
-	SAPP_STAT_UDP_STREAM_S2C_PKTS,/*  Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ(total pkt num > m and total byte > n) */
-	SAPP_STAT_UDP_STREAM_DOUBLE_PKTS,/*  Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ  (total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_C2S_PKTS, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½  (total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_S2C_PKTS,/*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½(total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_DOUBLE_PKTS,/*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½  (total pkt num > m and total byte > n) */
 
-	SAPP_STAT_UDP_STREAM_C2S_BYTES, /* Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ  (total pkt num > m and total byte > n) */
-	SAPP_STAT_UDP_STREAM_S2C_BYTES,/*  Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ(total pkt num > m and total byte > n) */
-	SAPP_STAT_UDP_STREAM_DOUBLE_BYTES,/*  Âú×ãÒÔÏÂÌõ¼þµÄÍ³¼Æ  (total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_C2S_BYTES, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½  (total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_S2C_BYTES,/*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½(total pkt num > m and total byte > n) */
+	SAPP_STAT_UDP_STREAM_DOUBLE_BYTES,/*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½  (total pkt num > m and total byte > n) */
 
-	SAPP_STAT_UDP_STREAM_TOTAL_C2S, /* È«²¿UDPÁ÷Í³¼Æ */
-	SAPP_STAT_UDP_STREAM_TOTAL_S2C,/* È«²¿UDPÁ÷Í³¼Æ */
-	SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE,	/* È«²¿UDPÁ÷Í³¼Æ */	
+	SAPP_STAT_UDP_STREAM_TOTAL_C2S, /* È«ï¿½ï¿½UDPï¿½ï¿½Í³ï¿½ï¿½ */
+	SAPP_STAT_UDP_STREAM_TOTAL_S2C,/* È«ï¿½ï¿½UDPï¿½ï¿½Í³ï¿½ï¿½ */
+	SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE,	/* È«ï¿½ï¿½UDPï¿½ï¿½Í³ï¿½ï¿½ */	
 
-	SAPP_STAT_UDP_STREAM_TOTAL_C2S_PKTS, /* È«²¿UDPÁ÷Í³¼Æ */
-	SAPP_STAT_UDP_STREAM_TOTAL_S2C_PKTS,/* È«²¿UDPÁ÷Í³¼Æ */
-	SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_PKTS,	/* È«²¿UDPÁ÷Í³¼Æ */	
+	SAPP_STAT_UDP_STREAM_TOTAL_C2S_PKTS, /* È«ï¿½ï¿½UDPï¿½ï¿½Í³ï¿½ï¿½ */
+	SAPP_STAT_UDP_STREAM_TOTAL_S2C_PKTS,/* È«ï¿½ï¿½UDPï¿½ï¿½Í³ï¿½ï¿½ */
+	SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_PKTS,	/* È«ï¿½ï¿½UDPï¿½ï¿½Í³ï¿½ï¿½ */	
 
-	SAPP_STAT_UDP_STREAM_TOTAL_C2S_BYTES, /* È«²¿UDPÁ÷Í³¼Æ */
-	SAPP_STAT_UDP_STREAM_TOTAL_S2C_BYTES,/* È«²¿UDPÁ÷Í³¼Æ */
-	SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_BYTES,	/* È«²¿UDPÁ÷Í³¼Æ */	
+	SAPP_STAT_UDP_STREAM_TOTAL_C2S_BYTES, /* È«ï¿½ï¿½UDPï¿½ï¿½Í³ï¿½ï¿½ */
+	SAPP_STAT_UDP_STREAM_TOTAL_S2C_BYTES,/* È«ï¿½ï¿½UDPï¿½ï¿½Í³ï¿½ï¿½ */
+	SAPP_STAT_UDP_STREAM_TOTAL_DOUBLE_BYTES,	/* È«ï¿½ï¿½UDPï¿½ï¿½Í³ï¿½ï¿½ */	
 
 	SAPP_STAT_TCP_HASH_LIST_MAX,
 	SAPP_STAT_UDP_HASH_LIST_MAX,
 
-	SAPP_STAT_TCP_CLOSE_BY_FIN,     /* Èç¹û¹ÒÔØÁËTCP_ALL²å¼þ, ÆäÊµÃ»Õâ¸ö×´Ì¬, ²»ÊÇ³¬Ê±¾ÍÊÇ±»Ç¿ÖÆÌß³ö */
-	SAPP_STAT_TCP_CLOSE_BY_RST,     /* Èç¹û¹ÒÔØÁËTCP_ALL²å¼þ, ÆäÊµÃ»Õâ¸ö×´Ì¬, ²»ÊÇ³¬Ê±¾ÍÊÇ±»Ç¿ÖÆÌß³ö */
-	SAPP_STAT_TCP_CLOSE_BY_TIMEOUT, /* Òò³¬Ê±±»ÌÔÌ­ */
-	SAPP_STAT_TCP_CLOSE_BY_KICKOUT, /* ÒòÁ÷±íÂú±»ÌÔÌ­ */
-	SAPP_STAT_TCP_CLOSE_BY_REUSE,   /* ÒòËÄÔª×éÖØÓÃ±»ÌÔÌ­ */
-	SAPP_STAT_TCP_CLOSE_BY_DUMPFILE_END, /* ½öpcap dumpfileÄ£Ê½ÓÐÐ§, ÆäÊµÕý³£Çé¿öÏÂ»¹Ã»ÓÐ½áÊø, ¶Ápcap°ü½áÊøºóÇ¿ÖÆÇå¿ÕËùÓÐµÄÁ÷¶øÍË³ö */
-	SAPP_STAT_TCP_SHOULD_CLOSE_BUT_TCPALL, /* Õý³£Çé¿öÏÂtcp²ãÃæÒÑ¾­½áÊøÁË, µ«ÒòÎªÓÐTCP_ALL²å¼þ, ËùÒÔÊµ¼Ê»¹²»ÄÜfree, ÕâÖÖÁ÷×îÖÕ»áÒÔTIMEOUT»òKICKOUT½áÊø */
+	SAPP_STAT_TCP_CLOSE_BY_FIN,     /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½TCP_ALLï¿½ï¿½ï¿½, ï¿½ï¿½ÊµÃ»ï¿½ï¿½ï¿½×´Ì¬, ï¿½ï¿½ï¿½Ç³ï¿½Ê±ï¿½ï¿½ï¿½Ç±ï¿½Ç¿ï¿½ï¿½ï¿½ß³ï¿½ */
+	SAPP_STAT_TCP_CLOSE_BY_RST,     /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½TCP_ALLï¿½ï¿½ï¿½, ï¿½ï¿½ÊµÃ»ï¿½ï¿½ï¿½×´Ì¬, ï¿½ï¿½ï¿½Ç³ï¿½Ê±ï¿½ï¿½ï¿½Ç±ï¿½Ç¿ï¿½ï¿½ï¿½ß³ï¿½ */
+	SAPP_STAT_TCP_CLOSE_BY_TIMEOUT, /* ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ì­ */
+	SAPP_STAT_TCP_CLOSE_BY_KICKOUT, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì­ */
+	SAPP_STAT_TCP_CLOSE_BY_REUSE,   /* ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½Ã±ï¿½ï¿½ï¿½Ì­ */
+	SAPP_STAT_TCP_CLOSE_BY_DUMPFILE_END, /* ï¿½ï¿½pcap dumpfileÄ£Ê½ï¿½ï¿½Ð§, ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â»ï¿½Ã»ï¿½Ð½ï¿½ï¿½ï¿½, ï¿½ï¿½pcapï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ */
+	SAPP_STAT_TCP_SHOULD_CLOSE_BUT_TCPALL, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½tcpï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½TCP_ALLï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Êµï¿½Ê»ï¿½ï¿½ï¿½ï¿½ï¿½free, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½TIMEOUTï¿½ï¿½KICKOUTï¿½ï¿½ï¿½ï¿½ */
 	
 	SAPP_STAT_UDP_CLOSE_BY_TIMEOUT,
 	SAPP_STAT_UDP_CLOSE_BY_KICKOUT,
@@ -174,7 +175,7 @@ typedef enum __sapp_sys_stat_type{
 
 
 	/* under ddos bypass  */
-	SAPP_STAT_GLOBAL_BYPASS, /* ÈÎÒâÏß³Ìcpu³¬±ê, ¶¼»áÉèÖÃÈ«¾Öbypass±êÖ¾ */
+	SAPP_STAT_GLOBAL_BYPASS, /* ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½cpuï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½bypassï¿½ï¿½Ö¾ */
 	SAPP_STAT_TCP_BYPASS_STREAM,
 	SAPP_STAT_TCP_BYPASS_PKTS,
 	SAPP_STAT_TCP_BYPASS_BYTES,
