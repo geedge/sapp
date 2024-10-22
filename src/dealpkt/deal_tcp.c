@@ -2491,7 +2491,7 @@ static int tcp_deal_nouse_stream(struct streamindex *pindex,const void *this_iph
 		return PASS;
 	}
 
-	if(this_tcphdr->th_flags & TH_FIN || this_tcphdr->th_flags & TH_RST)
+	if(this_tcphdr->th_flags & TH_FIN || this_tcphdr->th_flags & TH_RST || pdetail_pr->link_state==STREAM_LINK_CLOSE)
 	{
 		struct stream_list *lru_list_root=&(G_MESA_GLOBAL_STREAM[pstream->threadnum]->tcpList[pstream->stream_state]);
 		timeouts_add(lru_list_root->streamindex_timer, &pindex->timeout, tcp_closing_timeout*1000+g_CurrentTime_ms);
