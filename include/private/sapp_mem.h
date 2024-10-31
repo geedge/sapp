@@ -5,32 +5,32 @@
 extern "C" {
 #endif
 
-#define MEM_STAT_GLOBAL_THREAD_ID  -1  /* È«¾Ö±äÁ¿ÄÚ´æµÄthread_id, ÆäÊµÃ»ÓÐÓÃ, ±£³Ö½Ó¿ÚÒ»ÖÂ, ÓÃÓÚ·ÇIOÏß³Ì */
+#define MEM_STAT_GLOBAL_THREAD_ID  -1  /* È«ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½thread_id, ï¿½ï¿½ÊµÃ»ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ö½Ó¿ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½Ú·ï¿½IOï¿½ß³ï¿½ */
 
 typedef enum{
 	__SAPP_MEM_TYPE_INIT = 0,
 
-	SAPP_MEM_STACK_LOCAL, /* º¯ÊýÕ»ÀïÁÙÊ±ÉêÇëµÄÄÚ´æ, º¯Êý·µ»Ø¾Í»á±»ÊÍ·Å */
+	SAPP_MEM_STACK_LOCAL, /* ï¿½ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾Í»á±»ï¿½Í·ï¿½ */
 	
 	SAPP_MEM_FIX_GLOBAL_VAL, 
 	SAPP_MEM_FIX_GLOBAL_STREAM, 
-	SAPP_MEM_FIX_PLUG_CTRL, 	/* ²å¼þ¹ÜÀí³õÊ¼»¯±ØÐèµÄÏà¹ØÊý¾Ý½á¹¹, ¸úÃ¿¸öÁ÷¶¯Ì¬¹ÒÔØµÄ²å¼þÎÞ¹Ø */
+	SAPP_MEM_FIX_PLUG_CTRL, 	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý½á¹¹, ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ØµÄ²ï¿½ï¿½ï¿½Þ¹ï¿½ */
 	
 /*******************************************	
-	ÒÔÉÏÊÇÈ«¾Ö±äÁ¿, »ò³õÊ¼»¯ºó²»±äµÄÄÚ´æ
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ó²»±ï¿½ï¿½ï¿½Ú´ï¿½
 *******************************************/
 	__SAPP_FIX_DYN_SEPARATOR,
 /*******************************************	
-	ÒÔÏÂÊÇ¶àÏß³Ì¶¯Ì¬ÄÚ´æ
+	ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½ß³Ì¶ï¿½Ì¬ï¿½Ú´ï¿½
 *******************************************/
 
-	SAPP_MEM_DYN_MEM_HDR, 		/* ÎªÁËÔö¼ÓÕâ¸öÍ³¼Æ, Ôö¼ÓµÄÄÚ´æÍ·²¿ÏûºÄ */
-	SAPP_MEM_DYN_IP_FRAG_PKT, /* ²»Ì«ÈÝÒ×Çø±ðipv4ºÍipv6, ´Ë´¦Í³Ò»¼ÆÊý */
+	SAPP_MEM_DYN_MEM_HDR, 		/* Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½, ï¿½ï¿½ï¿½Óµï¿½ï¿½Ú´ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	SAPP_MEM_DYN_IP_FRAG_PKT, /* ï¿½ï¿½Ì«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ipv4ï¿½ï¿½ipv6, ï¿½Ë´ï¿½Í³Ò»ï¿½ï¿½ï¿½ï¿½ */
 	SAPP_MEM_DYN_TCP_STREAM,
 	SAPP_MEM_DYN_UDP_STREAM,
-	SAPP_MEM_DYN_TCP_HALF_STREAM, /* c2s, s2c°ëÁ÷½á¹¹ */
+	SAPP_MEM_DYN_TCP_HALF_STREAM, /* c2s, s2cï¿½ï¿½ï¿½ï¿½ï¿½á¹¹ */
 	SAPP_MEM_DYN_UDP_HALF_STREAM,
-	SAPP_MEM_DYN_PLUG_CTRL, 	/* Ã¿¸öÁ÷²å¼þ¹ÜÀí±ØÐèµÄÏà¹ØÊý¾Ý½á¹¹, µ«²»°üÀ¨ÒµÎñ²å¼þÊ¹ÓÃµÄÄÚ´æ */
+	SAPP_MEM_DYN_PLUG_CTRL, 	/* Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý½á¹¹, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ãµï¿½ï¿½Ú´ï¿½ */
 	SAPP_MEM_DYN_TCP_UNORDER,
 	SAPP_MEM_DYN_TCP_SYN_OPT,	
 	SAPP_MEM_DYN_TCP_POLLING_RAW_PKT,
@@ -39,11 +39,11 @@ typedef enum{
 	SAPP_MEM_DYN_UDP_DETAIL,	
 	SAPP_MEM_DYN_TCP_FLOW_STAT,
 	SAPP_MEM_DYN_UDP_FLOW_STAT,
-	SAPP_MEM_DYN_TCP_PROJECT, /* ½ö°üÀ¨project±ØÐèµÄ¹ÜÀí½á¹¹, µ«²»°üÀ¨²å¼þÔÚproject_addÊ±ÉêÇëµÄÄÚ´æ */
+	SAPP_MEM_DYN_TCP_PROJECT, /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½projectï¿½ï¿½ï¿½ï¿½Ä¹ï¿½ï¿½ï¿½ï¿½á¹¹, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½project_addÊ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ */
 	SAPP_MEM_DYN_UDP_PROJECT,
 	SAPP_MEM_DYN_TCP_BRIDGE,
 	SAPP_MEM_DYN_UDP_BRIDGE,	
-	SAPP_MEM_DYN_PADDR, 		/* Ã¿²ãµØÖ·ËùÕ¼µÄÄÚ´æ, ¾Í²»·Ö¾ßÌåÐ­ÒéÁË, Ì«Âé·³ÁË!! */
+	SAPP_MEM_DYN_PADDR, 		/* Ã¿ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½Ú´ï¿½, ï¿½Í²ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½, Ì«ï¿½é·³ï¿½ï¿½!! */
 	SAPP_MEM_DYN_DETAIN_PKT,	
 	SAPP_MEM_DYN_SID_LIST,	
 	SAPP_MEM_DYN_BLOOM_FILTER, 
@@ -69,7 +69,6 @@ void sapp_mem_stat_output(void);
 #define SAPP_GLOBAL_FREE(mem) do{if(mem){sapp_mem_free(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID, (void *)mem); mem = NULL;}}while(0)
 #endif
 
-int bloomfilter_get_mem_stat(int tseq, long long *mem_blocks, long long *mem_bytes);
 
 #ifdef __cplusplus
 }

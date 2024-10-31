@@ -190,9 +190,9 @@ void sapp_mem_stat_output(void)
 	char time_string[128];
 
 	/* 
-	    ·ÀÖ¹ÄÄÌìÐÂÔöÁËÒ»¸öÀàÐÍ, ¶øÍüÁË¼Óµ½ mem_stat_name_tuple[] Êý×éÀï, »òÕßË³Ðò²»¶Ô, ´Ë´¦ÒªÐ£ÑéÒ»ÏÂ.
+	    ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ë¼Óµï¿½ mem_stat_name_tuple[] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ò²»¶ï¿½, ï¿½Ë´ï¿½ÒªÐ£ï¿½ï¿½Ò»ï¿½ï¿½.
 	    
-        TODO: ÆäÊµ³õÊ¼»¯ÑéÖ¤Ò»´Î¾ÍÐÐ, Ã»±ØÒªÃ¿´ÎÊä³öÈÕÖ¾Ê±¶¼¼ì²é!!
+        TODO: ï¿½ï¿½Êµï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ö¤Ò»ï¿½Î¾ï¿½ï¿½ï¿½, Ã»ï¿½ï¿½ÒªÃ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾Ê±ï¿½ï¿½ï¿½ï¿½ï¿½!!
 	*/
 	int stat_name_tuple_num = sizeof(mem_stat_name_tuple)/sizeof(mem_stat_name_tuple_t);
 	assert(stat_name_tuple_num == __SAPP_MEM_TYPE_MAX);
@@ -231,7 +231,7 @@ void sapp_mem_stat_output(void)
 		fix_realtime_stat.mem_used_block[stat_index] += mem_used_stat->mem_used_block[stat_index];
 		fix_realtime_stat.mem_used_bytes[stat_index] += mem_used_stat->mem_used_bytes[stat_index];
 	}
-	/* ¹Ì¶¨ÄÚ´æÊ¹ÓÃÊä³ö, SAPP_MEM_FIX_GLOBAL_VAL ±È½ÏÌØÊâ, Ö±½Ó´ÓÈ«¾Ö±äÁ¿ÖÐ»ñÈ¡ */
+	/* ï¿½Ì¶ï¿½ï¿½Ú´ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½, SAPP_MEM_FIX_GLOBAL_VAL ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½, Ö±ï¿½Ó´ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Ð»ï¿½È¡ */
 	fix_realtime_stat.mem_used_block[SAPP_MEM_FIX_GLOBAL_VAL] = g_sapp_global_mem_used_block;
 	fix_realtime_stat.mem_used_bytes[SAPP_MEM_FIX_GLOBAL_VAL] = g_sapp_global_mem_used_bytes;
 	
@@ -249,7 +249,7 @@ void sapp_mem_stat_output(void)
 
 	fprintf(fp, "\n%7s\n", "Dynamic");
 	
-	/* ÏÈ°Ñ¶à¸öÏß³ÌµÄÊýÖµÇóºÍ */
+	/* ï¿½È°Ñ¶ï¿½ï¿½ï¿½ß³Ìµï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ */
 	for(tseq=0;tseq<g_packet_io_thread_num;tseq++){
 		mem_used_stat = &sapp_global_val->mthread_volatile[tseq]->mem_used_stat;
 		for(stat_index = __SAPP_MEM_TYPE_INIT+1; stat_index < __SAPP_MEM_TYPE_MAX; stat_index++){
@@ -286,37 +286,6 @@ void sapp_mem_stat_output(void)
 				byte_convert_human((unsigned long)tot_mem_byte, 1, 1, human_string));
 	fprintf(fp,"===================================================================================\n");
 	fclose(fp);
-}
-
-char bloomfilter_stat_polling_entry(struct streaminfo *nouse1, void **nouse2, int thread_seq, void *nouse3)
-{
-	static time_t last_get_time[SAPP_MAX_THREADS] = {};
-
-	if(ABBR_CURRENT_TIME <= last_get_time[thread_seq])
-	{
-		return POLLING_STATE_IDLE;
-	} 
-
-	long long blocks = 0, bytes = 0;
-	bloomfilter_get_mem_stat(thread_seq, &blocks, &bytes);
-
-	sapp_global_val->mthread_volatile[thread_seq]->mem_used_stat.mem_used_block[SAPP_MEM_DYN_BLOOM_FILTER] = blocks;
-	sapp_global_val->mthread_volatile[thread_seq]->mem_used_stat.mem_used_bytes[SAPP_MEM_DYN_BLOOM_FILTER] = bytes;
-	
-	last_get_time[thread_seq] = ABBR_CURRENT_TIME;
-	return POLLING_STATE_WORK;
-}
-
-int sapp_mem_init(void)
-{
-	if(sapp_global_val->config.packet_io.dup_pkt_para.kickout_udp_stream_enabled
-	  || sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_tcp
-	  || sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_ipv4_udp
-	  || sapp_global_val->config.packet_io.dup_pkt_para.dup_pkt_distinguish_all_inject)
-	{
-		stream_register_fun(FUN_TYPE_POLLING, (char (*)(void))bloomfilter_stat_polling_entry, 0);
-	}
-	return 0;
 }
 
 #ifdef __cplusplus

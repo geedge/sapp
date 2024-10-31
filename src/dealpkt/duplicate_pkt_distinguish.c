@@ -8,22 +8,25 @@ extern "C" {
 #include "ap_bloom.h"
 #include "dablooms.h"
 
+
+
+
 /*
 	识别因路由策略导致的重复流量, 首次收到数据包加入bloom filter,
 	每个流的前N个包扫描bloom filter, 重复的数据包直接转发即可.
 
-	ip层的ttl, hop不能算为key, 因为经过了几跳路由器又回绕了, ttl肯定会变�??, 而上层的数据包确实是重复�??.
+	ip层的ttl, hop不能算为key, 因为经过了几跳路由器又回绕了, ttl肯定会变�??, 而上层的数据包确实是重复�??.
 */
 
 /* 
     2021-05-18 lijia close ipv6 protocol:
 
     重复流量识别bloom filter句柄, 根据流量方向和协议的不同, 功能分为三类,  
-    IPv6因为没有Ipid字段, 无法区别真正的应用层重传和重复流�??, 开启了会导致断网或者CT, 所以不支持!!!
+    IPv6因为没有Ipid字段, 无法区别真正的应用层重传和重复流�??, 开启了会导致断网或者CT, 所以不支持!!!
 
-	对于IPv6的两种情�??:
-       1)如果开启了代理策略, 重传包被识别成了重复包的�??, sapp就直接PASS�??, 实际那个包是真实通信双方发的, 没有经过tfe处理, 可能就断网了.
-       2)如果开启了firewall的drop策略, 第一次drop成功�??, 但应用层会重�??, 重传包被识别成了重复包的�??, sapp就直接PASS�??, 导致CT.
+	对于IPv6的两种情�??:
+       1)如果开启了代理策略, 重传包被识别成了重复包的�??, sapp就直接PASS�??, 实际那个包是真实通信双方发的, 没有经过tfe处理, 可能就断网了.
+       2)如果开启了firewall的drop策略, 第一次drop成功�??, 但应用层会重�??, 重传包被识别成了重复包的�??, sapp就直接PASS�??, 导致CT.
 */
 
 void *bloom_new(const sapp_dup_pkt_t *dup_conf, struct timeval now, long now_ms)
@@ -221,6 +224,24 @@ int bloomfilter_get_mem_stat(int tseq, long long *mem_blocks, long long *mem_byt
 	return 0;
 }
 
+__thread time_t t_last_get_time = 0;
+void bloom_mem_stat_update(int thread_seq, time_t now)
+{
+	if(now <= t_last_get_time)
+	{
+		return;
+	} 
+
+	long long blocks = 0, bytes = 0;
+	bloomfilter_get_mem_stat(thread_seq, &blocks, &bytes);
+
+	sapp_global_val->mthread_volatile[thread_seq]->mem_used_stat.mem_used_block[SAPP_MEM_DYN_BLOOM_FILTER] = blocks;
+	sapp_global_val->mthread_volatile[thread_seq]->mem_used_stat.mem_used_bytes[SAPP_MEM_DYN_BLOOM_FILTER] = bytes;
+	
+	t_last_get_time = now;
+	return;
+}
+
 int sapp_dup_stream_search(struct streaminfo *a_stream)
 {
 	void *key=NULL;
@@ -237,6 +258,7 @@ int sapp_dup_stream_search(struct streaminfo *a_stream)
 	}
 
 	struct timeval now={g_CurrentTime, 0};
+	bloom_mem_stat_update(a_stream->threadnum, g_CurrentTime);
 	return bloom_check(sapp_global_val->mthread_volatile[a_stream->threadnum]->dup_pkt_distinguish_handle, key, key_len, &sapp_global_val->config.packet_io.dup_pkt_para, now, g_current_time_ms);
 }
 
@@ -256,6 +278,7 @@ void sapp_dup_stream_add(struct streaminfo *a_stream)
 		key_len=sizeof(struct stream_tuple4_v6);
 	}
 	struct timeval now={g_CurrentTime, 0};
+	bloom_mem_stat_update(a_stream->threadnum, g_CurrentTime);
 	bloom_add(sapp_global_val->mthread_volatile[a_stream->threadnum]->dup_pkt_distinguish_handle, key, key_len, &sapp_global_val->config.packet_io.dup_pkt_para, now, g_current_time_ms);
 }
 
@@ -276,8 +299,8 @@ static inline int sapp_set_dup_pkt_key(enum addr_type_t addr_type, enum stream_t
 	if (stream_type == STREAM_TYPE_UDP)
     {
 		const struct mesa_udp_hdr *uhdr = (const struct mesa_udp_hdr *)l4_hdr;
-        l4->tcp_seq = 0x5A5A5A5A; /* udp没有, 但设�??0可能对某些hash函数不友�??, 此处设个固定�?? */
-        l4->tcp_ack = 0xA5A5A5A5; /* udp没有, 但设�??0可能对某些hash函数不友�??, 此处设个固定�?? */
+        l4->tcp_seq = 0x5A5A5A5A; /* udp没有, 但设�??0可能对某些hash函数不友�??, 此处设个固定�?? */
+        l4->tcp_ack = 0xA5A5A5A5; /* udp没有, 但设�??0可能对某些hash函数不友�??, 此处设个固定�?? */
         l4->sport = uhdr->uh_sport;
         l4->dport = uhdr->uh_dport;
         l4->checksum = uhdr->uh_sum;
@@ -315,7 +338,7 @@ int sapp_dup_pkt_identify(int tid, struct streaminfo_private *pstream_pr,
 	int is_dup_pkt = 0;
 	union sapp_dup_pkt_key dup_bloom_key;
 	struct timeval now={g_CurrentTime, 0};	
-
+	bloom_mem_stat_update(tid, g_CurrentTime);
 	size_t key_len = sapp_set_dup_pkt_key((enum addr_type_t)pstream_pr->stream_public.addr.addrtype, (enum stream_type_t)pstream_pr->stream_public.type, ip_hdr, (void *)l4_hdr, &dup_bloom_key);			
 	is_dup_pkt= bloom_check(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (const char*)&dup_bloom_key, key_len, &sapp_global_val->config.packet_io.dup_pkt_para, now, g_current_time_ms);
 	if(is_dup_pkt != 0){
@@ -333,6 +356,7 @@ void sapp_dup_pkt_mark_l4(struct streaminfo *a_stream, const void *ip_hdr, const
     union sapp_dup_pkt_key dup_bloom_key;
     size_t key_len = 0;
     int ret = 0;
+	bloom_mem_stat_update(tid, g_CurrentTime);
 	struct timeval now={g_CurrentTime, 0};		
     key_len = sapp_set_dup_pkt_key((enum addr_type_t)a_stream->addr.addrtype, (enum stream_type_t)a_stream->type, ip_hdr, l4_hdr, &dup_bloom_key);
 	bloom_add(sapp_global_val->mthread_volatile[tid]->dup_pkt_distinguish_handle, (const char*)&dup_bloom_key, key_len, &sapp_global_val->config.packet_io.dup_pkt_para, now, g_current_time_ms);
@@ -351,8 +375,8 @@ int sapp_dup_pkt_init(void)
 		return 0;
 	}
 
-	/* 流量入口有三个开�??, 识别句柄只有一�??, 
-	   拆分句柄多耗费内存, 且判断时每个包需要扫描多个句�??, 
+	/* 流量入口有三个开�??, 识别句柄只有一�??, 
+	   拆分句柄多耗费内存, 且判断时每个包需要扫描多个句�??, 
 	   可能好处只是准确率高了一点点而已 */
 	struct timeval now={time(NULL), 0};	
 	for(i = 0; i < sapp_global_val->config.cpu.worker_threads; i++){

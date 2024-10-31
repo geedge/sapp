@@ -20,19 +20,19 @@
 //#define STREAM_RAWPKT_MD5_CHECK		"48fdc3294bced1c74a853e197db8fd67"
 //#define STREAM_TUNNEL_MD5_CHECK		"d20aa6b4f5683b7b0040676547997be0"
 
-#define IP_PORT_UNION_VERSION			(1) /* ÊÇ·ñ½«IP-PORTºÏ²¢ */
-#define COMPAT_PAPP_FOR_BENCHMARK	(0) /* 2015-01-07 lijia add, Í¬papp¶Ô±È½á¹ûÊ±, ÁÙÊ±¹Ø±ÕÇ¶Ì×¡¢¸÷ÖÖËíµÀÐ­Òé, ·ñÔò²»Ò»ÖÂ */
-#define USE_RBTREE_INSTEAD_LIST		(0) /* µ±HASH³åÍ»Ê±, Ê¹ÓÃºìºÚÊ÷´úÌæÁ´±í, ±ÜÃâÌØÊâÇé¿öÏÂ±éÀú */
-//#define USE_LINUX_KERNEL_HASH_ALGO	(1) /* Ê¹ÓÃLINUXÄÚºËHASHËã·¨ */
+#define IP_PORT_UNION_VERSION			(1) /* ï¿½Ç·ï¿½IP-PORTï¿½Ï²ï¿½ */
+#define COMPAT_PAPP_FOR_BENCHMARK	(0) /* 2015-01-07 lijia add, Í¬pappï¿½Ô±È½ï¿½ï¿½Ê±, ï¿½ï¿½Ê±ï¿½Ø±ï¿½Ç¶ï¿½×¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
+#define USE_RBTREE_INSTEAD_LIST		(0) /* ï¿½ï¿½HASHï¿½ï¿½Í»Ê±, Ê¹ï¿½Ãºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â±ï¿½ï¿½ï¿½ */
+//#define USE_LINUX_KERNEL_HASH_ALGO	(1) /* Ê¹ï¿½ï¿½LINUXï¿½Úºï¿½HASHï¿½ã·¨ */
 
-#define SAPP_INSECTICIDE				(0) /* É±³æ(DEBUG)ÁÙÊ±¿ª¹Ø, ÔÚÓöµ½ÄªÃûÆäÃîµÄBUGÊ±ÁÙÊ±ÆôÓÃ, ¾¡Ôç·¢ÏÖÎÊÌâ, ÔçËÀÔç³¬Éú */
+#define SAPP_INSECTICIDE				(0) /* É±ï¿½ï¿½(DEBUG)ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½BUGÊ±ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ç·¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ç³¬ï¿½ï¿½ */
 
-//#define CYCLE_PKT_DUMP				(1 && DEBUG) /* 2015-04-16 lijia add, ½â¾öÔÚÏßÁ÷Á¿ÎÞ¹Êcoredump, µ«ÕÒ²»µ½Ô­Òò */
-#define CYCLE_PKT_DUMP				(1) /* 2015-04-16 lijia add, ½â¾öÔÚÏßÁ÷Á¿ÎÞ¹Êcoredump, µ«ÕÒ²»µ½Ô­Òò */
+//#define CYCLE_PKT_DUMP				(1 && DEBUG) /* 2015-04-16 lijia add, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ¹ï¿½coredump, ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ */
+#define CYCLE_PKT_DUMP				(1) /* 2015-04-16 lijia add, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ¹ï¿½coredump, ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ */
 
-#define PCAP_CAP_FROM_IP				(0) /* ÎªÁËÄ£ÄâpagµÈÔÚÏß»·¾³, ÈÃpcapÒ²Ä£Äâ´ÓIPv4Í·²¿¿ªÊ¼»ñÈ¡ */
+#define PCAP_CAP_FROM_IP				(0) /* Îªï¿½ï¿½Ä£ï¿½ï¿½pagï¿½ï¿½ï¿½ï¿½ï¿½ß»ï¿½ï¿½ï¿½, ï¿½ï¿½pcapÒ²Ä£ï¿½ï¿½ï¿½IPv4Í·ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½È¡ */
 
-//#define NON_PKT_THREAD_SEND_QUEUE		(64) /* ´¿·¢°ü´¦ÀíÏß³Ì×î´ó·¢ËÍ¶ÓÁÐÊýÁ¿ */
+//#define NON_PKT_THREAD_SEND_QUEUE		(64) /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½Í¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 
 #define IKNOW_ENABLE					(0)
 
@@ -54,7 +54,7 @@
 
 #define sapp_get_struct_header(ptr, type, member)  container_of(ptr, type, member)
 
-#define RAW_PKT_MAGIC_NUM		(0xF1E2D3C4) /* 1:ÓÃÓÚ¼æÈÝ¾ÉÏîÄ¿, ÔÚcall_old¹¹Ôì¾ÉÊý¾Ý½á¹¹Ê±,Ê¶±ðÔ­Ê¼°üµÄÀ´Ô´; 2:°²È«ÐÔ¼ì²â */
+#define RAW_PKT_MAGIC_NUM		(0xF1E2D3C4) /* 1:ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½Ý¾ï¿½ï¿½ï¿½Ä¿, ï¿½ï¿½call_oldï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý½á¹¹Ê±,Ê¶ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´; 2:ï¿½ï¿½È«ï¿½Ô¼ï¿½ï¿½ */
 
 #define SAPP_DESTROY_DONE_FLAG  (0x7FFFFFFF)
 
@@ -68,55 +68,55 @@ struct detain_pkt;
 struct rawpkt_metadata;
 
 
-/* Ô­Ê¼°ü½á¹¹ */
+/* Ô­Ê¼ï¿½ï¿½ï¿½á¹¹ */
 typedef struct {
 	/* ---8 bytes-- */
 	unsigned int magic_num; 
-	int offset_to_raw_pkt_hdr;			/* ±¾²ã»Øµ÷¶ÔÓ¦µÄÊý¾ÝÔÚraw_pkt_dataµÄÆ«ÒÆÁ¿ */
+	int offset_to_raw_pkt_hdr;			/* ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½raw_pkt_dataï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ */
 	/* ===8 bytes=== */
 
 	/* ---8 bytes-- */
-	enum addr_type_t low_layer_type;	/* Ô­Ê¼°ü×îµ×²ãÐ­ÒéµÄÀàÐÍ, ¿ÉÄÜÊÇMAC(pcap²¶°ü), Ò²¿ÉÄÜÊÇIPv4(pag²¶°ü) */
-	int __lib_raw_pkt_len;		/* µ×²ã²¶°ü¿âÌá¹©µÄ°üÕæÊµÔ­Ê¼³¤¶È */
+	enum addr_type_t low_layer_type;	/* Ô­Ê¼ï¿½ï¿½ï¿½ï¿½×²ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MAC(pcapï¿½ï¿½ï¿½ï¿½), Ò²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPv4(pagï¿½ï¿½ï¿½ï¿½) */
+	int __lib_raw_pkt_len;		/* ï¿½×²ã²¶ï¿½ï¿½ï¿½ï¿½ï¿½á¹©ï¿½Ä°ï¿½ï¿½ï¿½ÊµÔ­Ê¼ï¿½ï¿½ï¿½ï¿½ */
 	/* ===8 bytes=== */
 
 	/* ---8 bytes-- */
-	int raw_pkt_len;			/* ¸øÉÏ²ãÓ¦ÓÃ¿´µÄÔ­Ê¼°ü×Ü³¤¶È, ÓÐ¿ÉÄÜ²»ÊÇÕæÊµµÄ, ±ÈÈçÌø¹ýÁËEthernet²ã */
-	unsigned int hd_hash; /* Íø¿¨Ó²¼þ¼ÆËãµÄËÄÔª×éHASH, ¼õÉÙÆ½Ì¨CPU¼ÆËãÏûºÄ */
+	int raw_pkt_len;			/* ï¿½ï¿½ï¿½Ï²ï¿½Ó¦ï¿½Ã¿ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½, ï¿½Ð¿ï¿½ï¿½Ü²ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ethernetï¿½ï¿½ */
+	unsigned int hd_hash; /* ï¿½ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½HASH, ï¿½ï¿½ï¿½ï¿½Æ½Ì¨CPUï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	/* ===8 bytes=== */
 
-	const void *__lib_raw_pkt_data; /* µ×²ã²¶°ü¿âÌá¹©µÄÕæÊµÔ­Ê¼°üÖ¸Õë */
-	const void *raw_pkt_data;	/* ¸øÉÏ²ãÓ¦ÓÃ¿´µÄÔ­Ê¼°üÍ·Ö¸Õë, ÓÐ¿ÉÄÜÌø¹ýÁËEthernet²ã, ¸ù¾Ýlow_layer_typeÅÐ¶ÏÐ­ÒéÀàÐÍ */
+	const void *__lib_raw_pkt_data; /* ï¿½×²ã²¶ï¿½ï¿½ï¿½ï¿½ï¿½á¹©ï¿½ï¿½ï¿½ï¿½ÊµÔ­Ê¼ï¿½ï¿½Ö¸ï¿½ï¿½ */
+	const void *raw_pkt_data;	/* ï¿½ï¿½ï¿½Ï²ï¿½Ó¦ï¿½Ã¿ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½Í·Ö¸ï¿½ï¿½, ï¿½Ð¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ethernetï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½low_layer_typeï¿½Ð¶ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 
-	struct timeval raw_pkt_ts;	/* Ô­Ê¼°ü²¶»ñÊ±¼ä´Á, Èç¹ûÈ«Îª0Ôò²»Ö§³Ö´Ë¹¦ÄÜ(ÈçpagÄ£Ê½) */
+	struct timeval raw_pkt_ts;	/* Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½È«Îª0ï¿½ï¿½Ö§ï¿½Ö´Ë¹ï¿½ï¿½ï¿½(ï¿½ï¿½pagÄ£Ê½) */
 	//2*8 Bytes
-	const void *io_lib_pkt_reference; /* ÒýÓÃµ×²ãI/O¿âµÄÔ­Ê¼°ü¹ÜÀí½á¹¹, ÀýÈç:¶ÔÓÚmarsioÀ´Ëµ, ¼´µ×²ãµÄmbuf½á¹¹ */
+	const void *io_lib_pkt_reference; /* ï¿½ï¿½ï¿½Ãµ×²ï¿½I/Oï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹, ï¿½ï¿½ï¿½ï¿½:ï¿½ï¿½ï¿½ï¿½marsioï¿½ï¿½Ëµ, ï¿½ï¿½ï¿½×²ï¿½ï¿½mbufï¿½á¹¹ */
 
 	/* ---8 bytes-- */
-	int payload_len; /* ¸ºÔØ³¤¶È */
-	int device_index;/* ÓÐ¶à¿éÍø¿¨Ê±, Òª±£Ö¤´ÓÄÄ¸ö¿¨½ø¾Í´ÓÄÄ¸ö¿¨³ö */
+	int payload_len; /* ï¿½ï¿½ï¿½Ø³ï¿½ï¿½ï¿½ */
+	int device_index;/* ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±, Òªï¿½ï¿½Ö¤ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í´ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	/* ===8 bytes=== */
 
 	/* ---8 bytes-- */
 	unsigned char route_dir:1;
-	unsigned char is_overlay_pkt:1; /* ±íÊ¾ÊÇÕæÊµÁ´Â·ÖÐµÄÊý¾Ý°ü, ÒªÎÞÌõ¼þ»Ø×¢, ¼´±¾»ú¿´ÆðÀ´ÏñÒ»¸ùÍøÏß; ·ñÔòÒª¶ªÆú */
+	unsigned char is_overlay_pkt:1; /* ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½Â·ï¿½Ðµï¿½ï¿½ï¿½ï¿½Ý°ï¿½, Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½; ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ */
 	unsigned char is_ctrl_pkt:1;
-	unsigned char diagnose_error_to_dump:1; /* ÊÇÄ³ÖÖ´íÎóÊý¾Ý°ü, ÆÚÍûpkt_dump´æ´¢»òudp socket·¢ËÍ¸øtcpdump_mesa */
-	unsigned char drop_current_pkt_flag:1; /* ²å¼þµ÷ÓÃMSO_DROP_CURRENT_PKTÉèÖÃ¶ªÆúµ±Ç°°ü, Ã¿´Î´¦ÀíÍêÒªÇå¿Õ */
+	unsigned char diagnose_error_to_dump:1; /* ï¿½ï¿½Ä³ï¿½Ö´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½, ï¿½ï¿½ï¿½ï¿½pkt_dumpï¿½æ´¢ï¿½ï¿½udp socketï¿½ï¿½ï¿½Í¸ï¿½tcpdump_mesa */
+	unsigned char drop_current_pkt_flag:1; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MSO_DROP_CURRENT_PKTï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½, Ã¿ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ */
 	unsigned char mac_flipping_enable:1;
 	unsigned char padding_flags:2;
 			//1 Bytes
 	unsigned char padding[2];
-	unsigned char overlay_layer_bytes; /* ´®Áª·â×°²ã³¤¶È, ±ÈÈçvxlanÄ£Ê½ÏÂÊÇ50×Ö½Ú */
+	unsigned char overlay_layer_bytes; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°ï¿½ã³¤ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½vxlanÄ£Ê½ï¿½ï¿½ï¿½ï¿½50ï¿½Ö½ï¿½ */
 			//3 Bytes
 		//4 Bytes
-	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, in host order, vlan flipping for adev, index0±íÊ¾ÊÕµ½µ±Ç°°üµÄvlan_id, index1±íÊ¾Ô­°ü×ª·¢µÄvlan_id */
+	unsigned short vlan_flipping_couple[2]; /*2020-09-28 lijia add, in host order, vlan flipping for adev, index0ï¿½ï¿½Ê¾ï¿½Õµï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½vlan_id, index1ï¿½ï¿½Ê¾Ô­ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½vlan_id */
 		//4Bytes
 	/* ===8 bytes=== */
 
 
 	struct detain_pkt *d_pkt;
-	struct rawpkt_metadata *meta_route_dir[2];// ·¢ËÍËùÐèµÄmetadata, ÓÃÓÚÔÚµ÷ÓÃlow_level_sendÊ±, Ìî³ämarsio 4.6ºóÐèÒªµÄÐÅÏ¢.
+	struct rawpkt_metadata *meta_route_dir[2];// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½metadata, ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½low_level_sendÊ±, ï¿½ï¿½ï¿½marsio 4.6ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ï¢.
 	struct segment_id_list *append_list;
 	struct segment_id_list *prepend_list;
 	unsigned long long stream_trace_id;
@@ -144,10 +144,10 @@ struct buf_unorder
 	struct buf_unorder *prev;
 	//void *data; 
 	//UINT32 len;	
-	void *this_ip_hdr; /* ¿ÉÄÜÀ´Ô´ÓÚÕæÊµÔ­Ê¼°ü, Ò²¿ÉÄÜÀ´Ô´ÓÚÖØ×éµÄIP·ÖÆ¬°ü,¿¿'ip_reassemble_pkt'Çø±ð */
+	void *this_ip_hdr; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ÊµÔ­Ê¼ï¿½ï¿½, Ò²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½,ï¿½ï¿½'ip_reassemble_pkt'ï¿½ï¿½ï¿½ï¿½ */
 	struct mesa_tcp_hdr *this_tcp_hdr;
-	void *tcpdata; /* TCPµÄÊý¾Ý²¿·ÖÖ¸Õë, ²»º¬TCPÍ· */
-	UINT16 tcpdatalen; /* TCPµÄÊý¾Ý²¿·Ö³¤¶È */
+	void *tcpdata; /* TCPï¿½ï¿½ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½TCPÍ· */
+	UINT16 tcpdatalen; /* TCPï¿½ï¿½ï¿½ï¿½ï¿½Ý²ï¿½ï¿½Ö³ï¿½ï¿½ï¿½ */
 	UINT16 urg_ptr;
 	char fin;
 	char urg;
@@ -155,80 +155,80 @@ struct buf_unorder
 	unsigned char ip_reassemble_pkt;
 	UINT32 seq;
 	UINT32 ack;
-	raw_ipfrag_list_t *ipfrag_list; /* Èç¹ûµ±Ç°°üÊÇIP·ÖÆ¬ÖØ×éµÄ°ü, ÐèÒª´æ´¢ËùÓÐIP·ÖÆ¬°üÁ´±í */
-	raw_pkt_t raw_pkt; /* ÂÒÐò°ü´æ´¢Ô­Ê¼°ü */
+	raw_ipfrag_list_t *ipfrag_list; /* ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ä°ï¿½, ï¿½ï¿½Òªï¿½æ´¢ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	raw_pkt_t raw_pkt; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ´¢Ô­Ê¼ï¿½ï¿½ */
 };
 
-/*°ëÁ÷½á¹¹Ìå¶¨Òå£º*/
+/*ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½å¶¨ï¿½å£º*/
 struct half_tcpstream
 {
   UCHAR *data;
-  UINT32 offset;           /*dataÖÐµÚÒ»¸ö×Ö½ÚÔÚTCPÊý¾ÝÁ÷ÖÐµÄÆ«ÒÆÁ¿*/
-  UINT32 count;           /*´ÓÁ¬½Ó½¨Á¢Æðµ½ÏÖÔÚÎªÖ¹£¬µ½´ïµÄÊý¾Ý×Ü³¤¶È×Ö½ÚÊý*/
-  UINT32 count_new;        /*±¾´ÎÐÂµ½µÄÊý¾Ý×Ö½ÚÊý*/
-  UINT32 count_ideal;      /*´ÓÁ¬½Ó½¨Á¢Æðµ½ÏÖÔÚÎªÖ¹£¬ÀíÂÛÉÏÓ¦¸Ãµ½´ïµÄÊý¾Ý×Ü³¤¶È*/
-  UINT32 pktcout;          /*±¾²àÀÛ¼Æµ½´ïµÄ°ü¸öÊý, °üÀ¨ÖØ´«°ü, ACK, µ«²»º¬SYN */
-  UINT32 totallost;        /*±¾²àÀÛ¼Æ¶ª°ü³¤¶È*/
-  UINT32 seq;              /*±¾²àÊý¾ÝÆÚ´ýµÄseqÐòºÅ*/
-  UINT32 first_data_seq;   /*±¾²àÊý¾ÝÆðÊ¼µÄµÄseqÐòºÅ*/
+  UINT32 offset;           /*dataï¿½Ðµï¿½Ò»ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½TCPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½Æ«ï¿½ï¿½ï¿½ï¿½*/
+  UINT32 count;           /*ï¿½ï¿½ï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÖ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½*/
+  UINT32 count_new;        /*ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½*/
+  UINT32 count_ideal;      /*ï¿½ï¿½ï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÖ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½*/
+  UINT32 pktcout;          /*ï¿½ï¿½ï¿½ï¿½ï¿½Û¼Æµï¿½ï¿½ï¿½Ä°ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½, ACK, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SYN */
+  UINT32 totallost;        /*ï¿½ï¿½ï¿½ï¿½ï¿½Û¼Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
+  UINT32 seq;              /*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½seqï¿½ï¿½ï¿½*/
+  UINT32 first_data_seq;   /*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½Äµï¿½seqï¿½ï¿½ï¿½*/
   
-  //UINT32 ack_seq;          /*±¾²àÊý¾Ý×îºóÊ¹ÓÃµÄÓ¦´ðºÅ, 2017-08-02 lijia modify , ÒÆ¶¯ÖÁstruct tcpdetail_private */
+  //UINT32 ack_seq;          /*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ãµï¿½Ó¦ï¿½ï¿½ï¿½, 2017-08-02 lijia modify , ï¿½Æ¶ï¿½ï¿½ï¿½struct tcpdetail_private */
   
-  UINT16 window;           /*±¾²àÊý¾Ý»¬¶¯´°¿Ú´óÐ¡*/
+  UINT16 window;           /*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ð¡*/
   UCHAR __pad__;
   UCHAR finstate;		    /*fin×´Ì¬*/
-  UINT16 unorder_cnt;/* 2014-11-27 lijia modify, Ä³Ð©Á÷ÂÒÐòÊý¾Þ´ó, UCHARÐÍ²»¹», À©Õ¹ÎªUINT16 */
-  UINT16 maxunorder; /* 2014-11-27 lijia modify, Ä³Ð©Á÷ÂÒÐòÊý¾Þ´ó, UCHARÐÍ²»¹», À©Õ¹ÎªUINT16 */
-  struct buf_unorder *unorderlist;	/*ÂÒÐò°üµÄÁ´±í*/
-  struct buf_unorder *unorderlisttail;	/*ÂÒÐò°üµÄÁ´±íÎ²²¿Ö¸Õë*/
+  UINT16 unorder_cnt;/* 2014-11-27 lijia modify, Ä³Ð©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ´ï¿½, UCHARï¿½Í²ï¿½ï¿½ï¿½, ï¿½ï¿½Õ¹ÎªUINT16 */
+  UINT16 maxunorder; /* 2014-11-27 lijia modify, Ä³Ð©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ´ï¿½, UCHARï¿½Í²ï¿½ï¿½ï¿½, ï¿½ï¿½Õ¹ÎªUINT16 */
+  struct buf_unorder *unorderlist;	/*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
+  struct buf_unorder *unorderlisttail;	/*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î²ï¿½ï¿½Ö¸ï¿½ï¿½*/
 };
 
-/* ±£´æÃ¿¸öÁ÷Á½¸ö·½ÏòµÚÒ»¸ö°ü, ÓÃÓÚpolling entry·¢°üÊ¹ÓÃ */
+/* ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½polling entryï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ */
 typedef struct {
 	const raw_pkt_t *raw_pkt_stream_dir[2];
-	struct rawpkt_metadata* meta_stream_dir[2];// Ã¿¸öÁ÷µÄmetadata°´[0:c2s, 1:s2c]·½Ïò´æ´¢ÔÚpolling_inject_contextÖÐ, update_raw_pktº¯Êýµ÷ÓÃÊ±£¬°´·½ÏòÌî³äµ½·µ»ØµÄrawpktÖÐ
+	struct rawpkt_metadata* meta_stream_dir[2];// Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½metadataï¿½ï¿½[0:c2s, 1:s2c]ï¿½ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½polling_inject_contextï¿½ï¿½, update_raw_pktï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½äµ½ï¿½ï¿½ï¿½Øµï¿½rawpktï¿½ï¿½
 }polling_inject_context_t;
 
 struct streaminfo_private
 {
-	/* ¶ÔÍâ½á¹¹·ÅÖÃÔÚ½á¹¹Ìå×îÇ°, Ö¸ÕëµØÖ·¿ÉÒÔ»¥ÏàÇ¿×ª */
+	/* ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½Ú½á¹¹ï¿½ï¿½ï¿½ï¿½Ç°, Ö¸ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½Ç¿×ª */
 	struct streaminfo stream_public;
-	struct streaminfo_private *pfather_pr; /* ÕæÊµÁ÷Á¿µÄÉÏ²ãÁ÷Ö¸Õë, °üÀ¨ÁËvxlanµÈ·â×°²ã, stream_public.pfatherÊÇ¸øÒµÎñ²å¼þ¿´µÄ,²»°üÀ¨vxlan²ãµÄ */
-	/* ÒÔÏÂ±äÁ¿ÎªÆ½Ì¨ÄÚ²¿Ë½ÓÐ, ¶ÔÍâ²»¿É¼û */
+	struct streaminfo_private *pfather_pr; /* ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï²ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½vxlanï¿½È·ï¿½×°ï¿½ï¿½, stream_public.pfatherï¿½Ç¸ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½vxlanï¿½ï¿½ï¿½ */
+	/* ï¿½ï¿½ï¿½Â±ï¿½ï¿½ï¿½ÎªÆ½Ì¨ï¿½Ú²ï¿½Ë½ï¿½ï¿½, ï¿½ï¿½ï¿½â²»ï¿½É¼ï¿½ */
 	void *cur_plugin_cb_func;
-	void   *pproject;		//Ã¿¸ö¹¤³Ì¿ÉÒÔ×Ô¶¨ÒåÊ¹ÓÃ£»
+	void   *pproject;		//Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Ì¿ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½Ê¹ï¿½Ã£ï¿½
 
 	/* ---8 bytes-- */
-	UCHAR  layer_dir:2;   /* µ¥°üÓÐÐ§, µ±Ç°²ãµÄµØÖ·ÊÇ·ñºÍÄ¬ÈÏ¹æÔò"´ó¶Ë¿ÚÊÇ¿Í»§¶Ë"ÏàÍ¬ */	
-	UCHAR  stream_dir:1; /* Á÷µÄÉú´æÆÚÄÚÓÐÐ§, Á÷µÄ´æ´¢µÄµØÖ·ÊÇ·ñºÍÄ¬ÈÏ¹æÔò"´ó¶Ë¿ÚÊÇ¿Í»§¶Ë"ÏàÍ¬  */		
-	UCHAR  stream_c2s_route_dir:1; /* c2s·½ÏòµÄ°ü, ¶ÔÓ¦µÄÁ´Â·route dir·½Ïò, ÓÃÓÚ»ñÈ¡inbound, outboundÁ÷Á¿ */
-	UCHAR  addr_use_as_hash:1; /* ±¾²ãµÄaddrÊÇ·ñ×öÎªHASH¼ÆËãºÍ±È½ÏµÄ²ÎÊý, Èç:MACµØÖ·²»²ÎÓë¼ÆËã */
+	UCHAR  layer_dir:2;   /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§, ï¿½ï¿½Ç°ï¿½ï¿½Äµï¿½Ö·ï¿½Ç·ï¿½ï¿½Ä¬ï¿½Ï¹ï¿½ï¿½ï¿½"ï¿½ï¿½Ë¿ï¿½ï¿½Ç¿Í»ï¿½ï¿½ï¿½"ï¿½ï¿½Í¬ */	
+	UCHAR  stream_dir:1; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§, ï¿½ï¿½ï¿½Ä´æ´¢ï¿½Äµï¿½Ö·ï¿½Ç·ï¿½ï¿½Ä¬ï¿½Ï¹ï¿½ï¿½ï¿½"ï¿½ï¿½Ë¿ï¿½ï¿½Ç¿Í»ï¿½ï¿½ï¿½"ï¿½ï¿½Í¬  */		
+	UCHAR  stream_c2s_route_dir:1; /* c2sï¿½ï¿½ï¿½ï¿½Ä°ï¿½, ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Â·route dirï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ú»ï¿½È¡inbound, outboundï¿½ï¿½ï¿½ï¿½ */
+	UCHAR  addr_use_as_hash:1; /* ï¿½ï¿½ï¿½ï¿½ï¿½addrï¿½Ç·ï¿½ï¿½ï¿½ÎªHASHï¿½ï¿½ï¿½ï¿½Í±È½ÏµÄ²ï¿½ï¿½ï¿½, ï¿½ï¿½:MACï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	UCHAR  set_special_timeout:1;
-	UCHAR  need_update_opposite_addr:1;/*±¾²ãµÄaddrÊÇ·ñÔÚ¶Ô²àÀ´°üÊ±¸üÐÂ£¬Èç£ºMPLS±êÇ©·Ç¶Ô³ÆÊ±ÐèÒªÔÚS2C²àµÚÒ»¸ö°ü¼ÇÂ¼±¾²à±êÇ©,¸ÃÖµÄ¬ÈÏÎª0£¬¼´²»ÐèÒª¸üÐÂ*/
-	UCHAR  stream_killed_flag:1; /* 2014-08-22 lijia add, ´®ÁªÄ£Ê½ÏÂ, ÒÑ¾­±»²å¼þKill, Ö®ºó´ËÁ÷¿ÉÖ±½ÓDrop»òKill, ÎÞÐèÔÙ¸øÉÏ²ã²å¼þ */
-	UCHAR  dirreverse;	     /* ½¨Á¢Á¬½ÓÊ±ÊÇ·ñ½øÐÐÁËipµØÖ··´×ª, ¼´Óë"´ó¶Ë¿ÚÊÇ¿Í»§¶Ë"¹æÔòÏà·´ */
-	UINT16 timeout;/* Ã¿¸öÁ´½ÓµÄ¶ÀÓÐ³¬Ê±Ê±¼ä, ´ËÖµÓÐÁ½¸öÓÃÍ¾, 1:ÓÃÓÚ¾¡ÔçÌÔÌ­³¤Ê±¼äÎÞ°üµ½´ïµÄÁ÷, ÒÔ½ÚÔ¼ÄÚ´æ; 2:ÓÃÓÚ±£»¤³¤Ê±¼äÎÞ°üµÄÁ÷, ¶ÔÓÚIMÀà³¤Ê±¼äÎÞ°üµ«Á¬½Ó²¢Î´½áÊø, ¿ÉÉèÖÃ½Ï´óµÄtimeout */
-	unsigned short offset_to_raw_pkt_hdr; /* ±¾²ãÍ·Ïà¶ÔÓÚÔ­Ê¼°üµÄÆðÊ¼µØÖ·µÄÆ«ÒÆÁ¿ */
-	unsigned short offset_to_ip_hdr; /* 2015-12-07 lijia add, UDP/TCP °üÍ·Ïà¶ÔÓÚ³ÐÔØµÄIP°üÍ·Æ«ÒÆÁ¿ */
+	UCHAR  need_update_opposite_addr:1;/*ï¿½ï¿½ï¿½ï¿½ï¿½addrï¿½Ç·ï¿½ï¿½Ú¶Ô²ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Â£ï¿½ï¿½ç£ºMPLSï¿½ï¿½Ç©ï¿½Ç¶Ô³ï¿½Ê±ï¿½ï¿½Òªï¿½ï¿½S2Cï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ç©,ï¿½ï¿½ÖµÄ¬ï¿½ï¿½Îª0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½*/
+	UCHAR  stream_killed_flag:1; /* 2014-08-22 lijia add, ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½, ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Kill, Ö®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½Dropï¿½ï¿½Kill, ï¿½ï¿½ï¿½ï¿½ï¿½Ù¸ï¿½ï¿½Ï²ï¿½ï¿½ï¿½ */
+	UCHAR  dirreverse;	     /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ipï¿½ï¿½Ö·ï¿½ï¿½×ª, ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½Ë¿ï¿½ï¿½Ç¿Í»ï¿½ï¿½ï¿½"ï¿½ï¿½ï¿½ï¿½ï¿½à·´ */
+	UINT16 timeout;/* Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ÓµÄ¶ï¿½ï¿½Ð³ï¿½Ê±Ê±ï¿½ï¿½, ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¾, 1:ï¿½ï¿½ï¿½Ú¾ï¿½ï¿½ï¿½ï¿½ï¿½Ì­ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Þ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ô½ï¿½Ô¼ï¿½Ú´ï¿½; 2:ï¿½ï¿½ï¿½Ú±ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Þ°ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½IMï¿½à³¤Ê±ï¿½ï¿½ï¿½Þ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó²ï¿½Î´ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ã½Ï´ï¿½ï¿½timeout */
+	unsigned short offset_to_raw_pkt_hdr; /* ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ö·ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ */
+	unsigned short offset_to_ip_hdr; /* 2015-12-07 lijia add, UDP/TCP ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½Ú³ï¿½ï¿½Øµï¿½IPï¿½ï¿½Í·Æ«ï¿½ï¿½ï¿½ï¿½ */
 	/* ===8 bytes=== */
-	const raw_pkt_t *raw_pkt; /* 2014-12-30 lijia add, ÓÐÐ©»Øµ÷º¯Êý²»Ö§³ÖÔ­Ê¼°ü, µ«·¢°üÓÖÐèÒª, ´æ´¢ÓÚprivate½á¹¹ÖÐ */
+	const raw_pkt_t *raw_pkt; /* 2014-12-30 lijia add, ï¿½ï¿½Ð©ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½Ô­Ê¼ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òª, ï¿½æ´¢ï¿½ï¿½privateï¿½á¹¹ï¿½ï¿½ */
 
 	/* ---8 bytes-- */
-	unsigned int hash_slave; /* 2015-12-14 lijia add, Ê¹ÓÃlinux_jhash¼ÆËãÊ±, ¿ÉÒÔÍ¬Ê±µÃµ½Á½¸öÒÔÉÏµÄHASHÖµ, Ö÷HASHÓÃÓÚÈ·¶¨ÔÚHASH±íµÄSLOTÎ»ÖÃ, slave_HASHÓÃÓÚ¿ìËÙ±È½ÏµØÖ·ÊÇ·ñÏàµÈ */
-	unsigned char hash_not_head_times;/* 2015-12-15 lijia add, µ±Ç°index²»ÔÚHASH SLOTµÄµÚÒ»Î»µÄ´ÎÊý */
-	unsigned char cur_layer_raw_hdr_len; /* 2017-10-31 lijia add, µ±Ç°²ãµÄÔ­Ê¼°üµØÖ·³¤¶È, ÒòpppÍ·²¿Ñ¹Ëõ, Ô­À´°æ±¾ÎÞ·¨±£´æÕâ¸ö×´Ì¬, ·¢°üÊ±Ò²ÎÞ·¨µÃÖªµØÖ·ÈçºÎÌî³ä */
+	unsigned int hash_slave; /* 2015-12-14 lijia add, Ê¹ï¿½ï¿½linux_jhashï¿½ï¿½ï¿½ï¿½Ê±, ï¿½ï¿½ï¿½ï¿½Í¬Ê±ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½HASHÖµ, ï¿½ï¿½HASHï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½HASHï¿½ï¿½ï¿½ï¿½SLOTÎ»ï¿½ï¿½, slave_HASHï¿½ï¿½ï¿½Ú¿ï¿½ï¿½Ù±È½Ïµï¿½Ö·ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ */
+	unsigned char hash_not_head_times;/* 2015-12-15 lijia add, ï¿½ï¿½Ç°indexï¿½ï¿½ï¿½ï¿½HASH SLOTï¿½Äµï¿½Ò»Î»ï¿½Ä´ï¿½ï¿½ï¿½ */
+	unsigned char cur_layer_raw_hdr_len; /* 2017-10-31 lijia add, ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½pppÍ·ï¿½ï¿½Ñ¹ï¿½ï¿½, Ô­ï¿½ï¿½ï¿½æ±¾ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬, ï¿½ï¿½ï¿½ï¿½Ê±Ò²ï¿½Þ·ï¿½ï¿½ï¿½Öªï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	unsigned char __pad:1;
 	unsigned char packet_process_context:1;
 	unsigned char is_ctrl_pkt:1;
 	unsigned char plugin_process_context:1; /* 2019-09-07 lijia add, for polling entry send packet */
-	unsigned char stream_close_reason:4; /* 2019-02-14 lijia add, ¶ÔÓÚTCPÊ¹ÓÃtcpdetail_privateµÄlink_state±äÁ¿, ¶ÔÓÚUDPÖ®Ç°Ã»ÓÐ, ²ð·ÖpadÐÂÔö´Ë±äÁ¿ */
+	unsigned char stream_close_reason:4; /* 2019-02-14 lijia add, ï¿½ï¿½ï¿½ï¿½TCPÊ¹ï¿½ï¿½tcpdetail_privateï¿½ï¿½link_stateï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½UDPÖ®Ç°Ã»ï¿½ï¿½, ï¿½ï¿½ï¿½padï¿½ï¿½ï¿½ï¿½ï¿½Ë±ï¿½ï¿½ï¿½ */
 	unsigned char gdev_block_timer;
 	/* ===8 bytes=== */
 
 	/* ---8 bytes-- */
-	unsigned short stream_low_layer_tunnel_type; /* 2016-07-25 lijia add, ¼ÇÂ¼±¾Á÷µ×²ãËíµÀÀàÐÍ, 0Îª·ÇËíµÀ, ÆäËûÏê¼û:enum stream_carry_tunnel_t */
-	unsigned short stream_carry_up_layer_tunnel_type; /* µ±Ç°Á÷ÉÏ²ãµÄËíµÀÀàÐÍ, ±ÈÈçµ±Ç°Á÷ÎªUDP, ³ÐÔØµÄ¿ÉÄÜÊÇteredoËíµÀ»òL2TPËíµÀ */
-	/* 2016-07-08 lijia add, for janus hijack, ±¾Ó¦¸Ã´æ´¢ÓÚhalf_stream, µ«¸ÕÊÕµ½SYNÊ±, »¹Ã»ÓÐ´´½¨half_streamÊµÌå, ËùÒÔÔÝ´æÓÚstreaminfo_private */
+	unsigned short stream_low_layer_tunnel_type; /* 2016-07-25 lijia add, ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, 0Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:enum stream_carry_tunnel_t */
+	unsigned short stream_carry_up_layer_tunnel_type; /* ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½çµ±Ç°ï¿½ï¿½ÎªUDP, ï¿½ï¿½ï¿½ØµÄ¿ï¿½ï¿½ï¿½ï¿½ï¿½teredoï¿½ï¿½ï¿½ï¿½ï¿½ï¿½L2TPï¿½ï¿½ï¿½ï¿½ */
+	/* 2016-07-08 lijia add, for janus hijack, ï¿½ï¿½Ó¦ï¿½Ã´æ´¢ï¿½ï¿½half_stream, ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½SYNÊ±, ï¿½ï¿½Ã»ï¿½Ð´ï¿½ï¿½ï¿½half_streamÊµï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½streaminfo_private */
 	unsigned short syn_opt_num;
 	unsigned short synack_opt_num;
 	/* ===8 bytes=== */
@@ -243,67 +243,67 @@ struct streaminfo_private
 	struct segment_id_list *sid_append_list;
 	struct segment_id_list *sid_prepend_list;
 
-	/* È«¾ÖÁ÷id, stream_indexÀúÊ·ÉÏÒÑ¾­±íÊ¾µ¥»úÄÚÎ¨Ò»id, ´Ë´¦Òª±£Ö¤¼¯ÈºËùÓÐ»úÆ÷²»ÖØ¸´, ËùÒÔÐÂ½¨±äÁ¿;  
-		¸ßÎ» --- µÍÎ»
+	/* È«ï¿½ï¿½ï¿½ï¿½id, stream_indexï¿½ï¿½Ê·ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¨Ò»id, ï¿½Ë´ï¿½Òªï¿½ï¿½Ö¤ï¿½ï¿½Èºï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Â½ï¿½ï¿½ï¿½ï¿½ï¿½;  
+		ï¿½ï¿½Î» --- ï¿½ï¿½Î»
 		1 |  12bit device_id | 8bit thread_id | 28bit timestamp in sec | 15bit sequence per thread
 	*/
 	unsigned long long global_stream_id; 
 	unsigned long long stream_create_timestamp_ms; 
 	unsigned long long stream_lastupdate_timestamp_ms; 
 	/* ---8 bytes-- */
-	unsigned char layer_index:4; /* ±íÊ¾µ±Ç°²ãµÄ¼ÆÊý, ´Ó×îµ×²ã¿ªÊ¼,Ò»°ãÊÇethernet¿ªÊ¼, ´Ó0¿ªÊ¼¼ÆÊý, 4bit×î¶àÖ§³Ö15²ãÇ¶Ì×, Ò²ÄÜ·ÀÖ¹ËíµÀÇ¶Ì×¹¥»÷(Ä¿Ç°»¹Ã»²¶µ½¹ý°ü) */
-	unsigned char create_dir_by_well_known_port:1;  /* UDP»òTCP°´data½¨Á¬½Ó, ÃüÖÐwell_known_port¹æÔò, ¶ø²»ÊÇ°´´ó¶Ë¿ÚÊÇ¿Í»§¶ËÔ­Ôò´´½¨Á÷ */
+	unsigned char layer_index:4; /* ï¿½ï¿½Ê¾ï¿½ï¿½Ç°ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½×²ã¿ªÊ¼,Ò»ï¿½ï¿½ï¿½ï¿½ethernetï¿½ï¿½Ê¼, ï¿½ï¿½0ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½, 4bitï¿½ï¿½ï¿½Ö§ï¿½ï¿½15ï¿½ï¿½Ç¶ï¿½ï¿½, Ò²ï¿½Ü·ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½×¹ï¿½ï¿½ï¿½(Ä¿Ç°ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½) */
+	unsigned char create_dir_by_well_known_port:1;  /* UDPï¿½ï¿½TCPï¿½ï¿½dataï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½well_known_portï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ë¿ï¿½ï¿½Ç¿Í»ï¿½ï¿½ï¿½Ô­ï¿½ò´´½ï¿½ï¿½ï¿½ */
 	char __pad2:3;
-	char has_duplicate_pkt; /* µ±Ç°Á÷Ôø¾­ÓÐ¹ýÖØ¸´Êý¾Ý°ü, ºóÐøµÄÁ÷Á¿Ó¦¸ÃÃ¿¸ö¶¼¼ì²â */
+	char has_duplicate_pkt; /* ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¹ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½Ý°ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	char under_ddos_bypass;
 	char __pad3[3];
 	/* ===8 bytes=== */
 	
 	unsigned char ip_ttl_c2s;
 	unsigned char ip_ttl_s2c;
-	void   *stream_bridge;	/* 20210425 lijia add, ÀàËÆproject¹¦ÄÜ, Ö§³ÖÍ¬²½ºÍÒì²½Á½ÖÖÄ£Ê½, Ô­ÓÐprojectÀàËÆÒì²½Ä£Ê½ */
+	void   *stream_bridge;	/* 20210425 lijia add, ï¿½ï¿½ï¿½ï¿½projectï¿½ï¿½ï¿½ï¿½, Ö§ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ì²½ï¿½ï¿½ï¿½ï¿½Ä£Ê½, Ô­ï¿½ï¿½projectï¿½ï¿½ï¿½ï¿½ï¿½ì²½Ä£Ê½ */
 };
 
 struct tcpdetail_private
 {
-	/* ¶ÔÍâ½á¹¹·ÅÖÃÔÚ½á¹¹Ìå×îÇ°, Ö¸ÕëµØÖ·¿ÉÒÔ»¥ÏàÇ¿×ª */
+	/* ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½Ú½á¹¹ï¿½ï¿½ï¿½ï¿½Ç°, Ö¸ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½Ç¿×ª */
 	struct tcpdetail tcpdetail_public;
 	
 	/* ---8 bytes-- */
 	UCHAR  multisynflag:2;	  // multi syn
-	UCHAR  ignore_rst_fin:1;  //²»»áÒòrst, fin½áÊø, Ö»ÄÜÒò³¬Ê±»òlru½áÊø
-	UCHAR  drop_stream_flag:1; //2019-11-20 lijia add, ÓïÒåÍ¬DROPPKT, Ö»²»¹ý×÷ÓÃÓòÊÇÕû¸östream
-	UCHAR  auto_remedy_flag:1;	  //ÊÇ·ñÆôÓÃFD²¹¾È
-	UCHAR  needackflag:1;	  //ÐèÒªÉÏ´«ack±¨ÎÄ
+	UCHAR  ignore_rst_fin:1;  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½rst, finï¿½ï¿½ï¿½ï¿½, Ö»ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½lruï¿½ï¿½ï¿½ï¿½
+	UCHAR  drop_stream_flag:1; //2019-11-20 lijia add, ï¿½ï¿½ï¿½ï¿½Í¬DROPPKT, Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½stream
+	UCHAR  auto_remedy_flag:1;	  //ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½FDï¿½ï¿½ï¿½ï¿½
+	UCHAR  needackflag:1;	  //ï¿½ï¿½Òªï¿½Ï´ï¿½ackï¿½ï¿½ï¿½ï¿½
 	UCHAR  takeoverflag:1;
-	UCHAR  has_lost_pkt_flag:1;		//2020-08-23 lijia add, ±¾Á÷Ôø¾­¶ª¹ý°ü±êÖ¾Î»
-	UCHAR  tcpstateflag;	   // ÓÃÓÚ¼ÇÂ¼tcpµÄ»á»°SYNÏà¹Ø×´Ì¬
-	UCHAR  link_state;		   // Á´½ÓµÄ×´Ì¬
+	UCHAR  has_lost_pkt_flag:1;		//2020-08-23 lijia add, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾Î»
+	UCHAR  tcpstateflag;	   // ï¿½ï¿½ï¿½Ú¼ï¿½Â¼tcpï¿½Ä»á»°SYNï¿½ï¿½ï¿½×´Ì¬
+	UCHAR  link_state;		   // ï¿½ï¿½ï¿½Óµï¿½×´Ì¬
 	UCHAR  creat_mod;
-	UINT16 tcpoverlen;		// modify by lqy 20150225, ¼ÇÂ¼µ±Ç°°üÓëÉÏÒ»¸ö°üµÄÖØµþtcp³¤¶È£»	
-	UCHAR  offload_stream_flag; //2022-04-13 liuxueli add, ×÷ÓÃÓòÊÇÕû¸östream
+	UINT16 tcpoverlen;		// modify by lqy 20150225, ï¿½ï¿½Â¼ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½tcpï¿½ï¿½ï¿½È£ï¿½	
+	UCHAR  offload_stream_flag; //2022-04-13 liuxueli add, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½stream
 	UCHAR  pad;			
 	/* ===8 bytes=== */
 	time_t offload_stream_timestamp_s;
 	
-	struct half_tcpstream *pclient;  //µ½clientµÄTCPÁ¬½ÓÐÅÏ¢
-	struct half_tcpstream *pserver;  //µ½ serverµÄTCPÁ¬½ÓÐÅÏ¢
-	UINT32 iserverseq;	  //Á´½Ó½¨Á¢Ê±ÁÙÊ±´æ´¢seq, ´ËÖµÊÇC2S->SYN+1
-	UINT32 iclientseq;	  //Á´½Ó½¨Á¢Ê±ÁÙÊ±´æ´¢seq, ´ËÖµÊÇS2C->SYN+1
+	struct half_tcpstream *pclient;  //ï¿½ï¿½clientï¿½ï¿½TCPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+	struct half_tcpstream *pserver;  //ï¿½ï¿½ serverï¿½ï¿½TCPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+	UINT32 iserverseq;	  //ï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ê±ï¿½æ´¢seq, ï¿½ï¿½Öµï¿½ï¿½C2S->SYN+1
+	UINT32 iclientseq;	  //ï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ê±ï¿½æ´¢seq, ï¿½ï¿½Öµï¿½ï¿½S2C->SYN+1
 	/* NOTE:
-		ÎªºÎfirst_ack_seq²»·ÅÔÚhalf_tcpstreamÀï?
-		Òòhalf_tcpstreamÊÇÔÚÊÕµ½µÚÒ»¸ö´øÓÐ¸ºÔØµÄ°ü²Å·ÖÅäµÄ, 
-		Èç¹ûÔÚtcp_deal_ack()º¯ÊýÖÐÉèÖÃ, Èç¹ûÊÇS2C·½Ïò, ÄÇÃ´µÚÒ»¸öS2CÊý¾Ý°üµ½´ïÊ±, ÒÑ¾­²»ÊÇfirst_ack_seqÁË.
-		»¹¿ÉÒÔ·ÀÖ¹DDOS¹¥»÷.
+		Îªï¿½ï¿½first_ack_seqï¿½ï¿½ï¿½ï¿½ï¿½ï¿½half_tcpstreamï¿½ï¿½?
+		ï¿½ï¿½half_tcpstreamï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ð¸ï¿½ï¿½ØµÄ°ï¿½ï¿½Å·ï¿½ï¿½ï¿½ï¿½, 
+		ï¿½ï¿½ï¿½ï¿½ï¿½tcp_deal_ack()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½S2Cï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ã´ï¿½ï¿½Ò»ï¿½ï¿½S2Cï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½ï¿½ï¿½Ê±, ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½first_ack_seqï¿½ï¿½.
+		ï¿½ï¿½ï¿½ï¿½ï¿½Ô·ï¿½Ö¹DDOSï¿½ï¿½ï¿½ï¿½.
 	*/
-	UINT32 C2S_first_ack_seq; /* 2017-08-02 lijia modify, C2S²àµÚÒ»¸öACKºÅ, ºÍhalf_tcpstream->ack_seqÒ»Æð¿ÉÒÔ¼ÆËã³öµ¥ÏòÁ÷¶Ô²àµÄÊý¾Ý×ÜÁ¿ */
-	UINT32 C2S_ack_seq;  /* 2017-08-02 lijia add, C2S²àµ±Ç°µÄACKºÅ */ 
-	UINT32 S2C_first_ack_seq; /* 2017-08-02 lijia modify, C2S²àµÚÒ»¸öACKºÅ, ºÍhalf_tcpstream->ack_seqÒ»Æð¿ÉÒÔ¼ÆËã³öµ¥ÏòÁ÷¶Ô²àµÄÊý¾Ý×ÜÁ¿ */
-	UINT32 S2C_ack_seq;  /* 2017-08-02 lijia add, S2C²àµ±Ç°µÄACKºÅ */ 
-	void   *apme;		  //Ó¦ÓÃ²ãÉÏÏÂÎÄ
-	void   *pAllpktpme;   //ÎÞ×´Ì¬µÄtcp¹ÜÀíÉÏÏÂÎÄ
-	struct tcp_flow_stat *flow_stat; /* 2016-07-14 lijia add, ÓÃÓÚ¼ÇÂ¼TCP´¿data°üµÄ¼ÆÊý, Êµ¼ÊÄÚ´æ·ÖÅäºÍÊÍ·ÅÓÉprojectÄ£¿éÍê³É, ¿ÉÄÜÎªNULL,  */
-	struct tcp_flow_stat *deduce_flow_stat; /* 2018-10-30 lijia add, ÓÃÓÚ¼ÇÂ¼¿¿ÐòºÅÍÆ¶Ï³öÀíÂÛÉÏ´«ÊäµÄÊý¾Ý, °üº¬¶ª°üµÄ³¤¶È; ÒÔ¼°µ¥ÏòÁ÷Çé¿öÏÂ, ¶Ô¶ËÓ¦¸ÃÊÕµ½µÄÊý¾Ý  */
+	UINT32 C2S_first_ack_seq; /* 2017-08-02 lijia modify, C2Sï¿½ï¿½ï¿½Ò»ï¿½ï¿½ACKï¿½ï¿½, ï¿½ï¿½half_tcpstream->ack_seqÒ»ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	UINT32 C2S_ack_seq;  /* 2017-08-02 lijia add, C2Sï¿½àµ±Ç°ï¿½ï¿½ACKï¿½ï¿½ */ 
+	UINT32 S2C_first_ack_seq; /* 2017-08-02 lijia modify, C2Sï¿½ï¿½ï¿½Ò»ï¿½ï¿½ACKï¿½ï¿½, ï¿½ï¿½half_tcpstream->ack_seqÒ»ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	UINT32 S2C_ack_seq;  /* 2017-08-02 lijia add, S2Cï¿½àµ±Ç°ï¿½ï¿½ACKï¿½ï¿½ */ 
+	void   *apme;		  //Ó¦ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	void   *pAllpktpme;   //ï¿½ï¿½×´Ì¬ï¿½ï¿½tcpï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	struct tcp_flow_stat *flow_stat; /* 2016-07-14 lijia add, ï¿½ï¿½ï¿½Ú¼ï¿½Â¼TCPï¿½ï¿½dataï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½, Êµï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½projectÄ£ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ÎªNULL,  */
+	struct tcp_flow_stat *deduce_flow_stat; /* 2018-10-30 lijia add, ï¿½ï¿½ï¿½Ú¼ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶Ï³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½; ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ô¶ï¿½Ó¦ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  */
 	unsigned short rtt_csc;
 	unsigned short rtt_scs;
 	long long last_c2s_pkt_rcv_time;
@@ -312,12 +312,12 @@ struct tcpdetail_private
 
 struct udpdetail_private
 {
-	/* ¶ÔÍâ½á¹¹·ÅÖÃÔÚ½á¹¹Ìå×îÇ°, Ö¸ÕëµØÖ·¿ÉÒÔ»¥ÏàÇ¿×ª */
+	/* ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½Ú½á¹¹ï¿½ï¿½ï¿½ï¿½Ç°, Ö¸ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½Ç¿×ª */
 	struct udpdetail udpdetail_public;
-	void   *apme;		  //Ó¦ÓÃ²ãÉÏÏÂÎÄ
-	struct udp_flow_stat *flow_stat; /* 2015-12-28 lijia add, udpdetailÖÐµÄÏêÏ¸¼ÆÊý(64bit), Êµ¼ÊÄÚ´æ·ÖÅäºÍÊÍ·ÅÓÉprojectÄ£¿éÍê³É, ¿ÉÄÜÎªNULL */
-	UCHAR  drop_stream_flag; //2020-06-02 lijia add, ÓïÒåÍ¬DROPPKT, Ö»²»¹ý×÷ÓÃÓòÊÇÕû¸östream	
-	UCHAR  offload_stream_flag; //2022-04-13 liuxueli add, ×÷ÓÃÓòÊÇÕû¸östream
+	void   *apme;		  //Ó¦ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	struct udp_flow_stat *flow_stat; /* 2015-12-28 lijia add, udpdetailï¿½Ðµï¿½ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½ï¿½(64bit), Êµï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½projectÄ£ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ÎªNULL */
+	UCHAR  drop_stream_flag; //2020-06-02 lijia add, ï¿½ï¿½ï¿½ï¿½Í¬DROPPKT, Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½stream	
+	UCHAR  offload_stream_flag; //2022-04-13 liuxueli add, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½stream
 	UCHAR pad[6];
 	time_t offload_stream_timestamp_s;
 };	
@@ -325,98 +325,98 @@ struct udpdetail_private
 /* 2015-02-26 lijia add, for stream-addr-list ntop, pton */
 typedef struct{
 	struct streaminfo stream;
-	char addr_value[MAX_ADDR_BIN_VALUE_LEN]; /* ÎªÁËpaddr²»ÓÃÔÙmalloc, Ìá¸ßÐÔÄÜ, ÔÚstreamºóÃæ×·¼ÓÒ»¿é»º´æ */
+	char addr_value[MAX_ADDR_BIN_VALUE_LEN]; /* Îªï¿½ï¿½paddrï¿½ï¿½ï¿½ï¿½ï¿½ï¿½malloc, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½streamï¿½ï¿½ï¿½ï¿½×·ï¿½ï¿½Ò»ï¿½é»ºï¿½ï¿½ */
 }addr_continuous_bin_t;
 
 typedef struct{
 	enum addr_type_t addr_type_bin;
-	UCHAR stream_type;/* ÓÃÓÚÊ¶±ðADDR_TYPE_IPV4ÊÇTCP»¹ÊÇUDP */
+	UCHAR stream_type;/* ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ADDR_TYPE_IPV4ï¿½ï¿½TCPï¿½ï¿½ï¿½ï¿½UDP */
 	const char *addr_type_str;
 	const char *addr_type_prefix;
-	const char *addr_type_prefix_with_delim; /* ´ø·Ö¸ô·ûµÄÇ°×º, ÓÃÓÚ±È½Ï×Ö·û´®, ·ÀÖ¹IPv4ºÍIPv4_TCP×Ö·û´®±È½ÏÊ±»ìÏý, Èç¹ûÓÃIPv4:, IPv4_TCP:¾Í²»´æÔÚ»ìÏý·çÏÕ */
+	const char *addr_type_prefix_with_delim; /* ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½Ç°×º, ï¿½ï¿½ï¿½Ú±È½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½, ï¿½ï¿½Ö¹IPv4ï¿½ï¿½IPv4_TCPï¿½Ö·ï¿½ï¿½ï¿½ï¿½È½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½IPv4:, IPv4_TCP:ï¿½Í²ï¿½ï¿½ï¿½ï¿½Ú»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	int (*addr_n2p_fun)(const struct layer_addr *paddr, char *buf, int buf_len);
 	int (*addr_p2n_fun)(char *addr_str, addr_continuous_bin_t *addr_bin_val);
 	const char *addr_type_string_abbreviation;
 }addr_convert_t;
 
 struct pptp_stream_key{
-	UINT32 sip;	/* TCP-SYN°üµÄÔ´IP, Èç¹ûÊÇ°´data½¨Á¬½Ó, ¸ù¾Ýpptp->message_typeÅÐ¶Ï, REQÀàÇëÇó°üµÄÔ´IPÈÏÎªÊÇsip */
+	UINT32 sip;	/* TCP-SYNï¿½ï¿½ï¿½ï¿½Ô´IP, ï¿½ï¿½ï¿½ï¿½Ç°ï¿½dataï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½pptp->message_typeï¿½Ð¶ï¿½, REQï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´IPï¿½ï¿½Îªï¿½ï¿½sip */
 	UINT32 dip;   /* sip,dip are network order */
-	UINT16 sip_side_call_id; /* ÍøÂçÊý¾Ý°üÖÐÓÉsip·¢³öµÄGRE°üµÄcallid, Êµ¼ÊÒâÒå±íÊ¾peer call id, network order */
-	UINT16 dip_side_call_id; /* ÍøÂçÊý¾Ý°üÖÐÓÉdip·¢³öµÄGRE°üµÄcallid, Êµ¼ÊÒâÒå±íÊ¾peer call id, network order */
-	//struct streaminfo_private *stream_pr;  /* TODO 1, ÓÃÓÚ±£´æµØÖ·Á´±í, Ä¿Ç°½öÓÃÁË×îµ×²ãµÄIPºÍcall_id */
+	UINT16 sip_side_call_id; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½ï¿½ï¿½sipï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GREï¿½ï¿½ï¿½ï¿½callid, Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾peer call id, network order */
+	UINT16 dip_side_call_id; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½ï¿½ï¿½dipï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GREï¿½ï¿½ï¿½ï¿½callid, Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾peer call id, network order */
+	//struct streaminfo_private *stream_pr;  /* TODO 1, ï¿½ï¿½ï¿½Ú±ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½, Ä¿Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½IPï¿½ï¿½call_id */
 };
 
-/* PPTPÐ­Òé½âÎö²ã¹ÜÀí½á¹¹, sappÄÚ²¿Ê¹ÓÃ */
+/* PPTPÐ­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹, sappï¿½Ú²ï¿½Ê¹ï¿½ï¿½ */
 struct pptp_info_pri{
 	struct MESA_tunnel_info tunnel_context;
 	struct pptp_stream_key pptp_key;
-	stSessionInfo ssinfo; /* µ÷ÓÃÒµÎñ²ãÉÏÏÂÎÄÐÅÏ¢ */
-	void *biz_pme; /* ÒµÎñ²ã×Ô¶¨ÒåÊý¾Ý */
-	struct streaminfo *my_stream; /* pptpµ×²ãUDPÁ÷ */
+	stSessionInfo ssinfo; /* ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ */
+	void *biz_pme; /* Òµï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	struct streaminfo *my_stream; /* pptpï¿½×²ï¿½UDPï¿½ï¿½ */
 	unsigned char threadnum; 
-	char insert_hash_flag; /* ¿ØÖÆÁ¬½ÓÒÑ½«key²åÈëHASH±í */
-	char content_notify_biz_flag; /* ÊÇ·ñÒÑ¾­µ÷ÓÃ¹ýÒµÎñ²å¼þ, ¸æÖ®content_type */	
+	char insert_hash_flag; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ½ï¿½keyï¿½ï¿½ï¿½ï¿½HASHï¿½ï¿½ */
+	char content_notify_biz_flag; /* ï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Ã¹ï¿½Òµï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ö®content_type */	
 };
 
-/* Ë½ÓÐpptpµØÖ·, pptp_addrÌá¹©¸øÒµÎñ²å¼þ, ÆäÖÐgre_layer_lenÓÃÓÚFDÊ±¿ìËÙÊ¶±ð±¾²ãÍ·²¿³¤¶È */
+/* Ë½ï¿½ï¿½pptpï¿½ï¿½Ö·, pptp_addrï¿½á¹©ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½gre_layer_lenï¿½ï¿½ï¿½ï¿½FDÊ±ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ð±¾²ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 struct layer_addr_pptp_pri{
 	struct layer_addr_pptp pptp_addr;
 	int gre_layer_len;
 };
 
 struct l2tp_stream_key{
-	UINT32 sip;	/* L2TPËíµÀÖ÷¶¯·¢Æð·½µÄIP, ¼´¿ØÖÆÀàÐÍSCCRQ, ICRQ, SCCCNµÈ°üµÄÔ´IP, network order */
-	UINT32 dip;   /* L2TPËíµÀ·þÎñÆ÷¶ËµÄIP, network order */
+	UINT32 sip;	/* L2TPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ð·½µï¿½IP, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SCCRQ, ICRQ, SCCCNï¿½È°ï¿½ï¿½ï¿½Ô´IP, network order */
+	UINT32 dip;   /* L2TPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½IP, network order */
 	UINT16 sport; /* network order */
 	UINT16 dport; /* network order */
-	UINT16 sip_side_tunnel_id; /* sip²â·¢À´°üµÄtunnelid, network order */
-	UINT16 sip_side_session_id; /* sip²â·¢À´°üµÄtunnelid, network order */
-	UINT16 dip_side_tunnel_id; /* dip²â·¢À´°üµÄtunnelid, network order */
-	UINT16 dip_side_session_id; /* dip²â·¢À´°üµÄtunnelid, network order */
-	//struct streaminfo_private *stream_pr;  /* TODO 1, ÓÃÓÚ±£´æµØÖ·Á´±í, Ä¿Ç°½öÓÃÁË×îµ×²ãµÄIPºÍcall_id */
+	UINT16 sip_side_tunnel_id; /* sipï¿½â·¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½tunnelid, network order */
+	UINT16 sip_side_session_id; /* sipï¿½â·¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½tunnelid, network order */
+	UINT16 dip_side_tunnel_id; /* dipï¿½â·¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½tunnelid, network order */
+	UINT16 dip_side_session_id; /* dipï¿½â·¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½tunnelid, network order */
+	//struct streaminfo_private *stream_pr;  /* TODO 1, ï¿½ï¿½ï¿½Ú±ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½, Ä¿Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½IPï¿½ï¿½call_id */
 };
 
 struct l2tp_info_pri{
 	struct MESA_tunnel_info tunnel_context;
 	struct l2tp_stream_key l2tp_key;
-	stSessionInfo ssinfo; /* µ÷ÓÃÒµÎñ²ãÉÏÏÂÎÄ */
+	stSessionInfo ssinfo; /* ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	void *biz_pme;
-	const struct streaminfo *my_stream; /* l2tpµ×²ãUDPÁ÷ */
+	const struct streaminfo *my_stream; /* l2tpï¿½×²ï¿½UDPï¿½ï¿½ */
 	unsigned char thread_seq;
-	char content_notify_biz_flag; /* ÊÇ·ñÒÑ¾­µ÷ÓÃ¹ýÒµÎñ²å¼þ, ¸æÖ®content_type */	
+	char content_notify_biz_flag; /* ï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Ã¹ï¿½Òµï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Ö®content_type */	
 };
 
 #define STATSD_SEND_MSS	(1472)
-/* È«¾ÖÎ¨Ò»µÄÈ«¾Ö±äÁ¿, Í¨³£ÊÇ¿ª¹ØÀàÅäÖÃÏî, »ò²»³£±ä»¯µÄÈ«¾Ö±äÁ¿, ÈçÁ÷±íÊýµÈ, ¶àÓÃÓÚÖ»¶Á */
+/* È«ï¿½ï¿½Î¨Ò»ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½, Í¨ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ò²»³ï¿½ï¿½ä»¯ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ */
 struct sapp_global_single_t{
-	int signal_take_over_sw; /* ÊÇ·ñ½Ó¹Ü³£¼ûÏµÍ³ÐÅºÅ, ÈçSIGSEGV, SIGABRTµÈµÈ */
-	int ipentry_priority_over_ipfrag; /* IP_entryÓÅÏÈ¼¶¸ßÓÚIP_frag_entry, Ä¬ÈÏÎª0, ÊÊÓ¦WY´®ÁªÌØ¶¨ÐèÇó */
-	//int kill_tcp_with_gdev; /* FDÎ´ÉúÐ§Ê±, ½èÖúgdev´®Áª¹æÔò */
-	int cfg_send_tcp_offload_sw; /* ³¬¹ýÍø¿¨MTUÊ±, Ö÷¶¯ÇÐÆ¬³É¶à¸öÐ¡ÓÚMTUµÄ°ü·¢ËÍ */
-	//int cfg_kill_tcp_rst_num; /* kill_tcp·¢ËÍrst°üÊýÁ¿ */
-	//int cfg_kill_tcp_rst_signature; /* kill_tcp·¢ËÍµÄrstÊÇ·ñÐèÒªÖ¸ÎÆÐÅÏ¢, ÓÃÓÚÊ¶±ð */
-    //int tuple4_reuse_time_interval; /* ËÄÔª×éÖØÓÃµÄ×îÐ¡¼ä¸ôÊ±¼ä */
+	int signal_take_over_sw; /* ï¿½Ç·ï¿½Ó¹Ü³ï¿½ï¿½ï¿½ÏµÍ³ï¿½Åºï¿½, ï¿½ï¿½SIGSEGV, SIGABRTï¿½Èµï¿½ */
+	int ipentry_priority_over_ipfrag; /* IP_entryï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½IP_frag_entry, Ä¬ï¿½ï¿½Îª0, ï¿½ï¿½Ó¦WYï¿½ï¿½ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	//int kill_tcp_with_gdev; /* FDÎ´ï¿½ï¿½Ð§Ê±, ï¿½ï¿½ï¿½ï¿½gdevï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	int cfg_send_tcp_offload_sw; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MTUÊ±, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½É¶ï¿½ï¿½Ð¡ï¿½ï¿½MTUï¿½Ä°ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	//int cfg_kill_tcp_rst_num; /* kill_tcpï¿½ï¿½ï¿½ï¿½rstï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	//int cfg_kill_tcp_rst_signature; /* kill_tcpï¿½ï¿½ï¿½Íµï¿½rstï¿½Ç·ï¿½ï¿½ï¿½ÒªÖ¸ï¿½ï¿½ï¿½ï¿½Ï¢, ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ */
+    //int tuple4_reuse_time_interval; /* ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ */
 	//void *fs2_handle;
 	const char *fs2_server_ip;
 	unsigned short fs2_server_port_host;
 	short __pad1;
 
-	//int send_fake_pkt_mode; /* 2018-10-26 lijia add, for PanGu, ÓÉÓÚÈ±ÉÙFDÂ·ÓÉ, Ðè½èÓÃ´®ÁªGDEV·¢ËÍrst°ü, DNS-fake°üµÈ,mode 0£º Ð­ÒéÕ»Èý²ã·¢°ü£¬ 1£ºÐ­ÒéÕ»¶þ²ã·¢°ü£¬3£ºgdev×¢Èë·¢°ü£¬´ËÄ£Ê½ÏÂsend_fake_pkt_gdev_sportÓÐÐ§ */
-	//int send_fake_pkt_gdev_sport;  /* 2018-10-26 lijia add, for PanGu, ÓÃÓÚÑ¡ÔñvxlanÔ´¶Ë¿Ú */
+	//int send_fake_pkt_mode; /* 2018-10-26 lijia add, for PanGu, ï¿½ï¿½ï¿½ï¿½È±ï¿½ï¿½FDÂ·ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½GDEVï¿½ï¿½ï¿½ï¿½rstï¿½ï¿½, DNS-fakeï¿½ï¿½ï¿½ï¿½,mode 0ï¿½ï¿½ Ð­ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ã·¢ï¿½ï¿½ï¿½ï¿½ 1ï¿½ï¿½Ð­ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ã·¢ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½gdev×¢ï¿½ë·¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½send_fake_pkt_gdev_sportï¿½ï¿½Ð§ */
+	//int send_fake_pkt_gdev_sport;  /* 2018-10-26 lijia add, for PanGu, ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½vxlanÔ´ï¿½Ë¿ï¿½ */
 	int send_fake_pkt_sip;	
 };
 
-#define TIMESTAMP_SINGLE_PKT_REGION 		(4) /* µ¥°üÑÓÊ±Í³¼ÆÇø¼ä */
-#define TIMESTAMP_SINGLE_PKT_REGION_MAX     (5) /* °üÀ¨³¬¹ýÍ³¼ÆÇø¼äµÄÖµ */
+#define TIMESTAMP_SINGLE_PKT_REGION 		(4) /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Í³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+#define TIMESTAMP_SINGLE_PKT_REGION_MAX     (5) /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ */
 typedef struct{
-	unsigned int runtime_pkt_max_delay; /* µ¥°ü×î´ó´¦ÀíÑÓÊ± */
-	unsigned long long pkt_total_num[TIMESTAMP_SINGLE_PKT_REGION_MAX]; /* ¼ÇÂ¼°ü´¦ÀíÑÓÊ±µÄ×Ü°üÊý, °´ÇøÓòÍ³¼Æ */
-	unsigned long long pkt_total_time; /* ×î½üÒ»¶ÎÊ±¼äµÄ×ÜÑÓÊ±, ÓÃÓÚ¼ÆËãÆ½¾ùµ¥°ü´¦ÀíÑÓÊ± */
+	unsigned int runtime_pkt_max_delay; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê± */
+	unsigned long long pkt_total_num[TIMESTAMP_SINGLE_PKT_REGION_MAX]; /* ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ü°ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½ */
+	unsigned long long pkt_total_time; /* ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±, ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê± */
 }timestamp_record_region_t;
 
 
-/* ¶àÏß³ÌÈ«¾Ö±äÁ¿, ÀýÈçÊý¾Ý°üÍ³¼ÆÐÅÏ¢, Í¨³£Öµ»áÊµÊ±±ä»¯ */
+/* ï¿½ï¿½ï¿½ß³ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½Í³ï¿½ï¿½ï¿½ï¿½Ï¢, Í¨ï¿½ï¿½Öµï¿½ï¿½ÊµÊ±ï¿½ä»¯ */
 struct sapp_global_mthread_t{
 	int ipv6_pkt_type_flag; /* ipv6 packet type, normal, or rebuild */
 	int pptp_hash_max_search_times;
@@ -424,28 +424,28 @@ struct sapp_global_mthread_t{
 	char __pad1[4];
 	double pptp_hash_avg_search_times;
 	double l2tp_hash_avg_search_times;
-	int tcp_stream_special_timeout_num; /* ÉèÖÃµ¥¶À³¬Ê±Ê±¼äµÄÁ÷, Ä¬ÈÏ²»ÔÊÐí³¬¹ý×ÜÁ÷±íµÄ10% */
-	int udp_stream_special_timeout_num;/* ÉèÖÃµ¥¶À³¬Ê±Ê±¼äµÄÁ÷, Ä¬ÈÏ²»ÔÊÐí³¬¹ý×ÜÁ÷±íµÄ10% */
+	int tcp_stream_special_timeout_num; /* ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½Ê±Ê±ï¿½ï¿½ï¿½ï¿½ï¿½, Ä¬ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½10% */
+	int udp_stream_special_timeout_num;/* ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½Ê±Ê±ï¿½ï¿½ï¿½ï¿½ï¿½, Ä¬ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½10% */
 	timestamp_record_region_t runtime_record;
-	timestamp_record_region_t runtime_record_driver; /* Çý¶¯´ÓÍø¿¨ÄÃµ½°ü, µ½Æ½Ì¨ÄÃµ½°üµÄÑÓÊ± */
+	timestamp_record_region_t runtime_record_driver; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½, ï¿½ï¿½Æ½Ì¨ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê± */
 }__attribute__ ((aligned (64)));
 
 typedef struct{
 #ifdef DEBUG
-	unsigned int magic; /* mallocºóÌî³ä0x4D4D4D4D,  ¼´MMMM µÄ16½øÖÆ; freeºóÌî³ä0xFEFEFEFE */
+	unsigned int magic; /* mallocï¿½ï¿½ï¿½ï¿½ï¿½0x4D4D4D4D,  ï¿½ï¿½MMMM ï¿½ï¿½16ï¿½ï¿½ï¿½ï¿½; freeï¿½ï¿½ï¿½ï¿½ï¿½0xFEFEFEFE */
 #endif	
 	unsigned int user_buf_size;
 }sapp_private_mem_t;
 
 
 /*
-	vxlan pppºÍhdlc×Ö¶Î»ù±¾²»±ä, ²»Ïñethernet, Éæ¼°µ½·´Ïò·¢°ü, Òª½«macµØÖ·µßµ¹·½Ïò.
-	ËùÒÔ²»ÔÙ´´½¨Ò»¸öÐÂµÄstreaminfo½á¹¹, ÀË·ÑÄÚ´æÒ²ºÄ·ÑCPU, ÒâÒå²»´ó,
-	½«hdlc, pppµÄ×Ö¶ÎºÍvxlanºÏ²¢, ÀàËÆip²ãºÍtcp/udpµÄ¹ØÏµÒ»Ñù.
+	vxlan pppï¿½ï¿½hdlcï¿½Ö¶Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ethernet, ï¿½æ¼°ï¿½ï¿½ï¿½ï¿½ï¿½ò·¢°ï¿½, Òªï¿½ï¿½macï¿½ï¿½Ö·ï¿½ßµï¿½ï¿½ï¿½ï¿½ï¿½.
+	ï¿½ï¿½ï¿½Ô²ï¿½ï¿½Ù´ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Âµï¿½streaminfoï¿½á¹¹, ï¿½Ë·ï¿½ï¿½Ú´ï¿½Ò²ï¿½Ä·ï¿½CPU, ï¿½ï¿½ï¿½å²»ï¿½ï¿½,
+	ï¿½ï¿½hdlc, pppï¿½ï¿½ï¿½Ö¶Îºï¿½vxlanï¿½Ï²ï¿½, ï¿½ï¿½ï¿½ï¿½ipï¿½ï¿½ï¿½tcp/udpï¿½Ä¹ï¿½ÏµÒ»ï¿½ï¿½.
 */
 struct layer_addr_vxlan_private{
 	struct layer_addr_vxlan addr_public;
-	unsigned char actual_total_len; /* ÕæÕýµÄÍøÂç´«ÊäÖÐµÄvxlanÍ·²¿µØÖ·³¤¶È, °üÀ¨ºóÐø×·¼ÓµÄhdlc, ppp×Ö¶Î  */
+	unsigned char actual_total_len; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ç´«ï¿½ï¿½ï¿½Ðµï¿½vxlanÍ·ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×·ï¿½Óµï¿½hdlc, pppï¿½Ö¶ï¿½  */
 	union{
 		struct hdlc_net_hdr inner_hdlc;
 		struct layer_ppp_hdr inner_ppp;
@@ -523,7 +523,6 @@ void packet_io_device_alias_destroy(void);
 void sapp_dup_pkt_destroy(void);
 const char *stream_bridge_id_to_name(int bridge_id);
 void sapp_printf(const char *fmt, ...);
-int sapp_mem_init(void);
 
 #ifdef __cplusplus
 }
