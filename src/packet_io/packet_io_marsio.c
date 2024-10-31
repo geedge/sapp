@@ -807,7 +807,7 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 							raw_pkt->raw_pkt_len, raw_pkt->raw_pkt_len))
 		{
 			g_marsio_bpf_counter[tid].count++;
-			return PASS;
+			return DROP;
 		}
 	}
 
