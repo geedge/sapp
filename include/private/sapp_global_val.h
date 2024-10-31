@@ -258,6 +258,7 @@ typedef struct{
 	char inject_mode_single_gateway_dst_mac[6]; 
 	char inject_mode_single_gateway_src_mac[6]; 
 	int monitor_thread_enabled;
+	int drop_bpf_filter_packet;
 	sapp_dup_pkt_t dup_pkt_para; 
 
 	char extract_linkdir_from_mac_sntax_raw_string[32];

@@ -11,22 +11,22 @@ extern "C" {
 #include "mrtunnat.h"
 /*
 	netconnection_mode:
-		1: ¶àÍø¿¨´¿ÊÕ²»·¢ 
-		2: Ò»¹²Á½¿é¿¨, Ë«½øË«³ö
-		3: Ò»¹²Ò»¿é¿¨, µ¥½øµ¥³ö
+		1: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ²ï¿½ï¿½ï¿½ 
+		2: Ò»ï¿½ï¿½ï¿½ï¿½ï¿½é¿¨, Ë«ï¿½ï¿½Ë«ï¿½ï¿½
+		3: Ò»ï¿½ï¿½Ò»ï¿½é¿¨, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 
 	TODO 1:
-	    ´Ósend_raw_pkt.conf½âÎöµÄÊý¾Ý´æ´¢ÓÚG_SND_RAW_PKT_INFO,
-	    ±¾Ä£¿éËä²»Ò»¶¨´ÓÕâÐ©Íø¿¨ÊÕ°ü, µ«¿Ï¶¨»á´ÓÕâÐ©Íø¿¨·¢°ü, ÓÃÓÚ×¢ÈëÊý¾Ý°ü¸ø´ÓÓ¦ÓÃµÄÐéÄâÍø¿¨,
-	    ÈÔÈ»ÒªÔÚ³õÊ¼»¯Ê±´ò¿ªÕâÐ©Éè±¸, ´´½¨send_path.
+	    ï¿½ï¿½send_raw_pkt.confï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý´æ´¢ï¿½ï¿½G_SND_RAW_PKT_INFO,
+	    ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ä²»Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð©ï¿½ï¿½ï¿½ï¿½ï¿½Õ°ï¿½, ï¿½ï¿½ï¿½Ï¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,
+	    ï¿½ï¿½È»Òªï¿½Ú³ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ð©ï¿½è±¸, ï¿½ï¿½ï¿½ï¿½send_path.
 */
 typedef struct{
 	int thread_seq; 
 	void *send_mbuf_mtod_ptr;
 	marsio_buff_t *send_mbuf[1];
-	struct mr_vdev *dev_up, *dev_down; /* GDEVÄ£Ê½ÏÂ, Ö±½ÓÊ¹ÓÃdev_up[0]; Í¬Ê±¼æÈÝË«Íø¿¨´®ÁªÄ£Ê½ */
-	struct mr_sendpath *sendpath_up, *sendpath_down; /* ²¢ÁªÄ£Ê½ÏÂ, Ö±½ÓÊ¹ÓÃsendpath_up; Í¬Ê±¼æÈÝË«Íø¿¨´®ÁªÄ£Ê½ */
+	struct mr_vdev *dev_up, *dev_down; /* GDEVÄ£Ê½ï¿½ï¿½, Ö±ï¿½ï¿½Ê¹ï¿½ï¿½dev_up[0]; Í¬Ê±ï¿½ï¿½ï¿½ï¿½Ë«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ */
+	struct mr_sendpath *sendpath_up, *sendpath_down; /* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½, Ö±ï¿½ï¿½Ê¹ï¿½ï¿½sendpath_up; Í¬Ê±ï¿½ï¿½ï¿½ï¿½Ë«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ */
 }marsio4_io_handle;
 
 
@@ -34,8 +34,8 @@ extern int marsio_buff_get_metadata(marsio_buff_t *m, enum mr_buff_metadata_type
 extern int marsio_buff_set_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data);
 extern int marsio_buff_unset_metadata(marsio_buff_t *m, enum mr_buff_metadata_type type);
 /* 
-	·¢°üµÄÍ¬Ê±, ¸øtcpdump_mesaÒ»·Ý, ±ãÓÚ²¶°ü·ÖÎö,
-	»Ø×¢µÄ°üÎÞÐètcpdump_mesa²¶»ñ, Ö±½ÓÔÚÇý¶¯µ×²ã²¶»ñ¼´¿É.
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ê±, ï¿½ï¿½tcpdump_mesaÒ»ï¿½ï¿½, ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,
+	ï¿½ï¿½×¢ï¿½Ä°ï¿½ï¿½ï¿½ï¿½ï¿½tcpdump_mesaï¿½ï¿½ï¿½ï¿½, Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ã²¶ï¿½ñ¼´¿ï¿½.
 */
 extern void cycle_pkt_dump_by_classify(int thread_seq, const raw_pkt_t *p_raw_pkt, enum _pkt_classify class_val);
 extern int G_PKT_DUMP_SW;
@@ -50,19 +50,19 @@ static int g_marsio4_topology_mode = NET_CONN_PARALLEL;
 static int marsio4_work_thread_seq[MAX_THREAD_NUM];
 static pthread_t marsio4_work_tid[MAX_THREAD_NUM];
 extern int g_use_MESA_sleep_sw;
-struct mr_instance * sapp_marsio4_instance = NULL; /* ÔÝÊ±¶ÔÍâ¿ª·Å,²»ÄÜÉèÎªstatic */
+struct mr_instance * sapp_marsio4_instance = NULL; /* ï¿½ï¿½Ê±ï¿½ï¿½ï¿½â¿ªï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªstatic */
 static int g_mr4_device_num = 0;
-static char **g_mr4_up_device_name; /* Éè±¸Ãû³Æ¼¯ºÏ, meth0, meth1, meth2... */
-static char **g_mr4_down_device_name; /* Éè±¸Ãû³Æ¼¯ºÏ, meth0, meth1, meth2... */
-static struct mr_vdev **g_mr4_dev_up_handle_set, **g_mr4_dev_down_handle_set; /* Éè±¸¾ä±ú¼¯ºÏ */
-static struct mr_sendpath **g_mr4_sendpath_up_set, **g_mr4_sendpath_down_set; /* ·¢°üÂ·¾¶(¾ä±ú)¼¯ºÏ */
+static char **g_mr4_up_device_name; /* ï¿½è±¸ï¿½ï¿½ï¿½Æ¼ï¿½ï¿½ï¿½, meth0, meth1, meth2... */
+static char **g_mr4_down_device_name; /* ï¿½è±¸ï¿½ï¿½ï¿½Æ¼ï¿½ï¿½ï¿½, meth0, meth1, meth2... */
+static struct mr_vdev **g_mr4_dev_up_handle_set, **g_mr4_dev_down_handle_set; /* ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+static struct mr_sendpath **g_mr4_sendpath_up_set, **g_mr4_sendpath_down_set; /* ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½(ï¿½ï¿½ï¿½)ï¿½ï¿½ï¿½ï¿½ */
 static marsio4_io_handle *g_mario4_io_handle;
 static void *marsio_so_handle;
 
 #define MARSIO_BURST_PKT_MAX		(256)
-static int marsio4_burst_process_pkt_num = 32; /* Åú´¦Àí°üÊýÁ¿, ´Ópag.confÖÐ»ñÈ¡ */
+static int marsio4_burst_process_pkt_num = 32; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½pag.confï¿½Ð»ï¿½È¡ */
 //static long marsio4_thread_bind_mask = 0;
-#define TIME_DELAY_MONITOR	(0) /* µ¥°ü´¦ÀíÑÓÊ±¼à²â */
+#define TIME_DELAY_MONITOR	(0) /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ */
 
 extern void timestamp_region_update_driver(int tid, long long cpu_cycle);
 extern int stream_process_polling(int thread_seq);
@@ -182,13 +182,13 @@ int marsio_dl_io_set_capdev_parallel(const char *cap_dev)
 	char cfg_name_from_conf[1024]; 
 	char *single_device;
 	
-	 /* marsio4Ä£Ê½²¶°üÍø¿¨¿ÉÄÜÓÐ¶à¸ö, ¸´ÓÃÔ­ÓÐµÄpcapdeviceÅäÖÃ, ¿¿¶ººÅ·Ö¸ô */
+	 /* marsio4Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ô­ï¿½Ðµï¿½pcapdeviceï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Å·Ö¸ï¿½ */
 	if(NULL == cap_dev){
 		printf("\033[1;31;40m[Error]Invalid pcapdevice!\033[0m\n");
 		return -1;
 	}
 
-	/* marsioÄ£Ê½Ö§³Ö¶àÍø¿¨, ¶ººÅ·Ö¸ôÄ£Ê½ */
+	/* marsioÄ£Ê½Ö§ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Å·Ö¸ï¿½Ä£Ê½ */
 	strncpy(cfg_name_from_conf, sapp_global_val->config.packet_io.internal.interface.name, sizeof(cfg_name_from_conf));
 	tmp_cap_dev_name = cfg_name_from_conf;
 
@@ -216,7 +216,7 @@ int marsio_dl_io_set_capdev_serial(const char *up_dev, const char *down_dev)
 	char *single_device;
 	int local_mr4_serial_device_num = 0;
 	
-	 /* marsio4Ä£Ê½²¶°üÍø¿¨¿ÉÄÜÓÐ¶à¸ö, ¸´ÓÃÔ­ÓÐµÄpcapdeviceÅäÖÃ, ¿¿¶ººÅ·Ö¸ô */
+	 /* marsio4Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ô­ï¿½Ðµï¿½pcapdeviceï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Å·Ö¸ï¿½ */
 	if(NULL == down_dev){
 		printf("\033[1;31;40m[Error]Invalid pcapdevice!\033[0m\n");
 		return -1;
@@ -275,7 +275,7 @@ int marsio_dl_io_set_capture_filter(const char *filter_rule)
 
 int marsio_dl_io_set_cap_buf_queue(int queue_num_max)
 {
-	(void)queue_num_max; /* Çý¶¯ÉèÖÃ */
+	(void)queue_num_max; /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	return 0;
 }
 	
@@ -288,7 +288,7 @@ int marsio_dl_io_set_work_thread_num(int thread_num_max)
 
 long marsio_dl_io_get_app_drop_num(int thread_num)
 {
-	/* pagÄ£Ê½²é¿´¶ª°üÓÐ×¨ÓÃ¹¤¾ß, ³ÌÐòÄ¿Ç°²»Ìá¹©´Ë¹¦ÄÜ */
+	/* pagÄ£Ê½ï¿½é¿´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¨ï¿½Ã¹ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ä¿Ç°ï¿½ï¿½ï¿½á¹©ï¿½Ë¹ï¿½ï¿½ï¿½ */
 	(void)thread_num;
 	return 0;
 }
@@ -320,7 +320,7 @@ void marsio_dl_io_free_sendbuf(void *phandle, int thread_seq)
 	return;
 }
 
-/* 2020-10-30 lijia add, in/forward/injectµÄ°ü¸øtcpdump_mesa, ÓÃÓÚdebug. */
+/* 2020-10-30 lijia add, in/forward/injectï¿½Ä°ï¿½ï¿½ï¿½tcpdump_mesa, ï¿½ï¿½ï¿½ï¿½debug. */
 static void marsio_pkt_dump(int thread_seq, const marsio_buff_t *send_mbuf, enum _pkt_classify classify)
 {
 	raw_pkt_t to_tcpdump_mesa;
@@ -379,7 +379,7 @@ int marsio_dl_io_raw_pkt_send(void *phandle, unsigned char *data,int datalen, vo
 	}
 	
 
-	/* ´Ë´¦Ê¹ÓÃappend¶ø²»ÊÇmtod, appendÄÚ²¿Êµ¼Ê°üÀ¨ÁËset datalenµÄ²Ù×÷ */
+	/* ï¿½Ë´ï¿½Ê¹ï¿½ï¿½appendï¿½ï¿½ï¿½ï¿½ï¿½ï¿½mtod, appendï¿½Ú²ï¿½Êµï¿½Ê°ï¿½ï¿½ï¿½ï¿½ï¿½set datalenï¿½Ä²ï¿½ï¿½ï¿½ */
 	real_buf = ptr_marsio_buff_append(send_mbuf[0], datalen);
 	if(NULL == real_buf){
 		ptr_marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
@@ -424,12 +424,12 @@ int marsio_dl_io_low_level_send(void *phandle, UINT8 *data,int datalen,
 {
 	int ret;
 	//struct mesa_ethernet_hdr *ehdr = (struct mesa_ethernet_hdr *)data;
-	//ÔÚË«Íø¿¨Í¸Ã÷Ä£Ê½(transparent)ÏÂ, ¸ù¾ÝdirÑ¡Ôñup or down device·¢³ö.
+	//ï¿½ï¿½Ë«ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½Ä£Ê½(transparent)ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½dirÑ¡ï¿½ï¿½up or down deviceï¿½ï¿½ï¿½ï¿½.
 	if(NET_CONN_SERIAL_2CARD == g_marsio4_topology_mode){
 		assert((dir >= 0) && (dir <= 1));
 		ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_packet_device_alias[dir].dl_io_param, thread_num, dir, raw_pkt);
 	}else{
-		/* ¿ÉÖ§³Ö¶à¿éÍø¿¨, Ô­Ê¼°ü´ÓÄÄÊÕµ½¾Í´ÓÄÄ³öÈ¥ */
+		/* ï¿½ï¿½Ö§ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½Í´ï¿½ï¿½Ä³ï¿½È¥ */
 		ret = marsio_dl_io_raw_pkt_send(phandle, data, datalen, g_mr4_sendpath_up_set[raw_pkt->device_index], thread_num,dir, raw_pkt);
 	}
 	
@@ -542,7 +542,7 @@ int marsio_send_ctrl_data(unsigned char *data,int datalen, struct segment_id_lis
 	ret = ptr_marsio_buff_malloc_global(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
 	if((ret < 0) || (NULL == send_mbuf[0]))return -1;
 		
-	/* ´Ë´¦Ê¹ÓÃappend¶ø²»ÊÇmtod, appendÄÚ²¿Êµ¼Ê°üÀ¨ÁËset datalenµÄ²Ù×÷ */
+	/* ï¿½Ë´ï¿½Ê¹ï¿½ï¿½appendï¿½ï¿½ï¿½ï¿½ï¿½ï¿½mtod, appendï¿½Ú²ï¿½Êµï¿½Ê°ï¿½ï¿½ï¿½ï¿½ï¿½set datalenï¿½Ä²ï¿½ï¿½ï¿½ */
 	char *real_buf = ptr_marsio_buff_append(send_mbuf[0], datalen);
 	if(NULL == real_buf){
 		ptr_marsio_buff_free(sapp_marsio4_instance, send_mbuf, 1, MARSIO_SOCKET_ID_ANY, thread_seq);
@@ -664,7 +664,7 @@ int marsio_dl_io_send_only_thread_init(void)
 #define MAX(a, b)  	(((a) > (b)) ? (a) : (b))
 #endif
 static int tmp_vdevice_num;
-static char **tmp_vdevice_name; /* ÐéÄâÉè±¸Ãû³ÆÁÐ±í, ·Çpag.confÖÐµÄ²¶°üÉè±¸, ÓÃÓÚÖ÷´ÓÓ¦ÓÃÄ£Ê½»Ø×¢ */
+static char **tmp_vdevice_name; /* ï¿½ï¿½ï¿½ï¿½ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½, ï¿½ï¿½pag.confï¿½ÐµÄ²ï¿½ï¿½ï¿½ï¿½è±¸, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½Ä£Ê½ï¿½ï¿½×¢ */
 static struct mr_sendpath **tmp_vdevice_sendpath;
 void * marsio_dl_io_device_alias(unsigned int target_id, char *device_args)
 {
@@ -675,7 +675,7 @@ void * marsio_dl_io_device_alias(unsigned int target_id, char *device_args)
 
 	for(i = 0; i < g_mr4_device_num; i++){
 		len2 = strlen(g_mr4_up_device_name[i]);
-		/* Ê¹ÓÃ×î³¤µÄ×Ö·û±È½Ï, ·ÀÖ¹"eth12", "eth1"±È½Ïµ«ÏàµÈµÄBUG */
+		/* Ê¹ï¿½ï¿½ï¿½î³¤ï¿½ï¿½ï¿½Ö·ï¿½ï¿½È½ï¿½, ï¿½ï¿½Ö¹"eth12", "eth1"ï¿½È½Ïµï¿½ï¿½ï¿½Èµï¿½BUG */
 		if(strncasecmp(device_args, g_mr4_up_device_name[i], MAX(len1, len2)) == 0){
 			return (void *)g_mr4_sendpath_up_set[i];
 		}
@@ -684,25 +684,25 @@ void * marsio_dl_io_device_alias(unsigned int target_id, char *device_args)
 	if(NULL != g_mr4_down_device_name){
 		for(i = 0; i < g_mr4_device_num; i++){
 			len2 = strlen(g_mr4_down_device_name[i]);
-			/* Ê¹ÓÃ×î³¤µÄ×Ö·û±È½Ï, ·ÀÖ¹"eth12", "eth1"±È½Ïµ«ÏàµÈµÄBUG */
+			/* Ê¹ï¿½ï¿½ï¿½î³¤ï¿½ï¿½ï¿½Ö·ï¿½ï¿½È½ï¿½, ï¿½ï¿½Ö¹"eth12", "eth1"ï¿½È½Ïµï¿½ï¿½ï¿½Èµï¿½BUG */
 			if(strncasecmp(device_args, g_mr4_down_device_name[i], MAX(len1, len2)) == 0){
 				return (void *)g_mr4_sendpath_down_set[i];
 			}
 		}	
 	}
 
-	/* ´Ë¿¨Î´ÔÚpag.confÖÐ×¢²á, ¿ÉÄÜÊÇÐéÄâÉè±¸Íø¿¨, ÏÖ³¡´ò¿ª·¢ËÍ¾ä±ú */
+	/* ï¿½Ë¿ï¿½Î´ï¿½ï¿½pag.confï¿½ï¿½×¢ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½è±¸ï¿½ï¿½ï¿½ï¿½, ï¿½Ö³ï¿½ï¿½ò¿ª·ï¿½ï¿½Í¾ï¿½ï¿½ */
 	struct mr_vdev *t_vdev;
 	struct mr_sendpath *t_sendpath;
 
 	for(i = 0; i < tmp_vdevice_num; i++){
 		len2 = strlen(tmp_vdevice_name[i]);
-		/* Ê¹ÓÃ×î³¤µÄ×Ö·û±È½Ï, ·ÀÖ¹"eth12", "eth1"±È½Ïµ«ÏàµÈµÄBUG */
+		/* Ê¹ï¿½ï¿½ï¿½î³¤ï¿½ï¿½ï¿½Ö·ï¿½ï¿½È½ï¿½, ï¿½ï¿½Ö¹"eth12", "eth1"ï¿½È½Ïµï¿½ï¿½ï¿½Èµï¿½BUG */
 		if(strncasecmp(device_args, tmp_vdevice_name[i], MAX(len1, len2)) == 0){
 			return (void *)tmp_vdevice_sendpath[i];
 		}		
 	}
-	/* Ã»ÕÒµ½, ´ò¿ªÉè±¸, ²¢´æ´¢·¢ËÍ¾ä±ú */
+	/* Ã»ï¿½Òµï¿½, ï¿½ï¿½ï¿½è±¸, ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½ï¿½Í¾ï¿½ï¿½ */
 	if(0 == tmp_vdevice_num){
 		tmp_vdevice_name = (char **)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(void *));
 		tmp_vdevice_sendpath = (struct mr_sendpath **)sapp_mem_calloc(SAPP_MEM_FIX_GLOBAL_VAL, MEM_STAT_GLOBAL_THREAD_ID,sizeof(void *));
@@ -721,7 +721,7 @@ void * marsio_dl_io_device_alias(unsigned int target_id, char *device_args)
 	}
 	t_sendpath = ptr_marsio_sendpath_create_by_vdev(t_vdev);
 	tmp_vdevice_sendpath[tmp_vdevice_num] = t_sendpath;
-	tmp_vdevice_num++; /* ×îºó¸üÐÂ¼ÆËãÆ÷ */
+	tmp_vdevice_num++; /* ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	
 	return t_sendpath;
 }
@@ -729,7 +729,7 @@ void * marsio_dl_io_device_alias(unsigned int target_id, char *device_args)
 /************************  funcitons for dynamic link *************************/
 
 /*
-	¼ÆËãÒ»¸öÕûÐÍÊý°üº¬ÁË¶àÉÙ¸öbitÊÇ1µÄ.
+	ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½Ù¸ï¿½bitï¿½ï¿½1ï¿½ï¿½.
 */
 static inline int calc_integer_bit_num(unsigned long long num)
 {
@@ -741,7 +741,7 @@ static inline int calc_integer_bit_num(unsigned long long num)
 			bit_num++;
 		}
 		num = num >> 1;
-		if(0 == num){ /* numÒÑ¾­ÊÇ0ÁË, ¾ÍÃ»±ØÒªÔÙÅÐ¶ÏºóÐøbitÎ»ÁË */
+		if(0 == num){ /* numï¿½Ñ¾ï¿½ï¿½ï¿½0ï¿½ï¿½, ï¿½ï¿½Ã»ï¿½ï¿½Òªï¿½ï¿½ï¿½Ð¶Ïºï¿½ï¿½ï¿½bitÎ»ï¿½ï¿½ */
 			break;
 		}
 	}
@@ -754,7 +754,7 @@ static int marsio4_pkt_forward_for_gdev_mode(int tid, struct mr_sendpath * sendp
 	char tmp_mac[6];
 	struct mesa_ethernet_hdr *eth_hdr = (struct mesa_ethernet_hdr *)ptr_marsio_buff_mtod(mbuf);
 	
-	/* ½»»»Ô´¡¢Ä¿µÄMACµØÖ·, ÔÙ°ÑÔ­Ê¼°üÔÙ×¢ÈëGDEV */
+	/* ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½Ä¿ï¿½ï¿½MACï¿½ï¿½Ö·, ï¿½Ù°ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½GDEV */
 	memcpy(tmp_mac, eth_hdr->ether_shost, 6);
 	memcpy(eth_hdr->ether_shost, eth_hdr->ether_dhost, 6);
 	memcpy(eth_hdr->ether_dhost, tmp_mac, 6);
@@ -766,11 +766,11 @@ static int marsio4_pkt_forward(int tid, struct mr_sendpath * sendpath, marsio_bu
 {
 	int ret = 0;
 
-	/* ÅúÁ¿»ñÈ¡, µ«¿¼ÂÇÌØÊâÇé¿öÏÂ, vxlanºÍÆäËû·â×°Ä£Ê½»ìÔÓÊ¹ÓÃ, Òª¶ÔÃ¿¸ömbufÅÐ¶Ïµ×²ã·â×°Ä£Ê½ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, vxlanï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°Ä£Ê½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½, Òªï¿½ï¿½Ã¿ï¿½ï¿½mbufï¿½Ð¶Ïµ×²ï¿½ï¿½×°Ä£Ê½ */
 
-	/* 20201010 lijia modify, ¿ªÆôoverlayÎÞmrtunnatµÄÄ£Ê½ÏÂ, ctrl_zoneÊÇ¿Õ, Ä¬ÈÏ¶¼»Ø×¢ */
-	/* 20190409 lijia modify, tunnel mode, ·ÇËíµÀ·â×°µÄ°ü²»ÄÜ»Ø×¢ */
-	/* vxlan·â×°ÄÚ²ãÊý¾Ý×ª·¢²»±Ø×öÈÎºÎ²Ù×÷, Ö±½Óµ÷ÓÃmarsio_send_burst, ÓÉmarsioÇý¶¯¸ºÔð */
+	/* 20201010 lijia modify, ï¿½ï¿½ï¿½ï¿½overlayï¿½ï¿½mrtunnatï¿½ï¿½Ä£Ê½ï¿½ï¿½, ctrl_zoneï¿½Ç¿ï¿½, Ä¬ï¿½Ï¶ï¿½ï¿½ï¿½×¢ */
+	/* 20190409 lijia modify, tunnel mode, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°ï¿½Ä°ï¿½ï¿½ï¿½ï¿½Ü»ï¿½×¢ */
+	/* vxlanï¿½ï¿½×°ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎºÎ²ï¿½ï¿½ï¿½, Ö±ï¿½Óµï¿½ï¿½ï¿½marsio_send_burst, ï¿½ï¿½marsioï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 
 	marsio_pkt_dump(tid, mbufs, PKT_CLASSIFY_FORWARD);
 	ret = ptr_marsio_send_burst(sendpath, tid, &mbufs, 1);
@@ -795,8 +795,8 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	{
 		raw_pkt->is_ctrl_pkt=0;
 	}
-	/* Ë«±ÛÄ£Ê½dir¸ù¾ÝÍø¿¨internal, external¾ö¶¨, 
-	   inlineÄ£Ê½´ËÊ±µÄdirÎÞÒâÒå, ×îÖÕ»áÔÚ packet_io_hook_input_vxlan() ,Í¨¹ývxlan header¸üÐÂroutedir .
+	/* Ë«ï¿½ï¿½Ä£Ê½dirï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½internal, externalï¿½ï¿½ï¿½ï¿½, 
+	   inlineÄ£Ê½ï¿½ï¿½Ê±ï¿½ï¿½dirï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ packet_io_hook_input_vxlan() ,Í¨ï¿½ï¿½vxlan headerï¿½ï¿½ï¿½ï¿½routedir .
 	*/
 	raw_pkt->route_dir = dir;
 
@@ -807,6 +807,7 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 							raw_pkt->raw_pkt_len, raw_pkt->raw_pkt_len))
 		{
 			g_marsio_bpf_counter[tid].count++;
+			if(sapp_global_val->config.packet_io.drop_bpf_filter_packet==1)return DROP;
 			return PASS;
 		}
 	}
@@ -817,7 +818,7 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 	}
 	else
 	{
-		raw_pkt->is_overlay_pkt = 0; /* ÎÞmrtunnatÊ±, ¸ÕÊÕµ½°ü»¹²»È·¶¨, ¿¿packet_io_hook¾ö¶¨ÊÇ·ñÊÇoverlayµÄ°ü */
+		raw_pkt->is_overlay_pkt = 0; /* ï¿½ï¿½mrtunnatÊ±, ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½, ï¿½ï¿½packet_io_hookï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½overlayï¿½Ä°ï¿½ */
 	}
 
 	/* clear pkt status */
@@ -844,7 +845,7 @@ static inline int marsio4_pkt_hand(int tid, marsio_buff_t *rx_buff, raw_pkt_t *r
 static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 {
 	int i,j,k, pkt_num = 0;
-	marsio_buff_t * rx_buff[MARSIO_BURST_PKT_MAX]; /* ¶à¸öÉè±¸Ö®¼äÊÇ´®ÐÐ»ñÈ¡, Ì«ÉÙÔòÐÔÄÜµÍ, Ì«¶àÔòÏà¶ÔÑÓÊ±¸ß */
+	marsio_buff_t * rx_buff[MARSIO_BURST_PKT_MAX]; /* ï¿½ï¿½ï¿½ï¿½è±¸Ö®ï¿½ï¿½ï¿½Ç´ï¿½ï¿½Ð»ï¿½È¡, Ì«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Üµï¿½, Ì«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ */
 	int rcv_res, hand_res;
 
 	if((__NET_CONN_PARALLEL & g_marsio4_topology_mode) != 0){
@@ -859,10 +860,10 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 						__builtin_prefetch(ptr_marsio_buff_mtod(rx_buff[k]));
 					}
 					
-					marsio4_pkt_hand(tid, rx_buff[j], raw_pkt, DIR_ROUTE_UP); /* ²¢ÁªÄ£Ê½²»¹ØÐÄ·µ»ØÖµ */
+					marsio4_pkt_hand(tid, rx_buff[j], raw_pkt, DIR_ROUTE_UP); /* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½Öµ */
 				}
 				pkt_num += rcv_res;
-				ptr_marsio_buff_free(sapp_marsio4_instance, rx_buff, rcv_res, MARSIO_SOCKET_ID_ANY, tid); /* ²¢Áª²»Éæ¼°·¢ËÍ, µ÷ÓÃÍêÒµÎñ²å¼þºóÅúÁ¿free */
+				ptr_marsio_buff_free(sapp_marsio4_instance, rx_buff, rcv_res, MARSIO_SOCKET_ID_ANY, tid); /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ¼°ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½free */
 			}
 		}
 	}else if(NET_CONN_SERIAL_GDEV == g_marsio4_topology_mode){
@@ -880,11 +881,11 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 						__builtin_prefetch((rx_buff[k]));
 						__builtin_prefetch(((char *)(rx_buff[k])+128));
 					}
-					hand_res = marsio4_pkt_hand(tid, rx_buff[j], raw_pkt, DIR_ROUTE_UP); /* ÔÚmarsio4_pkt_hand()¸üÐÂdir */
+					hand_res = marsio4_pkt_hand(tid, rx_buff[j], raw_pkt, DIR_ROUTE_UP); /* ï¿½ï¿½marsio4_pkt_hand()ï¿½ï¿½ï¿½ï¿½dir */
                     if ((g_marsio4_topology_mode & __NET_CONN_SERIAL) && (PASS == hand_res))
                     {
                         /* NOTE:
-                            MARSIOÖ÷´ÓÄ£Ê½¶ÀÌØÐÔ, ´ÓÐéÄâÍø¿¨ÊÕ°ü, µ«ÒªÍ¨¹ýÎïÀíÍø¿¨»Ø×¢°ü,
+                            MARSIOï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ°ï¿½, ï¿½ï¿½ÒªÍ¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½,
                         */
 					   	marsio_update_sid_list(raw_pkt, (void *)rx_buff[j]);
 						marsio_update_trace_id(raw_pkt, (void *)rx_buff[j]);
@@ -897,7 +898,7 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
                     }
                     else if (hand_res == DROP)
                     {
-                        /* ´®ÁªÄ£Ê½ÏÂÖ»ÄÜµ¥°üfree, ÓÐ¿ÉÄÜbatchÊÕµÄN¸÷°üÀï, Ä³¸ö°üÐèÒª»Ø×¢, Ä³¸ö°ü²»ÐèÒª */
+                        /* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½Ö»ï¿½Üµï¿½ï¿½ï¿½free, ï¿½Ð¿ï¿½ï¿½ï¿½batchï¿½Õµï¿½Nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½×¢, Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òª */
 						marsio4_emit_datapath_telemetry(raw_pkt, "sapp", "egress_action=drop");
                         ptr_marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);
                     }
@@ -917,7 +918,7 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 						//marsio4_pkt_forward(tid, rx_buff[j]);
 						ptr_marsio_send_burst(g_mr4_sendpath_down_set[i], tid, &rx_buff[j], 1);
 					}else{
-						/* ´®ÁªÄ£Ê½ÏÂµ¥°üfree, ÓÐ¿ÉÄÜÐèÒª»Ø×¢/·¢ËÍ */
+						/* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Âµï¿½ï¿½ï¿½free, ï¿½Ð¿ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½×¢/ï¿½ï¿½ï¿½ï¿½ */
 						ptr_marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);
 					}
 				}
@@ -931,7 +932,7 @@ static int marsio4_process_packet(int tid, raw_pkt_t *raw_pkt)
 						//marsio4_pkt_forward(tid, rx_buff[j]);
 						ptr_marsio_send_burst(g_mr4_sendpath_up_set[i], tid, &rx_buff[j], 1);
 					}else{
-						/* ´®ÁªÄ£Ê½ÏÂµ¥°üfree, ÓÐ¿ÉÄÜÐèÒª»Ø×¢/·¢ËÍ */
+						/* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Âµï¿½ï¿½ï¿½free, ï¿½Ð¿ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½×¢/ï¿½ï¿½ï¿½ï¿½ */
 						ptr_marsio_buff_free(sapp_marsio4_instance, &rx_buff[j], 1, MARSIO_SOCKET_ID_ANY, tid);
 					}
 				}
@@ -968,7 +969,7 @@ static inline void marsio4_sleep(int tid, int work_percent)
 	{
 		if (ptr_marsio_poll_wait != NULL)
 		{
-			ptr_marsio_poll_wait(sapp_marsio4_instance, g_mr4_dev_up_handle_set, g_mr4_device_num, tid, 900); // sappÄÚ²¿¶¨Ê±Æ÷×îÐ¡¾«¶ÈÎªÃë£¬´Ë´¦ÉèÖÃ³¬Ê±ÎªÎª900ºÁÃë£¬ÓÃÓÚ¶à½ø³ÌÄ£Ê½ÏÂÈÃ³öCPUÊ±¼ä
+			ptr_marsio_poll_wait(sapp_marsio4_instance, g_mr4_dev_up_handle_set, g_mr4_device_num, tid, 900); // sappï¿½Ú²ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Îªï¿½ë£¬ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ã³ï¿½Ê±ÎªÎª900ï¿½ï¿½ï¿½ë£¬ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½Ã³ï¿½CPUÊ±ï¿½ï¿½
 		}
 		else
 		{
@@ -978,7 +979,7 @@ static inline void marsio4_sleep(int tid, int work_percent)
 	return;
 }
 
-/* ¸ßÐÔÄÜÄ£Ê½ÏÂ, marsio¶ÓÁÐÓÐ»º´æ, ÎÞÐÂ°üµ½À´Ê±ÐèÒª¶¨ÆÚË¢ÐÂ¶ÓÁÐÖÐµÄÊý¾Ý */
+/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½, marsioï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Â°ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ë¢ï¿½Â¶ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ */
 static inline void marsio4_flush_queue_buf(int tid)
 {
 	int i;
@@ -1022,7 +1023,7 @@ static void *marsio4_worker(void *arg)
 					
 	memset(&raw_pkt, 0, sizeof(raw_pkt_t));
 
-	/* ¹Ì¶¨²»±äµÄ²ÎÊýÔ¤ÏÈÉèÖÃ */
+	/* ï¿½Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	raw_pkt.low_layer_type = (enum addr_type_t)g_marsio4_cap_level;
 	raw_pkt.magic_num = RAW_PKT_MAGIC_NUM;
 	raw_pkt.offset_to_raw_pkt_hdr = 0;
@@ -1033,7 +1034,7 @@ static void *marsio4_worker(void *arg)
 	}
 
 	/* for perf optimize
-	   Æµ·±µ÷ÓÃstream_process_polling()µÈº¯Êý, ´Ë´¦ÏÈÔÚº¯ÊýÍâ²¿ÅÐ¶ÏÒ»ÏÂÊÇ·ñÐèÒªµ÷ÓÃ.
+	   Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½stream_process_polling()ï¿½Èºï¿½ï¿½ï¿½, ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½â²¿ï¿½Ð¶ï¿½Ò»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½.
 	*/
 	int polling_enabled = sapp_global_val->config.packet_io.polling_priority;
 	int infinite_loop_enabled = sapp_global_val->config.packet_io.infinite_loop_enabled;
@@ -1045,7 +1046,7 @@ static void *marsio4_worker(void *arg)
 			rcv_pkt_tims++;
 		}else{
 			marsio4_flush_queue_buf(tseq);
-			/* ÎÞ°üÊ±Òªµ÷ÓÃpolling½Ó¿Ú */
+			/* ï¿½Þ°ï¿½Ê±Òªï¿½ï¿½ï¿½ï¿½pollingï¿½Ó¿ï¿½ */
 			if (likely(polling_enabled))
 			{
 				if ((g_PollingFunNum > 0))
@@ -1071,7 +1072,7 @@ static void *marsio4_worker(void *arg)
 
 		if((rcv_pkt_tims % sleep_check_interval) == 0 && polling_enabled)
 		{
-			/* Èç¹ûÁ÷Á¿¾Þ´ó, Ò»Ö±ÓÐ°üÊ±, Ã¿¸ôsleep_check_interval´Îµ÷ÓÃÒ²Òªµ÷ÓÃpolling½Ó¿Ú */
+			/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ´ï¿½, Ò»Ö±ï¿½Ð°ï¿½Ê±, Ã¿ï¿½ï¿½sleep_check_intervalï¿½Îµï¿½ï¿½ï¿½Ò²Òªï¿½ï¿½ï¿½ï¿½pollingï¿½Ó¿ï¿½ */
 			if(g_PollingFunNum > 0)
 			{
 				if((stream_process_polling(tseq) & POLLING_STATE_WORK) != 0)
@@ -1242,7 +1243,7 @@ static int marsio_dl_get_function_entry(void)
 		return -1;
 	}
 
-	/*************   note: Ã»ÓÐmarsio_send_burst_flush()º¯Êý²»Ëã´íÎó, Ïòºó¼æÈÝ! *****************/
+	/*************   note: Ã»ï¿½ï¿½marsio_send_burst_flush()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½! *****************/
 	ptr_marsio_send_burst_flush = (void (*)(struct mr_sendpath * sendpath, queue_id_t sid))dlsym(marsio_so_handle, "marsio_send_burst_flush");
 	if(NULL == ptr_marsio_send_burst_flush){
 		printf("\033[33m[Warning]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_send_burst_flush", ABBR_MARSIO_LIBRARY_FILE);
@@ -1273,61 +1274,61 @@ static int marsio_dl_get_function_entry(void)
 		ptr_marsio_buff_get_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_get_metadata");
 		if(NULL == ptr_marsio_buff_get_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_get_metadata", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* ÎªÁËÏòÇ°¼æÈÝmrzcpd¾É°æ, ´Ë´¦ÏÈ²»·µ»Ø´íÎó*/
+			//return -1; /* Îªï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½mrzcpdï¿½É°ï¿½, ï¿½Ë´ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½*/
 			sleep(1);
 		}
 
 		ptr_marsio_buff_set_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type, void *data, unsigned int sz_data))dlsym(marsio_so_handle, "marsio_buff_set_metadata");
 		if(NULL == ptr_marsio_buff_set_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_metadata", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* ÎªÁËÏòÇ°¼æÈÝmrzcpd¾É°æ, ´Ë´¦ÏÈ²»·µ»Ø´íÎó*/
+			//return -1; /* Îªï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½mrzcpdï¿½É°ï¿½, ï¿½Ë´ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½*/
 			sleep(1);
 		}
 
 		ptr_marsio_buff_get_sid_list = (int (*)(marsio_buff_t *m, uint16_t * out_slist, uint8_t sz_out_slist))dlsym(marsio_so_handle, "marsio_buff_get_sid_list");
 		if(NULL == ptr_marsio_buff_set_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_get_sid_list", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* ÎªÁËÏòÇ°¼æÈÝmrzcpd¾É°æ, ´Ë´¦ÏÈ²»·µ»Ø´íÎó*/
+			//return -1; /* Îªï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½mrzcpdï¿½É°ï¿½, ï¿½Ë´ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½*/
 			sleep(1);
 		}
 		ptr_marsio_buff_set_sid_list = (int (*)(marsio_buff_t *m, uint16_t * slist, uint8_t sz_slist))dlsym(marsio_so_handle, "marsio_buff_set_sid_list");
 		if(NULL == ptr_marsio_buff_set_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_sid_list", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* ÎªÁËÏòÇ°¼æÈÝmrzcpd¾É°æ, ´Ë´¦ÏÈ²»·µ»Ø´íÎó*/
+			//return -1; /* Îªï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½mrzcpdï¿½É°ï¿½, ï¿½Ë´ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½*/
 			sleep(1);
 		}
 
 		ptr_marsio_buff_append_sid_list = (int (*)(marsio_buff_t *m, uint16_t * slist, uint8_t sz_slist))dlsym(marsio_so_handle, "marsio_buff_append_sid_list");
 		if(NULL == ptr_marsio_buff_append_sid_list){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_append_sid_list", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* ÎªÁËÏòÇ°¼æÈÝmrzcpd¾É°æ, ´Ë´¦ÏÈ²»·µ»Ø´íÎó */
+			//return -1; /* Îªï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½mrzcpdï¿½É°ï¿½, ï¿½Ë´ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½ */
 			sleep(1);
 		}
 
 		ptr_marsio_buff_prepend_sid_list = (int (*)(marsio_buff_t *m, uint16_t * slist, uint8_t sz_slist))dlsym(marsio_so_handle, "marsio_buff_prepend_sid_list");
 		if(NULL == ptr_marsio_buff_prepend_sid_list){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_prepend_sid_list", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* ÎªÁËÏòÇ°¼æÈÝmrzcpd¾É°æ, ´Ë´¦ÏÈ²»·µ»Ø´íÎó*/
+			//return -1; /* Îªï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½mrzcpdï¿½É°ï¿½, ï¿½Ë´ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½*/
 			sleep(1);
 		}
 
 		ptr_marsio_buff_unset_metadata = (int (*)(marsio_buff_t *m, enum mr_buff_metadata_type type))dlsym(marsio_so_handle, "marsio_buff_unset_metadata");
 		if(NULL == ptr_marsio_buff_unset_metadata){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_unset_metadata", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* ÎªÁËÏòÇ°¼æÈÝmrzcpd¾É°æ, ´Ë´¦ÏÈ²»·µ»Ø´íÎó*/
+			//return -1; /* Îªï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½mrzcpdï¿½É°ï¿½, ï¿½Ë´ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½*/
 			sleep(1);
 		}
 
 		ptr_marsio_buff_set_ctrlbuf = (void (*)(marsio_buff_t *m))dlsym(marsio_so_handle, "marsio_buff_set_ctrlbuf");
 		if(NULL == ptr_marsio_buff_set_ctrlbuf){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_buff_set_ctrlbuf", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* ÎªÁËÏòÇ°¼æÈÝmrzcpd¾É°æ, ´Ë´¦ÏÈ²»·µ»Ø´íÎó*/
+			//return -1; /* Îªï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½mrzcpdï¿½É°ï¿½, ï¿½Ë´ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½*/
 			sleep(1);
 		}
 		ptr_marsio_poll_wait = (int (*)(struct mr_instance * instance, struct mr_vdev * vdevs[], unsigned int nr_vdevs, unsigned int tid, int timeout))dlsym(marsio_so_handle, "marsio_poll_wait");
 		if(NULL == ptr_marsio_poll_wait){
 			printf("\033[33m[Error]dlsym function '%s' from '%s' failed!\033[0m\n", "marsio_poll_wait", ABBR_MARSIO_LIBRARY_FILE);
-			//return -1; /* ÎªÁËÏòÇ°¼æÈÝmrzcpd¾É°æ, ´Ë´¦ÏÈ²»·µ»Ø´íÎó */
+			//return -1; /* Îªï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½mrzcpdï¿½É°ï¿½, ï¿½Ë´ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½ */
 			sleep(1);
 		}
 		ptr_marsio_buff_is_ctrlbuf = (int(*)(marsio_buff_t * m))dlsym(marsio_so_handle, "marsio_buff_is_ctrlbuf");

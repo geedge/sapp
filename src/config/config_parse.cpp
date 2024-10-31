@@ -1625,6 +1625,7 @@ int sapp_parse_config(void)
 	if(str_tmp[0] != '\0'){
 		pconfig->packet_io.input_bpf_filter = sapp_strdup(str_tmp);
 	}
+	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"drop_bpf_filter_packet", &pconfig->packet_io.drop_bpf_filter_packet, 1);
 	tomlc99_wrap_load_int_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"inbound_route_dir", &pconfig->packet_io.inbound_route_dir, 0);
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"pcap_capture_direction", pconfig->packet_io.pcap_capture_direction, NAME_MAX, "in");
 	tomlc99_wrap_load_string_def(ABBR_CFG_FILE_MAIN_ENTRY, (char *)"packet_io.feature", (char *)"inject_pkt_mode", pconfig->packet_io.inject_pkt_mode_string, NAME_MAX, "sys_route");
