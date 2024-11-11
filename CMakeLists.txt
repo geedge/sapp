@@ -57,6 +57,16 @@ else()
   message(FATAL_ERROR "Could not find the program cppcheck.")
 endif()
 
+function(suppress_cppcheck_in_current_dir)
+    if (CMAKE_CXX_CPPCHECK)
+        list(APPEND CMAKE_CXX_CPPCHECK 
+            "--suppress=*:${CMAKE_CURRENT_SOURCE_DIR}/*"
+        )
+        # 将修改后的变量传递回父作用域
+        set(CMAKE_CXX_CPPCHECK "${CMAKE_CXX_CPPCHECK}" PARENT_SCOPE)
+        set(CMAKE_C_CPPCHECK "${CMAKE_CXX_CPPCHECK}" PARENT_SCOPE)
+    endif()
+endfunction()
 
 set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
     " set CMAKE_BUILD_TYPE chosen by the user, using DEBUG as default")

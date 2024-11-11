@@ -13,17 +13,17 @@ extern int udp_stream_table_size;
 
 /*
 20141017 : lqy
-1)  ÐÂ½¨deal_proxy_stream ÊÊÓÃ´¦Àísock4,5,httpµÄ¹«¹²´¦Àíº¯Êý
-2) Ä£ÄâÒ»²ãstream ÐÎ³ÉÀàËÆµÄÎ±Á÷pstream->pPrxoy->fstream
+1)  ï¿½Â½ï¿½deal_proxy_stream ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½sock4,5,httpï¿½Ä¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+2) Ä£ï¿½ï¿½Ò»ï¿½ï¿½stream ï¿½Î³ï¿½ï¿½ï¿½ï¿½Æµï¿½Î±ï¿½ï¿½pstream->pPrxoy->fstream
 20150123 lqy
-1) ¸üÐÂ´úÀíµÄµØÖ·Ë³Ðò£¬ÄÚÇ¶µ÷ÓÃÊ±£¬Ê¹ÓÃÐéÄâµØÖ·µÄÊµ¼ÊµØÖ·ºÍ¶Ë¿Ú
-    ÓÉÓÚÓÐ¿ÉÄÜÎªCONNECT pop.163.com:110 ÕâÖÖÄ£Ê½ÏÂ£¬µØÖ·»á³öÏÖ0.0.0.0
+1) ï¿½ï¿½ï¿½Â´ï¿½ï¿½ï¿½ï¿½Äµï¿½Ö·Ë³ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Êµï¿½Êµï¿½Ö·ï¿½Í¶Ë¿ï¿½
+    ï¿½ï¿½ï¿½ï¿½ï¿½Ð¿ï¿½ï¿½ï¿½ÎªCONNECT pop.163.com:110 ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Â£ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½0.0.0.0
 
 
 */
 
 
-/*»Øµ÷ÉÏ²ãÐÅÏ¢£¬ÊÍ·Å´úÀí±£´æµÄÏà¹ØÐÅÏ¢*/
+/*ï¿½Øµï¿½ï¿½Ï²ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Í·Å´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢*/
 void free_tcp_proxy_stream(struct streaminfo *pstream,struct streaminfo *pProxy)
 {
 	if (pProxy == NULL)
@@ -37,20 +37,20 @@ void free_tcp_proxy_stream(struct streaminfo *pstream,struct streaminfo *pProxy)
 	
 
 
-	//ÏÈ»Øµ÷¿ÉÄÜ´æÔÚµÄÓ¦ÓÃ²ã
+	//ï¿½È»Øµï¿½ï¿½ï¿½ï¿½Ü´ï¿½ï¿½Úµï¿½Ó¦ï¿½Ã²ï¿½
 	if(pProxydetail->apme!=NULL)
 	{
 		pProxy->opstate=OP_STATE_CLOSE;
 		saved_opstate = pstream->opstate;
-		pstream->opstate = OP_STATE_CLOSE;/* 20160928 lijia add, ÉèÖÃ´úÀíµÄÁ÷½áÊø×´Ì¬ */
-		//tcp stream »Øµ÷
+		pstream->opstate = OP_STATE_CLOSE;/* 20160928 lijia add, ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ */
+		//tcp stream ï¿½Øµï¿½
 		stream_process_tcp(pstream,NULL,NULL,NULL,&(pProxydetail->apme),&(pProxy->opstate));  
 		pProxydetail->apme=NULL;
-		pstream->opstate = saved_opstate; /* 20160928 lijia add, »Ö¸´µ±Ç°Á÷×´Ì¬ */
+		pstream->opstate = saved_opstate; /* 20160928 lijia add, ï¿½Ö¸ï¿½ï¿½ï¿½Ç°ï¿½ï¿½×´Ì¬ */
 	}
 
 	
-	//µÚ¶þ²½ ÊÍ·Å
+	//ï¿½Ú¶ï¿½ï¿½ï¿½ ï¿½Í·ï¿½
 	
 	pProxydetail=(struct proxydetail *)pProxy->pdetail;
 	if(pProxydetail->pUser)
@@ -95,7 +95,7 @@ void free_tcp_proxy_stream(struct streaminfo *pstream,struct streaminfo *pProxy)
 }
 
 
-/*°ÑÒ»¸ö´úÀíµÄÐÅÏ¢ÐéÄâ³ÉÒ»¸öfatherstream,²¢ÇÒ¹ÒÔØµ½streamÉÏ*/
+/*ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½fatherstream,ï¿½ï¿½ï¿½Ò¹ï¿½ï¿½Øµï¿½streamï¿½ï¿½*/
 
 void set_proxy_fstream(struct streaminfo *pstream,struct streaminfo *pProxy)
 {
@@ -103,7 +103,7 @@ void set_proxy_fstream(struct streaminfo *pstream,struct streaminfo *pProxy)
 		struct proxydetail *pProxydetail=(struct proxydetail *)pProxy->pdetail;
 	        struct tcpdetail *pdetail=(struct tcpdetail *)pstream->pdetail;		
 
-		//Ìî³ä´úÀí²ãµÄÀàÐÍ¼°µØÖ·ÐÅÏ¢
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ï¢
 
 		if(pstream->addr.addrtype==ADDR_TYPE_IPV4)
 		{
@@ -118,7 +118,7 @@ void set_proxy_fstream(struct streaminfo *pstream,struct streaminfo *pProxy)
 			pProxy->addr.addrtype=ADDR_TYPE_IPV6;
 			paddr=dictator_malloc(pstream->threadnum,sizeof(struct tuple6));
 			memcpy(paddr,pstream->addr.paddr,sizeof(struct tuple6));
-			if(NULL == pProxydetail->pIpv6){ /* 2015-02-02 lijia add, ÓÐ¿ÉÄÜ»ñÈ¡²»µ½ */
+			if(NULL == pProxydetail->pIpv6){ /* 2015-02-02 lijia add, ï¿½Ð¿ï¿½ï¿½Ü»ï¿½È¡ï¿½ï¿½ï¿½ï¿½ */
 				//printf("proxy type:%d, not fill addr info!\n", pProxydetail->iType);
 				memset(((struct tuple6 *)paddr)->daddr,0,16);
 			}else{
@@ -140,7 +140,7 @@ void set_proxy_fstream(struct streaminfo *pstream,struct streaminfo *pProxy)
 	
 }
 
-/*µ±´úÀí×ÔÉíµÄÐÅÏ¢´¦ÀíÍê³Éºó£¬½øÐÐÇ¶Ì×µ÷ÓÃ*/
+/*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Éºó£¬½ï¿½ï¿½ï¿½Ç¶ï¿½×µï¿½ï¿½ï¿½*/
 int deal_tcp_in_proxy_stream(struct streaminfo *stream,void * a_packet,struct streaminfo *pProxy)
 {
 	int ret=PASS;
@@ -178,10 +178,10 @@ int deal_tcp_in_proxy_stream(struct streaminfo *stream,void * a_packet,struct st
 		return APP_STATE_GIVEME;
 	}
 #else
-	struct streaminfo_private *carry_ip_stream = stream_pr; /* IP-PORT´æ´¢ÓÚÍ¬Ò»²ã, ²»ÐèÒªÍ¨¹ýpfather²éÕÒ */
+	struct streaminfo_private *carry_ip_stream = stream_pr; /* IP-PORTï¿½æ´¢ï¿½ï¿½Í¬Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ÒªÍ¨ï¿½ï¿½pfatherï¿½ï¿½ï¿½ï¿½ */
 #endif
 	
-	//¸üÐÂÁ´½Ó¶ÔÓ¦¹ØÏµ£¬Ê¹µÃÐÂÎ±ÔìµÄÁ´½ÓÉúÐ§
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¶ï¿½Ó¦ï¿½ï¿½Ïµï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½Î±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§
 	pProxy->pfather=stream->pfather;
 	stream->pfather=pProxy;    
 	
@@ -197,7 +197,7 @@ int deal_tcp_in_proxy_stream(struct streaminfo *stream,void * a_packet,struct st
 	
 	stream->opstate=pProxy->opstate;
 
-	if(NULL == real_raw_pkt){ /* ³¬Ê±ÌÔÌ­, ÎÞÔ­Ê¼°ü²ÎÊý */
+	if(NULL == real_raw_pkt){ /* ï¿½ï¿½Ê±ï¿½ï¿½Ì­, ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		ret=stream_process_tcp(stream, NULL, NULL, NULL, 
 							&pProxydetail->apme,&(stream->opstate));	
 
@@ -208,7 +208,7 @@ int deal_tcp_in_proxy_stream(struct streaminfo *stream,void * a_packet,struct st
 							(const raw_pkt_t *)real_raw_pkt, &pProxydetail->apme,&(stream->opstate));	
 	}							
 	pProxy->opstate=stream->opstate;
-	//»¹Ô­×´Ì¬
+	//ï¿½ï¿½Ô­×´Ì¬
 	stream->opstate=tmpstate;
 	
 	stream->pfather=pProxy->pfather;
@@ -242,16 +242,16 @@ int deal_tcp_in_proxy_stream(struct streaminfo *stream,void * a_packet,struct st
 	
 	if(ret==DROP)
 	{
-		appstate=appstate|APP_STATE_DROPPKT;
+		appstate|=APP_STATE_DROPPKT;
 	}
 	
 	if(pProxydetail->apme==NULL)
 	{
-		appstate=appstate|APP_STATE_DROPME;
+		appstate|=APP_STATE_DROPME;
 	}
 
 	if(OP_STATE_CLOSE == stream->opstate){
-		appstate |= APP_STATE_DROPME;
+		appstate|= APP_STATE_DROPME;
 	}
 	
 	return appstate;

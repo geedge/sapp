@@ -2194,7 +2194,6 @@ char polling_inject_tcp_entry(struct streaminfo *no_stream,void **no_pme, int th
 char test_project_add(struct streaminfo *pstream,void **pme, int thread_seq,const void *a_packet)
 {
 	static int __init_flag = 0;
-	static int project_id;
 	char *pro_value = (char *)"test project!";
 	
 	project_req_add_struct(pstream, g_test_app_val.test_project_id, pro_value);		

@@ -44,7 +44,7 @@ static inline int should_create_empty_mpls_layer_for_symmetric(const struct stre
 }
 
 
-/* 2018-08-19 lijia add, for PanGuÏîÄ¿²¢Áª»ØÁ÷Á÷Á¿¸ñÊ½, ¸´ÓÃÁËETH_P_8021AD×Ö¶Î, Êµ¼ÊÊÇMAC-IN-MAC¸ñÊ½Êý¾Ý°ü,
+/* 2018-08-19 lijia add, for PanGuï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ETH_P_8021ADï¿½Ö¶ï¿½, Êµï¿½ï¿½ï¿½ï¿½MAC-IN-MACï¿½ï¿½Ê½ï¿½ï¿½ï¿½Ý°ï¿½,
 	outer_mac--inner_mac--ipv4/6--tcp/udp---layer7.
 */
 int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_layer_hdr,int thread_num, 
@@ -55,8 +55,8 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 	struct streamindex *ptmp;
 	struct streaminfo_private *pstream_pr;
 	struct streaminfo *pstream;
-	const struct mesa_ethernet_hdr *outer_ether_hdr;
-	const struct mesa_ethernet_hdr *inner_ether_hdr;
+	const struct mesa_ethernet_hdr *outer_ether_hdr=NULL;
+	const struct mesa_ethernet_hdr *inner_ether_hdr=NULL;
 	//const struct mesa_vlan_detail_hdr *vlan_hdr;
 	const  unsigned char *next_layer_data;
 	int next_layer_offset,  ret;
@@ -83,7 +83,7 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 		pstream->addr.paddr = &mim_addr;
 		pstream_pr->addr_use_as_hash = 0;
 	}else{
-		pstream_pr = NULL; /* Ê¹ÉÏ²ã³ÐÔØÐ­ÒéµÄpfatherÎªNULL */
+		pstream_pr = NULL; /* Ê¹ï¿½Ï²ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½pfatherÎªNULL */
 		next_layer_offset = 0;
 		if((int)CAP_LEVEL_MAC == (int)raw_pkt->low_layer_type){
 			((raw_pkt_t *)raw_pkt)->raw_pkt_data = (char *)raw_pkt->__lib_raw_pkt_data + sizeof(struct mesa_ethernet_hdr);
@@ -92,7 +92,7 @@ int mac_in_mac_entry(struct streaminfo_private *fstream_pr, const void *this_lay
 	}
     eth_type = ntohs(inner_ether_hdr->ether_type);
     
-#if 0 /* 2021-05-06 lijia close, ·Ç¶Ô³Æmpls¸Ä³É¶¯Ì¬²åÈëstreaminfoµÄ·½Ê½½â¾ö. */		
+#if 0 /* 2021-05-06 lijia close, ï¿½Ç¶Ô³ï¿½mplsï¿½Ä³É¶ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½streaminfoï¿½Ä·ï¿½Ê½ï¿½ï¿½ï¿½. */		
 	if(should_create_empty_mpls_layer_for_symmetric(pstream, eth_type) != 0){
 		if(eth_type == ETHERTYPE_IP || eth_type == ETHERTYPE_IPv6)
 		{
