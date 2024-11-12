@@ -1,7 +1,7 @@
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(MY_RPM_NAME_PREFIX "${project_name}-debug")
+    set(MY_RPM_NAME_PREFIX "${PROJECT_NAME}-debug")
 else()
-    set(MY_RPM_NAME_PREFIX "${project_name}")
+    set(MY_RPM_NAME_PREFIX "${PROJECT_NAME}")
 endif()
 
 message(STATUS "Package: ${MY_RPM_NAME_PREFIX}")

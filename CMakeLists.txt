@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8...3.10)
 
-set(project_name sapp)
-
-project(${project_name})
+project(sapp)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(Version)
@@ -205,13 +203,13 @@ endif()
 option(HASP_ENABLED "Enable hasp envelope" OFF)
 if(HASP_ENABLED STREQUAL "ON")
 	add_definitions(-DHASP_ENABLED=1)	
-	set(project_name sapp-pr)
+	project(sapp-pr)
 endif()
 
 add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
     -D__USE_BSD=1 -D_GNU_SOURCE=1  -DMESA_SAPP_PLATFORM=1)
 
-set(SAPP_DEPEND_DYN_LIB MESA_handle_logger MESA_prof_load MESA_htable  MESA_field_stat2 fieldstat3 fieldstat4 cjson MESA_jump_layer breakpad_mini ${SYSTEMD_LIBRARIES} pthread dl pcap)
+set(SAPP_DEPEND_DYN_LIB MESA_handle_logger MESA_prof_load MESA_htable  MESA_field_stat2 fieldstat3 fieldstat4 cjson breakpad_mini ${SYSTEMD_LIBRARIES} pthread dl pcap)
 set(SAPP_DEPEND_DYN_LIB ${SAPP_DEPEND_DYN_LIB} packet_io_pcap)
 if(CAPTURE_MODE STREQUAL "MARSIO")
 	set(SAPP_DEPEND_DYN_LIB ${SAPP_DEPEND_DYN_LIB} packet_io_marsio)
@@ -223,7 +221,7 @@ endif()
 
 set(SAPP_MODULES timestamp_record md5 
 	symbol_check MESA_sleep MESA_socket_wrap 
-	packet_io dealpkt project plugctrl common 
+	packet_io dealpkt project plugctrl common MESA_jump_layer 
 	config timer tomlc99_wrap dpdk_ip_hash  
 	gdev_assistant inline_keepalive ap_bloom libdabloom
 	sapp_dev sapp_assistant sapp_metrics 
@@ -264,6 +262,11 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HEADER_CHECK_DEFINITIONS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
+include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/include/public)
+include_directories(${CMAKE_SOURCE_DIR}/include/public/stream_inc)
+include_directories(${CMAKE_SOURCE_DIR}/include/private)
+
 add_subdirectory(./vendor)
 add_subdirectory(./src/support)
 add_subdirectory(./src/dealpkt)
@@ -287,7 +290,7 @@ add_subdirectory(./benchmark)
 add_subdirectory(./module_test)
 
 enable_testing()
-add_subdirectory(./ctest)
+add_subdirectory(ctest)
 endif()
 #by default, not include sapp_module_test dir
 #add_subdirectory(./test/sapp_module_test/src)

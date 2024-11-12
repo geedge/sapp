@@ -17,3 +17,4 @@ add_definitions(-DPLATFORM_NSDPF_PAPP=1)
 add_definitions(-fPIC)
 
 add_library(common linux_kernel_jhash.c net_common.c stream_addr_inet.c sapp_log.c sapp_mem.c)
+add_library(MESA_jump_layer MESA_jump_layer.cpp)

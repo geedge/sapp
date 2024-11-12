@@ -3,12 +3,10 @@ variables:
   BUILD_PADDING_PREFIX: /tmp/padding_for_CPACK_RPM_BUILD_SOURCE_DIRS_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX/
   BUILD_IMAGE_CENTOS8: "git.mesalab.cn:7443/mesa_platform/build-env:rocky8-for-sapp"
   INSTALL_DEPENDENCY_LIBRARY: 
-    libMESA_htable-devel libMESA_prof_load-devel libcjson-devel libMESA_field_stat2-devel  framework_env 
-    libMESA_handle_logger-devel libbreakpad_mini-devel
-    libMESA_jump_layer-devel libfieldstat3-devel
-    libMESA_htable libMESA_prof_load  libMESA_field_stat2  libMESA_handle_logger 
-    libcjson libbreakpad_mini libMESA_jump_layer libfieldstat3 libfieldstat4  libfieldstat4-devel
-    mrzcpd-corei7 hasp-tools  libuuid-devel
+    framework_env libcjson-devel  libbreakpad_mini-devel libuuid-devel
+    libMESA_htable-devel libMESA_prof_load-devel libMESA_handle_logger-devel
+    libMESA_field_stat2-devel libfieldstat3-devel libfieldstat4-devel
+    mrzcpd-corei7 hasp-tools  
   SYMBOL_TARGET: sapp
   TEST_NAME: gtest_sapp_v4
   INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
@@ -24,7 +22,6 @@ stages:
     - mkdir -p $BUILD_PADDING_PREFIX/$CI_PROJECT_NAMESPACE/
     - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
     - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
-    - chmod +x ./ci/travis.sh
     - yum makecache --disablerepo="*" --enablerepo="framework,platform"
     - yum install -y $INSTALL_DEPENDENCY_LIBRARY
     - source /etc/profile.d/framework.sh; source /etc/profile.d/mrzcpd.sh
@@ -34,8 +31,6 @@ stages:
 .cppcheck_script:
   variables:    
     BUILD_TYPE: Debug
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
   stage: cppcheck
   script:
     - cd build; cmake3 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
@@ -71,12 +66,24 @@ run_cppcheck_for_centos8:
 .build_before_script:
   before_script: *everything_before_script
   script:
-    - ./ci/travis.sh
+    - mkdir build || true
+    - cd build
+    - >
+      cmake3 -DCMAKE_BUILD_TYPE=$BUILD_TYPE 
+      -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX 
+      -DBUILD_TEST=$BUILD_TEST 
+      -DCAPTURE_MODE=MARSIO 
+      -DPLATFORM_MODE=INLINE
+      -DMEM_POOL=$MEM_POOL 
+      -DHASP_ENABLED=$HASP_ENABLED 
+      -DFEATURE_ID=$FEATURE_ID 
+      -DHASP_INTERNAL_S=$HASP_INTERNAL_S 
+      -DASAN_OPTION=$ASAN_OPTION ..
+    - make -j4 VERBOSE=1
+    - make package
   variables:    
     BUILD_TEST: "ON"
     BUILD_TYPE: Debug
-    CAPTURE_MODE: MARSIO
-    PLATFORM_MODE: INLINE
   tags:
     - share
 
