@@ -27,9 +27,7 @@
 #include <net/if.h>
 #include <stdarg.h>
 
-#include "stream.h"
 #include "gtest_sapp_fun.h"
-#include "MESA_jump_layer.h"
 
 
 static int gtest_sapp_master_fd;

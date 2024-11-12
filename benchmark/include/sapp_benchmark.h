@@ -1,23 +1,17 @@
 #ifndef _SAPP_BENCHMARK_H_
 #define _SAPP_BENCHMARK_H_ 1
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
-#include <assert.h>
-#include <time.h>
 #include <arpa/inet.h>
 #include <sys/types.h>	 
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <errno.h>
-#include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "stream.h"
 
 
 #ifdef __cplusplus

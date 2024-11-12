@@ -1,8 +1,13 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "sapp_benchmark.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <assert.h>
@@ -12,8 +17,6 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <errno.h>
-#include "stream.h"
-#include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/time.h>
@@ -26,9 +29,8 @@
 
 #include "wrap_cJSON.h"
 #include "sapp_bchmk_inner.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "MESA_prof_load.h"
+
 
 
 
@@ -102,9 +104,9 @@ static int ifconfig_device_up(const char *interface_name)
 		printf("Create Socket Failed.\n");		  
 		return -2;	  
 	}
-	//Ö¸¶¨Íø¿¨Ãû³ÆÇÒup
+	//Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½up
 	sprintf(ifr.ifr_name, "%s", interface_name);
-	/* »ñµÃ½Ó¿ÚµÄ±êÖ¾ */
+	/* ï¿½ï¿½Ã½Ó¿ÚµÄ±ï¿½Ö¾ */
 	if ((err = ioctl(socket_fd, SIOCGIFFLAGS, (void *)&ifr)) < 0) {
 		fprintf(stderr, "ifconfig_device_up(%s), ioctl SIOCGIFFLAGS: %s\n", interface_name, strerror(errno));
 		close(socket_fd);
@@ -143,7 +145,7 @@ int ifconfig_device_mtu(const char *interface_name, int mtu_val)
 		return -2;	  
 	}
 	sprintf(ifr.ifr_name, "%s", interface_name);
-	/* »ñµÃ½Ó¿ÚµÄ±êÖ¾ */
+	/* ï¿½ï¿½Ã½Ó¿ÚµÄ±ï¿½Ö¾ */
 	if ((err = ioctl(socket_fd, SIOCGIFMTU, (void *)&ifr)) < 0) {
 		fprintf(stderr, "ifconfig_device_mtu(%s), ioctl SIOCGIFMTU: %s\n", interface_name, strerror(errno));
 		close(socket_fd);
@@ -191,14 +193,14 @@ static int tuntap_dev_create(char *dev, int flags)
 
     ifconfig_device_up(dev);
 
-    ifconfig_device_mtu(dev, 2000); /* Ä³Ð©pcap°ü¿ÉÄÜ¿ªÆôÁËoffload,  »òÕßvlan, vxlanµÈ, Ôö¼ÓMTU */
+    ifconfig_device_mtu(dev, 2000); /* Ä³Ð©pcapï¿½ï¿½ï¿½ï¿½ï¿½Ü¿ï¿½ï¿½ï¿½ï¿½ï¿½offload,  ï¿½ï¿½ï¿½ï¿½vlan, vxlanï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½MTU */
 
     return fd;
 }
 
 /* 
-    ¸ù¾ÝÇé¿ö, Èç¹ûmirror, inlineÄ£Ê½ÊÇ´´½¨Ò»¸öTAP, transparentÊÇ´´½¨Á½¸öTAP,
-    Ö±½Ó¶ÁÈ¡½âÎösapp.tomlÎÄ¼þ.
+    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½mirror, inlineÄ£Ê½ï¿½Ç´ï¿½ï¿½ï¿½Ò»ï¿½ï¿½TAP, transparentï¿½Ç´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½TAP,
+    Ö±ï¿½Ó¶ï¿½È¡ï¿½ï¿½ï¿½ï¿½sapp.tomlï¿½Ä¼ï¿½.
 */
 int sapp_bchmk_create_process_engine(benchmark_engine_t *bch_engine)
 {
@@ -289,9 +291,9 @@ int sapp_bchmk_md5_checksum(const char *filename, const char *expect_md5sum)
 }
 
 /*
-	×¢Òâ:
-		´Ëº¯ÊýÊµ¼Ê·µ»ØµÄÊÇTRUEºÍFALSE,
-		0±íÊ¾²»Ò»Ñù, 1±íÊ¾Ò»Ñù!!
+	×¢ï¿½ï¿½:
+		ï¿½Ëºï¿½ï¿½ï¿½Êµï¿½Ê·ï¿½ï¿½Øµï¿½ï¿½ï¿½TRUEï¿½ï¿½FALSE,
+		0ï¿½ï¿½Ê¾ï¿½ï¿½Ò»ï¿½ï¿½, 1ï¿½ï¿½Ê¾Ò»ï¿½ï¿½!!
 */
 cJSON_bool sapp_bchmk_json_file_compare(benchmark_engine_t *bchmk_engine, const char *json_file1, const char *json_file2, cJSON_Compare_Opt_t opt)
 {
@@ -429,7 +431,7 @@ int sapp_bchmk_gen_pcap_file(benchmark_engine_t *bchmk_engine, const pcap_pkt_de
 
 
 /*
-	½«ÄÚ´æÖÐµÄÒ»¸öÔ­Ê¼±¨ÎÄ, ÏÈÉú³ÉpcapÎÄ¼þ, ÔÙµ÷ÓÃtshark -T Éú³ÉÒ»¸öjsonÎÄ¼þ.
+	ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ðµï¿½Ò»ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pcapï¿½Ä¼ï¿½, ï¿½Ùµï¿½ï¿½ï¿½tshark -T ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½jsonï¿½Ä¼ï¿½.
 */
 int sapp_bchmk_gen_tshark_json(benchmark_engine_t *bchmk_engine, const pcap_pkt_detail_t *pkt_detail, int pkt_num, const char *tshark_json_filename)
 {
@@ -478,7 +480,7 @@ int sapp_bchmk_need_drop_cur_pkt(benchmark_engine_t *bchmk_engine, int pkt_index
 
 	array_size = cJSON_GetArraySize(sub_pkt_index_item);
 
-	/* ½«CÊý×éÏÂ±ê×ª»»ÎªwiresharkµÄÊý¾Ý°üÐòºÅ, ÆäÊµ¾ÍÊÇ¼Ó1 */
+	/* ï¿½ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½Â±ï¿½×ªï¿½ï¿½Îªwiresharkï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Êµï¿½ï¿½ï¿½Ç¼ï¿½1 */
 	ADJUST_ARRAY_INDEX_to_WIRESHARK(pkt_index);
 	
 	for(i = 0; i < array_size; i++){
@@ -492,9 +494,9 @@ int sapp_bchmk_need_drop_cur_pkt(benchmark_engine_t *bchmk_engine, int pkt_index
 }
 
 /*
-	·µ»ØÖµ: Òª¼ì²é´Ë°ü¾ßÌå²ÎÊýµÄjson file name.
+	ï¿½ï¿½ï¿½ï¿½Öµ: Òªï¿½ï¿½ï¿½Ë°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½json file name.
 
-	Èç¹ûÊÇNULL, ÐèÒª¶îÍâÅÐ¶ÏÒ»ÏÂerrno, ÊÇ·ñÊÇÒòÎªjson¸ñÊ½´íÎó, Ã»ÓÐÐ´packet_detail_json_file.
+	ï¿½ï¿½ï¿½ï¿½ï¿½NULL, ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½Ò»ï¿½ï¿½errno, ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Îªjsonï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½, Ã»ï¿½ï¿½Ð´packet_detail_json_file.
 */
 const char *sapp_bchmk_need_check_forward_pkt(benchmark_engine_t *bchmk_engine, int pkt_index)
 {
@@ -520,7 +522,7 @@ const char *sapp_bchmk_need_check_forward_pkt(benchmark_engine_t *bchmk_engine, 
 
 	array_size = cJSON_GetArraySize(sub_pkt_detail_item);
 
-	/* ×¢Òâ: ÎªÁË·½±ãºÍwireshark¶Ô±È, pkt index´Ó1¿ªÊ¼¼ÆËã, Êý×éÏÂ±ê´Ó0¿ªÊ¼ */
+	/* ×¢ï¿½ï¿½: Îªï¿½Ë·ï¿½ï¿½ï¿½ï¿½wiresharkï¿½Ô±ï¿½, pkt indexï¿½ï¿½1ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Â±ï¿½ï¿½0ï¿½ï¿½Ê¼ */
 	ADJUST_ARRAY_INDEX_to_WIRESHARK(pkt_index);
 
 	for(i = 0; i < array_size; i++){
@@ -546,7 +548,7 @@ const char *sapp_bchmk_need_check_forward_pkt(benchmark_engine_t *bchmk_engine, 
 }
 
 /*
-	·µ»ØÖµ: Ö¸Ïòinject¿éµÄcjson½á¹¹ÌåÖ¸Õë.
+	ï¿½ï¿½ï¿½ï¿½Öµ: Ö¸ï¿½ï¿½injectï¿½ï¿½ï¿½cjsonï¿½á¹¹ï¿½ï¿½Ö¸ï¿½ï¿½.
 */
 const cJSON *sapp_bchmk_need_check_inject_pkt(benchmark_engine_t *bchmk_engine, int carray_pkt_index)
 {
@@ -566,9 +568,9 @@ const cJSON *sapp_bchmk_need_check_inject_pkt(benchmark_engine_t *bchmk_engine, 
 		return NULL;
 	}	
 
-	/* ×¢Òâ: ÎªÁË·½±ãºÍwireshark¶Ô±È, pkt index´Ó1¿ªÊ¼¼ÆËã, ´Ë´¦Êý×é´Ó0¿ªÊ¼ */
+	/* ×¢ï¿½ï¿½: Îªï¿½Ë·ï¿½ï¿½ï¿½ï¿½wiresharkï¿½Ô±ï¿½, pkt indexï¿½ï¿½1ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½, ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½Ê¼ */
 	if(sub_array_pkt_index_item->valueint != (carray_pkt_index+1)){
-		/* µ±Ç°°ü²»»á´¥·¢inject¶¯×÷, do nothing */
+		/* ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½á´¥ï¿½ï¿½injectï¿½ï¿½ï¿½ï¿½, do nothing */
 		sapp_bchmk_log(bchmk_engine,RLOG_LV_DEBUG, "pkt index:%d, don't need check inject json, ignore it", carray_pkt_index+1);
 		errno = 0;
 		return NULL;
@@ -578,7 +580,7 @@ const cJSON *sapp_bchmk_need_check_inject_pkt(benchmark_engine_t *bchmk_engine, 
 }
 
 /*
-	·µ»ØÖµ: Ö¸Ïòcontrol¿éµÄcjson½á¹¹ÌåÖ¸Õë.
+	ï¿½ï¿½ï¿½ï¿½Öµ: Ö¸ï¿½ï¿½controlï¿½ï¿½ï¿½cjsonï¿½á¹¹ï¿½ï¿½Ö¸ï¿½ï¿½.
 */
 const cJSON *sapp_bchmk_need_process_control(benchmark_engine_t *bchmk_engine, int carray_pkt_index)
 {
@@ -604,13 +606,13 @@ const cJSON *sapp_bchmk_need_process_control(benchmark_engine_t *bchmk_engine, i
 
 
 /*
-	Ã¿´Î²âÊÔÇ°, ¶¼ÓÃsappµÄÄ¬ÈÏÅäÖÃ¸²¸ÇÔËÐÐ»·¾³, 
-	ÐèÒªÐÞ¸ÄµÄÅäÖÃ²ÎÊý, Ã¿´ÎÒ²ÒªÏÖ³¡ÐÞ¸Ä,
-	±ÜÃâÒòÄ¬ÈÏ²ÎÊý´íÎóµ¼ÖÂ²âÊÔ²»Í¨¹ý.
+	Ã¿ï¿½Î²ï¿½ï¿½ï¿½Ç°, ï¿½ï¿½ï¿½ï¿½sappï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½, 
+	ï¿½ï¿½Òªï¿½Þ¸Äµï¿½ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½, Ã¿ï¿½ï¿½Ò²Òªï¿½Ö³ï¿½ï¿½Þ¸ï¿½,
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â²ï¿½ï¿½Ô²ï¿½Í¨ï¿½ï¿½.
 
-	½«sappµÄÅäÖÃÎÄ¼þÖ±½Ó·­Òë³ÉÁË.cÊý×é, ÕâÑùcmake install, ¼´rpm -iÊ±¾Í²»ÓÃ×°Ò»¶ÑÎÄ¼þÁË, 
-	¶øÇÒÈç¹û°²×°Ê±Ê¹ÓÃ--prefix²ÎÊý, ³ÌÐò¾ÍÕÒ²»µ½ÕâÐ©ÎÄ¼þÁË.
-	Ö±½Ó´Ó³ÌÐòÀïcopy¼´¿É.
+	ï¿½ï¿½sappï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ö±ï¿½Ó·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.cï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½cmake install, ï¿½ï¿½rpm -iÊ±ï¿½Í²ï¿½ï¿½ï¿½×°Ò»ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½, 
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°Ê±Ê¹ï¿½ï¿½--prefixï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½ï¿½Ð©ï¿½Ä¼ï¿½ï¿½ï¿½.
+	Ö±ï¿½Ó´Ó³ï¿½ï¿½ï¿½ï¿½ï¿½copyï¿½ï¿½ï¿½ï¿½.
 */
 
 static void sapp_bchmk_write_to_file(const char *config_name, const void *content, int content_len)
@@ -657,7 +659,7 @@ void sapp_bchmk_set_default_config(void)
 	sapp_bchmk_write_to_file("etc/send_raw_pkt.conf", templete_send_raw_pkt, templete_send_raw_pkt_len);
 	sapp_bchmk_write_to_file("etc/send_log.conf", templete_sapp_log, templete_sapp_log_len);
 
-	/* Çé¿ö²å¼þplug.infÄÚÈÝ, Ö»±£Áô×î»ù±¾Í·²¿×Ö¶Î */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½plug.infï¿½ï¿½ï¿½ï¿½, Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½Ö¶ï¿½ */
 	system("mkdir -p ./plug/business/gtest_sapp");
 	system("echo \"[PLUGINFO]\" > ./plug/business/gtest_sapp/gtest_sapp.inf");
 	system("echo \"PLUGNAME=xxxx\" >> ./plug/business/gtest_sapp/gtest_sapp.inf");
@@ -734,7 +736,7 @@ const char *sapp_bchmk_rawpkt_ntop_v6(const struct ip6_hdr *ip6hdr, char *res_bu
 		dport = inner_uhdr->dest;	
 		snprintf(res_buf, buf_len, "%s.%u --> %s.%u, %s", ip_src_str, ntohs(sport),
 				ip_dst_str, ntohs(dport), "UDP");
-	}else if(IPPROTO_ICMPV6 == inner_ip_proto){ /* ×¢Òâ: ipv6µÄicmpÍ·²¿×Ö¶ÎÓëipv4²»Ò»ÖÂ!! */
+	}else if(IPPROTO_ICMPV6 == inner_ip_proto){ /* ×¢ï¿½ï¿½: ipv6ï¿½ï¿½icmpÍ·ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ipv4ï¿½ï¿½Ò»ï¿½ï¿½!! */
 		snprintf(res_buf, buf_len, "%s --> %s,ICMP", ip_src_str, ip_dst_str);
 	}else{
 		snprintf(res_buf, buf_len, "%s --> %s, unknown protocol:%u", ip_src_str, ip_dst_str, inner_ip_proto);

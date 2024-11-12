@@ -98,6 +98,7 @@ extern volatile long long g_current_time_ms;
 #define g_ipv6_send_packet_enabled    sapp_global_val->config.protocol_feature.ipv6_send_packet_enabled
 #define G_SKIP_NOT_IP_LAYER 	sapp_global_val->config.protocol_feature.skip_not_ip_layer_over_eth
 
+#include "MESA_handle_logger.h"
 #define sapp_runtime_log(log_level, format, ...)                                                       \
 do                                                                                                     \
 {                                                                                                      \

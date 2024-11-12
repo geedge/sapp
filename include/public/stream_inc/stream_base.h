@@ -5,13 +5,7 @@
 
 #include <sys/types.h>
 #include <netinet/in.h>            
-#include <netinet/ip.h>            
-#include <netinet/ip6.h>   
-#include <netinet/tcp.h>   
-#include <netinet/udp.h>   
 #include <linux/if_ether.h>   
-#include <stdlib.h>
-#include <string.h>
 
 #ifndef UINT8
 typedef unsigned char		UINT8;
@@ -30,28 +24,28 @@ typedef unsigned int		UINT32;
 typedef unsigned long long	UINT64;
 #endif
 
-/* CHN : Á÷µÄ·½Ïò¶¨Òå */
+/* CHN : ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ */
 /* ENG : stream direction definition*/
 #define DIR_C2S 			0x01
 #define DIR_S2C 			0x02
 #define DIR_DOUBLE 			0x03
 
-/* CHN : ÍøÂçµ×²ã´«Êä·½Ïò¶¨Òå,´®ÁªÄ£Ê½ÓÐÒâÒå */
+/* CHN : ï¿½ï¿½ï¿½ï¿½×²ã´«ï¿½ä·½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 /* ENG : network topology route direction, is valid in serial mode */
 #define DIR_ROUTE_UP		0x00
 #define DIR_ROUTE_DOWN 		0x01
 
-/* CHN : µ¥°üµÄÀàÐÍ¶¨Òå */
+/* CHN : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¶ï¿½ï¿½ï¿½ */
 /* ENG : single packet type definition */
 #define PKT_TYPE_NORMAL  			(0x0)	/* normal, common */
-#define PKT_TYPE_IPREBUILD 			(1<<0)  /* ip frag reassembled packet;  ipËéÆ¬ÖØ×é±¨ÎÄ */
-#define PKT_TYPE_TCPUNORDER 		(1<<1)  /* TCP out of order packet;  TCPÂÒÐò±¨ÎÄ */
-#define PKT_TYPE_TCPREORDER 		(1<<2)  /* TCP sequential packet;  TCPÂÒÐòÅÅÐòºÃµÄÊý¾Ý°ü */ 
-#define PKT_TYPE_TCPRETRANS 		(1<<3)  /* TCP retransmit packet;  TCPÖØ´«±¨ÎÄ */
-#define PKT_TYPE_IP_FRAG			(1<<4)  /* IP frag packet;  IP·ÖÆ¬°ü */
-#define PKT_TYPE_IP_FRAG_LAST		(1<<5)  /* last IP frag packet;  Í¬ÊôÓÚÒ»¸öÔ­Ê¼ÍêÕûIP°üµÄ×îºóÒ»¸öIP·ÖÆ¬°ü */
+#define PKT_TYPE_IPREBUILD 			(1<<0)  /* ip frag reassembled packet;  ipï¿½ï¿½Æ¬ï¿½ï¿½ï¿½é±¨ï¿½ï¿½ */
+#define PKT_TYPE_TCPUNORDER 		(1<<1)  /* TCP out of order packet;  TCPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+#define PKT_TYPE_TCPREORDER 		(1<<2)  /* TCP sequential packet;  TCPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½Ý°ï¿½ */ 
+#define PKT_TYPE_TCPRETRANS 		(1<<3)  /* TCP retransmit packet;  TCPï¿½Ø´ï¿½ï¿½ï¿½ï¿½ï¿½ */
+#define PKT_TYPE_IP_FRAG			(1<<4)  /* IP frag packet;  IPï¿½ï¿½Æ¬ï¿½ï¿½ */
+#define PKT_TYPE_IP_FRAG_LAST		(1<<5)  /* last IP frag packet;  Í¬ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½IPï¿½ï¿½Æ¬ï¿½ï¿½ */
 
-/* CHN : µØÖ·ÀàÐÍ¶¨Òå, ¿ÉÍ¨¹ýº¯Êý addr_type_to_string() ×ª³É×Ö·û´®ÐÎÊ½. */
+/* CHN : ï¿½ï¿½Ö·ï¿½ï¿½ï¿½Í¶ï¿½ï¿½ï¿½, ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ addr_type_to_string() ×ªï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ê½. */
 /* ENG : address type, transform to string mode by call addr_type_to_string(). */
 enum addr_type_t{
 	__ADDR_TYPE_INIT = 0,
@@ -80,14 +74,14 @@ enum addr_type_t{
 #define TCP_TAKEOVER_STATE_FLAG_ON	1
 
 
-/* CHN : Ó¦ÓÃ²ã¿´µ½µÄÁ´½Ó×´Ì¬¶¨Òå */
+/* CHN : Ó¦ï¿½Ã²ã¿´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ */
 /* ENG : stream state for protocol or business plug*/
 #define OP_STATE_PENDING   0
 #define OP_STATE_TIMED 1  /* is obsolete */
 #define OP_STATE_CLOSE     2
 #define OP_STATE_DATA      3
 
-/* CHN : Ó¦ÓÃ²ã·µ»Ø½á¹û¶¨Òå */
+/* CHN : Ó¦ï¿½Ã²ã·µï¿½Ø½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 /* ENG : return value of plug */
 #define APP_STATE_GIVEME   0x00
 #define APP_STATE_FAWPKT   0x00
@@ -98,14 +92,14 @@ enum addr_type_t{
 
 #define APP_STATE_DROPPKT  0x10
 
-#define APP_STATE_KILL_FOLLOW 0x40 /* Ç¿ÖÆCLOSEµ±Ç°²å¼þºóÐøµÄËùÓÐ²å¼þ */
-#define APP_STATE_KILL_OTHER  0x80 /* Ç¿ÖÆCLOSE³ýµ±Ç°²å¼þÍâµÄËùÓÐ²å¼þ */
+#define APP_STATE_KILL_FOLLOW 0x40 /* Ç¿ï¿½ï¿½CLOSEï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½ï¿½ */
+#define APP_STATE_KILL_OTHER  0x80 /* Ç¿ï¿½ï¿½CLOSEï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½ï¿½ */
 
 
-/* CHN : Á÷µÄÀàÐÍ¶¨Òå */
+/* CHN : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¶ï¿½ï¿½ï¿½ */
 /* ENG : stream type */
 enum stream_type_t{
-	STREAM_TYPE_NON = 0, /* No stream concept indeed, such as vlan, IP, etc.;  ÎÞÁ÷µÄ¸ÅÄî, ÈçVLAN, IP²ãµÈ */
+	STREAM_TYPE_NON = 0, /* No stream concept indeed, such as vlan, IP, etc.;  ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½, ï¿½ï¿½VLAN, IPï¿½ï¿½ï¿½ */
 	STREAM_TYPE_TCP,
 	STREAM_TYPE_UDP,	 /* there is no stream of UDP in RFC, but in MESA platform, we build a UDP stream with same tuple4 packet */
 	STREAM_TYPE_VLAN,
@@ -120,12 +114,12 @@ enum stream_type_t{
 };
 
 /*
-   CHN: Á÷µÄµ×²ã³ÐÔØËíµÀÀàÐÍ, 
-   	   ²»Í¬ÓÚstream_type_t, ±ÈÈçµ±Ç°Á÷ÎªSTREAM_TYPE_TCP, µ«µ×²ãËíµÀÀàÐÍ¿ÉÄÜÊÇSTREAM_TUNNLE_PPTP.
-        ÒòÎªËíµÀ¿ÉÄÜÊÇ¶àÖÖ²»Í¬ÀàÐÍÇ¶Ì××éºÏ, Ö»¼ÇÂ¼×îµ×²ã(ÀëMAC²ã×î½üµÄ)ËíµÀÀàÐÍ.
+   CHN: ï¿½ï¿½ï¿½Äµ×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, 
+   	   ï¿½ï¿½Í¬ï¿½ï¿½stream_type_t, ï¿½ï¿½ï¿½çµ±Ç°ï¿½ï¿½ÎªSTREAM_TYPE_TCP, ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½ï¿½ï¿½ï¿½ï¿½STREAM_TUNNLE_PPTP.
+        ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½Ö²ï¿½Í¬ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½, Ö»ï¿½ï¿½Â¼ï¿½ï¿½×²ï¿½(ï¿½ï¿½MACï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
 */
 enum stream_carry_tunnel_t{
-	STREAM_TUNNLE_NON 		= 0, 	/* default is 0, not tunnel; Ä¬ÈÏÎª0, ·ÇËíµÀ; */
+	STREAM_TUNNLE_NON 		= 0, 	/* default is 0, not tunnel; Ä¬ï¿½ï¿½Îª0, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½; */
 	STREAM_TUNNLE_6OVER4 	= 1 << 0,
 	STREAM_TUNNLE_4OVER6	= 1 << 1,
 	STREAM_TUNNLE_GRE		= 1 << 2,
@@ -138,7 +132,7 @@ enum stream_carry_tunnel_t{
 };
 
 typedef struct raw_ipfrag_list{
-    void *frag_packet; /* ·Çip°üÍ·, ´Óµ×²ãÍø¿¨»ñÈ¡µÄÔ­Ê¼°üÍ· */
+    void *frag_packet; /* ï¿½ï¿½ipï¿½ï¿½Í·, ï¿½Óµ×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½Ô­Ê¼ï¿½ï¿½Í· */
     int pkt_len;
     int type; /* IPv4 or IPv6 */
     struct raw_ipfrag_list *next;
@@ -147,7 +141,7 @@ typedef struct raw_ipfrag_list{
 
 #ifndef STRUCT_TUPLE4_DEFINED
 #define STRUCT_TUPLE4_DEFINED (1)
-/* compat for start, papp;  ¼æÈÝstart, papp */
+/* compat for start, papp;  ï¿½ï¿½ï¿½ï¿½start, papp */
 struct tuple4 {
   u_int saddr;
   u_int daddr;
@@ -235,9 +229,9 @@ struct layer_addr_pppoe_session
 struct layer_addr_mac
 {
 	/* 
-	   C2SºÍS2C·½ÏòÀ´×Ô²»Í¬µÄÁ´Â·ºÍÉè±¸, »áµ¼ÖÂÁ½¸ö·½ÏòµÄmacµØÖ·È«²»Ò»Ñù, ·´Ïò×¢ÈëÊ±²»ÄÜÓÃ´«Í³·½Ê½, ¼´¼òµ¥µÄµßµ¹srcºÍdst,
-	   ÐÞ¸Ä¶¨ÒåÈçÏÂ, mirrorÄ£Ê½ÏÂ, »¹ÊÇ´æ´¢ÔÚsrc_addrÖÐ,
-	   API²»Í¬ÁË, ABI»¹ÊÇÏòÇ°¼æÈÝµÄ, ½á¹¹ÌåÄÚ´æ·Ö²¼ÓëÖ®Ç°µÄÒ»ÖÂ. 
+	   C2Sï¿½ï¿½S2Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô²ï¿½Í¬ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½è±¸, ï¿½áµ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½macï¿½ï¿½Ö·È«ï¿½ï¿½Ò»ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ã´ï¿½Í³ï¿½ï¿½Ê½, ï¿½ï¿½ï¿½òµ¥µÄµßµï¿½srcï¿½ï¿½dst,
+	   ï¿½Þ¸Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, mirrorÄ£Ê½ï¿½ï¿½, ï¿½ï¿½ï¿½Ç´æ´¢ï¿½ï¿½src_addrï¿½ï¿½,
+	   APIï¿½ï¿½Í¬ï¿½ï¿½, ABIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ýµï¿½, ï¿½á¹¹ï¿½ï¿½ï¿½Ú´ï¿½Ö²ï¿½ï¿½ï¿½Ö®Ç°ï¿½ï¿½Ò»ï¿½ï¿½. 
 	*/
 	struct ethhdr src_addr;
 	struct ethhdr dst_addr;
@@ -251,9 +245,9 @@ struct layer_addr_ipv4
 	UINT32 saddr; 	/* network order */
 	UINT32 daddr; 	/* network order */
 	/* 2014-04-21 lijia add, 
-	   ÎªÁË½ÚÔ¼ÄÚ´æ¿Õ¼ä¡¢ºÍ´¦ÀíÐ§ÂÊ, ²»Ç¿ÖÆ°´Ð­Òé²ã´Î´¦Àí,
-	   IP²ãºÍTCP²ã×öÎªÒ»¸ö²ã,
-	   ¶ÔÓÚËíµÀÍâ²ãIP, ¶Ë¿ÚÐÅÏ¢Îª0;
+	   Îªï¿½Ë½ï¿½Ô¼ï¿½Ú´ï¿½Õ¼ä¡¢ï¿½Í´ï¿½ï¿½ï¿½Ð§ï¿½ï¿½, ï¿½ï¿½Ç¿ï¿½Æ°ï¿½Ð­ï¿½ï¿½ï¿½Î´ï¿½ï¿½ï¿½,
+	   IPï¿½ï¿½ï¿½TCPï¿½ï¿½ï¿½ï¿½ÎªÒ»ï¿½ï¿½ï¿½ï¿½,
+	   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IP, ï¿½Ë¿ï¿½ï¿½ï¿½Ï¢Îª0;
 	*/
 	UINT16 source;	/* network order */
 	UINT16 dest;		/* network order */
@@ -264,9 +258,9 @@ struct layer_addr_ipv6
 	UCHAR saddr[IPV6_ADDR_LEN] ; /* network order */
 	UCHAR daddr[IPV6_ADDR_LEN] ; /* network order */
 	/* 2014-04-21 lijia add, 
-	   ÎªÁË½ÚÔ¼ÄÚ´æ¿Õ¼ä¡¢ºÍ´¦ÀíÐ§ÂÊ, ²»Ç¿ÖÆ°´Ð­Òé²ã´Î´¦Àí,
-	   IP²ãºÍTCP²ã×öÎªÒ»¸ö²ã,
-	   ¶ÔÓÚËíµÀÍâ²ãIP, ¶Ë¿ÚÐÅÏ¢Îª0;
+	   Îªï¿½Ë½ï¿½Ô¼ï¿½Ú´ï¿½Õ¼ä¡¢ï¿½Í´ï¿½ï¿½ï¿½Ð§ï¿½ï¿½, ï¿½ï¿½Ç¿ï¿½Æ°ï¿½Ð­ï¿½ï¿½ï¿½Î´ï¿½ï¿½ï¿½,
+	   IPï¿½ï¿½ï¿½TCPï¿½ï¿½ï¿½ï¿½ÎªÒ»ï¿½ï¿½ï¿½ï¿½,
+	   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IP, ï¿½Ë¿ï¿½ï¿½ï¿½Ï¢Îª0;
 	*/
 	UINT16 source;/* network order */
 	UINT16 dest;/* network order */
@@ -291,17 +285,17 @@ struct layer_ppp_hdr{
 	unsigned short protocol;	/* network order */ 		
 }__attribute__((packed));
 
-/* Ò»°ãÇé¿öÏÂ, address,control¶¼ÊÇ¹Ì¶¨²»±äµÄ,¶¼ÊÇ0xFF,0x03, ppp hdrÊÇ¿ÉÒÔÑ¹ËõÒÔ½ÚÔ¼´û¿î,Ö»´«ÊäÒ»¸ö×Ö½ÚµÄprotocol×Ö¶Î */
+/* Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, address,controlï¿½ï¿½ï¿½Ç¹Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½0xFF,0x03, ppp hdrï¿½Ç¿ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½Ô½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½,Ö»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö½Úµï¿½protocolï¿½Ö¶ï¿½ */
 struct layer_compress_ppp_hdr{
 	unsigned char protocol;		
 };	
 
 
 struct layer_addr_l2tp_v2_t{
-	UINT16 tunnelid_C2S; /* network order, ÒÔ´«Êä²ã´´½¨Á÷µÄ·½ÏòÎª×¼ */
-	UINT16 tunnelid_S2C; /* network order, ÒÔ´«Êä²ã´´½¨Á÷µÄ·½ÏòÎª×¼ */
-	UINT16 sessionid_C2S; /* network order, ÒÔ´«Êä²ã´´½¨Á÷µÄ·½ÏòÎª×¼ */
-	UINT16 sessionid_S2C; /* network order, ÒÔ´«Êä²ã´´½¨Á÷µÄ·½ÏòÎª×¼ */
+	UINT16 tunnelid_C2S; /* network order, ï¿½Ô´ï¿½ï¿½ï¿½ã´´ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½Îª×¼ */
+	UINT16 tunnelid_S2C; /* network order, ï¿½Ô´ï¿½ï¿½ï¿½ã´´ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½Îª×¼ */
+	UINT16 sessionid_C2S; /* network order, ï¿½Ô´ï¿½ï¿½ï¿½ã´´ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½Îª×¼ */
+	UINT16 sessionid_S2C; /* network order, ï¿½Ô´ï¿½ï¿½ï¿½ã´´ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½Îª×¼ */
 	unsigned char seq_present_C2S;
 	unsigned char seq_present_S2C;
 	unsigned char ppp_hdr_compress_enable;
@@ -335,15 +329,15 @@ struct single_layer_mpls_addr{ /* refer to RFC3032 */
 };
 
 /* 
-    MPLSÓÐ¿ÉÄÜÊÇ¶à²ãÇ¶Ì×, sapp°Ñ¶à²ãºÏ²¢´¦Àí, Ä¿Ç°×î´óÖ§³Ö4²ã, ²ã´ÎÐòºÅÓÉÍâµ½ÄÚÅÅÁÐ, 0±íÊ¾×îÍâ²ã, 3±íÊ¾×îÄÚ²ã 
-    ¶ÔÓÚÒ»¸öÄÚ²ãTCP/UDPÁ÷À´Ëµ, µ×²ãMPLSÁ½¸ö·½ÏòµÄµØÖ·¿ÉÄÜ²»Ò»Ñù, ·Ö±ð¼ÇÎªcs2_addr, s2c_addr.
+    MPLSï¿½Ð¿ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½Ç¶ï¿½ï¿½, sappï¿½Ñ¶ï¿½ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½, Ä¿Ç°ï¿½ï¿½ï¿½Ö§ï¿½ï¿½4ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½âµ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, 0ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½, 3ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ú²ï¿½ 
+    ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ú²ï¿½TCP/UDPï¿½ï¿½ï¿½ï¿½Ëµ, ï¿½×²ï¿½MPLSï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½Ö·ï¿½ï¿½ï¿½Ü²ï¿½Ò»ï¿½ï¿½, ï¿½Ö±ï¿½ï¿½Îªcs2_addr, s2c_addr.
 */
 struct layer_addr_mpls
 {
 	struct single_layer_mpls_addr c2s_addr_array[MAX_MPLS_ADDR_LAYER]; 
 	struct single_layer_mpls_addr s2c_addr_array[MAX_MPLS_ADDR_LAYER]; 
-    char c2s_layer_num; /* Êµ¼Êmpls²ãÊý */
-    char s2c_layer_num; /* Êµ¼Êmpls²ãÊý */
+    char c2s_layer_num; /* Êµï¿½ï¿½mplsï¿½ï¿½ï¿½ï¿½ */
+    char s2c_layer_num; /* Êµï¿½ï¿½mplsï¿½ï¿½ï¿½ï¿½ */
 	char c2s_has_ctrl_word;
 	char s2c_has_ctrl_word;
     unsigned int c2s_mpls_ctrl_word; /* refer to RFC4623 */
@@ -353,8 +347,8 @@ struct layer_addr_mpls
 
 struct layer_addr_pptp
 {
-	UINT16 C2S_call_id;	/* C2SÒÔ´«Êä²ãÐ­Òé·½ÏòÎª×¼, TCP SYNÎªC2S, UDPÔ´¶Ë¿Ú´óµÄÎªC2S, callid, network order */
-	UINT16 S2C_call_id;	/* S2CkÒÔ´«Êä²ãÐ­Òé·½ÏòÎª×¼, TCP SYN/ACKÎªS2C, UDPÄ¿µÄ¶Ë¿Ú´óµÄÎªS2C, callid, network order */
+	UINT16 C2S_call_id;	/* C2Sï¿½Ô´ï¿½ï¿½ï¿½ï¿½Ð­ï¿½é·½ï¿½ï¿½Îª×¼, TCP SYNÎªC2S, UDPÔ´ï¿½Ë¿Ú´ï¿½ï¿½ÎªC2S, callid, network order */
+	UINT16 S2C_call_id;	/* S2Ckï¿½Ô´ï¿½ï¿½ï¿½ï¿½Ð­ï¿½é·½ï¿½ï¿½Îª×¼, TCP SYN/ACKÎªS2C, UDPÄ¿ï¿½Ä¶Ë¿Ú´ï¿½ï¿½ÎªS2C, callid, network order */
 };
 
 struct layer_addr_gtp
@@ -366,10 +360,10 @@ struct layer_addr_gtp
 #define MAC_IN_MAC_HDR_LEN	(sizeof(struct mesa_ethernet_hdr) +  sizeof(struct mesa_ethernet_hdr))
 struct layer_addr_mac_in_mac
 {
-	UCHAR outer_dst_mac[MAC_ADDR_LEN]; /* ×îÍâ²ãmacµØÖ·, network order */
-	UCHAR outer_src_mac[MAC_ADDR_LEN]; /* ×îÍâ²ãmacµØÖ·, network order */
-	UCHAR inner_dst_mac[MAC_ADDR_LEN]; /* ÄÚ²ãmacµØÖ·, network order */
-	UCHAR inner_src_mac[MAC_ADDR_LEN]; /* ÄÚ²ãmacµØÖ·, network order */
+	UCHAR outer_dst_mac[MAC_ADDR_LEN]; /* ï¿½ï¿½ï¿½ï¿½ï¿½macï¿½ï¿½Ö·, network order */
+	UCHAR outer_src_mac[MAC_ADDR_LEN]; /* ï¿½ï¿½ï¿½ï¿½ï¿½macï¿½ï¿½Ö·, network order */
+	UCHAR inner_dst_mac[MAC_ADDR_LEN]; /* ï¿½Ú²ï¿½macï¿½ï¿½Ö·, network order */
+	UCHAR inner_src_mac[MAC_ADDR_LEN]; /* ï¿½Ú²ï¿½macï¿½ï¿½Ö·, network order */
 };
 
 struct single_layer_addr_vxlan
@@ -420,7 +414,7 @@ struct layer_addr
 
 };
 
-/* CHN : ±£Áô´Ë½á¹¹ÓÃÓÚºÍpapp¼æÈÝ, ÓÃ×÷Ö¸ÕëÊ±, ¿ÉÓëstruct layer_addrÇ¿×ª */
+/* CHN : ï¿½ï¿½ï¿½ï¿½ï¿½Ë½á¹¹ï¿½ï¿½ï¿½Úºï¿½pappï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ê±, ï¿½ï¿½ï¿½ï¿½struct layer_addrÇ¿×ª */
 /* ENG : compat for papp, can be transform to struct layer_addr pointer */
 struct ipaddr
 {
@@ -467,7 +461,7 @@ struct udpdetail
 struct streaminfo
 {
 	struct layer_addr addr;      
-	struct streaminfo *pfather; /* this stream's carry layer stream; ÉÏ²ãÁ÷½á¹¹Ìå */
+	struct streaminfo *pfather; /* this stream's carry layer stream; ï¿½Ï²ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ */
 	UCHAR type;			/* stream type, definition in enum stream_type_t */
 	UCHAR threadnum;	     
 	UCHAR  dir;           	/*  valid in all stream life, current stream direction state, 0x01:c-->s; 0x02:s-->c; 0x03 c<-->s; */
@@ -504,13 +498,13 @@ typedef struct {
 extern "C" {
 #endif
 
-/* CHN : ÄÚ´æ¹ÜÀíÏà¹Øº¯Êý, »ùÓÚÆ½Ì¨µÄ²å¼þ±ØÐëÊ¹ÓÃ´ËÀàº¯ÊýÉêÇë»òÊÍ·ÅÄÚ´æ */
+/* CHN : ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Æ½Ì¨ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã´ï¿½ï¿½àº¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ú´ï¿½ */
 /* ENG : memory management function, plugs must call these functions instead of malloc, free in <stdlib.h> */
 void *dictator_malloc(int thread_seq,size_t size);
 void dictator_free(int thread_seq,void *pbuf);
 void *dictator_realloc(int thread_seq, void* pbuf, size_t size);
 
-/* CHN : »ñÈ¡µ±Ç°ÏµÍ³ÔËÐÐµÄ²¢·¢´¦ÀíÏß³Ì×ÜÊý */
+/* CHN : ï¿½ï¿½È¡ï¿½ï¿½Ç°ÏµÍ³ï¿½ï¿½ï¿½ÐµÄ²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ */
 /* ENG : get current total thread of platfomr */
 int get_thread_count(void);
 
@@ -520,19 +514,19 @@ long long get_timestamp_ms(void);
 //if return -1, it means caller not in worker thread context
 int get_current_worker_thread_id();
 
-/* CHN : ½«µØenum addr_type_tÖ·ÀàÐÍ×ª»»³É¿É´òÓ¡µÄ×Ö·û´®ÐÎÊ½ */
+/* CHN : ï¿½ï¿½ï¿½ï¿½enum addr_type_tÖ·ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½É¿É´ï¿½Ó¡ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ */
 /* ENG : transform binary addr_type_t to string mode */
 const char *addr_type_to_string(enum addr_type_t type);
 
 /*
 	ENG : transform tuple4 to string mode, must used in packet process thread context;
-	CHN : ½«layer_addrµØÖ·×ª»»³É×Ö·û´®ÐÎÊ½, ±ØÐëÓÃÔÚ°ü´¦ÀíÏß³Ì.
+	CHN : ï¿½ï¿½layer_addrï¿½ï¿½Ö·×ªï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ê½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½.
 */
 const char *printaddr (const struct layer_addr *paddrinfo, int threadindex);
 
 /*
 	ENG : a reentrant version of printaddr, thread safe;
-	CHN : printaddrµÄ¿ÉÖØÈë°æ±¾, ÊÇÏß³Ì°²È«µÄ.
+	CHN : printaddrï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½æ±¾, ï¿½ï¿½ï¿½ß³Ì°ï¿½È«ï¿½ï¿½.
 */
 const char *printaddr_r(const struct layer_addr *paddrinfo, char *out_buf, int out_buf_len);
 
@@ -540,45 +534,45 @@ const char *printaddr_r(const struct layer_addr *paddrinfo, char *out_buf, int o
 /*
 	ENG : transform layer address to string mode, must used in packet process thread context, 
 	      the return value is read-only, user can't free it;
-	CHN : ½«layer_addrµØÖ·×ª»»³É×Ö·û´®ÐÎÊ½, ±ØÐëÓÃÔÚ°ü´¦ÀíÏß³Ì, ·µ»ØµÄÖ¸ÕëÎªÖ»¶Á, Ê¹ÓÃÕß²»±Øfree.
+	CHN : ï¿½ï¿½layer_addrï¿½ï¿½Ö·×ªï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ê½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½, ï¿½ï¿½ï¿½Øµï¿½Ö¸ï¿½ï¿½ÎªÖ»ï¿½ï¿½, Ê¹ï¿½ï¿½ï¿½ß²ï¿½ï¿½ï¿½free.
 */
 const char *layer_addr_ntop(const struct streaminfo *pstream);
 
 /*
 	ENG : a reentrant version of layer_addr_ntop, thread safe, return a pointer to the destination string 'out_buf';
-	CHN : layer_addr_ntop_rµÄ¿ÉÖØÈë°æ±¾, ÊÇÏß³Ì°²È«µÄ, ·µ»ØµÄÖ¸ÕëÖ´ÏòÊ¹ÓÃÕßÌá¹©µÄout_buf, ±ãÓÚ´úÂë×éÖ¯.
+	CHN : layer_addr_ntop_rï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½æ±¾, ï¿½ï¿½ï¿½ß³Ì°ï¿½È«ï¿½ï¿½, ï¿½ï¿½ï¿½Øµï¿½Ö¸ï¿½ï¿½Ö´ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½á¹©ï¿½ï¿½out_buf, ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½Ö¯.
 */
 char *layer_addr_ntop_r(const struct streaminfo *pstream, char *out_buf, int out_buf_len);
 
 /*
 	ENG : transform layer type to abbr string mode, is reentrant, the return value is read-only, user can't free it;.
-	CHN : ½«layer_addrµØÖ·ÀàÐÍ×ª»»³ÉËõÐ´×Ö·û´®ÐÎÊ½, ¿ÉÖØÈëÏß³Ì°²È«, ·µ»ØµÄÖ¸ÕëÎªÖ»¶Á, Ê¹ÓÃÕß²»±Øfree..
+	CHN : ï¿½ï¿½layer_addrï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ê½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³Ì°ï¿½È«, ï¿½ï¿½ï¿½Øµï¿½Ö¸ï¿½ï¿½ÎªÖ»ï¿½ï¿½, Ê¹ï¿½ï¿½ï¿½ß²ï¿½ï¿½ï¿½free..
 */
 const char *layer_addr_prefix_ntop(const struct streaminfo *pstream);
 
 
 /* 
 	ENG : duplicate a same layer_addr struct, memory obtained with malloc(3);
-	CHN : ¸´ÖÆÒ»¸öÍêÈ«ÏàÍ¬µÄlayer_addr½á¹¹Ìå, ÄÚ´æÍ¨¹ýmalloc(3)»ñÈ¡.
+	CHN : ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½Í¬ï¿½ï¿½layer_addrï¿½á¹¹ï¿½ï¿½, ï¿½Ú´ï¿½Í¨ï¿½ï¿½malloc(3)ï¿½ï¿½È¡.
 */
 struct layer_addr * layer_addr_dup(const struct layer_addr *paddrinfo);
 
 /* 
 	ENG: used to free all memory of paddrinfo;
-	CHN: ÓÃÓÚÊÍ·ÅpaddrinfoÄÚ´æ.
+	CHN: ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½paddrinfoï¿½Ú´ï¿½.
 */
 void layer_addr_free(struct layer_addr *paddrinfo);
 
 
 /* 
 	ENG : duplicate a same streaminfo list, memory obtained with malloc(3);
-	CHN : ¸´ÖÆÒ»¸öÍêÈ«ÏàÍ¬µÄstreaminfo½á¹¹Ìå¼°¸¸Á÷½á¹¹, ÄÚ´æÍ¨¹ýmalloc(3)»ñÈ¡.
+	CHN : ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½Í¬ï¿½ï¿½streaminfoï¿½á¹¹ï¿½å¼°ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹, ï¿½Ú´ï¿½Í¨ï¿½ï¿½malloc(3)ï¿½ï¿½È¡.
 */
 struct streaminfo *streaminfo_dup(const struct streaminfo *stream);
 
 /* 
 	ENG: used to free all memory of streaminfo;
-	CHN: ÓÃÓÚÊÍ·Å½á¹¹Ìå¼°¸¸Á÷½á¹¹µÄÄÚ´æ.
+	CHN: ï¿½ï¿½ï¿½ï¿½ï¿½Í·Å½á¹¹ï¿½å¼°ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½Ú´ï¿½.
 */
 void streaminfo_free(struct streaminfo *stream);
 
@@ -598,46 +592,46 @@ void streaminfo_free(struct streaminfo *stream);
 		addr_list_str: addr list string;
 		thread_index : thread index;
 
-	·µ»ØÖµ:
-		>0:×ª»»ºóµÄ½á¹ûÊµ¼ÊÕ¼ÓÃÄÚ´æ³¤¶È, stream_addr_list_ntop()°üº¬ÁË×Ö·û´®Ä©Î²µÄ'\0';
-		-1:dst»º´æ¿Õ¼ä³¤¶È²»×ã;
-		-2:¸ñÊ½´íÎó;
-		-3:ÆäËû´íÎó;
+	ï¿½ï¿½ï¿½ï¿½Öµ:
+		>0:×ªï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½Êµï¿½ï¿½Õ¼ï¿½ï¿½ï¿½Ú´æ³¤ï¿½ï¿½, stream_addr_list_ntop()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½Ä©Î²ï¿½ï¿½'\0';
+		-1:dstï¿½ï¿½ï¿½ï¿½Õ¼ä³¤ï¿½È²ï¿½ï¿½ï¿½;
+		-2:ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½;
+		-3:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½;
 */
 int stream_addr_list_ntop(const struct streaminfo *pstream, char *dst, int size);
 int stream_addr_list_pton(const char *addr_list_str, void *dst, int size, int thread_index);
 
 /*
-	TCP,UDPÁ÷Ä£Ê½ÏÂ, »ñÈ¡µ±Ç°IP°üµÄÔ­Ê¼·ÖÆ¬°ü.
+	TCP,UDPï¿½ï¿½Ä£Ê½ï¿½ï¿½, ï¿½ï¿½È¡ï¿½ï¿½Ç°IPï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½Æ¬ï¿½ï¿½.
 */
 const raw_ipfrag_list_t *get_raw_frag_list(const struct streaminfo *stream);
 
 /*
-	IP²å¼þÄ£Ê½ÏÂ, »ñÈ¡µ±Ç°IP°üµÄÔ­Ê¼·ÖÆ¬°ü.
+	IPï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½, ï¿½ï¿½È¡ï¿½ï¿½Ç°IPï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½Æ¬ï¿½ï¿½.
 */
 const raw_ipfrag_list_t *ip_plug_get_raw_ipfrag_list(int thread_num, enum addr_type_t addr_type);
 
 
 /*
-	ÒòÎªËíµÀ¡¢Ç¶Ì×Ð­ÒéµÈÔ­Òò, ÊäÈëÒ»¸ö´¿ËÄÔª×é, Êµ¼ÊÓÐ¿ÉÄÜ²éÑ¯µ½¶à¸östreaminfo,
-	±ÈÈçÒÔÏÂÁ½¸öÁ÷:
+	ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½Ð­ï¿½ï¿½ï¿½Ô­ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½, Êµï¿½ï¿½ï¿½Ð¿ï¿½ï¿½Ü²ï¿½Ñ¯ï¿½ï¿½ï¿½ï¿½ï¿½streaminfo,
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:
 		(1) tuple4->gtp->ip->udp->ethernet;
 		(2) tuple4->l2tp->ip->udp->ethernet;
-	Èç¹ûËíµÀÄÚ²ãÊ¹ÓÃË½ÓÐµØÖ·, ÔÚÒ»Ð©¼«¶Ë´ÕÇÉµÄÇé¿öÏÂ, Á÷1ºÍÁ÷2µÄÄÚ²ãtuple4¿ÉÄÜÊÇÒ»ÑùµÄ, µ«sapp»á´´½¨Á½¸ö²»Í¬µÄstreaminfo.
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½Ê¹ï¿½ï¿½Ë½ï¿½Ðµï¿½Ö·, ï¿½ï¿½Ò»Ð©ï¿½ï¿½ï¿½Ë´ï¿½ï¿½Éµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½1ï¿½ï¿½ï¿½ï¿½2ï¿½ï¿½ï¿½Ú²ï¿½tuple4ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½sappï¿½á´´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½streaminfo.
 
-	ÊäÈë²ÎÊý:
-		thread_index: Ïß³Ìid;
-		tuple4v4 or tuple4v6: ËÄÔª×éµØÖ·, Ô´¡¢Ä¿µÄµØÖ·Ë³ÐòÎÞÒªÇó, C2S, S2c·½Ïò¾ù¿É;
-		streamtype: Ö»Ö§³ÖÁ½ÖÖÀàÐÍ, STREAM_TYPE_TCP or STREAM_TYPE_UDP;
-		array_max_num: Êý×éstreaminfo_arrayµÄ×î´óÔªËØ¸öÊý.
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:
+		thread_index: ï¿½ß³ï¿½id;
+		tuple4v4 or tuple4v6: ï¿½ï¿½Ôªï¿½ï¿½ï¿½Ö·, Ô´ï¿½ï¿½Ä¿ï¿½Äµï¿½Ö·Ë³ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½, C2S, S2cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½;
+		streamtype: Ö»Ö§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, STREAM_TYPE_TCP or STREAM_TYPE_UDP;
+		array_max_num: ï¿½ï¿½ï¿½ï¿½streaminfo_arrayï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½Ø¸ï¿½ï¿½ï¿½.
 
-	Êä³ö²ÎÊý: 
-		streaminfo_array: ²éÑ¯µ½µÄ·ûºÏÊäÈëËÄÔª×éµØÖ·µÄstreaminfo½á¹¹ÌåÖ¸Õë.
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: 
+		streaminfo_array: ï¿½ï¿½Ñ¯ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½Ö·ï¿½ï¿½streaminfoï¿½á¹¹ï¿½ï¿½Ö¸ï¿½ï¿½.
 
-	·µ»ØÖµ:
+	ï¿½ï¿½ï¿½ï¿½Öµ:
 	    -1: error;
-		 0: Ã»ÓÐ¶ÔÓ¦µÄstreaminfo½á¹¹;
-		>0: Êµ¼ÊÕÒµ½streaminfo½á¹¹µÄÊýÁ¿;
+		 0: Ã»ï¿½Ð¶ï¿½Ó¦ï¿½ï¿½streaminfoï¿½á¹¹;
+		>0: Êµï¿½ï¿½ï¿½Òµï¿½streaminfoï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½;
 */
 int find_streaminfo_by_addrv4(int thread_index, const struct stream_tuple4_v4 *tuplev4, enum stream_type_t streamtype, struct streaminfo *streaminfo_array[], int array_max_num);
 int find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *tuplev6, enum stream_type_t streamtype, struct streaminfo *streaminfo_array[], int array_max_num);

@@ -8,7 +8,11 @@
 #include <pcap/pcap.h>
 #include <linux/if_tun.h>
 #include <net/if.h>
-#include "MESA_jump_layer.h"
+
+#include <netinet/ip.h>
+#include <netinet/ip6.h>
+#include <netinet/tcp.h>
+#include <netinet/udp.h>
 
 /*
 	说明:
@@ -26,10 +30,7 @@
 #define SAPP_MAX_PLUG_ENTRY_NUM (256)
 #endif
 
-#include "stream.h"
-#include "packet_io.h"
-#include "sapp_cla_private.h"
-//#include "sapp_global_val.h"
+#include "stream_internal.h"
 #include "mesa_net.h"
 #include "MESA_handle_logger.h"
 

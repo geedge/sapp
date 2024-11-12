@@ -86,15 +86,34 @@ const void *get_current_layer3_header(const struct streaminfo *pstream);
 const void *get_current_layer4_header(const struct streaminfo *pstream);
 
 /*
-		NULL: layer not exist;
-		NON-NULL: layer start buff
-	
 
-		Ethernet, jump to ipv6 header:
+	parameters:
+		raw_data: current layer header address;
+		raw_layer_type: current layer type, enum addr_type_t define in stream_base.h;
+		expect_layer_type: except layer type, enum addr_type_t define in stream_base.h;
+
+	return value:
+		NULL: no expect layer;
+		NON-NULL: expect layer header.
+
+	example:
+		For ethernet data, jump to ipv6 hdr:
 		struct ip6_hdr *ip6_header;
 		ip6_header = MESA_jump_layer(this_layer_hdr, ADDR_TYPE_MAC, ADDR_TYPE_IPV6);
 */
 const void *MESA_jump_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
+
+/*
+	MESA_jump_layer_greedy vs MESA_jump_layer:
+	   for tunnels,
+	       MESA_jump_layer return to first expect_layer_type;
+	       MESA_jump_layer_greedy return to inner most expect_layer_type; 
+*/
+const void *MESA_jump_layer_greedy(const void *raw_data, int raw_layer_type, int expect_layer_type);
+
+/* same as MESA_jump_layer_ */
+const void *MESA_net_jump_to_layer(const void *raw_data,  int raw_layer_type, int expect_layer_type);
+const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_type, int expect_layer_type);
 
 const void *get_current_rawpkt_from_streaminfo(const struct streaminfo *pstream);
 

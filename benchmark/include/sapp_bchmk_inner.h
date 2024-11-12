@@ -1,29 +1,20 @@
 #ifndef _SAPP_BCHMK_INNER_H_
 #define _SAPP_BCHMK_INNER_H_  1
-#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
-#include <assert.h>
-#include <time.h>
 #include <arpa/inet.h>
 #include <sys/types.h>			/* See NOTES */
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <linux/limits.h>
-#include <errno.h>
-#include "stream.h"
-#include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <pthread.h>
 #include <pcap/pcap.h>
 #include "wrap_cJSON.h"
-#include "MESA_jump_layer.h"
-#include "MESA_handle_logger.h"
-#include "MESA_prof_load.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -58,10 +49,11 @@ extern "C" {
 
 #define SAPP_BCHMK_DEFAULT_CFG_FILE_DIR "sapp_default_config"
 
+#include "MESA_handle_logger.h"
 extern void * __g_sapp_benchmark_log_handle;
 #define sapp_bchmk_log(h, log_level, format, args...)  do{if(((benchmark_engine_t *)h)->plug_opt.MESA_log_handle) {MESA_handle_runtime_log(((benchmark_engine_t *)h)->plug_opt.MESA_log_handle, log_level, "sapp_benchmark", format, ##args);} }while(0)
 
-/* ÄÚ´æÀïµÄindex´Ó0¿ªÊ¼, µ«ÊÇÎªÁË·½±ãºÍwireshark¶Ô±È·½±ã, ËùÓÐÅäÖÃÎÄ¼þµÄindex¶¼´Ó1¿ªÊ¼, ÐèÒª×öÒ»´Î×ª»» */
+/* ï¿½Ú´ï¿½ï¿½ï¿½ï¿½indexï¿½ï¿½0ï¿½ï¿½Ê¼, ï¿½ï¿½ï¿½ï¿½Îªï¿½Ë·ï¿½ï¿½ï¿½ï¿½wiresharkï¿½Ô±È·ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½indexï¿½ï¿½ï¿½ï¿½1ï¿½ï¿½Ê¼, ï¿½ï¿½Òªï¿½ï¿½Ò»ï¿½ï¿½×ªï¿½ï¿½ */
 #define ADJUST_ARRAY_INDEX_to_WIRESHARK(n) do{ n = n + 1;}while(0)
 #define ADJUST_WIRESHARK_INDEX_to_ARRAY(n) do{ n = n + 1;}while(0)
 
@@ -88,23 +80,24 @@ typedef struct{
 
 
 typedef struct{
-	int pkt_len; /* pcapÃ¿¸öeth°üµÄ³¤¶È */
-	const struct ethhdr *pkt_data; /* ´æ´¢pcap°üÄÚÈÝµÄÖ¸ÕëÊý×é */
-	//char md5sum_with_timestamp[MD5_STRING_MAX_LEN]; /* ÒòÎªÖØ¸´°ü¡¢ÖØ´«°ümd5¿ÉÄÜÍêÈ«ÊÇÒ»ÑùµÄ, Òª¼ÓÉÏÊ±¼ä´Á */
+	int pkt_len; /* pcapÃ¿ï¿½ï¿½ethï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ */
+	const struct ethhdr *pkt_data; /* ï¿½æ´¢pcapï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	//char md5sum_with_timestamp[MD5_STRING_MAX_LEN]; /* ï¿½ï¿½Îªï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½md5ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½, Òªï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ */
 }pcap_pkt_detail_t;
 
 
 typedef struct{
-	int pkt_num; /* Õâ¸öpcap°üÀïÒ»¹²¶àÉÙ¸öÊý¾Ý°ü */
+	int pkt_num; /* ï¿½ï¿½ï¿½pcapï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ù¸ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ */
 	pcap_pkt_detail_t *pkt_array;
 }pcap_pkt_image_t;
 
+#include "stream.h"
 
 typedef struct{
 	enum sapp_deploment_mode_t sapp_deploy_mode;
 	int tap_internal_fd;
 	int tap_external_fd;
-	int last_replay_fd; /* ¼ÇÂ¼ÊÇ´ÓÄÄ¸öÍø¿¨·¢³öÈ¥µÄ, Ö»ÓÐË«±ÛÄ£Ê½ÓÐÒâÒå, inlineºÍmirror¿Ï¶¨¶¼ÊÇtap_up */
+	int last_replay_fd; /* ï¿½ï¿½Â¼ï¿½Ç´ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¥ï¿½ï¿½, Ö»ï¿½ï¿½Ë«ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, inlineï¿½ï¿½mirrorï¿½Ï¶ï¿½ï¿½ï¿½ï¿½ï¿½tap_up */
 }pkt_process_engine_t;
 
 
@@ -118,8 +111,8 @@ typedef struct{
 }plug_opt_t;
 
 
-/* ÓÃÓÚdebug, Ô­Ê¼°ü×¢Èëºó, ÓÖ´ÓÍø¿¨ÊÕµ½µÄÊý¾Ý°ü, (²»°üÀ¨Ð­ÒéÕ»×Ô¶¯·¢³öµÄ¹ã²¥¡¢×é²¥°ü),
-   ¿ÉÄÜÊÇforwardµÄ, ¿ÉÄÜÊÇ²å¼þÐÂ×¢ÈëµÄ, Ò²¿ÉÄÜÒ»¸ö¶¼Ã»ÓÐ, ¶¼±»DROPÁË! 
+/* ï¿½ï¿½ï¿½ï¿½debug, Ô­Ê¼ï¿½ï¿½×¢ï¿½ï¿½ï¿½, ï¿½Ö´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½, (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½Õ»ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¹ã²¥ï¿½ï¿½ï¿½é²¥ï¿½ï¿½),
+   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½forwardï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½, Ò²ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½DROPï¿½ï¿½! 
 */
 typedef struct{
 	int pkt_index;
@@ -168,9 +161,9 @@ int sapp_bchmk_create_process_engine(benchmark_engine_t *bch_engine);
 
 int sapp_bchmk_md5_checksum(const char *filename, const char *expect_md5sum);
 /*
-	×¢Òâ:
-		´Ëº¯ÊýÊµ¼Ê·µ»ØµÄÊÇTRUEºÍFALSE,
-		0±íÊ¾²»Ò»Ñù, 1±íÊ¾Ò»Ñù!!
+	×¢ï¿½ï¿½:
+		ï¿½Ëºï¿½ï¿½ï¿½Êµï¿½Ê·ï¿½ï¿½Øµï¿½ï¿½ï¿½TRUEï¿½ï¿½FALSE,
+		0ï¿½ï¿½Ê¾ï¿½ï¿½Ò»ï¿½ï¿½, 1ï¿½ï¿½Ê¾Ò»ï¿½ï¿½!!
 */
 cJSON_bool sapp_bchmk_json_file_compare(benchmark_engine_t *, const char *json_file1, const char *json_file2, cJSON_Compare_Opt_t opt);
 

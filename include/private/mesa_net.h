@@ -1,7 +1,5 @@
-#ifndef _MESA_NET_H_
-#define _MESA_NET_H_
+#pragma once
 
-#include <stdio.h>
 #include <endian.h>
 #include <netinet/in.h>
 #include <netinet/ip_icmp.h>
@@ -412,8 +410,8 @@ struct mesa_pppoe_session_hdr{
 	unsigned short session_id;
 	unsigned short len;
 	/* to do:
-		pppÓ¦¸Ãµ¥¶À×÷ÎªÒ»²ã´æÔÚ, ÎªÁË¼ò»¯´¦Àí, Ç¿ÖÆ½«ÆäºÍPPPOE_SES°óÔÚÒ»Æð,
-		Èç¹ûÐèÒª¼àÌýPPPÐ­ÉÌ¹ý³Ì, ´Ë½á¹¹ÐèÒª¸Ä¶¯.
+		pppÓ¦ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ÎªÒ»ï¿½ï¿½ï¿½ï¿½ï¿½, Îªï¿½Ë¼ò»¯´ï¿½ï¿½ï¿½, Ç¿ï¿½Æ½ï¿½ï¿½ï¿½ï¿½PPPOE_SESï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½,
+		ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½PPPÐ­ï¿½Ì¹ï¿½ï¿½ï¿½, ï¿½Ë½á¹¹ï¿½ï¿½Òªï¿½Ä¶ï¿½.
 	*/
 	unsigned short ppp_protocol; 
 }BYTE_ALIGNED(1);
@@ -500,11 +498,11 @@ enum pptp_control_message_type{
 };
 
 struct mesa_pptp_control_hdr{
-	unsigned short length; /* È«²¿Êý¾Ý³¤¶È, °üÀ¨±¾Í·²¿ */
+	unsigned short length; /* È«ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ */
 	unsigned short pptp_message_type;
 	unsigned int magic_cookie;
 	unsigned short control_message_type;
-	char ignore_bytes[0]; /* ºóÐø×Ö¶ÎÔÝ²»¹ØÐÄ, ³¤¶ÈÒ²²»Ò»¶¨ */
+	char ignore_bytes[0]; /* ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½Ý²ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½Ò»ï¿½ï¿½ */
 };
 
 struct mesa_vlan_hdr{
@@ -520,7 +518,7 @@ struct mesa_vlan_detail_hdr{
 	unsigned short type;
 };
 
-/* 2018-08-28 lijia add, for pangu ÏîÄ¿mac_in_mac»ØÁ÷ */
+/* 2018-08-28 lijia add, for pangu ï¿½ï¿½Ä¿mac_in_macï¿½ï¿½ï¿½ï¿½ */
 struct mesa_mac_in_mac_net_hdr{
 	unsigned int route_dir:1;
 	unsigned int link_id:3;
@@ -595,7 +593,7 @@ struct mesa_gre_base_hdr_v1{
 	unsigned short protocol;
 };
 
-#define GRE_SRE_MAX_LEN		(256) /* ³¤¶È×î³¤ÎªÒ»¸ö×Ö½Ú, 256 */
+#define GRE_SRE_MAX_LEN		(256) /* ï¿½ï¿½ï¿½ï¿½ï¿½î³¤ÎªÒ»ï¿½ï¿½ï¿½Ö½ï¿½, 256 */
 struct gre_source_route_entry_hdr{
 	unsigned short address_family;
 	unsigned char sre_offset;
@@ -603,7 +601,7 @@ struct gre_source_route_entry_hdr{
 	unsigned char sre_entry_list[GRE_SRE_MAX_LEN];
 };
 
-/* ËùÓÐ¿ÉÄÜµÄÖµ¾ùÔÚ, ÐèÒª¸ù¾Ýmesa_gre_base_hdr¸÷¸öbitµÄÖµ, ÅÐ¶ÏÊÇ·ñº¬ÓÐÈçÏÂÖµ */
+/* ï¿½ï¿½ï¿½Ð¿ï¿½ï¿½Üµï¿½Öµï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½mesa_gre_base_hdrï¿½ï¿½ï¿½ï¿½bitï¿½ï¿½Öµ, ï¿½Ð¶ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ */
 struct mesa_gre_extend_hdr{
 	unsigned short checksum; //version0
 	unsigned short offset;	//version0, if checksum present, then offset also present 
@@ -616,7 +614,7 @@ struct mesa_gre_extend_hdr{
 };
 
 struct mesa_gre_hdr{
-	/* version0ºÍversion1µÄÍ·²¿ÖÐ, version×Ö¶ÎÊ±Ò»ÖÂµÄ, ÆäËûÓÐÐ¡Çø±ð, Ä¬ÈÏÊ¹ÓÃv0·½Ê½½âÎö */
+	/* version0ï¿½ï¿½version1ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½, versionï¿½Ö¶ï¿½Ê±Ò»ï¿½Âµï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½, Ä¬ï¿½ï¿½Ê¹ï¿½ï¿½v0ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ */
 	struct mesa_gre_base_hdr_v0 gre_base;
 	struct mesa_gre_extend_hdr gre_extend;
 };
@@ -732,8 +730,8 @@ struct l2tp_avp{
 #define ISAKMP_EXCHANGE_TYPE_AUTH		(3)
 #define ISAKMP_EXCHANGE_TYPE_AGGRESS	(4)/* RFC-2409 page8, Aggressive mode is instantiation os ISAKMP Aggressive Exchange  */
 #define ISAKMP_EXCHANGE_TYPE_INFO		(5)
-#define ISAKMP_EXCHANGE_TYPE_FEATURE_USE_BEGIN	(6) /* 6-31µÄÖµÔÝ²»¿ÉÓÃ */
-#define ISAKMP_EXCHANGE_TYPE_FEATURE_USE_END	(31) /* 6-31µÄÖµÔÝ²»¿ÉÓÃ */
+#define ISAKMP_EXCHANGE_TYPE_FEATURE_USE_BEGIN	(6) /* 6-31ï¿½ï¿½Öµï¿½Ý²ï¿½ï¿½ï¿½ï¿½ï¿½ */
+#define ISAKMP_EXCHANGE_TYPE_FEATURE_USE_END	(31) /* 6-31ï¿½ï¿½Öµï¿½Ý²ï¿½ï¿½ï¿½ï¿½ï¿½ */
 
 struct mesa_isakmp_hdr{ /* RFC2408-Page22 */
 	unsigned long long init_cookie;
@@ -807,14 +805,14 @@ struct teredo_auth_hdr{
 
 #define MAX_ADDR_TYPE_STRING_LEN	(64)
 #define MAX_ADDR_LIST_STRING_LEN	(2048)
-#define MAX_ADDR_EMBED_LAYER_NUM (20) /* ×î´óµØÖ·Ç¶Ì×²ãÊý */
-#define MAX_ADDR_BIN_VALUE_LEN	(40) /* paddrÊµ¼ÊÄÚÈÝ×î´ó³¤¶È, Ä¿Ç°ÊÇtuple4v6×î³¤ */
+#define MAX_ADDR_EMBED_LAYER_NUM (20) /* ï¿½ï¿½ï¿½ï¿½Ö·Ç¶ï¿½×²ï¿½ï¿½ï¿½ */
+#define MAX_ADDR_BIN_VALUE_LEN	(40) /* paddrÊµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó³¤¶ï¿½, Ä¿Ç°ï¿½ï¿½tuple4v6ï¿½î³¤ */
 
-/* ´®ÁªÄ£Ê½ÏÂ, ¼ÇÂ¼MACµØÖ·ÓÃÓÚ·¢°ü */
+/* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½, ï¿½ï¿½Â¼MACï¿½ï¿½Ö·ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ */
 struct packet_io_mac_addr{
 	struct mesa_ethernet_hdr eth_hdr;
 	char route_dir;
-	char __pad__;	 /* ÕûÌå½á¹¹8×Ö½Ú¶ÔÆë */
+	char __pad__;	 /* ï¿½ï¿½ï¿½ï¿½á¹¹8ï¿½Ö½Ú¶ï¿½ï¿½ï¿½ */
 };
 
 
@@ -827,7 +825,7 @@ struct hdlc_net_hdr{
 
 
 
-/* ¹ØÓÚÍøÂçÏà¹Ø×Ö¶Î, ¾ùÎªÍøÂçÐò, network order */
+/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½, ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, network order */
 #define VXLAN_KEEPALIVE_PKT_PORT	(3784)
 #define VXLAN_OVERLAY_PKT_PORT		(4789)
 
@@ -843,7 +841,7 @@ struct __inline_vxlan_hdr{
 	unsigned char reserved[3];
 	/*--------int delim -------*/
 	unsigned char vlan_id_half_high;
-	unsigned char link_layer_type : 4; /* ¶þ²ã±¨ÎÄ·â×°¸ñÊ½ */
+	unsigned char link_layer_type : 4; /* ï¿½ï¿½ï¿½ã±¨ï¿½Ä·ï¿½×°ï¿½ï¿½Ê½ */
 	unsigned char vlan_id_half_low : 4;
 	
 	unsigned int dir : 1;
@@ -879,5 +877,4 @@ const char *sapp_raw_ipv6_ntop(const struct mesa_ip6_hdr *ip6_hdr, char *out_buf
 }
 #endif
 
-#endif
 

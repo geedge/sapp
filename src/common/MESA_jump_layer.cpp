@@ -1,14 +1,11 @@
-#include "stream.h"
 #include "mesa_net.h"
 #include "deal_ipv6.h"
 /* Linux OS std */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 #include <unistd.h>
 #include <assert.h>
-#include <errno.h>
 #include <dlfcn.h>
 #include <linux/if_ether.h>
 #include <linux/limits.h>
@@ -23,7 +20,6 @@
 #include <linux/version.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
-#include <signal.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/prctl.h>
@@ -1428,6 +1424,9 @@ const void *MESA_net_jump_to_layer_greedy(const void *raw_data, int raw_layer_ty
 {
 	return MESA_jump_layer_greedy(raw_data, raw_layer_type, expect_layer_type);
 }
+
+#include <netinet/tcp.h>
+#include <netinet/udp.h>
 
 /* ģ��tcpdump��ʽ:   192.168.40.137.22 > 192.168.36.40.49429  */
 const char *MESA_jump_layer_ipv4_ntop(const struct ip *ip4_hdr, char *out_buf, int buf_len )
