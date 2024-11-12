@@ -398,7 +398,7 @@ envelope_rpm_upload_for_x86_64_rocky8:
   only:
     - tags
   tags:
-    - tsg-os-builder-el8 
+    - tsg-os-builder-aarch64 
 
 rpm_upload_for_aarch64_rocky9:
   extends: .define_before_upload_aarch64_rocky9
