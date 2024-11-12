@@ -1,15 +1,17 @@
 variables:
   GIT_STRATEGY: "clone"
   BUILD_PADDING_PREFIX: /tmp/padding_for_CPACK_RPM_BUILD_SOURCE_DIRS_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX_PREFIX/
-  BUILD_IMAGE_CENTOS8: "git.mesalab.cn:7443/mesa_platform/build-env:rocky8-for-sapp"
+  BUILD_IMAGE_X86_64_ROCKY8: "git.mesalab.cn:7443/mesa_platform/build-env:rocky8-for-sapp"
+  BUILD_IMAGE_AARCH64_ROCKY9: "git.mesalab.cn:7443/mesa_platform/build-env:rocky9-aarch64"
   INSTALL_DEPENDENCY_LIBRARY: 
     framework_env libcjson-devel  libbreakpad_mini-devel libuuid-devel
     libMESA_htable-devel libMESA_prof_load-devel libMESA_handle_logger-devel
     libMESA_field_stat2-devel libfieldstat3-devel libfieldstat4-devel
-    mrzcpd-corei7 hasp-tools  
+    hasp-tools 
+  MRZCPD: mrzcpd-corei7 
   SYMBOL_TARGET: sapp
   TEST_NAME: gtest_sapp_v4
-  INSTALL_PREFIX: "/home/mesasoft/sapp_run/"
+  INSTALL_PREFIX: "/opt/tsg/sapp/"
 
 stages:
 - cppcheck
@@ -18,13 +20,6 @@ stages:
 - envelope
 - upload
 
-.everything_before_script: &everything_before_script
-    - mkdir -p $BUILD_PADDING_PREFIX/$CI_PROJECT_NAMESPACE/
-    - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
-    - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
-    - yum makecache --disablerepo="*" --enablerepo="framework,platform"
-    - yum install -y $INSTALL_DEPENDENCY_LIBRARY
-    - source /etc/profile.d/framework.sh; source /etc/profile.d/mrzcpd.sh
 ###############################################################################
 # cppcheck 
 ###############################################################################
@@ -52,19 +47,33 @@ stages:
       --suppress=unusedStructMember
       --suppress=preprocessorErrorDirective
       --suppress=syntaxError
-  tags:
-    - share
+      --suppress=*:${CI_PROJECT_DIR}/src/support/ap_bloom/deps/*
 
-run_cppcheck_for_centos8:
+run_cppcheck_for_x86_64_rocky8:
   extends: .cppcheck_script
-  image: $BUILD_IMAGE_CENTOS8
+  image: $BUILD_IMAGE_X86_64_ROCKY8
+  tags:
+    - tsg-os-builder-el8  
 
+run_cppcheck_for_aarch64_rocky9:
+  extends: .cppcheck_script
+  image: $BUILD_IMAGE_AARCH64_ROCKY9
+  tags:
+    - tsg-os-builder-aarch64  
 ###############################################################################
 # build 
 ###############################################################################
 
+.everything_before_build_script: &everything_before_build_script
+    - mkdir -p $BUILD_PADDING_PREFIX/$CI_PROJECT_NAMESPACE/
+    - ln -s $CI_PROJECT_DIR $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+    - cd $BUILD_PADDING_PREFIX/$CI_PROJECT_PATH
+    - yum makecache --disablerepo="*" --enablerepo="framework,platform"
+    - yum install -y $INSTALL_DEPENDENCY_LIBRARY $MRZCPD
+    - source /etc/profile.d/framework.sh; source /etc/profile.d/mrzcpd.sh
+
 .build_before_script:
-  before_script: *everything_before_script
+  before_script: *everything_before_build_script
   script:
     - mkdir build || true
     - cd build
@@ -84,16 +93,16 @@ run_cppcheck_for_centos8:
   variables:    
     BUILD_TEST: "ON"
     BUILD_TYPE: Debug
-  tags:
-    - share
+  stage: build    
 
-.build_by_travis_for_centos8:
-  stage: build
-  image: $BUILD_IMAGE_CENTOS8
+.build_for_x86_64_rocky8:
+  image: $BUILD_IMAGE_X86_64_ROCKY8
   extends: .build_before_script
+  tags:
+    - tsg-os-builder-el8
 
-develop_build_for_centos8:
-  extends: .build_by_travis_for_centos8
+develop_build_for_x86_64_rocky8:
+  extends: .build_for_x86_64_rocky8
   variables:
     BUILD_TYPE: RelWithDebInfo
   artifacts:
@@ -103,11 +112,10 @@ develop_build_for_centos8:
   except:
     - tags
 
-release_build_debug_for_centos8:
-  extends: .build_by_travis_for_centos8
+release_build_debug_for_x86_64_rocky8:
+  extends: .build_for_x86_64_rocky8
   variables:
     BUILD_TYPE: Debug
-    PACKAGE: 1
     ASAN_OPTION: "ADDRESS"
   artifacts:
     name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-release"
@@ -116,12 +124,11 @@ release_build_debug_for_centos8:
   only:
     - tags
 
-release_build_for_centos8:
-  extends: .build_by_travis_for_centos8
+release_build_for_x86_64_rocky8:
+  extends: .build_for_x86_64_rocky8
   variables:
     BUILD_TYPE: RelWithDebInfo
     MEM_POOL: JEMALLOC_STATIC  
-    PACKAGE: 1
   artifacts:
     name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-release"
     paths:
@@ -129,12 +136,54 @@ release_build_for_centos8:
   only:
     - tags   
 
+.build_for_aarch64_rocky9:
+  image: $BUILD_IMAGE_AARCH64_ROCKY9
+  extends: .build_before_script
+  variables:    
+    MRZCPD: mrzcpd 
+  tags:
+    - tsg-os-builder-aarch64
+
+develop_build_for_aarch64_rocky9:
+  extends: .build_for_aarch64_rocky9
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+  artifacts:
+    name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-debug"
+    paths:
+      - build/*
+  except:
+    - tags
+
+release_build_debug_for_aarch64_rocky9:
+  extends: .build_for_aarch64_rocky9
+  variables:
+    BUILD_TYPE: Debug
+    ASAN_OPTION: "ADDRESS"
+  artifacts:
+    name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*
+  only:
+    - tags
+
+release_build_for_aarch64_rocky9:
+  extends: .build_for_aarch64_rocky9
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    MEM_POOL: JEMALLOC_STATIC  
+  artifacts:
+    name: "$SYMBOL_TARGET-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*
+  only:
+    - tags   
 ###############################################################################
 # envelope 
 ###############################################################################
-.define_before_envelope_centos8:
+.define_before_envelope_x86_64_rocky8:
   stage: envelope
-  extends: .build_by_travis_for_centos8
+  extends: .build_for_x86_64_rocky8
   variables:
     BUILD_TEST : "OFF"
     BUILD_TYPE: RelWithDebInfo
@@ -142,47 +191,65 @@ release_build_for_centos8:
     HASP_ENABLED: "ON"
     FEATURE_ID: 100
     HASP_INTERNAL_S: 3600
-    PACKAGE: 1
   only:
     - tags
-  tags:
-    - share 
 
-envelope_rpm_for_centos8:
-  extends: .define_before_envelope_centos8
-  image: $BUILD_IMAGE_CENTOS8
+envelope_rpm_for_x86_64_rocky8:
+  extends: .define_before_envelope_x86_64_rocky8
+  image: $BUILD_IMAGE_X86_64_ROCKY8
   artifacts:
     name: "$SYMBOL_TARGET-pr-$CI_COMMIT_REF_NAME-release"
     paths:
       - build/*-pr-*.rpm
   dependencies:
-    - release_build_for_centos8
+    - release_build_for_x86_64_rocky8
 
+.define_before_envelope_aarch64_rocky9:
+  stage: envelope
+  extends: .build_for_aarch64_rocky9
+  variables:
+    BUILD_TEST : "OFF"
+    BUILD_TYPE: RelWithDebInfo
+    MEM_POOL: JEMALLOC_STATIC  
+    HASP_ENABLED: "ON"
+    FEATURE_ID: 100
+    HASP_INTERNAL_S: 3600
+  only:
+    - tags
 
+envelope_rpm_for_aarch64_rocky9:
+  extends: .define_before_envelope_aarch64_rocky9
+  image: $BUILD_IMAGE_AARCH64_ROCKY9
+  artifacts:
+    name: "$SYMBOL_TARGET-pr-$CI_COMMIT_REF_NAME-release"
+    paths:
+      - build/*-pr-*.rpm
+  dependencies:
+    - release_build_for_aarch64_rocky9
 ###############################################################################
 # test 
 ###############################################################################
 
-.setup_test_env_for_centos8:
+.setup_test_env_for_x86_64_rocky8:
   stage: test
-  image: $BUILD_IMAGE_CENTOS8
+  image: $BUILD_IMAGE_X86_64_ROCKY8
   allow_failure: false
   before_script:
-    - *everything_before_script
+    - *everything_before_build_script
     - ls -l /opt/MESA/lib && echo "/opt/MESA/lib" >> /etc/ld.so.conf
     - ldconfig && sysctl -w net.ipv6.conf.all.disable_ipv6=0 && ifconfig && ulimit -c unlimited
     - ip neigh show && ip -6 neigh show
     - cd build; ctest3; pwd 
     - cd testing/ && ldd $TEST_NAME
   dependencies:
-    - develop_build_for_centos8
-    - release_build_for_centos8
+    - develop_build_for_x86_64_rocky8
+    - release_build_for_x86_64_rocky8
   tags:
-    - share    
+    - tsg-os-builder-el8    
 
 
-benchmark_test_for_centos8:
-  extends: .setup_test_env_for_centos8
+benchmark_test_for_x86_64_rocky8:
+  extends: .setup_test_env_for_x86_64_rocky8
   script:
 #run module v2.0 with death test
     - ./$TEST_NAME -s -f control.*
@@ -194,15 +261,78 @@ benchmark_test_for_centos8:
     - ./$TEST_NAME -s -f benchmark_inject.inline_same_dir
     - ./$TEST_NAME -s -f benchmark_inject.inline_reverse_dir
 
-inline_test_for_centos8:
-  extends: .setup_test_env_for_centos8
+inline_test_for_x86_64_rocky8:
+  extends: .setup_test_env_for_x86_64_rocky8
   script:
 #run module v2.0 with death test
     - ./$TEST_NAME -s -f inline_mode.*
 #    - ./$TEST_NAME -s -f transparent.*
 
-basic_test_for_centos8:
-  extends: .setup_test_env_for_centos8
+basic_test_for_x86_64_rocky8:
+  extends: .setup_test_env_for_x86_64_rocky8
+  script:
+#run module v2.0 immediately
+    - ./$TEST_NAME -s -f ipv4.*
+    - ./$TEST_NAME -s -f ipv6.*
+    - ./$TEST_NAME -s -f udp.*
+    - ./$TEST_NAME -s -f appstate.*
+    - ./$TEST_NAME -s -f timer.*
+    - ./$TEST_NAME -s -f proxy.*
+    - ./$TEST_NAME -s -f asymmetric.*
+    - ./$TEST_NAME -s -f pkt_dump.*
+    - ./$TEST_NAME -s -f project.*
+    - ./$TEST_NAME -s -f stream_bridge.*
+    - ./$TEST_NAME -s -f tunnel.*
+    - ./$TEST_NAME -s -f plug_ctrl.*
+    - ./$TEST_NAME -s -f jump_layer.*
+    - ./$TEST_NAME -s -f hybrid.*
+#    - ./$TEST_NAME -s -f inject.*
+    - ./$TEST_NAME -s -f offload.*
+    - ./$TEST_NAME -s -f tcp.*
+    - ./$TEST_NAME -s -f tcpall.*
+
+.setup_test_env_for_aarch64_rocky9:
+  stage: test
+  image: $BUILD_IMAGE_AARCH64_ROCKY9
+  allow_failure: false
+  variables:    
+    MRZCPD: mrzcpd
+  before_script:
+    - *everything_before_build_script
+    - ls -l /opt/MESA/lib && echo "/opt/MESA/lib" >> /etc/ld.so.conf
+    - ldconfig && sysctl -w net.ipv6.conf.all.disable_ipv6=0 && ifconfig && ulimit -c unlimited
+    - ip neigh show && ip -6 neigh show
+    - cd build; ctest3; pwd 
+    - cd testing/ && ldd $TEST_NAME
+  dependencies:
+    - develop_build_for_aarch64_rocky9
+    - release_build_for_aarch64_rocky9
+  tags:
+    - tsg-os-builder-aarch64    
+
+
+benchmark_test_for_aarch64_rocky9:
+  extends: .setup_test_env_for_aarch64_rocky9
+  script:
+#run module v2.0 with death test
+    - ./$TEST_NAME -s -f control.*
+    - ./$TEST_NAME -s -f fake_marsio.*
+#run module v3.0
+    - ./$TEST_NAME -s -f benchmark_drop.*
+    - ./$TEST_NAME -s -f benchmark_forward.*
+    - ./$TEST_NAME -s -f benchmark_inject.tcp*
+    - ./$TEST_NAME -s -f benchmark_inject.inline_same_dir
+    - ./$TEST_NAME -s -f benchmark_inject.inline_reverse_dir
+
+inline_test_for_aarch64_rocky9:
+  extends: .setup_test_env_for_aarch64_rocky9
+  script:
+#run module v2.0 with death test
+    - ./$TEST_NAME -s -f inline_mode.*
+#    - ./$TEST_NAME -s -f transparent.*
+
+basic_test_for_aarch64_rocky9:
+  extends: .setup_test_env_for_aarch64_rocky9
   script:
 #run module v2.0 immediately
     - ./$TEST_NAME -s -f ipv4.*
@@ -227,9 +357,9 @@ basic_test_for_centos8:
 ###############################################################################
 # upload 
 ###############################################################################
-.define_before_upload_centos8:
+.define_before_upload_x86_64_rocky8:
   stage: upload
-  image: $BUILD_IMAGE_CENTOS8
+  image: $BUILD_IMAGE_X86_64_ROCKY8
   before_script:
     - pwd; ls -l ; cd build ; ls -l
     - cp /root/rpm_upload_tools.py ./  
@@ -239,22 +369,49 @@ basic_test_for_centos8:
   only:
     - tags
   tags:
-    - share 
+    - tsg-os-builder-el8 
 
-rpm_upload_for_centos8:
-  extends: .define_before_upload_centos8
+rpm_upload_for_x86_64_rocky8:
+  extends: .define_before_upload_x86_64_rocky8
   dependencies:
-    - release_build_debug_for_centos8
-    - release_build_for_centos8
+    - release_build_debug_for_x86_64_rocky8
+    - release_build_for_x86_64_rocky8
   script:
     - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *.rpm    
 
-envelope_rpm_upload_for_centos8:
-  extends: .define_before_upload_centos8
+envelope_rpm_upload_for_x86_64_rocky8:
+  extends: .define_before_upload_x86_64_rocky8
   dependencies:
-    - envelope_rpm_for_centos8
+    - envelope_rpm_for_x86_64_rocky8
   script:
     - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *-pr-*.rpm    
 
+.define_before_upload_aarch64_rocky9:
+  stage: upload
+  image: $BUILD_IMAGE_AARCH64_ROCKY9
+  before_script:
+    - pwd; ls -l ; cd build ; ls -l
+    - cp /root/rpm_upload_tools.py ./  
+  variables:
+    PULP3_REPO_NAME: platform-stable-aarch64.el9
+    PULP3_DIST_NAME: platform-stable-aarch64.el9
+  only:
+    - tags
+  tags:
+    - tsg-os-builder-el8 
 
+rpm_upload_for_aarch64_rocky9:
+  extends: .define_before_upload_aarch64_rocky9
+  dependencies:
+    - release_build_debug_for_aarch64_rocky9
+    - release_build_for_aarch64_rocky9
+  script:
+    - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *.rpm    
+
+envelope_rpm_upload_for_aarch64_rocky9:
+  extends: .define_before_upload_aarch64_rocky9
+  dependencies:
+    - envelope_rpm_for_aarch64_rocky9
+  script:
+    - python3 rpm_upload_tools.py $PULP3_REPO_NAME $PULP3_DIST_NAME *-pr-*.rpm    
 
