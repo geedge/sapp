@@ -375,11 +375,11 @@ void get_linkdir_from_mac_run2(void);
 void get_deployment_mode_mirror(void);
 void get_deployment_mode_inline(void);
 void get_deployment_mode_transparent(void);
-void control_get_ip_ttl_run(void);
-void control_get_tcp_rtt_run(void);
-void control_get_tcp_rtt_c2s_run(void);
-void control_get_tcp_rtt_s2c_run(void);
 void control_get_stream_uuid_run(void);
+void control_get_ip_ttl_run(void);
+void control_get_tcp_latency_run(void);
+void control_get_tcp_latency_srtt_run(void);
+void control_get_tcp_latency_srtt_long_duration_run(void);
 /****************************** tunnel **************************/
 void teredo_unstandard_port_run(void);
 void teredo_with_auth_hdr_run(void);

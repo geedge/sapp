@@ -14,68 +14,70 @@ extern "C"
 	/*
 		option of stream,
 
-		MSO_IGNORE_RST_FIN: will not be terminated by RST, FIN packet, only if timeout or in LRU tail, it will be eliminated.
-	*/
-	enum MESA_stream_opt
-	{
-		__MSO_PAD = 0,						/* placeholder */
-		MSO_MAX_UNORDER = 1,				/* opt_val type must be struct max_unorder_opt */
-		MSO_NEED_ACK,						/* opt_val type must be unsigned char, value only be [0,1] */
-		MSO_TAKEOVER,						/* opt_val type must be int, value only be [0,1] */
-		MSO_TIMEOUT,						/* opt_val type must be unsigned short */
-		MSO_IGNORE_RST_FIN,					/* opt_val type must be unsigned char, value only be [0,1] */
-		MSO_TCP_CREATE_LINK_MODE,			/* opt_val must be unsigned char, refer to TCP_CTEAT_LINK_xxx */
-		MSO_TCP_ISN_C2S,					/* Host-order, opt_val type must be unsigned int */
-		MSO_TCP_ISN_S2C,					/* Host-order, opt_val type must be unsigned int */
-		MSO_TCP_SYN_OPT,					/* opt_val must be struct tcp_option **, opt_val_len [OUT} is struct tcp_option number, valid only if SYN packet is captured */
-		MSO_TCP_SYNACK_OPT,					/* opt_val must be struct tcp_option **, opt_val_len [OUT} is struct tcp_option number, valid only if SYN/ACK packet is captured */
-		MSO_STREAM_TUNNEL_TYPE,				/* opt_val must be unsigned short, refer to enum stream_carry_tunnel_t */
-		MSO_STREAM_CLOSE_REASON,			/* opt_val type must be unsigned char, refer to stream_close_reason_t */
-		MSO_STREAM_VXLAN_INFO,				/* opt_val type must be struct vxlan_info, only support for MAC-in-MAC encapsulation in mirror mode  */
-		MSO_TCPALL_VALID_AFTER_KILL,		/* opt_val type must be unsigned char, value only be [0,1]; Warning, this option is obsolete, use MESA_rst_tcp() instead */
-		MSO_GLOBAL_STREAM_ID,				/* opt_val type must be unsigned long long, is value-result argument, IN: device_id, value range[0, 4095]; OUT:global stream id */
-		MSO_DROP_STREAM,					/* opt_val type must be int, value only be [0,1]; similar to DROPPKT, but effective scope is all subsequent packets of this stream. */
-		MSO_TCP_RST_REMEDY,					/* opt_val type must be int, value only be [0,1]; if not set this, default is disable. */
-		MSO_TOTAL_INBOUND_PKT,				/* inbound packet number of this stream, opt_val type must be unsigned long long  */
-		MSO_TOTAL_INBOUND_BYTE,				/* inbound packet byte of this stream, opt_val type must be unsigned long long  */
-		MSO_TOTAL_OUTBOUND_PKT,				/* outbound packet pkt of this stream, opt_val type must be unsigned long long  */
-		MSO_TOTAL_OUTBOUND_BYTE,			/* outbound packet byte of this stream, opt_val type must be unsigned long long  */
-		MSO_STREAM_CREATE_TIMESTAMP_MS,		/* first pkt arrive timestamp of this stream, opt_val type must be unsigned long long  */
-		MSO_TOTAL_INBOUND_BYTE_RAW,			/* inbound packet byte of this stream, raw packet len, include ip hdr, ethernet hdr... opt_val type must be unsigned long long  */
-		MSO_TOTAL_OUTBOUND_BYTE_RAW,		/* outbound packet byte of this stream, raw packet len, include ip hdr, ethernet hdr... opt_val type must be unsigned long long  */
-		MSO_STREAM_UP_LAYER_TUNNEL_TYPE,	/* opt_val must be unsigned short, refer to enum stream_carry_tunnel_t */
-		MSO_STREAM_PLUG_PME,				/* opt_val type must be struct mso_plug_pme, this is a value-result argument, the caller should set plug_name and plug_entry_type, only support: TCP, TCP_ALL, UDP */
-		MSO_DROP_CURRENT_PKT,				/* opt_val type must be int, value only be [0,1], notice the difference between MSO_DROP_CURRENT_PKT and MSO_DROP_STREAM, MSO_DROP_CURRENT_PKT only discard current packet, but MSO_DROP_STREAM discard all subsequent packets of stream  */
-		MSO_HAVE_DUP_PKT,					/* opt_val type must be int, value only be [0, 1, -2], if the current stream found duplicate packets ? 0:no; 1:yes; -2: not sure */
-		MSO_STREAM_LASTUPDATE_TIMESTAMP_MS, /* latest pkt arrive timestamp of this stream, opt_val type must be unsigned long long  */
-		MSO_STREAM_TIMED,
-		MSO_STREAM_APPLEND_SEGMENT_ID_LIST,
-		MSO_STREAM_PREPLEND_SEGMENT_ID_LIST,
-		MSO_STREAM_SET_DATAMETA_TRACE_ID,
-		MSO_STREAM_C2S_RAWPKT_HDR,
-		MSO_STREAM_S2C_RAWPKT_HDR,
-		MSO_STREAM_C2S_SYN_NUM,
-		MSO_STREAM_S2C_SYN_NUM,
-		MSO_STREAM_INBOND_LINK_ID,
-		MSO_STREAM_OUTBOND_LINK_ID,
-		MSO_STREAM_C2S_ROUTE_DIRECTION,
-		MSO_STREAM_INBOND_ROUTE_CTX,
-		MSO_STREAM_OUTBOND_ROUTE_CTX,
-		MSO_STREAM_C2S_LINK_ID,
-		MSO_STREAM_S2C_LINK_ID,
-		MSO_STREAM_C2S_ROUTE_CTX,
-		MSO_STREAM_S2C_ROUTE_CTX,
-		MSO_IP_TTL_C2S,	 /* opt_val type must be unsigned char, IPv4 is TTL, IPv6 is Hop Limit */
-		MSO_IP_TTL_S2C,	 /* opt_val type must be unsigned char, IPv4 is TTL, IPv6 is Hop Limit */
-		MSO_TCP_RTT_CSC, /* opt_val type must be unsigned short, the full RTT is client->tsg->server->tsg->client, this is |tsg->server->tsg| */
-		MSO_TCP_RTT_SCS, /* opt_val type must be unsigned short, the full RTT is server->tsg->client->tsg->server, this is |tsg->client->tsg| */
-		MSO_STREAM_C2S_SEGMENT_ID_LIST,
-		MSO_STREAM_S2C_SEGMENT_ID_LIST,
-		MSO_STREAM_INBOND_SEGMENT_ID_LIST,
-		MSO_STREAM_OUTBOND_SEGMENT_ID_LIST,
-		MSO_STREAM_UUID, /* opt_val is uuid_t (unsigned char [16]) */
-		__MSO_MAX,
-	};
+	MSO_IGNORE_RST_FIN: will not be terminated by RST, FIN packet, only if timeout or in LRU tail, it will be eliminated. 
+*/
+enum MESA_stream_opt{
+	__MSO_PAD			=	0,    /* placeholder */
+	MSO_MAX_UNORDER	=	1,  	/* opt_val type must be struct max_unorder_opt */
+	MSO_NEED_ACK,				/* opt_val type must be unsigned char, value only be [0,1] */
+	MSO_TAKEOVER,				/* opt_val type must be int, value only be [0,1] */
+	MSO_TIMEOUT,				/* opt_val type must be unsigned short */
+	MSO_IGNORE_RST_FIN, 		/* opt_val type must be unsigned char, value only be [0,1] */
+	MSO_TCP_CREATE_LINK_MODE,  /* opt_val must be unsigned char, refer to TCP_CTEAT_LINK_xxx */
+	MSO_TCP_ISN_C2S, /* Host-order, opt_val type must be unsigned int */
+	MSO_TCP_ISN_S2C, /* Host-order, opt_val type must be unsigned int */
+	MSO_TCP_SYN_OPT, /* opt_val must be struct tcp_option **, opt_val_len [OUT} is struct tcp_option number, valid only if SYN packet is captured */
+	MSO_TCP_SYNACK_OPT, /* opt_val must be struct tcp_option **, opt_val_len [OUT} is struct tcp_option number, valid only if SYN/ACK packet is captured */
+	MSO_STREAM_TUNNEL_TYPE,  /* opt_val must be unsigned short, refer to enum stream_carry_tunnel_t */
+	MSO_STREAM_CLOSE_REASON, /* opt_val type must be unsigned char, refer to stream_close_reason_t */
+	MSO_STREAM_VXLAN_INFO, /* opt_val type must be struct vxlan_info, only support for MAC-in-MAC encapsulation in mirror mode  */
+	MSO_TCPALL_VALID_AFTER_KILL, /* opt_val type must be unsigned char, value only be [0,1]; Warning, this option is obsolete, use MESA_rst_tcp() instead */
+	MSO_GLOBAL_STREAM_ID, /* opt_val type must be unsigned long long, is value-result argument, IN: device_id, value range[0, 4095]; OUT:global stream id */
+	MSO_DROP_STREAM, /* opt_val type must be int, value only be [0,1]; similar to DROPPKT, but effective scope is all subsequent packets of this stream. */
+	MSO_TCP_RST_REMEDY, /* opt_val type must be int, value only be [0,1]; if not set this, default is disable. */
+	MSO_TOTAL_INBOUND_PKT,  /* inbound packet number of this stream, opt_val type must be unsigned long long  */
+	MSO_TOTAL_INBOUND_BYTE, /* inbound packet byte of this stream, opt_val type must be unsigned long long  */
+	MSO_TOTAL_OUTBOUND_PKT, /* outbound packet pkt of this stream, opt_val type must be unsigned long long  */
+	MSO_TOTAL_OUTBOUND_BYTE,/* outbound packet byte of this stream, opt_val type must be unsigned long long  */
+	MSO_STREAM_CREATE_TIMESTAMP_MS,/* first pkt arrive timestamp of this stream, opt_val type must be unsigned long long  */
+	MSO_TOTAL_INBOUND_BYTE_RAW, /* inbound packet byte of this stream, raw packet len, include ip hdr, ethernet hdr... opt_val type must be unsigned long long  */
+	MSO_TOTAL_OUTBOUND_BYTE_RAW,/* outbound packet byte of this stream, raw packet len, include ip hdr, ethernet hdr... opt_val type must be unsigned long long  */
+	MSO_STREAM_UP_LAYER_TUNNEL_TYPE,  /* opt_val must be unsigned short, refer to enum stream_carry_tunnel_t */
+	MSO_STREAM_PLUG_PME, /* opt_val type must be struct mso_plug_pme, this is a value-result argument, the caller should set plug_name and plug_entry_type, only support: TCP, TCP_ALL, UDP */
+	MSO_DROP_CURRENT_PKT,  /* opt_val type must be int, value only be [0,1], notice the difference between MSO_DROP_CURRENT_PKT and MSO_DROP_STREAM, MSO_DROP_CURRENT_PKT only discard current packet, but MSO_DROP_STREAM discard all subsequent packets of stream  */
+	MSO_HAVE_DUP_PKT,  /* opt_val type must be int, value only be [0, 1, -2], if the current stream found duplicate packets ? 0:no; 1:yes; -2: not sure */
+	MSO_STREAM_LASTUPDATE_TIMESTAMP_MS,/* latest pkt arrive timestamp of this stream, opt_val type must be unsigned long long  */
+	MSO_STREAM_TIMED,
+	MSO_STREAM_APPLEND_SEGMENT_ID_LIST,
+	MSO_STREAM_PREPLEND_SEGMENT_ID_LIST,
+	MSO_STREAM_SET_DATAMETA_TRACE_ID,
+	MSO_STREAM_C2S_RAWPKT_HDR,
+	MSO_STREAM_S2C_RAWPKT_HDR,
+	MSO_STREAM_C2S_SYN_NUM,
+	MSO_STREAM_S2C_SYN_NUM,
+	MSO_STREAM_INBOND_LINK_ID,
+	MSO_STREAM_OUTBOND_LINK_ID,
+	MSO_STREAM_C2S_ROUTE_DIRECTION,
+	MSO_STREAM_INBOND_ROUTE_CTX,
+	MSO_STREAM_OUTBOND_ROUTE_CTX,
+	MSO_STREAM_C2S_LINK_ID,
+	MSO_STREAM_S2C_LINK_ID,
+	MSO_STREAM_C2S_ROUTE_CTX,
+	MSO_STREAM_S2C_ROUTE_CTX,	
+	MSO_IP_TTL_C2S, /* opt_val type must be unsigned char, IPv4 is TTL, IPv6 is Hop Limit */
+	MSO_IP_TTL_S2C, /* opt_val type must be unsigned char, IPv4 is TTL, IPv6 is Hop Limit */
+	MSO_TCP_RTT_CSC, /* deprecated in v24.12 */
+	MSO_TCP_RTT_SCS, /* deprecated in v24.12  */
+	MSO_STREAM_C2S_SEGMENT_ID_LIST,
+	MSO_STREAM_S2C_SEGMENT_ID_LIST,
+	MSO_STREAM_INBOND_SEGMENT_ID_LIST,
+	MSO_STREAM_OUTBOND_SEGMENT_ID_LIST,
+	MSO_STREAM_UUID, /* opt_val is uuid_t (unsigned char [16]) */
+	MSO_ACCESS_LATENCY, /* millisecond, opt_val type must be double, the access latency from client to DPI system */
+	MSO_INTERNET_LATENCY, /* millisecond, opt_val type must be double, the internet latency from DPI system to server */
+	MSO_TCP_STREAM_SRTT, /* millisecond, opt_val type must be double, the SRTT of current TCP stream */
+	__MSO_MAX,
+};
 
 	/* for MSO_STREAM_CLOSE_REASON,
 	   don't confuse, these values is not consecutive indeed, because some value(1,2) is obsoleted!

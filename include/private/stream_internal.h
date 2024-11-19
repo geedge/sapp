@@ -6,6 +6,7 @@
 #include "mesa_pkt_dump.h"
 #include "sapp_limits.h"
 #include "stream.h"
+#include <float.h>
 
 //#define STREAM_BASE_MD5_CHECK		"dd09b3b11993cc835200db477dad7d4b"
 //#define STREAM_CONTROL_MD5_CHECK 	"75aab0821e489b84355fa22ad02a2e78"
@@ -57,6 +58,8 @@
 #ifndef uuid_t
 typedef unsigned char uuid_t[16];
 #endif
+#define TCP_SAMPLING_SRTT_INTERVAL_MS (5000)  /* millisecond */
+#define TCP_SRTT_EWMA_ALPHA (0.125) 
 
 #ifdef __cplusplus
 extern "C" {
@@ -264,6 +267,18 @@ struct streaminfo_private
 	uuid_t stream_uuid;
 };
 
+#define DOUBLE_EPSILON 1e-15
+#define DOUBLE_IS_ZERO(v) (fabs(v) < DOUBLE_EPSILON)
+struct tcp_srtt_metric
+{
+	long long last_rtt_sampling_time;
+	unsigned short half_pkt_interval_c2s;
+	unsigned short half_pkt_interval_s2c;
+	unsigned short rtt_dpi_server_dpi; /* millisecond, duration of 'dpi-->server-->dpi', every Nsec throughout the life of stream */
+	unsigned short rtt_dpi_client_dpi; /* millisecond, duration of 'dpi-->client-->dpi', every Nsec throughout the life of stream */
+	double srtt; /* Smoothed Round-Trip Time, update every Nsec throughout the life of stream */
+};
+
 struct tcpdetail_private
 {
 	/* ����ṹ�����ڽṹ�����?, ָ���ַ���Ի���ǿ�? */
@@ -304,10 +319,11 @@ struct tcpdetail_private
 	void   *pAllpktpme;   //��״̬��tcp����������
 	struct tcp_flow_stat *flow_stat; /* 2016-07-14 lijia add, ���ڼ�¼TCP��data���ļ���, ʵ���ڴ������ͷ���projectģ�����?, ����ΪNULL,  */
 	struct tcp_flow_stat *deduce_flow_stat; /* 2018-10-30 lijia add, ���ڼ�¼������ƶϳ������ϴ��������, ���������ĳ���; �Լ������������?, �Զ�Ӧ���յ�������  */
-	unsigned short rtt_csc;
-	unsigned short rtt_scs;
+	double internet_latency; /* millisecond, from the hashshake phase */
+	double access_latency; /* millisecond, from the hashshake phase */
 	long long last_c2s_pkt_rcv_time;
 	long long last_s2c_pkt_rcv_time;
+	struct tcp_srtt_metric srtt_metric;
 };
 
 struct udpdetail_private

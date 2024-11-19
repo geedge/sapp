@@ -963,32 +963,22 @@ TEST(control, get_ip_ttl)
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
 }
 
-
-#define control_get_tcp_rtt 1  
-TEST(control, get_tcp_rtt)
+TEST(control, get_tcp_latency)
 {
-#if 0	
-	//control_get_tcp_rtt_run();
-	//ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
-#else	
-	EXPECT_EXIT(control_get_tcp_rtt_run(), testing::ExitedWithCode(0),  "test succ");
-#endif	
+	control_get_tcp_latency_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
 }
 
-#define control_get_tcp_rtt_c2s 1  
-TEST(control, get_tcp_rtt_c2s)
+TEST(control, get_tcp_latency_srtt)
 {
-	control_get_tcp_rtt_c2s_run();
+	control_get_tcp_latency_srtt_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
-	// EXPECT_EXIT(control_get_tcp_rtt_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
-#define control_get_tcp_rtt_s2c 1  
-TEST(control, get_tcp_rtt_s2c)
+TEST(control, get_tcp_latency_srtt_long_duration)
 {
-	control_get_tcp_rtt_s2c_run();
+	control_get_tcp_latency_srtt_long_duration_run();
 	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
-	// EXPECT_EXIT(control_get_tcp_rtt_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
 TEST(control, get_stream_uuid)

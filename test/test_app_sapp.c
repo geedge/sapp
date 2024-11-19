@@ -45,7 +45,7 @@ typedef struct{
 	int test_bridge_id;
 }test_app_val_t;
 
-/* ����һЩȫ�ֱ���, �и��ֲ�ͬ������, ��������������ݲ���, 
+/* ����һЩȫ�ֱ���, �и��ֲ�ͬ������, ��������������ݲ���?, 
    �����������ɸ��������Լ����� 
 */
 static test_app_val_t g_test_app_val;
@@ -140,7 +140,7 @@ static void show_hierarchical_layer_stat(void)
 
 static int update_hierarchical_layer_stat(const struct hierarchical_layer *stream_hierarchical_layer_stat)
 {
-	if(search_g_hierarchical_layer_stat(stream_hierarchical_layer_stat) == 0){ //不存�? �?新的流结�?
+	if(search_g_hierarchical_layer_stat(stream_hierarchical_layer_stat) == 0){ //不存�?? �??新的流结�??
 		memcpy(&g_hierarchical_layer_stat[hierarchical_layer_stat_num], stream_hierarchical_layer_stat, sizeof(struct hierarchical_layer) * MAX_LAYER_DEPTH);
 		hierarchical_layer_stat_num++;
 		show_hierarchical_layer_stat();
@@ -209,7 +209,7 @@ void phony_protocol_get_plugid(unsigned short plugid)
 	phony_protocol_plugid= plugid;
 }
 
-/* ģ�������, �������ļ�PLUGNAME=xxxʶ�� */
+/* ģ�������?, �������ļ�PLUGNAME=xxxʶ�� */
 char phony_protocol_test(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a_packet)
 {
 	stSessionInfo stinfo;
@@ -449,6 +449,23 @@ char test_get_stream_tcp_opts(struct streaminfo *a_tcp,  void **pme, int thread_
 		DPRINT("MESA_get_stream_opt() MSO_TCP_SYNACK_OPT error!\n");
 	}	
 
+	uint16_t latency = 0;
+	int optlen = sizeof(uint16_t);
+	ret = MESA_get_stream_opt(a_tcp, MSO_ACCESS_LATENCY, &latency, &optlen);
+	if(ret >= 0){
+		DPRINT("stream:%s, access latency:%ums\n", printaddr(&a_tcp->addr, thread_seq), latency);
+	}else{
+		DPRINT("MESA_get_stream_opt() MSO_ACCESS_LATENCY error!\n");
+	}	
+
+	latency = 0;
+	ret = MESA_get_stream_opt(a_tcp, MSO_INTERNET_LATENCY, &latency, &optlen);
+	if(ret >= 0){
+		DPRINT("stream:%s, internet latency:%ums\n", printaddr(&a_tcp->addr, thread_seq), latency);
+	}else{
+		DPRINT("MESA_get_stream_opt() MSO_INTERNET_LATENCY error!\n");
+	}	
+
 	return APP_STATE_DROPME;
 }
 
@@ -466,7 +483,7 @@ char test_set_stream_timeout(struct streaminfo *pstream,  void **pme, int thread
 			������nc����3��udp����, �˿ڷֱ�Ϊ11111, 22222, 33333,
 			��11s֮��, 11111Ӧ�ý���,
 			22s֮��, 22222Ӧ�ý���,
-			33333����Ĭ��ȫ�ֳ�ʱ��̭ʱ��, �������ȫ�ֳ�ʱ��̭, Ӧ�ò������(dumpfileģʽ����).
+			33333����Ĭ��ȫ�ֳ�ʱ��̭ʱ��, �������ȫ�ֳ�ʱ���?, Ӧ�ò������?(dumpfileģʽ����).
 		*/
 		if((pstream->addr.tuple4_v4->source == ntohs(11111))
 		|| (pstream->addr.tuple4_v4->dest == ntohs(11111))){
@@ -1113,7 +1130,7 @@ char test_deadlock(struct streaminfo *pstream,void **pme, int thread_seq,void *a
 
 }
 
-/* 关于网络相关字�??, 均为网络�? network order */
+/* 关于网络相关字�??, 均为网络�?? network order */
 struct __test_inline_vxlan_hdr{
 	unsigned char flags;
 
@@ -1121,12 +1138,12 @@ struct __test_inline_vxlan_hdr{
 #if 0	
 	unsigned char reserved[3];
 #else
-	unsigned char nat_type; /* 复用�?�?保留字�?? 表示NAT类型 */
+	unsigned char nat_type; /* 复用�??�??保留字�?? 表示NAT类型 */
 	unsigned char reserved[2];
 #endif
 	/*--------int delim -------*/
 	unsigned char vlan_id_half_high;
-	unsigned char link_layer_type : 4; /* 二层报文封�?�格�? */
+	unsigned char link_layer_type : 4; /* 二层报文封�?�格�?? */
 	unsigned char vlan_id_half_low : 4;
 	unsigned int dir : 1;
 	unsigned int link_id : 6;
@@ -1807,7 +1824,7 @@ static void test_inject_tcp_pkt_with_this_hdr(struct streaminfo *stream,void **p
 	raw_thdr = (struct mesa_tcp_hdr *)((char *)raw_ihdr + raw_ihdr->ip_hl*4);
 	raw_tcp_payload_len = ntohs(raw_ihdr->ip_len) - raw_ihdr->ip_hl*4 - raw_thdr->th_off * 4;
 
-	/* 当前包是C2S方向的GET, �?要回复一�?虚假的S2C方向的RESPONSE */
+	/* 当前包是C2S方向的GET, �??要回复一�??虚假的S2C方向的RESPONSE */
 	send_ihdr = (struct mesa_ip4_hdr *)pkt_header_payload;
 	send_thdr = (struct mesa_tcp_hdr *)((char *)send_ihdr + sizeof(struct mesa_ip4_hdr));
 
@@ -1911,7 +1928,7 @@ char test_inject_tcp_pkt2(struct streaminfo *stream,void **pme, int thread_seq,c
 
 
 
-/* ʹ���µķ����ӿ�  sapp_inject_pkt()����α��� */
+/* ʹ���µķ����ӿ�  sapp_inject_pkt()����α���? */
 static int send_by_sapp_inject_pkt(struct streaminfo *a_tcp, const struct mesa_ip4_hdr *raw_ip4hdr)
 {
 #define HIJACK_RESPONSE_HDR "HTTP/1.1 200 OK\r\nServer: hijack.com\r\nContent-Length:%d\r\nContent-Type: text/html; charset=UTF-8\r\nConnection: close\r\n\r\n"
@@ -1977,7 +1994,7 @@ char MESA_inject_pkt_for_l2_l3_tcp(struct streaminfo *stream,void **pme, int thr
 	if(DIR_C2S == stream->curdir){
 		if(memmem(stream->ptcpdetail->pdata, stream->ptcpdetail->datalen, modify_raw_data_c2s, strlen(modify_raw_data_c2s)) != NULL){
 
-			//������һ��get����, ������һ�����Ӧ��
+			//������һ��get����, ������һ�����Ӧ��?
 			ret = MESA_inject_pkt(stream, modify_inject_data_s2c, 1460, raw_pkt, stream->routedir ^ 1); 
 			if(ret < 0){
 				DPRINT("%s, MESA_inject_pkt S2C error!\n", printaddr(&stream->addr, thread_seq));
@@ -1991,7 +2008,7 @@ char MESA_inject_pkt_for_l2_l3_tcp(struct streaminfo *stream,void **pme, int thr
 		}
 	}else{
 		if(memmem(stream->ptcpdetail->pdata, stream->ptcpdetail->datalen, "<html><pre>******", strlen("<html><pre>******")) != NULL){
-			/* ��һ��S2CӦ����Ѿ���α�췢��, �˴�����Ҫ */
+			/* ��һ��S2CӦ����Ѿ���α�췢��?, �˴�����Ҫ */
 			ret_flag = APP_STATE_DROPPKT;
 			return APP_STATE_DROPME | ret_flag;
 		}
@@ -2015,12 +2032,12 @@ char MESA_inject_pkt_for_l2_l3_tcpall(struct streaminfo *stream,void **pme, int 
 
 	if((DIR_C2S == stream->curdir) 
 	 && (stream->ptcpdetail->serverpktnum == 2)
-	 && (stream->ptcpdetail->datalen == 0)){ /* ֻ���������ָո���ɺ�, �յ�ACK������һ��get����,������ŶԲ��� */
+	 && (stream->ptcpdetail->datalen == 0)){ /* ֻ���������ָո���ɺ�?, �յ�ACK������һ��get����,������ŶԲ���? */
 		inet_ntop(AF_INET, &stream->addr.tuple4_v4->daddr, server_ip, 32);
 
 		DSPRINT(raw_data_c2s, modify_inject_data_c2s, server_ip);
 		if(strlen(raw_data_c2s) != 197){
-			DPRINT("MESA_inject_pkt_for_l2_l3_tcpall(), C2S inject len is not 197, %d\n", (int)strlen(raw_data_c2s)); //Ҫ���Ǳ������������һ��, ������SEQ���ܲ���
+			DPRINT("MESA_inject_pkt_for_l2_l3_tcpall(), C2S inject len is not 197, %d\n", (int)strlen(raw_data_c2s)); //Ҫ���Ǳ������������һ��?, ������SEQ���ܲ���
 			return APP_STATE_DROPME;
 		}		
 		ret = MESA_inject_pkt(stream, raw_data_c2s, strlen(raw_data_c2s), raw_pkt, stream->routedir);
@@ -2836,19 +2853,19 @@ char TEST_TCP_LOST(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 		ipv4_hdr = (const struct mesa_ip4_hdr *)a_packet;
 		tcp_hdr = (const struct mesa_tcp_hdr *)((char *)ipv4_hdr + ipv4_hdr->ip_hl * 4);
 		pkt_raw_data = (char *)tcp_hdr + tcp_hdr->th_off * 4; /* ���ݰ�ԭʼ����ָ�� */
-		/* �����ش�׷�����ݵ�ԭ��, ƽ̨�����������a_tcp->ptcpdetail->pdata����һ������pkt_raw_data, �������ƫ���� */
+		/* �����ش�׷�����ݵ�ԭ��, ƽ̨�����������a_tcp->ptcpdetail->pdata����һ������pkt_raw_data, �������ƫ����? */
 		actual_data_seq = ntohl(tcp_hdr->th_seq) + ((char *)a_tcp->ptcpdetail->pdata - pkt_raw_data);
 
 		DPRINT("stream:%s, dir:%d, pkt-seq:%u, actual-data-seq:%u\n", printaddr(&a_tcp->addr, a_tcp->threadnum),a_tcp->curdir, ntohl(tcp_hdr->th_seq),  actual_data_seq);
 		
 		if(DIR_C2S == a_tcp->curdir){
-			/* ����ʵ����� == ���ϴμ���ó�������Ӧ�õ������ + ���μ���ó��Ķ������� */
+			/* ����ʵ�����? == ���ϴμ���ó�������Ӧ�õ������ + ���μ���ó��Ķ�������? */
 			if(actual_data_seq != tcp_status->seq_next_c2s + a_tcp->ptcpdetail->lostlen){
 				DPRINT("\033[41mstream:%s,  seq check fail!\033[0m\n", printaddr(&a_tcp->addr, a_tcp->threadnum));
 				//assert(0);
 				goto err_exit;
 			}
-			/* ��һ���ڴ��������: ��ǰʵ����� + ʵ�����ݳ��� */
+			/* ��һ���ڴ��������?: ��ǰʵ�����? + ʵ�����ݳ��� */
 			tcp_status->seq_next_c2s = actual_data_seq + a_tcp->ptcpdetail->datalen;
 		}else{
 			if(actual_data_seq  != tcp_status->seq_next_s2c + a_tcp->ptcpdetail->lostlen){
@@ -2856,7 +2873,7 @@ char TEST_TCP_LOST(struct streaminfo *a_tcp,  void **pme, int thread_seq,void *a
 				//assert(0);
 				goto err_exit;
 			}
-			/* ��һ���ڴ��������: ��ǰʵ����� + ʵ�����ݳ��� */
+			/* ��һ���ڴ��������?: ��ǰʵ�����? + ʵ�����ݳ��� */
 			tcp_status->seq_next_s2c = actual_data_seq + a_tcp->ptcpdetail->datalen;
 		}
 	}
@@ -3154,7 +3171,7 @@ char TEST_STREAM(struct streaminfo *stream,  void **pme, int thread_seq, const v
 		return APP_STATE_GIVEME;
 	}
 
-	/* ���д�㶫��, �ķ�CPU */
+	/* ���д�㶫��?, �ķ�CPU */
 	if(datalen > 0){
 		for(i = 0; i < datalen; i++){
 			result1[i] = (long)memchr(local_data, data[i], min_num);
@@ -3374,7 +3391,7 @@ char POLLING_ENTRY(struct streaminfo *stream,  void **pme, int thread_seq,void *
 extern long long sapp_random(void);
 char fake_deadlock(struct streaminfo *pstream,void **pme, int thread_seq,void *a_packet)
 {
-	/* ����������߳�, ģ������ */
+	/* ����������߳�?, ģ������ */
 	int opt_val_len = sizeof(int);
 	int tid;
 	int tot_thread_cnt;

@@ -39,7 +39,7 @@ static void packet_io_status_tcp_pkt_update(int tid, unsigned char tcp_flags, in
 
 static int tcp_deal_unorder(struct streamindex *pindex,struct streaminfo *a_tcp,
 		struct  half_tcpstream  *rcv, struct half_tcpstream *snd,int orderflag);
-		
+
 inline static int before (u_int seq1, u_int seq2)
 {
     return ((int) (seq1 - seq2) < 0);
@@ -653,14 +653,23 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 			pdetail->clientbytes+= datalen; /* 2014-12-19 lijia add, for SYN pkt append data */
 			pdetail_pr->last_s2c_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
 			pdetail_pr->S2C_ack_seq = ntohl(this_tcphdr->th_ack);
+			sapp_runtime_log(RLOG_LV_DEBUG, "add_new_by_syn()->S2C TCP PKT timestamp: stream:%s, current_ms=%lld, seq=%u, ack=%u, chksum=0x%x", 
+							printaddr(&pstream->addr, pstream->threadnum), ABBR_CURRENT_TIME_MS, 
+							ntohl(this_tcphdr->th_seq), ntohl(this_tcphdr->th_ack), ntohs(this_tcphdr->th_sum));				
 		}else if(createdir==DIR_C2S){
 			pdetail->serverpktnum++;
 			pdetail->serverbytes+= datalen;/* 2014-12-19 lijia add, for SYN pkt append data */
 			pdetail_pr->last_c2s_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
 			pdetail_pr->C2S_ack_seq = ntohl(this_tcphdr->th_ack);
+			sapp_runtime_log(RLOG_LV_DEBUG, "add_new_by_syn()->C2S TCP PKT timestamp: stream:%s, current_ms=%lld, seq=%u, ack=%u, chksum=0x%x", 
+										printaddr(&pstream->addr, pstream->threadnum), ABBR_CURRENT_TIME_MS, 
+										ntohl(this_tcphdr->th_seq), ntohl(this_tcphdr->th_ack), ntohs(this_tcphdr->th_sum));						
 		}	
-		pdetail_pr->rtt_csc = 0xFFFF;
-		pdetail_pr->rtt_scs = 0xFFFF;
+		pdetail_pr->internet_latency = DBL_MAX;
+		pdetail_pr->access_latency = DBL_MAX;
+		pdetail_pr->srtt_metric.rtt_dpi_client_dpi = 0xFFFF;
+		pdetail_pr->srtt_metric.rtt_dpi_server_dpi = 0xFFFF;
+		pdetail_pr->srtt_metric.srtt = DBL_MAX;
 	}
 	else
 	{
@@ -693,6 +702,12 @@ static struct streamindex *tcp_add_new_stream_bysyn(struct streamindex *pindex,
 		pindex_tcp->stream.stream_trace_id=0;
 		pdetail->createtime=g_CurrentTime;
 		pstream_pr->stream_create_timestamp_ms=g_CurrentTime_ms;	
+
+		pdetail_pr->internet_latency = DBL_MAX;
+		pdetail_pr->access_latency = DBL_MAX;
+		pdetail_pr->srtt_metric.rtt_dpi_client_dpi = 0xFFFF;
+		pdetail_pr->srtt_metric.rtt_dpi_server_dpi = 0xFFFF;
+		pdetail_pr->srtt_metric.srtt = DBL_MAX;
 
 		/* ????????, ?????��????ddos ?? */
 		if(pstream_pr->create_dir_by_well_known_port != 1)
@@ -1307,6 +1322,12 @@ int tcp_free_stream(struct streamindex *pindex, const void *this_ip_hdr, const v
 	UCHAR threadnum = pstream->threadnum;
 	int pkt_ret = PASS;
 
+    sapp_runtime_log(RLOG_LV_DEBUG, "tcp_free_stream():%s srtt measurement result: access_latency=%.3fms, internet_latency=%.3fms, srtt=%.3fms", 
+                    printaddr(&pstream->addr, pstream->threadnum), 
+					pdetail_pr->access_latency == DBL_MAX   ? 0.0 : pdetail_pr->access_latency, 
+					pdetail_pr->internet_latency == DBL_MAX ? 0.0 : pdetail_pr->internet_latency, 
+					pdetail_pr->srtt_metric.srtt == DBL_MAX ? 0.0 : pdetail_pr->srtt_metric.srtt);	
+
 	tcp_update_close_reason_stat(threadnum, pdetail_pr);
 	plist=&(G_MESA_GLOBAL_STREAM[threadnum]->tcpList[pstream->stream_state]);
 
@@ -1567,34 +1588,138 @@ static int tcp_reset_stream(struct streamindex *pindex,const void *this_iphdr,
 	return ret;
 }
 
-static void inline calculate_tcp_rtt(const struct streaminfo *pstream, struct tcpdetail_private *pdetail_pr, const struct mesa_tcp_hdr *this_tcphdr)
+static void inline calculate_tcp_handshake_latency(const struct streaminfo *pstream, struct tcpdetail_private *pdetail_pr, const struct mesa_tcp_hdr *this_tcphdr)
 {
-	if(pdetail_pr->tcpdetail_public.clientpktnum < 1 || pdetail_pr->tcpdetail_public.serverpktnum < 1)
-	{
+	if(pdetail_pr->tcpdetail_public.clientpktnum < 1 
+	|| pdetail_pr->tcpdetail_public.serverpktnum < 1
+	|| pstream->stream_state != TCP_SYN_STATE){
 		return;
 	}
-	if(pdetail_pr->rtt_csc != 0xFFFF && pdetail_pr->rtt_scs != 0xFFFF)
-	{
-		return;
-	}	
+	unsigned int th_flags = this_tcphdr->th_flags;
 	unsigned int cur_tcp_ack = ntohl(this_tcphdr->th_ack);
+	unsigned int cur_tcp_seq = ntohl(this_tcphdr->th_seq);
 
-	if(pstream->curdir == DIR_C2S)
-	{
-		unsigned int cur_tcp_seq = ntohl(this_tcphdr->th_seq);
-		if(pdetail_pr->iclientseq == cur_tcp_ack && pdetail_pr->S2C_ack_seq == cur_tcp_seq)
-		{
-			pdetail_pr->rtt_scs = ABBR_CURRENT_TIME_MS - pdetail_pr->last_s2c_pkt_rcv_time;
+	if(pstream->curdir == DIR_C2S){
+		if(cur_tcp_seq ==  pdetail_pr->iserverseq &&  pdetail_pr->iclientseq == cur_tcp_ack){
+			pdetail_pr->access_latency = ((double)ABBR_CURRENT_TIME_MS - (double)pdetail_pr->last_s2c_pkt_rcv_time)/2;
+			pdetail_pr->srtt_metric.rtt_dpi_client_dpi = ABBR_CURRENT_TIME_MS - pdetail_pr->last_s2c_pkt_rcv_time;		
+			sapp_runtime_log(RLOG_LV_DEBUG, "tcp_handshake_latency stream:%s, C2S, current_ms=%lld, seq=%u, ack=%u, chksum=0x%x, access_latency=%.3fms", 
+					printaddr(&pstream->addr, pstream->threadnum), ABBR_CURRENT_TIME_MS, 
+					ntohl(this_tcphdr->th_seq), ntohl(this_tcphdr->th_ack), ntohs(this_tcphdr->th_sum), pdetail_pr->access_latency);	
 		}
-	}
-	else
-	{
-		if(pdetail_pr->iserverseq == cur_tcp_ack)
-		{
-			pdetail_pr->rtt_csc = ABBR_CURRENT_TIME_MS - pdetail_pr->last_c2s_pkt_rcv_time;
+	}else{ // DIR_S2C
+		if(th_flags == (TH_SYN|TH_ACK) &&  pdetail_pr->iserverseq == cur_tcp_ack){
+			pdetail_pr->internet_latency = ((double)ABBR_CURRENT_TIME_MS - (double)pdetail_pr->last_c2s_pkt_rcv_time)/2;
+			pdetail_pr->srtt_metric.rtt_dpi_server_dpi = ABBR_CURRENT_TIME_MS - pdetail_pr->last_c2s_pkt_rcv_time;
+			sapp_runtime_log(RLOG_LV_DEBUG, "tcp_handshake_latency stream:%s, S2C, current_ms=%lld, seq=%u, ack=%u, chksum=0x%x, internet_latency=%.3fms", 
+					printaddr(&pstream->addr, pstream->threadnum), ABBR_CURRENT_TIME_MS, 
+					ntohl(this_tcphdr->th_seq), ntohl(this_tcphdr->th_ack), ntohs(this_tcphdr->th_sum), pdetail_pr->internet_latency);			
 		}
 	}
 	return;
+}
+
+/*
+    EWMA: Exponentially Weighted Moving Average
+*/
+static inline void tcp_srtt_update(struct tcp_srtt_metric *srtt_metric, double current_rtt)
+{
+	if(DOUBLE_IS_ZERO(current_rtt)){
+		return;
+	}
+	double new_srtt = current_rtt * TCP_SRTT_EWMA_ALPHA + (1 - TCP_SRTT_EWMA_ALPHA) * srtt_metric->srtt;
+	srtt_metric->srtt = new_srtt;
+}
+
+static void tcp_srtt_measurement(const struct streaminfo *pstream, struct tcpdetail_private *pdetail_pr, const struct mesa_tcp_hdr *this_tcphdr)
+{
+	struct tcp_srtt_metric *srtt_metric = &pdetail_pr->srtt_metric;
+	if(pstream->dir != DIR_DOUBLE){
+		return;
+	}
+	if(pstream->addr.pkttype & PKT_TYPE_TCPRETRANS
+	 || pstream->addr.pkttype & PKT_TYPE_TCPREORDER
+	 || pstream->addr.pkttype & PKT_TYPE_TCPUNORDER){
+		return; //ignore tcp retransmission, unorder packets
+	}
+
+	struct streaminfo_private *pstream_pr = container_of(pstream, struct streaminfo_private, stream_public);
+	if(pstream_pr->raw_pkt && pstream_pr->raw_pkt->is_ctrl_pkt){
+		return;
+	}
+
+	if(DBL_MAX == pdetail_pr->srtt_metric.srtt){
+		if(pdetail_pr->internet_latency == DBL_MAX || pdetail_pr->access_latency == DBL_MAX){
+			sapp_runtime_log(RLOG_LV_INFO, "tcp_srtt_measurement error: stream:%s, can't get handshake latency!", 
+							printaddr(&pstream->addr, pstream->threadnum));				
+			return;
+		}
+		pdetail_pr->srtt_metric.srtt = 0.0; //set initialize rtt from handshake latency
+		 if(pdetail_pr->internet_latency != DBL_MAX){
+			pdetail_pr->srtt_metric.srtt += (double)pdetail_pr->internet_latency * 2;
+		 } 
+		 if(pdetail_pr->access_latency != DBL_MAX){
+			pdetail_pr->srtt_metric.srtt += (double)pdetail_pr->access_latency * 2;
+		 } 
+	}
+
+	const struct half_tcpstream *rcv;
+	uint32_t cur_ack = ntohl(this_tcphdr->th_ack);
+
+	if(DIR_C2S == pstream->curdir){
+		if(0 == pdetail_pr->last_s2c_pkt_rcv_time){
+			return;
+		}
+		rcv = pdetail_pr->pclient;
+		if(rcv && (EXP_SEQ == cur_ack)){
+			srtt_metric->rtt_dpi_client_dpi = ABBR_CURRENT_TIME_MS - pdetail_pr->last_s2c_pkt_rcv_time;	
+			sapp_runtime_log(RLOG_LV_DEBUG, "tcp_srtt_measurement: stream:%s, current_ms=%lld, seq=%u, ack=%u, chksum=0x%x, rtt_dpi_client_dpi=%u", 
+							printaddr(&pstream->addr, pstream->threadnum), ABBR_CURRENT_TIME_MS, 
+							ntohl(this_tcphdr->th_seq), ntohl(this_tcphdr->th_ack), ntohs(this_tcphdr->th_sum), srtt_metric->rtt_dpi_client_dpi);		
+			pdetail_pr->last_s2c_pkt_rcv_time = 0;						
+		}else{
+			sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream:%s into srtt measurement(), curdir=%d, but not expect seq! EXP_SEQ=%x, curack=%x", 
+			                printaddr(&pstream->addr, pstream->threadnum), pstream->curdir, EXP_SEQ, cur_ack);
+		}
+	}
+	else //DIR_S2C
+	{
+		if(0 == pdetail_pr->last_c2s_pkt_rcv_time){
+			return;
+		}		
+		rcv = pdetail_pr->pserver;
+		if(rcv && (EXP_SEQ == cur_ack)){
+			srtt_metric->rtt_dpi_server_dpi = ABBR_CURRENT_TIME_MS - pdetail_pr->last_c2s_pkt_rcv_time;
+			sapp_runtime_log(RLOG_LV_DEBUG, "tcp_srtt_measurement: stream:%s, current_ms=%lld, seq=%u, ack=%u, chksum=0x%x, rtt_dpi_server_dpi=%u", 
+							printaddr(&pstream->addr, pstream->threadnum), ABBR_CURRENT_TIME_MS, 
+							ntohl(this_tcphdr->th_seq), ntohl(this_tcphdr->th_ack), ntohs(this_tcphdr->th_sum), srtt_metric->rtt_dpi_server_dpi);	
+			pdetail_pr->last_c2s_pkt_rcv_time = 0;															
+		}else{
+			sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream:%s into srtt measurement(), curdir=%d, but not expect seq! EXP_SEQ=%x, curack=%x", 
+			                 printaddr(&pstream->addr, pstream->threadnum), pstream->curdir, EXP_SEQ, cur_ack);
+		}		
+	}
+
+	//sampling rtt every TCP_SAMPLING_SRTT_INTERVAL_MS 
+	if(pdetail_pr->srtt_metric.last_rtt_sampling_time + TCP_SAMPLING_SRTT_INTERVAL_MS > ABBR_CURRENT_TIME_MS){
+		return; 
+	}
+
+	if(srtt_metric->rtt_dpi_client_dpi != 0xFFFF 
+	   && srtt_metric->rtt_dpi_server_dpi != 0xFFFF
+	   && (srtt_metric->rtt_dpi_client_dpi + srtt_metric->rtt_dpi_server_dpi > 0) ){
+		double last_rtt = srtt_metric->srtt;
+		double current_rtt = (double)(srtt_metric->rtt_dpi_client_dpi + srtt_metric->rtt_dpi_server_dpi);
+		tcp_srtt_update(srtt_metric, current_rtt);
+		sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream:%s srtt measurement update: seq=%u, ack=%u, chksum=0x%x, last rtt: %f, current_rtt: %f(rtt_dpi_client_dpi=%f, rtt_dpi_server_dpi=%f), new_srtt: %f, access_latency=%.3fms, internet_latency=%.3fms", 
+		                 printaddr(&pstream->addr, pstream->threadnum), 
+						 ntohl(this_tcphdr->th_seq), ntohl(this_tcphdr->th_ack), ntohs(this_tcphdr->th_sum),
+						 last_rtt, current_rtt, srtt_metric->rtt_dpi_client_dpi, srtt_metric->rtt_dpi_server_dpi,
+						 srtt_metric->srtt, pdetail_pr->access_latency, pdetail_pr->internet_latency);
+		srtt_metric->last_rtt_sampling_time = ABBR_CURRENT_TIME_MS;
+		srtt_metric->rtt_dpi_client_dpi = 0xFFFF; /* reset after use */
+		srtt_metric->rtt_dpi_server_dpi = 0xFFFF; /* reset after use */
+	}
 }
 
 //static int tcp_deal_syn_stream(struct streamindex *pindex,struct mesa_tcp_hdr *this_tcphdr,int datalen)
@@ -1610,15 +1735,24 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 	int thisseq=ntohl (this_tcphdr->th_seq);
 	int thisack=ntohl (this_tcphdr->th_ack);
 
-	calculate_tcp_rtt(pstream, pdetail_pr, this_tcphdr);
-
+	calculate_tcp_handshake_latency(pstream, pdetail_pr, this_tcphdr);
+	if (curdir == DIR_C2S){
+		pdetail_pr->last_c2s_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
+		sapp_runtime_log(RLOG_LV_DEBUG, "deal_syn_stream()->C2S TCP PKT timestamp: stream:%s, current_ms=%lld, seq=%u, ack=%u, chksum=0x%x", 
+						printaddr(&pstream->addr, pstream->threadnum), ABBR_CURRENT_TIME_MS, 
+						ntohl(this_tcphdr->th_seq), ntohl(this_tcphdr->th_ack), ntohs(this_tcphdr->th_sum));				
+	}else{
+		pdetail_pr->last_s2c_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
+		sapp_runtime_log(RLOG_LV_DEBUG, "deal_syn_stream()->S2C TCP PKT timestamp: stream:%s, current_ms=%lld, seq=%u, ack=%u, chksum=0x%x", 
+						printaddr(&pstream->addr, pstream->threadnum), ABBR_CURRENT_TIME_MS, 
+						ntohl(this_tcphdr->th_seq), ntohl(this_tcphdr->th_ack), ntohs(this_tcphdr->th_sum));				
+	}
     if (pstream->dir == DIR_C2S)
     {
         curseq = pdetail_pr->iserverseq;
         if (curdir == DIR_S2C)
         {
 			pdetail_pr->S2C_ack_seq = thisack;
-			pdetail_pr->last_s2c_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
             if ((this_tcphdr->th_flags & TH_RST) && (datalen == 0))
             {
                 if (thisack == curseq)
@@ -1649,7 +1783,6 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
         else 
         {
 			pdetail_pr->C2S_ack_seq = thisack;
-			pdetail_pr->last_c2s_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
             if (thisseq == curseq)
             {
                 if ((this_tcphdr->th_flags & TH_RST) && (datalen == 0))
@@ -1677,7 +1810,6 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 
         if (curdir == DIR_C2S)
         {
-			pdetail_pr->last_c2s_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
             if ((this_tcphdr->th_flags & TH_RST) && (datalen == 0))
             {
                 pstream->dir = DIR_DOUBLE;
@@ -1697,7 +1829,6 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
         }
         else 
         {
-			pdetail_pr->last_s2c_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
             if ((thisseq == curseq) && (this_tcphdr->th_flags & TH_RST) && (datalen == 0))
 
             {
@@ -1723,14 +1854,14 @@ static int tcp_deal_syn_stream(struct streamindex *pindex,const raw_pkt_t *raw_p
 	{
 		pdetail_pr->iserverseq=thisseq + 1;
 		pdetail_pr->multisynflag=1;
-		pdetail_pr->tcpstateflag=TCP_SYN_SENT;
+		pdetail_pr->tcpstateflag=TCP_SYN_SENT;	
 	}
 	
 	if(this_tcphdr->th_flags == (TH_SYN|TH_ACK))
 	{
 		pdetail_pr->iclientseq=thisseq+1;
 		pdetail_pr->multisynflag=1;
-		pdetail_pr->tcpstateflag=TCP_SYN_SENT;
+		pdetail_pr->tcpstateflag=TCP_SYN_SENT;		
 	}
 	
 	return PASS;
@@ -2194,6 +2325,7 @@ static int tcp_deal_data(struct streamindex *pindex,const void *this_iphdr,const
 		if (after(this_seq + datalen + 
 			(this_tcphdr->th_flags & TH_FIN), EXP_SEQ))
 		{
+			tcp_srtt_measurement(pstream, pdetail_pr, this_tcphdr);
 			tcp_set_new_data(pstream,rcv,snd,tcpdata,datalen,this_seq,this_tcphdr->th_flags & TH_FIN, raw_pkt->is_ctrl_pkt);
 			if(datalen >0)
 			{
@@ -2402,6 +2534,7 @@ static int tcp_deal_data_stream(struct streamindex *pindex,const void *this_iphd
 			return ret;
 		}
 	}
+	tcp_srtt_measurement(pstream, pdetail_pr, this_tcphdr);
 
 	if(pstream->dir==DIR_DOUBLE)
 	{
@@ -2650,6 +2783,26 @@ static int deal_tcp_tfo(struct streaminfo *pstream, const void *this_iphdr, stru
 	return ret;
 }
 
+static inline void tcp_update_last_pkt_time(struct streaminfo_private *pstream_pr, int tcplen)
+{
+	struct tcpdetail_private * pdetail_pr = (struct tcpdetail_private *)(pstream_pr->stream_public.pdetail);
+	if(pdetail_pr){
+		if(DIR_C2S == pstream_pr->stream_public.curdir){
+			if(tcplen > 0 || pstream_pr->stream_public.stream_state == TCP_SYN_STATE){
+				pdetail_pr->last_c2s_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
+			}else{
+				pdetail_pr->last_c2s_pkt_rcv_time = 0;
+			}
+		}else{
+			if(tcplen > 0 || pstream_pr->stream_public.stream_state == TCP_SYN_STATE){
+				pdetail_pr->last_s2c_pkt_rcv_time = ABBR_CURRENT_TIME_MS;
+			}else{
+				pdetail_pr->last_s2c_pkt_rcv_time = 0;
+			}
+		}
+	}
+}
+
 //int deal_tcp_stream(struct streamindex *pstream,struct mesa_tcp_hdr *this_tcphdr,int tcplen,const void *rawippkt,int iplen)
 static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, struct mesa_tcp_hdr *this_tcphdr,
 	int tcplen,const raw_pkt_t *raw_pkt, int offset_to_raw_pkt_hdr)
@@ -2704,6 +2857,7 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 					}
 				}
 			}
+			tcp_update_last_pkt_time(pstream_pr, this_tcphdr->th_flags & TH_SYN); //The SYN packets consume one sequence number
 			return ret; 
 		}
 		else
@@ -2824,6 +2978,9 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		}
 		pdetail->clientbytes+=tcplen;
 		pdetail->clientpktnum++;
+		if(pdetail_pr->last_s2c_pkt_rcv_time != 0){
+			pdetail_pr->srtt_metric.half_pkt_interval_s2c = ABBR_CURRENT_TIME_MS - pdetail_pr->last_s2c_pkt_rcv_time;
+		}
 	}
 	else
 	{
@@ -2833,6 +2990,9 @@ static int deal_tcp_stream(struct streamindex *pindex, const void *this_iphdr, s
 		}
 		pdetail->serverbytes+=tcplen;
 		pdetail->serverpktnum++;
+		if(pdetail_pr->last_c2s_pkt_rcv_time != 0){
+			pdetail_pr->srtt_metric.half_pkt_interval_c2s = ABBR_CURRENT_TIME_MS - pdetail_pr->last_c2s_pkt_rcv_time;
+		}
 	}
 
 	if(try_to_update_addr_info == 1)
@@ -3011,16 +3171,15 @@ fun_exit:
 		sapp_runtime_log(RLOG_LV_DEBUG, "TCP stream: %s, tcphdr->checksum:0x%x, curdir:%d, return DROP.", 
 						printaddr(&pstream->addr, pstream->threadnum), ntohs(this_tcphdr->th_sum), pstream->curdir);
 	}
-
+	if(raw_pkt->is_ctrl_pkt == 0){
+		tcp_update_last_pkt_time(pstream_pr, tcplen);
+	}
 	return ret;
 }
-
 
 static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struct mesa_tcp_hdr *this_tcphdr, 
 	int thread_num,unsigned char routedir, int tcpdatalen, const raw_pkt_t *raw_packet, int offset_to_raw_pkt_hdr)
 {
-
-
 	//struct streamindex tmp_tcp_stream;
 	//struct streamindex *ptmp=&tmp_tcp_stream;
 	struct streaminfo_private *pstream_pr = (struct streaminfo_private *)(&pfindex->stream);
@@ -3057,7 +3216,11 @@ static int dealtcppkt(struct streamindex *pfindex, const void *this_iphdr, struc
 
 	local_sys_stat->count_per_layer[ADDR_TYPE_TCP][pstream_pr->layer_index]++;
 	local_sys_stat->length_per_layer[ADDR_TYPE_TCP][pstream_pr->layer_index] += tcpdatalen + this_tcphdr->th_off*4; 
-	
+
+	sapp_runtime_log(RLOG_LV_DEBUG, "TCP PKT timestamp: stream:%s, current_ms=%lld, seq=%u, ack=%u, chksum=0x%x, len=%d", 
+					printaddr(&pstream->addr, pstream->threadnum), ABBR_CURRENT_TIME_MS, 
+					ntohl(this_tcphdr->th_seq), ntohl(this_tcphdr->th_ack), ntohs(this_tcphdr->th_sum), tcpdatalen);	
+
 	//return deal_tcp_stream(ptmp,this_tcphdr,tcpdatalen,raw_packet,raw_len);
 	return deal_tcp_stream(pfindex,this_iphdr, this_tcphdr,tcpdatalen, raw_packet, offset_to_raw_pkt_hdr);
 }

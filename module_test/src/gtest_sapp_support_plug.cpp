@@ -2482,41 +2482,44 @@ extern "C" char get_ip_ttl_entry(struct streaminfo *pstream,void **pme, int thre
 	return APP_STATE_GIVEME;	
 }
 
-extern "C" char get_tcp_rtt_entry(struct streaminfo *pstream, void **pme, int thread_seq, void *a_packet)
+#endif
+
+extern "C" char get_tcp_latency_entry(struct streaminfo *pstream, void **pme, int thread_seq, void *a_packet)
 {
-	static unsigned short rtt_csc = 0, rtt_scs = 0;
+	static double internet_latency = 0.0, access_latency = 0.0;
 	int ret;
-	int opt_len = sizeof(short);
+	int opt_len = sizeof(double);
 
-	if (pstream->opstate == OP_STATE_CLOSE)
+	if (pstream->opstate == OP_STATE_DATA)
 	{
-		ret = MESA_get_stream_opt(pstream, MSO_TCP_RTT_CSC, &rtt_csc, &opt_len);
+		ret = MESA_get_stream_opt(pstream, MSO_INTERNET_LATENCY, &internet_latency, &opt_len);
 		if (ret < 0)
 		{
-			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_entry error: get MSO_TCP_RTT_CSC test fail!\033[0m\n");
+			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_entry error: get MSO_INTERNET_LATENCY test fail!\033[0m\n");
 			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
 			exit(1);
 			return APP_STATE_DROPME;
 		}
 
-		ret = MESA_get_stream_opt(pstream, MSO_TCP_RTT_SCS, &rtt_scs, &opt_len);
+		ret = MESA_get_stream_opt(pstream, MSO_ACCESS_LATENCY, &access_latency, &opt_len);
 		if (ret < 0)
 		{
-			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_entry error: get MSO_TCP_RTT_SCS test fail!\033[0m\n");
+			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_entry error: get MSO_ACCESS_LATENCY test fail!\033[0m\n");
 			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
 			exit(1);
 			return APP_STATE_DROPME;
 		}
 
-		/* in pcap, actual latency is 65ms, scs is 143ms,  an error of 3 microseconds is allowed */
-		if (rtt_csc >= 62 && rtt_csc <= 68 && rtt_scs >= 141 && rtt_scs <= 146)
+		/* in pcap, actual internet latency is 33ms, access latency is 71ms,  an accuracy error within 1 microseconds is allowed */
+		if (internet_latency >= 32 && internet_latency <= 34 && access_latency >= 70 && access_latency <= 72)
 		{
 			fprintf(stderr, "\033[32mget_tcp_rtt_entry test succ \033[0m\n");
 			gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
 			exit(0);
 			return APP_STATE_DROPME;
 		}else{
-			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_entry error: get rtt_csc:%d, but expect:%d, get rtt_scs:%d, but expect:%d\033[0m\n", rtt_csc, 65, rtt_scs, 143);
+			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_entry error: get internet_latency:%f, but expect:%d, get access_latency:%f, but expect:%d\033[0m\n",
+			        internet_latency, 31, access_latency, 71);
 			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
 			exit(1);
 			return APP_STATE_DROPME;
@@ -2525,31 +2528,65 @@ extern "C" char get_tcp_rtt_entry(struct streaminfo *pstream, void **pme, int th
 	return APP_STATE_GIVEME;
 }
 
-extern "C" char get_tcp_rtt_err_entry(struct streaminfo *pstream, void **pme, int thread_seq, void *a_packet)
+extern "C" char get_tcp_latency_srtt_entry(struct streaminfo *pstream, void **pme, int thread_seq, void *a_packet)
 {
-	unsigned short rtt_csc = 0xFFFF, rtt_scs = 0xFFFF;
+	static double internet_latency = 0.0, access_latency = 0.0;
 	int ret;
-	int opt_len = sizeof(short);
+	int opt_len = sizeof(double);
 
-	if(OP_STATE_CLOSE == pstream->opstate){
-		ret = MESA_get_stream_opt(pstream, MSO_TCP_RTT_CSC, &rtt_csc, &opt_len);
-		if(ret >= 0 || rtt_csc != 0xFFFF){
-			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_err_entry error: get rtt_csc, but expect not!\033[0m\n");
+	if (pstream->opstate == OP_STATE_DATA)
+	{
+		ret = MESA_get_stream_opt(pstream, MSO_INTERNET_LATENCY, &internet_latency, &opt_len);
+		if (ret < 0)
+		{
+			fprintf(stderr, "\033[1;31;40mget_tcp_latency_srtt_entry error: get MSO_INTERNET_LATENCY test fail!\033[0m\n");
 			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
 			return APP_STATE_DROPME;
 		}
-		ret = MESA_get_stream_opt(pstream, MSO_TCP_RTT_SCS, &rtt_scs, &opt_len);
-		if(ret >= 0 || rtt_scs != 0xFFFF){
-			fprintf(stderr, "\033[1;31;40mget_tcp_rtt_err_entry error: get rtt_scs, but expect not!\033[0m\n");
-			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
-			return APP_STATE_DROPME;
-		}		
 
-		fprintf(stderr, "\033[32mget_tcp_rtt_error_entry test succ \033[0m\n");
-		gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
-		return APP_STATE_DROPME;
+		ret = MESA_get_stream_opt(pstream, MSO_ACCESS_LATENCY, &access_latency, &opt_len);
+		if (ret < 0)
+		{
+			fprintf(stderr, "\033[1;31;40mget_tcp_latency_srtt_entry error: get MSO_ACCESS_LATENCY test fail!\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
+			return APP_STATE_DROPME;
+		}
+
+		/* in pcap, actual internet latency is 600ms, access latency is 14ms,  an accuracy error within 1 microseconds is allowed */
+		if (internet_latency < 599 || internet_latency > 601 || access_latency < 13 || access_latency > 15)
+		{
+			fprintf(stderr, "\033[1;31;40mget_tcp_latency_srtt_entry error: get internet_latency:%f, but expect:%f, get access_latency:%f, but expect:%f\033[0m\n",
+			        internet_latency, (double)600, access_latency, (double)14);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
+			return APP_STATE_DROPME;
+		}
 	}
 
+	if (pstream->opstate == OP_STATE_CLOSE)
+	{
+		double srtt = 0.0;
+		opt_len = sizeof(double);
+		ret = MESA_get_stream_opt(pstream, MSO_TCP_STREAM_SRTT, &srtt, &opt_len);
+		if (ret < 0)
+		{
+			fprintf(stderr, "\033[1;31;40mget_tcp_latency_srtt_entry error: get MSO_TCP_STREAM_SRTT test fail!\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
+			return APP_STATE_DROPME;
+		}
+		if (srtt < 1227 || srtt > 1229)//initialize srtt is 1228ms
+		{
+			fprintf(stderr, "\033[1;31;40mget_tcp_latency_srtt_entry error: get srtt:%f, but expect:%f \033[0m\n",srtt, (double)1228);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
+			return APP_STATE_DROPME;
+		}
+		fprintf(stderr, "\033[32mget_tcp_latency_srtt_entry test succ \033[0m\n");
+		gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
+	}
 	return APP_STATE_GIVEME;
 }
 
@@ -2588,7 +2625,64 @@ extern "C" char ctrl_get_stream_uuid_entry(struct streaminfo *pstream, void **pm
 	return APP_STATE_GIVEME;
 }
 
-#endif
+extern "C" char get_tcp_latency_srtt_long_duration_entry(struct streaminfo *pstream, void **pme, int thread_seq, void *a_packet)
+{
+	static double internet_latency = 0.0, access_latency = 0.0;
+	int ret;
+	int opt_len = sizeof(double);
 
+	if (pstream->opstate == OP_STATE_DATA)
+	{
+		ret = MESA_get_stream_opt(pstream, MSO_INTERNET_LATENCY, &internet_latency, &opt_len);
+		if (ret < 0)
+		{
+			fprintf(stderr, "\033[1;31;40mget_tcp_latency_srtt_entry error: get MSO_INTERNET_LATENCY test fail!\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
+			return APP_STATE_DROPME;
+		}
 
+		ret = MESA_get_stream_opt(pstream, MSO_ACCESS_LATENCY, &access_latency, &opt_len);
+		if (ret < 0)
+		{
+			fprintf(stderr, "\033[1;31;40mget_tcp_latency_srtt_entry error: get MSO_ACCESS_LATENCY test fail!\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
+			return APP_STATE_DROPME;
+		}
 
+		/* in pcap, actual internet latency is 2ms, access latency is approximately 0ms,  an accuracy error within 1 microseconds is allowed */
+		if (internet_latency < 1 || internet_latency > 3 || access_latency < -1.0 || access_latency > 1)
+		{
+			fprintf(stderr, "\033[1;31;40mget_tcp_latency_srtt_entry error: get internet_latency:%f, but expect:%f, get access_latency:%f, but expect:%f\033[0m\n",
+			        internet_latency, (double)600, access_latency, (double)14);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
+			return APP_STATE_DROPME;
+		}
+	}
+
+	if (pstream->opstate == OP_STATE_CLOSE)
+	{
+		double srtt = 0.0;
+		opt_len = sizeof(double);
+		ret = MESA_get_stream_opt(pstream, MSO_TCP_STREAM_SRTT, &srtt, &opt_len);
+		if (ret < 0)
+		{
+			fprintf(stderr, "\033[1;31;40mget_tcp_latency_srtt_entry error: get MSO_TCP_STREAM_SRTT test fail!\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
+			return APP_STATE_DROPME;
+		}
+		if (srtt < 5 || srtt > 8)//initialize srtt is approximately 6~7 ms
+		{
+			fprintf(stderr, "\033[1;31;40mget_tcp_latency_srtt_entry error: get srtt:%f, but expect:%f \033[0m\n",srtt, (double)6.8);
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			exit(1);
+			return APP_STATE_DROPME;
+		}
+		fprintf(stderr, "\033[32mget_tcp_latency_srtt_entry test succ \033[0m\n");
+		gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
+	}
+	return APP_STATE_GIVEME;
+}

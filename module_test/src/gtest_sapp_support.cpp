@@ -1080,38 +1080,33 @@ void control_get_ip_ttl_run(void)
 	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
-void control_get_tcp_rtt_run(void)
+void control_get_tcp_latency_run(void)
 {
 	set_default_config();
-
 	update_plugin_inf("IP", "iplayer_readjust_time_entry");
-	append_plugin_inf("TCP", "get_tcp_rtt_entry");
-	
+	append_plugin_inf("TCP", "get_tcp_latency_entry");
 	set_pcap_dumpfile("for_gtest_only/tcp/tcp_rtt.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "1e06f7ed52405f9014bea2b117ecadff"),0);
-
 	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
-void control_get_tcp_rtt_c2s_run(void)
+void control_get_tcp_latency_srtt_run(void)
 {
 	set_default_config();
-	update_plugin_inf("TCP", "get_tcp_rtt_err_entry");
-	
-	set_pcap_dumpfile("tcp/tcp_isn_c2s_single.pcap");
-	ASSERT_EQ(file_md5_checksum("dumpfile", "a5d0d96ee6f44f729d79aeac5cc2fee0"),0);
-
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");
+	append_plugin_inf("TCP", "get_tcp_latency_srtt_entry");
+	set_pcap_dumpfile("for_gtest_only/tcp/tcp_http_rtt.pcap");
+	ASSERT_EQ(file_md5_checksum("dumpfile", "4564f6d281528435288d2263e7947d5b"),0);
 	call_libsapp_devel_for_dumpfile_topspeed();
 }
 
-void control_get_tcp_rtt_s2c_run(void)
+void control_get_tcp_latency_srtt_long_duration_run(void)
 {
 	set_default_config();
-	update_plugin_inf("TCP", "get_tcp_rtt_err_entry");
-	
-	set_pcap_dumpfile("for_gtest_only/tcp/tcp_rtt_s2c.pcap");
-	ASSERT_EQ(file_md5_checksum("dumpfile", "006277b38aa1f9a0d272b643b8a3b686"),0);
-
+	update_plugin_inf("IP", "iplayer_readjust_time_entry");
+	append_plugin_inf("TCP", "get_tcp_latency_srtt_long_duration_entry");
+	set_pcap_dumpfile("for_gtest_only/tcp/tcp_rtt_long_duration.pcap");
+	ASSERT_EQ(file_md5_checksum("dumpfile", "ec0e5e1359c8a9352eeb7c6122944f90"),0);
 	call_libsapp_devel_for_dumpfile_topspeed();
 }
 

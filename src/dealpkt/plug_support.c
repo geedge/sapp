@@ -2143,33 +2143,62 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 
 		case MSO_TCP_RTT_CSC:
 		{
-			if(STREAM_TYPE_TCP != pstream->type){
-				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_RTT_CSC error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
-				ret = -1;
-				break;
-			}
-			if(0xFFFF == pdetail_pr->rtt_csc){
-				ret = -1;
-				break;
-			}
-			*((unsigned short *)opt_val) = pdetail_pr->rtt_csc;
-			*opt_val_len = sizeof(short);
+			sapp_runtime_log(RLOG_LV_FATAL, "%s,MESA_get_stream_opt() MSO_TCP_RTT_CSC is deprecated!\n", printaddr(&pstream->addr, pstream->threadnum));
+			ret = -1;	
+		}
+		break;
+		case MSO_TCP_RTT_SCS:
+		{
+			sapp_runtime_log(RLOG_LV_FATAL, "%s,MESA_get_stream_opt() MSO_TCP_RTT_SCS is deprecated!\n", printaddr(&pstream->addr, pstream->threadnum));
+			ret = -1;
 		}
 		break;
 
-		case MSO_TCP_RTT_SCS:
+		case MSO_ACCESS_LATENCY:
+		{	
+			if(STREAM_TYPE_TCP != pstream->type){
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_ACCESS_LATENCY error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
+				ret = -1;
+				break;
+			}
+			if(DBL_MAX == pdetail_pr->access_latency){
+				ret = -1;
+				break;
+			}
+			*((double *)opt_val) = pdetail_pr->access_latency;
+			*opt_val_len = sizeof(double);	
+		}
+		break;
+
+		case MSO_INTERNET_LATENCY:
+		{	
+			if(STREAM_TYPE_TCP != pstream->type){
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_INTERNET_LATENCY error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
+				ret = -1;
+				break;
+			}
+			if(DBL_MAX == pdetail_pr->internet_latency){
+				ret = -1;
+				break;
+			}
+			*((double *)opt_val) = pdetail_pr->internet_latency;
+			*opt_val_len = sizeof(double);	
+		}
+		break;
+
+		case MSO_TCP_STREAM_SRTT:
 		{
 			if(STREAM_TYPE_TCP != pstream->type){
-				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_RTT_CSC error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
+				sapp_runtime_log(RLOG_LV_INFO, "%s,MESA_get_stream_opt() MSO_TCP_STREAM_SRTT error:stream type is not tcp!\n", printaddr(&pstream->addr, pstream->threadnum));
 				ret = -1;
 				break;
 			}
-			if(0xFFFF == pdetail_pr->rtt_scs){
+			if(DBL_MAX == pdetail_pr->srtt_metric.srtt){
 				ret = -1;
 				break;
 			}
-			*((unsigned short *)opt_val) = pdetail_pr->rtt_scs;
-			*opt_val_len = sizeof(short);
+			*((double *)opt_val) = pdetail_pr->srtt_metric.srtt;
+			*opt_val_len = sizeof(double);	
 		}
 		break;
 
