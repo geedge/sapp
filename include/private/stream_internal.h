@@ -17,8 +17,8 @@
 //#define STREAM_TUNNEL_MD5_CHECK		"d20aa6b4f5683b7b0040676547997be0"
 
 #define IP_PORT_UNION_VERSION			(1) /* �Ƿ�IP-PORT�ϲ� */
-#define COMPAT_PAPP_FOR_BENCHMARK	(0) /* 2015-01-07 lijia add, ͬpapp�ԱȽ��ʱ, ��ʱ�ر�Ƕ�ס���������Э��, ����һ�� */
-#define USE_RBTREE_INSTEAD_LIST		(0) /* ��HASH��ͻʱ, ʹ�ú������������, ������������±��� */
+#define COMPAT_PAPP_FOR_BENCHMARK	(0) /* 2015-01-07 lijia add, ͬpapp�ԱȽ���?, ��ʱ�ر�Ƕ�ס���������Э��, ����һ�� */
+#define USE_RBTREE_INSTEAD_LIST		(0) /* ��HASH��ͻʱ, ʹ�ú������������?, ������������±���? */
 //#define USE_LINUX_KERNEL_HASH_ALGO	(1) /* ʹ��LINUX�ں�HASH�㷨 */
 
 #define SAPP_INSECTICIDE				(0) /* ɱ��(DEBUG)��ʱ����, ������Ī�������BUGʱ��ʱ����, ���緢������, �����糬�� */
@@ -28,7 +28,7 @@
 
 #define PCAP_CAP_FROM_IP				(0) /* Ϊ��ģ��pag�����߻���, ��pcapҲģ���IPv4ͷ����ʼ��ȡ */
 
-//#define NON_PKT_THREAD_SEND_QUEUE		(64) /* �����������߳�����Ͷ������� */
+//#define NON_PKT_THREAD_SEND_QUEUE		(64) /* �����������߳�����Ͷ�������? */
 
 #define IKNOW_ENABLE					(0)
 
@@ -50,10 +50,13 @@
 
 #define sapp_get_struct_header(ptr, type, member)  container_of(ptr, type, member)
 
-#define RAW_PKT_MAGIC_NUM		(0xF1E2D3C4) /* 1:���ڼ��ݾ���Ŀ, ��call_old��������ݽṹʱ,ʶ��ԭʼ������Դ; 2:��ȫ�Լ�� */
+#define RAW_PKT_MAGIC_NUM		(0xF1E2D3C4) /* 1:���ڼ��ݾ���Ŀ, ��call_old��������ݽṹ�?,ʶ��ԭʼ������Դ; 2:��ȫ�Լ��? */
 
 #define SAPP_DESTROY_DONE_FLAG  (0x7FFFFFFF)
 
+#ifndef uuid_t
+typedef unsigned char uuid_t[16];
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,13 +87,13 @@ typedef struct {
 	const void *__lib_raw_pkt_data; /* �ײ㲶�����ṩ����ʵԭʼ��ָ�� */
 	const void *raw_pkt_data;	/* ���ϲ�Ӧ�ÿ���ԭʼ��ͷָ��, �п���������Ethernet��, ����low_layer_type�ж�Э������ */
 
-	struct timeval raw_pkt_ts;	/* ԭʼ������ʱ���, ���ȫΪ0��֧�ִ˹���(��pagģʽ) */
+	struct timeval raw_pkt_ts;	/* ԭʼ������ʱ���?, ���ȫ�?0��֧�ִ˹���(��pagģʽ) */
 	//2*8 Bytes
-	const void *io_lib_pkt_reference; /* ���õײ�I/O���ԭʼ�������ṹ, ����:����marsio��˵, ���ײ��mbuf�ṹ */
+	const void *io_lib_pkt_reference; /* ���õײ�I/O���ԭʼ��������?, ����:����marsio��˵, ���ײ��mbuf�ṹ */
 
 	/* ---8 bytes-- */
 	int payload_len; /* ���س��� */
-	int device_index;/* �ж������ʱ, Ҫ��֤���ĸ������ʹ��ĸ����� */
+	int device_index;/* �ж�������?, Ҫ��֤���ĸ������ʹ��ĸ����� */
 	/* ===8 bytes=== */
 
 	/* ---8 bytes-- */
@@ -98,7 +101,7 @@ typedef struct {
 	unsigned char is_overlay_pkt:1; /* ��ʾ����ʵ��·�е����ݰ�, Ҫ��������ע, ��������������һ������; ����Ҫ���� */
 	unsigned char is_ctrl_pkt:1;
 	unsigned char diagnose_error_to_dump:1; /* ��ĳ�ִ������ݰ�, ����pkt_dump�洢��udp socket���͸�tcpdump_mesa */
-	unsigned char drop_current_pkt_flag:1; /* �������MSO_DROP_CURRENT_PKT���ö�����ǰ��, ÿ�δ�����Ҫ��� */
+	unsigned char drop_current_pkt_flag:1; /* �������MSO_DROP_CURRENT_PKT���ö�����ǰ��, ÿ�δ�����Ҫ���? */
 	unsigned char mac_flipping_enable:1;
 	unsigned char padding_flags:2;
 			//1 Bytes
@@ -151,8 +154,8 @@ struct buf_unorder
 	unsigned char ip_reassemble_pkt;
 	UINT32 seq;
 	UINT32 ack;
-	raw_ipfrag_list_t *ipfrag_list; /* �����ǰ����IP��Ƭ����İ�, ��Ҫ�洢����IP��Ƭ������ */
-	raw_pkt_t raw_pkt; /* ������洢ԭʼ�� */
+	raw_ipfrag_list_t *ipfrag_list; /* �����ǰ����IP��Ƭ����İ�?, ��Ҫ�洢����IP��Ƭ������ */
+	raw_pkt_t raw_pkt; /* ������洢ԭʼ��? */
 };
 
 /*�����ṹ�嶨�壺*/
@@ -160,13 +163,13 @@ struct half_tcpstream
 {
   UCHAR *data;
   UINT32 offset;           /*data�е�һ���ֽ���TCP�������е�ƫ����*/
-  UINT32 count;           /*�����ӽ���������Ϊֹ������������ܳ����ֽ���*/
+  UINT32 count;           /*�����ӽ���������Ϊֹ������������ܳ����ֽ���?*/
   UINT32 count_new;        /*�����µ��������ֽ���*/
-  UINT32 count_ideal;      /*�����ӽ���������Ϊֹ��������Ӧ�õ���������ܳ���*/
-  UINT32 pktcout;          /*�����ۼƵ���İ�����, �����ش���, ACK, ������SYN */
+  UINT32 count_ideal;      /*�����ӽ���������Ϊֹ��������Ӧ�õ���������ܳ���?*/
+  UINT32 pktcout;          /*�����ۼƵ���İ�����?, �����ش���, ACK, ������SYN */
   UINT32 totallost;        /*�����ۼƶ�������*/
-  UINT32 seq;              /*���������ڴ���seq���*/
-  UINT32 first_data_seq;   /*����������ʼ�ĵ�seq���*/
+  UINT32 seq;              /*���������ڴ���seq���?*/
+  UINT32 first_data_seq;   /*����������ʼ�ĵ�seq���?*/
   
   //UINT32 ack_seq;          /*�����������ʹ�õ�Ӧ���, 2017-08-02 lijia modify , �ƶ���struct tcpdetail_private */
   
@@ -175,11 +178,11 @@ struct half_tcpstream
   UCHAR finstate;		    /*fin״̬*/
   UINT16 unorder_cnt;/* 2014-11-27 lijia modify, ĳЩ���������޴�, UCHAR�Ͳ���, ��չΪUINT16 */
   UINT16 maxunorder; /* 2014-11-27 lijia modify, ĳЩ���������޴�, UCHAR�Ͳ���, ��չΪUINT16 */
-  struct buf_unorder *unorderlist;	/*�����������*/
-  struct buf_unorder *unorderlisttail;	/*�����������β��ָ��*/
+  struct buf_unorder *unorderlist;	/*�����������?*/
+  struct buf_unorder *unorderlisttail;	/*�����������β��ָ��?*/
 };
 
-/* ����ÿ�������������һ����, ����polling entry����ʹ�� */
+/* ����ÿ�������������һ����?, ����polling entry����ʹ�� */
 typedef struct {
 	const raw_pkt_t *raw_pkt_stream_dir[2];
 	struct rawpkt_metadata* meta_stream_dir[2];// ÿ������metadata��[0:c2s, 1:s2c]����洢��polling_inject_context��, update_raw_pkt��������ʱ����������䵽���ص�rawpkt��
@@ -187,32 +190,32 @@ typedef struct {
 
 struct streaminfo_private
 {
-	/* ����ṹ�����ڽṹ����ǰ, ָ���ַ���Ի���ǿת */
+	/* ����ṹ�����ڽṹ�����?, ָ���ַ���Ի���ǿ�? */
 	struct streaminfo stream_public;
-	struct streaminfo_private *pfather_pr; /* ��ʵ�������ϲ���ָ��, ������vxlan�ȷ�װ��, stream_public.pfather�Ǹ�ҵ��������,������vxlan��� */
+	struct streaminfo_private *pfather_pr; /* ��ʵ�������ϲ���ָ��, ������vxlan�ȷ�װ��, stream_public.pfather�Ǹ�ҵ��������,������vxlan���? */
 	/* ���±���Ϊƽ̨�ڲ�˽��, ���ⲻ�ɼ� */
 	void *cur_plugin_cb_func;
 	void   *pproject;		//ÿ�����̿����Զ���ʹ�ã�
 
 	/* ---8 bytes-- */
-	UCHAR  layer_dir:2;   /* ������Ч, ��ǰ��ĵ�ַ�Ƿ��Ĭ�Ϲ���"��˿��ǿͻ���"��ͬ */	
-	UCHAR  stream_dir:1; /* ��������������Ч, ���Ĵ洢�ĵ�ַ�Ƿ��Ĭ�Ϲ���"��˿��ǿͻ���"��ͬ  */		
-	UCHAR  stream_c2s_route_dir:1; /* c2s����İ�, ��Ӧ����·route dir����, ���ڻ�ȡinbound, outbound���� */
-	UCHAR  addr_use_as_hash:1; /* �����addr�Ƿ���ΪHASH����ͱȽϵĲ���, ��:MAC��ַ��������� */
+	UCHAR  layer_dir:2;   /* ������Ч, ��ǰ��ĵ�ַ�Ƿ��Ĭ�Ϲ���"��˿��ǿͻ���?"��ͬ */	
+	UCHAR  stream_dir:1; /* ��������������Ч, ���Ĵ洢�ĵ�ַ�Ƿ��Ĭ�Ϲ���?"��˿��ǿͻ���?"��ͬ  */		
+	UCHAR  stream_c2s_route_dir:1; /* c2s����İ�?, ��Ӧ����·route dir����, ���ڻ�ȡinbound, outbound���� */
+	UCHAR  addr_use_as_hash:1; /* �����addr�Ƿ���ΪHASH����ͱȽϵĲ���?, ��:MAC��ַ���������? */
 	UCHAR  set_special_timeout:1;
 	UCHAR  need_update_opposite_addr:1;/*�����addr�Ƿ��ڶԲ�����ʱ���£��磺MPLS��ǩ�ǶԳ�ʱ��Ҫ��S2C���һ������¼�����ǩ,��ֵĬ��Ϊ0��������Ҫ����*/
 	UCHAR  stream_killed_flag:1; /* 2014-08-22 lijia add, ����ģʽ��, �Ѿ������Kill, ֮�������ֱ��Drop��Kill, �����ٸ��ϲ��� */
-	UCHAR  dirreverse;	     /* ��������ʱ�Ƿ������ip��ַ��ת, ����"��˿��ǿͻ���"�����෴ */
-	UINT16 timeout;/* ÿ�����ӵĶ��г�ʱʱ��, ��ֵ��������;, 1:���ھ�����̭��ʱ���ް��������, �Խ�Լ�ڴ�; 2:���ڱ�����ʱ���ް�����, ����IM�೤ʱ���ް������Ӳ�δ����, �����ýϴ��timeout */
-	unsigned short offset_to_raw_pkt_hdr; /* ����ͷ�����ԭʼ������ʼ��ַ��ƫ���� */
+	UCHAR  dirreverse;	     /* ��������ʱ�Ƿ������ip��ַ��ת, ����"��˿��ǿͻ���?"�����෴ */
+	UINT16 timeout;/* ÿ�����ӵĶ��г�ʱʱ��, ��ֵ��������;, 1:���ھ�����̭��ʱ���ް��������?, �Խ�Լ�ڴ�; 2:���ڱ�����ʱ���ް�����, ����IM�೤ʱ���ް������Ӳ�δ����, �����ýϴ��timeout */
+	unsigned short offset_to_raw_pkt_hdr; /* ����ͷ�����ԭʼ������ʼ��ַ��ƫ����? */
 	unsigned short offset_to_ip_hdr; /* 2015-12-07 lijia add, UDP/TCP ��ͷ����ڳ��ص�IP��ͷƫ���� */
 	/* ===8 bytes=== */
 	const raw_pkt_t *raw_pkt; /* 2014-12-30 lijia add, ��Щ�ص�������֧��ԭʼ��, ����������Ҫ, �洢��private�ṹ�� */
 
 	/* ---8 bytes-- */
-	unsigned int hash_slave; /* 2015-12-14 lijia add, ʹ��linux_jhash����ʱ, ����ͬʱ�õ��������ϵ�HASHֵ, ��HASH����ȷ����HASH����SLOTλ��, slave_HASH���ڿ��ٱȽϵ�ַ�Ƿ���� */
+	unsigned int hash_slave; /* 2015-12-14 lijia add, ʹ��linux_jhash����ʱ, ����ͬʱ�õ��������ϵ�HASHֵ, ��HASH����ȷ����HASH����SLOTλ��, slave_HASH���ڿ��ٱȽϵ�ַ�Ƿ����? */
 	unsigned char hash_not_head_times;/* 2015-12-15 lijia add, ��ǰindex����HASH SLOT�ĵ�һλ�Ĵ��� */
-	unsigned char cur_layer_raw_hdr_len; /* 2017-10-31 lijia add, ��ǰ���ԭʼ����ַ����, ��pppͷ��ѹ��, ԭ���汾�޷��������״̬, ����ʱҲ�޷���֪��ַ������ */
+	unsigned char cur_layer_raw_hdr_len; /* 2017-10-31 lijia add, ��ǰ���ԭʼ����ַ����?, ��pppͷ��ѹ��, ԭ���汾�޷��������״�?, ����ʱҲ�޷���֪��ַ������ */
 	unsigned char __pad:1;
 	unsigned char packet_process_context:1;
 	unsigned char is_ctrl_pkt:1;
@@ -222,8 +225,8 @@ struct streaminfo_private
 	/* ===8 bytes=== */
 
 	/* ---8 bytes-- */
-	unsigned short stream_low_layer_tunnel_type; /* 2016-07-25 lijia add, ��¼�����ײ���������, 0Ϊ������, �������:enum stream_carry_tunnel_t */
-	unsigned short stream_carry_up_layer_tunnel_type; /* ��ǰ���ϲ����������, ���統ǰ��ΪUDP, ���صĿ�����teredo������L2TP���� */
+	unsigned short stream_low_layer_tunnel_type; /* 2016-07-25 lijia add, ��¼�����ײ���������, 0Ϊ������, �������?:enum stream_carry_tunnel_t */
+	unsigned short stream_carry_up_layer_tunnel_type; /* ��ǰ���ϲ����������?, ���統ǰ��ΪUDP, ���صĿ�����teredo������L2TP���� */
 	/* 2016-07-08 lijia add, for janus hijack, ��Ӧ�ô洢��half_stream, �����յ�SYNʱ, ��û�д���half_streamʵ��, �����ݴ���streaminfo_private */
 	unsigned short syn_opt_num;
 	unsigned short synack_opt_num;
@@ -247,10 +250,10 @@ struct streaminfo_private
 	unsigned long long stream_create_timestamp_ms; 
 	unsigned long long stream_lastupdate_timestamp_ms; 
 	/* ---8 bytes-- */
-	unsigned char layer_index:4; /* ��ʾ��ǰ��ļ���, ����ײ㿪ʼ,һ����ethernet��ʼ, ��0��ʼ����, 4bit���֧��15��Ƕ��, Ҳ�ܷ�ֹ����Ƕ�׹���(Ŀǰ��û��������) */
-	unsigned char create_dir_by_well_known_port:1;  /* UDP��TCP��data������, ����well_known_port����, �����ǰ���˿��ǿͻ���ԭ�򴴽��� */
+	unsigned char layer_index:4; /* ��ʾ��ǰ��ļ���?, ����ײ㿪�?,һ����ethernet��ʼ, ��0��ʼ����, 4bit���֧��?15��Ƕ��, Ҳ�ܷ�ֹ����Ƕ�׹���(Ŀǰ��û��������) */
+	unsigned char create_dir_by_well_known_port:1;  /* UDP��TCP��data������, ����well_known_port����, �����ǰ���˿��ǿͻ���ԭ�򴴽���? */
 	char __pad2:3;
-	char has_duplicate_pkt; /* ��ǰ�������й��ظ����ݰ�, ����������Ӧ��ÿ������� */
+	char has_duplicate_pkt; /* ��ǰ�������й��ظ����ݰ�, ����������Ӧ��ÿ�������? */
 	char under_ddos_bypass;
 	char __pad3[3];
 	/* ===8 bytes=== */
@@ -258,11 +261,12 @@ struct streaminfo_private
 	unsigned char ip_ttl_c2s;
 	unsigned char ip_ttl_s2c;
 	void   *stream_bridge;	/* 20210425 lijia add, ����project����, ֧��ͬ�����첽����ģʽ, ԭ��project�����첽ģʽ */
+	uuid_t stream_uuid;
 };
 
 struct tcpdetail_private
 {
-	/* ����ṹ�����ڽṹ����ǰ, ָ���ַ���Ի���ǿת */
+	/* ����ṹ�����ڽṹ�����?, ָ���ַ���Ի���ǿ�? */
 	struct tcpdetail tcpdetail_public;
 	
 	/* ---8 bytes-- */
@@ -273,7 +277,7 @@ struct tcpdetail_private
 	UCHAR  needackflag:1;	  //��Ҫ�ϴ�ack����
 	UCHAR  takeoverflag:1;
 	UCHAR  has_lost_pkt_flag:1;		//2020-08-23 lijia add, ����������������־λ
-	UCHAR  tcpstateflag;	   // ���ڼ�¼tcp�ĻỰSYN���״̬
+	UCHAR  tcpstateflag;	   // ���ڼ�¼tcp�ĻỰSYN���״�?
 	UCHAR  link_state;		   // ���ӵ�״̬
 	UCHAR  creat_mod;
 	UINT16 tcpoverlen;		// modify by lqy 20150225, ��¼��ǰ������һ�������ص�tcp���ȣ�	
@@ -288,18 +292,18 @@ struct tcpdetail_private
 	UINT32 iclientseq;	  //���ӽ���ʱ��ʱ�洢seq, ��ֵ��S2C->SYN+1
 	/* NOTE:
 		Ϊ��first_ack_seq������half_tcpstream��?
-		��half_tcpstream�����յ���һ�����и��صİ��ŷ����, 
+		��half_tcpstream�����յ���һ�����и��صİ��ŷ����?, 
 		�����tcp_deal_ack()����������, �����S2C����, ��ô��һ��S2C���ݰ�����ʱ, �Ѿ�����first_ack_seq��.
 		�����Է�ֹDDOS����.
 	*/
-	UINT32 C2S_first_ack_seq; /* 2017-08-02 lijia modify, C2S���һ��ACK��, ��half_tcpstream->ack_seqһ����Լ�����������Բ���������� */
+	UINT32 C2S_first_ack_seq; /* 2017-08-02 lijia modify, C2S���һ��ACK��, ��half_tcpstream->ack_seqһ����Լ�����������Բ����������? */
 	UINT32 C2S_ack_seq;  /* 2017-08-02 lijia add, C2S�൱ǰ��ACK�� */ 
-	UINT32 S2C_first_ack_seq; /* 2017-08-02 lijia modify, C2S���һ��ACK��, ��half_tcpstream->ack_seqһ����Լ�����������Բ���������� */
+	UINT32 S2C_first_ack_seq; /* 2017-08-02 lijia modify, C2S���һ��ACK��, ��half_tcpstream->ack_seqһ����Լ�����������Բ����������? */
 	UINT32 S2C_ack_seq;  /* 2017-08-02 lijia add, S2C�൱ǰ��ACK�� */ 
 	void   *apme;		  //Ӧ�ò�������
 	void   *pAllpktpme;   //��״̬��tcp����������
-	struct tcp_flow_stat *flow_stat; /* 2016-07-14 lijia add, ���ڼ�¼TCP��data���ļ���, ʵ���ڴ������ͷ���projectģ�����, ����ΪNULL,  */
-	struct tcp_flow_stat *deduce_flow_stat; /* 2018-10-30 lijia add, ���ڼ�¼������ƶϳ������ϴ��������, ���������ĳ���; �Լ������������, �Զ�Ӧ���յ�������  */
+	struct tcp_flow_stat *flow_stat; /* 2016-07-14 lijia add, ���ڼ�¼TCP��data���ļ���, ʵ���ڴ������ͷ���projectģ�����?, ����ΪNULL,  */
+	struct tcp_flow_stat *deduce_flow_stat; /* 2018-10-30 lijia add, ���ڼ�¼������ƶϳ������ϴ��������, ���������ĳ���; �Լ������������?, �Զ�Ӧ���յ�������  */
 	unsigned short rtt_csc;
 	unsigned short rtt_scs;
 	long long last_c2s_pkt_rcv_time;
@@ -308,10 +312,10 @@ struct tcpdetail_private
 
 struct udpdetail_private
 {
-	/* ����ṹ�����ڽṹ����ǰ, ָ���ַ���Ի���ǿת */
+	/* ����ṹ�����ڽṹ�����?, ָ���ַ���Ի���ǿ�? */
 	struct udpdetail udpdetail_public;
 	void   *apme;		  //Ӧ�ò�������
-	struct udp_flow_stat *flow_stat; /* 2015-12-28 lijia add, udpdetail�е���ϸ����(64bit), ʵ���ڴ������ͷ���projectģ�����, ����ΪNULL */
+	struct udp_flow_stat *flow_stat; /* 2015-12-28 lijia add, udpdetail�е���ϸ����(64bit), ʵ���ڴ������ͷ���projectģ�����?, ����ΪNULL */
 	UCHAR  drop_stream_flag; //2020-06-02 lijia add, ����ͬDROPPKT, ֻ����������������stream	
 	UCHAR  offload_stream_flag; //2022-04-13 liuxueli add, ������������stream
 	UCHAR pad[6];
@@ -321,7 +325,7 @@ struct udpdetail_private
 /* 2015-02-26 lijia add, for stream-addr-list ntop, pton */
 typedef struct{
 	struct streaminfo stream;
-	char addr_value[MAX_ADDR_BIN_VALUE_LEN]; /* Ϊ��paddr������malloc, �������, ��stream����׷��һ�黺�� */
+	char addr_value[MAX_ADDR_BIN_VALUE_LEN]; /* Ϊ��paddr������malloc, �������?, ��stream����׷��һ�黺�� */
 }addr_continuous_bin_t;
 
 typedef struct{
@@ -340,15 +344,15 @@ struct pptp_stream_key{
 	UINT32 dip;   /* sip,dip are network order */
 	UINT16 sip_side_call_id; /* �������ݰ�����sip������GRE����callid, ʵ�������ʾpeer call id, network order */
 	UINT16 dip_side_call_id; /* �������ݰ�����dip������GRE����callid, ʵ�������ʾpeer call id, network order */
-	//struct streaminfo_private *stream_pr;  /* TODO 1, ���ڱ����ַ����, Ŀǰ��������ײ��IP��call_id */
+	//struct streaminfo_private *stream_pr;  /* TODO 1, ���ڱ����ַ����?, Ŀǰ��������ײ��IP��call_id */
 };
 
 /* PPTPЭ�����������ṹ, sapp�ڲ�ʹ�� */
 struct pptp_info_pri{
 	struct MESA_tunnel_info tunnel_context;
 	struct pptp_stream_key pptp_key;
-	stSessionInfo ssinfo; /* ����ҵ�����������Ϣ */
-	void *biz_pme; /* ҵ����Զ������� */
+	stSessionInfo ssinfo; /* ����ҵ������������? */
+	void *biz_pme; /* ҵ����Զ�������? */
 	struct streaminfo *my_stream; /* pptp�ײ�UDP�� */
 	unsigned char threadnum; 
 	char insert_hash_flag; /* ���������ѽ�key����HASH�� */
@@ -370,13 +374,13 @@ struct l2tp_stream_key{
 	UINT16 sip_side_session_id; /* sip�ⷢ������tunnelid, network order */
 	UINT16 dip_side_tunnel_id; /* dip�ⷢ������tunnelid, network order */
 	UINT16 dip_side_session_id; /* dip�ⷢ������tunnelid, network order */
-	//struct streaminfo_private *stream_pr;  /* TODO 1, ���ڱ����ַ����, Ŀǰ��������ײ��IP��call_id */
+	//struct streaminfo_private *stream_pr;  /* TODO 1, ���ڱ����ַ����?, Ŀǰ��������ײ��IP��call_id */
 };
 
 struct l2tp_info_pri{
 	struct MESA_tunnel_info tunnel_context;
 	struct l2tp_stream_key l2tp_key;
-	stSessionInfo ssinfo; /* ����ҵ��������� */
+	stSessionInfo ssinfo; /* ����ҵ���������? */
 	void *biz_pme;
 	const struct streaminfo *my_stream; /* l2tp�ײ�UDP�� */
 	unsigned char thread_seq;
@@ -386,13 +390,13 @@ struct l2tp_info_pri{
 #define STATSD_SEND_MSS	(1472)
 /* ȫ��Ψһ��ȫ�ֱ���, ͨ���ǿ�����������, �򲻳��仯��ȫ�ֱ���, ����������, ������ֻ�� */
 struct sapp_global_single_t{
-	int signal_take_over_sw; /* �Ƿ�ӹܳ���ϵͳ�ź�, ��SIGSEGV, SIGABRT�ȵ� */
+	int signal_take_over_sw; /* �Ƿ�ӹܳ���ϵͳ�ź�?, ��SIGSEGV, SIGABRT�ȵ� */
 	int ipentry_priority_over_ipfrag; /* IP_entry���ȼ�����IP_frag_entry, Ĭ��Ϊ0, ��ӦWY�����ض����� */
 	//int kill_tcp_with_gdev; /* FDδ��Чʱ, ����gdev�������� */
 	int cfg_send_tcp_offload_sw; /* ��������MTUʱ, ������Ƭ�ɶ��С��MTU�İ����� */
 	//int cfg_kill_tcp_rst_num; /* kill_tcp����rst������ */
 	//int cfg_kill_tcp_rst_signature; /* kill_tcp���͵�rst�Ƿ���Ҫָ����Ϣ, ����ʶ�� */
-    //int tuple4_reuse_time_interval; /* ��Ԫ�����õ���С���ʱ�� */
+    //int tuple4_reuse_time_interval; /* ��Ԫ�����õ���С���ʱ��? */
 	//void *fs2_handle;
 	const char *fs2_server_ip;
 	unsigned short fs2_server_port_host;
@@ -404,9 +408,9 @@ struct sapp_global_single_t{
 };
 
 #define TIMESTAMP_SINGLE_PKT_REGION 		(4) /* ������ʱͳ������ */
-#define TIMESTAMP_SINGLE_PKT_REGION_MAX     (5) /* ��������ͳ�������ֵ */
+#define TIMESTAMP_SINGLE_PKT_REGION_MAX     (5) /* ��������ͳ��������? */
 typedef struct{
-	unsigned int runtime_pkt_max_delay; /* �����������ʱ */
+	unsigned int runtime_pkt_max_delay; /* ������������? */
 	unsigned long long pkt_total_num[TIMESTAMP_SINGLE_PKT_REGION_MAX]; /* ��¼��������ʱ���ܰ���, ������ͳ�� */
 	unsigned long long pkt_total_time; /* ���һ��ʱ�������ʱ, ���ڼ���ƽ������������ʱ */
 }timestamp_record_region_t;
@@ -420,15 +424,15 @@ struct sapp_global_mthread_t{
 	char __pad1[4];
 	double pptp_hash_avg_search_times;
 	double l2tp_hash_avg_search_times;
-	int tcp_stream_special_timeout_num; /* ���õ�����ʱʱ�����, Ĭ�ϲ�����������������10% */
-	int udp_stream_special_timeout_num;/* ���õ�����ʱʱ�����, Ĭ�ϲ�����������������10% */
+	int tcp_stream_special_timeout_num; /* ���õ�����ʱʱ�����?, Ĭ�ϲ�����������������10% */
+	int udp_stream_special_timeout_num;/* ���õ�����ʱʱ�����?, Ĭ�ϲ�����������������10% */
 	timestamp_record_region_t runtime_record;
 	timestamp_record_region_t runtime_record_driver; /* �����������õ���, ��ƽ̨�õ�������ʱ */
 }__attribute__ ((aligned (64)));
 
 typedef struct{
 #ifdef DEBUG
-	unsigned int magic; /* malloc�����0x4D4D4D4D,  ��MMMM ��16����; free�����0xFEFEFEFE */
+	unsigned int magic; /* malloc�����?0x4D4D4D4D,  ��MMMM ��16����; free�����?0xFEFEFEFE */
 #endif	
 	unsigned int user_buf_size;
 }sapp_private_mem_t;

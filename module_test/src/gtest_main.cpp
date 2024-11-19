@@ -25,7 +25,7 @@ const char *user_define_args;
 
 const char *for_test_sapp_version = "4.2.68_c9193fe";
 
-static int g_libsapp_devel_res = GTEST_SAPP_ERR; /* 使用lisapp_devel.so在同一个进程内运行的测试结�???*/
+static int g_libsapp_devel_res = GTEST_SAPP_ERR; /* 使用lisapp_devel.so在同一个进程内运行的测试结�????*/
 int gtest_set_libsapp_devel_result(int res_value)
 {
 	g_libsapp_devel_res = res_value;
@@ -171,7 +171,7 @@ void call_libsapp_devel_online_mode(void)
 	while(sapp_get_current_state() != SAPP_STATE_PROCESSING){
 		usleep(100);
 	}
-	sleep(3); /* TODO: 此处不用超时, 而是靠一个标志位或特定状�???*/
+	sleep(3); /* TODO: 此处不用超时, 而是靠一个标志位或特定状�????*/
 	libsapp_destroy_env();
 
 }
@@ -991,6 +991,13 @@ TEST(control, get_tcp_rtt_s2c)
 	// EXPECT_EXIT(control_get_tcp_rtt_run(), testing::ExitedWithCode(0),  "test succ");
 }
 
+TEST(control, get_stream_uuid)
+{
+	control_get_stream_uuid_run();
+	ASSERT_EQ(GTEST_SAPP_SUCC, gtest_get_libsapp_devel_result()); 
+	// EXPECT_EXIT(control_get_tcp_rtt_run(), testing::ExitedWithCode(0),  "test succ");
+}
+
 /************************ project_requirement.h API test ***********************/
 #define project_simple 1  // for SI symbol view
 TEST(project, simple)
@@ -1336,7 +1343,7 @@ TEST(timer, DISABLED_simple)
 /********************* inject rst packet Test ***********************/
 #if SAPP_V4 //rst_tcp only support in sapp-v4.0
 
-#if 0 /* 改成用sapp_benchmark框架测试, 不需要写代码、不用重新编�???*/
+#if 0 /* 改成用sapp_benchmark框架测试, 不需要写代码、不用重新编�????*/
 #define inject_rst_packet_test_v4 1  // for SI symbol view
 TEST(inject, rst_pkt_v4)
 {
@@ -1347,7 +1354,7 @@ TEST(inject, rst_pkt_v4)
 
 /********************* inject  rst packet Test ***********************/
 #define inject_rst_packet_test_v6 1  // for SI symbol view
-#if 0 /* 改成用sapp_benchmark框架测试, 不需要写代码、不用重新编�???*/
+#if 0 /* 改成用sapp_benchmark框架测试, 不需要写代码、不用重新编�????*/
 TEST(inject, rst_pkt_v6)
 {
 	MESA_rst_tcp_test_v6_run();
@@ -2054,7 +2061,7 @@ TEST(proxy, simple)
 #define _proxy_kill_tcp 1   
 /* 
 	TODO:
-		使用libsapp_devel实测, 两个用例不能顺序执行, 疑似与解析层dlopen有关�??? 暂未定位原因, 待解�???!!!
+		使用libsapp_devel实测, 两个用例不能顺序执行, 疑似与解析层dlopen有关�???? 暂未定位原因, 待解�????!!!
 */
 #if 0 
 TEST(proxy, kill_tcp)
@@ -2176,7 +2183,7 @@ TEST(fake_marsio, vlan_flip_and_symmetric_mpls1vs2)
 #define _fake_marsio_vlan_mac_flip_inject_no_asymmetric 1   
 TEST(fake_marsio, vlan_mac_flip_inject_no_asymmetric)
 {
-	/* 别着�??? 不是BUG!
+	/* 别着�???? 不是BUG!
 	   这个测试用例就是应该错的 !!!
 	*/
 	EXPECT_EXIT(fake_marsio_vlan_mac_flipping_inject_run(0), testing::ExitedWithCode(1),  "index:4, mac addr error");

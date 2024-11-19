@@ -194,7 +194,7 @@ elseif(MEM_POOL STREQUAL "MIMALLOC")
 	add_definitions(-DUSE_MIMALLOC=1)		
 endif()
 
-# 定义宏 LIBEVENT_ENABLED
+# 定义�? LIBEVENT_ENABLED
 option(LIBEVENT_ENABLED "Enable libevent" OFF)
 if(LIBEVENT_ENABLED STREQUAL "ON")
 	add_definitions(-DLIBEVENT_ENABLED=1)	
@@ -209,7 +209,7 @@ endif()
 add_definitions(${CAPTURE_DEFINITIONS} ${MEM_POOL_DEFINITIONS} -D__FAVOR_BSD=1
     -D__USE_BSD=1 -D_GNU_SOURCE=1  -DMESA_SAPP_PLATFORM=1)
 
-set(SAPP_DEPEND_DYN_LIB MESA_handle_logger MESA_prof_load MESA_htable  MESA_field_stat2 fieldstat3 fieldstat4 cjson breakpad_mini ${SYSTEMD_LIBRARIES} pthread dl pcap)
+set(SAPP_DEPEND_DYN_LIB MESA_handle_logger MESA_prof_load MESA_htable  MESA_field_stat2 fieldstat3 fieldstat4 cjson breakpad_mini ${SYSTEMD_LIBRARIES} pthread dl pcap uuid)
 set(SAPP_DEPEND_DYN_LIB ${SAPP_DEPEND_DYN_LIB} packet_io_pcap)
 if(CAPTURE_MODE STREQUAL "MARSIO")
 	set(SAPP_DEPEND_DYN_LIB ${SAPP_DEPEND_DYN_LIB} packet_io_marsio)
@@ -225,7 +225,7 @@ set(SAPP_MODULES timestamp_record md5
 	config timer tomlc99_wrap dpdk_ip_hash  
 	gdev_assistant inline_keepalive ap_bloom libdabloom
 	sapp_dev sapp_assistant sapp_metrics 
-	platform_support cpu_limit timeout token_bucket)
+	platform_support cpu_limit timeout token_bucket ulid)
 
 if(LIBEVENT_ENABLED STREQUAL "ON")
 	set(SAPP_MODULES ${SAPP_MODULES} libevent-static)

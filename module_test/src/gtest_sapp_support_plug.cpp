@@ -32,7 +32,7 @@ extern "C" char ctrl_max_unorder_tcp_entry(struct streaminfo *pstream,void **pme
 	{
 		memset(&gtest_ctrl_tcp_stat, 0, sizeof(gtest_plug_stat_t));
 		mopt.stream_dir = DIR_DOUBLE;
-		mopt.max_unorder_val = 5; /* 重置当前流的最大乱序数为5 */
+		mopt.max_unorder_val = 5; /* 重置当前流的最大乱序数�?5 */
 		ret = MESA_set_stream_opt(pstream, MSO_MAX_UNORDER, &mopt, sizeof(mopt));
 		if(ret < 0){
 			printf("\033[1;31;40mMESA_set_stream_opt():set max_unorder option error!\033[0m\n");
@@ -138,7 +138,7 @@ extern "C" char ctrl_takeover_exclusive_entry(struct streaminfo *pstream,void **
 
 	if(tcp_exclusive_entry_pkt_num >= 68){
 		if(0 == tcp_plundered_entry_pkt_num){
-			/* 此函数挂载到TCPALL入库, 设置takeover标志后,  
+			/* 此函数挂载到TCPALL入库, 设置takeover标志�?,  
 			   ctrl_takeover_plundered_entry一个包应该都收不到 
 			*/
 			sendto_test_result(GTEST_SAPP_SUCC);
@@ -580,7 +580,7 @@ extern "C" char project_customer_entry(struct streaminfo *pstream,void **pme, in
 extern "C" char project_producer_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	if(OP_STATE_PENDING == pstream->pktstate){
-#if 0	//v4.2版本后, 支持动态自动注册,不用写project_list.conf, 但是标签注册必须在初始化阶段, 
+#if 0	//v4.2版本�?, 支持动态自动注�?,不用写project_list.conf, 但是标签注册必须在初始化阶段, 
 		project_test_id = project_producer_register(project_name, "int", NULL);
 		if(project_test_id < 0){
 			printf("\033[1;31;40mproject_producer_register error!\033[0m\n");
@@ -601,7 +601,7 @@ extern "C" int project_test_init(void)
 		return -1;
 	}
 
-	//v4.2版本后, 支持动态自动注册,不用写project_list.conf, 但是标签注册必须在初始化阶段, 
+	//v4.2版本�?, 支持动态自动注�?,不用写project_list.conf, 但是标签注册必须在初始化阶段, 
 	project_test_id = project_producer_register(project_name, "int", NULL);
 	if(project_test_id < 0){
 		printf("\033[1;31;40mproject_producer_register error!\033[0m\n");
@@ -639,7 +639,7 @@ extern "C" int project_notify_cb2(const struct streaminfo *stream, int project_r
 
 extern "C" char project_customer_no_result_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
-	/* 此处插件不发送正确结果, 只判断错误 */
+	/* 此处插件不发送正确结�?, 只判断错�? */
 	int res;
 	
 	res = project_req_get_int(pstream, project_test_id);
@@ -657,7 +657,7 @@ extern "C" char project_customer_no_result_entry(struct streaminfo *pstream,void
 extern "C" char project_customer_entry1(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	int res;
-	/* 此处插件不发送正确结果, 只判断错误 */
+	/* 此处插件不发送正确结�?, 只判断错�? */
 
 	res = project_req_get_int(pstream, project_notify_plug1_id);
 	if(0x12345678 != res){
@@ -673,7 +673,7 @@ extern "C" char project_customer_entry1(struct streaminfo *pstream,void **pme, i
 extern "C" char project_customer_entry2(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	int res;
-	/* 第2个插件排在最后, 如果都正确, 则发送正确结果 */
+	/* �?2个插件排在最�?, 如果都正�?, 则发送正确结�? */
 
 	res = project_req_get_int(pstream, project_notify_plug2_id);
 	if(0x12345678 == res){
@@ -741,7 +741,7 @@ void sapp_timer_test_cbfun(sapp_timer_handle h, sapp_timer_event ev, int pkt_pro
 
 	if(gtest_ctrl_tcp_stat.C2S_all_pkt >= 10){
 		diff = time(NULL) - first_call_time;
-		if(diff >= 9){ /* 理论上收到10个包, 也是延迟10秒, 允许一点误差, 此处判断9秒 */
+		if(diff >= 9){ /* 理论上收�?10个包, 也是延迟10�?, 允许一点误�?, 此处判断9�? */
 			SAPP_PLUG_LOG(RLOG_LV_INFO, "timer.simple","timer_test succ! time pass %lds, call entry %u times!\n", diff, gtest_ctrl_tcp_stat.C2S_all_pkt);
 			gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
 			memset(&gtest_ctrl_tcp_stat, 0, sizeof(gtest_plug_stat_t));
@@ -849,13 +849,13 @@ extern "C" char global_stream_id_tcpall_entry(struct streaminfo *pstream,void **
 
 	unsigned long long ts_from_sapp = (sapp_global_id & 0x07ffffff8000) >> 15;
 	if(ts_from_sapp > ts_from_time){
-		if(ts_from_sapp > ts_from_time + 1){ /* 允许误差1秒 */
+		if(ts_from_sapp > ts_from_time + 1){ /* 允许误差1�? */
 			printf("\033[1;31;40mtimestamp from sapp error!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_ERR);
 			return APP_STATE_DROPME;
 		}
 	}else{
-		if(ts_from_time > ts_from_sapp + 1){ /* 允许误差1秒 */
+		if(ts_from_time > ts_from_sapp + 1){ /* 允许误差1�? */
 			printf("\033[1;31;40mtimestamp from sapp error!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_ERR);
 			return APP_STATE_DROPME;
@@ -870,7 +870,7 @@ extern "C" char global_stream_id_tcpall_entry(struct streaminfo *pstream,void **
 
 
 /*
-	读取tcp_tuple4_reuse.pcap, 应该有两个流被先后调用, stream_id应该生成两个不同的值.
+	读取tcp_tuple4_reuse.pcap, 应该有两个流被先后调�?, stream_id应该生成两个不同的�?.
 */
 static int test_stream_id_num = 0;
 static unsigned long long test_last_stream_id = 0;
@@ -914,7 +914,7 @@ extern "C" char global_stream_id_tuple4_reuse_tcpall_entry(struct streaminfo *ps
 
 
 /*
-	读取tcp_tuple4_reuse.pcap, 应该有两个流被先后调用, stream tcpdetail createtime应该有两个值.
+	读取tcp_tuple4_reuse.pcap, 应该有两个流被先后调�?, stream tcpdetail createtime应该有两个�?.
 */
 static int test_reuse_stream_num = 0;
 static time_t first_stream_creatime, second_stream_creatime;
@@ -928,7 +928,7 @@ extern "C" char stream_creatime_tuple4_reuse_tcpall_entry(struct streaminfo *pst
 			first_stream_creatime = pstream->ptcpdetail->createtime;
 			MESA_get_stream_opt(pstream, MSO_STREAM_CREATE_TIMESTAMP_MS, &first_stream_creatime_ms, &opt_len);
 		}else{
-			/* 记录四元组重用, 第2个流的时间 */
+			/* 记录四元组重�?, �?2个流的时�? */
 			second_stream_creatime = pstream->ptcpdetail->createtime;
 			MESA_get_stream_opt(pstream, MSO_STREAM_CREATE_TIMESTAMP_MS, &second_stream_creatime_ms, &opt_len);
 			
@@ -1053,7 +1053,7 @@ extern "C" char stream_createtime_ms_tcpall_entry(struct streaminfo *pstream,voi
 	}	
 	
 
-	if(OP_STATE_CLOSE == pstream->pktstate){ /* 结束的时候再获取一遍 */
+	if(OP_STATE_CLOSE == pstream->pktstate){ /* 结束的时候再获取一�? */
 		ret = MESA_get_stream_opt(pstream, MSO_STREAM_CREATE_TIMESTAMP_MS, &create_time_ms_close, &opt_len);
 		if(ret < 0){
 			printf("\033[1;31;40mMESA_get_stream_opt()->MSO_STREAM_CREATE_TIMESTAMP_MS error!\033[0m\n");
@@ -1099,7 +1099,7 @@ extern "C" char up_layer_tunnel_gtp_entry(struct streaminfo *pstream,void **pme,
 	
 	if(OP_STATE_CLOSE != pstream->pktstate){
 		MESA_get_stream_opt(pstream, MSO_STREAM_UP_LAYER_TUNNEL_TYPE, &up_layer_tunnel_type, &opt_len);
-		if(STREAM_TUNNEL_GPRS_TUNNEL != up_layer_tunnel_type){ /* 此处要精确判断隧道类型, 防止解析出错, 不能用STREAM_TUNNLE_NON模糊判断 */
+		if(STREAM_TUNNEL_GPRS_TUNNEL != up_layer_tunnel_type){ /* 此处要精确判断隧道类�?, 防止解析出错, 不能用STREAM_TUNNLE_NON模糊判断 */
 			g_up_layer_non_num++;
 		}else{
 			g_up_layer_is_tunnel_num++;
@@ -1108,7 +1108,7 @@ extern "C" char up_layer_tunnel_gtp_entry(struct streaminfo *pstream,void **pme,
 		printf("stream: %s, tunnel:%d\n", printaddr(&pstream->addr, thread_seq), (int)up_layer_tunnel_type);
 	}
 
-	if(13 == g_up_layer_plug_call_times){ /* gtp_dns.pcap一共5个包, 5个外层udp, 5个内层udp, 外加3个流的close状态, 最终是调用本插件entry 13次 */
+	if(13 == g_up_layer_plug_call_times){ /* gtp_dns.pcap一�?5个包, 5个外层udp, 5个内层udp, 外加3个流的close状�?, 最终是调用本插件entry 13�? */
 		if((5 == g_up_layer_non_num) && (5 == g_up_layer_is_tunnel_num)){
 			printf("\033[32mup_layer_tunnel_gtp test success!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_SUCC);
@@ -1131,7 +1131,7 @@ extern "C" char up_layer_tunnel_l2tp_entry(struct streaminfo *pstream,void **pme
 	
 	if(OP_STATE_CLOSE != pstream->pktstate){
 		MESA_get_stream_opt(pstream, MSO_STREAM_UP_LAYER_TUNNEL_TYPE, &up_layer_tunnel_type, &opt_len);
-		if(STREAM_TUNNLE_L2TP != up_layer_tunnel_type){  /* 此处要精确判断隧道类型, 防止解析出错, 不能用STREAM_TUNNLE_NON模糊判断 */
+		if(STREAM_TUNNLE_L2TP != up_layer_tunnel_type){  /* 此处要精确判断隧道类�?, 防止解析出错, 不能用STREAM_TUNNLE_NON模糊判断 */
 			g_up_layer_non_num++;
 		}else{
 			g_up_layer_is_tunnel_num++;
@@ -1140,7 +1140,7 @@ extern "C" char up_layer_tunnel_l2tp_entry(struct streaminfo *pstream,void **pme
 		printf("stream: %s, tunnel:%d\n", printaddr(&pstream->addr, thread_seq), (int)up_layer_tunnel_type);
 	}
 
-	if(11 == g_up_layer_plug_call_times){ /* l2tp_dns.pcap一共4个包, 4个外层udp, 4个内层udp, 外加3个流的close状态, 最终是调用本插件entry 11次 */
+	if(11 == g_up_layer_plug_call_times){ /* l2tp_dns.pcap一�?4个包, 4个外层udp, 4个内层udp, 外加3个流的close状�?, 最终是调用本插件entry 11�? */
 		if((4 == g_up_layer_non_num) && (4 == g_up_layer_is_tunnel_num)){
 			sendto_test_result(GTEST_SAPP_SUCC);
 		}else{
@@ -1161,7 +1161,7 @@ extern "C" char up_layer_tunnel_teredo_entry(struct streaminfo *pstream,void **p
 	
 	if(OP_STATE_CLOSE != pstream->pktstate){
 		MESA_get_stream_opt(pstream, MSO_STREAM_UP_LAYER_TUNNEL_TYPE, &up_layer_tunnel_type, &opt_len);
-		if(STREAM_TUNNLE_TEREDO != up_layer_tunnel_type){  /* 此处要精确判断隧道类型, 防止解析出错, 不能用STREAM_TUNNLE_NON模糊判断 */
+		if(STREAM_TUNNLE_TEREDO != up_layer_tunnel_type){  /* 此处要精确判断隧道类�?, 防止解析出错, 不能用STREAM_TUNNLE_NON模糊判断 */
 			g_up_layer_non_num++;
 		}else{
 			g_up_layer_is_tunnel_num++;
@@ -1170,7 +1170,7 @@ extern "C" char up_layer_tunnel_teredo_entry(struct streaminfo *pstream,void **p
 		printf("stream: %s, tunnel:%d\n", printaddr(&pstream->addr, thread_seq), (int)up_layer_tunnel_type);
 	}
 
-	if(10 == g_up_layer_plug_call_times){ /* teredo_udp.pcap一共3个包, 3个外层udp, 3个内层udp, 外加4个流的close状态, 最终是调用本插件entry 10次 */
+	if(10 == g_up_layer_plug_call_times){ /* teredo_udp.pcap一�?3个包, 3个外层udp, 3个内层udp, 外加4个流的close状�?, 最终是调用本插件entry 10�? */
 		if((3 == g_up_layer_non_num) && (3 == g_up_layer_is_tunnel_num)){
 			sendto_test_result(GTEST_SAPP_SUCC);
 		}else{
@@ -1186,19 +1186,19 @@ extern "C" char up_layer_tunnel_teredo_entry(struct streaminfo *pstream,void **p
 
 extern "C" int get_plug_pme_init(void)
 {
-	/* 此处每个插件都要初始化一遍, 因为dlopen时业务层插件加载方式是RTLD_LOCAL, 看似一个全局变量gtest_slave_plug_fd, 实际上地址是不一样的 */
+	/* 此处每个插件都要初始化一�?, 因为dlopen时业务层插件加载方式是RTLD_LOCAL, 看似一个全局变量gtest_slave_plug_fd, 实际上地址是不一样的 */
 	gtest_sapp_slave_init(); 
 	return 0;
 }
 
-/* 空函数, 啥也不干, 只是挂载这个层的一个插件 */
+/* 空函�?, 啥也不干, 只是挂载这个层的一个插�? */
 extern "C" char void_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	return APP_STATE_GIVEME;
 }
 
 
-/* 挂载到tcpall层入口,只处理本插件自身的pme   */
+/* 挂载到tcpall层入�?,只处理本插件自身的pme   */
 extern "C" char get_plug_pme_tcpall_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	int ret;
@@ -1206,7 +1206,7 @@ extern "C" char get_plug_pme_tcpall_entry(struct streaminfo *pstream,void **pme,
 	struct mso_plug_pme mso_plug_pme1 = {};
 	int opt_val_len;
 	
-	/* 此处插件不发送正确结果, 只判断错误 */
+	/* 此处插件不发送正确结�?, 只判断错�? */
 	if(OP_STATE_PENDING == pstream->opstate){
 		plug1_pme = (int *)malloc(sizeof(int));
 		*plug1_pme = 0x11111111;
@@ -1244,7 +1244,7 @@ extern "C" char get_plug_pme_tcpall_entry(struct streaminfo *pstream,void **pme,
 	return APP_STATE_GIVEME;
 }
 
-/* tcp插件最后被调用, 需要验证tcpall和udp插件的Pme获取状态 */
+/* tcp插件最后被调用, 需要验证tcpall和udp插件的Pme获取状�? */
 extern "C" char get_plug_pme_tcp_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	int ret;
@@ -1310,7 +1310,7 @@ extern "C" char get_plug_pme_tcp_entry(struct streaminfo *pstream,void **pme, in
 }
 
 
-/* 挂载到udp层入口,只处理本插件自身的pme   */
+/* 挂载到udp层入�?,只处理本插件自身的pme   */
 extern "C" char get_plug_pme_udp_entry1(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	int ret;
@@ -1318,7 +1318,7 @@ extern "C" char get_plug_pme_udp_entry1(struct streaminfo *pstream,void **pme, i
 	struct mso_plug_pme mso_plug_pme1 = {};
 	int opt_val_len;
 	
-	/* 此处插件不发送正确结果, 只判断错误 */
+	/* 此处插件不发送正确结�?, 只判断错�? */
 	if(OP_STATE_PENDING == pstream->opstate){
 		plug1_pme = (int *)malloc(sizeof(int));
 		*plug1_pme = 0x11111111;
@@ -1356,7 +1356,7 @@ extern "C" char get_plug_pme_udp_entry1(struct streaminfo *pstream,void **pme, i
 	return APP_STATE_GIVEME;
 }
 
-/* udp2插件最后被调用, 需要验证udp1插件的Pme获取状态 */
+/* udp2插件最后被调用, 需要验证udp1插件的Pme获取状�? */
 extern "C" char get_plug_pme_udp_entry2(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	int ret;
@@ -1416,7 +1416,7 @@ extern "C" char get_plug_pme_udp_entry2(struct streaminfo *pstream,void **pme, i
 
 	if(OP_STATE_CLOSE == pstream->opstate){
 		free(*pme);
-		/* 正确结果在 get_plug_pme_tcp_entry() 函数中发送 */
+		/* 正确结果�? get_plug_pme_tcp_entry() 函数中发�? */
 		//printf("\033[32mget_plug_pme_entry test success!\033[0m\n");
 		//sendto_test_result(GTEST_SAPP_SUCC);
 	}
@@ -1437,7 +1437,7 @@ extern "C" char get_duplicate_pkt_stat_entry(struct streaminfo *pstream,void **p
 			  
 		}
 
-		/* pending状态的第一个包, 不可能是1也不可能是0, 只能是-2 */
+		/* pending状态的第一个包, 不可能是1也不可能�?0, 只能�?-2 */
 		if(has_dup_pkt != -2){
 			printf("\033[1;31;40mget_duplicate_pkt_stat_entry(), first packet get MSO_HAVE_DUP_PKT is true!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_ERR);
@@ -1484,11 +1484,11 @@ extern "C" char tcp_bridge_producer_entry(struct streaminfo *pstream,void **pme,
 		async_data = (char *)malloc(strlen(TEST_BRIDGE_ASYNC_DATA) + 1);
 		strcpy(async_data, TEST_BRIDGE_ASYNC_DATA);
 		stream_bridge_async_data_put(pstream, bridge_id, async_data);
-		stream_bridge_sync_data_put(pstream, bridge_id, (void *)TEST_BRIDGE_SYNC_DATA); /* 第一次customer收不到, 因为customer还没有注册 */
+		stream_bridge_sync_data_put(pstream, bridge_id, (void *)TEST_BRIDGE_SYNC_DATA); /* 第一次customer收不�?, 因为customer还没有注�? */
 	}else if(OP_STATE_DATA == pstream->opstate){
 		stream_bridge_sync_data_put(pstream, bridge_id, (void *)TEST_BRIDGE_SYNC_DATA); 
 	}else{
-		; /* customer2最后被调用, 测试结果在customer2发送 */
+		; /* customer2最后被调用, 测试结果在customer2发�? */
 	}
 
 	return APP_STATE_GIVEME;
@@ -1540,11 +1540,11 @@ extern "C" char tcp_bridge_customer1_entry(struct streaminfo *pstream,void **pme
 			  				
 		}
 	
-		if(g_test_stream_bridge_sync_call_num1 != 46){ /* tcp_simple.pcap有46个负载包 */
+		if(g_test_stream_bridge_sync_call_num1 != 46){ /* tcp_simple.pcap�?46个负载包 */
 			printf("\033[1;31;40mtcp_bridge_customer1_entry() sync call number error!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_ERR);
 			  			
-		} /* customer2最后被调用, 是否成功的结果在customer2里发送 */
+		} /* customer2最后被调用, 是否成功的结果在customer2里发�? */
 	}
 
 	return APP_STATE_GIVEME;
@@ -1567,7 +1567,7 @@ extern "C" char tcp_bridge_customer2_entry(struct streaminfo *pstream,void **pme
 			  				
 		}
 	
-		if(g_test_stream_bridge_sync_call_num2 != 46){ /* tcp_simple.pcap有46个负载包 */
+		if(g_test_stream_bridge_sync_call_num2 != 46){ /* tcp_simple.pcap�?46个负载包 */
 			printf("\033[1;31;40mtcp_bridge_customer2_entry() sync call number error!\033[0m\n");
 			sendto_test_result(GTEST_SAPP_ERR);
 			  			
@@ -1837,7 +1837,7 @@ extern "C" int find_streaminfo_by_addrv4(int thread_index, const struct stream_t
 extern "C" int find_streaminfo_by_addrv6(int thread_index, const struct stream_tuple4_v6 *tuplev6, enum stream_type_t streamtype, struct streaminfo *streaminfo_array[], int array_max_num);
 
 /* 
-    通过四元组查找streaminfo, 在一堆pcap里, 随机找四个流, 两个tcp, 两个udp ,
+    通过四元组查找streaminfo, 在一堆pcap�?, 随机找四个流, 两个tcp, 两个udp ,
     两个方向分别查询, C2S和S2C.
 */
 extern "C" char polling_find_streaminfo_entry_v4(struct streaminfo *nouse,void **nouse2, int thread_seq, void *nouse3)
@@ -1927,7 +1927,7 @@ extern "C" char polling_find_streaminfo_entry_v4(struct streaminfo *nouse,void *
 	}	
 
 
-	/************ 此处故意写个错的四元组, ip和port顺序反了, 理论上应该是查不到的 */
+	/************ 此处故意写个错的四元�?, ip和port顺序反了, 理论上应该是查不到的 */
 	find_streaminfo_build_tuple4v4(&t4v4, "192.168.36.103", "125.94.242.80", 20001, 57232);
 	result_num = find_streaminfo_by_addrv4(thread_seq, &t4v4, STREAM_TYPE_TCP, result, 10);
 	if(result_num > 0){
@@ -1940,7 +1940,7 @@ extern "C" char polling_find_streaminfo_entry_v4(struct streaminfo *nouse,void *
 
 
 /* 
-    通过四元组查找streaminfo, 在一堆pcap里, 随机找四个流, 两个tcp, 两个udp ,
+    通过四元组查找streaminfo, 在一堆pcap�?, 随机找四个流, 两个tcp, 两个udp ,
     两个方向分别查询, C2S和S2C.
 */
 extern "C" char polling_find_streaminfo_entry_v6(struct streaminfo *nouse,void **nouse2, int thread_seq, void *nouse3)
@@ -2039,7 +2039,7 @@ extern "C" char polling_find_streaminfo_entry_v6(struct streaminfo *nouse,void *
 	}
 
 
-	/************ 此处故意写个错的四元组, ip和port顺序反了, 理论上应该是查不到的 */
+	/************ 此处故意写个错的四元�?, ip和port顺序反了, 理论上应该是查不到的 */
 	find_streaminfo_build_tuple4v6(&t4v6, "2001::192:168:40:162", "2001::192:168:40:161", 44444, 39410);
 	result_v6_num = find_streaminfo_by_addrv6(thread_seq, &t4v6, STREAM_TYPE_TCP, result_v6, 10);
 	if(result_v6_num > 0){
@@ -2052,7 +2052,7 @@ extern "C" char polling_find_streaminfo_entry_v6(struct streaminfo *nouse,void *
 }
 
 /*
-	内层四元组一样, 但外层不一样的四元组地址查询.
+	内层四元组一�?, 但外层不一样的四元组地址查询.
 */
 extern "C" char polling_find_diff_tunnel_streaminfo_entry_v4(struct streaminfo *nouse,void **nouse2, int thread_seq, void *nouse3)
 {
@@ -2138,7 +2138,7 @@ extern "C" char fork_listen_port_tcp_plug(struct streaminfo *pstream,void **pme,
 			printf("fork_listen_port child pid:%d\n", getpid());
 			usleep(10000); /* 子进程等父sapp进程彻底结束 */
 
-			/* 再次执行一次sapp, 保证不能再打开12345等监听端口, 且使用在线模式, 不退出 */
+			/* 再次执行一次sapp, 保证不能再打开12345等监听端�?, 且使用在线模�?, 不退�? */
 
 			update_config_file_by_lastline("etc/sapp.toml", "packet_io.deployment", "mode", "mirror");
 			update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 1, "name", "lo");
@@ -2161,7 +2161,7 @@ extern "C" char fork_listen_port_tcp_plug(struct streaminfo *pstream,void **pme,
 			printf("\033[1;31;40mfork_listen_port plug error: execv sapp fail!\033[0m\n");
 		}else{
 			printf("fork_listen_port parent pid:%d, exit!\n", getpid());
-			   /* sapp父进程退出 */
+			   /* sapp父进程退�? */
 		}
 	}
 	
@@ -2297,7 +2297,7 @@ static char __get_deployment_mode_entry(struct streaminfo *pstream,void **pme, i
 			return APP_STATE_DROPME;
 		}		
 
-		/* 用了一个插件入口函数, 使用不同的dumpfile来表示不同的拓扑模式 */
+		/* 用了一个插件入口函�?, 使用不同的dumpfile来表示不同的拓扑模式 */
 		gtest_file_md5sum("dumpfile", file_md5, sizeof(file_md5));
 		if(strncasecmp(file_md5, "df138740a6a22ca9c977052f21f7a470", strlen("df138740a6a22ca9c977052f21f7a470")) == 0){
 			if(dep_mode != DEPLOYMENT_MODE_MIRROR){
@@ -2380,10 +2380,10 @@ extern "C" int plug_necessary_init(void)
 	return -1; /* 测试necessary_plug_list功能, 故意初始化不成功 */
 }
 
-/* 排在necessary插件后面, 也不应该被调用 */
+/* 排在necessary插件后面, 也不应该被调�? */
 extern "C" int plug_indifferent_init(void)
 {
-	gtest_sapp_slave_init(); /* 每个插件有独立的符号名, 需要独立调用gtest_sapp_slave_init()函数, 创建socket, 否则发送结果会失败 */
+	gtest_sapp_slave_init(); /* 每个插件有独立的符号�?, 需要独立调用gtest_sapp_slave_init()函数, 创建socket, 否则发送结果会失败 */
 	
 	printf("\033[1;31;40mnecessary plug init error, can't call this function!\033[0m\n");
 	sendto_test_result(GTEST_SAPP_ERR);	
@@ -2393,13 +2393,13 @@ extern "C" int plug_indifferent_init(void)
 
 extern "C" char plug_necessary_not_call_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
-	gtest_sapp_slave_init(); /* 每个插件有独立的符号名, 需要独立调用gtest_sapp_slave_init()函数, 创建socket, 否则发送结果会失败 */
+	gtest_sapp_slave_init(); /* 每个插件有独立的符号�?, 需要独立调用gtest_sapp_slave_init()函数, 创建socket, 否则发送结果会失败 */
 	printf("\033[1;31;40minit error, can't call this entry!\033[0m\n");
 	sendto_test_result(GTEST_SAPP_ERR);	
 	return APP_STATE_GIVEME;
 }
 
-/* 排在necessary插件后面, 也不应该被调用 */
+/* 排在necessary插件后面, 也不应该被调�? */
 extern "C" char plug_indifferent_not_call_entry(struct streaminfo *pstream,void **pme, int thread_seq, void *a_packet)
 {
 	printf("\033[1;31;40mnecessary plug init error, can't call this entry!\033[0m\n");
@@ -2546,6 +2546,41 @@ extern "C" char get_tcp_rtt_err_entry(struct streaminfo *pstream, void **pme, in
 		}		
 
 		fprintf(stderr, "\033[32mget_tcp_rtt_error_entry test succ \033[0m\n");
+		gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
+		return APP_STATE_DROPME;
+	}
+
+	return APP_STATE_GIVEME;
+}
+
+extern "C" char ctrl_get_stream_uuid_entry(struct streaminfo *pstream, void **pme, int thread_seq, void *a_packet)
+{
+	static unsigned char uuid[16] = {0};
+	int opt_len = sizeof(uuid);
+
+	if(OP_STATE_PENDING == pstream->opstate){
+		MESA_get_stream_opt(pstream, MSO_STREAM_UUID, uuid, &opt_len);
+	}
+	if(OP_STATE_DATA == pstream->opstate){
+		unsigned char uuid_data[16] = {0};
+		MESA_get_stream_opt(pstream, MSO_STREAM_UUID, uuid_data, &opt_len);
+		if(memcmp(uuid, uuid_data, 16) != 0){
+			fprintf(stderr, "\033[1;31;40mctrl_get_stream_uuid_entry error: get uuid error!\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			return APP_STATE_DROPME;
+		}
+	}
+
+	if(OP_STATE_CLOSE == pstream->opstate){
+		unsigned char uuid_close[16] = {0};
+		MESA_get_stream_opt(pstream, MSO_STREAM_UUID, uuid_close, &opt_len);
+		if(memcmp(uuid, uuid_close, 16) != 0){
+			fprintf(stderr, "\033[1;31;40mctrl_get_stream_uuid_entry error: get uuid error!\033[0m\n");
+			gtest_set_libsapp_devel_result(GTEST_SAPP_ERR);
+			return APP_STATE_DROPME;
+		}
+
+		fprintf(stderr, "\033[32mctrl_get_stream_uuid_entry test succ \033[0m\n");
 		gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
 		return APP_STATE_DROPME;
 	}

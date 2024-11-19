@@ -21,7 +21,7 @@ void control_max_unorder_run(void)
 {
 	set_default_config();
 #if SAPP_V3
-	update_config_file("conf/main.conf", "MaxUnorderNum", "3"); /* ȫ�����������С��ʵ������İ����, �ᵼ����Ϊ�Ƕ��� */
+	update_config_file("conf/main.conf", "MaxUnorderNum", "3"); /* ȫ�����������С��ʵ������İ����?, �ᵼ����Ϊ�Ƕ��� */
 #elif SAPP_V4
 	update_config_file("etc/sapp.toml", "reorder_pkt_max", "3");
 #else 
@@ -201,7 +201,7 @@ void control_tunnel_type_l2tp_run(void)
 {
 	set_default_config();
 
-	/* l2tpʶ��Ŀǰ��Ҫ����l2tp_protocol��� */
+	/* l2tpʶ��Ŀǰ��Ҫ����l2tp_protocol���? */
 	insert_into_conflist_inf("protocol", "./plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.inf");
 	
 	update_plugin_inf("TCP", "ctrl_tunnel_l2tp_entry");
@@ -245,7 +245,7 @@ void control_tunnel_type_gtp_run(void)
 	call_libsapp_devel_with_args(2, sapp_start_args);
 }
 
-/* ����sapp_get_platform_opt()�ӿ���ع��� */
+/* ����sapp_get_platform_opt()�ӿ���ع���? */
 void control_stream_and_traffic_run(void)
 {
 	set_default_config();
@@ -302,10 +302,10 @@ void project_nodify_run(void)
 	/* ����gtest.inf */
 	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "project_test_init", NULL, "TCP", "project_customer_entry");	
 
-	/* project_producer_notify_entry ע�ᵽTCP_ALL, ��֤Ҫ����TCP�������, �Ȳ���projectֵ */	
+	/* project_producer_notify_entry ע�ᵽTCP_ALL, ��֤Ҫ����TCP�������?, �Ȳ���projectֵ */	
 	append_plugin_inf("TCP_ALL", "project_producer_notify_entry");
 
-	/* ����sapp_appstate���������Ĳ��Ŀ¼, ��������project nofity���� */
+	/* ����sapp_appstate���������Ĳ��Ŀ�?, ��������project nofity���� */
 	update_plugin_inf_with_options("./plug/business/gtest_sapp_appstate_1", "notify1", "project_nofity_custom1_init", NULL, "TCP", "project_customer_entry1");
 	update_plugin_inf_with_options("./plug/business/gtest_sapp_appstate_2", "notify2", "project_nofity_custom2_init", NULL, "TCP", "project_customer_entry2");
 
@@ -351,7 +351,7 @@ void timer_simple_run(void)
 
 	/* 
 		����һ��pcap��, ʹ�����ǳ���, ʹ��--dumpfile-speed=timestamp����,��֤ƽ̨��ʱ�䲻�˳�!
-		�����pcap_onlineģʽ����lo��,�ǳ�����û������,���²�����ᱻ����.
+		�����pcap_onlineģʽ����lo��,�ǳ�����û������,���²�����ᱻ����?.
 	*/
 	set_pcap_dumpfile("for_gtest_only/timer/timer_tcp_test.pcap");
 	ASSERT_EQ(file_md5_checksum("dumpfile", "7bfc59d66bb44f76603cd6cedfd19091"),0);
@@ -421,7 +421,7 @@ void global_stream_id_tuple4_reuse_run(void)
 }
 
 /*
-	������Ԫ�����ú�, ���Ĵ���ʱ���Ƿ����.
+	������Ԫ�����ú�, ���Ĵ���ʱ���Ƿ����?.
 */
 void stream_creattime_tuple4_reuse_run(void)
 {
@@ -489,7 +489,7 @@ void control_platform_opt_run(void)
 {
 	set_default_config();
 
-	/* ����gtest.inf, �˴���Ҫ�Ǹ���test_get_platform_opt_init()����, �����ʵ����ν, ���Ӹ�tcp��� */
+	/* ����gtest.inf, �˴���Ҫ�Ǹ���test_get_platform_opt_init()����, �����ʵ�����?, ���Ӹ�tcp���? */
 	update_plugin_inf_with_options("./plug/business/gtest_sapp", "gtest", "test_get_platform_opt_init", NULL, "TCP", "tcp_simple");
 
 	set_pcap_dumpfile("tcp/tcp_simple.pcap");
@@ -519,12 +519,12 @@ void control_stream_create_timestamp_ms_run(void)
 }
 
 
-/* ���Ի�ȡ��ǰ���ϲ���ص�����, ��ײ�������ͬ */
+/* ���Ի�ȡ��ǰ���ϲ���ص�����?, ��ײ��������? */
 void control_up_layer_tunnel_gtp_run(void)
 {
 	set_default_config();
 
-	/* gtp_dns.pcap�м����ظ����ݰ�, �ùر��ظ�����⹦�� */
+	/* gtp_dns.pcap�м����ظ����ݰ�, �ùر��ظ�����⹦��? */
 	update_config_file("etc/sapp.toml", "original_ipv4_udp_enabled", "0");
 	update_config_file("etc/sapp.toml", "inject_all_enabled", "0");
 
@@ -538,12 +538,12 @@ void control_up_layer_tunnel_gtp_run(void)
 }
 
 
-/* ���Ի�ȡ��ǰ���ϲ���ص�����, ��ײ�������ͬ */
+/* ���Ի�ȡ��ǰ���ϲ���ص�����?, ��ײ��������? */
 void control_up_layer_tunnel_l2tp_run(void)
 {
 	set_default_config();
 
-	/* l2tpʶ��Ŀǰ��Ҫ����l2tp_protocol��� */
+	/* l2tpʶ��Ŀǰ��Ҫ����l2tp_protocol���? */
 	insert_into_conflist_inf("protocol", "./plug/protocol/l2tp_protocol_plug/l2tp_protocol_plug.inf");
 
 	update_plugin_inf("UDP", "up_layer_tunnel_l2tp_entry");
@@ -556,7 +556,7 @@ void control_up_layer_tunnel_l2tp_run(void)
 }
 
 
-/* ���Ի�ȡ��ǰ���ϲ���ص�����, ��ײ�������ͬ */
+/* ���Ի�ȡ��ǰ���ϲ���ص�����?, ��ײ��������? */
 void control_up_layer_tunnel_teredo_run(void)
 {
 	set_default_config();
@@ -576,14 +576,14 @@ void control_get_plug_pme_run(void)
 {
 	set_default_config();
 
-	update_plugin_inf("TCP", "void_entry"); /* �˲����Ҫ���ڵ��� gtest_sapp_slave_init, entry����ɶҲ���� */
+	update_plugin_inf("TCP", "void_entry"); /* �˲����Ҫ���ڵ���? gtest_sapp_slave_init, entry����ɶҲ���� */
 
 	update_plugin_inf_with_options("./plug/business/gtest_get_plug_pme1", "get_plug_pme1", "get_plug_pme_init", NULL, "TCP_ALL", "get_plug_pme_tcpall_entry");
 	update_plugin_inf_with_options("./plug/business/gtest_get_plug_pme2", "get_plug_pme2", "get_plug_pme_init", NULL, "TCP", "get_plug_pme_tcp_entry");
 
 	/* ��Ҫע��: 
 		sapp����business�����dlopen + RTLD_LOCAL����ģʽ, ������-l��ϵͳ�Զ����ص�, 
-		������ͬ�������ں���������Ȼһ��, ���ڴ��ַʵ���ǲ�һ����!! 
+		������ͬ�������ں���������Ȼһ��, ���ڴ��ַʵ���ǲ�һ����?!! 
 		������Ҫ���ص�platform��.	
 	*/
 	update_plugin_inf_with_options("./plug/platform/gtest_get_plug_pme3", "get_plug_pme3", "get_plug_pme_init", NULL, "UDP", "get_plug_pme_udp_entry1");
@@ -609,12 +609,12 @@ void control_get_plug_pme_run(void)
 }
 
 
-/* ���Ա�Ҫ����ĳ�ʼ��, ���.inf��.so������, init()�������ش��� */
+/* ���Ա�Ҫ����ĳ�ʼ��?, ���?.inf��.so������, init()�������ش��� */
 void control_plug_necessary_run(void)
 {
 	set_default_config();
 	
-	/* Ĭ�Ͻ���ǳɹ�, ���ǲ�����ʹ����� */
+	/* Ĭ�Ͻ���ǳɹ�?, ���ǲ�����ʹ�����? */
 	gtest_set_timeout_default_result(GTEST_SAPP_SUCC);
 
 	update_plugin_inf_with_options("./plug/business/necessary", "plug_necessary", "plug_necessary_init", NULL, "TCP", "plug_necessary_not_call_entry");
@@ -634,12 +634,12 @@ void control_plug_necessary_run(void)
 	call_libsapp_devel_with_args(2, sapp_start_args);
 }
 
-/* ���Ա�Ҫ����ĳ�ʼ��,���ǲ��.inf������, ��ȡ���.so·��, �����������Ȼ���ִ��� */
+/* ���Ա�Ҫ����ĳ�ʼ��?,���ǲ��?.inf������, ��ȡ���?.so·��, �����������Ȼ���ִ���? */
 void control_plug_necessary_run_no_inf(void)
 {
 	set_default_config();
 
-	/* Ĭ�Ͻ���ǳɹ�, ���ǲ�����ʹ����� */
+	/* Ĭ�Ͻ���ǳɹ�?, ���ǲ�����ʹ�����? */
 	gtest_set_timeout_default_result(GTEST_SAPP_SUCC);
 
 	update_plugin_inf_with_options("./plug/business/necessary", "plug_necessary", "plug_necessary_init", NULL, "TCP", "plug_necessary_not_call_entry");
@@ -659,12 +659,12 @@ void control_plug_necessary_run_no_inf(void)
 }
 
 
-/* ���Ա�Ҫ����ĳ�ʼ��,���.inf����, ����.so������, dlopen����ִ��� */
+/* ���Ա�Ҫ����ĳ�ʼ��?,���?.inf����, ����.so������, dlopen����ִ���? */
 void control_plug_necessary_run_no_sofile(void)
 {
 	set_default_config();
 
-	/* Ĭ�Ͻ���ǳɹ�, ���ǲ�����ʹ����� */
+	/* Ĭ�Ͻ���ǳɹ�?, ���ǲ�����ʹ�����? */
 	gtest_set_timeout_default_result(GTEST_SAPP_SUCC);
 
 	update_plugin_inf_with_options("./plug/business/necessary", "plug_necessary", "plug_necessary_init", NULL, "TCP", "plug_necessary_not_call_entry");
@@ -685,7 +685,7 @@ void control_plug_necessary_run_no_sofile(void)
 }
 
 
-/* ���Բ����ȡ�ظ�����״̬, tcp�� */
+/* ���Բ����ȡ�ظ�����״�?, tcp�� */
 void control_plug_dup_pkt_tcp_run(void)
 {
 	set_default_config();
@@ -706,7 +706,7 @@ void control_plug_dup_pkt_tcp_run(void)
 }
 
 
-/* ���Բ����ȡ�ظ�����״̬, udp�� */
+/* ���Բ����ȡ�ظ�����״�?, udp�� */
 void control_plug_dup_pkt_udp_run(void)
 {
 	set_default_config();
@@ -726,7 +726,7 @@ void control_plug_dup_pkt_udp_run(void)
 }
 
 /*
-	ͨ�������в���-c�޸������ļ���Ŀ¼, -D�޸������ļ���Ŀ¼��Ĳ���.
+	ͨ�������в���-c�޸������ļ���Ŀ¼, -D�޸������ļ���Ŀ¼��Ĳ���?.
 */
 void control_get_root_dir_run(void)
 {
@@ -755,7 +755,7 @@ void control_get_root_dir_run(void)
 
 	update_config_file("./etc/sapp.toml", "dumpfile_sleep_time_before_exit", "0");
 
-	/* ��Ϊ�����ļ�·�������'/', ���sed�����ͻ, ��Ҫʹ�ö���ת��, 
+	/* ��Ϊ�����ļ�·�������?'/', ���sed������?, ��Ҫʹ�ö���ת��, 
        ��һ��������������\\, ��ʾ��ʵ��'\',
        �ڶ���ת�����ʵ�����\x2F, ����sed��˵��ʾ��ʵ��'/'
 	*/
@@ -778,7 +778,7 @@ void control_get_root_dir_run(void)
 	
 	call_libsapp_devel_with_args(8, sapp_change_root_dir_args);	
 
-	/* ִ������ټ��һ������Ŀ¼�Ƿ���sysinfo.log, �Ƿ���־������ݷ���Ԥ�� */
+	/* ִ������ټ��һ������Ŀ¼�Ƿ���sysinfo.log, �Ƿ���־������ݷ���Ԥ��? */
 	ASSERT_EQ(expect_file_has_some_string("/tmp/sapp_change_root_dir_test/data/sysinfo.log", "17.75K"), 0);
 	ASSERT_EQ(expect_file_has_some_string("/tmp/sapp_change_root_dir_test/data/sysinfo.log", "16.82K"), 0);
 	ASSERT_EQ(expect_file_has_some_string("/tmp/sapp_change_root_dir_test/data/sysinfo.log", "13674"), 0);
@@ -792,7 +792,7 @@ void stream_bridge_test_run(void)
 {
 	set_default_config();
 	
-	/* ������Ҫ�����������bridge����, ���������²��Ŀ¼ */
+	/* ������Ҫ�����������bridge����, ���������²��Ŀ�? */
 	system("mkdir -p ./plug/business/gtest_sapp_1");
 	system("mkdir -p ./plug/business/gtest_sapp_2");
 	system("cp ./plug/business/gtest_sapp/libgtest_sapp.so ./plug/business/gtest_sapp_1/");
@@ -830,7 +830,7 @@ void find_streaminfo_v4_run(void)
 	
 	set_default_config();
 	
-	update_config_file("etc/sapp.toml", "worker_threads", "4"); /* ���߳������һЩ, �����ڲ�ͬ�߳���polling���ҹ��� */
+	update_config_file("etc/sapp.toml", "worker_threads", "4"); /* ���߳������һ�?, �����ڲ�ͬ�߳���polling���ҹ��� */
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "reorder_pkt_max", "100");
 	update_config_file("etc/sapp.toml", "timeout", "0");
@@ -857,7 +857,7 @@ void find_streaminfo_v6_run(void)
 	
 	set_default_config();
 	
-	update_config_file("etc/sapp.toml", "worker_threads", "6"); /* ���߳������һЩ, �����ڲ�ͬ�߳���polling���ҹ��� */
+	update_config_file("etc/sapp.toml", "worker_threads", "6"); /* ���߳������һ�?, �����ڲ�ͬ�߳���polling���ҹ��� */
 	update_config_file("etc/sapp.toml", "syn_mandatory", "0");
 	update_config_file("etc/sapp.toml", "reorder_pkt_max", "100");
 	update_config_file("etc/sapp.toml", "timeout", "0");
@@ -907,7 +907,7 @@ void find_streaminfo_diff_tunnel_v4_run(void)
 
 /*
 	���������breakpad��forkһ���½��̣��ռ������ֳ������ϴ�����������
-	�˹��̻�̳�sapp����������socket�����minidump�ϴ�ʱ��Ƚϳ���	
+	�˹��̻�̳�sapp����������socket�����minidump�ϴ�ʱ��Ƚϳ���?	
 	�ᵼ��sapp������ʱ�ᷢ�ֶ˿ڻ��ڱ�minidumpռ�ã����޷���ʱ������
 	������������֤sapp��socket��ռ�ö˿��Ƿ��ܱ���ʱ�ر�.
 */
@@ -940,7 +940,7 @@ void control_fork_listen_port_run(void)
 	
 	call_libsapp_devel_with_args(3, sapp_timestamp_argv);	
 
-	/*************** ִ�е��˴�, ��sapp�����Ѿ��˳�, fork������sapp�ӽ��̿��ܸո�����, ���һ��12345�Ƿ񻹱�ռ�� *****************/
+	/*************** ִ�е��˴�, ��sapp�����Ѿ��˳�, fork������sapp�ӽ��̿��ܸո�����, ���һ��?12345�Ƿ񻹱�ռ�� *****************/
 
 	sleep(1);
 
@@ -953,7 +953,7 @@ void control_fork_listen_port_run(void)
 
 	fgets(result, sizeof(result), result_fp);
 	
-	if(strlen(result) == 0){ /* netstat�����޽��, ����ȷ�� */
+	if(strlen(result) == 0){ /* netstat�����޽��?, ����ȷ�� */
 		printf("\033[32mfork_listen_port test success!\033[0m\n");
 		gtest_set_libsapp_devel_result(GTEST_SAPP_SUCC);
 	}else{
@@ -1024,7 +1024,7 @@ void get_deployment_mode_mirror(void)
 	set_default_config();
 	update_plugin_inf("TCP", "get_deployment_mode_tcp_udp_entry");
 	
-	set_pcap_dumpfile("tcp/tcp_simple.pcap");  /* ����Ҹ���, ʲô����, ����Ϊ������, ����ģʽ�İ�Ҫ��һ�� */
+	set_pcap_dumpfile("tcp/tcp_simple.pcap");  /* ����Ҹ���?, ʲô����, ����Ϊ������, ����ģʽ�İ�Ҫ��һ�� */
 	ASSERT_EQ(file_md5_checksum("dumpfile", "df138740a6a22ca9c977052f21f7a470"),0);
 	
 	call_libsapp_devel_with_args(2, sapp_start_args);	
@@ -1040,7 +1040,7 @@ void get_deployment_mode_transparent(void)
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.internal.interface", 2, "name", "lo");
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.external.interface", 1, "name", "lo");
 	update_config_file_by_lastNline("etc/sapp.toml", "packet_io.external.interface", 2, "name", "lo");
-	set_pcap_dumpfile("tcp/tcp_isn_c2s_single.pcap");  /* ����Ҹ���, ʲô����, ����Ϊ������, ����ģʽ�İ�Ҫ��һ�� */
+	set_pcap_dumpfile("tcp/tcp_isn_c2s_single.pcap");  /* ����Ҹ���?, ʲô����, ����Ϊ������, ����ģʽ�İ�Ҫ��һ�� */
 	ASSERT_EQ(file_md5_checksum("dumpfile", "a5d0d96ee6f44f729d79aeac5cc2fee0"),0);
 	call_libsapp_devel_with_args(1, sapp_transparent_start_args);	
 
@@ -1061,7 +1061,7 @@ void get_deployment_mode_inline(void)
 	update_config_file("etc/gdev.conf", "sendto_gdev_ip", "10.3.36.1");
 	update_plugin_inf("POLLING", "get_deployment_mode_tcp_udp_entry"); 
 
-	set_pcap_dumpfile("for_gtest_only/inline/tcp_flow_stat.pcap"); /* ����Ҹ���, ʲô����, ����Ϊ������, ����ģʽ�İ�Ҫ��һ�� */
+	set_pcap_dumpfile("for_gtest_only/inline/tcp_flow_stat.pcap"); /* ����Ҹ���?, ʲô����, ����Ϊ������, ����ģʽ�İ�Ҫ��һ�� */
 	ASSERT_EQ(file_md5_checksum("dumpfile", "917fd6b8bc70e02812a036adf637479b"),0);
 
 	call_libsapp_devel_with_args(1, sapp_inline_start_args);
@@ -1113,4 +1113,13 @@ void control_get_tcp_rtt_s2c_run(void)
 	ASSERT_EQ(file_md5_checksum("dumpfile", "006277b38aa1f9a0d272b643b8a3b686"),0);
 
 	call_libsapp_devel_for_dumpfile_topspeed();
+}
+
+void control_get_stream_uuid_run(void)
+{
+	set_default_config();
+	update_plugin_inf("TCP", "ctrl_get_stream_uuid_entry");
+	set_pcap_dumpfile("tcp/tcp_simple.pcap");
+	ASSERT_EQ(file_md5_checksum("dumpfile", "df138740a6a22ca9c977052f21f7a470"),0);
+	call_libsapp_devel_with_args(2, sapp_start_args);
 }

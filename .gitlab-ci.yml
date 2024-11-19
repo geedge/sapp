@@ -4,7 +4,8 @@ variables:
   BUILD_IMAGE_X86_64_ROCKY8: "git.mesalab.cn:7443/mesa_platform/build-env:rocky8-for-sapp"
   BUILD_IMAGE_AARCH64_ROCKY9: "git.mesalab.cn:7443/mesa_platform/build-env:rocky9-aarch64"
   INSTALL_DEPENDENCY_LIBRARY: 
-    framework_env libcjson-devel  libbreakpad_mini-devel libuuid-devel
+    systemd-devel 
+    framework_env libcjson-devel  libbreakpad_mini-devel libuuid-devel libuuid 
     libMESA_htable-devel libMESA_prof_load-devel libMESA_handle_logger-devel
     libMESA_field_stat2-devel libfieldstat3-devel libfieldstat4-devel
     hasp-tools 
@@ -48,6 +49,7 @@ stages:
       --suppress=preprocessorErrorDirective
       --suppress=syntaxError
       --suppress=*:${CI_PROJECT_DIR}/src/support/ap_bloom/deps/*
+      --suppress=*:${CI_PROJECT_DIR}/src/support/ulid/*
 
 run_cppcheck_for_x86_64_rocky8:
   extends: .cppcheck_script

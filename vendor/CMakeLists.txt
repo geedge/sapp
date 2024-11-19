@@ -64,4 +64,3 @@ if(MEM_POOL STREQUAL "MIMALLOC")
         set_property(TARGET libmimalloc-dynamic PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib64/mimalloc-2.1/libmimalloc.so)
         set_property(TARGET libmimalloc-dynamic PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include/mimalloc-1.8)
 endif()
-

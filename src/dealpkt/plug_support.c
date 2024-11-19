@@ -8,6 +8,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include "ulid/ulid_wrap.h"
 extern int G_TCP_FLOW_STAT_PROJECT_ID ;
 extern int G_UDP_FLOW_STAT_PROJECT_ID ;
 
@@ -2169,6 +2170,24 @@ int MESA_get_stream_opt(const struct streaminfo *pstream, enum MESA_stream_opt o
 			}
 			*((unsigned short *)opt_val) = pdetail_pr->rtt_scs;
 			*opt_val_len = sizeof(short);
+		}
+		break;
+
+		case MSO_STREAM_UUID:
+		{
+			if(*opt_val_len != sizeof(uuid_t)){
+				return -1;
+			}
+			if(uuid_is_null(pstream_pr->stream_uuid)){
+				ulid_uuid_generate(pstream_pr->stream_uuid);
+				if (MESA_handle_runtime_log_level_enabled(ABBR_SAPP_LOG_HANDLE, RLOG_LV_DEBUG)){    
+					char uuid_string_buf[UUID_STR_LEN] = {0};
+					uuid_unparse(pstream_pr->stream_uuid, uuid_string_buf);
+					sapp_runtime_log(RLOG_LV_DEBUG, "%s, stream uuid: %s\n", printaddr(&pstream->addr, pstream->threadnum), uuid_string_buf);
+				}
+			}
+			memcpy(opt_val, pstream_pr->stream_uuid, sizeof(uuid_t));
+			ret = 0;
 		}
 		break;
 

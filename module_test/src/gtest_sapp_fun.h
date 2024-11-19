@@ -16,8 +16,8 @@
 
 /*
 	说明:
-		为了方便测试sapp的某些功�?不得已引用了一些private级别的头文件,
-		但是如果sapp的头文件更新�? 但此模块没同步更�? 导致结构体不一�? 可能会测试不通过.
+		为了方便测试sapp的某些功�??不得已引用了一些private级别的头文件,
+		但是如果sapp的头文件更新�?? 但此模块没同步更�?? 导致结构体不一�?? 可能会测试不通过.
 */
 
 #include "sapp_limits.h"
@@ -51,8 +51,8 @@
 #define GTEST_INLINE_TO_SAPP_SUCC		(0x07654321) /* inline模式下TAP模拟外部设备检测正确返回�?*/
 #define GTEST_TRANSPARENT_TO_SAPP_SUCC	(0x00ABCDEF) /* 双臂模式下TAP模拟外部设备检测正确返回�?*/
 #define GTEST_FAKE_MARSIO_SUCC			(0x0FEFEFE0) /* fake marsio模式检测正确返回�?*/
-#define GTEST_SAPP_ERR_SKIP				(0x534B4950U) /* 因sapp的内部结构体变化, 无法测试, 跳过此用例的返回�? 即字符SKIP的十六进�?*/
-#define GTEST_RESULT_NONE				(0x4E4F4E45) /* "NONE"�?6进制, 不发送或者表示无任何意义的返回�?*/
+#define GTEST_SAPP_ERR_SKIP				(0x534B4950U) /* 因sapp的内部结构体变化, 无法测试, 跳过此用例的返回�?? 即字符SKIP的十六进�??*/
+#define GTEST_RESULT_NONE				(0x4E4F4E45) /* "NONE"�??6进制, 不发送或者表示无任何意义的返回�?*/
 
 #define BENCHMARK_PCAP_ROOT_DIR "../benchmark_pcap"
 
@@ -68,7 +68,7 @@
 
 #define SAPP_GTEST_LOG(level, module, fmt, args...)		do{MESA_handle_runtime_log(g_sapp_test_log_handle, level, module, fmt, ##args);}while(0)
 
-/* 用于sapp插件上下文空�? 有可能是被fork之后调用sapp, 跟gtest_main函数不在同一个进程里 */
+/* 用于sapp插件上下文空�?? 有可能是被fork之后调用sapp, 跟gtest_main函数不在同一个进程里 */
 #define SAPP_PLUG_LOG(level, module, fmt, args...)		do{MESA_handle_runtime_log(g_sapp_plug_log_handle, level, module, fmt, ##args);}while(0)
 
 
@@ -148,7 +148,7 @@ enum gtest_inject_type{
 	GINJECT_UDP_PAYLOAD = GINJECT_TYPE_UDP|0x01,
 };
 
-/* 用于指定哪些pcap�? 对应哪些检测函�?*/
+/* 用于指定哪些pcap�?? 对应哪些检测函�??*/
 typedef struct {
 	const char *pcap_file_md5;
 	unsigned int default_check_result;
@@ -159,8 +159,8 @@ typedef struct {
 typedef struct {
 	const char *pcap_file_md5;
 	const char *keepalive_ip; /* inline 回流 保活ip */
-	int inject_reverse; /* 注入包是否反�?*/
-	int inject_pkt_trigger_threshold; /* inject超过几个包发送成功结�?*/ 
+	int inject_reverse; /* 注入包是否反�??*/
+	int inject_pkt_trigger_threshold; /* inject超过几个包发送成功结�??*/ 
 	unsigned int default_check_result;
 	void (*pcap_callback)(u_char *user, const struct pcap_pkthdr *hdr, const u_char *data);	
 	const char *description;
@@ -224,7 +224,7 @@ void gtest_exec_printf(const char *fmt, ...);
 void gtest_plug_printf(const char *fmt, ...);
 
 
-extern "C" void sapp_printf(const char *fmt, ...); /* 在插件的上下文调�?*/
+extern "C" void sapp_printf(const char *fmt, ...); /* 在插件的上下文调�??*/
 extern "C" int gtest_sapp_slave_init(void);
 /*********************************** tcp **************************************/
 void tcp_simple_run(void);
@@ -379,6 +379,7 @@ void control_get_ip_ttl_run(void);
 void control_get_tcp_rtt_run(void);
 void control_get_tcp_rtt_c2s_run(void);
 void control_get_tcp_rtt_s2c_run(void);
+void control_get_stream_uuid_run(void);
 /****************************** tunnel **************************/
 void teredo_unstandard_port_run(void);
 void teredo_with_auth_hdr_run(void);
